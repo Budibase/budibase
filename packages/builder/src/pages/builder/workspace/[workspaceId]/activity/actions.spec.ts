@@ -14,6 +14,7 @@ import ActivityActions from "./actions.svelte"
 
 const mocks = vi.hoisted(() => ({
   fetchActionSessions: vi.fn(),
+  fetchActionSessionEvents: vi.fn(),
 }))
 
 vi.mock("@budibase/bbui", async importOriginal => {
@@ -27,7 +28,10 @@ vi.mock("@budibase/bbui", async importOriginal => {
 })
 
 vi.mock("@/api", () => ({
-  API: { fetchActionSessions: mocks.fetchActionSessions },
+  API: {
+    fetchActionSessions: mocks.fetchActionSessions,
+    fetchActionSessionEvents: mocks.fetchActionSessionEvents,
+  },
 }))
 
 const response: FetchActionSessionsResponse = {
@@ -83,6 +87,11 @@ const pageResponse = ({
 describe("Activity actions page", () => {
   beforeEach(() => {
     mocks.fetchActionSessions.mockReset()
+    mocks.fetchActionSessionEvents.mockResolvedValue({
+      events: [],
+      summary: { total: 0 },
+      pagination: { hasNextPage: false, hasPreviousPage: false },
+    })
   })
 
   it("loads sessions from all environments and renders them with the summary", async () => {

@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/svelte"
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/svelte"
 import { describe, expect, it, vi } from "vitest"
 import type { AgentRequest } from "@budibase/types"
 import ActivitySidePanel from "./ActivitySidePanel.svelte"
@@ -66,6 +72,43 @@ describe("ActivitySidePanel", () => {
     )
 
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it("is exposed as a focused dialog named after its title", async () => {
+    renderPanel()
+
+    const dialog = screen.getByRole("dialog", { name: "Restock request" })
+    await waitFor(() => {
+      expect(dialog).toHaveFocus()
+    })
+  })
+
+  it("closes with the close button and the Escape key", async () => {
+    const onClose = vi.fn()
+    renderPanel(onClose)
+
+    await fireEvent.click(screen.getByRole("button", { name: "Close" }))
+    await fireEvent.keyDown(window, { key: "Escape" })
+
+    expect(onClose).toHaveBeenCalledTimes(2)
+  })
+
+  it("ignores Escape while closed", async () => {
+    const onClose = vi.fn()
+    render(ActivitySidePanel, {
+      props: {
+        open: false,
+        title: "Restock request",
+        request,
+        agentName: "Support agent",
+        createdBy: "Jane Doe",
+        onClose,
+      },
+    })
+
+    await fireEvent.keyDown(window, { key: "Escape" })
+
+    expect(onClose).not.toHaveBeenCalled()
   })
 
   it("renders nothing without a request", () => {

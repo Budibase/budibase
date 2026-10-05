@@ -18,7 +18,21 @@
   } = $props()
 
   let panelRoot: HTMLDivElement | undefined = $state(undefined)
+
+  $effect(() => {
+    if (open && panelRoot) {
+      panelRoot.focus()
+    }
+  })
 </script>
+
+<svelte:window
+  onkeydown={event => {
+    if (open && event.key === "Escape") {
+      onClose()
+    }
+  }}
+/>
 
 {#if open}
   <div
@@ -34,6 +48,9 @@
   ></div>
   <div
     class="activity-panel-container"
+    role="dialog"
+    aria-label={title}
+    tabindex="-1"
     bind:this={panelRoot}
     transition:fly|local={{ x: 260, duration: 300 }}
   >
@@ -47,7 +64,14 @@
       <Panel resizable noHeaderBorder>
         <div slot="panel-header-content" class="activity-panel-header">
           <div class="activity-panel-title">{title}</div>
-          <Icon name="x" hoverable on:click={onClose} />
+          <button
+            type="button"
+            class="activity-panel-close"
+            aria-label="Close"
+            onclick={onClose}
+          >
+            <Icon name="x" />
+          </button>
         </div>
 
         <div class="activity-panel-content">
@@ -70,6 +94,31 @@
     position: fixed;
     inset: 0 0 0 auto;
     z-index: 99;
+  }
+
+  .activity-panel-container:focus {
+    outline: none;
+  }
+
+  .activity-panel-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .activity-panel-close:hover {
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .activity-panel-close:focus-visible {
+    outline: 2px solid var(--spectrum-global-color-blue-400);
+    outline-offset: 2px;
   }
 
   .activity-panel-header {
