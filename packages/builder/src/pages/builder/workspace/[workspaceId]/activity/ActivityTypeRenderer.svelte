@@ -1,11 +1,15 @@
 <script lang="ts">
   import { Icon } from "@budibase/bbui"
 
-  export let row: {
-    typeLabel: string
-    typeIcon: string
-    typeIconColor: string
-  }
+  let {
+    row,
+  }: {
+    row: {
+      typeLabel: string
+      typeIcon: string
+      typeIconColor: string
+    }
+  } = $props()
 </script>
 
 <div class="activity-type">
