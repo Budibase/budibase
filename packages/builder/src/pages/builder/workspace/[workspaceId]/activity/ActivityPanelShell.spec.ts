@@ -16,7 +16,18 @@ const renderPanel = () =>
     },
   })
 
-describe("ActivityPanelShell focus", () => {
+describe("ActivityPanelShell", () => {
+  it("removes the panel and overlay when closed", async () => {
+    const { container, rerender } = renderPanel()
+
+    await rerender({ open: false, title: "" })
+
+    expect(
+      screen.queryByRole("dialog", { hidden: true })
+    ).not.toBeInTheDocument()
+    expect(container.querySelector(".activity-panel-overlay")).toBeNull()
+  })
+
   it("exposes a modal dialog and moves initial Tab to its first control", async () => {
     renderPanel()
     const dialog = screen.getByRole("dialog")

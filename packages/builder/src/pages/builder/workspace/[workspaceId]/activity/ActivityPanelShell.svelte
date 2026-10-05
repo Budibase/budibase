@@ -101,7 +101,7 @@
     aria-label={title}
     tabindex="-1"
     bind:this={panelRoot}
-    transition:fly|local={{ x: 260, duration: 300 }}
+    in:fly|local={{ x: 260, duration: 300 }}
   >
     <ResizablePanel
       storageKey="agent-activity-side-panel-width"
