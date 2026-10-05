@@ -8,6 +8,7 @@
     hasNextPage,
     onPrevPage,
     onNextPage,
+    disabled = false,
   }: {
     label: string
     page: number
@@ -15,6 +16,7 @@
     hasNextPage: boolean
     onPrevPage: () => void
     onNextPage: () => void
+    disabled?: boolean
   } = $props()
 </script>
 
@@ -26,8 +28,8 @@
       {page}
       goToPrevPage={onPrevPage}
       goToNextPage={onNextPage}
-      {hasPrevPage}
-      {hasNextPage}
+      hasPrevPage={hasPrevPage && !disabled}
+      hasNextPage={hasNextPage && !disabled}
     />
   {/if}
 </div>

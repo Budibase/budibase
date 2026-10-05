@@ -177,6 +177,14 @@
     <section class="activity-panel-section">
       <div class="section-title">Timeline</div>
 
+      {#if loading}
+        <div role="status">
+          <Body size="S" color="var(--spectrum-global-color-gray-600)">
+            Loading events...
+          </Body>
+        </div>
+      {/if}
+
       {#if loadFailed}
         <div class="load-error" role="alert">
           <Body size="S">Failed to load events.</Body>
@@ -184,11 +192,7 @@
             >Try again</Button
           >
         </div>
-      {:else if loading && events.length === 0}
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          Loading events...
-        </Body>
-      {:else}
+      {:else if !loading || events.length > 0}
         <ActivityTimeline
           items={timelineItems}
           emptyText="No events recorded yet."
@@ -200,6 +204,7 @@
             page={currentPage}
             {hasPrevPage}
             {hasNextPage}
+            disabled={loading}
             onPrevPage={goToPrevPage}
             onNextPage={goToNextPage}
           />
