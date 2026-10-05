@@ -139,6 +139,37 @@ export default async function () { return { output: { text: inputs.value?.toUppe
     })
   })
 
+  it.each([
+    {
+      updateSchema: undefined,
+      expectedSchema: [{ name: "value", type: "string" }],
+    },
+    { updateSchema: [], expectedSchema: [] },
+  ])(
+    "preserves omitted input schemas and allows explicit clearing: $updateSchema",
+    async ({ updateSchema, expectedSchema }) => {
+      await withFunctionsEnabled(async () => {
+        const { function: created } = await config.api.function.create({
+          name: "Typed inputs",
+          source: validSource,
+          capabilities: [],
+          inputSchema: [{ name: "value", type: "string" }],
+        })
+        await config.api.function.update(created._id, {
+          _rev: created._rev!,
+          name: created.name,
+          source: created.source,
+          capabilities: [],
+          ...(updateSchema === undefined ? {} : { inputSchema: updateSchema }),
+        })
+        const { function: updated } = await config.api.function.find(
+          created._id
+        )
+        expect(updated.inputSchema).toEqual(expectedSchema)
+      })
+    }
+  )
+
   it("rejects invalid input definitions with actionable errors", async () => {
     await withFunctionsEnabled(async () => {
       await config.api.function.create(
@@ -148,7 +179,12 @@ export default async function () { return { output: { text: inputs.value?.toUppe
           capabilities: [],
           inputSchema: [{ name: "not a name", type: "string" }],
         },
-        { status: 400 }
+        {
+          status: 400,
+          body: {
+            message: "use a valid identifier of up to 128 characters.",
+          },
+        }
       )
       await config.api.function.create(
         {
@@ -160,7 +196,24 @@ export default async function () { return { output: { text: inputs.value?.toUppe
             { name: "value", type: "number" },
           ],
         },
-        { status: 400 }
+        {
+          status: 400,
+          body: { message: "input names must be unique." },
+        }
+      )
+      await config.api.function.create(
+        {
+          name: "Reserved input",
+          source: validSource,
+          capabilities: [],
+          inputSchema: [{ name: "__proto__", type: "object" }],
+        },
+        {
+          status: 400,
+          body: {
+            message: "__proto__ cannot be used as an input name.",
+          },
+        }
       )
     })
   })

@@ -15,6 +15,7 @@ import {
   type JSONValue,
 } from "@budibase/types"
 import { getFunctionInputError } from "@budibase/shared-core"
+import { processFunctionBindings } from "../functionBindings"
 import env from "../../environment"
 import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
 import {
@@ -193,8 +194,16 @@ export const executeFunction = async (
     if (!fn) {
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_BUILD_REQUIRED)
     }
+    const unresolvedInputs = jsonRecordSchema.safeParse(inputs.inputs)
+    if (!unresolvedInputs.success) {
+      throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
+    }
     const functionInputs = parseInputs({
-      inputs: inputs.inputs,
+      inputs: processFunctionBindings({
+        inputs: unresolvedInputs.data,
+        inputSchema: fn.inputSchema ?? [],
+        context,
+      }),
       limits,
       inputSchema: fn.inputSchema,
     })

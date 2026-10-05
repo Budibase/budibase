@@ -37,6 +37,7 @@ import {
   isLogicalSearchOperator,
   isRangeSearchOperator,
   EscalationStepInputs,
+  type ExecuteFunctionStepInputs,
   LoopV2Step,
   LoopV2StepInputs,
 } from "@budibase/types"
@@ -1051,10 +1052,15 @@ class Orchestrator {
             ? (inputs as EscalationStepInputs)
             : undefined
         const resolutionStrategy = escalationInputs?.resolutionStrategy
-        inputs = await processObject(inputs, ctx, {
-          serializeArrays:
-            step.stepId === AutomationActionStepId.EXECUTE_FUNCTION,
-        })
+        if (step.stepId === AutomationActionStepId.EXECUTE_FUNCTION) {
+          const functionStepInputs = inputs as ExecuteFunctionStepInputs
+          inputs = {
+            ...functionStepInputs,
+            functionId: processStringSync(functionStepInputs.functionId, ctx),
+          }
+        } else {
+          inputs = await processObject(inputs, ctx)
+        }
         if (escalationInputs && resolutionStrategy !== undefined) {
           ;(inputs as EscalationStepInputs).resolutionStrategy =
             resolutionStrategy

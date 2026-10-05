@@ -53,9 +53,14 @@ export const HELPERS = [
     HelperFunctionNames.ALL,
     (value: string, inputs: { __opts: any }) => {
       const { __opts } = inputs
+      if (__opts?.arrayHandling === "preserve" && Array.isArray(value)) {
+        return new Handlebars.SafeString(
+          `{{${LITERAL_MARKER} object-${JSON.stringify(value)}}}`
+        )
+      }
       if (
         isObject(value) ||
-        (__opts?.serializeArrays && Array.isArray(value))
+        (__opts?.arrayHandling === "stringify" && Array.isArray(value))
       ) {
         return new Handlebars.SafeString(JSON.stringify(value))
       }

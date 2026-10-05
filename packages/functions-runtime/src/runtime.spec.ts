@@ -3,8 +3,15 @@ import type {
   FunctionCapabilityRequest,
   FunctionCapabilityHandler,
   FunctionRunRequest,
+  JSONValue,
 } from "@budibase/types"
 import { executeFunctionInIsolate } from "./runtime"
+
+interface PrototypeInputTestCase {
+  scenario: string
+  inputs: Record<string, JSONValue>
+  output: Record<string, JSONValue>
+}
 
 const request = (compiledJavaScript: string): FunctionRunRequest => ({
   runId: "runtime-run",
@@ -40,6 +47,51 @@ const execute = (
 ) => executeFunctionInIsolate(runRequest, { invokeCapability })
 
 describe("Function runtime", () => {
+  it.each<PrototypeInputTestCase>([
+    {
+      scenario: "omitted",
+      inputs: {},
+      output: { toString: null, constructor: null, prototype: null },
+    },
+    {
+      scenario: "supplied",
+      inputs: {
+        toString: "value",
+        constructor: 42,
+        ["__proto__"]: { nested: true },
+      },
+      output: {
+        toString: "value",
+        constructor: 42,
+        prototype: { nested: true },
+      },
+    },
+  ])(
+    "reads $scenario inputs named after Object.prototype properties",
+    async ({ inputs, output }) => {
+      const runRequest = request(`
+      export default async function run() {
+        const inputs = globalThis.__budibaseInputs
+        return {
+          output: {
+            toString: inputs.toString ?? null,
+            constructor: inputs.constructor ?? null,
+            prototype: inputs.__proto__ ?? null,
+          },
+        }
+      }
+    `)
+      runRequest.inputs = inputs
+
+      await expect(
+        execute(
+          runRequest,
+          jest.fn(async () => ({}))
+        )
+      ).resolves.toMatchObject({ status: "success", output })
+    }
+  )
+
   it("runs with an injected capability handler", async () => {
     const invokeCapability = jest.fn(async () => ({ id: "row-1" }))
 

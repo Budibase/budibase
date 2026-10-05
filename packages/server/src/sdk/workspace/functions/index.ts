@@ -86,7 +86,7 @@ const validateDraft = (draft: FunctionDraftInput) => {
 
   const inputErrors = validateFunctionInputSchema(draft.inputSchema || [])
   if (inputErrors.length) {
-    throw new HTTPError(inputErrors[0], 400)
+    throw new HTTPError(inputErrors[0].message, 400)
   }
 
   const queryIds = new Set<string>()
@@ -541,7 +541,7 @@ export const update = async (
       _rev: draft._rev,
       name: draft.name,
       source: draft.source,
-      inputSchema: draft.inputSchema,
+      inputSchema: draft.inputSchema ?? persisted.inputSchema,
       capabilities,
       createdAt: persisted.createdAt,
       updatedAt: new Date().toISOString(),

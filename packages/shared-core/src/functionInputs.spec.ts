@@ -46,18 +46,20 @@ describe("Function input definitions", () => {
     ).toBeUndefined()
   })
 
-  it("rejects duplicate and invalid identifiers", () => {
+  it("rejects duplicate, invalid and reserved identifiers", () => {
     expect(
       validateFunctionInputSchema([
         { name: "valid", type: "number" },
         { name: "valid", type: "string" },
         { name: "bad name", type: "array" },
         { name: "newline\n", type: "string" },
+        { name: "__proto__", type: "object" },
       ])
     ).toEqual([
-      "Input 2: input names must be unique.",
-      "Input 3: use a valid identifier of up to 128 characters.",
-      "Input 4: use a valid identifier of up to 128 characters.",
+      { index: 1, message: "input names must be unique." },
+      { index: 2, message: "use a valid identifier of up to 128 characters." },
+      { index: 3, message: "use a valid identifier of up to 128 characters." },
+      { index: 4, message: "__proto__ cannot be used as an input name." },
     ])
   })
 
