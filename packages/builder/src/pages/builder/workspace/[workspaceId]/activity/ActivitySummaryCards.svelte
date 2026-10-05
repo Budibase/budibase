@@ -1,7 +1,7 @@
 <script lang="ts" module>
   export interface SummaryMetric {
     label: string
-    value: number
+    value: number | null
   }
 </script>
 
@@ -15,7 +15,11 @@
   {#each metrics as metric}
     <section class="metric-card">
       <Body size="XL" weight="600">
-        {metric.value.toLocaleString()}
+        {#if metric.value === null}
+          <span aria-label="Unavailable">-</span>
+        {:else}
+          {metric.value.toLocaleString()}
+        {/if}
       </Body>
       <Body size="S" color="var(--spectrum-global-color-gray-600)">
         {metric.label}

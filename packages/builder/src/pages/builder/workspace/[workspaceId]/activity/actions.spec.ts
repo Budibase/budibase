@@ -439,7 +439,31 @@ describe("Activity actions page", () => {
     })
   })
 
-  it("shows an error state and retries the request", async () => {
+  it("shows unavailable counters when loading fails", async () => {
+    mocks.fetchActionSessions.mockRejectedValueOnce(new Error("boom"))
+
+    renderPage()
+
+    await screen.findByRole("button", { name: "Try again" })
+    expect(screen.getAllByLabelText("Unavailable")).toHaveLength(5)
+    expect(screen.queryByText("0")).not.toBeInTheDocument()
+  })
+
+  it("shows zero counters for a successful empty response", async () => {
+    mocks.fetchActionSessions.mockResolvedValueOnce({
+      ...response,
+      sessions: [],
+      summary: { total: 0, active: 0, waiting: 0, completed: 0, failed: 0 },
+    })
+
+    renderPage()
+
+    await screen.findByText("No actions tracked yet.")
+    expect(screen.getAllByText("0")).toHaveLength(5)
+    expect(screen.queryByLabelText("Unavailable")).not.toBeInTheDocument()
+  })
+
+  it("restores counters after retrying a failed request", async () => {
     mocks.fetchActionSessions
       .mockRejectedValueOnce(new Error("boom"))
       .mockResolvedValueOnce(response)
@@ -454,5 +478,9 @@ describe("Activity actions page", () => {
       expect(table().getByText("Support agent")).toBeInTheDocument()
     })
     expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(2)
+    expect(screen.queryByLabelText("Unavailable")).not.toBeInTheDocument()
+    for (const value of ["15", "1", "2", "5", "7"]) {
+      expect(screen.getByText(value)).toBeInTheDocument()
+    }
   })
 })

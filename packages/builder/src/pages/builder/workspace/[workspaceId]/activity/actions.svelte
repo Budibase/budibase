@@ -100,19 +100,18 @@
   )
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
-    const counts = summary || {
-      total: 0,
-      active: 0,
-      waiting: 0,
-      completed: 0,
-      failed: 0,
-    }
     return [
-      { label: "All actions", value: counts.total },
-      { label: ACTIVITY_STATUS_LABELS.completed, value: counts.completed },
-      { label: ACTIVITY_STATUS_LABELS.active, value: counts.active },
-      { label: ACTIVITY_STATUS_LABELS.waiting, value: counts.waiting },
-      { label: ACTIVITY_STATUS_LABELS.failed, value: counts.failed },
+      { label: "All actions", value: summary?.total ?? null },
+      {
+        label: ACTIVITY_STATUS_LABELS.completed,
+        value: summary?.completed ?? null,
+      },
+      { label: ACTIVITY_STATUS_LABELS.active, value: summary?.active ?? null },
+      {
+        label: ACTIVITY_STATUS_LABELS.waiting,
+        value: summary?.waiting ?? null,
+      },
+      { label: ACTIVITY_STATUS_LABELS.failed, value: summary?.failed ?? null },
     ]
   })
 
