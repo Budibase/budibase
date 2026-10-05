@@ -20,16 +20,64 @@
   let panelRoot: HTMLDivElement | undefined = $state(undefined)
 
   $effect(() => {
-    if (open && panelRoot) {
-      panelRoot.focus()
+    if (!open || !panelRoot) {
+      return
+    }
+    const root = panelRoot
+    const previousFocus = document.activeElement
+    root.focus()
+
+    return () => {
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
+        previousFocus.focus()
+      }
     }
   })
+
+  const trapTab = (event: KeyboardEvent) => {
+    if (!panelRoot) {
+      return
+    }
+    const controls = Array.from(
+      panelRoot.querySelectorAll<HTMLElement>(
+        "a[href], button, input, select, textarea, [tabindex]"
+      )
+    ).filter(element => {
+      const style = getComputedStyle(element)
+      return (
+        element.tabIndex >= 0 &&
+        !element.matches(":disabled") &&
+        !element.closest("[hidden], [inert]") &&
+        style.display !== "none" &&
+        style.visibility !== "hidden"
+      )
+    })
+    const first = controls[0]
+    const last = controls[controls.length - 1]
+    const active = document.activeElement
+    if (!first || !panelRoot.contains(active) || active === panelRoot) {
+      event.preventDefault()
+      const target = (event.shiftKey ? last : first) || panelRoot
+      target.focus()
+    } else if (event.shiftKey && active === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
 </script>
 
 <svelte:window
   onkeydown={event => {
-    if (open && event.key === "Escape") {
+    if (!open || event.defaultPrevented) {
+      return
+    }
+    if (event.key === "Escape") {
       onClose()
+    } else if (event.key === "Tab") {
+      trapTab(event)
     }
   }}
 />
@@ -49,6 +97,7 @@
   <div
     class="activity-panel-container"
     role="dialog"
+    aria-modal="true"
     aria-label={title}
     tabindex="-1"
     bind:this={panelRoot}
