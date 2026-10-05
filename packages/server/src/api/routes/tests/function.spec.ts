@@ -100,7 +100,6 @@ export default async function () { return { output: { text: inputs.value?.toUppe
           {
             name: "value",
             type: "string",
-            description: "Text",
           },
         ],
       })
@@ -117,7 +116,6 @@ export default async function () { return { output: { text: inputs.value?.toUppe
             {
               name: "value",
               type: "number",
-              description: "Count",
             },
           ],
         }
@@ -126,13 +124,11 @@ export default async function () { return { output: { text: inputs.value?.toUppe
       const { function: failed } = await config.api.function.find(updated._id)
       const { functions } = await config.api.function.fetch()
       expect(functions.find(fn => fn._id === failed._id)?.inputSchema).toEqual([
-        { name: "value", type: "number", description: "Count" },
+        { name: "value", type: "number" },
       ])
       expect(updated.readiness).toBe("build_required")
       expect(failed.readiness).toBe("build_failed")
-      expect(failed.inputSchema).toEqual([
-        { name: "value", type: "number", description: "Count" },
-      ])
+      expect(failed.inputSchema).toEqual([{ name: "value", type: "number" }])
       expect(failed.lastBuild?.diagnostics).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -140,36 +136,6 @@ export default async function () { return { output: { text: inputs.value?.toUppe
           }),
         ])
       )
-    })
-  })
-
-  it("requires rebuilding after description edits", async () => {
-    await withFunctionsEnabled(async () => {
-      const { function: created } = await config.api.function.create({
-        name: "Input metadata",
-        source: validSource,
-        capabilities: [],
-        inputSchema: [{ name: "value", type: "string" }],
-      })
-      await config.api.function.build(created._id, { _rev: created._rev! })
-      const { function: built } = await config.api.function.find(created._id)
-      const { function: updated } = await config.api.function.update(
-        built._id,
-        {
-          _rev: built._rev!,
-          name: built.name,
-          source: built.source,
-          capabilities: [],
-          inputSchema: [
-            {
-              name: "value",
-              type: "string",
-              description: "Optional text",
-            },
-          ],
-        }
-      )
-      expect(updated.readiness).toBe("build_required")
     })
   })
 

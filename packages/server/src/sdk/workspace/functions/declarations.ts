@@ -49,18 +49,10 @@ const inputTypes: Record<FunctionInputType, string> = {
   array: "JsonValue[]",
 }
 
-const renderInputDescription = (description?: string) => {
-  if (!description) {
-    return ""
-  }
-  const text = description.replace(/\*\//g, "* /").replace(/[\r\n]/g, " ")
-  return `    /** ${text} */\n`
-}
-
 const renderInputProperty = (input: FunctionInputDefinition) => {
   const name = property(input.name)
   const type = inputTypes[input.type]
-  return `${renderInputDescription(input.description)}    readonly ${name}?: ${type} | null`
+  return `    readonly ${name}?: ${type} | null`
 }
 
 const renderInputs = (inputSchema: readonly FunctionInputDefinition[]) => {
@@ -121,10 +113,9 @@ export const hashFunctionDeclarations = ({
       JSON.stringify(
         [...inputSchema]
           .sort((a, b) => a.name.localeCompare(b.name))
-          .map(({ name, type, description }) => ({
+          .map(({ name, type }) => ({
             name,
             type,
-            description: description || "",
           }))
       )
     )

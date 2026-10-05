@@ -46,24 +46,18 @@ describe("Function input definitions", () => {
     ).toBeUndefined()
   })
 
-  it("rejects duplicate and invalid identifiers and bounds descriptions", () => {
+  it("rejects duplicate and invalid identifiers", () => {
     expect(
       validateFunctionInputSchema([
         { name: "valid", type: "number" },
         { name: "valid", type: "string" },
         { name: "bad name", type: "array" },
         { name: "newline\n", type: "string" },
-        {
-          name: "long",
-          type: "string",
-          description: "x".repeat(1025),
-        },
       ])
     ).toEqual([
       "Input 2: input names must be unique.",
       "Input 3: use a valid identifier of up to 128 characters.",
       "Input 4: use a valid identifier of up to 128 characters.",
-      "Input 5: descriptions cannot exceed 1024 characters.",
     ])
   })
 

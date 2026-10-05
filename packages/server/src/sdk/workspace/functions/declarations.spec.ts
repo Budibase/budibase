@@ -81,7 +81,6 @@ describe("typed Function input declarations", () => {
     {
       name: "text",
       type: "string",
-      description: "A description */\nwith newlines",
     },
     { name: "count", type: "number" },
     { name: "flag", type: "boolean" },
@@ -155,7 +154,7 @@ const omitted: GeneratedInputs = {}
         declarations: declarations,
         inputSchema: inputSchema.map(input => ({
           ...input,
-          description: "changed",
+          name: `${input.name}Changed`,
         })),
       })
     ).not.toBe(hash)

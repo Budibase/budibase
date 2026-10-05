@@ -3,7 +3,6 @@ import {
   FUNCTION_INPUT_TYPES,
   MAX_FUNCTION_INPUTS,
   MAX_FUNCTION_INPUT_NAME_LENGTH,
-  MAX_FUNCTION_INPUT_DESCRIPTION_LENGTH,
 } from "@budibase/shared-core"
 import { middleware } from "@budibase/backend-core"
 import { functionsEnabled } from "../../middleware/functionsEnabled"
@@ -27,10 +26,6 @@ const draftSchema = {
         type: Joi.string()
           .valid(...FUNCTION_INPUT_TYPES)
           .required(),
-        description: Joi.string()
-          .max(MAX_FUNCTION_INPUT_DESCRIPTION_LENGTH)
-          .allow("")
-          .optional(),
       })
     )
     .optional(),
