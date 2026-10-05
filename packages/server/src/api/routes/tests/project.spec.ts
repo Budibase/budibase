@@ -1969,6 +1969,8 @@ describe("/projects", () => {
       queryScreen.props._children!.push({
         _id: generator.guid(),
         _component: "@budibase/standard-components/heading",
+        _instanceName: "Heading",
+        _styles: {},
         text: `{{!-- {{ ${query._id}.rows }} --}} Value: {{ ${query._id}.rows }}`,
       })
       await config.api.screen.save({
