@@ -40,9 +40,6 @@ export const validateFunctionInputSchema = (
     if (!FUNCTION_INPUT_TYPES.includes(input.type)) {
       errors.push(`${label}: select a supported type.`)
     }
-    if (typeof input.required !== "boolean") {
-      errors.push(`${label}: required must be a boolean.`)
-    }
     if (
       input.description &&
       input.description.length > MAX_FUNCTION_INPUT_DESCRIPTION_LENGTH
@@ -65,13 +62,10 @@ export const getFunctionInputError = ({
   for (const input of inputSchema) {
     const present = Object.prototype.hasOwnProperty.call(inputs, input.name)
     if (!present) {
-      if (input.required) {
-        return `Required input "${input.name}" is missing.`
-      }
       continue
     }
     const value = inputs[input.name]
-    if (value === null && !input.required) {
+    if (value === null) {
       continue
     }
     let valid: boolean

@@ -4,6 +4,12 @@ import {
   validateFunctionInputSchema,
 } from "./functionInputs"
 
+interface InheritedPropertyTestCase {
+  scenario: string
+  inputs: Record<string, JSONValue>
+  expectedError: string | undefined
+}
+
 const cases: {
   type: FunctionInputType
   value: JSONValue
@@ -18,25 +24,19 @@ const cases: {
 
 describe("Function input definitions", () => {
   it.each(cases)(
-    "validates required and optional $type inputs without coercion",
+    "validates supplied $type inputs without coercion and allows omitted or null values",
     ({ type, value, invalid }) => {
-      for (const required of [true, false]) {
-        const inputSchema = [{ name: "value", type, required }]
-        expect(
-          getFunctionInputError({ inputSchema, inputs: { value } })
-        ).toBeUndefined()
-        expect(
-          getFunctionInputError({ inputSchema, inputs: { value: invalid } })
-        ).toBe('Input "value" must be of type ' + type + ".")
-        expect(
-          getFunctionInputError({ inputSchema, inputs: { value: null } })
-        ).toBe(
-          required ? 'Input "value" must be of type ' + type + "." : undefined
-        )
-        expect(getFunctionInputError({ inputSchema, inputs: {} })).toBe(
-          required ? 'Required input "value" is missing.' : undefined
-        )
-      }
+      const inputSchema = [{ name: "value", type }]
+      expect(
+        getFunctionInputError({ inputSchema, inputs: { value } })
+      ).toBeUndefined()
+      expect(
+        getFunctionInputError({ inputSchema, inputs: { value: invalid } })
+      ).toBe(`Input "value" must be of type ${type}.`)
+      expect(
+        getFunctionInputError({ inputSchema, inputs: { value: null } })
+      ).toBeUndefined()
+      expect(getFunctionInputError({ inputSchema, inputs: {} })).toBeUndefined()
     }
   )
 
@@ -49,14 +49,13 @@ describe("Function input definitions", () => {
   it("rejects duplicate and invalid identifiers and bounds descriptions", () => {
     expect(
       validateFunctionInputSchema([
-        { name: "valid", type: "number", required: true },
-        { name: "valid", type: "string", required: false },
-        { name: "bad name", type: "array", required: false },
-        { name: "newline\n", type: "string", required: false },
+        { name: "valid", type: "number" },
+        { name: "valid", type: "string" },
+        { name: "bad name", type: "array" },
+        { name: "newline\n", type: "string" },
         {
           name: "long",
           type: "string",
-          required: false,
           description: "x".repeat(1025),
         },
       ])
@@ -68,12 +67,27 @@ describe("Function input definitions", () => {
     ])
   })
 
-  it("does not treat inherited properties as supplied inputs", () => {
-    expect(
-      getFunctionInputError({
-        inputSchema: [{ name: "toString", type: "string", required: true }],
-        inputs: {},
-      })
-    ).toBe('Required input "toString" is missing.')
-  })
+  it.each<InheritedPropertyTestCase>([
+    { scenario: "an omitted", inputs: {}, expectedError: undefined },
+    {
+      scenario: "a supplied string",
+      inputs: { toString: "value" },
+      expectedError: undefined,
+    },
+    {
+      scenario: "a supplied number",
+      inputs: { toString: 123 },
+      expectedError: 'Input "toString" must be of type string.',
+    },
+  ])(
+    "validates $scenario input named after an inherited property",
+    ({ inputs, expectedError }) => {
+      expect(
+        getFunctionInputError({
+          inputSchema: [{ name: "toString", type: "string" }],
+          inputs,
+        })
+      ).toBe(expectedError)
+    }
+  )
 })

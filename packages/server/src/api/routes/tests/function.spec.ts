@@ -91,7 +91,7 @@ export default async function (): Promise<FunctionResult> {
   it("persists typed inputs and invalidates builds when their schema changes", async () => {
     await withFunctionsEnabled(async () => {
       const source = `import { inputs } from "@budibase/functions"
-export default async function () { return { output: { text: inputs.value.toUpperCase() } } }`
+export default async function () { return { output: { text: inputs.value?.toUpperCase() } } }`
       const { function: created } = await config.api.function.create({
         name: "Typed inputs",
         source,
@@ -100,7 +100,6 @@ export default async function () { return { output: { text: inputs.value.toUpper
           {
             name: "value",
             type: "string",
-            required: true,
             description: "Text",
           },
         ],
@@ -118,7 +117,6 @@ export default async function () { return { output: { text: inputs.value.toUpper
             {
               name: "value",
               type: "number",
-              required: true,
               description: "Count",
             },
           ],
@@ -129,7 +127,7 @@ export default async function () { return { output: { text: inputs.value.toUpper
       expect(updated.readiness).toBe("build_required")
       expect(failed.readiness).toBe("build_failed")
       expect(failed.inputSchema).toEqual([
-        { name: "value", type: "number", required: true, description: "Count" },
+        { name: "value", type: "number", description: "Count" },
       ])
       expect(failed.lastBuild?.diagnostics).toEqual(
         expect.arrayContaining([
@@ -141,13 +139,13 @@ export default async function () { return { output: { text: inputs.value.toUpper
     })
   })
 
-  it("requires rebuilding after requiredness or description edits", async () => {
+  it("requires rebuilding after description edits", async () => {
     await withFunctionsEnabled(async () => {
       const { function: created } = await config.api.function.create({
         name: "Input metadata",
         source: validSource,
         capabilities: [],
-        inputSchema: [{ name: "value", type: "string", required: true }],
+        inputSchema: [{ name: "value", type: "string" }],
       })
       await config.api.function.build(created._id, { _rev: created._rev! })
       const { function: built } = await config.api.function.find(created._id)
@@ -162,7 +160,6 @@ export default async function () { return { output: { text: inputs.value.toUpper
             {
               name: "value",
               type: "string",
-              required: false,
               description: "Optional text",
             },
           ],
@@ -179,7 +176,7 @@ export default async function () { return { output: { text: inputs.value.toUpper
           name: "Invalid inputs",
           source: validSource,
           capabilities: [],
-          inputSchema: [{ name: "not a name", type: "string", required: true }],
+          inputSchema: [{ name: "not a name", type: "string" }],
         },
         { status: 400 }
       )
@@ -189,8 +186,8 @@ export default async function () { return { output: { text: inputs.value.toUpper
           source: validSource,
           capabilities: [],
           inputSchema: [
-            { name: "value", type: "string", required: true },
-            { name: "value", type: "number", required: false },
+            { name: "value", type: "string" },
+            { name: "value", type: "number" },
           ],
         },
         { status: 400 }
@@ -1188,7 +1185,7 @@ export default async function () { return { output: { text: inputs.value.toUpper
       const { function: created } = await config.api.function.create({
         name: "Published lookup",
         source: validSource,
-        inputSchema: [{ name: "customerId", type: "string", required: true }],
+        inputSchema: [{ name: "customerId", type: "string" }],
         capabilities: [
           {
             queryId: query._id!,
@@ -1258,7 +1255,7 @@ export default async function () { return { output: { text: inputs.value.toUpper
         _rev: rebuilt._rev!,
         name: rebuilt.name,
         source: `${rebuilt.source}\n// development edit`,
-        inputSchema: [{ name: "customerId", type: "number", required: false }],
+        inputSchema: [{ name: "customerId", type: "number" }],
         capabilities: toCapabilityInputs(rebuilt),
       })
 
@@ -1268,7 +1265,7 @@ export default async function () { return { output: { text: inputs.value.toUpper
       )
       expect(unchangedPublished?.source).toBe(rebuilt.source)
       expect(unchangedPublished?.inputSchema).toEqual([
-        { name: "customerId", type: "string", required: true },
+        { name: "customerId", type: "string" },
       ])
 
       const status = await config.api.deploy.publishStatus()

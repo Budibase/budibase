@@ -24,6 +24,6 @@ export const getFunctionInputCompletions = (
   inputSchema.map(input => ({
     label: input.name,
     type: "property",
-    detail: `${input.type}${input.required ? "" : " | null (optional)"}`,
+    detail: `${input.type} | null`,
     info: input.description,
   }))
