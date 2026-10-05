@@ -13,15 +13,15 @@
   $gotoStore
   $: goto = $gotoStore
 
-  export let app
+  export let workspace
   export let lockedAction
 
   let workspaceContextMenuModals
 
-  $: contextMenuOpen = `${app.appId}-index` === $contextMenuStore.id
-  $: editing = app.sessions?.length
-  $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
-  $: unclickable = !isBuilder && !app.deployed
+  $: contextMenuOpen = `${workspace.appId}-index` === $contextMenuStore.id
+  $: editing = workspace.sessions?.length
+  $: isBuilder = sdk.users.isBuilder($auth.user, workspace?.devId)
+  $: unclickable = !isBuilder && !workspace.deployed
 
   const handleDefaultClick = () => {
     if (!isBuilder) {
@@ -34,16 +34,16 @@
   }
 
   const goToBuilder = () => {
-    goto && goto(`../../workspace/${app.devId}/home`)
+    goto && goto(`../../workspace/${workspace.devId}/home`)
   }
 
   const goToOverview = () => {
-    goto && goto(`../../workspace/${app.devId}/settings`)
+    goto && goto(`../../workspace/${workspace.devId}/settings`)
   }
 
   const goToApp = () => {
-    if (app.deployed && app.url) {
-      window.open(`/app${app.url}${app.defaultWorkspaceAppUrl}`, "_blank")
+    if (workspace.deployed && workspace.url) {
+      window.open(`/app${workspace.url}${workspace.defaultWorkspaceAppUrl}`, "_blank")
     }
   }
 
@@ -52,14 +52,14 @@
     e.stopPropagation()
 
     const items = getWorkspaceContextMenuItems({
-      app,
+      app: workspace,
       onDuplicate: workspaceContextMenuModals?.showDuplicateModal,
       onExportDev: workspaceContextMenuModals?.showExportDevModal,
       onExportProd: workspaceContextMenuModals?.showExportProdModal,
       onDelete: workspaceContextMenuModals?.showDeleteModal,
     })
 
-    contextMenuStore.open(`${app.appId}-index`, items, {
+    contextMenuStore.open(`${workspace.appId}-index`, items, {
       x: e.clientX,
       y: e.clientY,
     })
@@ -72,7 +72,7 @@
   class:contextMenuOpen
   class="app-row"
   class:unclickable
-  class:favourite={app.favourite}
+  class:favourite={workspace.favourite}
   on:click={lockedAction || handleDefaultClick}
   on:contextmenu={openContextMenu}
 >
@@ -80,13 +80,13 @@
     <div class="app-icon">
       <Icon
         size="L"
-        name={app.icon?.name || "squares-four"}
-        color={app.icon?.color || "var(--spectrum-global-color-gray-700)"}
+        name={workspace.icon?.name || "squares-four"}
+        color={workspace.icon?.color || "var(--spectrum-global-color-gray-700)"}
       />
     </div>
     <div class="name">
       <Body size="M" weight="500">
-        {app.name}
+        {workspace.name}
       </Body>
     </div>
   </div>
@@ -94,19 +94,19 @@
   <div class="updated">
     {#if editing && isBuilder}
       Currently editing
-      <UserAvatars users={app.sessions} />
-    {:else if app.updatedAt}
+      <UserAvatars users={workspace.sessions} />
+    {:else if workspace.updatedAt}
       {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
-        time: new Date().getTime() - new Date(app.updatedAt).getTime(),
+        time: new Date().getTime() - new Date(workspace.updatedAt).getTime(),
       })}
     {:else}
       Never updated
     {/if}
   </div>
 
-  <div class="title app-status" class:deployed={app.deployed}>
-    <Icon size="L" name={app.deployed ? "globe-check" : "globe-slash"} />
-    <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
+  <div class="title app-status" class:deployed={workspace.deployed}>
+    <Icon size="L" name={workspace.deployed ? "globe-check" : "globe-slash"} />
+    <Body size="S">{workspace.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
   <div class="actions-wrap">
@@ -131,7 +131,10 @@
       {/if}
     </div>
   </div>
-  <WorkspaceContextMenuModals {app} bind:this={workspaceContextMenuModals} />
+  <WorkspaceContextMenuModals
+    app={workspace}
+    bind:this={workspaceContextMenuModals}
+  />
 </div>
 
 <style>
