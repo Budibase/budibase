@@ -1,5 +1,13 @@
-import { EmailTemplatePurpose, SendEmailRequest } from "@budibase/types"
+import { objectStore, tenancy } from "@budibase/backend-core"
+import {
+  EmailTemplatePurpose,
+  Feature,
+  SendEmailRequest,
+  Template,
+} from "@budibase/types"
+import * as cheerio from "cheerio"
 import { TestConfiguration } from "../../../../tests"
+import mocks from "../../../../tests/mocks"
 import {
   captureEmail,
   deleteAllEmail,
@@ -8,13 +16,12 @@ import {
   startMailserver,
   stopMailserver,
 } from "../../../../tests/mocks/email"
-import { objectStore } from "@budibase/backend-core"
-import * as cheerio from "cheerio"
 
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
   let mailserver: Mailserver
   let smtpPort: number
+  let savedTemplate: Template | undefined
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -27,8 +34,21 @@ describe("/api/global/email", () => {
     await config.afterAll()
   })
 
-  beforeEach(async () => {
-    await deleteAllEmail(mailserver)
+  beforeEach(() => {
+    deleteAllEmail(mailserver)
+  })
+
+  afterEach(async () => {
+    mocks.licenses.useUnlimited()
+    const templateToRemove = savedTemplate
+    if (templateToRemove) {
+      await config.doInTenant(async () => {
+        await tenancy
+          .getGlobalDB()
+          .remove(templateToRemove._id!, templateToRemove._rev!)
+      })
+      savedTemplate = undefined
+    }
   })
 
   interface TestCase {
@@ -86,6 +106,73 @@ describe("/api/global/email", () => {
 
       expect(email.html).toContain(expectedContents)
       expect(email.html).not.toContain("Invalid binding")
+    }
+  )
+
+  it.each([
+    {
+      templatePurpose: EmailTemplatePurpose.WELCOME,
+      emailPurpose: EmailTemplatePurpose.WELCOME,
+      customContents: "<div>Licensed custom welcome template</div>",
+      customMarker: "Licensed custom welcome template",
+      defaultMarker:
+        "Thanks for getting started with Budibase's Budibase platform.",
+    },
+    {
+      templatePurpose: EmailTemplatePurpose.INVITATION,
+      emailPurpose: EmailTemplatePurpose.INVITATION,
+      customContents: "<div>Licensed custom invitation template</div>",
+      customMarker: "Licensed custom invitation template",
+      defaultMarker:
+        "Use the button below to set up your account and get started:",
+    },
+    {
+      templatePurpose: EmailTemplatePurpose.BASE,
+      emailPurpose: EmailTemplatePurpose.WELCOME,
+      customContents:
+        "<html><body><div>Licensed custom base template</div>{{ body }}</body></html>",
+      customMarker: "Licensed custom base template",
+      defaultMarker:
+        "Thanks for getting started with Budibase's Budibase platform.",
+    },
+  ])(
+    "uses the default $templatePurpose template for $emailPurpose emails when email customisation is not licensed",
+    async ({
+      templatePurpose,
+      emailPurpose,
+      customContents,
+      customMarker,
+      defaultMarker,
+    }) => {
+      mocks.licenses.useUnlimited({ features: [Feature.CUSTOMISE_EMAILS] })
+      const templateResponse = await config.api.templates.saveTemplate({
+        contents: customContents,
+        purpose: templatePurpose,
+        type: "email",
+      })
+      savedTemplate = templateResponse.body as Template
+
+      const customisedEmail = await captureEmail(mailserver, async () => {
+        await config.api.emails.sendEmail({
+          email: "to@example.com",
+          subject: "Test",
+          userId: config.user!._id,
+          purpose: emailPurpose,
+        })
+      })
+      expect(customisedEmail.html).toContain(customMarker)
+
+      mocks.licenses.useCloudFree()
+      const defaultEmail = await captureEmail(mailserver, async () => {
+        await config.api.emails.sendEmail({
+          email: "to@example.com",
+          subject: "Test",
+          userId: config.user!._id,
+          purpose: emailPurpose,
+        })
+      })
+      expect(defaultEmail.html).toContain(defaultMarker)
+      expect(defaultEmail.html).not.toContain(customMarker)
     }
   )
 

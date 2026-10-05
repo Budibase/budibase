@@ -173,6 +173,7 @@ export async function withDefinitionRebuildLock<T>(
       type: LockType.AUTO_EXTEND,
       name: LockName.SQS_SYNC_DEFINITIONS,
       resource: workspaceId,
+      ttl: 60_000,
     },
     fn
   )

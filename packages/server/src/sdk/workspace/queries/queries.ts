@@ -21,7 +21,14 @@ const DEFAULT_ENRICH_CONTEXT_OPTS: Required<EnrichContextOpts> = {
   escapeNewlines: true,
 }
 
-const JSON_TEMPLATE_FIELDS = new Set(["json", "customData", "requestBody"])
+const JSON_TEMPLATE_FIELDS = new Set([
+  "json",
+  "customData",
+  "requestBody",
+  "delete",
+  "row",
+  "rows",
+])
 type EnrichableRecord = Record<string, JSONValue | undefined>
 
 const processTemplateString = (

@@ -127,7 +127,9 @@ export async function doWithLock<T>(
     const name = getLockName(opts)
 
     const ttl =
-      opts.type === LockType.AUTO_EXTEND ? AUTO_EXTEND_POLLING_MS : opts.ttl
+      opts.type === LockType.AUTO_EXTEND
+        ? (opts.ttl ?? AUTO_EXTEND_POLLING_MS)
+        : opts.ttl
 
     // create the lock
     lock = await redlock.lock(name, ttl)
@@ -140,14 +142,21 @@ export async function doWithLock<T>(
             return
           }
           inflightExtend = (async () => {
-            lock = await lock!.extend(
-              ttl,
-              () => opts.onExtend && opts.onExtend()
-            )
+            try {
+              lock = await lock!.extend(
+                ttl,
+                () => opts.onExtend && opts.onExtend()
+              )
+            } catch {
+              // swallow - a transient extend failure shouldn't stop future
+              // extend attempts, the final unlock will surface a real loss of the lock
+            }
           })()
           await inflightExtend
           inflightExtend = undefined
-          extendInIntervals()
+          if (!stopped) {
+            extendInIntervals()
+          }
         }, ttl / 2)
       }
 

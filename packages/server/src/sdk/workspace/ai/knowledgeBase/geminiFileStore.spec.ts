@@ -89,6 +89,36 @@ describe("geminiFileStore", () => {
     })
   })
 
+  it.each([
+    {
+      status: 403,
+      message:
+        "Gemini file store is inaccessible (403 Forbidden). Use 'Reset store' to recreate it.",
+    },
+    {
+      status: 404,
+      message:
+        "Gemini file store was not found (404). Use 'Reset store' to recreate it.",
+    },
+  ])(
+    "offers store reset for a direct HTTP $status ingestion failure",
+    async ({ status, message }) => {
+      await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
+        mockFetch.mockResolvedValue(
+          response({ ok: false, status, text: "Upstream request failed" })
+        )
+
+        await expect(
+          ingestGeminiFile({
+            vectorStoreId: "vector-store-1",
+            filename: "notes.txt",
+            buffer: Buffer.from("hello"),
+          })
+        ).rejects.toMatchObject({ status, message })
+      })
+    }
+  )
+
   it("throws when ingest succeeds without returning a file_id", async () => {
     await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
       mockFetch.mockResolvedValue(response({ ok: true, status: 200, json: {} }))

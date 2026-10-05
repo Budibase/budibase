@@ -1,5 +1,11 @@
 import type { Job } from "bull"
-import { context, objectStore, queue, utils } from "@budibase/backend-core"
+import {
+  context,
+  HTTPError,
+  objectStore,
+  queue,
+  utils,
+} from "@budibase/backend-core"
 import {
   KnowledgeBase,
   KnowledgeBaseFile,
@@ -140,7 +146,7 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
             durationMs: Date.now() - startedAtMs,
           })
         } catch (error: any) {
-          await handleProcessingError(knowledgeBaseFile, job, error)
+          await handleProcessingError({ file: knowledgeBaseFile, job, error })
           console.error("RAG ingestion queue job failed", {
             workspaceId,
             knowledgeBaseId,
@@ -194,31 +200,42 @@ const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {
   return Buffer.concat(chunks)
 }
 
-const handleProcessingError = async (
-  file: KnowledgeBaseFile,
-  job: Job<RagIngestionJob>,
-  error: any
-) => {
+const handleProcessingError = async ({
+  file,
+  job,
+  error,
+}: {
+  file: KnowledgeBaseFile
+  job: Job<RagIngestionJob>
+  error: unknown
+}) => {
   const attempts = job.opts.attempts || 1
   const isFinalAttempt = job.attemptsMade + 1 >= attempts
+  const isStoreAccessError =
+    error instanceof HTTPError && (error.status === 403 || error.status === 404)
+  const errorMessage =
+    error instanceof Error ? error.message : "Failed to process uploaded file"
 
-  if (!isFinalAttempt) {
+  if (!isFinalAttempt && !isStoreAccessError) {
     console.log("RAG ingestion job attempt failed, will retry", {
       fileId: file._id,
       attemptsMade: job.attemptsMade,
       attempts,
-      errorMessage: error?.message,
+      errorMessage,
     })
     return
   }
 
   file.status = KnowledgeBaseFileStatus.FAILED
-  file.errorMessage = error?.message || "Failed to process uploaded file"
-  console.error("RAG ingestion job exhausted retries, marking file failed", {
+  file.errorMessage = errorMessage
+  console.error("RAG ingestion job cannot retry, marking file failed", {
     fileId: file._id,
     attemptsMade: job.attemptsMade,
     attempts,
     errorMessage: file.errorMessage,
   })
   await knowledgeBase.updateKnowledgeBaseFile(file)
+  if (isStoreAccessError) {
+    await job.discard()
+  }
 }

@@ -21,9 +21,6 @@ export interface SaveGlobalTemplateResponse extends Template {}
 
 export type FetchGlobalTemplateResponse = Template[]
 export type FetchGlobalTemplateByTypeResponse = Template[]
-export type FetchGlobalTemplateByOwnerIDResponse = Template[]
-
-export interface FindGlobalTemplateResponse extends Template {}
 
 export interface DeleteGlobalTemplateResponse {
   message: string
