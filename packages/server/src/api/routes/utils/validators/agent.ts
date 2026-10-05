@@ -74,12 +74,12 @@ const APPROVAL_POLICY_SCHEMA = Joi.object({
     .optional(),
   approvers: Joi.array().items(Joi.string()).optional(),
   expiry: Joi.object({
-    duration: Joi.number().integer().positive().optional(),
+    durationSeconds: Joi.number().integer().positive().optional(),
     outcome: Joi.string()
       .valid(...Object.values(EscalationAction))
       .optional(),
   })
-    .with("outcome", "duration")
+    .with("outcome", "durationSeconds")
     .optional(),
   notifications: Joi.object({
     recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),

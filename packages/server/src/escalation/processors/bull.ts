@@ -80,7 +80,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       appId: input.appId,
       tenantId: input.tenantId,
       contextCompressed,
-      ...(input.duration !== undefined && { duration: input.duration }),
+      ...(input.durationMs !== undefined && { durationMs: input.durationMs }),
       resolution: "pending",
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,

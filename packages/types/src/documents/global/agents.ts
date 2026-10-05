@@ -146,8 +146,8 @@ export interface AgentEscalationConfig {
 }
 
 export interface ApprovalPolicyExpiry {
-  // Seconds. Absent means the request never expires.
-  duration?: number
+  // Absent means the request never expires.
+  durationSeconds?: number
   outcome?: EscalationAction
 }
 
