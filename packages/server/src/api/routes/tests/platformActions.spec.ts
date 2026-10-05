@@ -94,22 +94,31 @@ describe("/api/actions", () => {
       "/api/actions/sessions/automation_run/session-1/events?env=prod",
     ])("rejects a missing or empty workspace for %s", async path => {
       const admin = await config.createUser({ admin: { global: true } })
-      await config.withUser(admin, async () => {
-        for (const workspaceHeader of [undefined, ""]) {
-          const req = request(getServer())
-            .get(path)
-            .set(config.defaultHeaders())
-            .unset("x-budibase-app-id")
-          if (workspaceHeader !== undefined) {
-            req.set("x-budibase-app-id", workspaceHeader)
-          }
-          const response = await req.expect(400)
-          expect(response.body).toMatchObject({
-            message: "Workspace ID is required",
-            status: 400,
-          })
-        }
+      const builder = await config.createUser({
+        admin: { global: false },
+        builder: {
+          global: false,
+          apps: [config.getProdWorkspaceId()],
+        },
       })
+      for (const user of [admin, builder]) {
+        await config.withUser(user, async () => {
+          for (const workspaceHeader of [undefined, ""]) {
+            const req = request(getServer())
+              .get(path)
+              .set(config.defaultHeaders())
+              .unset("x-budibase-app-id")
+            if (workspaceHeader !== undefined) {
+              req.set("x-budibase-app-id", workspaceHeader)
+            }
+            const response = await req.expect(400)
+            expect(response.body).toMatchObject({
+              message: "Workspace ID is required",
+              status: 400,
+            })
+          }
+        })
+      }
     })
 
     it("rejects users who are not builders of the workspace", async () => {
