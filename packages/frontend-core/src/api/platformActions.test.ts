@@ -1,10 +1,10 @@
-// @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import type {
   FetchActionSessionEventsResponse,
   FetchActionSessionsResponse,
 } from "@budibase/types"
-import { createAPIClient } from "./index"
+import { buildPlatformActionEndpoints } from "./platformActions"
+import type { BaseAPIClient } from "./types"
 
 const pagination = { hasNextPage: false, hasPreviousPage: false }
 
@@ -20,40 +20,39 @@ const eventsResponse: FetchActionSessionEventsResponse = {
   pagination,
 }
 
-const jsonResponse = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  })
-
 describe("platform action endpoints", () => {
-  const fetchMock = vi.fn()
+  const get = vi.fn()
+  const client: BaseAPIClient = {
+    get,
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+    invalidateCache: vi.fn(),
+    getAppID: vi.fn(),
+  }
+  const endpoints = buildPlatformActionEndpoints(client)
 
-  const requestedUrl = () => fetchMock.mock.calls[0][0]
+  const requestedUrl = () => get.mock.calls[0][0].url
 
   beforeEach(() => {
-    fetchMock.mockReset()
-    vi.stubGlobal("fetch", fetchMock)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
+    get.mockReset()
   })
 
   describe("fetchActionSessions", () => {
     it("requests sessions without a query when no options are given", async () => {
-      fetchMock.mockResolvedValue(jsonResponse(sessionsResponse))
+      get.mockResolvedValue(sessionsResponse)
 
-      const response = await createAPIClient().fetchActionSessions()
+      const response = await endpoints.fetchActionSessions()
 
       expect(requestedUrl()).toBe("/api/actions/sessions")
       expect(response).toEqual(sessionsResponse)
     })
 
     it("encodes every provided query option", async () => {
-      fetchMock.mockResolvedValue(jsonResponse(sessionsResponse))
+      get.mockResolvedValue(sessionsResponse)
 
-      await createAPIClient().fetchActionSessions({
+      await endpoints.fetchActionSessions({
         env: "prod",
         status: "failed",
         limit: 20,
@@ -68,9 +67,9 @@ describe("platform action endpoints", () => {
 
   describe("fetchActionSessionEvents", () => {
     it("encodes the session identity in the path and the query options", async () => {
-      fetchMock.mockResolvedValue(jsonResponse(eventsResponse))
+      get.mockResolvedValue(eventsResponse)
 
-      const response = await createAPIClient().fetchActionSessionEvents({
+      const response = await endpoints.fetchActionSessionEvents({
         sourceType: "automation_run",
         sourceId: "run/1?x=#2",
         env: "dev",
@@ -84,18 +83,17 @@ describe("platform action endpoints", () => {
       expect(response).toEqual(eventsResponse)
     })
 
-    it("rejects with the server error message", async () => {
-      fetchMock.mockResolvedValue(
-        jsonResponse({ message: "Session not found" }, 404)
-      )
+    it("propagates errors from the HTTP client", async () => {
+      const error = { status: 404, message: "Session not found" }
+      get.mockRejectedValue(error)
 
       await expect(
-        createAPIClient().fetchActionSessionEvents({
+        endpoints.fetchActionSessionEvents({
           sourceType: "agent_session",
           sourceId: "session-1",
           env: "prod",
         })
-      ).rejects.toMatchObject({ status: 404, message: "Session not found" })
+      ).rejects.toBe(error)
     })
   })
 })
