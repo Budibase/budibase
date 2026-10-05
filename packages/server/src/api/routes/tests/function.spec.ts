@@ -124,6 +124,10 @@ export default async function () { return { output: { text: inputs.value?.toUppe
       )
       await config.api.function.build(updated._id, { _rev: updated._rev! })
       const { function: failed } = await config.api.function.find(updated._id)
+      const { functions } = await config.api.function.fetch()
+      expect(functions.find(fn => fn._id === failed._id)?.inputSchema).toEqual([
+        { name: "value", type: "number", description: "Count" },
+      ])
       expect(updated.readiness).toBe("build_required")
       expect(failed.readiness).toBe("build_failed")
       expect(failed.inputSchema).toEqual([

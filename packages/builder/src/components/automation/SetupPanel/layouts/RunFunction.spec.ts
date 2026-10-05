@@ -4,6 +4,7 @@ import {
   AutomationStepType,
   type AutomationStep,
   type FunctionResponse,
+  type JSONValue,
 } from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import MockSlot from "@/test/mocks/MockSlot.svelte"
@@ -41,7 +42,7 @@ const mocks = vi.hoisted(() => {
     requestUpdate: vi.fn(),
     inputData: {
       functionId: undefined as string | undefined,
-      inputs: undefined,
+      inputs: undefined as Record<string, JSONValue> | undefined,
     },
   }
 })
@@ -102,6 +103,7 @@ describe("RunFunction", () => {
     vi.clearAllMocks()
     document.body.className = "spectrum"
     mocks.inputData.functionId = undefined
+    mocks.inputData.inputs = undefined
     mocks.functionStore.set({
       functions: [],
       loading: false,
@@ -109,8 +111,9 @@ describe("RunFunction", () => {
     })
   })
 
-  it("loads Functions and saves the selected Function ID", async () => {
+  it("loads Functions and clears inputs when selecting another Function", async () => {
     const readyFunction = makeFunction()
+    mocks.inputData.inputs = { previousInput: "previous value" }
     mocks.functionStore.set({
       functions: [readyFunction],
       loading: false,
