@@ -611,6 +611,41 @@ describe("configs", () => {
       expect(res.body.config).not.toHaveProperty("liteLLM")
       expect(JSON.stringify(res.body)).not.toContain("secret-proof")
     })
+
+    it("preserves hidden legacy LiteLLM credentials when settings are saved", async () => {
+      const liteLLM = {
+        keyId: "key-id-proof",
+        secretKey: "secret-proof",
+      }
+      await saveConfig(settings({ liteLLM }))
+
+      const res = await config.request
+        .get("/api/global/configs/public")
+        .set(config.tenantIdHeaders())
+        .expect(200)
+      const {
+        oidc,
+        google,
+        googleDatasourceConfigured,
+        oidcCallbackUrl,
+        googleCallbackUrl,
+        ...publicSettings
+      } = res.body.config
+
+      await config.api.configs.saveConfig({
+        type: ConfigType.SETTINGS,
+        config: {
+          ...publicSettings,
+          company: "Updated company",
+        },
+      })
+
+      await config.doInTenant(async () => {
+        const saved = await configs.getSettingsConfigDoc()
+        expect(saved.config.company).toEqual("Updated company")
+        expect(saved.config.liteLLM).toEqual(liteLLM)
+      })
+    })
   })
 
   describe("POST /api/global/configs/upload/:type/:name", () => {
