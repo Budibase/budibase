@@ -57,19 +57,32 @@
     input: FunctionInputDefinition
     text: string | number | null | undefined
   }) => {
-    const result = parseFunctionInputValue({ input, text: String(text ?? "") })
-    errors[input.name] = result.error
+    if (
+      input.type === "string" &&
+      text === "" &&
+      !Object.hasOwn(value ?? {}, input.name)
+    ) {
+      return
+    }
+    const result = parseFunctionInputValue({
+      input,
+      text: text == null ? undefined : String(text),
+    })
+    errors = { ...errors, [input.name]: result.error }
     if (result.error) {
       return
     }
     const inputs = { ...value }
     if (result.value === undefined) {
       delete inputs[input.name]
+      onchange(inputs)
     } else {
-      inputs[input.name] = result.value
+      onchange({ ...inputs, [input.name]: result.value })
     }
-    onchange(inputs)
   }
+
+  const getInputValue = (name: string): JSONValue | undefined =>
+    Object.hasOwn(value ?? {}, name) ? value?.[name] : undefined
 
   const displayValue = (inputValue: JSONValue | undefined) => {
     if (inputValue === undefined) {
@@ -87,7 +100,7 @@
       {#if input.type === "string"}
         <DrawerBindableInput
           title={input.name}
-          value={displayValue(value?.[input.name])}
+          value={displayValue(getInputValue(input.name))}
           inputType="text"
           {bindings}
           {context}
@@ -101,7 +114,7 @@
         <DrawerBindableSlot
           title={input.name}
           type="number"
-          value={displayValue(value?.[input.name])}
+          value={displayValue(getInputValue(input.name))}
           {bindings}
           {context}
           panel={AutomationBindingPanel}
@@ -112,7 +125,7 @@
         >
           <Input
             type="number"
-            value={displayValue(value?.[input.name])}
+            value={displayValue(getInputValue(input.name))}
             updateOnChange={false}
             on:change={(event: CustomEvent<string | number | null>) =>
               save({ input, text: event.detail })}
@@ -122,20 +135,20 @@
         <DrawerBindableSlot
           title={input.name}
           type={input.type === "boolean" ? "boolean" : "json"}
-          value={displayValue(value?.[input.name])}
+          value={displayValue(getInputValue(input.name))}
           {bindings}
           {context}
           panel={AutomationBindingPanel}
           allowJS
           updateOnChange={false}
           showComponent={input.type !== "boolean" &&
-            !isJSBinding(value?.[input.name])}
+            !isJSBinding(getInputValue(input.name))}
           on:change={(event: CustomEvent<string>) =>
             save({ input, text: event.detail })}
         >
           {#if input.type === "boolean"}
             <Select
-              value={displayValue(value?.[input.name])}
+              value={displayValue(getInputValue(input.name))}
               options={booleanOptions}
               on:change={(event: CustomEvent<string | undefined>) =>
                 save({ input, text: event.detail })}
@@ -145,7 +158,7 @@
               <CodeEditor
                 value={runtimeToReadableBinding(
                   bindings,
-                  displayValue(value?.[input.name])
+                  displayValue(getInputValue(input.name))
                 )}
                 mode={EditorModes.JSON}
                 {completions}
@@ -163,7 +176,7 @@
           {/if}
         </DrawerBindableSlot>
       {/if}
-      {#if errors[input.name]}
+      {#if Object.hasOwn(errors, input.name) && errors[input.name]}
         <div role="alert">
           <Body size="S" color="var(--spectrum-global-color-red-700)">
             {errors[input.name]}

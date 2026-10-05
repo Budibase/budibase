@@ -60,22 +60,29 @@
     const remainingErrors = validateFunctionInputSchema(drafts)
     inputErrors = inputErrors.map((messages, index) =>
       messages.filter(message =>
-        remainingErrors.includes(`Input ${index + 1}: ${message}`)
+        remainingErrors.some(
+          error => error.index === index && error.message === message
+        )
       )
     )
-    errors = errors.filter(message => remainingErrors.includes(message))
+    errors = errors.filter(message =>
+      remainingErrors.some(
+        error => error.index === undefined && error.message === message
+      )
+    )
   }
 
   const save = async () => {
     saveError = ""
     const validationErrors = validateFunctionInputSchema(drafts)
-    inputErrors = drafts.map((_, index) => {
-      const prefix = `Input ${index + 1}: `
-      return validationErrors
-        .filter(error => error.startsWith(prefix))
-        .map(error => error.slice(prefix.length))
-    })
-    errors = validationErrors.filter(error => !/^Input \d+: /.test(error))
+    inputErrors = drafts.map((_, index) =>
+      validationErrors
+        .filter(error => error.index === index)
+        .map(error => error.message)
+    )
+    errors = validationErrors
+      .filter(error => error.index === undefined)
+      .map(error => error.message)
     if (validationErrors.length) {
       return
     }

@@ -7,7 +7,6 @@ import {
   type JSONValue,
 } from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import MockSlot from "@/test/mocks/MockSlot.svelte"
 
 const mocks = vi.hoisted(() => {
   const store = <T>(initial: T) => {
@@ -57,10 +56,6 @@ vi.mock("@/stores/builder", () => ({
 }))
 vi.mock("@/stores/builder/functions", () => ({
   functionStore: mocks.functionStore,
-}))
-
-vi.mock("../FunctionInputsEditor.svelte", () => ({
-  default: MockSlot,
 }))
 
 import RunFunction from "./RunFunction.svelte"
@@ -137,6 +132,28 @@ describe("RunFunction", () => {
       block
     )
   })
+
+  it.each([undefined, []])(
+    "shows no inputs field when the selected Function has no declared inputs: %j",
+    inputSchema => {
+      const fn = makeFunction({ inputSchema })
+      mocks.inputData.functionId = fn._id
+      mocks.inputData.inputs = { previousInput: "previous value" }
+      mocks.functionStore.set({
+        functions: [fn],
+        loading: false,
+        error: undefined,
+      })
+      render(RunFunction, { block })
+
+      expect(
+        screen.getByText("This Function has no inputs.")
+      ).toBeInTheDocument()
+      expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
+      expect(screen.queryByText("Inputs")).not.toBeInTheDocument()
+    }
+  )
 
   it.each([
     [

@@ -2,7 +2,7 @@ import browserVM from "@budibase/vm-browserify"
 import vm from "vm"
 import { create, TemplateDelegate } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
-import { postprocess, postprocessWithLogs, preprocess } from "./processors"
+import { postprocessWithLogs, preprocess } from "./processors"
 import {
   atob,
   btoa,
@@ -20,7 +20,7 @@ import { Log, ProcessOptions } from "./types"
 import { UserScriptError } from "./errors"
 import { isTest } from "./environment"
 
-export type { Log, LogType } from "./types"
+export type { ArrayHandling, Log, LogType } from "./types"
 export { setTestingBackendJS } from "./environment"
 export { helpersToRemoveForJs, getJsHelperList } from "./helpers/list"
 export { FIND_ANY_HBS_REGEX } from "./utilities"
@@ -225,9 +225,14 @@ function processStringSyncInternal(
       },
       ...context,
     })
-    return opts?.logging
-      ? postprocessWithLogs(processedString)
-      : postprocess(processedString)
+    const processed = postprocessWithLogs(processedString)
+    if (
+      opts?.arrayHandling === "stringify" &&
+      Array.isArray(processed.result)
+    ) {
+      processed.result = JSON.stringify(processed.result)
+    }
+    return opts?.logging ? processed : processed.result
   }
   try {
     if (opts && opts.onlyFound) {

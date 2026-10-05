@@ -32,11 +32,23 @@ describe("Function automation inputs", () => {
     ).toEqual({ value: text })
   })
 
-  it.each(cases)("removes cleared $type inputs", ({ type }) => {
+  it.each(cases)("omits absent $type inputs", ({ type }) => {
     expect(
-      parseFunctionInputValue({ input: { name: "value", type }, text: "" })
+      parseFunctionInputValue({
+        input: { name: "value", type },
+        text: undefined,
+      })
     ).toEqual({})
   })
+
+  it.each(["string", "number", "boolean", "object", "array"] as const)(
+    "omits blank %s inputs",
+    type => {
+      expect(
+        parseFunctionInputValue({ input: { name: "value", type }, text: "" })
+      ).toEqual({})
+    }
+  )
 
   it.each(["number", "boolean", "object", "array"] as const)(
     "rejects an invalid %s literal",

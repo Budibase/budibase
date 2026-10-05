@@ -1,3 +1,5 @@
+export type ArrayHandling = "stringify" | "preserve"
+
 export interface ProcessOptions {
   cacheTemplates?: boolean
   noEscaping?: boolean
@@ -7,7 +9,7 @@ export interface ProcessOptions {
   escapeNewlines?: boolean
   onlyFound?: boolean
   disabledHelpers?: string[]
-  serializeArrays?: boolean
+  arrayHandling?: ArrayHandling
 }
 
 export type LogType = "log" | "info" | "debug" | "warn" | "error" | "table"
