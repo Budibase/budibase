@@ -3,7 +3,7 @@
   import { agentsStore } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
   import { builderStore } from "@/stores/builder"
-  import { Pagination, Select, Table, notifications } from "@budibase/bbui"
+  import { Select, Table, notifications } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
   import type {
     AgentRequest,
@@ -20,7 +20,9 @@
   import ActivitySummaryCards, {
     type SummaryMetric,
   } from "./ActivitySummaryCards.svelte"
+  import ActivityTableFooter from "./ActivityTableFooter.svelte"
   import ActivityTablePanel from "./ActivityTablePanel.svelte"
+  import { getPaginationLabel } from "./pagination"
 
   dayjs.extend(relativeTime)
 
@@ -181,16 +183,14 @@
     return userNames[selectedRequest.userId] || "Unknown user"
   })
 
-  let paginationLabel = $derived.by(() => {
-    const start = (currentPage - 1) * PAGE_SIZE + 1
-    const end = start + paginatedRows.length - 1
-
-    if (!paginatedRows.length) {
-      return "Showing 0 items"
-    }
-
-    return `Showing ${start}–${end} of ${filteredTotal} items`
-  })
+  let paginationLabel = $derived(
+    getPaginationLabel({
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+      rowCount: paginatedRows.length,
+      total: filteredTotal,
+    })
+  )
 
   const loadRequests = (() => {
     let requestSequence = 0
@@ -432,19 +432,14 @@
     />
 
     {#if paginatedRows.length > 0}
-      <div class="table-footer">
-        <div class="footer-copy">{paginationLabel}</div>
-
-        {#if currentPage > 1 || hasNextPage}
-          <Pagination
-            page={currentPage}
-            goToPrevPage={() => changePage(currentPage - 1)}
-            goToNextPage={() => changePage(currentPage + 1)}
-            hasPrevPage={currentPage > 1}
-            {hasNextPage}
-          />
-        {/if}
-      </div>
+      <ActivityTableFooter
+        label={paginationLabel}
+        page={currentPage}
+        hasPrevPage={currentPage > 1}
+        {hasNextPage}
+        onPrevPage={() => changePage(currentPage - 1)}
+        onNextPage={() => changePage(currentPage + 1)}
+      />
     {/if}
   </ActivityTablePanel>
 
@@ -457,25 +452,3 @@
     onClose={closeRequestPanel}
   />
 </ActivityPage>
-
-<style>
-  .table-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 26px 10px 0;
-    gap: 16px;
-  }
-
-  .footer-copy {
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-700);
-  }
-
-  @media (max-width: 720px) {
-    .table-footer {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-  }
-</style>

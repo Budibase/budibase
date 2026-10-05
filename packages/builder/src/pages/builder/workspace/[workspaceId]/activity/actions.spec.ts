@@ -59,8 +59,25 @@ const renderPage = () => {
   const { container } = render(ActivityActions)
   const table = () =>
     within(container.querySelector<HTMLElement>(".spectrum-Table")!)
-  return { table }
+  const pageButton = (direction: "prev" | "next") =>
+    container.querySelector<HTMLElement>(
+      `.spectrum-Pagination-${direction}Button`
+    )
+  return { table, pageButton }
 }
+
+const pageResponse = ({
+  assetLabel,
+  pagination,
+}: {
+  assetLabel: string
+  pagination: FetchActionSessionsResponse["pagination"]
+}): FetchActionSessionsResponse => ({
+  ...response,
+  sessions: [{ ...response.sessions[0], assetLabel }],
+  summary: { ...response.summary, total: 21 },
+  pagination,
+})
 
 describe("Activity actions page", () => {
   beforeEach(() => {
@@ -134,6 +151,163 @@ describe("Activity actions page", () => {
       expect(table().queryByText("Support agent")).not.toBeInTheDocument()
     })
     expect(table().getByText("Dev agent")).toBeInTheDocument()
+  })
+
+  it("navigates between pages using the response bookmarks", async () => {
+    mocks.fetchActionSessions
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Second page",
+          pagination: {
+            hasNextPage: false,
+            hasPreviousPage: true,
+            previousBookmark: "prev-2",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page again",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1",
+          },
+        })
+      )
+
+    const { table, pageButton } = renderPage()
+
+    await waitFor(() => {
+      expect(table().getByText("First page")).toBeInTheDocument()
+    })
+    expect(screen.getByText("Showing 1–1 of 21 items")).toBeInTheDocument()
+
+    await fireEvent.click(pageButton("next")!)
+    await waitFor(() => {
+      expect(table().getByText("Second page")).toBeInTheDocument()
+    })
+    expect(screen.getByText("Showing 21–21 of 21 items")).toBeInTheDocument()
+    expect(screen.getByText("Page 2")).toBeInTheDocument()
+
+    await fireEvent.click(pageButton("prev")!)
+    await waitFor(() => {
+      expect(table().getByText("First page again")).toBeInTheDocument()
+    })
+    expect(screen.getByText("Page 1")).toBeInTheDocument()
+
+    expect(
+      mocks.fetchActionSessions.mock.calls.map(([query]) => query.bookmark)
+    ).toEqual([undefined, "next-1", "prev-2"])
+  })
+
+  it("returns to the first page when a filter changes", async () => {
+    mocks.fetchActionSessions
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Second page",
+          pagination: {
+            hasNextPage: false,
+            hasPreviousPage: true,
+            previousBookmark: "prev-2",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Failed sessions",
+          pagination: { hasNextPage: false, hasPreviousPage: false },
+        })
+      )
+
+    const { table, pageButton } = renderPage()
+
+    await waitFor(() => {
+      expect(table().getByText("First page")).toBeInTheDocument()
+    })
+    await fireEvent.click(pageButton("next")!)
+    await waitFor(() => {
+      expect(table().getByText("Second page")).toBeInTheDocument()
+    })
+
+    await fireEvent.change(screen.getByDisplayValue("All statuses"), {
+      target: { value: "failed" },
+    })
+
+    await waitFor(() => {
+      expect(table().getByText("Failed sessions")).toBeInTheDocument()
+    })
+    expect(mocks.fetchActionSessions).toHaveBeenLastCalledWith({
+      env: undefined,
+      status: "failed",
+      limit: 20,
+      bookmark: undefined,
+    })
+    expect(screen.getByText("Showing 1–1 of 7 items")).toBeInTheDocument()
+    expect(pageButton("next")).not.toBeInTheDocument()
+  })
+
+  it("retries the page that failed to load", async () => {
+    mocks.fetchActionSessions
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1",
+          },
+        })
+      )
+      .mockRejectedValueOnce(new Error("boom"))
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Second page",
+          pagination: {
+            hasNextPage: false,
+            hasPreviousPage: true,
+            previousBookmark: "prev-2",
+          },
+        })
+      )
+
+    const { table, pageButton } = renderPage()
+
+    await waitFor(() => {
+      expect(table().getByText("First page")).toBeInTheDocument()
+    })
+    await fireEvent.click(pageButton("next")!)
+    await fireEvent.click(
+      await screen.findByRole("button", { name: "Try again" })
+    )
+
+    await waitFor(() => {
+      expect(table().getByText("Second page")).toBeInTheDocument()
+    })
+    expect(
+      mocks.fetchActionSessions.mock.calls.map(([query]) => query.bookmark)
+    ).toEqual([undefined, "next-1", "next-1"])
+    expect(screen.getByText("Page 2")).toBeInTheDocument()
   })
 
   it("shows an empty state when there are no sessions", async () => {
