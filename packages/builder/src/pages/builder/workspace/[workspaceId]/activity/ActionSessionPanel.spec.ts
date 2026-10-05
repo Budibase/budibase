@@ -147,6 +147,54 @@ describe("ActionSessionPanel", () => {
     ).toEqual([undefined, "events-next"])
   })
 
+  it("keeps events visible and disables pagination while the next page loads", async () => {
+    const nextPage = deferred<FetchActionSessionEventsResponse>()
+    mocks.fetchActionSessionEvents
+      .mockResolvedValueOnce(
+        eventsResponse({
+          ids: ["event-1"],
+          total: 21,
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "events-next",
+          },
+        })
+      )
+      .mockReturnValueOnce(nextPage.promise)
+
+    const { container } = renderPanel(session)
+    await screen.findByText("Showing 1–1 of 21 items")
+    const nextButton = container.ownerDocument.querySelector<HTMLElement>(
+      ".spectrum-Pagination-nextButton"
+    )!
+    await fireEvent.click(nextButton)
+
+    expect(screen.getByRole("status")).toHaveTextContent("Loading events...")
+    expect(screen.getByText(/Step executed: Create Row/)).toBeVisible()
+    expect(nextButton).toHaveClass("is-disabled")
+    await fireEvent.click(nextButton)
+    expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
+
+    nextPage.resolve(
+      eventsResponse({
+        ids: ["event-21"],
+        total: 21,
+        pagination: {
+          hasNextPage: false,
+          hasPreviousPage: true,
+          previousBookmark: "events-prev",
+        },
+      })
+    )
+
+    expect(await screen.findByText("Showing 21–21 of 21 items")).toBeVisible()
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
+    expect(
+      container.ownerDocument.querySelector(".spectrum-Pagination-prevButton")
+    ).not.toHaveClass("is-disabled")
+  })
+
   it("discards events of a previously selected session", async () => {
     const firstSession = deferred<FetchActionSessionEventsResponse>()
     mocks.fetchActionSessionEvents

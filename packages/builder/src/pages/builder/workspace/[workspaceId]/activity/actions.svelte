@@ -139,7 +139,7 @@
   )
 
   let placeholderText = $derived(
-    statusFilter === "all"
+    statusFilter === "all" && environmentFilter === "all"
       ? "No actions tracked yet."
       : "No actions match the selected filters."
   )

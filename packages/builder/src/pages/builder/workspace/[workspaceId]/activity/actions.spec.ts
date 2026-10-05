@@ -439,6 +439,33 @@ describe("Activity actions page", () => {
     })
   })
 
+  it.each(["prod", "dev"])(
+    "explains an empty result when only the %s environment filter is applied",
+    async env => {
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockResolvedValueOnce({
+          ...response,
+          sessions: [],
+          summary: { total: 0, active: 0, waiting: 0, completed: 0, failed: 0 },
+        })
+
+      const { findInTable } = renderPage()
+      await findInTable("Support agent")
+
+      await fireEvent.change(screen.getByDisplayValue("All environments"), {
+        target: { value: env },
+      })
+
+      expect(
+        await screen.findByText("No actions match the selected filters.")
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByText("No actions tracked yet.")
+      ).not.toBeInTheDocument()
+    }
+  )
+
   it("shows unavailable counters when loading fails", async () => {
     mocks.fetchActionSessions.mockRejectedValueOnce(new Error("boom"))
 
