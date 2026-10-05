@@ -112,6 +112,22 @@ describe("Function automation input fields", () => {
     })
   })
 
+  it("clears a number binding and restores numeric entry", async () => {
+    const onchange = vi.fn()
+    const { rerender } = render(FunctionInputsEditor, {
+      inputSchema: [{ name: "count", type: "number" }],
+      value: { count: "{{ trigger.fields.count }}" },
+      onchange,
+    })
+    await fireEvent.click(screen.getByLabelText("x"))
+    await rerender({ value: {} })
+
+    expect(onchange).toHaveBeenCalledExactlyOnceWith({})
+    expect(screen.getByRole("spinbutton")).toHaveValue(null)
+    expect(screen.getByLabelText("lightning")).toBeInTheDocument()
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+  })
+
   it("removes a cleared input", async () => {
     const onchange = vi.fn()
     render(FunctionInputsEditor, {
