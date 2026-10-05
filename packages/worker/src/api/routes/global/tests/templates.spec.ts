@@ -1,9 +1,10 @@
-import { TemplateMetadata, TemplateType } from "../../../../constants"
-import { TestConfiguration } from "../../../../tests"
-import { EmailTemplatePurpose, Template } from "@budibase/types"
-import { addBaseTemplates } from "../../../../constants/templates"
 import { tenancy } from "@budibase/backend-core"
+import { EmailTemplatePurpose, Feature, Template } from "@budibase/types"
 import yaml from "yaml"
+import { TemplateMetadata, TemplateType } from "../../../../constants"
+import { addBaseTemplates } from "../../../../constants/templates"
+import { TestConfiguration } from "../../../../tests"
+import mocks from "../../../../tests/mocks"
 
 // TODO
 
@@ -12,6 +13,10 @@ describe("/api/global/template", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
+  })
+
+  beforeEach(() => {
+    mocks.licenses.useUnlimited({ features: [Feature.CUSTOMISE_EMAILS] })
   })
 
   afterAll(async () => {
@@ -79,6 +84,66 @@ describe("/api/global/template", () => {
       let res = await config.api.templates.getTemplate()
       let newTemplate = res.body.find((t: any) => (t.purpose = purpose))
       expect(newTemplate.contents).toEqual(contents)
+    })
+
+    it("rejects updates without the customise emails feature", async () => {
+      mocks.licenses.useCloudFree()
+
+      await config.api.templates.saveTemplate(
+        {
+          contents: "Test contents",
+          purpose: "base",
+          type: "email",
+        },
+        { status: 400 }
+      )
+    })
+  })
+
+  describe("DELETE /api/global/template/:id/:rev", () => {
+    it("deletes a template", async () => {
+      const contents = "Template to delete"
+      const saved = await config.api.templates.saveTemplate({
+        contents,
+        purpose: EmailTemplatePurpose.PASSWORD_RECOVERY,
+        type: "email",
+      })
+
+      await config.api.templates.deleteTemplate({
+        id: saved.body._id,
+        rev: saved.body._rev,
+      })
+
+      const result = await config.api.templates.getTemplate()
+      expect(
+        result.body.find(
+          (template: Template) =>
+            template.purpose === EmailTemplatePurpose.PASSWORD_RECOVERY
+        ).contents
+      ).not.toEqual(contents)
+    })
+
+    it("rejects deletion without the customise emails feature", async () => {
+      const contents = "Template that should not be deleted"
+      const saved = await config.api.templates.saveTemplate({
+        contents,
+        purpose: EmailTemplatePurpose.INVITATION,
+        type: "email",
+      })
+      mocks.licenses.useCloudFree()
+
+      await config.api.templates.deleteTemplate(
+        { id: saved.body._id, rev: saved.body._rev },
+        { status: 400 }
+      )
+
+      const result = await config.api.templates.getTemplate()
+      expect(
+        result.body.find(
+          (template: Template) =>
+            template.purpose === EmailTemplatePurpose.INVITATION
+        ).contents
+      ).toEqual(contents)
     })
   })
 

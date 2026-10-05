@@ -4,19 +4,13 @@ import {
   TemplateBindings,
   GLOBAL_OWNER,
 } from "../../../constants"
-import {
-  addBaseTemplates,
-  getTemplateByID,
-  getTemplates,
-} from "../../../constants/templates"
+import { addBaseTemplates, getTemplates } from "../../../constants/templates"
 import { tenancy, db as dbCore, objectStore } from "@budibase/backend-core"
 import {
   DeleteGlobalTemplateResponse,
-  FetchGlobalTemplateByOwnerIDResponse,
   FetchGlobalTemplateByTypeResponse,
   FetchGlobalTemplateDefinitionResponse,
   FetchGlobalTemplateResponse,
-  FindGlobalTemplateResponse,
   SaveGlobalTemplateRequest,
   SaveGlobalTemplateResponse,
   GlobalTemplateBinding,
@@ -81,19 +75,6 @@ export async function fetchByType(
   ctx.body = await getTemplates({
     type: ctx.params.type,
   })
-}
-
-export async function fetchByOwner(
-  ctx: UserCtx<void, FetchGlobalTemplateByOwnerIDResponse>
-) {
-  // @ts-ignore
-  ctx.body = await getTemplates({
-    ownerId: ctx.params.ownerId,
-  })
-}
-
-export async function find(ctx: UserCtx<void, FindGlobalTemplateResponse>) {
-  ctx.body = await getTemplateByID(ctx.params.id)
 }
 
 export async function destroy(

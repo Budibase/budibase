@@ -63,6 +63,10 @@ export type LockOptions = {
     }
   | {
       type: LockType.AUTO_EXTEND
+      /**
+       * The ttl to auto-expire the lock if it cannot be extended
+       */
+      ttl?: number
       onExtend?: () => void
     }
 )

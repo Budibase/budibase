@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 
 import { S3, S3ClientConfig } from "@aws-sdk/client-s3"
+import type { Delete } from "@aws-sdk/client-s3"
 import csv from "csvtojson"
 import stream from "stream"
 
@@ -278,10 +279,13 @@ class S3Integration implements IntegrationBase {
     })
   }
 
-  async delete(query: { bucket: string; delete: string }) {
+  async delete(query: { bucket: string; delete: string | Delete }) {
     return await this.client.deleteObjects({
       Bucket: query.bucket,
-      Delete: JSON.parse(query.delete),
+      Delete:
+        typeof query.delete === "string"
+          ? JSON.parse(query.delete)
+          : query.delete,
     })
   }
 }
