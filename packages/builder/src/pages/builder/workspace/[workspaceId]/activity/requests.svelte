@@ -3,7 +3,7 @@
   import { agentsStore } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
   import { builderStore } from "@/stores/builder"
-  import { Select, Table, notifications } from "@budibase/bbui"
+  import { Select, Table } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
   import type {
     AgentRequest,
@@ -14,6 +14,7 @@
   import relativeTime from "dayjs/plugin/relativeTime"
   import ActivityActionsRenderer from "./ActivityActionsRenderer.svelte"
   import ActivityFilters from "./ActivityFilters.svelte"
+  import ActivityLoadError from "./ActivityLoadError.svelte"
   import ActivityPage from "./ActivityPage.svelte"
   import ActivitySidePanel from "./ActivitySidePanel.svelte"
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
@@ -65,6 +66,8 @@
   type StatusFilter = AgentRequestStatus | "all"
 
   let loading = $state(false)
+  let loadFailed = $state(false)
+  let lastRequestedPage = 1
   let currentPage = $state(1)
   let statusFilter = $state<StatusFilter>("all")
   let selectedRequestId = $state<string | null>(null)
@@ -136,7 +139,10 @@
       { label: "Processing", value: counts.active },
       { label: "Needs input", value: counts.needs_input },
       { label: "Failed", value: counts.failed },
-    ]
+    ].map(metric => ({
+      ...metric,
+      value: loadFailed || (loading && !summary) ? null : metric.value,
+    }))
   })
 
   let paginatedRows = $derived.by<RequestRow[]>(() => {
@@ -196,6 +202,8 @@
 
     return async function loadRequests(page = currentPage) {
       const sequence = ++requestSequence
+      lastRequestedPage = page
+      loadFailed = false
 
       if (!($agentsStore.agents || []).length) {
         allRequests = []
@@ -228,9 +236,10 @@
           return
         }
         console.error("Failed to fetch agent requests", error)
-        notifications.error("Failed to load agent actions")
         allRequests = []
         summary = null
+        selectedRequestId = null
+        loadFailed = true
       } finally {
         if (sequence === requestSequence) {
           loading = false
@@ -317,6 +326,7 @@
     if (!currentAgentIds.length) {
       allRequests = []
       summary = null
+      loadFailed = false
       return
     }
 
@@ -414,33 +424,40 @@
     />
   </ActivityFilters>
 
-  <ActivityTablePanel>
-    <Table
-      quiet
-      compact
-      {loading}
-      allowClickRows
-      allowEditRows={false}
-      allowEditColumns={false}
-      allowSelectRows={false}
-      data={paginatedRows}
-      schema={tableSchema}
-      {customRenderers}
-      placeholderText="No agent actions tracked yet."
-      on:click={({ detail }) => selectRequest(detail)}
+  {#if loadFailed}
+    <ActivityLoadError
+      message="Failed to load requests."
+      onRetry={() => loadRequests(lastRequestedPage)}
     />
-
-    {#if paginatedRows.length > 0}
-      <ActivityTableFooter
-        label={paginationLabel}
-        page={currentPage}
-        hasPrevPage={currentPage > 1}
-        {hasNextPage}
-        onPrevPage={() => changePage(currentPage - 1)}
-        onNextPage={() => changePage(currentPage + 1)}
+  {:else}
+    <ActivityTablePanel>
+      <Table
+        quiet
+        compact
+        {loading}
+        allowClickRows
+        allowEditRows={false}
+        allowEditColumns={false}
+        allowSelectRows={false}
+        data={paginatedRows}
+        schema={tableSchema}
+        {customRenderers}
+        placeholderText="No agent actions tracked yet."
+        on:click={({ detail }) => selectRequest(detail)}
       />
-    {/if}
-  </ActivityTablePanel>
+
+      {#if paginatedRows.length > 0}
+        <ActivityTableFooter
+          label={paginationLabel}
+          page={currentPage}
+          hasPrevPage={currentPage > 1}
+          {hasNextPage}
+          onPrevPage={() => changePage(currentPage - 1)}
+          onNextPage={() => changePage(currentPage + 1)}
+        />
+      {/if}
+    </ActivityTablePanel>
+  {/if}
 
   <ActivitySidePanel
     open={!!selectedRequest}
