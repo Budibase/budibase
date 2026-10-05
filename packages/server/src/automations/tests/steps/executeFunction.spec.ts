@@ -6,6 +6,7 @@ import {
   type JSONValue,
   type FunctionRunResult,
 } from "@budibase/types"
+import { encodeJSBinding, processObject } from "@budibase/string-templates"
 import env, { withEnv } from "../../../environment"
 import {
   executeFunction,
@@ -102,6 +103,51 @@ describe("Run Function automation action", () => {
     { type: "object", value: { nested: true } },
     { type: "array", value: [1, null] },
   ]
+  it.each(typedInputs)(
+    "dispatches JavaScript $type bindings with their declared type",
+    async ({ type, value }) => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type }],
+        }),
+      })
+      const inputs = await processObject(
+        {
+          functionId: fn._id,
+          inputs: { value: encodeJSBinding(`return ${JSON.stringify(value)}`) },
+        },
+        {},
+        { serializeArrays: true }
+      )
+      await run(deps, inputs)
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({ inputs: { value } })
+      )
+    }
+  )
+
+  it.each(typedInputs)(
+    "dispatches bound $type inputs with their declared type",
+    async ({ type, value }) => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type }],
+        }),
+      })
+      const inputs = await processObject(
+        { functionId: fn._id, inputs: { value: "{{ value }}" } },
+        { value },
+        { serializeArrays: true }
+      )
+      await run(deps, inputs)
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({ inputs: { value } })
+      )
+    }
+  )
+
   it.each(typedInputs)(
     "dispatches valid $type inputs",
     async ({ type, value }) => {

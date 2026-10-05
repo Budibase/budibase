@@ -69,8 +69,7 @@
         {getOptionLabel}
         {getOptionValue}
         placeholder="Select a Function"
-        on:change={event =>
-          update({ functionId: event.detail, inputs: inputData?.inputs ?? {} })}
+        on:change={event => update({ functionId: event.detail, inputs: {} })}
       />
     {/if}
   </PropField>
@@ -106,14 +105,17 @@
     </div>
   {/if}
 
-  <PropField label="Inputs *" fullWidth>
-    <FunctionInputsEditor
-      value={inputData?.inputs}
-      bindings={bindings || []}
-      {context}
-      onchange={inputs => update({ inputs })}
-    />
-  </PropField>
+  {#if selectedFunction}
+    {#key selectedFunction._id}
+      <FunctionInputsEditor
+        inputSchema={selectedFunction.inputSchema ?? []}
+        value={inputData?.inputs}
+        bindings={bindings || []}
+        {context}
+        onchange={inputs => update({ inputs })}
+      />
+    {/key}
+  {/if}
 </div>
 
 <style>

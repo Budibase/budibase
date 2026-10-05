@@ -53,7 +53,10 @@ export const HELPERS = [
     HelperFunctionNames.ALL,
     (value: string, inputs: { __opts: any }) => {
       const { __opts } = inputs
-      if (isObject(value)) {
+      if (
+        isObject(value) ||
+        (__opts?.serializeArrays && Array.isArray(value))
+      ) {
         return new Handlebars.SafeString(JSON.stringify(value))
       }
       // null/undefined values produce bad results

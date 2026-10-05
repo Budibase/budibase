@@ -1,3 +1,4 @@
+import type { JSONValue } from "@budibase/types"
 import {
   processObject,
   processString,
@@ -46,6 +47,22 @@ describe("Test that the string processing works correctly", () => {
 })
 
 describe("Test that the object processing works correctly", () => {
+  it.each([
+    { items: [], expected: "[]" },
+    { items: [1, null], expected: "[1,null]" },
+    { items: ["a", "b"], expected: '["a","b"]' },
+  ])(
+    "serializes bound arrays as JSON when requested: $items",
+    async ({ items, expected }: { items: JSONValue[]; expected: string }) => {
+      const output = await processObject(
+        { value: "{{ items }}" },
+        { items },
+        { serializeArrays: true }
+      )
+      expect(output.value).toBe(expected)
+    }
+  )
+
   it("should be able to process an object with some template strings", async () => {
     const output = await processObject(
       {
