@@ -63,7 +63,8 @@ const renderPage = () => {
     container.querySelector<HTMLElement>(
       `.spectrum-Pagination-${direction}Button`
     )
-  return { table, pageButton }
+  const findInTable = (text: string) => waitFor(() => table().getByText(text))
+  return { table, pageButton, findInTable }
 }
 
 const pageResponse = ({
@@ -308,6 +309,99 @@ describe("Activity actions page", () => {
       mocks.fetchActionSessions.mock.calls.map(([query]) => query.bookmark)
     ).toEqual([undefined, "next-1", "next-1"])
     expect(screen.getByText("Page 2")).toBeInTheDocument()
+  })
+
+  describe("session panel", () => {
+    const sameSourceInBothEnvironments: FetchActionSessionsResponse = {
+      ...response,
+      sessions: [
+        { ...response.sessions[0], assetLabel: "Prod agent" },
+        {
+          ...response.sessions[0],
+          environment: "dev",
+          status: "failed",
+          actionCount: 9,
+          assetLabel: "Dev agent",
+        },
+      ],
+    }
+
+    const panel = () =>
+      within(document.querySelector<HTMLElement>(".activity-panel-container")!)
+
+    it("opens the selected session using its own environment", async () => {
+      mocks.fetchActionSessions.mockResolvedValue(sameSourceInBothEnvironments)
+
+      const { findInTable } = renderPage()
+
+      await fireEvent.click(await findInTable("Dev agent"))
+
+      expect(panel().getByText("Development")).toBeInTheDocument()
+      expect(panel().getByText("Failed")).toBeInTheDocument()
+      expect(panel().getByText("9")).toBeInTheDocument()
+      expect(panel().queryByText("Production")).not.toBeInTheDocument()
+    })
+
+    it("keeps the current page when the panel is closed", async () => {
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "First page",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Second page",
+            pagination: {
+              hasNextPage: false,
+              hasPreviousPage: true,
+              previousBookmark: "prev-2",
+            },
+          })
+        )
+
+      const { table, pageButton, findInTable } = renderPage()
+
+      await fireEvent.click(await findInTable("First page"))
+      await fireEvent.click(pageButton("next")!)
+      await fireEvent.click(await findInTable("Second page"))
+      await fireEvent.click(
+        document.querySelector<HTMLElement>(".activity-panel-overlay")!
+      )
+
+      await waitFor(() => {
+        expect(
+          document.querySelector(".activity-panel-container")
+        ).not.toBeInTheDocument()
+      })
+      expect(table().getByText("Second page")).toBeInTheDocument()
+      expect(screen.getByText("Page 2")).toBeInTheDocument()
+      expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(2)
+    })
+
+    it("closes the panel when a filter changes", async () => {
+      mocks.fetchActionSessions.mockResolvedValue(sameSourceInBothEnvironments)
+
+      const { findInTable } = renderPage()
+
+      await fireEvent.click(await findInTable("Prod agent"))
+      expect(panel().getByText("Production")).toBeInTheDocument()
+
+      await fireEvent.change(screen.getByDisplayValue("All statuses"), {
+        target: { value: "failed" },
+      })
+
+      await waitFor(() => {
+        expect(
+          document.querySelector(".activity-panel-container")
+        ).not.toBeInTheDocument()
+      })
+    })
   })
 
   it("shows an empty state when there are no sessions", async () => {

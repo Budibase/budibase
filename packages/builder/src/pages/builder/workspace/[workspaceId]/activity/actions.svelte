@@ -10,6 +10,7 @@
     type PlatformActionEnvironment,
   } from "@budibase/types"
   import { onMount } from "svelte"
+  import ActionSessionPanel from "./ActionSessionPanel.svelte"
   import ActivityFilters from "./ActivityFilters.svelte"
   import ActivityPage from "./ActivityPage.svelte"
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
@@ -19,7 +20,12 @@
   import ActivityTableFooter from "./ActivityTableFooter.svelte"
   import ActivityTablePanel from "./ActivityTablePanel.svelte"
   import ActivityTypeRenderer from "./ActivityTypeRenderer.svelte"
-  import { toActionSessionRow } from "./actionSessionRows"
+  import {
+    ENVIRONMENT_LABELS,
+    getActionSessionRowId,
+    toActionSessionRow,
+    type ActionSessionRow,
+  } from "./actionSessionRows"
   import { ACTIVITY_STATUS_LABELS } from "./activityStatus"
   import { getPaginationLabel } from "./pagination"
 
@@ -66,8 +72,8 @@
     value: EnvironmentFilter
   }[] = [
     { label: "All environments", value: "all" },
-    { label: "Production", value: "prod" },
-    { label: "Development", value: "dev" },
+    { label: ENVIRONMENT_LABELS.prod, value: "prod" },
+    { label: ENVIRONMENT_LABELS.dev, value: "dev" },
   ]
 
   let loading = $state(true)
@@ -77,6 +83,7 @@
   let pagination = $state<ActionsPagination | null>(null)
   let currentPage = $state(1)
   let lastRequest: PageRequest = { page: 1 }
+  let selectedSessionId = $state<string | null>(null)
   let statusFilter = $state<StatusFilter>("all")
   let environmentFilter = $state<EnvironmentFilter>("all")
   // Ticks on an interval purely to force updatedLabel to re-derive
@@ -84,6 +91,12 @@
 
   let rows = $derived(
     sessions.map(session => toActionSessionRow({ session, now }))
+  )
+
+  let selectedSession = $derived(
+    sessions.find(
+      session => getActionSessionRowId(session) === selectedSessionId
+    )
   )
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
@@ -138,6 +151,7 @@
     return async function loadSessions(request: PageRequest = { page: 1 }) {
       const sequence = ++requestSequence
       lastRequest = request
+      selectedSessionId = null
       loading = true
       loadFailed = false
       try {
@@ -207,6 +221,14 @@
     })
   }
 
+  function selectSession(row: ActionSessionRow) {
+    selectedSessionId = row._id
+  }
+
+  function closeSessionPanel() {
+    selectedSessionId = null
+  }
+
   onMount(() => {
     loadSessions()
   })
@@ -255,7 +277,7 @@
         compact
         {loading}
         disableSorting
-        allowClickRows={false}
+        allowClickRows
         allowEditRows={false}
         allowEditColumns={false}
         allowSelectRows={false}
@@ -263,6 +285,7 @@
         schema={tableSchema}
         {customRenderers}
         {placeholderText}
+        on:click={({ detail }) => selectSession(detail)}
       />
 
       {#if rows.length > 0}
@@ -277,6 +300,8 @@
       {/if}
     </ActivityTablePanel>
   {/if}
+
+  <ActionSessionPanel session={selectedSession} onClose={closeSessionPanel} />
 </ActivityPage>
 
 <style>

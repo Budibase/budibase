@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 import type { ActionSession } from "@budibase/types"
-import { toActionSessionRow } from "./actionSessionRows"
+import dayjs from "dayjs"
+import {
+  getActionSessionDetails,
+  getActionSessionTitle,
+  toActionSessionRow,
+} from "./actionSessionRows"
 
 const now = new Date("2026-10-05T12:00:00.000Z").getTime()
 
@@ -64,5 +69,48 @@ describe("toActionSessionRow", () => {
     })
 
     expect(prodRow._id).not.toBe(devRow._id)
+  })
+})
+
+describe("getActionSessionTitle", () => {
+  it("uses the asset label when available", () => {
+    expect(
+      getActionSessionTitle({ ...session, assetLabel: "Nightly sync" })
+    ).toBe("Nightly sync")
+  })
+
+  it("falls back to the session type", () => {
+    expect(getActionSessionTitle(session)).toBe("Automation run")
+  })
+})
+
+describe("getActionSessionDetails", () => {
+  it("describes the session with explicit fallbacks", () => {
+    expect(getActionSessionDetails(session)).toEqual([
+      { type: "status-badge", label: "Status", status: "waiting" },
+      {
+        type: "text",
+        label: "Type",
+        value: "Automation run",
+        icon: "path",
+        iconColor: "var(--color-purple-300)",
+        highlight: true,
+      },
+      { type: "text", label: "Asset", value: "Unknown asset", icon: "cube" },
+      { type: "text", label: "Triggered by", value: "Unknown", icon: "user" },
+      {
+        type: "text",
+        label: "Environment",
+        value: "Production",
+        icon: "globe",
+      },
+      { type: "text", label: "Actions", value: "3", icon: "list-checks" },
+      {
+        type: "text",
+        label: "Started at",
+        value: dayjs(session.startedAt).format("MMM D, YYYY h:mm A"),
+        icon: "calendar",
+      },
+    ])
   })
 })
