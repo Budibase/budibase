@@ -66,7 +66,13 @@
     return `${label.charAt(0).toUpperCase()}${label.slice(1)}`
   }
 
-  const setDependencySelected = (dependencyId: string, selected: boolean) => {
+  const setDependencySelected = ({
+    dependencyId,
+    selected,
+  }: {
+    dependencyId: string
+    selected: boolean
+  }) => {
     const nextDeselected = new Set(deselectedDependencyIds)
     if (selected) {
       nextDeselected.delete(dependencyId)
@@ -231,7 +237,10 @@
               text={dependency.name}
               value={selectedDependencyIds.includes(dependency.id)}
               on:change={event =>
-                setDependencySelected(dependency.id, event.detail)}
+                setDependencySelected({
+                  dependencyId: dependency.id,
+                  selected: event.detail,
+                })}
             />
             <Body size="XS" color="var(--spectrum-global-color-gray-700)">
               {formatTypeLabel(dependency.type)}
