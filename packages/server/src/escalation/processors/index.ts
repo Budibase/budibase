@@ -13,7 +13,7 @@ interface CreateEscalationBase {
   appId: string
   tenantId: string
   message: string
-  duration?: number
+  durationMs?: number
   // Allow an explicit ID to be provided (e.g. for idempotent test runs)
   escalationId?: string
   recipients?: EscalationRecipient[]

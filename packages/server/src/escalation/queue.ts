@@ -148,7 +148,7 @@ export async function processNotify(
 
     const resumeJobId = `esc_${escalationId}_resume`
 
-    if (doc.duration === undefined) {
+    if (doc.durationMs === undefined) {
       console.log("Escalation notify: never expires, no resume job enqueued", {
         jobId: job.id,
         escalationId,
@@ -160,17 +160,17 @@ export async function processNotify(
         appId,
         tenantId: job.data.tenantId,
         message,
-        expiresAt: new Date(Date.now() + doc.duration).toISOString(),
+        expiresAt: new Date(Date.now() + doc.durationMs).toISOString(),
         isTest: job.data.isTest,
       }
-      await addEscalationJob(resumeJob, doc.duration, resumeJobId)
+      await addEscalationJob(resumeJob, doc.durationMs, resumeJobId)
 
       console.log("Escalation notify: resume job enqueued", {
         jobId: job.id,
         escalationId,
         message,
         resumeJobId,
-        durationMs: doc.duration,
+        durationMs: doc.durationMs,
         expiresAt: resumeJob.expiresAt,
       })
     }

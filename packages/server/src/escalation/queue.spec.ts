@@ -113,7 +113,7 @@ describe("resumeOperation", () => {
     agentId: "agent_1",
     operationId: "op_1",
     sessionId: "session_1",
-    duration: 1000,
+    durationMs: 1000,
     resolution: "pending",
     ...overrides,
   })
@@ -711,7 +711,7 @@ describe("processNotify", () => {
         source: EscalationSource.OPERATION,
         appId: config.getProdWorkspaceId(),
         tenantId: config.getTenantId(),
-        duration: 1000,
+        durationMs: 1000,
         resolution: "pending",
         recipients: [recipient],
       })
@@ -929,7 +929,7 @@ describe("expiry", () => {
   })
 
   it("queues a resume job for the escalation's duration", async () => {
-    const escalationId = await seedPending({ duration: 60_000 })
+    const escalationId = await seedPending({ durationMs: 60_000 })
 
     await processNotify({
       id: `esc_${escalationId}_notify`,
@@ -942,7 +942,7 @@ describe("expiry", () => {
 
   it("expires without a decision when the policy sets no outcome", async () => {
     const escalationId = await seedPending({
-      duration: 1000,
+      durationMs: 1000,
       policy: { id: "policy_1", name: "Manager approval", expiry: {} },
     })
 
@@ -963,11 +963,11 @@ describe("expiry", () => {
     "records a synthesised %s response when the policy says so",
     async (outcome, accepted) => {
       const escalationId = await seedPending({
-        duration: 1000,
+        durationMs: 1000,
         policy: {
           id: "policy_1",
           name: "Manager approval",
-          expiry: { duration: 1, outcome },
+          expiry: { durationSeconds: 1, outcome },
         },
       })
 

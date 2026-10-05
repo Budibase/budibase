@@ -46,7 +46,9 @@ export const escalationDurationMs = async (
     ceilingDays === proConstants.licenses.UNLIMITED ||
     !Number.isFinite(ceilingDays)
   const requested =
-    expiry?.duration === undefined ? undefined : expiry.duration * 1000
+    expiry?.durationSeconds === undefined
+      ? undefined
+      : expiry.durationSeconds * 1000
   if (unlimited) {
     return requested
   }
@@ -297,7 +299,7 @@ export const createEscalationGateRuntime = ({
       })
     }
 
-    const duration = await escalationDurationMs(policy.expiry)
+    const durationMs = await escalationDurationMs(policy.expiry)
     const reviewContext: EscalationReviewContext = {
       requestedBy: truncateReviewField(requestedBy),
       operation: truncateReviewField(operation.name),
@@ -313,7 +315,7 @@ export const createEscalationGateRuntime = ({
       title,
       summary,
       reviewContext,
-      ...(duration !== undefined && { duration }),
+      ...(durationMs !== undefined && { durationMs }),
       recipients,
       resolutionStrategy: resolutionStrategyBinding(
         policy.approvers?.length

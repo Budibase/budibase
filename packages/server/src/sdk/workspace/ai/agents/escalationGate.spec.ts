@@ -482,7 +482,7 @@ describe("policy snapshot", () => {
       notifications: { recipients },
     }).intercept({ title: "Planning" }, { toolCallId: "call_1" })
 
-    expect(createInput()).not.toHaveProperty("duration")
+    expect(createInput()).not.toHaveProperty("durationMs")
   })
 
   it("carries the frozen tool call exactly as invoked", async () => {
@@ -516,12 +516,11 @@ describe("policy snapshot", () => {
     })
 
     it("passes the policy duration through on an unlimited plan", async () => {
-      await gateFor(policyWith({ duration: 90 * 24 * 60 * 60 })).intercept(
-        { title: "Planning" },
-        { toolCallId: "call_1" }
-      )
+      await gateFor(
+        policyWith({ durationSeconds: 90 * 24 * 60 * 60 })
+      ).intercept({ title: "Planning" }, { toolCallId: "call_1" })
 
-      expect(createInput().duration).toEqual(90 * DAY_MS)
+      expect(createInput().durationMs).toEqual(90 * DAY_MS)
     })
 
     it("schedules no expiry for never on an unlimited plan", async () => {
@@ -530,18 +529,17 @@ describe("policy snapshot", () => {
         { toolCallId: "call_1" }
       )
 
-      expect(createInput()).not.toHaveProperty("duration")
+      expect(createInput()).not.toHaveProperty("durationMs")
     })
 
     it("caps a duration above the plan ceiling", async () => {
       mocks.licenses.setEscalationDurationQuota(7)
 
-      await gateFor(policyWith({ duration: 90 * 24 * 60 * 60 })).intercept(
-        { title: "Planning" },
-        { toolCallId: "call_1" }
-      )
+      await gateFor(
+        policyWith({ durationSeconds: 90 * 24 * 60 * 60 })
+      ).intercept({ title: "Planning" }, { toolCallId: "call_1" })
 
-      expect(createInput().duration).toEqual(7 * DAY_MS)
+      expect(createInput().durationMs).toEqual(7 * DAY_MS)
     })
 
     it("turns never into the ceiling on a capped plan", async () => {
@@ -552,18 +550,17 @@ describe("policy snapshot", () => {
         { toolCallId: "call_1" }
       )
 
-      expect(createInput().duration).toEqual(7 * DAY_MS)
+      expect(createInput().durationMs).toEqual(7 * DAY_MS)
     })
 
     it("leaves a duration below the ceiling alone", async () => {
       mocks.licenses.setEscalationDurationQuota(7)
 
-      await gateFor(policyWith({ duration: 3 * 24 * 60 * 60 })).intercept(
-        { title: "Planning" },
-        { toolCallId: "call_1" }
-      )
+      await gateFor(
+        policyWith({ durationSeconds: 3 * 24 * 60 * 60 })
+      ).intercept({ title: "Planning" }, { toolCallId: "call_1" })
 
-      expect(createInput().duration).toEqual(3 * DAY_MS)
+      expect(createInput().durationMs).toEqual(3 * DAY_MS)
     })
 
     it("treats a missing quota as unlimited", async () => {
@@ -574,12 +571,11 @@ describe("policy snapshot", () => {
       )
       mocks.licenses.useLicense(license)
 
-      await gateFor(policyWith({ duration: 90 * 24 * 60 * 60 })).intercept(
-        { title: "Planning" },
-        { toolCallId: "call_1" }
-      )
+      await gateFor(
+        policyWith({ durationSeconds: 90 * 24 * 60 * 60 })
+      ).intercept({ title: "Planning" }, { toolCallId: "call_1" })
 
-      expect(createInput().duration).toEqual(90 * DAY_MS)
+      expect(createInput().durationMs).toEqual(90 * DAY_MS)
     })
   })
 })

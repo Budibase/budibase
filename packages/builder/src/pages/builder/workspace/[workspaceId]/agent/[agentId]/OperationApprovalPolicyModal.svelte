@@ -148,7 +148,7 @@
     const largest =
       allowedPresets[allowedPresets.length - 1]?.value ??
       DEFAULT_ESCALATION_DURATION_SECONDS
-    const duration = policy.expiry?.duration
+    const duration = policy.expiry?.durationSeconds
     if (duration === undefined) {
       return unlimited ? NEVER : largest
     }
@@ -183,7 +183,7 @@
     if (!policy) {
       return undefined
     }
-    return policy.expiry?.duration ?? NEVER
+    return policy.expiry?.durationSeconds ?? NEVER
   }
 
   export const show = (policy?: AgentOperationApprovalPolicy) => {
@@ -245,9 +245,9 @@
     if (expiry === NEVER) {
       policy.expiry = {}
     } else {
-      const duration =
+      const durationSeconds =
         expiry === CUSTOM ? (customValue ?? 0) * customUnit : expiry
-      policy.expiry = { duration }
+      policy.expiry = { durationSeconds }
       if (outcome !== EXPIRE) {
         policy.expiry.outcome = outcome
       }

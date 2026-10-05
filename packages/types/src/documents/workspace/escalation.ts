@@ -100,8 +100,8 @@ export interface EscalationContextDoc extends Document {
   requestId?: string
   // zlib-deflated + base64 JSON of the SuspendedContext
   contextCompressed?: string
-  // Milliseconds. Absent means no resume job is scheduled.
-  duration?: number
+  // Absent means no resume job is scheduled.
+  durationMs?: number
   resolution: "pending" | "resolved" | "expired" | "cancelled"
   // Human-facing heading + detail shown in the notification. Populated by the
   // escalation trigger
