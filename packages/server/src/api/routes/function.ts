@@ -27,7 +27,6 @@ const draftSchema = {
         type: Joi.string()
           .valid(...FUNCTION_INPUT_TYPES)
           .required(),
-        required: Joi.boolean().strict().required(),
         description: Joi.string()
           .max(MAX_FUNCTION_INPUT_DESCRIPTION_LENGTH)
           .allow("")

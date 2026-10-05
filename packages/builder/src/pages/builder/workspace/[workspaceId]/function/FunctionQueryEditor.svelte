@@ -159,7 +159,7 @@
     if (missing) {
       return `The saved query ${capability.queryId} was deleted or is unavailable.`
     }
-    return "Stored aliases and last-known parameters are shown below."
+    return "Stored aliases are shown below."
   }
 
   const uniqueAlias = (
@@ -238,11 +238,6 @@
     )
   }
 
-  const getPersistedCapability = (
-    queryId: string
-  ): FunctionQueryCapability | undefined =>
-    capabilities.find(capability => capability.queryId === queryId)
-
   const save = async () => {
     showErrors = true
     saveError = ""
@@ -263,69 +258,10 @@
 <section class="query-editor">
   <div class="rail-heading">
     <Body size="S" weight="500">Linked queries</Body>
-    <Body size="S" color="var(--spectrum-global-color-gray-600)">
-      Give this Function access to saved queries it can call from code.
-    </Body>
     <div class="query-actions">
-      <div class="query-popover-container">
-        <ActionMenu
-          align="right"
-          roundedPopover
-          portalTarget=".query-popover-container"
-        >
-          <div slot="control">
-            <Button
-              secondary
-              size="S"
-              icon="plus-circle"
-              disabled={catalogLoading || !!catalogError}
-            >
-              Add queries
-            </Button>
-          </div>
-          <div class="query-menu">
-            <input
-              class="query-search"
-              type="search"
-              aria-label="Search saved queries"
-              placeholder="Search"
-              bind:value={querySearch}
-            />
-            {#each queryKinds as kind}
-              {@const options = getAvailableQueries(kind)}
-              {#if options.length}
-                <div class="query-menu-section">
-                  <div class="query-menu-label">
-                    {kind === "data" ? "Data queries" : "API Explorer queries"}
-                  </div>
-                  {#each options as entry (entry.queryId)}
-                    <MenuItem on:click={() => addQuery(entry.queryId)}>
-                      <div class="query-option">
-                        <Icon
-                          name={kind === "api" ? "globe-simple" : "database"}
-                          size="S"
-                        />
-                        <span>
-                          <strong>{entry.queryName}</strong>
-                          <small>{getOptionSubtitle(entry)}</small>
-                        </span>
-                      </div>
-                    </MenuItem>
-                  {/each}
-                </div>
-              {/if}
-            {/each}
-            {#if !getAvailableQueries("data").length && !getAvailableQueries("api").length}
-              <div class="menu-empty">No queries available</div>
-            {/if}
-          </div>
-        </ActionMenu>
-      </div>
-      {#if dirty}
-        <Button primary size="S" disabled={saving} on:click={save}>
-          {saving ? "Saving..." : "Save links"}
-        </Button>
-      {/if}
+      <Button primary size="S" disabled={saving || !dirty} on:click={save}>
+        {saving ? "Saving..." : "Save"}
+      </Button>
     </div>
   </div>
 
@@ -428,21 +364,6 @@
                   </ActionButton>
                 </div>
               </div>
-              <div class="parameters">
-                <span>Parameters</span>
-                {#if entry?.parameters.length}
-                  {#each entry.parameters as parameter (parameter.name)}
-                    <code>{parameter.name}: string | null</code>
-                  {/each}
-                {:else if !entry && getPersistedCapability(capability.queryId)?.parameterNames.length}
-                  {#each getPersistedCapability(capability.queryId)?.parameterNames || [] as parameter (parameter)}
-                    <code>{parameter}: string | null</code>
-                  {/each}
-                  <span class="parameter-note">Last known</span>
-                {:else}
-                  <span>None</span>
-                {/if}
-              </div>
               {#if entry && parametersChanged(capability, entry)}
                 <div class="parameter-change">
                   Query parameters changed. Save and rebuild this Function to
@@ -455,6 +376,61 @@
       {/each}
     </div>
   {/if}
+
+  <div class="query-popover-container">
+    <ActionMenu
+      align="left"
+      roundedPopover
+      portalTarget=".query-popover-container"
+    >
+      <div slot="control">
+        <Button
+          quiet
+          secondary
+          icon="plus"
+          disabled={catalogLoading || !!catalogError}
+        >
+          Add query
+        </Button>
+      </div>
+      <div class="query-menu">
+        <input
+          class="query-search"
+          type="search"
+          aria-label="Search saved queries"
+          placeholder="Search"
+          bind:value={querySearch}
+        />
+        {#each queryKinds as kind}
+          {@const options = getAvailableQueries(kind)}
+          {#if options.length}
+            <div class="query-menu-section">
+              <div class="query-menu-label">
+                {kind === "data" ? "Data queries" : "API Explorer queries"}
+              </div>
+              {#each options as entry (entry.queryId)}
+                <MenuItem on:click={() => addQuery(entry.queryId)}>
+                  <div class="query-option">
+                    <Icon
+                      name={kind === "api" ? "globe-simple" : "database"}
+                      size="S"
+                    />
+                    <span>
+                      <strong>{entry.queryName}</strong>
+                      <small>{getOptionSubtitle(entry)}</small>
+                    </span>
+                  </div>
+                </MenuItem>
+              {/each}
+            </div>
+          {/if}
+        {/each}
+        {#if !getAvailableQueries("data").length && !getAvailableQueries("api").length}
+          <div class="menu-empty">No queries available</div>
+        {/if}
+      </div>
+    </ActionMenu>
+  </div>
 
   {#if showErrors && errors.some(error => !!error.missingQuery)}
     <div class="save-error" role="alert">
@@ -471,14 +447,18 @@
 
 <style>
   .query-editor,
-  .rail-heading,
   .linked-queries,
   .query-details {
     display: flex;
     flex-direction: column;
   }
-  .query-editor,
+  .query-editor {
+    gap: var(--spacing-m);
+  }
   .rail-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: var(--spacing-m);
   }
   .linked-queries {
@@ -492,6 +472,9 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+  .query-popover-container {
+    width: fit-content;
   }
   .query-menu {
     width: 300px;
@@ -587,7 +570,6 @@
     border-top: 1px solid var(--spectrum-global-color-gray-200);
   }
   .code-reference,
-  .parameters,
   .missing-message,
   .parameter-change {
     display: flex;
@@ -601,9 +583,12 @@
     align-items: flex-start;
   }
   .code-snippet {
+    flex-wrap: wrap;
     max-width: 100%;
   }
   .code-snippet code {
+    min-width: 0;
+    max-width: 100%;
     overflow-wrap: anywhere;
   }
   code {
@@ -612,9 +597,5 @@
     background: var(--spectrum-global-color-gray-200);
     color: var(--spectrum-global-color-gray-800);
     font-family: var(--font-family-code);
-  }
-  .parameter-note {
-    color: var(--spectrum-global-color-gray-600);
-    font-style: italic;
   }
 </style>

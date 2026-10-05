@@ -58,13 +58,9 @@ const renderInputDescription = (description?: string) => {
 }
 
 const renderInputProperty = (input: FunctionInputDefinition) => {
-  let name = property(input.name)
-  let type = inputTypes[input.type]
-  if (!input.required) {
-    name += "?"
-    type += " | null"
-  }
-  return `${renderInputDescription(input.description)}    readonly ${name}: ${type}`
+  const name = property(input.name)
+  const type = inputTypes[input.type]
+  return `${renderInputDescription(input.description)}    readonly ${name}?: ${type} | null`
 }
 
 const renderInputs = (inputSchema: readonly FunctionInputDefinition[]) => {
@@ -125,10 +121,9 @@ export const hashFunctionDeclarations = ({
       JSON.stringify(
         [...inputSchema]
           .sort((a, b) => a.name.localeCompare(b.name))
-          .map(({ name, type, required, description }) => ({
+          .map(({ name, type, description }) => ({
             name,
             type,
-            required,
             description: description || "",
           }))
       )
