@@ -31,7 +31,6 @@ const makeFunction = (
     {
       name: "customerId",
       type: "string",
-      description: "Customer identifier",
     },
   ],
   capabilities: [

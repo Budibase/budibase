@@ -83,7 +83,7 @@
 
 <div class="inputs-editor">
   {#each inputSchema as input (input.name)}
-    <PropField label={input.name} labelTooltip={input.description} fullWidth>
+    <PropField label={input.name} fullWidth>
       {#if input.type === "string"}
         <DrawerBindableInput
           title={input.name}
