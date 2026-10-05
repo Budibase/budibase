@@ -57,11 +57,20 @@ describe("Test that the object processing works correctly", () => {
       const output = await processObject(
         { value: "{{ items }}" },
         { items },
-        { serializeArrays: true }
+        { arrayHandling: "stringify" }
       )
       expect(output.value).toBe(expected)
     }
   )
+
+  it("preserves bound array values when requested", async () => {
+    const output = await processObject(
+      { value: "{{ items }}", helper: '{{ split text "," }}' },
+      { items: [1, null], text: "Ada,Grace" },
+      { arrayHandling: "preserve" }
+    )
+    expect(output).toEqual({ value: [1, null], helper: ["Ada", "Grace"] })
+  })
 
   it("should be able to process an object with some template strings", async () => {
     const output = await processObject(

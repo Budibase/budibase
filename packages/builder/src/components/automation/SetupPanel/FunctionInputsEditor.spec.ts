@@ -128,7 +128,7 @@ describe("Function automation input fields", () => {
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
   })
 
-  it("removes a cleared input", async () => {
+  it("omits a cleared string input", async () => {
     const onchange = vi.fn()
     render(FunctionInputsEditor, {
       inputSchema: [{ name: "value", type: "string" }],
@@ -141,9 +141,57 @@ describe("Function automation input fields", () => {
     expect(onchange).toHaveBeenCalledWith({ other: false })
   })
 
-  it("shows an empty state for Functions without inputs", () => {
-    render(FunctionInputsEditor, { inputSchema: [] })
+  it("preserves omission when an unchanged blank string field loses focus", async () => {
+    const onchange = vi.fn()
+    render(FunctionInputsEditor, {
+      inputSchema: [{ name: "value", type: "string" }],
+      value: { other: "keep" },
+      onchange,
+    })
+    const field = screen.getByRole("textbox")
+    await fireEvent.focus(field)
+    await fireEvent.blur(field)
+    expect(onchange).not.toHaveBeenCalled()
+  })
+
+  it("stores constructor as an own input in the serialized payload", async () => {
+    const onchange = vi.fn()
+    render(FunctionInputsEditor, {
+      inputSchema: [{ name: "constructor", type: "object" }],
+      value: { other: "keep" },
+      onchange,
+    })
+    const field = screen.getByRole("textbox")
+    const editor = EditorView.findFromDOM(field)!
+    editor.dispatch({
+      changes: {
+        from: 0,
+        to: editor.state.doc.length,
+        insert: '{"nested":true}',
+      },
+    })
+    await fireEvent.blur(field)
+    expect(JSON.stringify(onchange.mock.calls[0][0])).toBe(
+      '{"other":"keep","constructor":{"nested":true}}'
+    )
+  })
+
+  it("does not display inherited properties as omitted input values", () => {
+    render(FunctionInputsEditor, {
+      inputSchema: [{ name: "toString", type: "string" }],
+      value: {},
+    })
+    expect(screen.getByRole("textbox")).toHaveValue("")
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  })
+
+  it("shows only a message when no inputs are declared", () => {
+    render(FunctionInputsEditor, {
+      inputSchema: [],
+      value: { existing: true },
+    })
     expect(screen.getByText("This Function has no inputs.")).toBeInTheDocument()
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
   })
 })

@@ -19,7 +19,7 @@
     indentWithTab,
   } from "@codemirror/commands"
   import { javascript } from "@codemirror/lang-javascript"
-  import { bracketMatching } from "@codemirror/language"
+  import { bracketMatching, syntaxTree } from "@codemirror/language"
   import { linter, setDiagnostics, type Diagnostic } from "@codemirror/lint"
   import { Compartment, EditorState } from "@codemirror/state"
   import {
@@ -84,7 +84,16 @@
     }
 
     const inputMatch = context.matchBefore(/inputs\.[\w$]*$/)
-    if (inputMatch && inputSchema.length) {
+    const inputNode = inputMatch
+      ? syntaxTree(context.state).resolveInner(inputMatch.from, 1)
+      : undefined
+    if (
+      inputMatch &&
+      inputSchema.length &&
+      inputNode?.name === "VariableName" &&
+      inputNode.from === inputMatch.from &&
+      inputNode.to === inputMatch.from + "inputs".length
+    ) {
       return {
         from: inputMatch.from + "inputs.".length,
         options: getFunctionInputCompletions(inputSchema),
