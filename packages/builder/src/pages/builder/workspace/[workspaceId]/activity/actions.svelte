@@ -197,6 +197,7 @@
       return
     }
     environmentFilter = nextFilter
+    summary = null
     loadSessions()
   }
 
@@ -241,7 +242,10 @@
 </script>
 
 <ActivityPage>
-  <ActivitySummaryCards metrics={summaryMetrics} />
+  <ActivitySummaryCards
+    metrics={summaryMetrics}
+    loading={loading && !summary}
+  />
 
   <ActivityFilters>
     <Select

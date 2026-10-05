@@ -138,6 +138,36 @@ describe("Activity actions page", () => {
     ])
   })
 
+  it("replaces old counters with loading indicators when changing environment", async () => {
+    const pending = deferred<FetchActionSessionsResponse>()
+    mocks.fetchActionSessions
+      .mockResolvedValueOnce(response)
+      .mockReturnValueOnce(pending.promise)
+    renderPage()
+    await screen.findByText("15")
+
+    await fireEvent.change(screen.getByDisplayValue("All environments"), {
+      target: { value: "prod" },
+    })
+
+    expect(
+      screen.getByRole("status", { name: "Loading All actions" })
+    ).toBeInTheDocument()
+    expect(screen.queryByText("15")).not.toBeInTheDocument()
+
+    pending.resolve({
+      ...response,
+      summary: { total: 8, completed: 8, active: 0, waiting: 0, failed: 0 },
+    })
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("status", { name: "Loading All actions" })
+      ).not.toBeInTheDocument()
+    })
+    expect(screen.getAllByText("8")).toHaveLength(2)
+  })
+
   it("ignores a stale response that resolves after a newer one", async () => {
     const initial = deferred<FetchActionSessionsResponse>()
     mocks.fetchActionSessions

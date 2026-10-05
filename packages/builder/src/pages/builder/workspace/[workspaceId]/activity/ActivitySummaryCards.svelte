@@ -6,16 +6,26 @@
 </script>
 
 <script lang="ts">
-  import { Body } from "@budibase/bbui"
+  import { Body, ProgressCircle } from "@budibase/bbui"
 
-  let { metrics }: { metrics: SummaryMetric[] } = $props()
+  let {
+    metrics,
+    loading = false,
+  }: {
+    metrics: SummaryMetric[]
+    loading?: boolean
+  } = $props()
 </script>
 
-<div class="metrics-grid">
+<div class="metrics-grid" aria-busy={loading}>
   {#each metrics as metric}
     <section class="metric-card">
       <Body size="XL" weight="600">
-        {#if metric.value === null}
+        {#if loading}
+          <span role="status" aria-label={`Loading ${metric.label}`}>
+            <ProgressCircle size="S" />
+          </span>
+        {:else if metric.value === null}
           <span aria-label="Unavailable">-</span>
         {:else}
           {metric.value.toLocaleString()}
