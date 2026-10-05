@@ -19,8 +19,10 @@
   import dayjs from "dayjs"
   import relativeTime from "dayjs/plugin/relativeTime"
   import ActivityActionsRenderer from "./ActivityActionsRenderer.svelte"
+  import ActivityPage from "./ActivityPage.svelte"
   import ActivitySidePanel from "./ActivitySidePanel.svelte"
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
+  import ActivityTablePanel from "./ActivityTablePanel.svelte"
 
   dayjs.extend(relativeTime)
 
@@ -406,65 +408,63 @@
   })
 </script>
 
-<div class="agent-actions-page">
-  <div class="agent-actions-content">
-    <div class="metrics-grid">
-      {#each summaryMetrics as metric}
-        <section class="metric-card">
-          <Body size="XL" weight="600">
-            {metric.value.toLocaleString()}
-          </Body>
-          <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            {metric.label}
-          </Body>
-        </section>
-      {/each}
-    </div>
-
-    <div class="filters-row">
-      <Select
-        size="M"
-        autoWidth
-        placeholder={false}
-        options={statusFilterOptions}
-        value={statusFilter}
-        on:change={({ detail }) => changeStatusFilter(detail)}
-      />
-    </div>
-
-    <section class="requests-table-panel">
-      <Table
-        quiet
-        compact
-        {loading}
-        allowClickRows
-        allowEditRows={false}
-        allowEditColumns={false}
-        allowSelectRows={false}
-        data={paginatedRows}
-        schema={tableSchema}
-        {customRenderers}
-        placeholderText="No agent actions tracked yet."
-        on:click={({ detail }) => selectRequest(detail)}
-      />
-
-      {#if paginatedRows.length > 0}
-        <div class="table-footer">
-          <div class="footer-copy">{paginationLabel}</div>
-
-          {#if currentPage > 1 || hasNextPage}
-            <Pagination
-              page={currentPage}
-              goToPrevPage={() => changePage(currentPage - 1)}
-              goToNextPage={() => changePage(currentPage + 1)}
-              hasPrevPage={currentPage > 1}
-              {hasNextPage}
-            />
-          {/if}
-        </div>
-      {/if}
-    </section>
+<ActivityPage>
+  <div class="metrics-grid">
+    {#each summaryMetrics as metric}
+      <section class="metric-card">
+        <Body size="XL" weight="600">
+          {metric.value.toLocaleString()}
+        </Body>
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          {metric.label}
+        </Body>
+      </section>
+    {/each}
   </div>
+
+  <div class="filters-row">
+    <Select
+      size="M"
+      autoWidth
+      placeholder={false}
+      options={statusFilterOptions}
+      value={statusFilter}
+      on:change={({ detail }) => changeStatusFilter(detail)}
+    />
+  </div>
+
+  <ActivityTablePanel>
+    <Table
+      quiet
+      compact
+      {loading}
+      allowClickRows
+      allowEditRows={false}
+      allowEditColumns={false}
+      allowSelectRows={false}
+      data={paginatedRows}
+      schema={tableSchema}
+      {customRenderers}
+      placeholderText="No agent actions tracked yet."
+      on:click={({ detail }) => selectRequest(detail)}
+    />
+
+    {#if paginatedRows.length > 0}
+      <div class="table-footer">
+        <div class="footer-copy">{paginationLabel}</div>
+
+        {#if currentPage > 1 || hasNextPage}
+          <Pagination
+            page={currentPage}
+            goToPrevPage={() => changePage(currentPage - 1)}
+            goToNextPage={() => changePage(currentPage + 1)}
+            hasPrevPage={currentPage > 1}
+            {hasNextPage}
+          />
+        {/if}
+      </div>
+    {/if}
+  </ActivityTablePanel>
 
   <ActivitySidePanel
     open={!!selectedRequest}
@@ -474,27 +474,9 @@
     createdBy={selectedRequestCreatedBy}
     onClose={closeRequestPanel}
   />
-</div>
+</ActivityPage>
 
 <style>
-  .agent-actions-page {
-    display: flex;
-    justify-content: center;
-    min-height: 100%;
-    padding: 0 var(--spacing-l);
-    box-sizing: border-box;
-    background: var(--background-alt);
-  }
-
-  .agent-actions-content {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    width: 100%;
-    max-width: 1280px;
-    padding: 20px 0 32px;
-  }
-
   .metrics-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -519,14 +501,6 @@
     min-width: 180px;
   }
 
-  .requests-table-panel {
-    background: transparent;
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    min-height: 0;
-  }
-
   .table-footer {
     display: flex;
     justify-content: space-between;
@@ -540,74 +514,13 @@
     color: var(--spectrum-global-color-gray-700);
   }
 
-  .requests-table-panel :global(.spectrum-Table) {
-    border-radius: var(--border-radius-s);
-    overflow: hidden;
-  }
-
-  .requests-table-panel :global(.spectrum-Table-headCell) {
-    background: var(--spectrum-global-color-gray-100);
-    border-top: none;
-    border-left: none;
-    border-right: none;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-    text-transform: none;
-    color: var(--spectrum-global-color-gray-700);
-    font-family: var(--font-sans);
-    font-size: var(--font-size-s);
-    font-weight: 400;
-    letter-spacing: normal;
-    height: auto;
-    padding: 8px 12px;
-  }
-
-  .requests-table-panel :global(.spectrum-Table-row) {
-    background: var(--spectrum-global-color-gray-100);
-  }
-
-  .requests-table-panel
-    :global(.spectrum-Table-row.clickable:hover .spectrum-Table-cell) {
-    background-color: var(--spectrum-global-color-gray-200);
-  }
-
-  .requests-table-panel :global(.spectrum-Table-cell) {
-    background: var(--spectrum-global-color-gray-100);
-    border-left: 0;
-    border-right: 0;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-    height: auto;
-    padding: 8px 12px;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-m);
-    line-height: 1.5;
-    color: var(--spectrum-global-color-gray-700);
-  }
-
-  .requests-table-panel :global(.spectrum-Table-cell:nth-child(1)) {
-    color: var(--spectrum-global-color-gray-800);
-  }
-
-  .requests-table-panel :global(.placeholder) {
-    background: var(--spectrum-global-color-gray-100);
-    color: var(--spectrum-global-color-gray-700);
-    border: none;
-  }
-
   @media (max-width: 1280px) {
     .metrics-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    .requests-table-panel {
-      overflow-x: auto;
-    }
   }
 
   @media (max-width: 720px) {
-    .agent-actions-content {
-      padding: 20px 0 24px;
-    }
-
     .table-footer {
       flex-direction: column;
       align-items: flex-start;

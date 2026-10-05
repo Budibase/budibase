@@ -1,15 +1,20 @@
 <script lang="ts">
   import { Badge, Icon } from "@budibase/bbui"
-  import type { AgentRequestStatus } from "@budibase/types"
+  import type {
+    AgentRequestStatus,
+    PlatformActionContainerStatus,
+  } from "@budibase/types"
+
+  type ActivityStatus = AgentRequestStatus | PlatformActionContainerStatus
 
   let {
     status,
   }: {
-    status: AgentRequestStatus
+    status: ActivityStatus
   } = $props()
 
   const statusConfig: Record<
-    AgentRequestStatus,
+    ActivityStatus,
     {
       icon: string
       iconWeight: "regular" | "fill"
@@ -36,6 +41,15 @@
         "color-mix(in srgb, var(--spectrum-global-color-yellow-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
       label: "Needs input",
+    },
+    waiting: {
+      icon: "warning",
+      iconWeight: "fill",
+      color: "var(--spectrum-global-color-yellow-500)",
+      backgroundColor:
+        "color-mix(in srgb, var(--spectrum-global-color-yellow-500) 18%, transparent)",
+      textColor: "var(--spectrum-global-color-static-gray-50)",
+      label: "Waiting",
     },
     completed: {
       icon: "check-circle",
