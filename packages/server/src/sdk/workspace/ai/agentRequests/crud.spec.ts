@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
 import {
   DocumentType,
   ApprovalToolResultStatus,
@@ -62,6 +62,7 @@ describe("agentRequests crud", () => {
 
   beforeEach(async () => {
     analyzeAgentRequestLinkMock.mockReset()
+    analyzeAgentRequestLinkMock.mockResolvedValue({ decision: "new_thread" })
     generateAgentRequestTitleMock.mockReset()
     generateAgentRequestTitleMock.mockResolvedValue("Generated title")
     generateInteractionSummaryMock.mockReset()
@@ -121,7 +122,7 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("returns the existing requestId if the sessionId already has a request", async () => {
+    it("reuses a request when boundary analysis identifies a follow-up", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const first = await initActiveRequest({
           agentId: "agent_1",
@@ -130,6 +131,12 @@ describe("agentRequests crud", () => {
           latestPrompt: "Book me a meeting",
           operation: { name: "Scheduling", prompt: "Schedule meetings." },
           source: "Chat",
+        })
+
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first!.requestId,
+          entryAction: "append_latest_entry",
         })
 
         const second = await initActiveRequest({
@@ -143,6 +150,275 @@ describe("agentRequests crud", () => {
 
         expect(second?.requestId).toEqual(first?.requestId)
         expect(await fetchRequestsByAgent("agent_1")).toHaveLength(1)
+      })
+    })
+
+    it("tracks four independent asks and their approvals in one session", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const asks = [
+          { prompt: "Raise a chips expense", operation: "Expenses" },
+          { prompt: "Raise a mayonnaise expense", operation: "Expenses" },
+          { prompt: "Create the first book", operation: "Books" },
+          { prompt: "Create the second book", operation: "Books" },
+        ]
+        for (const [index, ask] of asks.entries()) {
+          generateAgentRequestTitleMock.mockResolvedValueOnce(ask.prompt)
+          const { requestId } = (await initActiveRequest({
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            latestPrompt: ask.prompt,
+            operation: { name: ask.operation, prompt: "Create rows." },
+            source: "Slack",
+          }))!
+          await createOrUpdateRequestForPrompt({
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            latestUserPrompt: ask.prompt,
+            operation: { name: ask.operation, prompt: "Create rows." },
+            source: "Slack",
+            existingRequestId: requestId,
+          })
+          const escalationId = `esc_${index}`
+          await context.getWorkspaceDB().put({
+            _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
+            source: EscalationSource.OPERATION,
+            appId: config.getProdWorkspaceId(),
+            tenantId: config.getTenantId(),
+            agentId: "agent_1",
+            sessionId: "session_1",
+            requestId,
+            delay: 1000,
+            resolution: "pending",
+            recipients: [],
+          })
+          await recordToolCall({
+            requestId,
+            agentId: "agent_1",
+            sessionId: "session_1",
+            toolName: "create_row",
+            status: "success",
+            output: {
+              status: ApprovalToolResultStatus.PENDING_APPROVAL,
+              escalationId,
+            },
+          })
+          await updateRequestStatus({ requestId, status: "needs_input" })
+        }
+
+        const requests = await fetchRequestsByAgent("agent_1")
+        expect(requests).toHaveLength(4)
+        for (const [index, ask] of asks.entries()) {
+          const request = requests.find(
+            request => request.title === ask.prompt
+          )!
+          expect(request).toEqual(
+            expect.objectContaining({
+              status: "needs_input",
+              entries: [
+                expect.objectContaining({
+                  operationNames: [ask.operation],
+                  sessionId: "session_1",
+                }),
+              ],
+              actions: [
+                expect.objectContaining({ type: "user_message" }),
+                expect.objectContaining({
+                  type: "escalation_raised",
+                  escalationId: `esc_${index}`,
+                }),
+                expect.objectContaining({ type: "status_changed" }),
+              ],
+            })
+          )
+        }
+
+        const first = requests.find(
+          request => request.title === asks[0].prompt
+        )!
+        await updateRequestStatus({
+          requestId: first._id!,
+          status: "completed",
+          isHumanResponse: true,
+        })
+        const afterApproval = await fetchRequestsByAgent("agent_1")
+        expect(
+          afterApproval.find(request => request._id === first._id)?.status
+        ).toEqual("completed")
+        expect(
+          afterApproval
+            .filter(request => request._id !== first._id)
+            .map(request => request.status)
+        ).toEqual(["needs_input", "needs_input", "needs_input"])
+      })
+    })
+
+    it("keeps requests from different operations separate", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const first = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Raise a chips expense",
+          operation: { name: "Expenses", prompt: "Create expenses." },
+          source: "Slack",
+        }))!
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first.requestId,
+          entryAction: "append_latest_entry",
+        })
+        await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Create a book",
+          operation: { name: "Books", prompt: "Create books." },
+          source: "Slack",
+        })
+
+        const requests = await fetchRequestsByAgent("agent_1")
+        expect(requests).toHaveLength(2)
+        expect(
+          requests.map(request => request.entries[0].operationNames).sort()
+        ).toEqual([["Books"], ["Expenses"]])
+      })
+    })
+
+    it("retries a follow-up save that conflicts with approval tracking", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          operation: { name: "Expenses", prompt: "Create expenses." },
+          source: "Slack",
+        }
+        const first = (await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Raise a chips expense",
+        }))!
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first.requestId,
+          entryAction: "append_latest_entry",
+        })
+        const db = context.getWorkspaceDB()
+        const putSpy = jest
+          .spyOn(dbCore.DatabaseImpl.prototype, "put")
+          .mockImplementationOnce(async doc => {
+            putSpy.mockRestore()
+            await updateRequestStatus({
+              requestId: first.requestId,
+              status: "needs_input",
+            })
+            return db.put(doc)
+          })
+        try {
+          const result = await initActiveRequest({
+            ...inputs,
+            latestPrompt: "Change that expense to 20 pounds",
+          })
+          const requests = await fetchRequestsByAgent("agent_1")
+          expect(result?.requestId).toEqual(first.requestId)
+          expect(requests).toHaveLength(1)
+          expect(requests[0].status).toEqual("needs_input")
+          expect(requests[0].actions).toEqual([
+            expect.objectContaining({
+              type: "status_changed",
+              to: "needs_input",
+            }),
+          ])
+        } finally {
+          putSpy.mockRestore()
+        }
+      })
+    })
+
+    it("creates a new request when boundary analysis fails", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          operation: { name: "Expenses", prompt: "Create expenses." },
+          source: "Slack",
+        }
+        const first = (await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Raise a chips expense",
+        }))!
+        await updateRequestStatus({
+          requestId: first.requestId,
+          status: "needs_input",
+        })
+        analyzeAgentRequestLinkMock.mockRejectedValueOnce(
+          new Error("Invalid analysis")
+        )
+        await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Raise a mayonnaise expense",
+        })
+
+        const requests = await fetchRequestsByAgent("agent_1")
+        expect(requests).toHaveLength(2)
+        expect(
+          requests.find(request => request._id === first.requestId)?.status
+        ).toEqual("needs_input")
+        expect(
+          requests.find(request => request._id !== first.requestId)?.entries
+        ).toEqual([
+          expect.objectContaining({
+            operationNames: ["Expenses"],
+            status: "active",
+          }),
+        ])
+      })
+    })
+
+    it("updates entry metadata for a follow-up in another session", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          operation: { name: "Expenses", prompt: "Create expenses." },
+        }
+        const first = (await initActiveRequest({
+          ...inputs,
+          sessionId: "session_1",
+          source: "Slack",
+          latestPrompt: "Raise a chips expense",
+        }))!
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first.requestId,
+          entryAction: "create_new_entry",
+        })
+        await initActiveRequest({
+          ...inputs,
+          sessionId: "session_2",
+          source: "Chat",
+          latestPrompt: "Change that expense to 20 pounds",
+          recentChatContext: [
+            { role: "user", content: "Raise a chips expense" },
+          ],
+        })
+
+        const requests = await fetchRequestsByAgent("agent_1")
+        expect(requests).toHaveLength(1)
+        expect(requests[0].entries).toEqual([
+          expect.objectContaining({
+            sessionId: "session_1",
+            source: "Slack",
+            operationNames: ["Expenses"],
+          }),
+          expect.objectContaining({
+            sessionId: "session_2",
+            source: "Chat",
+            operationNames: ["Expenses"],
+          }),
+        ])
       })
     })
 
@@ -280,7 +556,7 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("treats needs_input as non-terminal so initActiveRequest reuses the same requestId", async () => {
+    it("keeps needs_input when boundary analysis links a follow-up", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const first = (await initActiveRequest({
           agentId: "agent_1",
@@ -297,6 +573,12 @@ describe("agentRequests crud", () => {
         await updateRequestStatus({
           requestId: first.requestId,
           status: "needs_input",
+        })
+
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first.requestId,
+          entryAction: "append_latest_entry",
         })
 
         const second = await initActiveRequest({
@@ -1624,8 +1906,8 @@ describe("agentRequests crud", () => {
           sessionId: "session_2",
           latestUserPrompt: "turn it into an email",
           operation: {
-            name: "Comms",
-            prompt: "Turn requested information into a polished email.",
+            name: "Support",
+            prompt: "Help users with company policy questions.",
           },
           source: "Slack",
           userId: "user_1",
@@ -1636,7 +1918,7 @@ describe("agentRequests crud", () => {
         expect(second?.request.entries[1]).toEqual({
           sessionId: "session_2",
           source: "Slack",
-          operationNames: ["Comms"],
+          operationNames: ["Support"],
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
           status: "active",
