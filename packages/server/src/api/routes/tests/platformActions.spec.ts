@@ -372,6 +372,16 @@ describe("/api/actions", () => {
         }
       )
 
+      expect(firstPage.pagination).toMatchObject({
+        hasNextPage: true,
+        hasPreviousPage: false,
+        nextBookmark: expect.any(String),
+      })
+      expect(secondPage.pagination).toMatchObject({
+        hasNextPage: false,
+        hasPreviousPage: true,
+        previousBookmark: expect.any(String),
+      })
       expect(
         [...firstPage.events, ...secondPage.events].map(e => e.eventName)
       ).toEqual(["action:1", "action:2", "action:3"])
