@@ -2,7 +2,7 @@
   import { API } from "@/api"
   import { automationStore } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
-  import { Body, Button } from "@budibase/bbui"
+  import { Body } from "@budibase/bbui"
   import type {
     ActionEvent,
     ActionSession,
@@ -10,6 +10,7 @@
   } from "@budibase/types"
   import { untrack } from "svelte"
   import ActivityDetailsList from "./ActivityDetailsList.svelte"
+  import ActivityLoadError from "./ActivityLoadError.svelte"
   import ActivityPanelShell from "./ActivityPanelShell.svelte"
   import ActivityTableFooter from "./ActivityTableFooter.svelte"
   import ActivityTimeline from "./ActivityTimeline.svelte"
@@ -19,9 +20,7 @@
     getActionSessionRowId,
     getActionSessionTitle,
   } from "./actionSessionRows"
-  import { getPaginationLabel } from "./pagination"
-
-  const PAGE_SIZE = 20
+  import { getPaginationLabel, PAGE_SIZE } from "./pagination"
 
   interface PageRequest {
     page: number
@@ -186,12 +185,10 @@
       {/if}
 
       {#if loadFailed}
-        <div class="load-error" role="alert">
-          <Body size="S">Failed to load events.</Body>
-          <Button secondary size="S" on:click={() => loadEvents(lastRequest)}
-            >Try again</Button
-          >
-        </div>
+        <ActivityLoadError
+          message="Failed to load events."
+          onRetry={() => loadEvents(lastRequest)}
+        />
       {:else if !loading || events.length > 0}
         <ActivityTimeline
           items={timelineItems}
@@ -213,15 +210,3 @@
     </section>
   {/if}
 </ActivityPanelShell>
-
-<style>
-  .load-error {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-m);
-    padding: var(--spacing-l);
-    border-radius: var(--border-radius-s);
-    background: var(--spectrum-global-color-gray-100);
-  }
-</style>

@@ -9,6 +9,7 @@ import type {
 } from "@budibase/types"
 import { getRowIcon, getRowIconColor } from "../home/_components/rows"
 import type { ActivityDetail } from "./ActivityDetailsList.svelte"
+import { formatActivityDate } from "./activityDate"
 
 dayjs.extend(relativeTime)
 
@@ -53,11 +54,6 @@ const getAssetLabel = (session: ActionSession) =>
 
 const getTriggeredByLabel = (session: ActionSession) =>
   session.triggeredByLabel || "Unknown"
-
-const formatDate = (value: string) => {
-  const date = dayjs(value)
-  return date.isValid() ? date.format("MMM D, YYYY h:mm A") : "Unknown time"
-}
 
 export const getActionSessionRowId = ({
   environment,
@@ -134,7 +130,7 @@ export const getActionSessionDetails = (
     {
       type: "text",
       label: "Started at",
-      value: formatDate(session.startedAt),
+      value: formatActivityDate(session.startedAt),
       icon: "calendar",
     },
   ]

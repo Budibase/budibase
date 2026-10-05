@@ -1,6 +1,6 @@
-import dayjs from "dayjs"
 import { ActionFailureReason, Event, type ActionEvent } from "@budibase/types"
 import type { ActivityTimelineItem } from "./ActivityTimeline.svelte"
+import { formatActivityDate } from "./activityDate"
 
 const FAILURE_REASON_LABELS: Record<ActionFailureReason, string> = {
   [ActionFailureReason.ERROR]: "Error",
@@ -27,11 +27,6 @@ const getFailureDetail = (payload: Record<string, unknown>) => {
   return isFailureReason(reason) ? FAILURE_REASON_LABELS[reason] : undefined
 }
 
-const formatTimestamp = (value: string) => {
-  const date = dayjs(value)
-  return date.isValid() ? date.format("MMM D, YYYY h:mm A") : "Unknown time"
-}
-
 export const toActionTimelineItem = ({
   event,
   stepNames,
@@ -49,7 +44,7 @@ export const toActionTimelineItem = ({
 
   const item = {
     id: event.id,
-    timestamp: formatTimestamp(event.timestamp),
+    timestamp: formatActivityDate(event.timestamp),
   }
 
   switch (event.eventName) {

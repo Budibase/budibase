@@ -1,6 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
-  import { Body, Button, Select, Table } from "@budibase/bbui"
+  import { Select, Table } from "@budibase/bbui"
   import {
     PLATFORM_ACTION_CONTAINER_STATUSES,
     type ActionSession,
@@ -12,6 +12,7 @@
   import { onMount } from "svelte"
   import ActionSessionPanel from "./ActionSessionPanel.svelte"
   import ActivityFilters from "./ActivityFilters.svelte"
+  import ActivityLoadError from "./ActivityLoadError.svelte"
   import ActivityPage from "./ActivityPage.svelte"
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
   import ActivitySummaryCards, {
@@ -27,9 +28,8 @@
     type ActionSessionRow,
   } from "./actionSessionRows"
   import { ACTIVITY_STATUS_LABELS } from "./activityStatus"
-  import { getPaginationLabel } from "./pagination"
+  import { getPaginationLabel, PAGE_SIZE } from "./pagination"
 
-  const PAGE_SIZE = 20
   const RELATIVE_TIME_REFRESH_MS = 30000
 
   const tableSchema = {
@@ -263,12 +263,10 @@
   </ActivityFilters>
 
   {#if loadFailed}
-    <div class="load-error" role="alert">
-      <Body size="S">Failed to load actions.</Body>
-      <Button secondary size="S" on:click={() => loadSessions(lastRequest)}
-        >Try again</Button
-      >
-    </div>
+    <ActivityLoadError
+      message="Failed to load actions."
+      onRetry={() => loadSessions(lastRequest)}
+    />
   {:else}
     <ActivityTablePanel>
       <Table
@@ -302,15 +300,3 @@
 
   <ActionSessionPanel session={selectedSession} onClose={closeSessionPanel} />
 </ActivityPage>
-
-<style>
-  .load-error {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-m);
-    padding: var(--spacing-l);
-    border-radius: var(--border-radius-s);
-    background: var(--spectrum-global-color-gray-100);
-  }
-</style>

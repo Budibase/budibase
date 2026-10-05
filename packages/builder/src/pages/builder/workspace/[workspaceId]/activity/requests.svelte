@@ -22,7 +22,7 @@
   } from "./ActivitySummaryCards.svelte"
   import ActivityTableFooter from "./ActivityTableFooter.svelte"
   import ActivityTablePanel from "./ActivityTablePanel.svelte"
-  import { getPaginationLabel } from "./pagination"
+  import { getPaginationLabel, PAGE_SIZE } from "./pagination"
 
   dayjs.extend(relativeTime)
 
@@ -35,7 +35,6 @@
     actions: string
   }
 
-  const PAGE_SIZE = 20
   const tableSchema = {
     title: {
       type: "string",
