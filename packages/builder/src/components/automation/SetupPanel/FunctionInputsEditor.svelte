@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { Body, Select } from "@budibase/bbui"
+  import { Body, Input, Select } from "@budibase/bbui"
   import { isJSBinding } from "@budibase/string-templates"
   import type {
     EnrichedBinding,
@@ -84,11 +84,11 @@
 <div class="inputs-editor">
   {#each inputSchema as input (input.name)}
     <PropField label={input.name} labelTooltip={input.description} fullWidth>
-      {#if input.type === "string" || input.type === "number"}
+      {#if input.type === "string"}
         <DrawerBindableInput
           title={input.name}
           value={displayValue(value?.[input.name])}
-          inputType={input.type === "number" ? "number" : "text"}
+          inputType="text"
           {bindings}
           {context}
           panel={AutomationBindingPanel}
@@ -97,6 +97,27 @@
           on:change={(event: CustomEvent<string | number | null>) =>
             save({ input, text: event.detail })}
         />
+      {:else if input.type === "number"}
+        <DrawerBindableSlot
+          title={input.name}
+          type="number"
+          value={displayValue(value?.[input.name])}
+          {bindings}
+          {context}
+          panel={AutomationBindingPanel}
+          allowJS
+          updateOnChange={false}
+          on:change={(event: CustomEvent<string>) =>
+            save({ input, text: event.detail })}
+        >
+          <Input
+            type="number"
+            value={displayValue(value?.[input.name])}
+            updateOnChange={false}
+            on:change={(event: CustomEvent<string | number | null>) =>
+              save({ input, text: event.detail })}
+          />
+        </DrawerBindableSlot>
       {:else}
         <DrawerBindableSlot
           title={input.name}
