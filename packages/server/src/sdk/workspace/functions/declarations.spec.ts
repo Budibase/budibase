@@ -81,41 +81,18 @@ describe("typed Function input declarations", () => {
     {
       name: "text",
       type: "string",
-      required: true,
       description: "A description */\nwith newlines",
     },
-    { name: "count", type: "number", required: true },
-    { name: "flag", type: "boolean", required: true },
-    { name: "data", type: "object", required: true },
-    { name: "items", type: "array", required: true },
+    { name: "count", type: "number" },
+    { name: "flag", type: "boolean" },
+    { name: "data", type: "object" },
+    { name: "items", type: "array" },
   ]
-
-  it("type-checks every supported required input type", () => {
-    const declarations = generateFunctionDeclarations({
-      capabilities: [],
-      inputSchema,
-    })
-    const source = `import { inputs, type JsonValue } from "@budibase/functions"
-const text: string = inputs.text
-const count: number = inputs.count
-const flag: boolean = inputs.flag
-const data: Record<string, JsonValue> = inputs.data
-const items: JsonValue[] = inputs.items
-`
-    expect(
-      getDiagnostics(
-        new Map([
-          ["functions.d.ts", declarations],
-          ["usage.ts", source],
-        ])
-      )
-    ).toEqual([])
-  })
 
   it("type-checks every supported optional input type, including null values", () => {
     const declarations = generateFunctionDeclarations({
       capabilities: [],
-      inputSchema: inputSchema.map(input => ({ ...input, required: false })),
+      inputSchema,
     })
     const source = `import { inputs, type GeneratedInputs, type JsonValue } from "@budibase/functions"
 const text: string | null | undefined = inputs.text
@@ -124,6 +101,7 @@ const flag: boolean | null | undefined = inputs.flag
 const data: Record<string, JsonValue> | null | undefined = inputs.data
 const items: JsonValue[] | null | undefined = inputs.items
 const nullable: GeneratedInputs = { text: null, count: null, flag: null, data: null, items: null }
+const omitted: GeneratedInputs = {}
 `
     expect(
       getDiagnostics(

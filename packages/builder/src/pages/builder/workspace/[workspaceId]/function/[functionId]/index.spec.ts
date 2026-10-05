@@ -130,23 +130,23 @@ describe("Function editor route", () => {
     render(FunctionPage)
     await fireEvent.click(await screen.findByRole("tab", { name: "Inputs" }))
     await fireEvent.click(screen.getByRole("button", { name: "Add input" }))
-    await fireEvent.input(screen.getByPlaceholderText("customerId"), {
+    await fireEvent.input(screen.getByPlaceholderText("Enter input name"), {
       target: { value: "customerId" },
     })
-    await fireEvent.click(screen.getByRole("button", { name: "Save inputs" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
     await waitFor(() =>
       expect(mocks.save).toHaveBeenCalledWith(
         expect.objectContaining({ _id: "function-a" }),
         expect.objectContaining({
           source: "saved source",
-          inputSchema: [{ name: "customerId", type: "string", required: true }],
+          inputSchema: [{ name: "customerId", type: "string" }],
         })
       )
     )
     await waitFor(() =>
       expect(mocks.compile).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          inputSchema: [{ name: "customerId", type: "string", required: true }],
+          inputSchema: [{ name: "customerId", type: "string" }],
         })
       )
     )
@@ -221,8 +221,8 @@ describe("Function editor route", () => {
     mocks.available.set(true)
 
     render(FunctionPage)
-    await screen.findByRole("button", { name: "Save links" })
-    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await screen.findByRole("button", { name: "Save" })
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
 
     mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
     await waitFor(() =>
@@ -230,11 +230,11 @@ describe("Function editor route", () => {
     )
     mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-a" })
     await waitFor(() => expect(mocks.fetchOne).toHaveBeenCalledTimes(3))
-    await screen.findByRole("button", { name: "Save links" })
+    await screen.findByRole("button", { name: "Save" })
 
     resolveSave({ ...createFunction("function-a"), _rev: "2" })
     await waitFor(() => expect(mocks.notificationsSuccess).toHaveBeenCalled())
-    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
 
     await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2))
     expect(mocks.save).toHaveBeenLastCalledWith(
@@ -254,9 +254,9 @@ describe("Function editor route", () => {
     mocks.available.set(true)
     const view = render(FunctionPage)
 
-    await screen.findByRole("button", { name: "Save links" })
+    await screen.findByRole("button", { name: "Save" })
     vi.useFakeTimers()
-    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
     const compilationsBeforeUnmount = mocks.compile.mock.calls.length
     view.unmount()
     await act(async () => {
@@ -383,9 +383,9 @@ describe("Function editor route", () => {
     mocks.available.set(true)
     render(FunctionPage)
 
-    await screen.findByRole("button", { name: "Save links" })
+    await screen.findByRole("button", { name: "Save" })
     vi.useFakeTimers()
-    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
     await act(async () => {
       mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
       await vi.advanceTimersByTimeAsync(0)

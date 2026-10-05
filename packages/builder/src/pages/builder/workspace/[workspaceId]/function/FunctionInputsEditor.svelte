@@ -1,14 +1,17 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { getErrorMessage } from "@/helpers/errors"
-  import { Button, Checkbox, Input, Select, TextArea } from "@budibase/bbui"
+  import { Button } from "@budibase/bbui"
   import {
-    FUNCTION_INPUT_TYPES,
     MAX_FUNCTION_INPUTS,
     validateFunctionInputSchema,
   } from "@budibase/shared-core"
-  import type { FunctionInputDefinition } from "@budibase/types"
+  import type {
+    FunctionInputDefinition,
+    FunctionInputType,
+  } from "@budibase/types"
+  import SchemaFieldRow from "@/components/common/SchemaFieldRow.svelte"
+  import { getErrorMessage } from "@/helpers/errors"
 
   export interface Props {
     inputSchema?: FunctionInputDefinition[]
@@ -17,28 +20,67 @@
   }
 
   let { inputSchema = [], onSave, onDirtyChange = () => {} }: Props = $props()
+  const typeOptions: { label: string; value: FunctionInputType }[] = [
+    { label: "String", value: "string" },
+    { label: "Number", value: "number" },
+    { label: "Boolean", value: "boolean" },
+    { label: "Object", value: "object" },
+    { label: "Array", value: "array" },
+  ]
+
   let drafts = $state<FunctionInputDefinition[]>([])
   let syncedSchema = $state("")
   let saving = $state(false)
   let saveError = $state("")
-  let errors = $derived(validateFunctionInputSchema(drafts))
+  let errors = $state<string[]>([])
+  let inputErrors = $state<string[][]>([])
   let dirty = $derived(JSON.stringify(drafts) !== syncedSchema)
 
   $effect(() => {
     const serialized = JSON.stringify(inputSchema)
     if (serialized !== syncedSchema) {
-      drafts = inputSchema.map(input => ({ ...input }))
+      drafts = inputSchema.map(({ name, type, description }) => ({
+        name,
+        type,
+        description,
+      }))
       syncedSchema = serialized
       saveError = ""
+      errors = []
+      inputErrors = []
     }
   })
   $effect(() => {
     onDirtyChange(dirty)
   })
 
+  const clearResolvedErrors = () => {
+    if (!inputErrors.some(messages => messages.length) && !errors.length) {
+      return
+    }
+    const remainingErrors = validateFunctionInputSchema(drafts)
+    inputErrors = inputErrors.map((messages, index) =>
+      messages.filter(message =>
+        remainingErrors.includes(`Input ${index + 1}: ${message}`)
+      )
+    )
+    errors = errors.filter(message => remainingErrors.includes(message))
+  }
+
   const save = async () => {
-    saving = true
     saveError = ""
+    const validationErrors = validateFunctionInputSchema(drafts)
+    inputErrors = drafts.map((_, index) => {
+      const prefix = `Input ${index + 1}: `
+      return validationErrors
+        .filter(error => error.startsWith(prefix))
+        .map(error => error.slice(prefix.length))
+    })
+    errors = validationErrors.filter(error => !/^Input \d+: /.test(error))
+    if (validationErrors.length) {
+      return
+    }
+    saving = true
     try {
       await onSave(drafts.map(input => ({ ...input })))
     } catch (error) {
@@ -50,47 +92,42 @@
 </script>
 
 <div class="inputs-panel">
-  <h3>Inputs</h3>
-  <p>
-    Define the inputs your Function accepts. Changes require a new build.
-    Optional inputs may be omitted or set to null.
-  </p>
-  {#if !drafts.length}
-    <p>No inputs defined. Your Function accepts a generic JSON object.</p>
-  {/if}
+  <div class="header">
+    <h3>Inputs</h3>
+    <Button primary size="S" disabled={saving || !dirty} on:click={save}
+      >{saving ? "Saving..." : "Save"}</Button
+    >
+  </div>
   {#each drafts as input, index}
-    <fieldset disabled={saving}>
-      <legend>Input {index + 1}</legend>
-      <Input
-        label="Name"
-        bind:value={input.name}
-        disabled={saving}
-        placeholder="customerId"
-      />
-      <Select
-        label="Type"
-        options={FUNCTION_INPUT_TYPES}
-        placeholder={false}
-        bind:value={input.type}
-        disabled={saving}
-      />
-      <Checkbox text="Required" bind:value={input.required} disabled={saving} />
-      <TextArea
-        label="Description (optional)"
-        bind:value={input.description}
+    <div class="input" role="group" aria-label={`Input ${index + 1}`}>
+      <SchemaFieldRow
+        name={input.name}
+        type={input.type}
+        options={typeOptions}
+        placeholder="Enter input name"
+        removeLabel={`Remove input ${index + 1}`}
         disabled={saving}
         updateOnChange
-        height={64}
-      />
-      <Button
-        secondary
-        size="S"
-        disabled={saving}
-        on:click={() => {
+        onNameChange={name => {
+          input.name = name
+          clearResolvedErrors()
+        }}
+        onTypeChange={type => {
+          input.type = type
+          clearResolvedErrors()
+        }}
+        onRemove={() => {
           drafts = drafts.filter((_, i) => i !== index)
-        }}>Remove input {index + 1}</Button
-      >
-    </fieldset>
+          inputErrors = inputErrors.filter((_, i) => i !== index)
+          clearResolvedErrors()
+        }}
+      />
+      {#if inputErrors[index]?.length}
+        <div role="alert">
+          {#each inputErrors[index] as error}<p>{error}</p>{/each}
+        </div>
+      {/if}
+    </div>
   {/each}
   {#if errors.length}
     <div role="alert">
@@ -100,18 +137,13 @@
   {#if saveError}<p role="alert">{saveError}</p>{/if}
   <div class="actions">
     <Button
+      quiet
       secondary
-      size="S"
+      icon="plus"
       disabled={saving || drafts.length >= MAX_FUNCTION_INPUTS}
       on:click={() => {
-        drafts = [...drafts, { name: "", type: "string", required: true }]
+        drafts = [...drafts, { name: "", type: "string" }]
       }}>Add input</Button
-    >
-    <Button
-      primary
-      size="S"
-      disabled={saving || !dirty || errors.length > 0}
-      on:click={save}>{saving ? "Saving..." : "Save inputs"}</Button
     >
   </div>
 </div>
@@ -123,6 +155,12 @@
     gap: 12px;
     font-size: 13px;
   }
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
   h3,
   p {
     margin: 0;
@@ -131,13 +169,10 @@
     color: var(--spectrum-global-color-gray-700);
     line-height: 1.5;
   }
-  fieldset {
+  .input {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 12px;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 6px;
     min-width: 0;
   }
   [role="alert"] p,
@@ -146,6 +181,7 @@
   }
   .actions {
     display: flex;
+    align-items: center;
     gap: 8px;
   }
 </style>

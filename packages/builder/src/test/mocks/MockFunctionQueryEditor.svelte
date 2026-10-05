@@ -6,4 +6,4 @@
   ) => Promise<void>
 </script>
 
-<button on:click={() => onSave([])}>Save links</button>
+<button on:click={() => onSave([])}>Save</button>

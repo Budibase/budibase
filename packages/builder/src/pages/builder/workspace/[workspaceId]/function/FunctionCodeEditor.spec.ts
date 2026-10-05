@@ -46,7 +46,6 @@ describe("FunctionCodeEditor", () => {
         {
           name: "customerId",
           type: "string",
-          required: true,
           description: "Customer identifier",
         },
       ],
