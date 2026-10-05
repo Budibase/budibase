@@ -330,7 +330,7 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
       if (value !== PASSWORD_REPLACEMENT) {
         continue
       }
-      if (old.config[key]) {
+      if (Object.hasOwn(old.config, key)) {
         restoredConfig[key] = old.config[key]
       } else {
         delete restoredConfig[key]

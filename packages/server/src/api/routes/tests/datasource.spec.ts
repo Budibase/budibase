@@ -201,6 +201,55 @@ describe("/datasources", () => {
       ).toThrow("Datasource settings cannot change")
     })
 
+    it("rejects using a stored password with a different datasource source", () => {
+      const stored: Datasource = {
+        type: "datasource",
+        source: SourceName.POSTGRES,
+        config: {
+          host: "trusted.example",
+          password: "stored-secret",
+        },
+      }
+
+      expect(() =>
+        sdk.datasources.mergeConfigs(
+          {
+            ...stored,
+            source: SourceName.MYSQL,
+            config: {
+              ...stored.config,
+              password: PASSWORD_REPLACEMENT,
+            },
+          },
+          stored
+        )
+      ).toThrow("Datasource settings cannot change")
+    })
+
+    it("preserves an empty stored password", () => {
+      const stored: Datasource = {
+        type: "datasource",
+        source: SourceName.ORACLE,
+        config: {
+          host: "trusted.example",
+          password: "",
+        },
+      }
+
+      const merged = sdk.datasources.mergeConfigs(
+        {
+          ...stored,
+          config: {
+            ...stored.config,
+            password: PASSWORD_REPLACEMENT,
+          },
+        },
+        stored
+      )
+
+      expect(merged.config).toEqual(stored.config)
+    })
+
     it.each([
       { source: SourceName.POSTGRES, hostField: "host" },
       { source: SourceName.SQL_SERVER, hostField: "server" },
