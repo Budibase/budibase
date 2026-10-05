@@ -62,13 +62,17 @@ describe("platformActions events", () => {
     sourceType = "agent_session",
     sourceId,
     eventName = "action:tool:executed",
+    createSessionIndex = true,
   }: {
     environment?: PlatformActionEnvironment
     sourceType?: PlatformActionSourceType
     sourceId: string
     eventName?: string
+    createSessionIndex?: boolean
   }) {
-    await createSession({ environment, sourceType, sourceId })
+    if (createSessionIndex) {
+      await createSession({ environment, sourceType, sourceId })
+    }
     const timestamp = new Date().toISOString()
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const doc: PlatformActionEvent = {
@@ -117,6 +121,24 @@ describe("platformActions events", () => {
           })
         )
       ).rejects.toMatchObject({ status: 404, message: "Session not found" })
+    })
+
+    it("returns persisted events before their session is indexed", async () => {
+      await createEvent({ sourceId: "run-1", createSessionIndex: false })
+
+      const result = await withContext(() =>
+        fetchSessionEvents({
+          environment: "prod",
+          sourceType: "agent_session",
+          sourceId: "run-1",
+        })
+      )
+
+      expect(result).toMatchObject({
+        events: [{ eventName: "action:tool:executed" }],
+        summary: { total: 1 },
+        pagination: { hasNextPage: false, hasPreviousPage: false },
+      })
     })
 
     it("returns an empty page for an existing session without events", async () => {
