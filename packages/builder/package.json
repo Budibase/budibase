@@ -45,7 +45,7 @@
     "svelte-loading-spinners": "^0.3.6",
     "svelte-portal": "^2.2.1",
     "to-json-schema": "0.2.5",
-    "uuid": "^8.3.2",
+    "uuid": "^14.0.0",
     "yup": "^0.32.11"
   },
   "devDependencies": {
