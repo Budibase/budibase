@@ -445,6 +445,7 @@ const createTeamsMessageHandler = ({
 export async function MSTeamsWebhook(
   ctx: Ctx<unknown, unknown, { instance: string; agentId: string }>
 ) {
+  let serviceUrl: string | undefined
   await runChatWebhook({
     ctx,
     providerName: "Teams",
@@ -457,7 +458,7 @@ export async function MSTeamsWebhook(
       ) {
         throw new HTTPError("Missing Microsoft Teams service URL", 400)
       }
-      validateMSTeamsServiceUrl(body.serviceUrl)
+      serviceUrl = validateMSTeamsServiceUrl(body.serviceUrl)
     },
     createWebhookHandler: async ({ workspaceId, agentId }) => {
       const {
@@ -488,6 +489,8 @@ export async function MSTeamsWebhook(
             appPassword: integration.appPassword,
             appTenantId: integration.tenantId,
             appType: "SingleTenant",
+            // Card posts use the adapter URL; DM streams use the activity URL.
+            apiUrl: serviceUrl,
           }),
         },
         state: await getTeamsState(),
