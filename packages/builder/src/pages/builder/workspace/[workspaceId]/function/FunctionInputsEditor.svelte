@@ -39,10 +39,9 @@
   $effect(() => {
     const serialized = JSON.stringify(inputSchema)
     if (serialized !== syncedSchema) {
-      drafts = inputSchema.map(({ name, type, description }) => ({
+      drafts = inputSchema.map(({ name, type }) => ({
         name,
         type,
-        description,
       }))
       syncedSchema = serialized
       saveError = ""

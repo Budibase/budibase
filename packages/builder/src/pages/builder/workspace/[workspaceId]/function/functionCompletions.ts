@@ -25,5 +25,4 @@ export const getFunctionInputCompletions = (
     label: input.name,
     type: "property",
     detail: `${input.type} | null`,
-    info: input.description,
   }))

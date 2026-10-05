@@ -13,7 +13,6 @@ export const FUNCTION_INPUT_TYPES: FunctionInputType[] = [
 ]
 export const MAX_FUNCTION_INPUTS = 100
 export const MAX_FUNCTION_INPUT_NAME_LENGTH = 128
-export const MAX_FUNCTION_INPUT_DESCRIPTION_LENGTH = 1024
 
 export const validateFunctionInputSchema = (
   inputSchema: readonly FunctionInputDefinition[]
@@ -39,14 +38,6 @@ export const validateFunctionInputSchema = (
     names.add(input.name)
     if (!FUNCTION_INPUT_TYPES.includes(input.type)) {
       errors.push(`${label}: select a supported type.`)
-    }
-    if (
-      input.description &&
-      input.description.length > MAX_FUNCTION_INPUT_DESCRIPTION_LENGTH
-    ) {
-      errors.push(
-        `${label}: descriptions cannot exceed ${MAX_FUNCTION_INPUT_DESCRIPTION_LENGTH} characters.`
-      )
     }
   })
   return errors

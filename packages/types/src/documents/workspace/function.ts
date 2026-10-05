@@ -11,7 +11,6 @@ export type FunctionInputType =
 export interface FunctionInputDefinition {
   name: string
   type: FunctionInputType
-  description?: string
 }
 
 export interface FunctionQueryCapability {
