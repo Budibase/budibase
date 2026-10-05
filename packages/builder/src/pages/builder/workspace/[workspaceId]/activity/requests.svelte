@@ -3,13 +3,7 @@
   import { agentsStore } from "@/stores/portal"
   import { users } from "@/stores/portal/users"
   import { builderStore } from "@/stores/builder"
-  import {
-    Body,
-    Pagination,
-    Select,
-    Table,
-    notifications,
-  } from "@budibase/bbui"
+  import { Pagination, Select, Table, notifications } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
   import type {
     AgentRequest,
@@ -19,9 +13,13 @@
   import dayjs from "dayjs"
   import relativeTime from "dayjs/plugin/relativeTime"
   import ActivityActionsRenderer from "./ActivityActionsRenderer.svelte"
+  import ActivityFilters from "./ActivityFilters.svelte"
   import ActivityPage from "./ActivityPage.svelte"
   import ActivitySidePanel from "./ActivitySidePanel.svelte"
   import ActivityStatusRenderer from "./ActivityStatusRenderer.svelte"
+  import ActivitySummaryCards, {
+    type SummaryMetric,
+  } from "./ActivitySummaryCards.svelte"
   import ActivityTablePanel from "./ActivityTablePanel.svelte"
 
   dayjs.extend(relativeTime)
@@ -33,11 +31,6 @@
     status: AgentRequestStatus
     updatedLabel: string
     actions: string
-  }
-
-  interface SummaryMetric {
-    label: string
-    value: number
   }
 
   const PAGE_SIZE = 20
@@ -409,20 +402,9 @@
 </script>
 
 <ActivityPage>
-  <div class="metrics-grid">
-    {#each summaryMetrics as metric}
-      <section class="metric-card">
-        <Body size="XL" weight="600">
-          {metric.value.toLocaleString()}
-        </Body>
-        <Body size="S" color="var(--spectrum-global-color-gray-600)">
-          {metric.label}
-        </Body>
-      </section>
-    {/each}
-  </div>
+  <ActivitySummaryCards metrics={summaryMetrics} />
 
-  <div class="filters-row">
+  <ActivityFilters>
     <Select
       size="M"
       autoWidth
@@ -431,7 +413,7 @@
       value={statusFilter}
       on:change={({ detail }) => changeStatusFilter(detail)}
     />
-  </div>
+  </ActivityFilters>
 
   <ActivityTablePanel>
     <Table
@@ -477,30 +459,6 @@
 </ActivityPage>
 
 <style>
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: var(--spacing-m);
-  }
-
-  .metric-card {
-    background: var(--spectrum-global-color-gray-100);
-    border-radius: 4px;
-    padding: var(--spacing-m) var(--spacing-l);
-    display: flex;
-    flex-direction: column;
-    gap: calc(var(--spacing-s) - var(--spacing-xs));
-  }
-
-  .filters-row {
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .filters-row :global(.spectrum-Picker) {
-    min-width: 180px;
-  }
-
   .table-footer {
     display: flex;
     justify-content: space-between;
@@ -512,12 +470,6 @@
   .footer-copy {
     font-size: 13px;
     color: var(--spectrum-global-color-gray-700);
-  }
-
-  @media (max-width: 1280px) {
-    .metrics-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
   }
 
   @media (max-width: 720px) {
