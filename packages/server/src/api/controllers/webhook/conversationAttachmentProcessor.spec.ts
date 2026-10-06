@@ -238,6 +238,39 @@ describe("conversation attachment processor", () => {
     }
   )
 
+  it("sends a fallback when a queued Teams answer is empty", async () => {
+    conversation.channel = {
+      provider: AgentChannelProvider.MSTEAMS,
+      conversationType: "personal",
+      conversationId: "teams_conversation",
+    }
+    conversation.attachments![0] = {
+      ...conversation.attachments![0],
+      provider: AgentChannelProvider.MSTEAMS,
+      status: ConversationAttachmentStatus.READY,
+    }
+    mockWebhookChat.mockResolvedValueOnce({
+      messages: conversation.messages,
+      assistantText: "",
+    })
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(mockTeamsReply).toHaveBeenCalledWith(
+      expect.objectContaining({ text: "No response generated." })
+    )
+    expect(conversation.pendingAttachmentTurns).toEqual([
+      expect.objectContaining({
+        status: ConversationAttachmentTurnStatus.COMPLETED,
+        responseText: "No response generated.",
+      }),
+    ])
+  })
+
   it("rejects Teams download URLs outside SharePoint", async () => {
     await expect(
       getTeamsFileData({

@@ -22,6 +22,7 @@ import {
   TeamsFileAccessDeniedError,
 } from "./teamsAttachments"
 import { formatSlackAssistantReply } from "./slack"
+import { NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import type { ConversationAttachmentIngestionJob } from "../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue"
 
 const MAX_UPDATE_ATTEMPTS = 5
@@ -490,7 +491,7 @@ const processTurn = async ({
     messages = result.messages
     responseText =
       current.channel?.provider === AgentChannelProvider.MSTEAMS
-        ? result.assistantText
+        ? result.assistantText || NO_ASSISTANT_RESPONSE_MESSAGE
         : await formatSlackAssistantReply({
             agentId: current.agentId,
             result,
