@@ -64,6 +64,8 @@ export interface Entry {
   key: string
   value: any
 }
+const SCAN_COUNT = 10000
+
 function promisifyStream(
   stream: ScanStream,
   client: Redis | Cluster
@@ -141,11 +143,11 @@ class RedisWrapper {
       let stream: ScanStream
       if (isCluster(this.client)) {
         let node = this.client.nodes("master")
-        stream = node[0].scanStream({ match: key + "*", count: 100 })
+        stream = node[0].scanStream({ match: key + "*", count: SCAN_COUNT })
       } else {
         stream = (this.client as Redis).scanStream({
           match: key + "*",
-          count: 100,
+          count: SCAN_COUNT,
         })
       }
 
