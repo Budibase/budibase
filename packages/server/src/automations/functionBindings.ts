@@ -23,6 +23,7 @@ export const processFunctionBindings = ({
       const standalone = bindings.length === 1 && bindings[0] === value.trim()
       return processStringSync(standalone ? value.trim() : value, context, {
         arrayHandling: standalone ? arrayHandling : "stringify",
+        noThrow: false,
       })
     }
     if (Array.isArray(value)) {

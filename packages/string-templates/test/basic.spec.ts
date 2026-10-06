@@ -10,6 +10,7 @@ import {
   disableEscaping,
   findHBSBlocks,
   processJsonStringSync,
+  processStringSync,
 } from "../src/index"
 
 describe("Test that the string processing works correctly", () => {
@@ -71,6 +72,22 @@ describe("Test that the object processing works correctly", () => {
     )
     expect(output).toEqual({ value: [1, null], helper: ["Ada", "Grace"] })
   })
+
+  it.each([
+    { items: ["}}"] },
+    { items: ["{{ value }}", "}}", "%7D%7D", "🦄"] },
+    { items: [{ value: "}}" }, ["}}"]] },
+  ])(
+    "preserves array values containing binding delimiters: $items",
+    ({ items }: { items: JSONValue[] }) => {
+      const output = processStringSync(
+        "{{ items }}",
+        { items },
+        { arrayHandling: "preserve", noThrow: false }
+      )
+      expect(output).toEqual(items)
+    }
+  )
 
   it("should be able to process an object with some template strings", async () => {
     const output = await processObject(

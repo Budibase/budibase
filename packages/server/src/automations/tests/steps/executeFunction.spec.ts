@@ -144,6 +144,47 @@ describe("Run Function automation action", () => {
     }
   )
 
+  it.each<{
+    name: string
+    type: FunctionInputType
+    wrap: (binding: string) => JSONValue
+  }>([
+    { name: "standalone", type: "string", wrap: binding => binding },
+    {
+      name: "interpolated",
+      type: "string",
+      wrap: binding => `Hello ${binding}`,
+    },
+    { name: "nested", type: "object", wrap: binding => ({ value: binding }) },
+    { name: "array", type: "array", wrap: binding => [binding] },
+  ])(
+    "rejects throwing $name JavaScript input bindings",
+    async ({ type, wrap }) => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type }],
+        }),
+      })
+      await expect(
+        run(deps, {
+          functionId: fn._id,
+          inputs: {
+            value: wrap(encodeJSBinding('throw new Error("Invalid input")')),
+          },
+        })
+      ).resolves.toEqual({
+        success: false,
+        status: "error",
+        error: {
+          code: FunctionErrorCode.FUNCTION_INPUT_INVALID,
+          message: "Function input bindings could not be resolved",
+        },
+      })
+      expect(deps.orchestrate).not.toHaveBeenCalled()
+    }
+  )
+
   it.each<{ type: FunctionInputType; expected: JSONValue }>([
     { type: "string", expected: "[1,null]" },
     { type: "array", expected: [1, null] },

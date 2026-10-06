@@ -1054,9 +1054,11 @@ class Orchestrator {
         const resolutionStrategy = escalationInputs?.resolutionStrategy
         if (step.stepId === AutomationActionStepId.EXECUTE_FUNCTION) {
           const functionStepInputs = inputs as ExecuteFunctionStepInputs
-          inputs = {
-            ...functionStepInputs,
-            functionId: processStringSync(functionStepInputs.functionId, ctx),
+          if (typeof functionStepInputs.functionId === "string") {
+            inputs = {
+              ...functionStepInputs,
+              functionId: processStringSync(functionStepInputs.functionId, ctx),
+            }
           }
         } else {
           inputs = await processObject(inputs, ctx)

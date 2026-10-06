@@ -18,6 +18,17 @@ describe("Javascript", () => {
     defaultJSSetup()
   })
 
+  describe("strict binding errors", () => {
+    it.each(['throw new Error("Binding failed")', "return ("])(
+      "throws user and syntax errors with noThrow disabled: %s",
+      javascript => {
+        expect(() =>
+          processStringSync(encodeJSBinding(javascript), {}, { noThrow: false })
+        ).toThrow()
+      }
+    )
+  })
+
   describe("Test the JavaScript helper", () => {
     it("should execute a simple expression", () => {
       const output = processJS(`return 1 + 2`)

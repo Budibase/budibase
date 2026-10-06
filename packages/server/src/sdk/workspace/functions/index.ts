@@ -86,7 +86,11 @@ const validateDraft = (draft: FunctionDraftInput) => {
 
   const inputErrors = validateFunctionInputSchema(draft.inputSchema || [])
   if (inputErrors.length) {
-    throw new HTTPError(inputErrors[0].message, 400)
+    const { index, message } = inputErrors[0]
+    throw new HTTPError(
+      index === undefined ? message : `Input ${index + 1}: ${message}`,
+      400
+    )
   }
 
   const queryIds = new Set<string>()
