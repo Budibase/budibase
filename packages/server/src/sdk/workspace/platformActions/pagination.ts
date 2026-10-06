@@ -1,3 +1,4 @@
+import { z } from "zod"
 import { HTTPError } from "@budibase/backend-core"
 import type { ActionsPagination, DatabaseKey } from "@budibase/types"
 
@@ -16,9 +17,11 @@ export interface KeysetBookmarkToken extends KeysetPosition {
   direction: KeysetBookmarkDirection
 }
 
-function isDirection(value: unknown): value is KeysetBookmarkDirection {
-  return value === "next" || value === "prev"
-}
+const bookmarkSchema = z.object({
+  direction: z.enum(["next", "prev"]),
+  key: z.union([z.string(), z.array(z.string())]),
+  id: z.string(),
+})
 
 export function encodeKeysetBookmark({
   direction,
@@ -31,24 +34,13 @@ export function encodeKeysetBookmark({
 }
 
 export function decodeKeysetBookmark(bookmark: string): KeysetBookmarkToken {
-  let parsed: { direction?: unknown; key?: DatabaseKey; id?: unknown }
   try {
-    parsed = JSON.parse(Buffer.from(bookmark, "base64").toString("utf-8"))
+    return bookmarkSchema.parse(
+      JSON.parse(Buffer.from(bookmark, "base64").toString("utf-8"))
+    )
   } catch {
     throw new HTTPError("Invalid bookmark", 400)
   }
-
-  if (
-    !parsed ||
-    typeof parsed !== "object" ||
-    !isDirection(parsed.direction) ||
-    typeof parsed.id !== "string" ||
-    parsed.key === undefined
-  ) {
-    throw new HTTPError("Invalid bookmark", 400)
-  }
-
-  return { direction: parsed.direction, key: parsed.key, id: parsed.id }
 }
 
 export function buildPagination<T>({

@@ -7,6 +7,28 @@ import {
 
 describe("platformActions pagination", () => {
   describe("bookmarks", () => {
+    it.each([
+      "",
+      "not-json",
+      "null",
+      "[]",
+      "{}",
+      '{"direction":"invalid","key":"timestamp","id":"event-1"}',
+      '{"direction":"next","key":"timestamp","id":42}',
+      '{"direction":"next","id":"event-1"}',
+      '{"direction":"next","key":null,"id":"event-1"}',
+      '{"direction":"next","key":42,"id":"event-1"}',
+      '{"direction":"next","key":{},"id":"event-1"}',
+      '{"direction":"next","key":["prod",42],"id":"event-1"}',
+      '{"direction":"next","key":[["prod"]],"id":"event-1"}',
+    ])("rejects invalid bookmark content: %s", content => {
+      const bookmark = Buffer.from(content).toString("base64url")
+
+      expect(() => decodeKeysetBookmark(bookmark)).toThrow(
+        expect.objectContaining({ status: 400, message: "Invalid bookmark" })
+      )
+    })
+
     const tokens: KeysetBookmarkToken[] = [
       {
         direction: "next",
