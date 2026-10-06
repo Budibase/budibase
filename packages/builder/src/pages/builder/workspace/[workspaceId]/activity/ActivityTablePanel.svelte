@@ -19,7 +19,6 @@
 
   .activity-table-panel :global(.spectrum-Table) {
     border-radius: var(--border-radius-s);
-    overflow: hidden;
   }
 
   .activity-table-panel :global(.spectrum-Table-headCell) {
