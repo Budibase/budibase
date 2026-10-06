@@ -182,7 +182,7 @@ export default async function () { return { output: { text: inputs.value?.toUppe
         {
           status: 400,
           body: {
-            message: "use a valid identifier of up to 128 characters.",
+            message: "Input 1: use a valid identifier of up to 128 characters.",
           },
         }
       )
@@ -198,7 +198,7 @@ export default async function () { return { output: { text: inputs.value?.toUppe
         },
         {
           status: 400,
-          body: { message: "input names must be unique." },
+          body: { message: "Input 2: input names must be unique." },
         }
       )
       await config.api.function.create(
@@ -211,7 +211,7 @@ export default async function () { return { output: { text: inputs.value?.toUppe
         {
           status: 400,
           body: {
-            message: "__proto__ cannot be used as an input name.",
+            message: "Input 1: __proto__ cannot be used as an input name.",
           },
         }
       )

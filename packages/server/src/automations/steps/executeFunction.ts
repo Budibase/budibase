@@ -198,12 +198,21 @@ export const executeFunction = async (
     if (!unresolvedInputs.success) {
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
     }
-    const functionInputs = parseInputs({
-      inputs: processFunctionBindings({
+    let resolvedInputs: Record<string, JSONValue>
+    try {
+      resolvedInputs = processFunctionBindings({
         inputs: unresolvedInputs.data,
         inputSchema: fn.inputSchema ?? [],
         context,
-      }),
+      })
+    } catch {
+      throw new FunctionActionError(
+        FunctionErrorCode.FUNCTION_INPUT_INVALID,
+        "Function input bindings could not be resolved"
+      )
+    }
+    const functionInputs = parseInputs({
+      inputs: resolvedInputs,
       limits,
       inputSchema: fn.inputSchema,
     })
