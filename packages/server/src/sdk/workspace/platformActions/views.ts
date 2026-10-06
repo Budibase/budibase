@@ -15,7 +15,7 @@ import {
   PLATFORM_ACTION_CONTAINER_STATUSES,
   SEPARATOR,
 } from "@budibase/types"
-import type { KeysetBookmarkDirection, KeysetPosition } from "./bookmarks"
+import type { KeysetBookmarkDirection, KeysetPosition } from "./pagination"
 
 const SESSION_ID_PREFIX = `${DocumentType.PLATFORM_ACTION_SESSION}${SEPARATOR}`
 

@@ -8,7 +8,7 @@ import type {
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { fetchSessions, fetchSessionsSummary } from "./sessions"
-import { encodeKeysetBookmark } from "./bookmarks"
+import { encodeKeysetBookmark } from "./pagination"
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 5))
 

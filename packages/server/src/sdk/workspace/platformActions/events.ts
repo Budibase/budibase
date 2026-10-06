@@ -7,8 +7,7 @@ import type {
   PlatformActionEvent,
   PlatformActionSourceType,
 } from "@budibase/types"
-import { decodeKeysetBookmark } from "./bookmarks"
-import { buildPagination } from "./pagination"
+import { buildPagination, decodeKeysetBookmark } from "./pagination"
 import { getEventKeysetKey, queryEvents, queryEventsTotal } from "./views"
 
 const DEFAULT_LIMIT = 20

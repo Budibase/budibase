@@ -7,8 +7,7 @@ import type {
   PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
-import { decodeKeysetBookmark } from "./bookmarks"
-import { buildPagination } from "./pagination"
+import { buildPagination, decodeKeysetBookmark } from "./pagination"
 import {
   getSessionKeysetKey,
   querySessions,
