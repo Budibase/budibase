@@ -3,9 +3,31 @@ import {
   buildPagination,
   decodeKeysetBookmark,
   encodeKeysetBookmark,
+  resolveLimit,
 } from "./pagination"
 
 describe("platformActions pagination", () => {
+  describe("resolveLimit", () => {
+    it.each([undefined, 0, -1, 0.5])(
+      "uses the default page size for %s",
+      limit => {
+        expect(resolveLimit(limit)).toBe(20)
+      }
+    )
+
+    it.each([1, 20, 100])("preserves a valid limit of %s", limit => {
+      expect(resolveLimit(limit)).toBe(limit)
+    })
+
+    it("rounds fractional limits down", () => {
+      expect(resolveLimit(25.9)).toBe(25)
+    })
+
+    it("caps the limit at the maximum page size", () => {
+      expect(resolveLimit(101)).toBe(100)
+    })
+  })
+
   describe("bookmarks", () => {
     it.each([
       "",

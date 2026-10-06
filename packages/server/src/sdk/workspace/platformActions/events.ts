@@ -7,18 +7,12 @@ import type {
   PlatformActionEvent,
   PlatformActionSourceType,
 } from "@budibase/types"
-import { buildPagination, decodeKeysetBookmark } from "./pagination"
+import {
+  buildPagination,
+  decodeKeysetBookmark,
+  resolveLimit,
+} from "./pagination"
 import { getEventKeysetKey, queryEvents, queryEventsTotal } from "./views"
-
-const DEFAULT_LIMIT = 20
-const MAX_LIMIT = 100
-
-function resolveLimit(limit?: number): number {
-  if (!limit || limit < 1) {
-    return DEFAULT_LIMIT
-  }
-  return Math.min(Math.floor(limit), MAX_LIMIT)
-}
 
 function toActionEvent(doc: PlatformActionEvent): ActionEvent {
   return {

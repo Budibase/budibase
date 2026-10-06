@@ -7,22 +7,16 @@ import type {
   PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
-import { buildPagination, decodeKeysetBookmark } from "./pagination"
+import {
+  buildPagination,
+  decodeKeysetBookmark,
+  resolveLimit,
+} from "./pagination"
 import {
   getSessionKeysetKey,
   querySessions,
   querySessionsStatusCounts,
 } from "./views"
-
-const DEFAULT_LIMIT = 20
-const MAX_LIMIT = 100
-
-function resolveLimit(limit?: number): number {
-  if (!limit || limit < 1) {
-    return DEFAULT_LIMIT
-  }
-  return Math.min(Math.floor(limit), MAX_LIMIT)
-}
 
 function toActionSession(doc: PlatformActionSessionIndexDoc): ActionSession {
   const {

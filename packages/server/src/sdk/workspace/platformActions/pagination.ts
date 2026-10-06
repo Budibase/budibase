@@ -2,6 +2,16 @@ import { z } from "zod"
 import { HTTPError } from "@budibase/backend-core"
 import type { ActionsPagination, DatabaseKey } from "@budibase/types"
 
+const DEFAULT_LIMIT = 20
+const MAX_LIMIT = 100
+
+export function resolveLimit(limit?: number): number {
+  if (!limit || limit < 1) {
+    return DEFAULT_LIMIT
+  }
+  return Math.min(Math.floor(limit), MAX_LIMIT)
+}
+
 export type KeysetBookmarkDirection = "next" | "prev"
 
 export interface KeysetPosition {
