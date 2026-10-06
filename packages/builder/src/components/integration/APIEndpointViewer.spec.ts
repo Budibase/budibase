@@ -184,7 +184,7 @@ vi.mock("@/stores/builder", async () => {
     tables: writable({ list: [] }),
     datasources,
     flags: writable({}),
-    appStore: writable({ appId: "app_test" }),
+    workspaceStore: writable({ appId: "app_test" }),
     workspaceAppStore: writable({
       selectedWorkspaceAppId: null,
       selectedWorkspaceApp: null,

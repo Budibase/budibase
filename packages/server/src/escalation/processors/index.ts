@@ -1,16 +1,19 @@
 import {
+  EscalationPolicySnapshot,
   EscalationRecipient,
+  EscalationReviewContext,
   EscalationResponse,
   EscalationSource,
   SuspendedAutomationContext,
   SuspendedOperationContext,
+  ToolExecutionRule,
 } from "@budibase/types"
 
 interface CreateEscalationBase {
   appId: string
   tenantId: string
   message: string
-  delay: number
+  durationMs?: number
   // Allow an explicit ID to be provided (e.g. for idempotent test runs)
   escalationId?: string
   recipients?: EscalationRecipient[]
@@ -18,6 +21,7 @@ interface CreateEscalationBase {
   // Human-facing heading + detail rendered in the notification.
   title?: string
   summary?: string
+  reviewContext?: EscalationReviewContext
 }
 
 export interface CreateAutomationEscalationInput extends CreateEscalationBase {
@@ -33,6 +37,8 @@ export interface CreateOperationEscalationInput extends CreateEscalationBase {
   agentId: string
   operationId: string
   requestId?: string
+  rule?: ToolExecutionRule
+  policy?: EscalationPolicySnapshot
   context: SuspendedOperationContext
 }
 
@@ -42,7 +48,6 @@ export type CreateEscalationInput =
 
 export interface CreateEscalationResult {
   escalationId: string
-  expiresAt: string
 }
 
 // Useful to have calculated values like expiresAt in the queue

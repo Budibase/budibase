@@ -1,7 +1,7 @@
 export * from "./hashing"
 export * from "./utils"
 export * from "./stringUtils"
-export * from "./Duration"
+export { Duration } from "@budibase/shared-core"
 export * from "./time"
 export * from "./fetch"
 export * from "./gzip"

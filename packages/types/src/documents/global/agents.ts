@@ -1,6 +1,9 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
+import type { ArrayOperator, BasicOperator } from "../../sdk"
+import type { FieldType } from "../workspace/row"
 import {
+  EscalationAction,
   EscalationRecipient,
   ResolutionStrategy,
 } from "../workspace/escalation"
@@ -12,8 +15,18 @@ export enum ToolType {
   REST_QUERY = "REST_QUERY",
   DATASOURCE_QUERY = "DATASOURCE_QUERY",
   SEARCH = "SEARCH",
-  ESCALATION = "ESCALATION",
 }
+
+export enum ToolAction {
+  LIST_ROWS = "list_rows",
+  GET_ROW = "get_row",
+  CREATE_ROW = "create_row",
+  UPDATE_ROW = "update_row",
+  SEARCH_ROWS = "search_rows",
+  TRIGGER = "trigger",
+}
+
+export type RowToolAction = Exclude<ToolAction, ToolAction.TRIGGER>
 
 export enum ToolExecutionPrincipal {
   REQUESTER = "requester",
@@ -31,6 +44,9 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  // The backing resource: tableId, query _id or automation _id.
+  sourceId?: string
+  action?: ToolAction
   executionPolicy: ToolExecutionPolicy
 }
 
@@ -127,8 +143,12 @@ export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
 
 export interface AgentEscalationConfig {
   recipients?: EscalationRecipient[]
-  // How long the escalation is kept before being marked as expired.
-  delay?: number
+}
+
+export interface ApprovalPolicyExpiry {
+  // Absent means the request never expires.
+  durationSeconds?: number
+  outcome?: EscalationAction
 }
 
 export interface AgentOperationApprovalPolicy {
@@ -136,14 +156,39 @@ export interface AgentOperationApprovalPolicy {
   name: string
   approvalType?: ResolutionStrategy
   approvers?: string[]
+  expiry?: ApprovalPolicyExpiry
   notifications: AgentEscalationConfig
 }
 
-export interface ToolExecutionCondition {}
+export type EscalationPolicySnapshot = Omit<
+  AgentOperationApprovalPolicy,
+  "notifications"
+>
+
+// TODO: This can go further. These exist all over the place
+// as magic strings. They can stay here until they are
+// refactored
+export enum ConditionRangeOperator {
+  RANGE_LOW = "rangeLow",
+  RANGE_HIGH = "rangeHigh",
+}
+
+export type ToolExecutionOperator =
+  | BasicOperator
+  | ArrayOperator
+  | ConditionRangeOperator
+
+export interface ToolExecutionCondition {
+  field: string
+  operator: ToolExecutionOperator
+  value: any
+  type?: FieldType
+}
 
 export interface ToolExecutionRule {
   conditions?: ToolExecutionCondition[]
   policyId: string
+  reviewParameters?: string[]
 }
 
 export interface AgentOperationToolConfig {
@@ -175,7 +220,6 @@ export interface AgentOperation {
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
-  escalation?: AgentEscalationConfig
 }
 
 export interface Agent extends Document {

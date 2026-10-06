@@ -4,6 +4,7 @@ import fetch from "node-fetch"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
 import { getLiteLLMSessionId } from "../llm/requestSession"
+import { GeminiRateLimitError, getGeminiRetryAt } from "../rag/geminiRateLimit"
 
 interface CreateVectorStoreResponse {
   id?: string
@@ -191,6 +192,21 @@ export async function deleteGeminiVectorStore(
   })
 }
 
+const throwIfStoreAccessError = (status: number) => {
+  if (status === 403) {
+    throw new HTTPError(
+      "Gemini file store is inaccessible (403 Forbidden). Use 'Reset store' to recreate it.",
+      403
+    )
+  }
+  if (status === 404) {
+    throw new HTTPError(
+      "Gemini file store was not found (404). Use 'Reset store' to recreate it.",
+      404
+    )
+  }
+}
+
 export async function ingestGeminiFile({
   vectorStoreId,
   filename,
@@ -223,6 +239,25 @@ export async function ingestGeminiFile({
     }),
   })
 
+  if (response.status === 429) {
+    const retryAfter = response.headers.get("Retry-After")
+    const retryAt = getGeminiRetryAt(retryAfter)
+    console.log("Gemini ingestion rate limit hit", {
+      vectorStoreId,
+      status: 429,
+      retryAfter,
+      retryAt,
+    })
+    throw new GeminiRateLimitError({
+      message: (await response.text()) || "Gemini ingestion is rate limited",
+      retryAt,
+    })
+  }
+
+  if (!response.ok) {
+    throwIfStoreAccessError(response.status)
+  }
+
   await handleNotOkResponse({
     response,
     fallbackMessage: "Failed to ingest file into Gemini store",
@@ -230,19 +265,30 @@ export async function ingestGeminiFile({
 
   const payload = (await response.json()) as RagIngestResponse
   if (payload.status === "failed" && payload.error) {
+    if (
+      payload.error.startsWith("Client error '429 Too Many Requests' for url '")
+    ) {
+      const retryAfter = response.headers.get("Retry-After")
+      const retryAt = getGeminiRetryAt(retryAfter)
+      console.log("Gemini ingestion rate limit hit", {
+        vectorStoreId,
+        status: 429,
+        source: "upstream",
+        retryAfter,
+        retryAt,
+      })
+      throw new GeminiRateLimitError({
+        message: payload.error,
+        retryAt,
+      })
+    }
     console.error("Gemini ingest failed", { error: payload.error })
     if (payload.error.includes("fileSearchStores")) {
       if (payload.error.includes("403")) {
-        throw new HTTPError(
-          "Gemini file store is inaccessible (403 Forbidden). Use 'Reset store' to recreate it.",
-          403
-        )
+        throwIfStoreAccessError(403)
       }
       if (payload.error.includes("404")) {
-        throw new HTTPError(
-          "Gemini file store was not found (404). Use 'Reset store' to recreate it.",
-          404
-        )
+        throwIfStoreAccessError(404)
       }
     }
     throw new HTTPError(payload.error, 500)
@@ -274,7 +320,8 @@ export async function searchGeminiFileStore({
         headers: await getCommonAuthHeaders(),
         body: JSON.stringify({
           query,
-          custom_llm_provider: "gemini",
+          passthrough_on_no_deployment: true,
+          model: "gemini/gemini-3.8-flash",
           ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
           ...(sessionId
             ? {

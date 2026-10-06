@@ -1,12 +1,19 @@
-import { constants, context, db as dbCore } from "@budibase/backend-core"
+import { constants, context, db as dbCore, locks } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
   AgentKnowledgeSourceType,
   Automation,
+  DeploymentDoc,
+  DeploymentHistoryEntry,
+  DeploymentStatus,
   FieldType,
   FormulaType,
+  LockName,
+  LockType,
+  MAX_DEPLOYMENT_HISTORY,
   PublishResourceState,
   Row,
+  RelationshipType,
   SharePointScopeMode,
   SharePointScopeTargetType,
   Table,
@@ -19,6 +26,7 @@ import { createAutomationBuilder } from "../../../automations/tests/utilities/Au
 import { getRowParams } from "../../../db/utils"
 import { basicTable } from "../../../tests/utilities/structures"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
+import sdk from "../../../sdk"
 import * as setup from "./utilities"
 
 describe("/api/deploy", () => {
@@ -497,6 +505,43 @@ describe("/api/deploy", () => {
       await config.api.workspace.sync(config.getDevWorkspaceId())
     }
 
+    it("rejects a publish while another publish holds the lock", async () => {
+      const devId = config.getDevWorkspaceId()
+
+      let releaseLock: () => void = () => {}
+      let confirmLockAcquired: () => void = () => {}
+      const lockAcquired = new Promise<void>(resolve => {
+        confirmLockAcquired = resolve
+      })
+      const heldLock = config.doInContext(devId, () =>
+        locks.doWithLock(
+          {
+            type: LockType.AUTO_EXTEND,
+            name: LockName.PUBLISH_WORKSPACE,
+            resource: devId,
+          },
+          () =>
+            new Promise<void>(resolve => {
+              releaseLock = resolve
+              confirmLockAcquired()
+            })
+        )
+      )
+      await lockAcquired
+
+      await config.api.workspace.publish(devId, { status: 429 })
+
+      releaseLock()
+      await heldLock
+
+      await config.api.workspace.publish(devId)
+    })
+
+    it("allows a publish immediately after a previous publish finished", async () => {
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+    })
+
     it("should define the disable value for all workspace apps when publishing for the first time", async () => {
       const { workspaceApp: publishedApp } =
         await config.api.workspaceApp.create({
@@ -889,6 +934,196 @@ describe("/api/deploy", () => {
       const devTable = await db.get<Table>(renamedTwice._id!)
       const devRevNum = parseInt(devTable._rev!.split("-")[0])
       expect(devRevNum).toBeGreaterThanOrEqual(prodRevNum!)
+    })
+  })
+
+  it("applies pending renames when related tables are rewritten during the rename loop", async () => {
+    const created: Table[] = []
+    for (let i = 0; i < 3; i++) {
+      created.push(
+        await config.api.table.save(
+          basicTable(undefined, { name: `Table${i}` })
+        )
+      )
+    }
+    const [target, ...writers] = created.sort((a, b) =>
+      a._id!.localeCompare(b._id!)
+    )
+
+    for (const [index, writer] of writers.entries()) {
+      const latest = await config.api.table.get(writer._id!)
+      await config.api.table.save({
+        ...latest,
+        schema: {
+          ...latest.schema,
+          [`rel${index}`]: {
+            type: FieldType.LINK,
+            name: `rel${index}`,
+            fieldName: `back${index}`,
+            tableId: target._id!,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+        },
+      })
+    }
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    for (const table of [target, ...writers]) {
+      const latest = await config.api.table.get(table._id!)
+      const schema = {
+        ...latest.schema,
+        details: { ...latest.schema.description, name: "details" },
+      }
+      delete (schema as any).description
+      await config.api.table.save({
+        ...latest,
+        schema,
+        _rename: { old: "description", updated: "details" },
+      })
+    }
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    await config.withProdApp(async () => {
+      for (const table of [target, ...writers]) {
+        const prodTable = await config.api.table.get(table._id!)
+        expect(prodTable.schema.details).toBeDefined()
+        expect(prodTable.schema.description).toBeUndefined()
+        expect(prodTable.pendingColumnRenames || []).toHaveLength(0)
+      }
+    })
+  })
+
+  describe("deployment history", () => {
+    const getDeploymentDoc = async () =>
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        return await db.tryGet<DeploymentDoc>("deployments")
+      })
+
+    const writeHistory = async (
+      history: Record<string, DeploymentHistoryEntry>
+    ) =>
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const existing = await db.tryGet<DeploymentDoc>("deployments")
+        await db.put({ ...existing, _id: "deployments", history })
+      })
+
+    const seedHistory = async (count: number) => {
+      const history: Record<string, DeploymentHistoryEntry> = {}
+      for (let i = 0; i < count; i++) {
+        const _id = `seeded-${i.toString().padStart(4, "0")}`
+        history[_id] = {
+          _id,
+          appId: config.getDevWorkspaceId(),
+          status: DeploymentStatus.SUCCESS,
+          // oldest first, all in the past so a real publish always wins
+          updatedAt: 1000 + i,
+        }
+      }
+      await writeHistory(history)
+    }
+
+    it("bounds the stored history when publishing", async () => {
+      await seedHistory(MAX_DEPLOYMENT_HISTORY + 25)
+
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const doc = await getDeploymentDoc()
+      const history = Object.values(doc!.history!)
+      expect(history.length).toBe(MAX_DEPLOYMENT_HISTORY)
+
+      const successful = history.filter(
+        entry => !entry._id.startsWith("seeded-") && entry.status === "SUCCESS"
+      )
+      expect(successful.length).toBe(1)
+      expect(history.some(entry => entry._id === "seeded-0000")).toBe(false)
+      expect(
+        history.some(
+          entry => entry._id === `seeded-${String(MAX_DEPLOYMENT_HISTORY + 24)}`
+        )
+      ).toBe(false)
+    })
+
+    it("keeps the deployment being written when stored entries are newer", async () => {
+      // a clock-skewed peer can leave entries dated ahead of this node's now
+      const future = Date.now() + 60 * 60 * 1000
+      const history: Record<string, DeploymentHistoryEntry> = {}
+      for (let i = 0; i < MAX_DEPLOYMENT_HISTORY + 10; i++) {
+        const _id = `future-${i.toString().padStart(4, "0")}`
+        history[_id] = {
+          _id,
+          appId: config.getDevWorkspaceId(),
+          status: DeploymentStatus.SUCCESS,
+          updatedAt: future + i,
+        }
+      }
+      await writeHistory(history)
+
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const doc = await getDeploymentDoc()
+      const entries = Object.values(doc!.history!)
+      expect(entries.length).toBe(MAX_DEPLOYMENT_HISTORY)
+      const written = entries.filter(entry => !entry._id.startsWith("future-"))
+      expect(written).toHaveLength(1)
+      expect(written[0].status).toBe(DeploymentStatus.SUCCESS)
+    })
+
+    it("truncates long error messages", async () => {
+      const message = "x".repeat(5000)
+      jest
+        .spyOn(sdk.workspaces, "isWorkspacePublished")
+        .mockRejectedValueOnce(new Error(message))
+
+      await config.api.workspace.publish(config.getDevWorkspaceId(), {
+        status: 500,
+      })
+
+      const doc = await getDeploymentDoc()
+      const failure = Object.values(doc!.history!).find(
+        entry => entry.status === DeploymentStatus.FAILURE
+      )
+      expect(failure!.err!.length).toBe(1000)
+    })
+
+    describe("GET /api/deployments", () => {
+      it("returns an empty array when there is no history", async () => {
+        await writeHistory({})
+        const res = await config.api.deploy.fetchDeployments()
+        expect(res).toEqual([])
+      })
+
+      it("returns deployments newest first", async () => {
+        await seedHistory(30)
+
+        const deployments = await config.api.deploy.fetchDeployments()
+        expect(deployments).toHaveLength(30)
+        expect(deployments[0]._id).toBe("seeded-0029")
+        expect(deployments[29]._id).toBe("seeded-0000")
+      })
+
+      it("marks stuck pending deployments as failed", async () => {
+        await writeHistory({
+          stuck: {
+            _id: "stuck",
+            appId: config.getDevWorkspaceId(),
+            status: DeploymentStatus.PENDING,
+            updatedAt: Date.now() - 60 * 60 * 1000,
+          },
+        })
+
+        const res = await config.api.deploy.fetchDeployments()
+        expect(res[0]).toEqual(
+          expect.objectContaining({
+            _id: "stuck",
+            status: DeploymentStatus.FAILURE,
+            err: "Timed out",
+          })
+        )
+      })
     })
   })
 })

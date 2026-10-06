@@ -20,7 +20,7 @@
   import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/BBLogo.svelte"
   import {
-    appStore,
+    workspaceStore,
     workspaceFavouriteStore,
     workspaceAppStore,
     automationStore,
@@ -60,7 +60,7 @@
   import WorkspaceSelect from "@/components/common/WorkspaceSelect.svelte"
   import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
-  import { type EnrichedApp } from "@/types"
+  import { type EnrichedWorkspace } from "@/types"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import AgentModal from "@/pages/builder/workspace/[workspaceId]/agent/AgentModal.svelte"
@@ -77,8 +77,11 @@
   $: backupErrors = getBackupErrors($enrichedApps || [], workspaceId)
   $: backupErrorCount = Object.keys(backupErrors).length
 
-  const getBackupErrors = (apps: EnrichedApp[], workspaceId: string) => {
-    const target = apps.find(app => app.devId === workspaceId)
+  const getBackupErrors = (
+    workspaces: EnrichedWorkspace[],
+    workspaceId: string
+  ) => {
+    const target = workspaces.find(workspace => workspace.devId === workspaceId)
     return target?.backupErrors || {}
   }
 
@@ -137,7 +140,7 @@
   let createTableModal: ModalAPI
   let tableName = ""
 
-  $: workspaceId = $appStore.appId
+  $: workspaceId = $workspaceStore.appId
   $: !$pinned && unPin()
 
   // keep sidebar expanded when workspace selector is open
@@ -372,7 +375,7 @@
       return null
     }
 
-    const liveUrl = buildLiveUrl($appStore, workspaceApp.url ?? "", true)
+    const liveUrl = buildLiveUrl($workspaceStore, workspaceApp.url ?? "", true)
 
     return liveUrl || null
   }
@@ -490,7 +493,7 @@
             }}
           />
         {:else}
-          <h1>{$appStore.name}</h1>
+          <h1>{$workspaceStore.name}</h1>
         {/if}
       </div>
       <Icon

@@ -31,6 +31,7 @@
   export let secondaryButtonWarning: boolean = false
   export let custom: boolean = false
   export let disableCancelOnConfirm: boolean = false
+  export let compact: boolean = false
 
   const { hide, cancel } = getContext(Context.Modal)
 
@@ -72,6 +73,7 @@
   class:spectrum-Dialog--extraLarge={size === "XL"}
   class:no-grid={custom}
   class:noDivider={!showDivider}
+  class:compact
   style="position: relative;"
   role="dialog"
   tabindex="-1"
@@ -181,6 +183,10 @@
   .no-grid:not(.noDivider) .spectrum-Dialog-content {
     border-top: 2px solid var(--spectrum-global-color-gray-200);
     border-bottom: 2px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .spectrum-Dialog.compact {
+    --spectrum-dialog-confirm-padding: 24px;
   }
 
   .spectrum-Dialog-heading {

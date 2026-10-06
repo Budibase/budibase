@@ -106,7 +106,10 @@
         ...agentUpdateOverrides,
         live: nextLive,
       })
-      await deploymentStore.publishApp()
+      const published = await deploymentStore.publishApp()
+      if (!published) {
+        return
+      }
       await agentsStore.fetchAgents()
 
       notifications.success(

@@ -4,7 +4,7 @@ services:
   minio-service:
     container_name: budi-minio-dev
     restart: on-failure
-    image: minio/minio
+    image: budibase/minio:final
     volumes:
       - minio_data:/data
     ports:

@@ -1,6 +1,11 @@
 import { auth } from "@budibase/backend-core"
-import { REVIEWER_TYPES } from "@budibase/shared-core"
 import {
+  MAX_REVIEW_PARAMETER_NAME_LENGTH,
+  MAX_REVIEW_PARAMETERS,
+  REVIEWER_TYPES,
+} from "@budibase/shared-core"
+import {
+  EscalationAction,
   EscalationNotificationChannel,
   ResolutionStrategy,
 } from "@budibase/types"
@@ -55,6 +60,10 @@ const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
 const TOOL_EXECUTION_RULE_SCHEMA = Joi.object({
   conditions: Joi.array().items(Joi.object()).optional(),
   policyId: Joi.string().required(),
+  reviewParameters: Joi.array()
+    .items(Joi.string().trim().min(1).max(MAX_REVIEW_PARAMETER_NAME_LENGTH))
+    .max(MAX_REVIEW_PARAMETERS)
+    .optional(),
 })
 
 const APPROVAL_POLICY_SCHEMA = Joi.object({
@@ -64,9 +73,16 @@ const APPROVAL_POLICY_SCHEMA = Joi.object({
     .valid(...Object.values(ResolutionStrategy))
     .optional(),
   approvers: Joi.array().items(Joi.string()).optional(),
+  expiry: Joi.object({
+    durationSeconds: Joi.number().integer().positive().optional(),
+    outcome: Joi.string()
+      .valid(...Object.values(EscalationAction))
+      .optional(),
+  })
+    .with("outcome", "durationSeconds")
+    .optional(),
   notifications: Joi.object({
     recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
-    delay: Joi.number().integer().positive().optional(),
   }).required(),
 })
 
@@ -87,10 +103,6 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
     .optional(),
   approvalPolicies: Joi.array().items(APPROVAL_POLICY_SCHEMA).optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
-  escalation: Joi.object({
-    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
-    delay: Joi.number().integer().positive().optional(),
-  }).optional(),
 })
 
 export function createAgentValidator() {

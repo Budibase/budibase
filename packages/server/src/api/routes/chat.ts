@@ -1,15 +1,12 @@
 import * as ai from "../controllers/ai"
 import { auth } from "@budibase/backend-core"
-import { escalationEnabled } from "../../middleware/escalationEnabled"
 import {
   builderAdminRoutes,
   endpointGroupList,
   publicRoutes,
 } from "./endpointGroups"
 
-const escalationSupportRoutes = endpointGroupList
-  .group(auth.builderOrAdmin)
-  .addGroupMiddleware(escalationEnabled)
+const escalationSupportRoutes = endpointGroupList.group(auth.builderOrAdmin)
 
 escalationSupportRoutes
   .get("/api/chat-links", ai.listChatIdentityLinks)

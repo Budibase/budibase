@@ -109,6 +109,17 @@ export async function getGroupUsers(
   )
 }
 
+export async function getUserIdsFromGroups(groupIds: string[]) {
+  const usersByGroup = await Promise.all(
+    groupIds.map(groupId => getGroupUsers(groupId))
+  )
+  return [
+    ...new Set(
+      usersByGroup.flatMap(groupUsers => groupUsers.map(user => user._id))
+    ),
+  ]
+}
+
 async function enrichGroup(
   group: UserGroup,
   appIds: string[]

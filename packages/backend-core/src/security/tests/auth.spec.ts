@@ -1,10 +1,16 @@
 import { generator } from "../../../tests"
-import { PASSWORD_MAX_LENGTH, validatePassword } from "../auth"
+import {
+  buildPasswordPolicy,
+  PASSWORD_MAX_LENGTH,
+  validatePassword,
+} from "../auth"
 
 describe("auth", () => {
   describe("validatePassword", () => {
     it("a valid password returns successful", () => {
-      expect(validatePassword("password123!")).toEqual({ valid: true })
+      expect(validatePassword("password123!")).toEqual({
+        valid: true,
+      })
     })
 
     it.each([
@@ -41,5 +47,40 @@ describe("auth", () => {
         })
       }
     )
+  })
+
+  describe("buildPasswordPolicy", () => {
+    it("builds an optional custom policy", () => {
+      expect(
+        buildPasswordPolicy({
+          minLength: "14",
+          maxLength: "100",
+          regex: "(?=.*[A-Z])(?=.*[0-9]).+",
+          regexErrorMessage: "Use an uppercase letter and a number.",
+        })
+      ).toEqual({
+        minLength: 14,
+        maxLength: 100,
+        regex: "(?=.*[A-Z])(?=.*[0-9]).+",
+        regexErrorMessage: "Use an uppercase letter and a number.",
+      })
+    })
+
+    it.each([
+      [
+        { regex: ".+" },
+        "PASSWORD_REGEX and PASSWORD_REGEX_ERROR_MESSAGE must be configured together.",
+      ],
+      [
+        { regex: "[", regexErrorMessage: "Invalid" },
+        "PASSWORD_REGEX must be a valid JavaScript expression.",
+      ],
+      [
+        { regex: "(a+)+", regexErrorMessage: "Invalid" },
+        "PASSWORD_REGEX must not contain unsafe expressions.",
+      ],
+    ])("rejects invalid configuration", (input, error) => {
+      expect(() => buildPasswordPolicy(input)).toThrow(error)
+    })
   })
 })

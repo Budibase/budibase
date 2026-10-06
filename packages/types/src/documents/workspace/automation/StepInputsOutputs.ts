@@ -16,6 +16,7 @@ import {
 } from "./automation"
 import { AutomationStep } from "./schema"
 import type { EscalationRecipient, EscalationResponse } from "../escalation"
+import type { ToolExecutionPrincipal } from "../../global/agents"
 
 export enum FilterCondition {
   EQUAL = "EQUAL",
@@ -268,6 +269,7 @@ export type ExtractFileDataStepOutputs = {
 export type AgentStepInputs = {
   agentId: string
   prompt: string
+  executionPrincipal?: ToolExecutionPrincipal
   useStructuredOutput?: boolean
   outputSchema?: Record<string, any>
 }

@@ -189,6 +189,7 @@ export async function syncWorkspace(
       if (opts?.automationOnly) {
         replOpts.filter = (doc: any) =>
           doc._id.startsWith(dbCore.DocumentType.AUTOMATION)
+        delete replOpts.selector
       }
       await replication.replicate(replOpts)
     } catch (err) {

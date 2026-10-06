@@ -84,6 +84,7 @@ export default abstract class BaseDataFetch<
   }
   store: Writable<DataFetchStore<TDefinition, TQuery, TRow>>
   derivedStore: Readable<DataFetchDerivedStore<TDefinition, TQuery, TRow>>
+  lastLoadId: number | undefined
 
   /**
    * Constructs a new DataFetch instance.
@@ -203,11 +204,22 @@ export default abstract class BaseDataFetch<
   async getInitialData() {
     const { filter, paginate } = this.options
 
+    // Load using IDs to track invocations and ensure we're handling the
+    // latest update
+    this.lastLoadId = Math.random()
+    const thisLoadId = this.lastLoadId
+
     // Fetch datasource definition and extract sort properties if configured
     const definition = await this.getDefinition()
 
     // Determine feature flags
     const features = await this.determineFeatureFlags()
+
+    // In case a newer load started while we waited, abandon this one before
+    // it writes its query to the store
+    if (thisLoadId !== this.lastLoadId) {
+      return
+    }
     this.features = {
       supportsSearch: !!features?.supportsSearch,
       supportsSort: !!features?.supportsSort,
@@ -259,6 +271,11 @@ export default abstract class BaseDataFetch<
 
     // Actually fetch data
     const page = await this.getPage()
+
+    // In case fetching takes longer than a newer load, abandon these results
+    if (thisLoadId !== this.lastLoadId) {
+      return
+    }
     this.store.update($store => ({
       ...$store,
       loading: false,

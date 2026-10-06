@@ -1,35 +1,74 @@
 import { context } from "@budibase/backend-core"
+import { constants as proConstants, licensing } from "@budibase/pro"
+import { dataFilters, Duration } from "@budibase/shared-core"
 import {
-  AgentEscalationConfig,
   AgentOperation,
   AgentOperationApprovalPolicy,
   AgentRequester,
+  ApprovalPolicyExpiry,
+  ApprovedToolCall,
   ChatConversationChannel,
-  EscalateToolResultStatus,
+  ApprovalToolResultStatus,
+  ConstantQuotaName,
   EscalationSource,
+  type EscalationReviewContext,
+  type EscalationReviewParameter,
   ResolutionStrategy,
   ToolExecutionRule,
+  ToolAction,
+  ToolType,
 } from "@budibase/types"
 import type { ModelMessage } from "ai"
+import isEqual from "lodash/isEqual"
 import type { EscalationGateRuntime } from "../../../../ai/tools"
+import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../../../../escalation/constants"
+import sdk from "../../.."
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
-
-export const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
+import {
+  formatToolParameters,
+  stringifyToolParameters,
+  truncateReviewField,
+} from "../../../../escalation/reviewContext"
 
 const SUMMARY_MAX_LENGTH = 300
+const DAY_MS = Duration.fromDays(1).toMs()
+
+export const escalationDurationMs = async (
+  expiry: ApprovalPolicyExpiry | undefined
+): Promise<number | undefined> => {
+  const license = await licensing.cache.getCachedLicense()
+  const ceilingDays =
+    license.quotas?.constant?.[ConstantQuotaName.ESCALATION_DURATION_DAYS]
+      ?.value
+  const unlimited =
+    ceilingDays == null ||
+    ceilingDays === proConstants.licenses.UNLIMITED ||
+    !Number.isFinite(ceilingDays)
+  const requested =
+    expiry?.durationSeconds === undefined
+      ? undefined
+      : expiry.durationSeconds * 1000
+  if (unlimited) {
+    return requested
+  }
+  const ceiling = ceilingDays * DAY_MS
+  return requested === undefined ? ceiling : Math.min(requested, ceiling)
+}
 
 export interface EscalationGateContext {
   sessionId: string
   channel?: ChatConversationChannel
   userId?: string
   requester?: AgentRequester
+  requesterLabel?: string
   getMessages: () => ModelMessage[]
   getRequestId: () => string | undefined
-  executedApproval?: { toolName: string }
+  executedApproval?: ApprovedToolCall
   generateCardCopy?: (input: {
     label: string
-    args: unknown
+    parameters?: EscalationReviewParameter[]
+    operation: string
   }) => Promise<{ title: string; summary: string } | undefined>
 }
 
@@ -38,14 +77,113 @@ interface CreateGateParams {
   operation: AgentOperation
   toolName: string
   readableName?: string
+  displayName?: string
   sourceId?: string
+  action?: ToolAction
+  // Key of the args object holding the condition fields e.g "data"
+  argsKey?: string
   rules: ToolExecutionRule[]
   gateContext: EscalationGateContext
 }
 
-// Conditions aren't evaluated until the Phase 3 evaluator exists - until
-// then every rule matches, so first-match = first rule.
-const matchRule = (rules: ToolExecutionRule[]) => rules[0]
+export const resolveToolArgsKey = (tool: {
+  sourceType: ToolType
+  action?: ToolAction
+}): string | undefined => {
+  if (
+    (tool.sourceType === ToolType.INTERNAL_TABLE ||
+      tool.sourceType === ToolType.EXTERNAL_TABLE) &&
+    (tool.action === ToolAction.CREATE_ROW ||
+      tool.action === ToolAction.UPDATE_ROW)
+  ) {
+    return "data"
+  }
+  if (
+    tool.sourceType === ToolType.AUTOMATION &&
+    tool.action === ToolAction.TRIGGER
+  ) {
+    return "fields"
+  }
+  return undefined
+}
+
+const conditionRecord = (
+  input: unknown,
+  argsKey?: string
+): Record<string, unknown> | undefined => {
+  const root =
+    argsKey && input && typeof input === "object"
+      ? (input as Record<string, unknown>)[argsKey]
+      : input
+  return root && typeof root === "object" && !Array.isArray(root)
+    ? (root as Record<string, unknown>)
+    : undefined
+}
+
+const reviewRecord = (input: unknown, argsKey?: string) => {
+  const root = conditionRecord(input)
+  const nested = conditionRecord(input, argsKey)
+  if (!argsKey || !root || !nested) {
+    return nested ?? input
+  }
+  const { [argsKey]: _nested, ...directArguments } = root
+  return { ...directArguments, ...nested }
+}
+
+const ruleMatches = (
+  rule: ToolExecutionRule,
+  record: Record<string, unknown> | undefined
+): boolean => {
+  const conditions = rule.conditions ?? []
+  if (!conditions.length) {
+    return true
+  }
+  if (!record) {
+    return true
+  }
+  const query = dataFilters.buildQuery(conditions)
+  return dataFilters.runQuery([record], query).length > 0
+}
+
+const buildConditionRecord = async ({
+  input,
+  argsKey,
+  toolName,
+  action,
+  sourceId,
+}: {
+  input: unknown
+  argsKey?: string
+  toolName: string
+  action?: ToolAction
+  sourceId?: string
+}): Promise<Record<string, unknown> | undefined> => {
+  const record = conditionRecord(input, argsKey)
+  if (!record || action !== ToolAction.UPDATE_ROW || !sourceId) {
+    return record
+  }
+  const rowId = (input as Record<string, unknown>).rowId
+  if (typeof rowId !== "string") {
+    return record
+  }
+  try {
+    const existing = await sdk.rows.find(sourceId, rowId)
+    return { ...existing, ...record }
+  } catch (error) {
+    console.warn("escalation gate: could not load row for update conditions", {
+      toolName,
+      rowId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return undefined
+  }
+}
+
+// First matching rule in array order wins.
+const matchRule = (
+  rules: ToolExecutionRule[],
+  record: Record<string, unknown> | undefined
+) => rules.find(rule => ruleMatches(rule, record))
 
 const resolvePolicy = (
   operation: AgentOperation,
@@ -53,21 +191,22 @@ const resolvePolicy = (
 ): AgentOperationApprovalPolicy | undefined =>
   operation.approvalPolicies?.find(policy => policy.id === policyId)
 
-const summariseArgs = (label: string, input: unknown) => {
-  let args: string
-  try {
-    args = JSON.stringify(input)
-  } catch {
-    args = String(input)
-  }
-  const summary = `${label}: ${args}`
+// Generated and fallback copy only receive the values explicitly shared with
+// reviewers, never the complete invocation arguments.
+const summariseArgs = (
+  label: string,
+  parameters?: EscalationReviewParameter[]
+) => {
+  const summary = parameters
+    ? `${label}: ${stringifyToolParameters(parameters).replace(/\s+/g, " ")}`
+    : `${label} requires approval.`
   return summary.length > SUMMARY_MAX_LENGTH
     ? `${summary.slice(0, SUMMARY_MAX_LENGTH - 1)}…`
     : summary
 }
 
 const unavailableResult = (label: string) => ({
-  status: EscalateToolResultStatus.UNAVAILABLE,
+  status: ApprovalToolResultStatus.UNAVAILABLE,
   note:
     `"${label}" requires approval but its approval policy is missing or has ` +
     "no reviewers configured. Tell the user this action cannot be requested " +
@@ -79,33 +218,51 @@ export const createEscalationGateRuntime = ({
   operation,
   toolName,
   readableName,
+  displayName,
   sourceId,
+  action,
+  argsKey,
   rules,
   gateContext,
 }: CreateGateParams): EscalationGateRuntime => ({
   intercept: async (input, { toolCallId, messages }) => {
     const label = readableName ?? toolName
     const executed = gateContext.executedApproval
-    if (executed && executed.toolName === toolName) {
+    if (
+      executed &&
+      executed.toolName === toolName &&
+      executed.sourceId === sourceId &&
+      isEqual(executed.args, input)
+    ) {
       return {
-        status: EscalateToolResultStatus.UNAVAILABLE,
+        status: ApprovalToolResultStatus.ALREADY_APPROVED,
         note:
           `"${label}" was already executed under this conversation's ` +
           "approval - its result is above. Report that outcome. The user " +
           "must ask again before another attempt can be requested.",
       }
     }
-    const rule = matchRule(rules)
+    const record = await buildConditionRecord({
+      input,
+      argsKey,
+      toolName,
+      action,
+      sourceId,
+    })
+    const rule = matchRule(rules, record)
     if (!rule) {
-      return unavailableResult(label)
+      return undefined
     }
 
     const policy = resolvePolicy(operation, rule.policyId)
-    const notifications: AgentEscalationConfig | undefined =
-      policy?.notifications
-    if (!policy || !notifications?.recipients?.length) {
+    if (!policy?.notifications?.recipients?.length) {
       return unavailableResult(label)
     }
+    const { notifications, ...policySnapshot } = policy
+    if (policySnapshot.approvers) {
+      policySnapshot.approvers = Array.from(new Set(policySnapshot.approvers))
+    }
+    const { recipients } = notifications
 
     const frozenMessages = messages?.length
       ? messages
@@ -116,12 +273,20 @@ export const createEscalationGateRuntime = ({
       throw new Error("escalation gate: missing workspace context")
     }
 
-    let title = `Approval required: ${label}`
-    let summary = summariseArgs(label, input)
+    const requestedBy = gateContext.requesterLabel ?? "Unknown requester"
+    const parameters = formatToolParameters({
+      input: reviewRecord(input, argsKey),
+      names: rule.reviewParameters,
+    })
+    const actionLabel = truncateReviewField(label)
+    const toolDisplay = truncateReviewField(displayName ?? label)
+    let title = `${APPROVAL_REQUIRED_TITLE_PREFIX} ${label}`
+    let summary = summariseArgs(label, parameters)
     try {
       const copy = await gateContext.generateCardCopy?.({
         label,
-        args: input,
+        parameters,
+        operation: operation.name,
       })
       if (copy?.title && copy?.summary) {
         title = copy.title
@@ -134,6 +299,14 @@ export const createEscalationGateRuntime = ({
       })
     }
 
+    const durationMs = await escalationDurationMs(policy.expiry)
+    const reviewContext: EscalationReviewContext = {
+      requestedBy: truncateReviewField(requestedBy),
+      operation: truncateReviewField(operation.name),
+      action: actionLabel,
+      ...(toolDisplay !== actionLabel && { toolName: toolDisplay }),
+      ...(parameters && { parameters }),
+    }
     const { escalationId } = await escalationProcessor.create({
       source: EscalationSource.OPERATION,
       appId,
@@ -141,11 +314,16 @@ export const createEscalationGateRuntime = ({
       message: summary,
       title,
       summary,
-      delay: (notifications.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
-      recipients: notifications.recipients,
+      reviewContext,
+      ...(durationMs !== undefined && { durationMs }),
+      recipients,
       resolutionStrategy: resolutionStrategyBinding(
-        policy.approvalType ?? ResolutionStrategy.FIRST_RESPONSE
+        policy.approvers?.length
+          ? (policy.approvalType ?? ResolutionStrategy.FIRST_RESPONSE)
+          : ResolutionStrategy.FIRST_RESPONSE
       ),
+      rule,
+      policy: policySnapshot,
       agentId,
       operationId: operation.id,
       requestId: gateContext.getRequestId(),
@@ -167,10 +345,11 @@ export const createEscalationGateRuntime = ({
     })
 
     return {
-      status: EscalateToolResultStatus.PENDING_APPROVAL,
+      status: ApprovalToolResultStatus.PENDING_APPROVAL,
       escalationId,
       title,
       summary,
+      reviewContext,
       note:
         `Approval requested for ${label}. The action is paused until a ` +
         "human responds - do not attempt it again in this turn.",

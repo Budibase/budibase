@@ -15,9 +15,8 @@ interface ResolutionStrategyFn {
 }
 
 // VM globals the isolate injects at execution time - declared for type-checking
-// only. totalRecipients isn't used yet but documents the contract.
+// only.
 declare const responses: EscalationResponse[]
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const totalRecipients: number
 declare const actions: { approve: string; reject: string }
 
@@ -41,6 +40,36 @@ const firstResponse: ResolutionStrategyFn = () => {
     : false
 }
 
+/* istanbul ignore next */
+const unanimous: ResolutionStrategyFn = () => {
+  const rejected = responses.some(r => r.actionId === actions.reject)
+  if (rejected) {
+    return { accepted: false, actionId: actions.reject }
+  }
+  const allApproved =
+    responses.length >= totalRecipients &&
+    responses.every(r => r.actionId === actions.approve)
+  return allApproved ? { accepted: true, actionId: actions.approve } : false
+}
+
+/* istanbul ignore next */
+const majority: ResolutionStrategyFn = () => {
+  const acceptedCount = responses.filter(
+    r => r.actionId === actions.approve
+  ).length
+  const rejectCount = responses.length - acceptedCount
+  if (acceptedCount > totalRecipients / 2) {
+    return { accepted: true, actionId: actions.approve }
+  }
+  if (
+    rejectCount > totalRecipients / 2 ||
+    responses.length >= totalRecipients
+  ) {
+    return { accepted: false, actionId: actions.reject }
+  }
+  return false
+}
+
 const toStrategy = (
   name: ResolutionStrategy,
   fn: ResolutionStrategyFn
@@ -52,6 +81,8 @@ const toStrategy = (
 
 export const RESOLUTION_STRATEGY_SNIPPETS: Snippet[] = [
   toStrategy(ResolutionStrategy.FIRST_RESPONSE, firstResponse),
+  toStrategy(ResolutionStrategy.UNANIMOUS, unanimous),
+  toStrategy(ResolutionStrategy.MAJORITY, majority),
 ]
 
 // JS binding stored on an escalation to invoke a built-in strategy by name.

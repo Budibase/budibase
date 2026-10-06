@@ -112,7 +112,9 @@ export default async function setup() {
         ).withStartupTimeout(20000)
       )
 
-    const minio = new GenericContainer("minio/minio")
+    const minio = new GenericContainer(
+      "budibase/minio:final"
+    )
       .withName("minio_testcontainer")
       .withExposedPorts(9000)
       .withCommand(["server", "/data"])

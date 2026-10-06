@@ -46,7 +46,7 @@ import {
 } from "../../../integrations/utils"
 import sdk from "../../../sdk"
 import { processTable } from "../../../sdk/workspace/tables/getters"
-import { publishWorkspaceInternal } from "../deploy"
+import { publishWorkspaceInternal, withPublishLock } from "../deploy"
 import {
   isRows,
   isSchema,
@@ -338,6 +338,12 @@ export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
 export async function publish(
   ctx: UserCtx<PublishTableRequest, PublishTableResponse>
 ) {
+  await withPublishLock(() => publishTableInternal(ctx))
+}
+
+async function publishTableInternal(
+  ctx: UserCtx<PublishTableRequest, PublishTableResponse>
+) {
   const tableId = ctx.params.tableId as string
   const table = await sdk.tables.getTable(tableId)
 
@@ -426,31 +432,29 @@ export async function publish(
 
   await replication.resolveInconsistencies([tableId])
 
-  await replication.replicate(
-    replication.appReplicateOpts({
-      tablesToSync: undefined,
-      checkpoint: false,
-      filter: (doc: any) => {
-        const _id = doc?._id as string
-        if (!_id || _id.startsWith("_design")) {
-          return false
-        }
-        if (_id.startsWith(DocumentType.AUTOMATION_LOG)) {
-          return false
-        }
-        if (_id.startsWith(DocumentType.WORKSPACE_METADATA)) {
-          return false
-        }
-        if (!matchesTable(_id)) {
-          return false
-        }
-        if (!seedProductionTables && isDataDoc(_id)) {
-          return false
-        }
-        return true
-      },
-    })
-  )
+  await replication.replicateApp({
+    tablesToSync: undefined,
+    checkpoint: false,
+    filter: (doc: any) => {
+      const _id = doc?._id as string
+      if (!_id || _id.startsWith("_design")) {
+        return false
+      }
+      if (_id.startsWith(DocumentType.AUTOMATION_LOG)) {
+        return false
+      }
+      if (_id.startsWith(DocumentType.WORKSPACE_METADATA)) {
+        return false
+      }
+      if (!matchesTable(_id)) {
+        return false
+      }
+      if (!seedProductionTables && isDataDoc(_id)) {
+        return false
+      }
+      return true
+    },
+  })
 
   const metadata = await sdk.workspaces.metadata.tryGet({
     production: true,

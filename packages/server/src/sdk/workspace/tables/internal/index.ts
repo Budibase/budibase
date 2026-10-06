@@ -73,6 +73,7 @@ export async function save(
     rowsToImport?: Row[]
     renaming?: RenameColumn
     isImport?: boolean
+    skipDefinitionRebuildLock?: boolean
   }
 ) {
   const db = context.getWorkspaceDB()
@@ -187,7 +188,9 @@ export async function save(
   table._rev = result.rev
   const savedTable = cloneDeep(table)
 
-  table = await tableSaveFunctions.after(table)
+  table = await tableSaveFunctions.after(table, {
+    skipDefinitionRebuildLock: opts?.skipDefinitionRebuildLock,
+  })
   // the table may be updated as part of the table save after functionality - need to write it
   if (!isEqual(savedTable, table)) {
     result = await db.put(table)

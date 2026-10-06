@@ -68,13 +68,13 @@ import os from "os"
 import path from "path"
 
 import extract from "extract-zip"
-import { context, docIds, features } from "@budibase/backend-core"
+import { createTeamsAdapter } from "@chat-adapter/teams"
+import { context, docIds } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
   DocumentType,
-  FeatureFlag,
   type Agent,
   type ChatConversation,
   type WebhookChatCompleteResult,
@@ -88,6 +88,7 @@ import { webhookChat } from "../../../controllers/ai/chatConversations"
 const { getMockChatOptions, resetMockChatState, setMockPostEphemeralResult } =
   jest.requireActual("chat") as ChatMockModule
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
+const mockedCreateTeamsAdapter = jest.mocked(createTeamsAdapter)
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
 const TEAMS_APP_ID = generator.guid()
 
@@ -111,6 +112,7 @@ describe("agent teams integration provisioning", () => {
       "test-config"
     )
     mockedWebhookChat.mockClear()
+    mockedCreateTeamsAdapter.mockClear()
     mockedGetFileUrlForAgent.mockReset()
     resetMockChatState()
   })
@@ -124,51 +126,42 @@ describe("agent teams integration provisioning", () => {
     config.end()
   })
 
-  const withEscalation = async <T>(f: () => Promise<T>) =>
-    features.testutils.withFeatureFlags(
-      config.getTenantId(),
-      { [FeatureFlag.ESCALATION]: true },
-      f
-    )
-
   it("returns only chat links in the agent's Teams tenant", async () => {
-    await withEscalation(async () => {
-      const agent = await config.api.agent.create({
-        name: "Teams Agent",
-        MSTeamsIntegration: {
-          appId: TEAMS_APP_ID,
-          appPassword: "teams-app-password",
-          tenantId: "azure-tenant-id",
-        },
-      })
-      const otherUser = await config.createUser()
-
-      await config.doInTenant(async () => {
-        await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
-          provider: AgentChannelProvider.MSTEAMS,
-          externalUserId: "reachable-user",
-          providerTenantId: "azure-tenant-id",
-          globalUserId: config.getUser()._id!,
-        })
-        await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
-          provider: AgentChannelProvider.MSTEAMS,
-          externalUserId: "other-workspace-user",
-          providerTenantId: "other-tenant-id",
-          globalUserId: otherUser._id!,
-        })
-      })
-
-      const response = await config
-        .getRequest()!
-        .get("/api/chat-links")
-        .set(await config.defaultHeaders())
-        .query({ provider: AgentChannelProvider.MSTEAMS, agentId: agent._id })
-        .expect(200)
-
-      expect(response.body).toEqual([
-        expect.objectContaining({ externalUserId: "reachable-user" }),
-      ])
+    const agent = await config.api.agent.create({
+      name: "Teams Agent",
+      MSTeamsIntegration: {
+        appId: TEAMS_APP_ID,
+        appPassword: "teams-app-password",
+        tenantId: "azure-tenant-id",
+      },
     })
+    const otherUser = await config.createUser()
+
+    await config.doInTenant(async () => {
+      await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+        provider: AgentChannelProvider.MSTEAMS,
+        externalUserId: "reachable-user",
+        providerTenantId: "azure-tenant-id",
+        globalUserId: config.getUser()._id!,
+      })
+      await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+        provider: AgentChannelProvider.MSTEAMS,
+        externalUserId: "other-workspace-user",
+        providerTenantId: "other-tenant-id",
+        globalUserId: otherUser._id!,
+      })
+    })
+
+    const response = await config
+      .getRequest()!
+      .get("/api/chat-links")
+      .set(await config.defaultHeaders())
+      .query({ provider: AgentChannelProvider.MSTEAMS, agentId: agent._id })
+      .expect(200)
+
+    expect(response.body).toEqual([
+      expect.objectContaining({ externalUserId: "reachable-user" }),
+    ])
   })
 
   it("provisions teams channel for an agent", async () => {
@@ -534,6 +527,7 @@ describe("agent teams integration provisioning", () => {
 
       expect(response.body.error).toEqual("Invalid Microsoft Teams service URL")
       expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(mockedCreateTeamsAdapter).not.toHaveBeenCalled()
     })
 
     it(`returns a private link prompt for ${ChatCommands.LINK} and /${ChatCommands.LINK} commands`, async () => {
@@ -810,56 +804,86 @@ describe("agent teams integration provisioning", () => {
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
     })
 
-    it("appends downloadable RAG source links to Teams personal replies", async () => {
-      mockedGetFileUrlForAgent.mockResolvedValue(
-        "/files/signed/prod-budi-app-assets/source.pdf"
-      )
-      mockedWebhookChat.mockResolvedValueOnce({
-        messages: [
-          {
-            id: "assistant-1",
-            role: "assistant",
-            parts: [{ type: "text", text: "Answer with sources" }],
+    it.each([false, true])(
+      "sends personal reply sources through the activity service URL (streaming: %s)",
+      async streaming => {
+        const serviceUrl = new URL(
+          "/emea/",
+          DEFAULT_MSTEAMS_SERVICE_URL
+        ).toString()
+        mockedGetFileUrlForAgent.mockResolvedValue(
+          "/files/signed/prod-budi-app-assets/source.pdf"
+        )
+        mockedWebhookChat.mockImplementationOnce(
+          async ({ onAssistantStream }) => {
+            if (streaming) {
+              async function* sourceAnswerStream() {
+                yield "Answer with "
+                yield "sources"
+              }
+              await onAssistantStream!(sourceAnswerStream())
+            }
+            return {
+              messages: [
+                {
+                  id: "assistant-1",
+                  role: "assistant",
+                  parts: [{ type: "text", text: "Answer with sources" }],
+                },
+              ],
+              assistantText: "Answer with sources",
+              allowKnowledgeSourceDownload: true,
+              ragSources: [
+                {
+                  sourceId: "source-1",
+                  fileId: "file-1",
+                  filename: "Source [One]\n@Draft.pdf",
+                },
+              ],
+              title: "Mock conversation",
+            }
+          }
+        )
+
+        const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+        const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
+        await linkExternalUser("user-1")
+
+        const response = await postTeamsMessage({
+          path,
+          body: {
+            id: "activity-rag-personal",
+            serviceUrl,
+            type: "message",
+            text: "hello teams",
+            from: { id: "user-1", name: "Teams User" },
+            conversation: {
+              id: "conversation-1",
+              conversationType: "personal",
+            },
+            channelData: { tenant: { id: "tenant-1" } },
           },
-        ] as any,
-        assistantText: "Answer with sources",
-        ragSources: [
-          {
-            sourceId: "source-1",
-            fileId: "file-1",
-            filename: "Source [One]\n@Draft.pdf",
-          },
-        ],
-        title: "Mock conversation",
-      })
+        })
 
-      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
-      await linkExternalUser("user-1")
-
-      const response = await postTeamsMessage({
-        path,
-        body: {
-          id: "activity-rag-personal",
-          type: "message",
-          text: "hello teams",
-          from: { id: "user-1", name: "Teams User" },
-          conversation: { id: "conversation-1", conversationType: "personal" },
-          channelData: { tenant: { id: "tenant-1" } },
-        },
-      })
-
-      expect(response.body.messages).toContain("Answer with sources")
-      const cardMessage = response.body.messages.find((message: string) =>
-        message.includes("Source One Draft.pdf")
-      )
-      expect(cardMessage).toContain('"title":"Sources"')
-      expect(cardMessage).toContain(
-        "http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf"
-      )
-      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
-      expect(mockedGetFileUrlForAgent).toHaveBeenCalledWith(agent._id, "file-1")
-    })
+        expect(response.body.messages).toHaveLength(2)
+        expect(response.body.messages[0]).toEqual("Answer with sources")
+        expect(mockedCreateTeamsAdapter).toHaveBeenLastCalledWith(
+          expect.objectContaining({ apiUrl: serviceUrl })
+        )
+        const cardMessage = response.body.messages.find((message: string) =>
+          message.includes("Source One Draft.pdf")
+        )
+        expect(cardMessage).toContain('"title":"Sources"')
+        expect(cardMessage).toContain(
+          "http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf"
+        )
+        expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
+        expect(mockedGetFileUrlForAgent).toHaveBeenCalledWith(
+          agent._id,
+          "file-1"
+        )
+      }
+    )
 
     it("does not append RAG source links to Teams channel replies", async () => {
       mockedWebhookChat.mockResolvedValueOnce({
