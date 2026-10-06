@@ -180,4 +180,18 @@ describe("layoutAutomationGraph", () => {
     expectNodeBelow(graph, "branch-0", "loop", 120)
     expectNodeBelow(graph, "branch-1", "branch-0", nodesep)
   })
+
+  it("does not overflow the stack when edges form a cycle", () => {
+    const graph = layoutGraph({
+      nodes: [stepNode("trigger"), stepNode("first"), stepNode("second")],
+      edges: [
+        edge("trigger", "first"),
+        edge("first", "second"),
+        edge("second", "first"),
+      ],
+    })
+
+    expectNodeRightOf(graph, "first", "trigger", ranksep)
+    expectNodeRightOf(graph, "second", "first", ranksep)
+  })
 })

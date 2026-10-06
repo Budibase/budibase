@@ -222,12 +222,29 @@ class AutomationLayoutEngine {
     }
   }
 
-  private layoutSubtree(nodeId: string, x: number, centerY: number): Bounds {
+  private layoutSubtree(
+    nodeId: string,
+    x: number,
+    centerY: number,
+    laying: Set<string> = new Set()
+  ): Bounds {
     const node = this.nodesById[nodeId]
-    if (!node) {
+    if (!node || laying.has(nodeId)) {
       return boundsFromSize(x, centerY, { width: 0, height: 0 })
     }
 
+    laying.add(nodeId)
+    const bounds = this.layoutNode(node, x, centerY, laying)
+    laying.delete(nodeId)
+    return bounds
+  }
+
+  private layoutNode(
+    node: FlowNode,
+    x: number,
+    centerY: number,
+    laying: Set<string>
+  ): Bounds {
     const nodeSize = getNodeDimensions(node)
     const nodeTop = centerY - nodeSize.height / 2
     node.position = {
@@ -237,7 +254,7 @@ class AutomationLayoutEngine {
     node.targetPosition = Position.Left
     node.sourcePosition = Position.Right
 
-    const childEdges = this.getChildEdges(nodeId)
+    const childEdges = this.getChildEdges(node.id)
     const nodeBounds = boundsFromSize(x, nodeTop, nodeSize)
 
     if (childEdges.length === 0) {
@@ -247,8 +264,8 @@ class AutomationLayoutEngine {
     const branchEdges = this.getBranchEdges(childEdges)
     const childBounds =
       branchEdges.length > 0
-        ? this.layoutBranchSubtrees(node, nodeBounds, branchEdges)
-        : this.layoutSequentialSubtree(node, nodeBounds, childEdges[0])
+        ? this.layoutBranchSubtrees(node, nodeBounds, branchEdges, laying)
+        : this.layoutSequentialSubtree(node, nodeBounds, childEdges[0], laying)
 
     return unionBounds([nodeBounds, childBounds])
   }
@@ -256,7 +273,8 @@ class AutomationLayoutEngine {
   private layoutSequentialSubtree(
     node: FlowNode,
     nodeBounds: Bounds,
-    edge: FlowEdge
+    edge: FlowEdge,
+    laying: Set<string>
   ) {
     const child = this.measureSubtree(edge.target)
     const nodeCenterY = nodeBounds.top + getNodeDimensions(node).height / 2
@@ -264,14 +282,16 @@ class AutomationLayoutEngine {
     return this.layoutSubtree(
       edge.target,
       nodeBounds.right + this.getSequentialGap(node),
-      childTop + child.rootCenterY
+      childTop + child.rootCenterY,
+      laying
     )
   }
 
   private layoutBranchSubtrees(
     node: FlowNode,
     nodeBounds: Bounds,
-    branchEdges: FlowEdge[]
+    branchEdges: FlowEdge[],
+    laying: Set<string>
   ) {
     const lanes = branchEdges.map(edge => ({
       edge,
@@ -295,7 +315,8 @@ class AutomationLayoutEngine {
         this.layoutSubtree(
           lane.edge.target,
           childX,
-          nextTop + lane.measured.rootCenterY
+          nextTop + lane.measured.rootCenterY,
+          laying
         )
       )
       nextTop += lane.measured.height + this.nodesep
