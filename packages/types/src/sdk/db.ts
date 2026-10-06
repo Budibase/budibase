@@ -97,6 +97,7 @@ export type DatabaseQueryOpts = {
   key?: DatabaseKey
   keys?: DatabaseKey[]
   group?: boolean
+  group_level?: number
   reduce?: boolean
   startkey_docid?: string
 }

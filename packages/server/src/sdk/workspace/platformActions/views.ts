@@ -323,8 +323,7 @@ export const querySessions = async ({
   })
 }
 
-// indexed status counts - one bounded key-range lookup per status, not a
-// full-database scan
+// Indexed counts over bounded key ranges.
 
 async function queryCount({
   viewName,
@@ -360,28 +359,41 @@ export const querySessionsStatusCounts = async ({
   workspaceDb: Database
   environment?: PlatformActionEnvironment
 }): Promise<SessionsStatusCounts> => {
-  const counts = {} as SessionsStatusCounts
-  await Promise.all(
-    PLATFORM_ACTION_CONTAINER_STATUSES.map(async status => {
-      counts[status] = environment
-        ? await queryCount({
-            viewName:
-              ViewName.PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_STATUS_AND_UPDATED_AT,
-            prefix: [environment, status],
-            workspaceDb,
-            createFunc: () =>
-              createSessionsByEnvironmentStatusAndUpdatedAtView(workspaceDb),
-          })
-        : await queryCount({
-            viewName:
-              ViewName.PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT,
-            prefix: [status],
-            workspaceDb,
-            createFunc: () =>
-              createSessionsByStatusAndUpdatedAtView(workspaceDb),
-          })
-    })
+  const counts: SessionsStatusCounts = {
+    active: 0,
+    waiting: 0,
+    completed: 0,
+    failed: 0,
+  }
+  const viewName = environment
+    ? ViewName.PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_STATUS_AND_UPDATED_AT
+    : ViewName.PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT
+  const response = await db.queryViewRaw(
+    viewName,
+    {
+      reduce: true,
+      include_docs: false,
+      group_level: environment ? 2 : 1,
+      ...(environment
+        ? { startkey: [environment], endkey: [environment, {}] }
+        : {}),
+    },
+    workspaceDb,
+    () =>
+      environment
+        ? createSessionsByEnvironmentStatusAndUpdatedAtView(workspaceDb)
+        : createSessionsByStatusAndUpdatedAtView(workspaceDb)
   )
+  for (const { key, value } of response.rows) {
+    if (Array.isArray(key) && typeof value === "number") {
+      const status = PLATFORM_ACTION_CONTAINER_STATUSES.find(
+        status => status === key[environment ? 1 : 0]
+      )
+      if (status) {
+        counts[status] = value
+      }
+    }
+  }
   return counts
 }
 

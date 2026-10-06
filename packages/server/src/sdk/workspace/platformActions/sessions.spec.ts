@@ -462,6 +462,58 @@ describe("platformActions sessions", () => {
   })
 
   describe("fetchSessionsSummary", () => {
+    it.each([undefined, "prod", "dev"] as const)(
+      "returns zero counts for an empty database with environment %s",
+      async environment => {
+        const summary = await withContext(() =>
+          fetchSessionsSummary({ environment })
+        )
+        expect(summary).toEqual({
+          total: 0,
+          active: 0,
+          waiting: 0,
+          completed: 0,
+          failed: 0,
+        })
+      }
+    )
+
+    it.each([undefined, "prod", "dev"] as const)(
+      "groups different timestamps by status with environment %s",
+      async environment => {
+        for (const env of ["prod", "dev"] as const) {
+          for (const status of [
+            "active",
+            "waiting",
+            "completed",
+            "failed",
+          ] as const) {
+            await createSession({
+              sourceId: `${env}-${status}-1`,
+              environment: env,
+              status,
+            })
+            await createSession({
+              sourceId: `${env}-${status}-2`,
+              environment: env,
+              status,
+            })
+          }
+        }
+        const summary = await withContext(() =>
+          fetchSessionsSummary({ environment })
+        )
+        const count = environment ? 2 : 4
+        expect(summary).toEqual({
+          total: count * 4,
+          active: count,
+          waiting: count,
+          completed: count,
+          failed: count,
+        })
+      }
+    )
+
     it("counts sessions per status, combined across environments", async () => {
       await createSession({
         sourceId: "prod-active",
