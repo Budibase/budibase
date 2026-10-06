@@ -37,6 +37,54 @@ const lightSelectionTheme = EditorView.theme({
     },
 })
 
+const completionTheme = EditorView.theme({
+  ".cm-tooltip-autocomplete": {
+    width: "min(440px, 90vw)",
+  },
+  ".cm-tooltip-autocomplete > ul": {
+    minWidth: "0",
+    maxWidth: "100%",
+  },
+  ".cm-tooltip-autocomplete > ul > li": {
+    display: "flex",
+    alignItems: "center",
+    padding: "3px 6px",
+  },
+  ".cm-completionLabel": {
+    minWidth: "0",
+    maxWidth: "55%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  ".cm-completionDetail": {
+    marginLeft: "auto",
+    paddingLeft: "12px",
+    minWidth: "0",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    fontStyle: "normal",
+    fontSize: "0.85em",
+    opacity: "0.75",
+  },
+  ".cm-tooltip-autocomplete .cm-completionInfo": {
+    position: "static",
+    width: "100%",
+    maxWidth: "none",
+    maxHeight: "8em",
+    overflowY: "auto",
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
+    border: "none",
+    borderTop: "1px solid rgba(128, 128, 128, 0.3)",
+    padding: "8px 10px",
+    fontFamily: "inherit",
+    fontSize: "12px",
+    lineHeight: "1.5",
+    backgroundColor: "inherit",
+    color: "inherit",
+  },
+})
+
 const darkCompletionTheme = EditorView.theme({
   ".cm-tooltip-autocomplete": {
     backgroundColor: oneDarkColors.highlightBackground,
@@ -56,6 +104,7 @@ export const getFunctionEditorTheme = ({
 }: {
   isDark: boolean
 }): Extension[] => [
+  completionTheme,
   syntaxHighlighting(isDark ? oneDarkHighlightStyle : lightHighlightStyle, {
     fallback: true,
   }),
