@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { writable } from "svelte/store"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { notifications } from "@budibase/bbui"
 import { SourceName, type Query } from "@budibase/types"
 import { queries } from "@/stores/builder"
 import QueryViewer from "./QueryViewer.svelte"
@@ -61,6 +62,8 @@ const renameField = async () => {
 }
 
 describe("QueryViewer saved schema", () => {
+  afterEach(() => vi.restoreAllMocks())
+
   beforeEach(() => {
     vi.clearAllMocks()
     document.body.className = "spectrum"
@@ -141,6 +144,41 @@ describe("QueryViewer saved schema", () => {
     expect(queries.preview).toHaveBeenCalledOnce()
     expect(screen.getByRole("button", { name: /Save$/ })).toBeEnabled()
   })
+
+  it.each(["an error", "no rows"])(
+    "does not expose the results panel when a new query returns %s",
+    async outcome => {
+      const notification = vi.spyOn(
+        notifications,
+        outcome === "an error" ? "error" : "info"
+      )
+      if (outcome === "an error") {
+        vi.mocked(queries.preview).mockRejectedValue(new Error("Query failed"))
+      } else {
+        vi.mocked(queries.preview).mockResolvedValue({
+          rows: [],
+          schema: {},
+          nestedSchemaFields: {},
+          info: {},
+          extra: {},
+        })
+      }
+      render(QueryViewer, {
+        query: { ...savedQuery, _id: undefined, schema: {} },
+      })
+      await fireEvent.click(screen.getByRole("button", { name: /Run query$/ }))
+
+      await waitFor(() => {
+        expect(notification).toHaveBeenCalledOnce()
+        expect(screen.queryByRole("button", { name: "Schema" })).toBeNull()
+        expect(
+          screen.queryByRole("button", { name: "Expand query results" })
+        ).toBeNull()
+        expect(screen.getByRole("button", { name: /Save$/ })).toBeDisabled()
+        expect(screen.getByRole("button", { name: /Run query$/ })).toBeEnabled()
+      })
+    }
+  )
 
   it("saves schema edits from the navigation prompt without running the query", async () => {
     render(QueryViewer, { query: savedQuery })
