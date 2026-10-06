@@ -106,6 +106,7 @@ const startAgentRequestTracking = async ({
   const operation =
     run.selectedOperation && run.operationIntent !== "query"
       ? {
+          id: run.selectedOperation.id,
           name: run.selectedOperation.name,
           prompt: run.selectedOperation.promptInstructions || "",
         }

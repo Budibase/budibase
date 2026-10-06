@@ -31,6 +31,7 @@ jest.mock("../../..", () => ({
 const buildThread = (overrides: Partial<AgentRequest> = {}): AgentRequest => ({
   _id: "agentrequest_thread_1",
   agentId: "agent_1",
+  operationId: "op_support",
   userId: "user_1",
   entries: [
     {

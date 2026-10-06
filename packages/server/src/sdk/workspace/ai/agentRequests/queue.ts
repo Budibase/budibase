@@ -1,6 +1,7 @@
 import { context, features, queue } from "@budibase/backend-core"
 import { FeatureFlag } from "@budibase/types"
 import { createOrUpdateRequestForPrompt } from "./crud"
+import type { AgentRequestOperation } from "./crud"
 import { determineTrigger } from "../agentLogs/shared"
 
 type AgentRequestTrackingJob = {
@@ -12,10 +13,7 @@ type AgentRequestTrackingJob = {
     role: "user" | "assistant"
     content: string
   }>
-  operation?: {
-    name: string
-    prompt: string
-  }
+  operation?: AgentRequestOperation
   source: string
   userId: string
   existingRequestId?: string
@@ -103,10 +101,7 @@ export async function enqueueRequestTracking({
     role: "user" | "assistant"
     content: string
   }>
-  operation?: {
-    name: string
-    prompt: string
-  }
+  operation?: AgentRequestOperation
   userId: string
   existingRequestId?: string
 }) {

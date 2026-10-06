@@ -105,7 +105,11 @@ describe("resumeOperation", () => {
       userId: "user_1",
       sessionId: "session_1",
       latestPrompt: "Buy 1500 pens",
-      operation: { name: "Procurement", prompt: "Handle procurement." },
+      operation: {
+        id: "op_procurement",
+        name: "Procurement",
+        prompt: "Handle procurement.",
+      },
       source: "Chat",
     })
 
@@ -327,7 +331,11 @@ describe("resumeOperation", () => {
         userId: "user_1",
         sessionId: "session_1",
         latestPrompt: "Buy 200 notebooks",
-        operation: { name: "Procurement", prompt: "Handle procurement." },
+        operation: {
+          id: "op_procurement",
+          name: "Procurement",
+          prompt: "Handle procurement.",
+        },
         source: "Chat",
       }))!
       await sdk.ai.agentRequests.updateRequestStatus({

@@ -86,7 +86,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         })
 
@@ -108,7 +112,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         })
 
@@ -129,7 +137,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         })
 
@@ -144,7 +156,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         })
 
@@ -152,6 +168,169 @@ describe("agentRequests crud", () => {
         expect(await fetchRequestsByAgent("agent_1")).toHaveLength(1)
       })
     })
+
+    it("keeps a follow-up on the same request after its operation is renamed", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+        }
+        const first = (await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Raise a chips expense",
+          operation: {
+            id: "op_expenses",
+            name: "Expenses",
+            prompt: "Create expenses.",
+          },
+        }))!
+        await updateRequestStatus({
+          requestId: first.requestId,
+          status: "needs_input",
+        })
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first.requestId,
+          entryAction: "append_latest_entry",
+        })
+        const followUp = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Change that expense to 25 pounds",
+          operation: {
+            id: "op_expenses",
+            name: "Purchases",
+            prompt: "Create expenses.",
+          },
+        })
+
+        const requests = await fetchRequestsByAgent("agent_1")
+        expect(followUp?.requestId).toEqual(first.requestId)
+        expect(requests).toHaveLength(1)
+        expect(requests[0]).toEqual(
+          expect.objectContaining({
+            operationId: "op_expenses",
+            status: "needs_input",
+            entries: [
+              expect.objectContaining({
+                operationNames: ["Purchases"],
+                status: "needs_input",
+              }),
+            ],
+          })
+        )
+      })
+    })
+
+    it("separates operations with identical display names", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Chat",
+        }
+        const first = (await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Raise a chips expense",
+          operation: {
+            id: "op_expenses",
+            name: "Create",
+            prompt: "Create expenses.",
+          },
+        }))!
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "existing_thread",
+          requestId: first.requestId,
+          entryAction: "append_latest_entry",
+        })
+        await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Create a book",
+          operation: {
+            id: "op_books",
+            name: "Create",
+            prompt: "Create books.",
+          },
+        })
+
+        const requests = await fetchRequestsByAgent("agent_1")
+        expect(requests).toHaveLength(2)
+        expect(requests.map(request => request.operationId).sort()).toEqual([
+          "op_books",
+          "op_expenses",
+        ])
+      })
+    })
+
+    it.each(["completed", "other_operation"] as const)(
+      "finds an older open request behind ten newer %s requests",
+      async newerRequestKind => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const inputs = {
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            source: "Slack",
+            operation: {
+              id: "op_expenses",
+              name: "Expenses",
+              prompt: "Create expenses.",
+            },
+          }
+          const first = (await initActiveRequest({
+            ...inputs,
+            latestPrompt: "Raise a chips expense",
+          }))!
+          const [request] = await fetchRequestsByAgent("agent_1")
+          const baseTime = Date.now()
+          await context.getWorkspaceDB().put({
+            ...request,
+            updatedAt: new Date(baseTime - 60000).toISOString(),
+          })
+          for (let index = 0; index < 10; index++) {
+            await context.getWorkspaceDB().put({
+              ...request,
+              _id: `agentrequest_newer_${index}`,
+              _rev: undefined,
+              operationId:
+                newerRequestKind === "other_operation"
+                  ? "op_books"
+                  : "op_expenses",
+              status: newerRequestKind === "completed" ? "completed" : "active",
+              updatedAt: new Date(baseTime + index).toISOString(),
+            })
+          }
+          analyzeAgentRequestLinkMock.mockImplementationOnce(
+            async ({
+              candidateRequests,
+            }: Parameters<typeof analyzeAgentRequestLink>[0]) => {
+              if (
+                candidateRequests.some(
+                  candidate => candidate._id === first.requestId
+                )
+              ) {
+                return {
+                  decision: "existing_thread",
+                  requestId: first.requestId,
+                  entryAction: "append_latest_entry",
+                }
+              }
+              return { decision: "new_thread" }
+            }
+          )
+          const followUp = await initActiveRequest({
+            ...inputs,
+            latestPrompt: "Change that expense to 25 pounds",
+          })
+
+          const requests = await fetchRequestsByAgent("agent_1")
+          expect(followUp?.requestId).toEqual(first.requestId)
+          expect(requests).toHaveLength(11)
+        })
+      }
+    )
 
     it("tracks four independent asks and their approvals in one session", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -168,7 +347,11 @@ describe("agentRequests crud", () => {
             userId: "user_1",
             sessionId: "session_1",
             latestPrompt: ask.prompt,
-            operation: { name: ask.operation, prompt: "Create rows." },
+            operation: {
+              id: ask.operation,
+              name: ask.operation,
+              prompt: "Create rows.",
+            },
             source: "Slack",
           }))!
           await createOrUpdateRequestForPrompt({
@@ -176,7 +359,11 @@ describe("agentRequests crud", () => {
             userId: "user_1",
             sessionId: "session_1",
             latestUserPrompt: ask.prompt,
-            operation: { name: ask.operation, prompt: "Create rows." },
+            operation: {
+              id: ask.operation,
+              name: ask.operation,
+              prompt: "Create rows.",
+            },
             source: "Slack",
             existingRequestId: requestId,
           })
@@ -261,7 +448,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Raise a chips expense",
-          operation: { name: "Expenses", prompt: "Create expenses." },
+          operation: {
+            id: "op_expenses",
+            name: "Expenses",
+            prompt: "Create expenses.",
+          },
           source: "Slack",
         }))!
         analyzeAgentRequestLinkMock.mockResolvedValueOnce({
@@ -274,7 +465,7 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Create a book",
-          operation: { name: "Books", prompt: "Create books." },
+          operation: { id: "op_books", name: "Books", prompt: "Create books." },
           source: "Slack",
         })
 
@@ -292,7 +483,11 @@ describe("agentRequests crud", () => {
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
-          operation: { name: "Expenses", prompt: "Create expenses." },
+          operation: {
+            id: "op_expenses",
+            name: "Expenses",
+            prompt: "Create expenses.",
+          },
           source: "Slack",
         }
         const first = (await initActiveRequest({
@@ -342,7 +537,11 @@ describe("agentRequests crud", () => {
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
-          operation: { name: "Expenses", prompt: "Create expenses." },
+          operation: {
+            id: "op_expenses",
+            name: "Expenses",
+            prompt: "Create expenses.",
+          },
           source: "Slack",
         }
         const first = (await initActiveRequest({
@@ -382,7 +581,11 @@ describe("agentRequests crud", () => {
         const inputs = {
           agentId: "agent_1",
           userId: "user_1",
-          operation: { name: "Expenses", prompt: "Create expenses." },
+          operation: {
+            id: "op_expenses",
+            name: "Expenses",
+            prompt: "Create expenses.",
+          },
         }
         const first = (await initActiveRequest({
           ...inputs,
@@ -447,7 +650,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         })
 
@@ -467,7 +674,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
 
@@ -491,7 +702,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
         emitAgentRequestChangeMock.mockClear()
@@ -513,7 +728,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
 
@@ -540,6 +759,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestPrompt: "Approve this purchase",
           operation: {
+            id: "op_procurement",
             name: "Procurement",
             prompt: "Handle procurement requests.",
           },
@@ -556,47 +776,63 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("keeps needs_input when boundary analysis links a follow-up", async () => {
-      await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const first = (await initActiveRequest({
-          agentId: "agent_1",
-          userId: "user_1",
-          sessionId: "session_1",
-          latestPrompt: "Approve this purchase",
-          operation: {
-            name: "Procurement",
-            prompt: "Handle procurement requests.",
-          },
-          source: "Chat",
-        }))!
+    it.each(["append_latest_entry", "create_new_entry"] as const)(
+      "keeps request and entry needs_input for a follow-up using %s",
+      async entryAction => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const first = (await initActiveRequest({
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            latestPrompt: "Approve this purchase",
+            operation: {
+              id: "op_procurement",
+              name: "Procurement",
+              prompt: "Handle procurement requests.",
+            },
+            source: "Chat",
+          }))!
 
-        await updateRequestStatus({
-          requestId: first.requestId,
-          status: "needs_input",
+          await updateRequestStatus({
+            requestId: first.requestId,
+            status: "needs_input",
+          })
+
+          analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+            decision: "existing_thread",
+            requestId: first.requestId,
+            entryAction,
+          })
+
+          const second = await initActiveRequest({
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            latestPrompt: "Approve this purchase",
+            operation: {
+              id: "op_procurement",
+              name: "Procurement",
+              prompt: "Handle procurement requests.",
+            },
+            source: "Chat",
+          })
+
+          expect(second?.requestId).toEqual(first.requestId)
+          await updateRequestStatus({
+            requestId: first.requestId,
+            status: "needs_input",
+          })
+          const requests = await fetchRequestsByAgent("agent_1")
+          expect(requests).toHaveLength(1)
+          expect(requests[0].status).toEqual("needs_input")
+          expect(requests[0].entries.map(entry => entry.status)).toEqual(
+            entryAction === "append_latest_entry"
+              ? ["needs_input"]
+              : ["needs_input", "needs_input"]
+          )
         })
-
-        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
-          decision: "existing_thread",
-          requestId: first.requestId,
-          entryAction: "append_latest_entry",
-        })
-
-        const second = await initActiveRequest({
-          agentId: "agent_1",
-          userId: "user_1",
-          sessionId: "session_1",
-          latestPrompt: "Approve this purchase",
-          operation: {
-            name: "Procurement",
-            prompt: "Handle procurement requests.",
-          },
-          source: "Chat",
-        })
-
-        expect(second?.requestId).toEqual(first.requestId)
-        expect(await fetchRequestsByAgent("agent_1")).toHaveLength(1)
-      })
-    })
+      }
+    )
 
     it("does not overwrite a request that is already failed", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -605,7 +841,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
 
@@ -629,7 +869,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
 
@@ -665,6 +909,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestPrompt: "Order 1500 pens",
           operation: {
+            id: "op_procurement",
             name: "Procurement",
             prompt: "Handle procurement requests.",
           },
@@ -692,6 +937,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestPrompt: "Order 1500 pens",
           operation: {
+            id: "op_procurement",
             name: "Procurement",
             prompt: "Handle procurement requests.",
           },
@@ -719,7 +965,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
 
@@ -748,7 +998,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
 
@@ -781,6 +1035,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestPrompt: "Order 1500 pens",
           operation: {
+            id: "op_procurement",
             name: "Procurement",
             prompt: "Handle procurement requests.",
           },
@@ -813,6 +1068,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestPrompt: "Approve this purchase",
           operation: {
+            id: "op_procurement",
             name: "Procurement",
             prompt: "Handle procurement requests.",
           },
@@ -837,7 +1093,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
 
@@ -866,6 +1126,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestPrompt: "Order 1500 pens",
           operation: {
+            id: "op_procurement",
             name: "Procurement",
             prompt: "Handle procurement requests.",
           },
@@ -893,7 +1154,11 @@ describe("agentRequests crud", () => {
         userId: "user_1",
         sessionId: "session_1",
         latestPrompt: "Book me a meeting",
-        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        operation: {
+          id: "op_scheduling",
+          name: "Scheduling",
+          prompt: "Schedule meetings.",
+        },
         source: "Chat",
       })
 
@@ -1056,7 +1321,11 @@ describe("agentRequests crud", () => {
         userId: "user_1",
         sessionId: "session_1",
         latestPrompt: "Book me a meeting",
-        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        operation: {
+          id: "op_scheduling",
+          name: "Scheduling",
+          prompt: "Schedule meetings.",
+        },
         source: "Chat",
       })
 
@@ -1223,7 +1492,11 @@ describe("agentRequests crud", () => {
         userId: "user_1",
         sessionId: "session_1",
         latestPrompt: "Book me a meeting",
-        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        operation: {
+          id: "op_scheduling",
+          name: "Scheduling",
+          prompt: "Schedule meetings.",
+        },
         source: "Chat",
       })
 
@@ -1305,7 +1578,11 @@ describe("agentRequests crud", () => {
   describe("fetchRequestsSummary", () => {
     it("counts requests by status across the whole workspace", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const operation = { name: "Scheduling", prompt: "Schedule meetings." }
+        const operation = {
+          id: "op_scheduling",
+          name: "Scheduling",
+          prompt: "Schedule meetings.",
+        }
 
         await initActiveRequest({
           agentId: "agent_1",
@@ -1370,7 +1647,11 @@ describe("agentRequests crud", () => {
   describe("fetchRequests", () => {
     it("returns every request ordered by most recently updated when no status is given", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const operation = { name: "Scheduling", prompt: "Schedule meetings." }
+        const operation = {
+          id: "op_scheduling",
+          name: "Scheduling",
+          prompt: "Schedule meetings.",
+        }
 
         const first = (await initActiveRequest({
           agentId: "agent_1",
@@ -1403,7 +1684,11 @@ describe("agentRequests crud", () => {
 
     it("only returns requests matching the given status", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const operation = { name: "Scheduling", prompt: "Schedule meetings." }
+        const operation = {
+          id: "op_scheduling",
+          name: "Scheduling",
+          prompt: "Schedule meetings.",
+        }
 
         const active = (await initActiveRequest({
           agentId: "agent_1",
@@ -1452,7 +1737,11 @@ describe("agentRequests crud", () => {
 
     it("paginates within a single status", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const operation = { name: "Scheduling", prompt: "Schedule meetings." }
+        const operation = {
+          id: "op_scheduling",
+          name: "Scheduling",
+          prompt: "Schedule meetings.",
+        }
 
         for (const sessionId of ["session_1", "session_2", "session_3"]) {
           await initActiveRequest({
@@ -1524,7 +1813,11 @@ describe("agentRequests crud", () => {
         userId: "user_1",
         sessionId: "session_1",
         latestPrompt: "Book me a meeting",
-        operation: { name: "Scheduling", prompt: "Schedule meetings." },
+        operation: {
+          id: "op_scheduling",
+          name: "Scheduling",
+          prompt: "Schedule meetings.",
+        },
         source: "Chat",
       })
 
@@ -1733,6 +2026,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestUserPrompt: "Show me the holidays company policy",
           operation: {
+            id: "op_support",
             name: "Support",
             prompt: "Help users with company policy questions.",
           },
@@ -1761,7 +2055,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
 
@@ -1771,7 +2069,11 @@ describe("agentRequests crud", () => {
           agentId: "agent_1",
           sessionId: "session_1",
           latestUserPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
           userId: "user_1",
           existingRequestId: requestId,
@@ -1794,6 +2096,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestUserPrompt: "Show me the holidays company policy",
           operation: {
+            id: "op_support",
             name: "Support",
             prompt: "Help users with company policy questions.",
           },
@@ -1812,6 +2115,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_2",
           latestUserPrompt: "summarise it in 50 words",
           operation: {
+            id: "op_support",
             name: "Support",
             prompt: "Summarise company policies clearly.",
           },
@@ -1844,6 +2148,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestUserPrompt: "Order 1500 pens",
           operation: {
+            id: "op_procurement",
             name: "Procurement",
             prompt: "Handle procurement requests.",
           },
@@ -1867,6 +2172,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_2",
           latestUserPrompt: "any update on this?",
           operation: {
+            id: "op_procurement",
             name: "Procurement",
             prompt: "Handle procurement requests.",
           },
@@ -1876,6 +2182,9 @@ describe("agentRequests crud", () => {
 
         expect(second?.request._id).toEqual(first?.request._id)
         expect(second?.request.status).toEqual("needs_input")
+        expect(second?.request.entries.map(entry => entry.status)).toEqual([
+          "needs_input",
+        ])
       })
     })
 
@@ -1889,6 +2198,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestUserPrompt: "Show me the holidays company policy",
           operation: {
+            id: "op_support",
             name: "Support",
             prompt: "Help users with company policy questions.",
           },
@@ -1906,6 +2216,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_2",
           latestUserPrompt: "turn it into an email",
           operation: {
+            id: "op_support",
             name: "Support",
             prompt: "Help users with company policy questions.",
           },
@@ -1936,6 +2247,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestUserPrompt: "Prod request",
           operation: {
+            id: "op_support",
             name: "Support",
             prompt: "Help users with company policy questions.",
           },
@@ -1968,6 +2280,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestUserPrompt: "I need a new laptop",
           operation: {
+            id: "op_it support",
             name: "IT support",
             prompt: "Create and track IT support requests.",
           },
@@ -2035,7 +2348,11 @@ describe("agentRequests crud", () => {
           agentId: "agent_1",
           sessionId: "session_1",
           latestUserPrompt: "I can't connect to the VPN from home",
-          operation: { name: "Support", prompt: "Help with IT issues." },
+          operation: {
+            id: "op_support",
+            name: "Support",
+            prompt: "Help with IT issues.",
+          },
           source: "Chat",
           userId: "user_1",
         })
@@ -2068,7 +2385,11 @@ describe("agentRequests crud", () => {
           agentId: "agent_1",
           sessionId: "session_1",
           latestUserPrompt: sensitivePrompt,
-          operation: { name: "Support", prompt: "Help with IT issues." },
+          operation: {
+            id: "op_support",
+            name: "Support",
+            prompt: "Help with IT issues.",
+          },
           source: "Chat",
           userId: "user_1",
         })
@@ -2094,7 +2415,11 @@ describe("agentRequests crud", () => {
           userId: "user_1",
           sessionId: "session_1",
           latestPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
         }))!
 
@@ -2106,7 +2431,11 @@ describe("agentRequests crud", () => {
           agentId: "agent_1",
           sessionId: "session_1",
           latestUserPrompt: "Book me a meeting",
-          operation: { name: "Scheduling", prompt: "Schedule meetings." },
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
           source: "Chat",
           userId: "user_1",
           existingRequestId: requestId,
@@ -2138,6 +2467,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           latestUserPrompt: "Show me the holidays company policy",
           operation: {
+            id: "op_support",
             name: "Support",
             prompt: "Help users with company policy questions.",
           },
@@ -2159,6 +2489,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_2",
           latestUserPrompt: "summarise it in 50 words",
           operation: {
+            id: "op_support",
             name: "Support",
             prompt: "Summarise company policies clearly.",
           },
