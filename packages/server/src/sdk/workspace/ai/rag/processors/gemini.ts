@@ -15,6 +15,7 @@ import {
 } from "../../knowledgeBase/geminiFileStore"
 import { updateKnowledgeBaseFile } from "../../knowledgeBase"
 import { prepareTabularKnowledgeFileForRagIngestion } from "./tabularText"
+import { GeminiRateLimitError } from "../geminiRateLimit"
 
 export class GeminiRagProcessor implements RagProcessor {
   private knowledgeBase: WithRequired<GeminiKnowledgeBase, "_id">
@@ -79,6 +80,9 @@ export class GeminiRagProcessor implements RagProcessor {
         processor: this.knowledgeBase.type,
       })
     } catch (error) {
+      if (error instanceof GeminiRateLimitError) {
+        throw error
+      }
       console.error("Failed Gemini RAG file ingestion", {
         knowledgeBaseId,
         vectorStoreId: this.knowledgeBase.config.googleFileStoreId,

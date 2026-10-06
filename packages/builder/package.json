@@ -33,6 +33,7 @@
     "@dagrejs/dagre": "1.1.4",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
+    "@typescript/vfs": "1.6.4",
     "@xyflow/svelte": "^0.1.39",
     "codemirror": "^5.65.16",
     "dayjs": "^1.10.8",
@@ -47,7 +48,8 @@
     "svelte-loading-spinners": "^0.3.6",
     "svelte-portal": "^2.2.1",
     "to-json-schema": "0.2.5",
-    "uuid": "^8.3.2",
+    "typescript": "6.0.3",
+    "uuid": "^14.0.0",
     "yup": "^0.32.11"
   },
   "devDependencies": {
@@ -59,7 +61,6 @@
     "@testing-library/jest-dom": "6.4.2",
     "@testing-library/svelte": "^5.2.8",
     "@types/sanitize-html": "^2.13.0",
-    "@types/uuid": "8.3.4",
     "jsdom": "^21.1.1",
     "resize-observer-polyfill": "^1.5.1",
     "vite": "7.3.5",
