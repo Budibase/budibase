@@ -149,6 +149,7 @@ const getFunctionDeclarationsFromCatalog = (
     return {
       ...capability,
       parameterNames: query.parameters.map(parameter => parameter.name),
+      responseSchema: query.responseSchema,
     }
   })
   const declarations = generateFunctionDeclarations({

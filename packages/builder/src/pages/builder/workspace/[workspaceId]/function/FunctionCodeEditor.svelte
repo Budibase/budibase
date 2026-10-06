@@ -1,5 +1,6 @@
 <script lang="ts">
   import { themeStore } from "@/stores/portal"
+  import { generateFunctionDeclarations } from "@budibase/shared-core"
   import type {
     FunctionBuildDiagnostic,
     FunctionInputDefinition,
@@ -7,10 +8,12 @@
   } from "@budibase/types"
   import {
     autocompletion,
+    closeCompletion,
     closeBrackets,
     closeBracketsKeymap,
     completionKeymap,
     type CompletionContext,
+    type CompletionResult,
   } from "@codemirror/autocomplete"
   import {
     defaultKeymap,
@@ -37,12 +40,25 @@
     getFunctionQueryCompletions,
   } from "./functionCompletions"
   import { getFunctionEditorTheme } from "./functionEditorTheme"
+  import { createFunctionTypeCompletions } from "./functionTypeCompletions"
 
-  export let value = ""
-  export let inputSchema: FunctionInputDefinition[] = []
-  export let capabilities: FunctionQueryCapability[] = []
-  export let diagnostics: FunctionBuildDiagnostic[] = []
-  export let readonly = false
+  let {
+    value = $bindable(""),
+    inputSchema = [],
+    capabilities = [],
+    diagnostics = [],
+    readonly = false,
+  }: {
+    value?: string
+    inputSchema?: FunctionInputDefinition[]
+    capabilities?: FunctionQueryCapability[]
+    diagnostics?: FunctionBuildDiagnostic[]
+    readonly?: boolean
+  } = $props()
+
+  const declarations = $derived(
+    generateFunctionDeclarations({ capabilities, inputSchema })
+  )
 
   const virtualModuleExports = [
     { label: "inputs", type: "variable", detail: "Function inputs" },
@@ -52,11 +68,16 @@
   ]
 
   let container: HTMLDivElement
-  let editor: EditorView | undefined
-  let currentTheme = $themeStore?.theme
+  let editor = $state.raw<EditorView>()
+  let currentTheme = $state($themeStore?.theme)
+  let typeCompletions:
+    | ReturnType<typeof createFunctionTypeCompletions>
+    | undefined
   const themeConfig = new Compartment()
 
-  const complete = (context: CompletionContext) => {
+  const complete = (
+    context: CompletionContext
+  ): CompletionResult | Promise<CompletionResult | null> | null => {
     const before = context.state.doc.sliceString(0, context.pos)
 
     // Complete the only module that Function source is allowed to import.
@@ -110,6 +131,7 @@
           item => ({
             label: item.label,
             type: "function",
+            info: item.info,
             detail: item.parameterNames.length
               ? `(${item.parameterNames.join(", ")})`
               : "()",
@@ -131,7 +153,10 @@
       }
     }
 
-    return null
+    if (!editor || !typeCompletions) {
+      return null
+    }
+    return typeCompletions.complete({ context, declarations })
   }
 
   const toEditorDiagnostics = (
@@ -171,24 +196,36 @@
     }
   }
 
-  $: refreshDiagnostics(diagnostics, editor)
+  $effect(() => refreshDiagnostics(diagnostics, editor))
 
-  $: if (editor && currentTheme !== $themeStore?.theme) {
-    currentTheme = $themeStore?.theme
-    editor.dispatch({
-      effects: themeConfig.reconfigure(
-        getFunctionEditorTheme({ isDark: !currentTheme?.includes("light") })
-      ),
-    })
-  }
+  $effect(() => {
+    // Drop cached suggestions when linked query or input types change.
+    if (editor && declarations) {
+      closeCompletion(editor)
+    }
+  })
 
-  $: if (editor && editor.state.doc.toString() !== value) {
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: value },
-    })
-  }
+  $effect(() => {
+    if (editor && currentTheme !== $themeStore?.theme) {
+      currentTheme = $themeStore?.theme
+      editor.dispatch({
+        effects: themeConfig.reconfigure(
+          getFunctionEditorTheme({ isDark: !currentTheme?.includes("light") })
+        ),
+      })
+    }
+  })
+
+  $effect(() => {
+    if (editor && editor.state.doc.toString() !== value) {
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: value },
+      })
+    }
+  })
 
   onMount(() => {
+    typeCompletions = createFunctionTypeCompletions()
     const isDark = !currentTheme?.includes("light")
     editor = new EditorView({
       parent: container,
@@ -204,7 +241,10 @@
         javascript({ typescript: true }),
         themeConfig.of(getFunctionEditorTheme({ isDark })),
         linter(null),
-        autocompletion({ override: [complete] }),
+        autocompletion({
+          override: [complete],
+          positionInfo: () => ({ style: "position: static;" }),
+        }),
         keymap.of([
           ...closeBracketsKeymap,
           ...defaultKeymap,
@@ -223,7 +263,10 @@
     refreshDiagnostics(diagnostics, editor)
   })
 
-  onDestroy(() => editor?.destroy())
+  onDestroy(() => {
+    typeCompletions?.destroy()
+    editor?.destroy()
+  })
 </script>
 
 <div class="function-code-editor" bind:this={container}></div>

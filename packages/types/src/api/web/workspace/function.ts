@@ -2,6 +2,7 @@ import type {
   FunctionBuildDiagnostic,
   FunctionDocument,
   FunctionInputDefinition,
+  FunctionQueryResponseSchema,
   FunctionRunSummary,
 } from "../../../documents"
 import type { SourceName } from "../../../sdk"
@@ -92,6 +93,7 @@ export interface FunctionQueryCatalogEntry {
   source: SourceName
   kind: FunctionQueryKind
   parameters: FunctionQueryCatalogParameter[]
+  responseSchema?: FunctionQueryResponseSchema
 }
 
 export interface FetchFunctionQueryCatalogResponse {
