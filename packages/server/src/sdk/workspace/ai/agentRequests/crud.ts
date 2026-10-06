@@ -768,8 +768,8 @@ export async function initActiveRequest({
     for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
       const existing = await context
         .getWorkspaceDB()
-        .get<AgentRequest>(decision.requestId)
-      if (isTerminalStatus(existing.status)) {
+        .tryGet<AgentRequest>(decision.requestId)
+      if (!existing || isTerminalStatus(existing.status)) {
         break
       }
       try {

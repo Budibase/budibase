@@ -89,12 +89,21 @@
 
     return request.entries[0]
   })
-  let operationName = $derived(
-    $agentsStore.agents
-      .find(agent => agent._id === request?.agentId)
-      ?.operations?.find(operation => operation.id === request?.operationId)
-      ?.name || "Deleted operation"
-  )
+  let operationName = $derived.by(() => {
+    if (!request?.operationId) {
+      return ""
+    }
+    const agent = $agentsStore.agents.find(
+      agent => agent._id === request.agentId
+    )
+    if (!agent) {
+      return ""
+    }
+    const operation = agent.operations?.find(
+      operation => operation.id === request.operationId
+    )
+    return operation?.name ?? "Deleted operation"
+  })
   let details = $derived<DetailRow[]>([
     {
       label: "Status",

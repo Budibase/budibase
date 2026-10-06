@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { builderSocket } from "../../../../websockets"
+import backfillOperationIds from "../../../../workspaceMigrations/migrations/20261006164506_backfill_agent_request_operation_ids"
 import {
   createOrUpdateRequestForPrompt,
   fetchRequests,
@@ -330,6 +331,115 @@ describe("agentRequests crud", () => {
         })
       }
     )
+
+    it("creates a fresh tracked request if the selected request is deleted during analysis", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: {
+            id: "op_expenses",
+            name: "Expenses",
+            prompt: "Create expenses.",
+          },
+        }
+        const first = (await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Raise a chips expense",
+        }))!
+        analyzeAgentRequestLinkMock.mockImplementationOnce(async () => {
+          const db = context.getWorkspaceDB()
+          const request = await db.get(first.requestId)
+          await db.remove(request)
+          return {
+            decision: "existing_thread",
+            requestId: first.requestId,
+            entryAction: "append_latest_entry",
+          }
+        })
+        const followUp = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Change that expense to 25 pounds",
+        })
+
+        const requests = await fetchRequestsByAgent("agent_1")
+        expect(requests).toHaveLength(1)
+        expect(followUp?.requestId).toEqual(requests[0]._id)
+        expect(followUp?.requestId).not.toEqual(first.requestId)
+        expect(requests[0].operationId).toEqual("op_expenses")
+      })
+    })
+
+    it("links a follow-up to a legacy open request after its operation ID is migrated", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        await db.put({
+          _id: "agent_1",
+          name: "Purchasing agent",
+          aiconfig: "config_1",
+          operations: [
+            {
+              id: "op_expenses",
+              name: "Expenses",
+              live: true,
+              allowKnowledgeSourceDownload: false,
+            },
+          ],
+        })
+        await db.put({
+          _id: "agentrequest_legacy",
+          agentId: "agent_1",
+          userId: "user_1",
+          status: "needs_input",
+          updatedAt: new Date().toISOString(),
+          entries: [
+            {
+              sessionId: "session_1",
+              source: "Slack",
+              operationNames: ["Expenses"],
+              status: "needs_input",
+            },
+          ],
+        })
+        await backfillOperationIds()
+        analyzeAgentRequestLinkMock.mockImplementationOnce(
+          async ({
+            candidateRequests,
+          }: Parameters<typeof analyzeAgentRequestLink>[0]) => {
+            const existing = candidateRequests.find(
+              request => request._id === "agentrequest_legacy"
+            )
+            return existing
+              ? {
+                  decision: "existing_thread",
+                  requestId: existing._id,
+                  entryAction: "append_latest_entry",
+                }
+              : { decision: "new_thread" }
+          }
+        )
+        const followUp = await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          latestPrompt: "Change that expense to 25 pounds",
+          operation: {
+            id: "op_expenses",
+            name: "Expenses",
+            prompt: "Create expenses.",
+          },
+        })
+
+        const requests = await fetchRequestsByAgent("agent_1")
+        expect(followUp?.requestId).toEqual("agentrequest_legacy")
+        expect(requests).toHaveLength(1)
+        expect(requests[0].operationId).toEqual("op_expenses")
+        expect(requests[0].status).toEqual("needs_input")
+      })
+    })
 
     it("tracks four independent asks and their approvals in one session", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {

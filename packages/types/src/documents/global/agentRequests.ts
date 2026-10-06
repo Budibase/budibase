@@ -78,7 +78,7 @@ export type AgentRequestAction =
 export interface AgentRequest extends Document {
   title?: string
   agentId: string
-  operationId: string
+  operationId?: string
   userId: string
   entries: AgentRequestEntry[]
   actions?: AgentRequestAction[]

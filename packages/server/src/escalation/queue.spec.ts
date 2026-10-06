@@ -106,7 +106,7 @@ describe("resumeOperation", () => {
       sessionId: "session_1",
       latestPrompt: "Buy 1500 pens",
       operation: {
-        id: "op_procurement",
+        id: "op_1",
         name: "Procurement",
         prompt: "Handle procurement.",
       },
@@ -332,7 +332,7 @@ describe("resumeOperation", () => {
         sessionId: "session_1",
         latestPrompt: "Buy 200 notebooks",
         operation: {
-          id: "op_procurement",
+          id: "op_1",
           name: "Procurement",
           prompt: "Handle procurement.",
         },

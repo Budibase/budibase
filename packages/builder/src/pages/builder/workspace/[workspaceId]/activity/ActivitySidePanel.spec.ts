@@ -42,11 +42,13 @@ const setOperation = (name: string) => {
   })
 }
 
-const renderRequest = () => {
+const renderRequest = ({
+  operationId = "operation_1",
+}: { operationId?: string | null } = {}) => {
   const request: AgentRequest = {
     _id: "agentrequest_1",
     agentId: "agent_1",
-    operationId: "operation_1",
+    ...(operationId ? { operationId } : {}),
     userId: "user_1",
     status: "needs_input",
     entries: [
@@ -82,6 +84,29 @@ describe("ActivitySidePanel operation name", () => {
       expect(screen.getByText("Purchases")).toBeInTheDocument()
       expect(screen.queryByText("Expenses")).not.toBeInTheDocument()
     })
+  })
+
+  it("does not label a legacy request without an operation ID as deleted", () => {
+    renderRequest({ operationId: null })
+    expect(screen.queryByText("Deleted operation")).not.toBeInTheDocument()
+    expect(
+      screen
+        .getByText("Operation")
+        .parentElement?.querySelector(".detail-text")
+        ?.textContent?.trim()
+    ).toBe("")
+  })
+
+  it("does not label an operation as deleted when the agent is unavailable", () => {
+    agentsStore.set({ agents: [] })
+    renderRequest()
+    expect(screen.queryByText("Deleted operation")).not.toBeInTheDocument()
+    expect(
+      screen
+        .getByText("Operation")
+        .parentElement?.querySelector(".detail-text")
+        ?.textContent?.trim()
+    ).toBe("")
   })
 
   it("shows a deleted operation without retaining its old name", async () => {
