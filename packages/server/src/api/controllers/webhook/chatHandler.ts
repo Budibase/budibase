@@ -735,14 +735,33 @@ export const handleChatMessage = async ({
           provider,
         })
       : []
-    conversationAttachments = [...conversationAttachments, ...queuedAttachments]
+    conversationAttachments = [
+      ...new Map(
+        [...conversationAttachments, ...queuedAttachments].map(attachment => [
+          attachment.id,
+          attachment,
+        ])
+      ).values(),
+    ]
     const attachmentContextExpiresAt =
       conversationAttachments.length || incomingAttachments.length
         ? new Date(Date.now() + idleTimeoutMs).toISOString()
         : undefined
 
     if (!content && incomingAttachments.length && !queuedAttachments.length) {
-      await reply("Those files are already available in this conversation.")
+      const stillProcessing = conversationAttachments.some(
+        attachment =>
+          (attachment.status === ConversationAttachmentStatus.QUEUED ||
+            attachment.status === ConversationAttachmentStatus.PROCESSING) &&
+          incomingAttachments.some(
+            incoming => incoming.providerFileId === attachment.providerFileId
+          )
+      )
+      await reply(
+        stillProcessing
+          ? "Those files are still processing. I'll reply here when ready."
+          : "Those files are already available in this conversation."
+      )
       return
     }
 
@@ -779,35 +798,45 @@ export const handleChatMessage = async ({
       hasPendingAttachmentTurns
     ) {
       const now = new Date().toISOString()
-      const turn: ConversationAttachmentTurn = {
-        id: v4(),
-        message: userMessage,
-        attachmentIds: conversationAttachments
-          .filter(
-            attachment =>
-              attachment.status !== ConversationAttachmentStatus.FAILED
-          )
-          .map(attachment => attachment.id),
-        status: ConversationAttachmentTurnStatus.QUEUED,
-        requester: {
-          userId,
-          linked: !!existingLink,
-          displayName: user.displayName,
-        },
-        createdAt: now,
-        updatedAt: now,
-      }
+      const turnId = v4()
       let chatToUpdate = existingChat
       let saved = false
       for (let attempt = 0; attempt < 5 && !saved; attempt++) {
         const currentAttachments = chatToUpdate?.attachments || []
+        const attachmentsToQueue =
+          attempt === 0
+            ? queuedAttachments
+            : sdk.ai.chatConversations.prepareConversationAttachments({
+                conversation: { _id: chatId, attachments: currentAttachments },
+                incoming: incomingAttachments,
+                provider,
+              })
         const mergedAttachments = [
-          ...currentAttachments,
-          ...conversationAttachments.filter(
-            attachment =>
-              !currentAttachments.some(current => current.id === attachment.id)
-          ),
+          ...new Map(
+            [...currentAttachments, ...attachmentsToQueue].map(attachment => [
+              attachment.id,
+              attachment,
+            ])
+          ).values(),
         ]
+        const turn: ConversationAttachmentTurn = {
+          id: turnId,
+          message: userMessage,
+          attachmentIds: mergedAttachments
+            .filter(
+              attachment =>
+                attachment.status !== ConversationAttachmentStatus.FAILED
+            )
+            .map(attachment => attachment.id),
+          status: ConversationAttachmentTurnStatus.QUEUED,
+          requester: {
+            userId,
+            linked: !!existingLink,
+            displayName: user.displayName,
+          },
+          createdAt: now,
+          updatedAt: now,
+        }
         const currentTurns = chatToUpdate?.pendingAttachmentTurns || []
         const queuedChat =
           sdk.ai.chatConversations.prepareChatConversationForSave({
@@ -855,7 +884,7 @@ export const handleChatMessage = async ({
         {
           workspaceId,
           conversationId: chatId,
-          turnId: turn.id,
+          turnId,
         }
       )
       await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(

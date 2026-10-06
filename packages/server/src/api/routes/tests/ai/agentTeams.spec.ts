@@ -63,13 +63,43 @@ jest.mock("../../../../sdk/workspace/ai/rag", () => {
   }
 })
 
+jest.mock(
+  "../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue",
+  () => {
+    const actual = jest.requireActual<
+      typeof import("../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue")
+    >("../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue")
+    return { ...actual, scheduleConversationAttachmentIngestion: jest.fn() }
+  }
+)
+
+jest.mock(
+  "../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue",
+  () => {
+    const actual = jest.requireActual<
+      typeof import("../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue")
+    >("../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue")
+    return { ...actual, scheduleConversationAttachmentCleanup: jest.fn() }
+  }
+)
+
+jest.mock("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  >("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  return {
+    ...actual,
+    isGeminiFileSearchConfigured: jest.fn(actual.isGeminiFileSearchConfigured),
+  }
+})
+
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
 
 import extract from "extract-zip"
 import { createTeamsAdapter } from "@chat-adapter/teams"
-import { context, docIds } from "@budibase/backend-core"
+import { context, db, docIds, encryption } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { ChatCommands } from "@budibase/shared-core"
 import {
@@ -77,6 +107,9 @@ import {
   DocumentType,
   type Agent,
   type ChatConversation,
+  ConversationAttachmentErrorCode,
+  ConversationAttachmentStatus,
+  ConversationAttachmentTurnStatus,
   type WebhookChatCompleteResult,
 } from "@budibase/types"
 import sdk from "../../../../sdk"
@@ -470,13 +503,16 @@ describe("agent teams integration provisioning", () => {
     const setupProvisionedTeamsAgent = async ({
       requireUserLink,
       allowKnowledgeSourceDownload,
+      allowConversationAttachments,
     }: {
       requireUserLink?: boolean
       allowKnowledgeSourceDownload?: boolean
+      allowConversationAttachments?: boolean
     } = {}) => {
       const agent = await config.api.agent.createWithOperation(
         {
           name: "Teams Incoming Messages Agent",
+          allowConversationAttachments,
           MSTeamsIntegration: {
             appId: TEAMS_APP_ID,
             appPassword: "teams-app-password",
@@ -510,6 +546,229 @@ describe("agent teams integration provisioning", () => {
       }
       return { agent, linkExternalUser }
     }
+
+    describe("file resends", () => {
+      const fileBody = {
+        type: "message",
+        text: "",
+        from: { id: "user-file", name: "Teams User" },
+        conversation: { id: "conversation-file", conversationType: "personal" },
+        channelData: { tenant: { id: "tenant-1" } },
+        attachments: [
+          {
+            contentType: "application/vnd.microsoft.teams.file.download.info",
+            name: "report.txt",
+            content: {
+              uniqueId: "file_1",
+              downloadUrl: "https://example.com/fresh-download",
+            },
+          },
+        ],
+      }
+      const scheduleIngestion = jest.mocked(
+        sdk.ai.chatConversations.attachmentIngestionQueue
+          .scheduleConversationAttachmentIngestion
+      )
+
+      const startFileConversation = async () => {
+        const { agent } = await setupProvisionedTeamsAgent({
+          requireUserLink: false,
+          allowConversationAttachments: true,
+        })
+        const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
+        await postTeamsMessage({
+          path,
+          body: { ...fileBody, id: "activity-upload" },
+        })
+        const [conversation] = await fetchConversations()
+        return { path, conversation }
+      }
+
+      const saveConversation = async (conversation: ChatConversation) =>
+        await config.doInContext(config.getProdWorkspaceId(), async () =>
+          context.getWorkspaceDB().put(conversation)
+        )
+
+      const markFailed = (
+        conversation: ChatConversation
+      ): ChatConversation => ({
+        ...conversation,
+        attachments: conversation.attachments!.map(attachment => ({
+          ...attachment,
+          status: ConversationAttachmentStatus.FAILED,
+          encryptedDownloadUrl: undefined,
+          errorCode: ConversationAttachmentErrorCode.TEAMS_FILE_ACCESS_DENIED,
+          errorMessage: "Access denied",
+          processedAt: new Date().toISOString(),
+        })),
+        pendingAttachmentTurns: conversation.pendingAttachmentTurns!.map(
+          turn => ({
+            ...turn,
+            status: ConversationAttachmentTurnStatus.COMPLETED,
+            responseText: "I couldn't access report.txt.",
+          })
+        ),
+      })
+
+      beforeEach(() => {
+        jest
+          .mocked(sdk.ai.knowledgeBase.isGeminiFileSearchConfigured)
+          .mockReturnValue(true)
+        scheduleIngestion.mockClear()
+      })
+
+      afterEach(() => {
+        jest.restoreAllMocks()
+      })
+
+      it.each(["", "Summarise the report"])(
+        "retries a failed file at the file limit with message '%s'",
+        async text => {
+          const { path, conversation } = await startFileConversation()
+          const failed = markFailed(conversation)
+          failed.attachments!.push(
+            ...["file_2", "file_3"].map(id => ({
+              ...conversation.attachments![0],
+              id,
+              providerFileId: id,
+              filename: `${id}.txt`,
+              status: ConversationAttachmentStatus.READY,
+            }))
+          )
+          await saveConversation(failed)
+
+          const response = await postTeamsMessage({
+            path,
+            body: { ...fileBody, id: "activity-retry", text },
+          })
+
+          const [saved] = await fetchConversations()
+          expect(response.body.messages).toContain(
+            "Processing report.txt. I'll reply here when ready."
+          )
+          expect(saved.attachments).toEqual([
+            {
+              id: conversation.attachments![0].id,
+              provider: AgentChannelProvider.MSTEAMS,
+              providerFileId: "file_1",
+              filename: "report.txt",
+              mimetype: "text/plain",
+              size: 0,
+              status: ConversationAttachmentStatus.QUEUED,
+              encryptedDownloadUrl: expect.any(String),
+              uploadedAt: expect.any(String),
+            },
+            ...failed.attachments!.slice(1),
+          ])
+          expect(
+            encryption.decrypt(saved.attachments![0].encryptedDownloadUrl!)
+          ).toBe("https://example.com/fresh-download")
+          expect(saved.pendingAttachmentTurns).toEqual([
+            ...failed.pendingAttachmentTurns!,
+            expect.objectContaining({
+              attachmentIds: saved.attachments!.map(
+                attachment => attachment.id
+              ),
+              status: ConversationAttachmentTurnStatus.QUEUED,
+            }),
+          ])
+          expect(scheduleIngestion).toHaveBeenLastCalledWith({
+            workspaceId: config.getProdWorkspaceId(),
+            conversationId: saved._id,
+            turnId: saved.pendingAttachmentTurns![1].id,
+          })
+          expect(mockedWebhookChat).not.toHaveBeenCalled()
+        }
+      )
+
+      it.each([
+        ConversationAttachmentStatus.QUEUED,
+        ConversationAttachmentStatus.PROCESSING,
+        ConversationAttachmentStatus.READY,
+      ])("reuses a %s file without starting another turn", async status => {
+        const { path, conversation } = await startFileConversation()
+        conversation.attachments![0].status = status
+        await saveConversation(conversation)
+
+        const response = await postTeamsMessage({
+          path,
+          body: { ...fileBody, id: "activity-resend" },
+        })
+
+        const [saved] = await fetchConversations()
+        expect(saved.attachments).toEqual(conversation.attachments)
+        expect(saved.pendingAttachmentTurns).toEqual(
+          conversation.pendingAttachmentTurns
+        )
+        expect(scheduleIngestion).toHaveBeenCalledTimes(1)
+        expect(response.body.messages).toContain(
+          status === ConversationAttachmentStatus.READY
+            ? "Those files are already available in this conversation."
+            : "Those files are still processing. I'll reply here when ready."
+        )
+      })
+
+      it.each([
+        ConversationAttachmentStatus.PROCESSING,
+        ConversationAttachmentStatus.READY,
+      ])(
+        "preserves a concurrent %s retry after a save conflict",
+        async status => {
+          const { path, conversation } = await startFileConversation()
+          await saveConversation(markFailed(conversation))
+          const originalPut = db.DatabaseImpl.prototype.put
+          let conflicted = false
+          jest
+            .spyOn(db.DatabaseImpl.prototype, "put")
+            .mockImplementation(async function (
+              this: db.DatabaseImpl,
+              document,
+              options
+            ) {
+              if (!conflicted && document._id === conversation._id) {
+                conflicted = true
+                const current = await this.get<ChatConversation>(
+                  conversation._id
+                )
+                const concurrent: ChatConversation = {
+                  ...current,
+                  attachments: [
+                    {
+                      ...conversation.attachments![0],
+                      status,
+                      encryptedDownloadUrl: encryption.encrypt(
+                        "https://example.com/concurrent-download"
+                      ),
+                    },
+                  ],
+                }
+                await originalPut.call(this, concurrent)
+              }
+              return originalPut.call(this, document, options)
+            })
+
+          await postTeamsMessage({
+            path,
+            body: { ...fileBody, id: "activity-retry" },
+          })
+
+          const [saved] = await fetchConversations()
+          expect(saved.attachments).toEqual([
+            expect.objectContaining({
+              id: conversation.attachments![0].id,
+              status,
+            }),
+          ])
+          expect(
+            encryption.decrypt(saved.attachments![0].encryptedDownloadUrl!)
+          ).toBe("https://example.com/concurrent-download")
+          expect(saved.pendingAttachmentTurns).toHaveLength(2)
+          expect(saved.pendingAttachmentTurns![1].attachmentIds).toEqual([
+            conversation.attachments![0].id,
+          ])
+        }
+      )
+    })
 
     it("rejects an activity with an untrusted service URL", async () => {
       const { agent } = await setupProvisionedTeamsAgent()

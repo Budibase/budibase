@@ -103,6 +103,7 @@ import {
 } from "@budibase/types"
 import { processConversationAttachmentJob } from "./conversationAttachmentProcessor"
 import { getTeamsAttachments, getTeamsFileData } from "./teamsAttachments"
+import { prepareConversationAttachments } from "../../../sdk/workspace/ai/chatConversations/attachments"
 
 describe("conversation attachment processor", () => {
   let conversation: ChatConversation
@@ -481,7 +482,7 @@ describe("conversation attachment processor", () => {
 
       expect(mockTeamsReply).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: "I couldn't access report.txt. Use /new and upload the file again. If it still fails, ask your Teams admin to check this app's file access and update it with the latest app package from Budibase.",
+          text: "I couldn't access report.txt. Upload the file again. If it still fails, ask your Teams admin to check this app's file access and update it with the latest app package from Budibase.",
         })
       )
     }
@@ -499,6 +500,79 @@ describe("conversation attachment processor", () => {
         ),
       })
     ).rejects.toThrow("exceeds the 20 MB file limit")
+  })
+
+  it("processes a resent Teams file using its fresh URL after access was denied", async () => {
+    conversation.channel = {
+      provider: AgentChannelProvider.MSTEAMS,
+      conversationType: "personal",
+      conversationId: "teams_conversation",
+    }
+    conversation.attachments![0] = {
+      ...conversation.attachments![0],
+      provider: AgentChannelProvider.MSTEAMS,
+      encryptedDownloadUrl: encryption.encrypt(
+        "https://example.sharepoint.com/expired"
+      ),
+    }
+    nock("https://example.sharepoint.com").get("/expired").reply(403)
+    const job = {
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    }
+    await processConversationAttachmentJob(job)
+
+    const originalTurn = conversation.pendingAttachmentTurns![0]
+    conversation.attachments = prepareConversationAttachments({
+      conversation,
+      incoming: [
+        {
+          providerFileId: "F1",
+          filename: "report.txt",
+          mimetype: "text/plain",
+          downloadUrl: "https://example.sharepoint.com/fresh",
+        },
+      ],
+      provider: AgentChannelProvider.MSTEAMS,
+    })
+    conversation.pendingAttachmentTurns!.push({
+      id: "turn_2",
+      message: { ...originalTurn.message, id: "message_2" },
+      attachmentIds: ["attachment_1"],
+      requester: originalTurn.requester,
+      status: ConversationAttachmentTurnStatus.QUEUED,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+    const download = nock("https://example.sharepoint.com")
+      .get("/fresh")
+      .reply(200, "content")
+
+    await processConversationAttachmentJob({ ...job, turnId: "turn_2" })
+
+    expect(download.isDone()).toBe(true)
+    expect(conversation.attachments).toEqual([
+      expect.objectContaining({
+        id: "attachment_1",
+        status: ConversationAttachmentStatus.READY,
+        encryptedDownloadUrl: undefined,
+        errorCode: undefined,
+        errorMessage: undefined,
+      }),
+    ])
+    expect(conversation.pendingAttachmentTurns).toEqual([
+      originalTurn,
+      expect.objectContaining({
+        id: "turn_2",
+        status: ConversationAttachmentTurnStatus.COMPLETED,
+        responseText: "The report says content.",
+      }),
+    ])
+    expect(mockTeamsReply).toHaveBeenLastCalledWith(
+      expect.objectContaining({ text: "The report says content." })
+    )
+    expect(mockIngestFile).toHaveBeenCalledTimes(1)
   })
 
   it.each(["personal", "channel", "groupChat"])(

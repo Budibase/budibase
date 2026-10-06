@@ -183,13 +183,18 @@ export const prepareConversationAttachments = ({
   }
 
   const existing = conversation.attachments || []
-  const existingProviderIds = new Set(existing.map(file => file.providerFileId))
+  const existingByProviderId = new Map(
+    existing.map(file => [file.providerFileId, file])
+  )
   const incomingByProviderId = new Map(
     incoming.map(file => [file.providerFileId, file])
   )
-  const deduplicated = [...incomingByProviderId.values()].filter(
-    file => !existingProviderIds.has(file.providerFileId)
-  )
+  const deduplicated = [...incomingByProviderId.values()].filter(file => {
+    const attachment = existingByProviderId.get(file.providerFileId)
+    return (
+      !attachment || attachment.status === ConversationAttachmentStatus.FAILED
+    )
+  })
   if (!deduplicated.length) {
     return []
   }
@@ -197,7 +202,10 @@ export const prepareConversationAttachments = ({
   deduplicated.forEach(attachment =>
     assertSupportedMetadata({ attachment, provider })
   )
-  const nextCount = existing.length + deduplicated.length
+  const nextCount =
+    existing.length +
+    deduplicated.filter(file => !existingByProviderId.has(file.providerFileId))
+      .length
   if (nextCount > MAX_CONVERSATION_ATTACHMENT_COUNT) {
     throw new HTTPError(
       `A conversation can contain at most ${MAX_CONVERSATION_ATTACHMENT_COUNT} files. Use /new to start another conversation.`,
@@ -205,7 +213,7 @@ export const prepareConversationAttachments = ({
     )
   }
   return deduplicated.map(input => ({
-    id: utils.newid(),
+    id: existingByProviderId.get(input.providerFileId)?.id || utils.newid(),
     provider,
     ...(input.downloadUrl && {
       encryptedDownloadUrl: encryption.encrypt(input.downloadUrl),

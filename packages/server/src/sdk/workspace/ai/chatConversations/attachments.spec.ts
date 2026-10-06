@@ -31,8 +31,11 @@ jest.mock("@budibase/backend-core", () => {
 
 import {
   AgentChannelProvider,
+  type ChatConversationAttachment,
+  ConversationAttachmentErrorCode,
   ConversationAttachmentStatus,
 } from "@budibase/types"
+import { encryption } from "@budibase/backend-core"
 import {
   MAX_CONVERSATION_ATTACHMENT_BYTES,
   addConversationAttachmentsToModelMessages,
@@ -113,6 +116,127 @@ describe("conversation attachments", () => {
         ],
       })
     ).toThrow("large.txt exceeds the 20 MB file limit")
+  })
+
+  describe("resending files", () => {
+    const failed: ChatConversationAttachment = {
+      id: "attachment_1",
+      provider: AgentChannelProvider.MSTEAMS,
+      providerFileId: "file_1",
+      filename: "report.txt",
+      mimetype: "text/plain",
+      size: 100,
+      status: ConversationAttachmentStatus.FAILED,
+      errorCode: ConversationAttachmentErrorCode.TEAMS_FILE_ACCESS_DENIED,
+      errorMessage: "Access denied",
+      processedAt: "2026-01-01T00:00:00.000Z",
+      uploadedAt: "2026-01-01T00:00:00.000Z",
+      textLength: 100,
+      ragSourceId: "old_source",
+    }
+    const incoming = {
+      providerFileId: "file_1",
+      filename: "updated.txt",
+      mimetype: "text/plain",
+      size: 200,
+      downloadUrl: "https://example.com/fresh-download",
+    }
+
+    it.each([AgentChannelProvider.MSTEAMS, AgentChannelProvider.SLACK])(
+      "requeues a failed %s file with fresh metadata and its existing attachment ID",
+      provider => {
+        const queued = prepareConversationAttachments({
+          conversation: {
+            _id: "chat_1",
+            attachments: [{ ...failed, provider }],
+          },
+          incoming: [incoming, incoming],
+          provider,
+        })
+
+        expect(queued).toEqual([
+          {
+            id: failed.id,
+            provider,
+            providerFileId: incoming.providerFileId,
+            filename: incoming.filename,
+            mimetype: incoming.mimetype,
+            size: incoming.size,
+            status: ConversationAttachmentStatus.QUEUED,
+            encryptedDownloadUrl: expect.any(String),
+            uploadedAt: expect.any(String),
+          },
+        ])
+        expect(encryption.decrypt(queued[0].encryptedDownloadUrl!)).toBe(
+          incoming.downloadUrl
+        )
+      }
+    )
+
+    it.each([
+      ConversationAttachmentStatus.QUEUED,
+      ConversationAttachmentStatus.PROCESSING,
+      ConversationAttachmentStatus.READY,
+      ConversationAttachmentStatus.DELETING,
+    ])("does not requeue a %s file", status => {
+      expect(
+        prepareConversationAttachments({
+          conversation: {
+            _id: "chat_1",
+            attachments: [{ ...failed, status }],
+          },
+          incoming: [incoming],
+          provider: AgentChannelProvider.MSTEAMS,
+        })
+      ).toEqual([])
+    })
+
+    it("allows a retry at the file limit but rejects a fourth file", () => {
+      const conversation = {
+        _id: "chat_1",
+        attachments: [
+          failed,
+          ...["file_2", "file_3"].map(providerFileId => ({
+            ...failed,
+            id: providerFileId,
+            providerFileId,
+            status: ConversationAttachmentStatus.READY,
+          })),
+        ],
+      }
+
+      expect(
+        prepareConversationAttachments({
+          conversation,
+          incoming: [incoming],
+          provider: AgentChannelProvider.MSTEAMS,
+        })
+      ).toEqual([
+        expect.objectContaining({
+          id: failed.id,
+          status: ConversationAttachmentStatus.QUEUED,
+        }),
+      ])
+      expect(() =>
+        prepareConversationAttachments({
+          conversation,
+          incoming: [incoming, { ...incoming, providerFileId: "file_4" }],
+          provider: AgentChannelProvider.MSTEAMS,
+        })
+      ).toThrow("A conversation can contain at most 3 files")
+    })
+
+    it("validates the metadata of a resent failed file", () => {
+      expect(() =>
+        prepareConversationAttachments({
+          conversation: { _id: "chat_1", attachments: [failed] },
+          incoming: [
+            { ...incoming, size: MAX_CONVERSATION_ATTACHMENT_BYTES + 1 },
+          ],
+          provider: AgentChannelProvider.MSTEAMS,
+        })
+      ).toThrow("updated.txt exceeds the 20 MB file limit")
+    })
   })
 
   it("rejects images", () => {
