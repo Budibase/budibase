@@ -192,6 +192,11 @@
   {#snippet response()}
     <Body size="S">Send a normal message to ask a question.</Body>
     <Body size="S">
+      File uploads are supported in personal chats. If users don't see an option
+      to attach files, ask your Teams admin to update the app in Teams using the
+      latest package from "Download app package" below.
+    </Body>
+    <Body size="S">
       Use `{MS_TEAMS_NEW_COMMAND}` to start a new conversation.
     </Body>
     <Body size="S">

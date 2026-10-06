@@ -382,7 +382,7 @@ const getAttachmentFailureText = (
   }
   if (teamsAccessDenied.length) {
     messages.push(
-      `I couldn't access ${teamsAccessDenied.map(file => file.filename).join(", ")}. Ask a Teams admin to reinstall the app, then upload the file again.`
+      `I couldn't access ${teamsAccessDenied.map(file => file.filename).join(", ")}. Use /new and upload the file again. If it still fails, ask your Teams admin to check this app's file access and update it with the latest app package from Budibase.`
     )
   }
   if (otherFailures.length) {

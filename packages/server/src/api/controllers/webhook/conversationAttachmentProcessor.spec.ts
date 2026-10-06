@@ -283,7 +283,7 @@ describe("conversation attachment processor", () => {
   })
 
   it.each([401, 403])(
-    "explains how to recover from Teams file access denial (%s)",
+    "directs users to their admin when Teams denies file access (%s)",
     async status => {
       conversation.channel = {
         provider: AgentChannelProvider.MSTEAMS,
@@ -299,15 +299,18 @@ describe("conversation attachment processor", () => {
       }
       nock("https://example.sharepoint.com").get("/report.txt").reply(status)
 
-      await processConversationAttachmentJob({
-        workspaceId: "workspace_1",
-        conversationId: "chat_1",
-        turnId: "turn_1",
-      })
+      await processConversationAttachmentJob(
+        {
+          workspaceId: "workspace_1",
+          conversationId: "chat_1",
+          turnId: "turn_1",
+        },
+        false
+      )
 
       expect(mockTeamsReply).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: "I couldn't access report.txt. Ask a Teams admin to reinstall the app, then upload the file again.",
+          text: "I couldn't access report.txt. Use /new and upload the file again. If it still fails, ask your Teams admin to check this app's file access and update it with the latest app package from Budibase.",
         })
       )
     }
