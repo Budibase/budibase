@@ -56,6 +56,45 @@ describe("platformActions events", () => {
   }
 
   describe("fetchSessionEvents", () => {
+    it("excludes events without timestamps from the list and total", async () => {
+      await createEvent({ sourceId: "run-1" })
+      const result = await withContext(async () => {
+        await events.platformActions.getActionsDB().put({
+          _id: [DocumentType.PLATFORM_ACTION_EVENT, utils.newid()].join(
+            SEPARATOR
+          ),
+          environment: "prod",
+          sourceType: "agent_session",
+          sourceId: "run-1",
+          eventName: "action:missing:timestamp",
+          payload: {},
+        })
+        return fetchSessionEvents({
+          environment: "prod",
+          sourceType: "agent_session",
+          sourceId: "run-1",
+        })
+      })
+
+      expect(result.events.map(event => event.eventName)).toEqual([
+        "action:tool:executed",
+      ])
+      expect(result.summary).toEqual({ total: 1 })
+    })
+
+    it("returns a zero total for a session with no events", async () => {
+      const result = await withContext(() =>
+        fetchSessionEvents({
+          environment: "prod",
+          sourceType: "agent_session",
+          sourceId: "empty",
+        })
+      )
+
+      expect(result.events).toEqual([])
+      expect(result.summary).toEqual({ total: 0 })
+    })
+
     it("rejects an explicitly supplied empty bookmark", async () => {
       await expect(
         withContext(() =>

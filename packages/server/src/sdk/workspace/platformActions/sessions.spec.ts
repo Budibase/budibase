@@ -1,4 +1,4 @@
-import { events } from "@budibase/backend-core"
+import { db, events } from "@budibase/backend-core"
 import { DocumentType, SEPARATOR } from "@budibase/types"
 import type {
   PlatformActionContainerStatus,
@@ -73,6 +73,46 @@ describe("platformActions sessions", () => {
   }
 
   describe("fetchSessions", () => {
+    it.each([
+      {},
+      { status: "active" as const },
+      { environment: "prod" as const },
+      { environment: "prod" as const, status: "active" as const },
+    ])(
+      "excludes sessions without timestamps from lists and counts: %j",
+      async filters => {
+        await createSession({ sourceId: "valid" })
+        const result = await withContext(async () => {
+          const workspaceDb = events.platformActions.getActionsDB()
+          // Bypass put(), which automatically populates updatedAt.
+          await db.directCouchQuery(workspaceDb.name, "POST", {
+            _id: buildSessionId({
+              environment: "prod",
+              sourceType: "agent_session",
+              sourceId: "missing-timestamp",
+            }),
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId: "missing-timestamp",
+            status: "active",
+            actionCount: 1,
+          })
+          return fetchSessions(filters)
+        })
+
+        expect(result.sessions.map(session => session.sourceId)).toEqual([
+          "valid",
+        ])
+        expect(result.summary).toEqual({
+          total: 1,
+          active: 1,
+          waiting: 0,
+          completed: 0,
+          failed: 0,
+        })
+      }
+    )
+
     it("preserves source IDs with special characters when reading encoded session IDs", async () => {
       const sourceId = "run/a b%25"
       await createSession({ sourceId })
