@@ -76,7 +76,10 @@ describe("Activity requests page", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Failed to load requests."
     )
-    expect(screen.getAllByLabelText("Unavailable")).toHaveLength(5)
+    expect(screen.getAllByText("Unavailable")).toHaveLength(5)
+    for (const placeholder of screen.getAllByText("-")) {
+      expect(placeholder).toHaveAttribute("aria-hidden", "true")
+    }
     expect(screen.queryByText("0")).not.toBeInTheDocument()
   })
 
@@ -90,7 +93,7 @@ describe("Activity requests page", () => {
 
     expect(await screen.findByText("7")).toBeInTheDocument()
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
-    expect(screen.queryByLabelText("Unavailable")).not.toBeInTheDocument()
+    expect(screen.queryByText("Unavailable")).not.toBeInTheDocument()
     expect(mocks.fetchAgentRequests).toHaveBeenLastCalledWith({
       limit: 20,
       page: 1,

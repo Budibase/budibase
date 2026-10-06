@@ -502,7 +502,10 @@ describe("Activity actions page", () => {
     renderPage()
 
     await screen.findByRole("button", { name: "Try again" })
-    expect(screen.getAllByLabelText("Unavailable")).toHaveLength(5)
+    expect(screen.getAllByText("Unavailable")).toHaveLength(5)
+    for (const placeholder of screen.getAllByText("-")) {
+      expect(placeholder).toHaveAttribute("aria-hidden", "true")
+    }
     expect(screen.queryByText("0")).not.toBeInTheDocument()
   })
 
@@ -517,7 +520,7 @@ describe("Activity actions page", () => {
 
     await screen.findByText("No actions tracked yet.")
     expect(screen.getAllByText("0")).toHaveLength(5)
-    expect(screen.queryByLabelText("Unavailable")).not.toBeInTheDocument()
+    expect(screen.queryByText("Unavailable")).not.toBeInTheDocument()
   })
 
   it("restores counters after retrying a failed request", async () => {
@@ -535,7 +538,7 @@ describe("Activity actions page", () => {
       expect(table().getByText("Support agent")).toBeInTheDocument()
     })
     expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(2)
-    expect(screen.queryByLabelText("Unavailable")).not.toBeInTheDocument()
+    expect(screen.queryByText("Unavailable")).not.toBeInTheDocument()
     for (const value of ["15", "1", "2", "5", "7"]) {
       expect(screen.getByText(value)).toBeInTheDocument()
     }

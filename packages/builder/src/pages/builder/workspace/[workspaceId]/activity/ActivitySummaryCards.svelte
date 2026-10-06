@@ -26,7 +26,8 @@
             <ProgressCircle size="S" />
           </span>
         {:else if metric.value === null}
-          <span aria-label="Unavailable">-</span>
+          <span aria-hidden="true">-</span>
+          <span class="visually-hidden">Unavailable</span>
         {:else}
           {metric.value.toLocaleString()}
         {/if}
@@ -39,6 +40,18 @@
 </div>
 
 <style>
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
   .metrics-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
