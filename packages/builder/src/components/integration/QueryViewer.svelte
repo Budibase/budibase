@@ -152,6 +152,9 @@
 
   async function runQuery({ suppressErrors = true }: RunQueryOptions = {}) {
     try {
+      hasRunQuery = true
+      activeResultTab = "JSON"
+      showSidePanel = true
       loading = true
       const response = await queries.preview({ ...newQuery, schema })
       if (response.rows.length === 0) {
@@ -166,9 +169,6 @@
       schema = response.schema
       rows = response.rows
       schemaQueryHash = getSchemaQueryHash(newQuery)
-      hasRunQuery = true
-      activeResultTab = "JSON"
-      showSidePanel = true
 
       notifications.success("Query executed successfully")
     } catch (error) {
