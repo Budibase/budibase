@@ -7,7 +7,7 @@ import {
 } from "@budibase/backend-core"
 import { ApprovalToolResultStatus } from "@budibase/types"
 import type {
-  AgentOperation,
+  AgentRequestOperation,
   AgentRequest,
   AgentRequestAction,
   AgentRequestEntry,
@@ -43,20 +43,13 @@ const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
 const MAX_CONFLICT_RETRIES = 3
 
-export interface AgentRequestOperation
-  extends Pick<AgentOperation, "id" | "name"> {
-  prompt: string
-}
-
 const nowIso = () => new Date().toISOString()
 
 const buildEntry = ({
   sessionId,
-  operation,
   source,
 }: {
   sessionId: string
-  operation?: AgentRequestOperation
   source: string
 }): AgentRequestEntry => {
   const timestamp = nowIso()
@@ -64,7 +57,6 @@ const buildEntry = ({
   return {
     sessionId,
     source,
-    operationNames: operation?.name ? [operation.name] : [],
     createdAt: timestamp,
     updatedAt: timestamp,
     status: "active",
@@ -525,11 +517,7 @@ async function createNewRequest({
       agentId,
       userId,
       operationId: operation.id,
-      entry: buildEntry({
-        sessionId,
-        operation,
-        source,
-      }),
+      entry: buildEntry({ sessionId, source }),
       actions: [fallbackAction],
     })
   )
@@ -699,13 +687,11 @@ export async function fetchRequestsByAgentAndUser({
 const linkRequestEntries = ({
   request,
   sessionId,
-  operation,
   source,
   entryAction,
 }: {
   request: AgentRequest
   sessionId: string
-  operation?: AgentRequestOperation
   source: string
   entryAction?: "append_latest_entry" | "create_new_entry"
 }): AgentRequestEntry[] => {
@@ -718,13 +704,12 @@ const linkRequestEntries = ({
       ...latestEntry,
       sessionId,
       source,
-      operationNames: operation ? [operation.name] : latestEntry.operationNames,
       updatedAt: timestamp,
       status: request.status,
     }
   } else {
     nextEntries.push({
-      ...buildEntry({ sessionId, source, operation }),
+      ...buildEntry({ sessionId, source }),
       status: request.status,
     })
   }
@@ -793,7 +778,6 @@ export async function initActiveRequest({
           entries: linkRequestEntries({
             request: existing,
             sessionId,
-            operation,
             source,
             entryAction: decision.entryAction,
           }),
@@ -812,7 +796,7 @@ export async function initActiveRequest({
     }
   }
 
-  const entry = buildEntry({ sessionId, operation, source })
+  const entry = buildEntry({ sessionId, source })
   const thread = buildThread({
     agentId,
     userId,
@@ -1085,7 +1069,6 @@ export async function createOrUpdateRequestForPrompt({
       entries: linkRequestEntries({
         request: latestRequest,
         sessionId,
-        operation: resolvedOperation,
         source: resolvedSource,
         entryAction: linkDecision.entryAction,
       }),

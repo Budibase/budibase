@@ -214,7 +214,6 @@ describe("agentRequests crud", () => {
             status: "needs_input",
             entries: [
               expect.objectContaining({
-                operationNames: ["Purchases"],
                 status: "needs_input",
               }),
             ],
@@ -405,7 +404,6 @@ describe("agentRequests crud", () => {
               status: "needs_input",
               entries: [
                 expect.objectContaining({
-                  operationNames: [ask.operation],
                   sessionId: "session_1",
                 }),
               ],
@@ -471,9 +469,10 @@ describe("agentRequests crud", () => {
 
         const requests = await fetchRequestsByAgent("agent_1")
         expect(requests).toHaveLength(2)
-        expect(
-          requests.map(request => request.entries[0].operationNames).sort()
-        ).toEqual([["Books"], ["Expenses"]])
+        expect(requests.map(request => request.operationId).sort()).toEqual([
+          "op_books",
+          "op_expenses",
+        ])
       })
     })
 
@@ -569,7 +568,6 @@ describe("agentRequests crud", () => {
           requests.find(request => request._id !== first.requestId)?.entries
         ).toEqual([
           expect.objectContaining({
-            operationNames: ["Expenses"],
             status: "active",
           }),
         ])
@@ -614,12 +612,10 @@ describe("agentRequests crud", () => {
           expect.objectContaining({
             sessionId: "session_1",
             source: "Slack",
-            operationNames: ["Expenses"],
           }),
           expect.objectContaining({
             sessionId: "session_2",
             source: "Chat",
-            operationNames: ["Expenses"],
           }),
         ])
       })
@@ -2039,7 +2035,7 @@ describe("agentRequests crud", () => {
         expect(created?.request.entries[0]).toEqual({
           sessionId: "session_1",
           source: "Chat",
-          operationNames: ["Support"],
+
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
           status: "active",
@@ -2128,7 +2124,7 @@ describe("agentRequests crud", () => {
         expect(second?.request.entries[0]).toEqual({
           sessionId: "session_2",
           source: "Slack",
-          operationNames: ["Support"],
+
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
           status: "active",
@@ -2229,7 +2225,7 @@ describe("agentRequests crud", () => {
         expect(second?.request.entries[1]).toEqual({
           sessionId: "session_2",
           source: "Slack",
-          operationNames: ["Support"],
+
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
           status: "active",
@@ -2262,7 +2258,7 @@ describe("agentRequests crud", () => {
         expect(requests[0].entries[0]).toEqual({
           sessionId: "session_1",
           source: "Chat",
-          operationNames: ["Support"],
+
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
           status: "active",
@@ -2308,7 +2304,7 @@ describe("agentRequests crud", () => {
         expect(second?.request.entries[0]).toEqual({
           sessionId: "session_1",
           source: "Chat",
-          operationNames: ["IT support"],
+
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
           status: "active",

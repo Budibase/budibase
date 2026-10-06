@@ -37,7 +37,7 @@ const buildThread = (overrides: Partial<AgentRequest> = {}): AgentRequest => ({
     {
       sessionId: "session_1",
       source: "Chat",
-      operationNames: ["Support"],
+
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
       status: "completed",
@@ -151,6 +151,7 @@ describe("analyzeAgentRequestLink", () => {
           candidateRequests: [
             {
               requestId: "agentrequest_thread_1",
+              operationId: "op_support",
               title: undefined,
               status: "completed",
               updatedAt: "2026-01-01T00:00:00.000Z",
@@ -158,7 +159,7 @@ describe("analyzeAgentRequestLink", () => {
                 {
                   sessionId: "session_1",
                   source: "Chat",
-                  operationNames: ["Support"],
+
                   createdAt: "2026-01-01T00:00:00.000Z",
                   updatedAt: "2026-01-01T00:00:00.000Z",
                   status: "completed",

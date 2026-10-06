@@ -1,7 +1,7 @@
 import { context, features, queue } from "@budibase/backend-core"
 import { FeatureFlag } from "@budibase/types"
+import type { AgentRequestOperation } from "@budibase/types"
 import { createOrUpdateRequestForPrompt } from "./crud"
-import type { AgentRequestOperation } from "./crud"
 import { determineTrigger } from "../agentLogs/shared"
 
 type AgentRequestTrackingJob = {

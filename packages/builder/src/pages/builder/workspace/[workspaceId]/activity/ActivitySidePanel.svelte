@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { agentsStore } from "@/stores/portal"
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { Icon } from "@budibase/bbui"
@@ -88,13 +89,12 @@
 
     return request.entries[0]
   })
-  let requestOperations = $derived.by(() => {
-    if (!latestEntry) {
-      return []
-    }
-
-    return latestEntry.operationNames
-  })
+  let operationName = $derived(
+    $agentsStore.agents
+      .find(agent => agent._id === request?.agentId)
+      ?.operations?.find(operation => operation.id === request?.operationId)
+      ?.name || "Deleted operation"
+  )
   let details = $derived<DetailRow[]>([
     {
       label: "Status",
@@ -109,7 +109,7 @@
     },
     {
       label: "Operation",
-      value: requestOperations.join(", ") || "",
+      value: operationName,
       icon: "gear",
     },
     {
