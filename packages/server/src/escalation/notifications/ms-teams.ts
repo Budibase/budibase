@@ -1,4 +1,6 @@
 import fetch from "node-fetch"
+import { cardToAdaptiveCard } from "@chat-adapter/teams"
+import type { CardElement } from "chat"
 import { cache, HTTPError, tenancy } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
@@ -351,11 +353,13 @@ export async function replyToConversation({
   agentId,
   channel,
   text,
+  sourceCard,
 }: {
   appId: string
   agentId?: string
   channel: ChatConversationChannel
   text: string
+  sourceCard?: CardElement
 }): Promise<void> {
   if (!channel.conversationId) {
     console.warn("replyToConversation: no conversationId", { appId })
@@ -400,6 +404,21 @@ export async function replyToConversation({
   }
 
   await teamsPost(serviceUrl, token, channel.conversationId, message)
+  if (sourceCard) {
+    try {
+      await teamsPost(serviceUrl, token, channel.conversationId, {
+        type: "message",
+        attachments: [
+          {
+            contentType: "application/vnd.microsoft.card.adaptive",
+            content: cardToAdaptiveCard(sourceCard),
+          },
+        ],
+      })
+    } catch (error) {
+      console.error("Failed to post Teams RAG source links", error)
+    }
+  }
 }
 
 export async function sendMSTeamsNotification({

@@ -6,6 +6,7 @@ import {
   type ChatConversation,
   type ChatConversationAttachment,
   type ContextUser,
+  type WebhookChatSourceMetadata,
   ConversationAttachmentErrorCode,
   ConversationAttachmentStatus,
   ConversationAttachmentTurnStatus,
@@ -23,6 +24,7 @@ import {
 } from "./teamsAttachments"
 import { formatSlackAssistantReply } from "./slack"
 import { NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
+import { getTeamsKnowledgeSourceCard } from "./teamsSources"
 import type { ConversationAttachmentIngestionJob } from "../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue"
 
 const MAX_UPDATE_ATTEMPTS = 5
@@ -32,12 +34,22 @@ const replyToConversation = async (params: {
   agentId: string
   channel: ChatConversationChannel
   text: string
+  responseSources?: WebhookChatSourceMetadata
 }) => {
-  const reply =
-    params.channel.provider === AgentChannelProvider.MSTEAMS
-      ? replyToTeamsConversation
-      : replyToSlackConversation
-  await reply(params)
+  if (params.channel.provider === AgentChannelProvider.MSTEAMS) {
+    const sourceCard = params.responseSources
+      ? await getTeamsKnowledgeSourceCard({
+          agentId: params.agentId,
+          result: params.responseSources,
+          isPersonalConversation:
+            params.channel.conversationType?.trim().toLowerCase() ===
+            "personal",
+        })
+      : undefined
+    await replyToTeamsConversation({ ...params, sourceCard })
+  } else {
+    await replyToSlackConversation(params)
+  }
 }
 
 const isConflict = (error: Error) => "status" in error && error.status === 409
@@ -421,6 +433,7 @@ const processTurn = async ({
       agentId: conversation.agentId,
       channel: conversation.channel!,
       text: turn.responseText,
+      responseSources: turn.responseSources,
     })
     await updateConversation(conversation._id!, current => ({
       ...current,
@@ -468,6 +481,7 @@ const processTurn = async ({
     .trim()
 
   let responseText: string
+  let responseSources: WebhookChatSourceMetadata | undefined
   let messages = current.messages
   if (!question) {
     messages = [...messages, turn.message]
@@ -489,6 +503,12 @@ const processTurn = async ({
       user: requester,
     })
     messages = result.messages
+    if (current.channel?.provider === AgentChannelProvider.MSTEAMS) {
+      responseSources = {
+        ragSources: result.ragSources,
+        allowKnowledgeSourceDownload: result.allowKnowledgeSourceDownload,
+      }
+    }
     responseText =
       current.channel?.provider === AgentChannelProvider.MSTEAMS
         ? result.assistantText || NO_ASSISTANT_RESPONSE_MESSAGE
@@ -511,6 +531,7 @@ const processTurn = async ({
             ...candidate,
             status: ConversationAttachmentTurnStatus.PROCESSING,
             responseText,
+            responseSources,
             updatedAt: new Date().toISOString(),
           }
         : candidate
@@ -522,6 +543,7 @@ const processTurn = async ({
     agentId: saved.agentId,
     channel: saved.channel!,
     text: responseText,
+    responseSources,
   })
   await updateConversation(saved._id!, latest => ({
     ...latest,

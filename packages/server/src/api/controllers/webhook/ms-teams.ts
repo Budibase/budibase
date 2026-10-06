@@ -10,9 +10,6 @@ import {
 } from "@budibase/types"
 import {
   Chat,
-  Actions,
-  Card,
-  LinkButton,
   type ActionEvent,
   type Thread,
   type Message,
@@ -35,58 +32,13 @@ import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
 import { getTeamsAttachments } from "./teamsAttachments"
-import { resolveEscalationWorkspaceId, toAbsoluteUrl } from "./utils"
+import { getTeamsKnowledgeSourceCard } from "./teamsSources"
+import { resolveEscalationWorkspaceId } from "./utils"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
 const TEAMS_PROCESSING_MESSAGE = "Thinking..."
 const TEAMS_STREAMING_UPDATE_INTERVAL_MS = 750
-
-const formatTeamsLinkLabel = (value: string) =>
-  value
-    .replace(/\[|]|<|>|@|\n|\r/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-
-const getTeamsKnowledgeSourceLinks = async ({
-  agentId,
-  result,
-  isPersonalConversation,
-}: {
-  agentId: string
-  result: WebhookChatCompleteResult
-  isPersonalConversation?: boolean
-}) => {
-  if (
-    result.allowKnowledgeSourceDownload === false ||
-    !isPersonalConversation
-  ) {
-    return []
-  }
-
-  const links: { label: string; url: string }[] = []
-  for (const source of result.ragSources || []) {
-    if (!source.fileId) {
-      continue
-    }
-
-    try {
-      const signedUrl = await sdk.ai.rag.getFileUrlForAgent(
-        agentId,
-        source.fileId
-      )
-      const absoluteUrl = await toAbsoluteUrl(signedUrl)
-      links.push({
-        label:
-          formatTeamsLinkLabel(source.filename || "") || "Knowledge source",
-        url: absoluteUrl,
-      })
-    } catch (error) {
-      console.error("Failed to generate Teams RAG source link", error)
-    }
-  }
-  return links
-}
 
 export const formatTeamsAssistantReply = async ({
   result,
@@ -107,31 +59,17 @@ const postTeamsKnowledgeSourceLinks = async ({
   result: WebhookChatCompleteResult
   isPersonalConversation?: boolean
 }) => {
-  const sourceLinks = await getTeamsKnowledgeSourceLinks({
+  const card = await getTeamsKnowledgeSourceCard({
     agentId,
     result,
     isPersonalConversation,
   })
-  if (!sourceLinks.length) {
+  if (!card) {
     return
   }
 
   try {
-    await thread.post(
-      Card({
-        title: "Sources",
-        children: [
-          Actions(
-            sourceLinks.map(source =>
-              LinkButton({
-                label: source.label,
-                url: source.url,
-              })
-            )
-          ),
-        ],
-      })
-    )
+    await thread.post(card)
   } catch (error) {
     console.error("Failed to post Teams RAG source links", error)
   }

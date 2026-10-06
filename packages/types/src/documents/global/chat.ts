@@ -1,4 +1,8 @@
-import { AgentMessageMetadata, Document } from "../../"
+import type {
+  AgentMessageMetadata,
+  AgentMessageRagSource,
+  Document,
+} from "../../"
 import type { UIMessage } from "ai"
 
 export enum AgentChannelProvider {
@@ -85,6 +89,7 @@ export interface ConversationAttachmentTurn {
   updatedAt: string
   errorMessage?: string
   responseText?: string
+  responseSources?: WebhookChatSourceMetadata
 }
 
 export interface ChatConversationRequest extends Document {
@@ -102,11 +107,14 @@ export interface ChatConversationRequest extends Document {
   attachmentDeletingAt?: string
 }
 
-export interface WebhookChatCompleteResult {
+export interface WebhookChatSourceMetadata {
+  ragSources?: AgentMessageRagSource[]
+  allowKnowledgeSourceDownload?: boolean
+}
+
+export interface WebhookChatCompleteResult extends WebhookChatSourceMetadata {
   messages: ChatConversation["messages"]
   assistantText: string
-  ragSources?: AgentMessageMetadata["ragSources"]
-  allowKnowledgeSourceDownload?: boolean
   title?: string
 }
 

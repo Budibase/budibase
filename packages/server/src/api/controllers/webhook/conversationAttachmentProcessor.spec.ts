@@ -9,6 +9,7 @@ const mockWebhookChat = jest.fn()
 const mockReply = jest.fn()
 const mockTeamsReply = jest.fn()
 const mockFormatReply = jest.fn()
+const mockGetFileUrlForAgent = jest.fn()
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -63,6 +64,10 @@ jest.mock("../../../sdk", () => ({
         deleteGeminiVectorStore: (id: string) => mockDeleteVectorStore(id),
         ingestGeminiFile: (args: object) => mockIngestFile(args),
       },
+      rag: {
+        getFileUrlForAgent: (agentId: string, fileId: string) =>
+          mockGetFileUrlForAgent(agentId, fileId),
+      },
     },
   },
 }))
@@ -92,6 +97,7 @@ import { encryption } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   type ChatConversation,
+  type WebhookChatSourceMetadata,
   ConversationAttachmentStatus,
   ConversationAttachmentTurnStatus,
 } from "@budibase/types"
@@ -184,6 +190,10 @@ describe("conversation attachment processor", () => {
     })
     mockFormatReply.mockResolvedValue("The report says content.")
     mockReply.mockResolvedValue(undefined)
+    mockTeamsReply.mockReset().mockResolvedValue(undefined)
+    mockGetFileUrlForAgent
+      .mockReset()
+      .mockResolvedValue("https://example.com/signed/policy.pdf")
   })
 
   afterEach(() => {
@@ -269,6 +279,167 @@ describe("conversation attachment processor", () => {
         responseText: "No response generated.",
       }),
     ])
+  })
+
+  describe("Teams knowledge sources", () => {
+    const responseSources: WebhookChatSourceMetadata = {
+      ragSources: [
+        {
+          sourceId: "source_1",
+          fileId: "file_1",
+          filename: "Policy [One]\n@Draft.pdf",
+        },
+      ],
+      allowKnowledgeSourceDownload: true,
+    }
+    const job = {
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    }
+
+    beforeEach(() => {
+      conversation.channel = {
+        provider: AgentChannelProvider.MSTEAMS,
+        conversationType: "personal",
+        conversationId: "teams_conversation",
+      }
+      conversation.attachments![0] = {
+        ...conversation.attachments![0],
+        provider: AgentChannelProvider.MSTEAMS,
+        status: ConversationAttachmentStatus.READY,
+      }
+      mockWebhookChat.mockResolvedValue({
+        messages: conversation.messages,
+        assistantText: "The report follows the policy.",
+        ...responseSources,
+      })
+    })
+
+    it("includes a Sources card with a queued answer", async () => {
+      await processConversationAttachmentJob(job)
+
+      expect(mockTeamsReply).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text: "The report follows the policy.",
+          sourceCard: {
+            type: "card",
+            title: "Sources",
+            children: [
+              {
+                type: "actions",
+                children: [
+                  {
+                    type: "link_button",
+                    label: "Policy One Draft.pdf",
+                    url: "https://example.com/signed/policy.pdf",
+                  },
+                ],
+              },
+            ],
+          },
+        })
+      )
+      expect(conversation.pendingAttachmentTurns).toEqual([
+        expect.objectContaining({
+          status: ConversationAttachmentTurnStatus.COMPLETED,
+          responseSources,
+        }),
+      ])
+    })
+
+    it("regenerates source links on delivery retry without rerunning the model", async () => {
+      mockTeamsReply.mockRejectedValueOnce(new Error("Teams unavailable"))
+      mockGetFileUrlForAgent
+        .mockResolvedValueOnce("https://example.com/signed/first")
+        .mockResolvedValueOnce("https://example.com/signed/retry")
+
+      await expect(
+        processConversationAttachmentJob(job, false)
+      ).rejects.toThrow("Teams unavailable")
+      await processConversationAttachmentJob(job)
+
+      expect(mockWebhookChat).toHaveBeenCalledTimes(1)
+      expect(mockGetFileUrlForAgent).toHaveBeenCalledTimes(2)
+      expect(mockGetFileUrlForAgent).toHaveBeenLastCalledWith(
+        "agent_1",
+        "file_1"
+      )
+      expect(mockTeamsReply).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          sourceCard: expect.objectContaining({
+            children: [
+              {
+                type: "actions",
+                children: [
+                  expect.objectContaining({
+                    url: "https://example.com/signed/retry",
+                  }),
+                ],
+              },
+            ],
+          }),
+        })
+      )
+      expect(conversation.pendingAttachmentTurns![0].status).toBe(
+        ConversationAttachmentTurnStatus.COMPLETED
+      )
+    })
+
+    it.each(["channel", "groupChat", undefined])(
+      "omits source links for conversation type %s",
+      async conversationType => {
+        conversation.channel!.conversationType = conversationType
+
+        await processConversationAttachmentJob(job)
+
+        expect(mockGetFileUrlForAgent).not.toHaveBeenCalled()
+        expect(mockTeamsReply).toHaveBeenCalledWith(
+          expect.objectContaining({ sourceCard: undefined })
+        )
+      }
+    )
+
+    it("preserves disabled downloads on a delivery retry", async () => {
+      mockWebhookChat.mockResolvedValueOnce({
+        messages: conversation.messages,
+        assistantText: "The report follows the policy.",
+        ...responseSources,
+        allowKnowledgeSourceDownload: false,
+      })
+      mockTeamsReply.mockRejectedValueOnce(new Error("Teams unavailable"))
+
+      await expect(
+        processConversationAttachmentJob(job, false)
+      ).rejects.toThrow("Teams unavailable")
+      await processConversationAttachmentJob(job)
+
+      expect(mockGetFileUrlForAgent).not.toHaveBeenCalled()
+      expect(mockTeamsReply).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sourceCard: undefined })
+      )
+      expect(conversation.pendingAttachmentTurns![0].status).toBe(
+        ConversationAttachmentTurnStatus.COMPLETED
+      )
+    })
+
+    it("still delivers the answer if a source link cannot be generated", async () => {
+      mockGetFileUrlForAgent.mockRejectedValueOnce(
+        new Error("File unavailable")
+      )
+
+      await processConversationAttachmentJob(job)
+
+      expect(mockTeamsReply).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text: "The report follows the policy.",
+          sourceCard: undefined,
+        })
+      )
+      expect(conversation.pendingAttachmentTurns![0].status).toBe(
+        ConversationAttachmentTurnStatus.COMPLETED
+      )
+    })
   })
 
   it("rejects Teams download URLs outside SharePoint", async () => {
