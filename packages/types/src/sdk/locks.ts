@@ -29,6 +29,7 @@ export enum LockName {
   CUSTOM_REST_TEMPLATES = "custom_rest_templates",
   CONVERSATION_ATTACHMENT = "conversation_attachment",
   ESCALATION = "escalation",
+  REQUEST_INBOX_SYNC = "request_inbox_sync",
 }
 
 export type LockOptions = {
