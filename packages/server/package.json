@@ -159,7 +159,6 @@
     "@types/supertest": "2.0.14",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/tmp": "0.2.6",
-    "@types/uuid": "8.3.4",
     "copyfiles": "2.4.1",
     "docker-compose": "1.2.0",
     "ioredis-mock": "8.13.1",
