@@ -4,6 +4,7 @@ import {
   Agent,
   ApprovalToolResultStatus,
   DocumentType,
+  EscalationAction,
   EscalationContextDoc,
   EscalationNotificationChannel,
   EscalationNotificationDoc,
@@ -14,7 +15,12 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import sdk from "../sdk"
-import { processNotify, resumeOperation } from "./queue"
+import {
+  getQueue,
+  processNotify,
+  processResume,
+  resumeOperation,
+} from "./queue"
 import * as slack from "./notifications/slack"
 import * as teams from "./notifications/ms-teams"
 import { ProviderResponseError } from "./notifications/utils"
@@ -125,7 +131,7 @@ describe("resumeOperation", () => {
     agentId: "agent_1",
     operationId: "op_1",
     sessionId: "session_1",
-    delay: 1000,
+    durationMs: 1000,
     resolution: "pending",
     ...overrides,
   })
@@ -817,6 +823,79 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("runs the frozen call when an expiry was auto-approved", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      mockApprovedRun("Approved automatically and booked.")
+      const execute = jest.fn().mockResolvedValue({ booked: true })
+      buildPromptAndToolsMock.mockResolvedValue({
+        tools: { book_meeting: { execute } },
+        toolSources: {},
+      })
+
+      await resumeOperation({
+        doc: baseDoc({
+          requestId,
+          response: {
+            accepted: true,
+            actionId: EscalationAction.APPROVE,
+            automatic: true,
+          },
+        }),
+        escalationId: "esc_primary",
+        resolution: "expired",
+        ctx: baseCtx,
+      })
+
+      expect(execute).toHaveBeenCalledTimes(1)
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.actions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "escalation_resolved",
+            escalationId: "esc_primary",
+            outcome: "approved",
+          }),
+        ])
+      )
+      expect(request.status).toEqual("completed")
+    })
+  })
+
+  it("treats an auto-rejected expiry as a rejection rather than a timeout", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+
+      await resumeOperation({
+        doc: baseDoc({
+          requestId,
+          response: {
+            accepted: false,
+            actionId: EscalationAction.REJECT,
+            automatic: true,
+          },
+        }),
+        escalationId: "esc_primary",
+        resolution: "expired",
+        ctx: baseCtx,
+      })
+
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.actions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "escalation_resolved",
+            escalationId: "esc_primary",
+            outcome: "rejected",
+          }),
+        ])
+      )
+      expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+    })
+  })
+
   it("still records escalation_resolved for the expiring escalation, but doesn't finalize the request while another escalation is pending", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
@@ -908,7 +987,7 @@ describe("processNotify", () => {
         source: EscalationSource.OPERATION,
         appId: config.getProdWorkspaceId(),
         tenantId: config.getTenantId(),
-        delay: 1000,
+        durationMs: 1000,
         resolution: "pending",
         recipients: [recipient],
       })
@@ -1052,4 +1131,134 @@ describe("processNotify", () => {
     expect(doc.status).toEqual("sent")
     expect(doc.responses).toHaveLength(1)
   })
+})
+
+describe("expiry", () => {
+  const config = new TestConfiguration()
+
+  const seedPending = async (overrides: Partial<EscalationContextDoc> = {}) => {
+    const escalationId = `esc_${Date.now()}`
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await context.getWorkspaceDB().put({
+        _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
+        source: EscalationSource.OPERATION,
+        appId: config.getProdWorkspaceId(),
+        tenantId: config.getTenantId(),
+        resolution: "pending",
+        recipients: [
+          {
+            type: EscalationNotificationChannel.SLACK,
+            config: { channelId: "C1" },
+          },
+        ],
+        ...overrides,
+      })
+    })
+    return escalationId
+  }
+
+  const getDoc = (escalationId: string) =>
+    config.doInContext(config.getProdWorkspaceId(), () =>
+      context
+        .getWorkspaceDB()
+        .get<EscalationContextDoc>(
+          `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
+        )
+    )
+
+  const jobData = (escalationId: string) => ({
+    escalationId,
+    appId: config.getProdWorkspaceId(),
+    tenantId: config.getTenantId(),
+  })
+
+  const resumeJobsFor = (escalationId: string) =>
+    addJobSpy.mock.calls.filter(
+      ([job]) => job.phase === "waiting" && job.escalationId === escalationId
+    )
+
+  let addJobSpy: jest.SpyInstance
+
+  beforeEach(async () => {
+    ;(slack.sendSlackNotification as jest.Mock).mockReset()
+    addJobSpy = jest.spyOn(getQueue(), "add")
+    await config.newTenant()
+  })
+
+  afterEach(() => {
+    addJobSpy.mockRestore()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("queues no resume job for an escalation that never expires", async () => {
+    const escalationId = await seedPending()
+
+    await processNotify({
+      id: `esc_${escalationId}_notify`,
+      data: { phase: "notify", ...jobData(escalationId) },
+    })
+
+    expect(resumeJobsFor(escalationId)).toHaveLength(0)
+  })
+
+  it("queues a resume job for the escalation's duration", async () => {
+    const escalationId = await seedPending({ durationMs: 60_000 })
+
+    await processNotify({
+      id: `esc_${escalationId}_notify`,
+      data: { phase: "notify", ...jobData(escalationId) },
+    })
+
+    const [[, opts]] = resumeJobsFor(escalationId)
+    expect(opts.delay).toEqual(60_000)
+  })
+
+  it("expires without a decision when the policy sets no outcome", async () => {
+    const escalationId = await seedPending({
+      durationMs: 1000,
+      policy: { id: "policy_1", name: "Manager approval", expiry: {} },
+    })
+
+    await processResume({
+      id: `esc_${escalationId}_resume`,
+      data: { phase: "waiting", ...jobData(escalationId) },
+    })
+
+    const doc = await getDoc(escalationId)
+    expect(doc.resolution).toEqual("expired")
+    expect(doc).not.toHaveProperty("response")
+  })
+
+  it.each([
+    [EscalationAction.APPROVE, true],
+    [EscalationAction.REJECT, false],
+  ])(
+    "records a synthesised %s response when the policy says so",
+    async (outcome, accepted) => {
+      const escalationId = await seedPending({
+        durationMs: 1000,
+        policy: {
+          id: "policy_1",
+          name: "Manager approval",
+          expiry: { durationSeconds: 1, outcome },
+        },
+      })
+
+      await processResume({
+        id: `esc_${escalationId}_resume`,
+        data: { phase: "waiting", ...jobData(escalationId) },
+      })
+
+      const doc = await getDoc(escalationId)
+      expect(doc.resolution).toEqual("expired")
+      expect(doc.response).toEqual({
+        accepted,
+        actionId: outcome,
+        automatic: true,
+      })
+    }
+  )
 })
