@@ -77,6 +77,56 @@ describe("toActionTimelineItem", () => {
     ).toMatchObject({ label: "Agent failed: Support agent", detail: "Error" })
   })
 
+  it.each([undefined, "completed"])(
+    "labels a normal agent execution with finalStatus %s",
+    finalStatus => {
+      expect(
+        toItem({
+          eventName: Event.ACTION_AI_AGENT_EXECUTED,
+          payload: { agentId: "agent-1", finalStatus },
+        })
+      ).toMatchObject({
+        label: "Agent executed: Support agent",
+        detail: undefined,
+      })
+    }
+  )
+
+  it.each([undefined, true])(
+    "prioritises a failed final status with awaitingEscalation %s",
+    awaitingEscalation => {
+      expect(
+        toItem({
+          eventName: Event.ACTION_AI_AGENT_EXECUTED,
+          payload: {
+            agentId: "agent-1",
+            finalStatus: "failed",
+            awaitingEscalation,
+          },
+        })
+      ).toMatchObject({
+        label: "Agent failed: Support agent",
+        detail: undefined,
+      })
+    }
+  )
+
+  it("includes failure details for an executed agent with a failed outcome", () => {
+    expect(
+      toItem({
+        eventName: Event.ACTION_AI_AGENT_EXECUTED,
+        payload: {
+          agentId: "agent-1",
+          finalStatus: "failed",
+          errorMessage: "Tool execution failed",
+        },
+      })
+    ).toMatchObject({
+      label: "Agent failed: Support agent",
+      detail: "Tool execution failed",
+    })
+  })
+
   it("falls back when the payload is incomplete or malformed", () => {
     expect(toItem({ payload: { stepId: 42 } })).toMatchObject({
       label: "Step executed: Unknown step",
