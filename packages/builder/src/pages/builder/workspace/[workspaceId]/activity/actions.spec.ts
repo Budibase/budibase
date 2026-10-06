@@ -251,6 +251,48 @@ describe("Activity actions page", () => {
     ).toEqual([undefined, "next-1", "prev-2"])
   })
 
+  it("disables pagination while loading and restores it after the response", async () => {
+    const pending = deferred<FetchActionSessionsResponse>()
+    mocks.fetchActionSessions
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1",
+          },
+        })
+      )
+      .mockReturnValueOnce(pending.promise)
+
+    const { findInTable, pageButton } = renderPage()
+    await findInTable("First page")
+    await fireEvent.click(pageButton("next")!)
+
+    expect(pageButton("prev")).toHaveClass("is-disabled")
+    expect(pageButton("next")).toHaveClass("is-disabled")
+    await fireEvent.click(pageButton("next")!)
+    await fireEvent.click(pageButton("prev")!)
+
+    pending.resolve(
+      pageResponse({
+        assetLabel: "Second page",
+        pagination: {
+          hasNextPage: true,
+          hasPreviousPage: true,
+          nextBookmark: "next-2",
+          previousBookmark: "prev-2",
+        },
+      })
+    )
+
+    await findInTable("Second page")
+    expect(pageButton("prev")).not.toHaveClass("is-disabled")
+    expect(pageButton("next")).not.toHaveClass("is-disabled")
+    expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(2)
+  })
+
   it("returns to the first page when a filter changes", async () => {
     mocks.fetchActionSessions
       .mockResolvedValueOnce(

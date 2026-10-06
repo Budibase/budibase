@@ -293,6 +293,7 @@
         <ActivityTableFooter
           label={paginationLabel}
           page={currentPage}
+          disabled={loading}
           {hasPrevPage}
           {hasNextPage}
           onPrevPage={goToPrevPage}
