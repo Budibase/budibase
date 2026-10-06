@@ -56,6 +56,54 @@ describe("platformActions events", () => {
   }
 
   describe("fetchSessionEvents", () => {
+    it("pages forward and backward by ID when timestamps are equal", async () => {
+      await withContext(async () => {
+        const database = events.platformActions.getActionsDB()
+        for (const suffix of ["c", "a", "e", "b", "d"]) {
+          const doc: PlatformActionEvent = {
+            _id: [DocumentType.PLATFORM_ACTION_EVENT, suffix].join(SEPARATOR),
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId: "run-1",
+            eventName: `action:step:${suffix}`,
+            timestamp: "2026-09-24T00:00:00.000Z",
+            payload: {},
+          }
+          await database.put(doc)
+        }
+      })
+
+      const fetchPage = (bookmark?: string) =>
+        withContext(() =>
+          fetchSessionEvents({
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId: "run-1",
+            limit: 2,
+            bookmark,
+          })
+        )
+      const first = await fetchPage()
+      const second = await fetchPage(first.pagination.nextBookmark)
+      const third = await fetchPage(second.pagination.nextBookmark)
+      const backToSecond = await fetchPage(third.pagination.previousBookmark)
+      const backToFirst = await fetchPage(
+        backToSecond.pagination.previousBookmark
+      )
+
+      expect(
+        [first, second, third].map(page => page.events.map(event => event.id))
+      ).toEqual([
+        ["platform_action_a", "platform_action_b"],
+        ["platform_action_c", "platform_action_d"],
+        ["platform_action_e"],
+      ])
+      expect(backToSecond.events).toEqual(second.events)
+      expect(backToFirst.events).toEqual(first.events)
+      expect(third.pagination.hasNextPage).toBe(false)
+      expect(backToFirst.pagination.hasPreviousPage).toBe(false)
+    })
+
     it("excludes events without timestamps from the list and total", async () => {
       await createEvent({ sourceId: "run-1" })
       const result = await withContext(async () => {

@@ -74,6 +74,37 @@ describe("platformActions sessions", () => {
   }
 
   describe("fetchSessions", () => {
+    it("pages forward and backward by ID when timestamps are equal", async () => {
+      tk.freeze(new Date("2026-09-24T00:00:00.000Z"))
+      try {
+        for (const sourceId of ["c", "a", "e", "b", "d"]) {
+          await createSession({ sourceId })
+        }
+      } finally {
+        tk.reset()
+      }
+
+      const fetchPage = (bookmark?: string) =>
+        withContext(() => fetchSessions({ limit: 2, bookmark }))
+      const first = await fetchPage()
+      const second = await fetchPage(first.pagination.nextBookmark)
+      const third = await fetchPage(second.pagination.nextBookmark)
+      const backToSecond = await fetchPage(third.pagination.previousBookmark)
+      const backToFirst = await fetchPage(
+        backToSecond.pagination.previousBookmark
+      )
+
+      expect(
+        [first, second, third].map(page =>
+          page.sessions.map(session => session.sourceId)
+        )
+      ).toEqual([["e", "d"], ["c", "b"], ["a"]])
+      expect(backToSecond.sessions).toEqual(second.sessions)
+      expect(backToFirst.sessions).toEqual(first.sessions)
+      expect(third.pagination.hasNextPage).toBe(false)
+      expect(backToFirst.pagination.hasPreviousPage).toBe(false)
+    })
+
     it.each([
       {},
       { status: "active" as const },
