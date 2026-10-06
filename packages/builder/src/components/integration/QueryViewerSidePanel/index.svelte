@@ -1,17 +1,32 @@
-<script>
+<script module lang="ts">
+  export type QueryResultTab = "JSON" | "Schema" | "Preview"
+</script>
+
+<script lang="ts">
+  import type { JSONValue, QuerySchema } from "@budibase/types"
   import Panel from "@/components/design/Panel.svelte"
   import { ActionButton } from "@budibase/bbui"
   import JSONPanel from "./JSONPanel.svelte"
   import SchemaPanel from "./SchemaPanel.svelte"
   import PreviewPanel from "./PreviewPanel.svelte"
 
-  export let rows
-  export let schema
-  export let onSchemaChange = () => {}
-  export let onClose = () => {}
+  interface Props {
+    rows?: JSONValue[]
+    schema: Record<string, QuerySchema | string>
+    onSchemaChange?: (_schema?: Record<string, QuerySchema | string>) => void
+    onClose?: () => void
+    activeTab?: QueryResultTab
+  }
 
-  const tabs = ["JSON", "Schema", "Preview"]
-  let activeTab = "JSON"
+  let {
+    rows = [],
+    schema,
+    onSchemaChange = () => {},
+    onClose = () => {},
+    activeTab = $bindable("JSON"),
+  }: Props = $props()
+
+  const tabs: QueryResultTab[] = ["JSON", "Schema", "Preview"]
 </script>
 
 <Panel
