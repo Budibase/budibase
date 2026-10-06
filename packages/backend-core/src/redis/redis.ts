@@ -64,7 +64,7 @@ export interface Entry {
   key: string
   value: any
 }
-const SCAN_COUNT = 10000
+const SCAN_COUNT = 1000
 
 function promisifyStream(
   stream: ScanStream,
