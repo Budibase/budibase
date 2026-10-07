@@ -46,6 +46,18 @@ import {
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
+jest.mock("@budibase/pro", () => {
+  const actual =
+    jest.requireActual<typeof import("@budibase/pro")>("@budibase/pro")
+  return {
+    ...actual,
+    quotas: {
+      ...actual.quotas,
+      removeApp: jest.fn(actual.quotas.removeApp),
+    },
+  }
+})
+
 const generateAppName = () => {
   return structures.generator.word({ length: 10 })
 }
@@ -2098,6 +2110,33 @@ describe("/applications", () => {
         } finally {
           nock.cleanAll()
           await db.getDB(actionsDbName, { skip_setup: true }).destroy()
+        }
+      }
+    )
+
+    it.each(["quota", "event"])(
+      "cleans up Actions when the deletion %s update fails",
+      async failingUpdate => {
+        const actionsDbName = events.platformActions.getActionsDbName(
+          config.getProdWorkspaceId()
+        )
+        try {
+          await db.getDB(actionsDbName).put({ _id: "test_doc" })
+          const error = new Error("Lifecycle update failed")
+          if (failingUpdate === "quota") {
+            jest.mocked(quotas.removeApp).mockRejectedValueOnce(error)
+          } else {
+            jest.mocked(events.app.deleted).mockRejectedValueOnce(error)
+          }
+
+          await config.api.workspace.delete(workspace.appId, { status: 500 })
+
+          expect(await db.dbExists(config.getDevWorkspaceId())).toBe(false)
+          expect(await db.dbExists(actionsDbName)).toBe(false)
+        } finally {
+          if (await db.dbExists(actionsDbName)) {
+            await db.getDB(actionsDbName, { skip_setup: true }).destroy()
+          }
         }
       }
     )
