@@ -688,6 +688,43 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("preserves the original finalization error and request when the pending lookup fails", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      mockApprovedRun("Approved and booked.")
+      const resolveFinalRequestOutcomeSpy = jest
+        .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
+        .mockRejectedValueOnce(new Error("Finalization unavailable"))
+      listContextDocsMock.mockRejectedValueOnce(new Error("Lookup unavailable"))
+
+      try {
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ requestId, response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("Finalization unavailable")
+
+        expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        expect(
+          enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+        ).toEqual(["active", "failed"])
+        const [request] =
+          await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("needs_input")
+      } finally {
+        resolveFinalRequestOutcomeSpy.mockRestore()
+      }
+    })
+  })
+
   it("emits a failed action when the resumed agent cannot be prepared", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
@@ -795,6 +832,9 @@ describe("resumeOperation", () => {
             expect.any(Number)
           )
           expect(aiAgentFailedMock).not.toHaveBeenCalled()
+          expect(
+            enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+          ).toEqual(["active", hasPending ? "waiting" : "failed"])
           expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
             sourceType: "agent_session",
             sourceId: "session_1",

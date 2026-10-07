@@ -900,24 +900,9 @@ export async function resumeOperation({
   } catch (error) {
     await toolCallChain
     await needsInputUpdate
-    // A failure after the terminal action already fired (e.g. persisting the
-    // resume result, or judging the final outcome) can't emit a second action
-    // without double-counting actionCount - correct the already-materialized
-    // session status instead.
-    if (hasEmittedTerminalAction) {
-      await updatePlatformActionSessionStatus("failed")
-    } else {
-      emitAgentResumeFailure(error)
-    }
+    let hasPending: boolean | undefined
     try {
-      if (await hasPendingEscalations()) {
-        await updatePlatformActionSessionStatus("waiting")
-      } else {
-        await markEscalationRequestResolved({
-          status: "failed",
-          error: error instanceof Error ? error.message : String(error),
-        })
-      }
+      hasPending = await hasPendingEscalations()
     } catch (lookupError) {
       console.error(
         "Failed to check pending escalations after resume failure",
@@ -928,6 +913,22 @@ export async function resumeOperation({
           error: lookupError,
         }
       )
+    }
+    // Correct an existing terminal action without double-counting or publishing
+    // an intermediate failed status while another approval is pending.
+    if (hasEmittedTerminalAction) {
+      await updatePlatformActionSessionStatus(hasPending ? "waiting" : "failed")
+    } else {
+      emitAgentResumeFailure(error)
+      if (hasPending) {
+        await updatePlatformActionSessionStatus("waiting")
+      }
+    }
+    if (hasPending === false) {
+      await markEscalationRequestResolved({
+        status: "failed",
+        error: error instanceof Error ? error.message : String(error),
+      })
     }
     throw error
   }
