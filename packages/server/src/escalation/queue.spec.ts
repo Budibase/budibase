@@ -1,4 +1,5 @@
 import zlib from "zlib"
+import { readUIMessageStream, type UIMessageChunk } from "ai"
 import { context, events } from "@budibase/backend-core"
 import {
   Agent,
@@ -914,6 +915,55 @@ describe("resumeOperation", () => {
           reason: "error",
           errorMessage: "Model unavailable",
         })
+      })
+    })
+
+    it("emits failure instead of success when the resumed stream contains an error chunk", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const ai = jest.requireActual<typeof import("ai")>("ai")
+        jest
+          .mocked(readUIMessageStream)
+          .mockImplementationOnce(ai.readUIMessageStream)
+        prepareAgentChatRunMock.mockResolvedValue({
+          toolDisplayNames: {},
+          sessionLogIndexer: {
+            index: jest.fn().mockResolvedValue(undefined),
+          },
+          stream: jest.fn().mockResolvedValue({
+            finishReason: Promise.resolve("error"),
+            toUIMessageStream: () =>
+              new ReadableStream<UIMessageChunk>({
+                start(controller) {
+                  controller.enqueue({ type: "start", messageId: "resume" })
+                  controller.enqueue({
+                    type: "error",
+                    errorText: "Model unavailable",
+                  })
+                  controller.close()
+                },
+              }),
+          }),
+        })
+
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("Model unavailable")
+
+        expect(aiAgentFailedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentFailedMock).toHaveBeenCalledWith({
+          agentId: "agent_1",
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          sessionId: "session_1",
+          reason: "error",
+          errorMessage: "Model unavailable",
+        })
+        expect(aiAgentExecutedMock).not.toHaveBeenCalled()
       })
     })
 

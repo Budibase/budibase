@@ -791,6 +791,7 @@ export async function resumeOperation({
         : {}
     let assistantMessage: UIMessage | undefined
     for await (const uiMessage of readUIMessageStream({
+      terminateOnError: true,
       stream: result.toUIMessageStream({
         sendReasoning: true,
         messageMetadata: ({ part }) =>
