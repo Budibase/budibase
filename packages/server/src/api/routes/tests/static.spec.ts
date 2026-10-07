@@ -173,6 +173,7 @@ describe("/static", () => {
           licensed: false,
         })
 
+        expect(res.status).toBe(200)
         expect(res.text).not.toContain('id="custom-head-script"')
         expect(res.text).not.toContain('id="custom-body-script"')
         expect(res.text).not.toContain('id="custom-style"')
@@ -187,6 +188,7 @@ describe("/static", () => {
           licensed: false,
         })
 
+        expect(res.status).toBe(200)
         expect(res.text).not.toContain('id="custom-head-script"')
         expect(res.text).not.toContain('id="custom-body-script"')
         expect(res.text).not.toContain('id="custom-style"')
