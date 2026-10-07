@@ -374,7 +374,7 @@ export default async function () { return { output: { text: inputs.value?.toUppe
       expect(beforeRename.declarations).toContain('readonly "Inventory"')
       expect(beforeRename.declarations).toContain('readonly "findRooms"')
       expect(beforeRename.declarations).toContain(
-        'readonly "building": string | null'
+        'readonly "building"?: string | null'
       )
       expect(beforeRename.declarations).toContain("Promise<JsonValue>")
       expect(beforeRename.declarations).not.toContain("findAvailableRooms")

@@ -7,6 +7,9 @@ import type {
   FunctionCompletionResponse,
 } from "./functionTypeService"
 
+// Unicode identifier characters, including JavaScript's permitted joiners.
+const identifierCharacters = /[\p{ID_Continue}$\u200c\u200d]/u
+
 export const createFunctionTypeCompletions = () => {
   const worker = new Worker(
     new URL("./functionTypes.worker.ts", import.meta.url),
@@ -37,7 +40,9 @@ export const createFunctionTypeCompletions = () => {
       context: CompletionContext
       declarations: string
     }): Promise<CompletionResult | null> | null => {
-      const member = context.matchBefore(/\.[\w$]*$/)
+      const member = context.matchBefore(
+        new RegExp(`\\.${identifierCharacters.source}*$`, "u")
+      )
       if (!member) {
         return null
       }
@@ -56,7 +61,10 @@ export const createFunctionTypeCompletions = () => {
               ? {
                   from: member.from + 1,
                   options: response.completions,
-                  validFor: /^[\w$]*$/,
+                  validFor: new RegExp(
+                    `^${identifierCharacters.source}*$`,
+                    "u"
+                  ),
                 }
               : null
           )

@@ -46,6 +46,47 @@ const getDiagnostics = (files: Map<string, string>) => {
 }
 
 describe("generateFunctionDeclarations", () => {
+  it("accepts omitted query parameters while checking provided overrides", () => {
+    const capabilities: FunctionQueryCapability[] = [
+      {
+        capabilityId: "capability_1",
+        queryId: "query_1",
+        datasourceAlias: "Inventory",
+        queryAlias: "findRooms",
+        parameterNames: ["building", "floor"],
+      },
+    ]
+    const declarations = generateFunctionDeclarations({ capabilities })
+    const usage = `import { queries } from "@budibase/functions"
+queries.Inventory.findRooms()
+queries.Inventory.findRooms({})
+queries.Inventory.findRooms({ building: "HQ" })
+queries.Inventory.findRooms({ floor: null })
+queries.Inventory.findRooms({ building: "HQ", floor: "2" })
+`
+    expect(
+      getDiagnostics(
+        new Map([
+          ["functions.d.ts", declarations],
+          ["usage.ts", usage],
+        ])
+      )
+    ).toEqual([])
+    const diagnostics = getDiagnostics(
+      new Map([
+        ["functions.d.ts", declarations],
+        [
+          "usage.ts",
+          `import { queries } from "@budibase/functions"
+queries.Inventory.findRooms({ building: 2 })
+queries.Inventory.findRooms({ missing: "value" })
+`,
+        ],
+      ])
+    )
+    expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([2322, 2353])
+  })
+
   it("generates valid declarations for parameter names requiring quoting", () => {
     const capabilities: FunctionQueryCapability[] = [
       {
