@@ -837,6 +837,56 @@ export default async function () {
     })
   })
 
+  it.each([
+    {
+      property: "calendar_last_scraped",
+      status: "success",
+      diagnostics: [],
+    },
+    {
+      property: "calendar_last_scrap",
+      status: "failed",
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({
+          code: "TS2551",
+          message: expect.stringContaining("calendar_last_scrap"),
+        }),
+      ]),
+    },
+  ])(
+    "builds with $status when accessing $property",
+    async ({ property, status, diagnostics }) => {
+      await withFunctionsEnabled(async () => {
+        const query = await createQuery()
+        await config.api.query.save({
+          ...query,
+          parameters: [],
+          schema: { calendar_last_scraped: "string" },
+        })
+        const { function: created } = await config.api.function.create({
+          name: "Response field access",
+          source: `import { queries } from "@budibase/functions"
+export default async function () {
+  const res = await queries.Inventory.findRooms()
+  res.data[0].${property}
+  return { output: {} }
+}`,
+          capabilities: [
+            {
+              queryId: query._id!,
+              datasourceAlias: "Inventory",
+              queryAlias: "findRooms",
+            },
+          ],
+        })
+        await config.api.function.build(created._id, { _rev: created._rev! })
+        const { function: built } = await config.api.function.find(created._id)
+        expect(built.lastBuild?.status).toBe(status)
+        expect(built.lastBuild?.diagnostics || []).toEqual(diagnostics)
+      })
+    }
+  )
+
   it("rejects datasource and query alias collisions", async () => {
     await withFunctionsEnabled(async () => {
       const firstQuery = await createQuery()

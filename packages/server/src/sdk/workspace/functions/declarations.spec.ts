@@ -105,7 +105,8 @@ async function check(): Promise<FunctionResult> {
   const enabled: boolean | null | undefined = row.enabled
   const details: JsonValue | undefined = row.details
   const items: JsonValue[] | null | undefined = row.items
-  const value: typeof response = { data: [{}, { count: null }, { count: 2, extra: true, items: ["text", 1, true, null, {}, []], details: { nested: [] } }], pagination: null }
+  const extraRow = { count: 2, extra: true, items: ["text", 1, true, null, {}, []], details: { nested: [] } }
+  const value: typeof response = { data: [{}, { count: null }, extraRow], pagination: null }
   return { output: { response, value } }
 }`
     expect(
@@ -126,12 +127,14 @@ async function check() {
   const row = (await queries.Inventory.findRooms()).data[0]
   const count: string = row.count
   row.count.toUpperCase()
+  row.missing
+  row["missing"]
 }`,
         ],
       ])
     )
     expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual(
-      expect.arrayContaining([2322, 2339, 18049])
+      expect.arrayContaining([2322, 2339, 18049, 7053])
     )
   })
 
