@@ -1,4 +1,5 @@
 import { LockName, LockType } from "@budibase/types"
+import nock from "nock"
 import type {
   PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
@@ -6,6 +7,7 @@ import type {
 import { generator, mocks } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
+import { getCouchInfo } from "../../../../db/couch/connections"
 import * as locks from "../../../../redis/redlockImpl"
 import { getActionsDB, getActionsDbName } from "../db"
 import { upsertPlatformActionSession } from "../sessionIndex"
@@ -30,6 +32,26 @@ async function getSessionDoc(
 }
 
 describe("upsertPlatformActionSession", () => {
+  it("rejects a failed workspace existence check so the job can be retried", async () => {
+    await run(async () => {
+      const workspaceId = context.getWorkspaceId()!
+      nock(getCouchInfo().url, { allowUnmocked: true })
+        .head(`/${db.getDevWorkspaceID(workspaceId)}`)
+        .reply(503)
+
+      await expect(
+        upsertPlatformActionSession({
+          sourceType: "agent_session",
+          sourceId: generator.guid(),
+          environment: "prod",
+          incrementsActionCount: true,
+          signal: "completed",
+          timestamp: "2026-08-31T00:00:00.000Z",
+        })
+      ).rejects.toMatchObject({ status: 503, statusCode: 503 })
+    })
+  })
+
   it("creates a new session doc on the first event", async () => {
     await run(async () => {
       const sourceId = generator.guid()

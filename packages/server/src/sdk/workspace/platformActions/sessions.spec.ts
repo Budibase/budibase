@@ -1,4 +1,5 @@
-import { events } from "@budibase/backend-core"
+import tk from "timekeeper"
+import { db, events } from "@budibase/backend-core"
 import { DocumentType, SEPARATOR } from "@budibase/types"
 import type {
   PlatformActionContainerStatus,
@@ -8,7 +9,7 @@ import type {
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { fetchSessions, fetchSessionsSummary } from "./sessions"
-import { encodeKeysetBookmark } from "./bookmarks"
+import { encodeKeysetBookmark } from "./pagination"
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 5))
 
@@ -73,6 +74,77 @@ describe("platformActions sessions", () => {
   }
 
   describe("fetchSessions", () => {
+    it("pages forward and backward by ID when timestamps are equal", async () => {
+      tk.freeze(new Date("2026-09-24T00:00:00.000Z"))
+      try {
+        for (const sourceId of ["c", "a", "e", "b", "d"]) {
+          await createSession({ sourceId })
+        }
+      } finally {
+        tk.reset()
+      }
+
+      const fetchPage = (bookmark?: string) =>
+        withContext(() => fetchSessions({ limit: 2, bookmark }))
+      const first = await fetchPage()
+      const second = await fetchPage(first.pagination.nextBookmark)
+      const third = await fetchPage(second.pagination.nextBookmark)
+      const backToSecond = await fetchPage(third.pagination.previousBookmark)
+      const backToFirst = await fetchPage(
+        backToSecond.pagination.previousBookmark
+      )
+
+      expect(
+        [first, second, third].map(page =>
+          page.sessions.map(session => session.sourceId)
+        )
+      ).toEqual([["e", "d"], ["c", "b"], ["a"]])
+      expect(backToSecond.sessions).toEqual(second.sessions)
+      expect(backToFirst.sessions).toEqual(first.sessions)
+      expect(third.pagination.hasNextPage).toBe(false)
+      expect(backToFirst.pagination.hasPreviousPage).toBe(false)
+    })
+
+    it.each([
+      {},
+      { status: "active" as const },
+      { environment: "prod" as const },
+      { environment: "prod" as const, status: "active" as const },
+    ])(
+      "excludes sessions without timestamps from lists and counts: %j",
+      async filters => {
+        await createSession({ sourceId: "valid" })
+        const result = await withContext(async () => {
+          const workspaceDb = events.platformActions.getActionsDB()
+          // Bypass put(), which automatically populates updatedAt.
+          await db.directCouchQuery(workspaceDb.name, "POST", {
+            _id: buildSessionId({
+              environment: "prod",
+              sourceType: "agent_session",
+              sourceId: "missing-timestamp",
+            }),
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId: "missing-timestamp",
+            status: "active",
+            actionCount: 1,
+          })
+          return fetchSessions(filters)
+        })
+
+        expect(result.sessions.map(session => session.sourceId)).toEqual([
+          "valid",
+        ])
+        expect(result.summary).toEqual({
+          total: 1,
+          active: 1,
+          waiting: 0,
+          completed: 0,
+          failed: 0,
+        })
+      }
+    )
+
     it("preserves source IDs with special characters when reading encoded session IDs", async () => {
       const sourceId = "run/a b%25"
       await createSession({ sourceId })
@@ -287,12 +359,12 @@ describe("platformActions sessions", () => {
                 sourceId,
               })
             )
-            await database.put({
-              ...doc,
-              updatedAt: new Date(
-                Date.UTC(2026, 8, 24, 0, 0, index)
-              ).toISOString(),
-            })
+            tk.freeze(new Date(Date.UTC(2026, 8, 24, 0, 0, index)))
+            try {
+              await database.put(doc)
+            } finally {
+              tk.reset()
+            }
           }
         })
         const first = await withContext(() => fetchSessions({ limit: 2 }))
@@ -304,7 +376,12 @@ describe("platformActions sessions", () => {
           const doc = await database.get<PlatformActionSessionIndexDoc>(
             buildSessionId(second.sessions[0])
           )
-          await database.put({ ...doc, updatedAt: "2026-09-24T00:00:03.500Z" })
+          tk.freeze(new Date("2026-09-24T00:00:03.500Z"))
+          try {
+            await database.put(doc)
+          } finally {
+            tk.reset()
+          }
         })
 
         const previous = await withContext(() =>
@@ -422,6 +499,58 @@ describe("platformActions sessions", () => {
   })
 
   describe("fetchSessionsSummary", () => {
+    it.each([undefined, "prod", "dev"] as const)(
+      "returns zero counts for an empty database with environment %s",
+      async environment => {
+        const summary = await withContext(() =>
+          fetchSessionsSummary({ environment })
+        )
+        expect(summary).toEqual({
+          total: 0,
+          active: 0,
+          waiting: 0,
+          completed: 0,
+          failed: 0,
+        })
+      }
+    )
+
+    it.each([undefined, "prod", "dev"] as const)(
+      "groups different timestamps by status with environment %s",
+      async environment => {
+        for (const env of ["prod", "dev"] as const) {
+          for (const status of [
+            "active",
+            "waiting",
+            "completed",
+            "failed",
+          ] as const) {
+            await createSession({
+              sourceId: `${env}-${status}-1`,
+              environment: env,
+              status,
+            })
+            await createSession({
+              sourceId: `${env}-${status}-2`,
+              environment: env,
+              status,
+            })
+          }
+        }
+        const summary = await withContext(() =>
+          fetchSessionsSummary({ environment })
+        )
+        const count = environment ? 2 : 4
+        expect(summary).toEqual({
+          total: count * 4,
+          active: count,
+          waiting: count,
+          completed: count,
+          failed: count,
+        })
+      }
+    )
+
     it("counts sessions per status, combined across environments", async () => {
       await createSession({
         sourceId: "prod-active",

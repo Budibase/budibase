@@ -15,7 +15,7 @@ import {
   PLATFORM_ACTION_CONTAINER_STATUSES,
   SEPARATOR,
 } from "@budibase/types"
-import type { KeysetBookmarkDirection, KeysetPosition } from "./bookmarks"
+import type { KeysetBookmarkDirection, KeysetPosition } from "./pagination"
 
 const SESSION_ID_PREFIX = `${DocumentType.PLATFORM_ACTION_SESSION}${SEPARATOR}`
 
@@ -47,21 +47,6 @@ const buildSessionsByEnvironmentStatusAndUpdatedAtView =
   }
 }`
 
-// map+reduce functions - session status counts, bounded indexed counts
-
-const buildSessionsStatusCountsView = (): string => `function(doc) {
-  if (doc._id && doc._id.startsWith("${SESSION_ID_PREFIX}") && doc.status) {
-    emit(doc.status, null)
-  }
-}`
-
-const buildSessionsByEnvironmentStatusCountsView =
-  (): string => `function(doc) {
-  if (doc._id && doc._id.startsWith("${SESSION_ID_PREFIX}") && doc.environment && doc.status) {
-    emit([doc.environment, doc.status], null)
-  }
-}`
-
 // map function - events, identified by environment + sourceType + sourceId
 // within the session's workspace. Filtered on doc.eventName rather than an
 // _id prefix: PLATFORM_ACTION_EVENT's id prefix is a strict prefix of
@@ -71,12 +56,6 @@ const buildSessionsByEnvironmentStatusCountsView =
 const buildEventsBySessionView = (): string => `function(doc) {
   if (doc.eventName && doc.environment && doc.sourceType && doc.sourceId && doc.timestamp) {
     emit([doc.environment, doc.sourceType, doc.sourceId, doc.timestamp], null)
-  }
-}`
-
-const buildEventsCountBySessionView = (): string => `function(doc) {
-  if (doc.eventName && doc.environment && doc.sourceType && doc.sourceId) {
-    emit([doc.environment, doc.sourceType, doc.sourceId], null)
   }
 }`
 
@@ -114,6 +93,7 @@ export const createSessionsByStatusAndUpdatedAtView = async (
     workspaceDb,
     map: buildSessionsByStatusAndUpdatedAtView(),
     viewName: ViewName.PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT,
+    reduce: "_count",
   })
 }
 
@@ -135,25 +115,6 @@ export const createSessionsByEnvironmentStatusAndUpdatedAtView = async (
     map: buildSessionsByEnvironmentStatusAndUpdatedAtView(),
     viewName:
       ViewName.PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_STATUS_AND_UPDATED_AT,
-  })
-}
-
-export const createSessionsStatusCountsView = async (workspaceDb: Database) => {
-  await createActionsView({
-    workspaceDb,
-    map: buildSessionsStatusCountsView(),
-    viewName: ViewName.PLATFORM_ACTION_SESSIONS_STATUS_COUNTS,
-    reduce: "_count",
-  })
-}
-
-export const createSessionsByEnvironmentStatusCountsView = async (
-  workspaceDb: Database
-) => {
-  await createActionsView({
-    workspaceDb,
-    map: buildSessionsByEnvironmentStatusCountsView(),
-    viewName: ViewName.PLATFORM_ACTION_SESSIONS_ENVIRONMENT_STATUS_COUNTS,
     reduce: "_count",
   })
 }
@@ -163,14 +124,6 @@ export const createEventsBySessionView = async (workspaceDb: Database) => {
     workspaceDb,
     map: buildEventsBySessionView(),
     viewName: ViewName.PLATFORM_ACTION_EVENTS_BY_SESSION,
-  })
-}
-
-export const createEventsCountBySessionView = async (workspaceDb: Database) => {
-  await createActionsView({
-    workspaceDb,
-    map: buildEventsCountBySessionView(),
-    viewName: ViewName.PLATFORM_ACTION_EVENTS_COUNT_BY_SESSION,
     reduce: "_count",
   })
 }
@@ -200,7 +153,12 @@ async function fetchKeysetPage<T extends Document>({
   const hasBookmark = params.startkey_docid !== undefined
   const response = await db.queryViewRaw<T>(
     viewName,
-    { ...params, include_docs: true, limit: limit + 1 + Number(hasBookmark) },
+    {
+      ...params,
+      reduce: false,
+      include_docs: true,
+      limit: limit + 1 + Number(hasBookmark),
+    },
     workspaceDb,
     createFunc
   )
@@ -385,23 +343,27 @@ export const querySessions = async ({
   })
 }
 
-// indexed status counts - one bounded exact-key lookup per status, not a
-// full-database scan
+// Indexed counts over bounded key ranges.
 
 async function queryCount({
   viewName,
-  key,
+  prefix,
   workspaceDb,
   createFunc,
 }: {
   viewName: ViewName
-  key: DatabaseKey
+  prefix: DatabaseKey[]
   workspaceDb: Database
   createFunc: () => Promise<void>
 }): Promise<number> {
   const value = (await db.queryView(
     viewName,
-    { key, include_docs: false },
+    {
+      startkey: prefix,
+      endkey: [...prefix, {}],
+      reduce: true,
+      include_docs: false,
+    },
     workspaceDb,
     createFunc
   )) as number | undefined
@@ -417,26 +379,41 @@ export const querySessionsStatusCounts = async ({
   workspaceDb: Database
   environment?: PlatformActionEnvironment
 }): Promise<SessionsStatusCounts> => {
-  const counts = {} as SessionsStatusCounts
-  await Promise.all(
-    PLATFORM_ACTION_CONTAINER_STATUSES.map(async status => {
-      counts[status] = environment
-        ? await queryCount({
-            viewName:
-              ViewName.PLATFORM_ACTION_SESSIONS_ENVIRONMENT_STATUS_COUNTS,
-            key: [environment, status],
-            workspaceDb,
-            createFunc: () =>
-              createSessionsByEnvironmentStatusCountsView(workspaceDb),
-          })
-        : await queryCount({
-            viewName: ViewName.PLATFORM_ACTION_SESSIONS_STATUS_COUNTS,
-            key: status,
-            workspaceDb,
-            createFunc: () => createSessionsStatusCountsView(workspaceDb),
-          })
-    })
+  const counts: SessionsStatusCounts = {
+    active: 0,
+    waiting: 0,
+    completed: 0,
+    failed: 0,
+  }
+  const viewName = environment
+    ? ViewName.PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_STATUS_AND_UPDATED_AT
+    : ViewName.PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT
+  const response = await db.queryViewRaw(
+    viewName,
+    {
+      reduce: true,
+      include_docs: false,
+      group_level: environment ? 2 : 1,
+      ...(environment
+        ? { startkey: [environment], endkey: [environment, {}] }
+        : {}),
+    },
+    workspaceDb,
+    () =>
+      environment
+        ? createSessionsByEnvironmentStatusAndUpdatedAtView(workspaceDb)
+        : createSessionsByStatusAndUpdatedAtView(workspaceDb)
   )
+  for (const { key, value } of response.rows) {
+    if (Array.isArray(key) && typeof value === "number") {
+      const status = PLATFORM_ACTION_CONTAINER_STATUSES.find(
+        status => status === key[environment ? 1 : 0]
+      )
+      if (status) {
+        counts[status] = value
+      }
+    }
+  }
   return counts
 }
 
@@ -490,9 +467,9 @@ export const queryEventsTotal = async ({
   sourceId: string
 }): Promise<number> => {
   return queryCount({
-    viewName: ViewName.PLATFORM_ACTION_EVENTS_COUNT_BY_SESSION,
-    key: [environment, sourceType, sourceId],
+    viewName: ViewName.PLATFORM_ACTION_EVENTS_BY_SESSION,
+    prefix: [environment, sourceType, sourceId],
     workspaceDb,
-    createFunc: () => createEventsCountBySessionView(workspaceDb),
+    createFunc: () => createEventsBySessionView(workspaceDb),
   })
 }
