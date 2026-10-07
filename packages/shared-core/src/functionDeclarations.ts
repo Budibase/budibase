@@ -24,16 +24,19 @@ const responseFieldTypes: Record<FunctionQueryResponseFieldType, string> = {
   array: "JsonValue[]",
 }
 
-export const renderQueryResponseType = ({
+const renderQueryResponseObjectType = (properties: string[]) =>
+  `Record<string, JsonValue> & { data: { ${properties.join("; ")} }[] }`
+
+export const renderQueryResponseFields = ({
   schema,
 }: {
   schema?: FunctionQueryResponseSchema
-}): string => {
+}): string[] | undefined => {
   if (
     !schema?.fields.length ||
     schema.fields.length > FUNCTION_QUERY_RESPONSE_LIMITS.maxFields
   ) {
-    return "JsonValue"
+    return undefined
   }
   const names = new Set<string>()
   const properties: string[] = []
@@ -47,20 +50,29 @@ export const renderQueryResponseType = ({
       names.has(field.name) ||
       !Object.prototype.hasOwnProperty.call(responseFieldTypes, field.type)
     ) {
-      return "JsonValue"
+      return undefined
     }
     names.add(field.name)
     const property = `${JSON.stringify(field.name)}?: ${responseFieldTypes[field.type]} | null`
     bytes += byteLength(property)
     if (bytes > FUNCTION_QUERY_RESPONSE_LIMITS.maxTypeBytes) {
-      return "JsonValue"
+      return undefined
     }
     properties.push(property)
   }
-  const type = `Record<string, JsonValue> & { data: { ${properties.join("; ")} }[] }`
+  const type = renderQueryResponseObjectType(properties)
   return byteLength(type) > FUNCTION_QUERY_RESPONSE_LIMITS.maxTypeBytes
-    ? "JsonValue"
-    : type
+    ? undefined
+    : properties
+}
+
+export const renderQueryResponseType = ({
+  schema,
+}: {
+  schema?: FunctionQueryResponseSchema
+}): string => {
+  const properties = renderQueryResponseFields({ schema })
+  return properties ? renderQueryResponseObjectType(properties) : "JsonValue"
 }
 
 const property = (value: string) => JSON.stringify(value)
@@ -71,9 +83,9 @@ const renderParameters = (parameterNames: readonly string[]) => {
   }
   const properties = [...parameterNames]
     .sort((a, b) => a.localeCompare(b))
-    .map(name => `          readonly ${property(name)}: string | null`)
+    .map(name => `          readonly ${property(name)}?: string | null`)
     .join("\n")
-  return `(parameters: Readonly<{\n${properties}\n        }>)`
+  return `(parameters?: Readonly<{\n${properties}\n        }>)`
 }
 
 const renderQueries = (capabilities: FunctionQueryCapability[]) => {
