@@ -171,6 +171,7 @@ describe("platformActions events", () => {
     })
 
     it("returns a zero total for a session with no events", async () => {
+      await createSession({ sourceId: "empty" })
       const result = await withContext(() =>
         fetchSessionEvents({
           environment: "prod",
