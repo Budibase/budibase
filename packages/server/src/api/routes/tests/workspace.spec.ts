@@ -11,6 +11,7 @@ import {
   roles,
 } from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
+import { quotas } from "@budibase/pro"
 import { encodeJSBinding } from "@budibase/string-templates"
 import {
   type Workspace,
@@ -19,9 +20,11 @@ import {
   DocumentType,
   Feature,
   PermissionLevel,
+  QuotaUsageType,
   RowValue,
   Screen,
   SEPARATOR,
+  StaticQuotaName,
   Theme,
   WorkspaceApp,
 } from "@budibase/types"
@@ -2058,6 +2061,46 @@ describe("/applications", () => {
         }
       }
     })
+
+    it.each(["workspace", "actions"])(
+      "updates deletion lifecycle only after workspace deletion when %s cleanup fails",
+      async failingDatabase => {
+        const actionsDbName = events.platformActions.getActionsDbName(
+          config.getProdWorkspaceId()
+        )
+        await db.getDB(actionsDbName).put({ _id: "test_doc" })
+        const failedDbName =
+          failingDatabase === "workspace"
+            ? config.getDevWorkspaceId()
+            : actionsDbName
+        nock(db.getCouchInfo().url, { allowUnmocked: true })
+          .persist()
+          .delete(`/${failedDbName}`)
+          .reply(500, {
+            error: "internal_server_error",
+            reason: "Cleanup failed",
+          })
+
+        try {
+          await config.api.workspace.delete(workspace.appId, { status: 500 })
+
+          const usage = await config.doInTenant(() =>
+            quotas.getCurrentUsageValues(
+              QuotaUsageType.STATIC,
+              StaticQuotaName.WORKSPACES
+            )
+          )
+          const workspaceDeleted = failingDatabase === "actions"
+          expect(usage.total).toBe(workspaceDeleted ? 0 : 1)
+          expect(events.app.deleted).toHaveBeenCalledTimes(
+            workspaceDeleted ? 1 : 0
+          )
+        } finally {
+          nock.cleanAll()
+          await db.getDB(actionsDbName, { skip_setup: true }).destroy()
+        }
+      }
+    )
 
     it("should not delete the shared Actions database on unpublish", async () => {
       const actionsDbName = events.platformActions.getActionsDbName(
