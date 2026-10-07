@@ -53,6 +53,13 @@ describe("FunctionCodeEditor", () => {
   beforeEach(() => {
     vi.stubGlobal("Worker", CompletionWorker)
     document.body.className = "spectrum"
+    const createRange = document.createRange.bind(document)
+    vi.spyOn(document, "createRange").mockImplementation(() =>
+      Object.assign(createRange(), {
+        getClientRects: () => [],
+        getBoundingClientRect: () => ({ left: 0, right: 0, top: 0, bottom: 0 }),
+      })
+    )
   })
 
   afterEach(() => {
@@ -112,18 +119,20 @@ describe("FunctionCodeEditor", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("automatically completes a row field while typing", async () => {
-    const createRange = document.createRange.bind(document)
-    vi.spyOn(document, "createRange").mockImplementation(() =>
-      Object.assign(createRange(), {
-        getClientRects: () => [],
-        getBoundingClientRect: () => ({ left: 0, right: 0, top: 0, bottom: 0 }),
-      })
-    )
+  it.each([
+    { name: "name", prefix: "na" },
+    { name: "résumé", prefix: "ré" },
+    { name: "re\u0301sume\u0301", prefix: "re\u0301" },
+  ])("automatically completes $name while typing", async ({ name, prefix }) => {
     const value = querySource + "res.data[0]"
     const view = render(FunctionCodeEditor, {
       value,
-      capabilities: [capability],
+      capabilities: [
+        {
+          ...capability,
+          responseSchema: { fields: [{ name, type: "string" }] },
+        },
+      ],
     })
     const editor = EditorView.findFromDOM(
       view.container.querySelector<HTMLElement>(".cm-editor")!
@@ -136,13 +145,41 @@ describe("FunctionCodeEditor", () => {
     })
     await waitFor(() => screen.getByRole("option"))
     editor.dispatch({
-      changes: { from: editor.state.doc.length, insert: "na" },
-      selection: { anchor: editor.state.doc.length + 2 },
+      changes: { from: editor.state.doc.length, insert: prefix },
+      selection: { anchor: editor.state.doc.length + prefix.length },
       userEvent: "input.type",
     })
     await waitFor(() => {
       acceptCompletion(editor)
-      expect(editor.state.doc.toString()).toBe(value + ".name")
+      expect(editor.state.doc.toString()).toBe(value + "." + name)
+    })
+  })
+
+  it.each([
+    { name: "résumé", prefix: "ré" },
+    { name: "re\u0301sume\u0301", prefix: "re\u0301" },
+  ])("completes an existing $name prefix", async ({ name, prefix }) => {
+    const value = querySource + "res.data[0]."
+    const view = render(FunctionCodeEditor, {
+      value: value + prefix,
+      capabilities: [
+        {
+          ...capability,
+          responseSchema: { fields: [{ name, type: "string" }] },
+        },
+      ],
+    })
+    const editor = EditorView.findFromDOM(
+      view.container.querySelector<HTMLElement>(".cm-editor")!
+    )!
+    editor.dispatch({ selection: { anchor: editor.state.doc.length } })
+    startCompletion(editor)
+    await waitFor(() =>
+      expect(screen.getByRole("option")).toHaveTextContent(name)
+    )
+    await waitFor(() => {
+      acceptCompletion(editor)
+      expect(editor.state.doc.toString()).toBe(value + name)
     })
   })
 
