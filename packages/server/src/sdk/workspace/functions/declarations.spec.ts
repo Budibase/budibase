@@ -1,6 +1,12 @@
 import ts from "typescript"
-import type { FunctionQueryCapability } from "@budibase/types"
-import { generateFunctionDeclarations } from "./declarations"
+import type {
+  FunctionInputDefinition,
+  FunctionQueryCapability,
+} from "@budibase/types"
+import {
+  generateFunctionDeclarations,
+  hashFunctionDeclarations,
+} from "./declarations"
 
 const getDiagnostics = (files: Map<string, string>) => {
   const options: ts.CompilerOptions = {
@@ -49,7 +55,9 @@ describe("generateFunctionDeclarations", () => {
         parameterNames: ['building "name"'],
       },
     ]
-    const declarations = generateFunctionDeclarations(capabilities)
+    const declarations = generateFunctionDeclarations({
+      capabilities,
+    })
     const usage = `import { queries } from "@budibase/functions"
 
 queries.DataWarehouse.findRooms({
@@ -65,5 +73,96 @@ queries.DataWarehouse.findRooms({
         ])
       )
     ).toEqual([])
+  })
+})
+
+describe("typed Function input declarations", () => {
+  const inputSchema: FunctionInputDefinition[] = [
+    {
+      name: "text",
+      type: "string",
+    },
+    { name: "count", type: "number" },
+    { name: "flag", type: "boolean" },
+    { name: "data", type: "object" },
+    { name: "items", type: "array" },
+  ]
+
+  it("type-checks every supported optional input type, including null values", () => {
+    const declarations = generateFunctionDeclarations({
+      capabilities: [],
+      inputSchema,
+    })
+    const source = `import { inputs, type GeneratedInputs, type JsonValue } from "@budibase/functions"
+const text: string | null | undefined = inputs.text
+const count: number | null | undefined = inputs.count
+const flag: boolean | null | undefined = inputs.flag
+const data: Record<string, JsonValue> | null | undefined = inputs.data
+const items: JsonValue[] | null | undefined = inputs.items
+const nullable: GeneratedInputs = { text: null, count: null, flag: null, data: null, items: null }
+const omitted: GeneratedInputs = {}
+`
+    expect(
+      getDiagnostics(
+        new Map([
+          ["functions.d.ts", declarations],
+          ["usage.ts", source],
+        ])
+      )
+    ).toEqual([])
+  })
+
+  it("reports wrong types, unknown inputs and writes to readonly inputs", () => {
+    const declarations = generateFunctionDeclarations({
+      capabilities: [],
+      inputSchema: inputSchema,
+    })
+    const diagnostics = getDiagnostics(
+      new Map([
+        ["functions.d.ts", declarations],
+        [
+          "usage.ts",
+          'import { inputs } from "@budibase/functions"; const text: number = inputs.text; inputs.text = "changed"; inputs.missing',
+        ],
+      ])
+    )
+    expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual(
+      expect.arrayContaining([2322, 2540, 2339])
+    )
+  })
+
+  it("hashes complete schema metadata deterministically", () => {
+    const declarations = generateFunctionDeclarations({
+      capabilities: [],
+      inputSchema: inputSchema,
+    })
+    const hash = hashFunctionDeclarations({
+      declarations: declarations,
+      inputSchema: inputSchema,
+    })
+    expect(
+      hashFunctionDeclarations({
+        declarations: generateFunctionDeclarations({
+          capabilities: [],
+          inputSchema: [...inputSchema].reverse(),
+        }),
+        inputSchema: [...inputSchema].reverse(),
+      })
+    ).toBe(hash)
+    expect(
+      hashFunctionDeclarations({
+        declarations: declarations,
+        inputSchema: inputSchema.map(input => ({
+          ...input,
+          name: `${input.name}Changed`,
+        })),
+      })
+    ).not.toBe(hash)
+    expect(generateFunctionDeclarations({ capabilities: [] })).toContain(
+      "Readonly<Record<string, JsonValue>>"
+    )
+    expect(
+      generateFunctionDeclarations({ capabilities: [], inputSchema: [] })
+    ).toBe(generateFunctionDeclarations({ capabilities: [] }))
   })
 })

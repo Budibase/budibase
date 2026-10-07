@@ -4,9 +4,9 @@ import {
   AutomationStepType,
   type AutomationStep,
   type FunctionResponse,
+  type JSONValue,
 } from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import MockSlot from "@/test/mocks/MockSlot.svelte"
 
 const mocks = vi.hoisted(() => {
   const store = <T>(initial: T) => {
@@ -41,7 +41,7 @@ const mocks = vi.hoisted(() => {
     requestUpdate: vi.fn(),
     inputData: {
       functionId: undefined as string | undefined,
-      inputs: undefined,
+      inputs: undefined as Record<string, JSONValue> | undefined,
     },
   }
 })
@@ -56,10 +56,6 @@ vi.mock("@/stores/builder", () => ({
 }))
 vi.mock("@/stores/builder/functions", () => ({
   functionStore: mocks.functionStore,
-}))
-
-vi.mock("../FunctionInputsEditor.svelte", () => ({
-  default: MockSlot,
 }))
 
 import RunFunction from "./RunFunction.svelte"
@@ -102,6 +98,7 @@ describe("RunFunction", () => {
     vi.clearAllMocks()
     document.body.className = "spectrum"
     mocks.inputData.functionId = undefined
+    mocks.inputData.inputs = undefined
     mocks.functionStore.set({
       functions: [],
       loading: false,
@@ -109,8 +106,9 @@ describe("RunFunction", () => {
     })
   })
 
-  it("loads Functions and saves the selected Function ID", async () => {
+  it("loads Functions and clears inputs when selecting another Function", async () => {
     const readyFunction = makeFunction()
+    mocks.inputData.inputs = { previousInput: "previous value" }
     mocks.functionStore.set({
       functions: [readyFunction],
       loading: false,
@@ -134,6 +132,28 @@ describe("RunFunction", () => {
       block
     )
   })
+
+  it.each([undefined, []])(
+    "shows no inputs field when the selected Function has no declared inputs: %j",
+    inputSchema => {
+      const fn = makeFunction({ inputSchema })
+      mocks.inputData.functionId = fn._id
+      mocks.inputData.inputs = { previousInput: "previous value" }
+      mocks.functionStore.set({
+        functions: [fn],
+        loading: false,
+        error: undefined,
+      })
+      render(RunFunction, { block })
+
+      expect(
+        screen.getByText("This Function has no inputs.")
+      ).toBeInTheDocument()
+      expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
+      expect(screen.queryByText("Inputs")).not.toBeInTheDocument()
+    }
+  )
 
   it.each([
     [

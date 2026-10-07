@@ -1,5 +1,9 @@
 import { createHash } from "crypto"
-import type { FunctionQueryCapability } from "@budibase/types"
+import type {
+  FunctionInputDefinition,
+  FunctionInputType,
+  FunctionQueryCapability,
+} from "@budibase/types"
 
 const property = (value: string) => JSON.stringify(value)
 
@@ -37,9 +41,42 @@ const renderQueries = (capabilities: FunctionQueryCapability[]) => {
     .join("\n")
 }
 
-export const generateFunctionDeclarations = (
+const inputTypes: Record<FunctionInputType, string> = {
+  string: "string",
+  number: "number",
+  boolean: "boolean",
+  object: "Record<string, JsonValue>",
+  array: "JsonValue[]",
+}
+
+const renderInputProperty = (input: FunctionInputDefinition) => {
+  const name = property(input.name)
+  const type = inputTypes[input.type]
+  return `    readonly ${name}?: ${type} | null`
+}
+
+const renderInputs = (inputSchema: readonly FunctionInputDefinition[]) => {
+  if (!inputSchema.length) {
+    return "export const inputs: Readonly<Record<string, JsonValue>>"
+  }
+  const properties = [...inputSchema]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(renderInputProperty)
+    .join("\n")
+  return `export interface GeneratedInputs {
+${properties}
+  }
+
+  export const inputs: Readonly<GeneratedInputs>`
+}
+
+export const generateFunctionDeclarations = ({
+  capabilities,
+  inputSchema = [],
+}: {
   capabilities: FunctionQueryCapability[]
-) => {
+  inputSchema?: readonly FunctionInputDefinition[]
+}) => {
   const queries = renderQueries(capabilities)
   return `declare module "@budibase/functions" {
   export type JsonValue =
@@ -50,7 +87,7 @@ export const generateFunctionDeclarations = (
     | JsonValue[]
     | { [key: string]: JsonValue }
 
-  export const inputs: Readonly<Record<string, JsonValue>>
+  ${renderInputs(inputSchema)}
   export const queries: Readonly<{
 ${queries}
   }>
@@ -63,6 +100,25 @@ ${queries}
 `
 }
 
-export const hashFunctionDeclarations = (declarations: string) => {
-  return createHash("sha256").update(declarations).digest("hex")
+export const hashFunctionDeclarations = ({
+  declarations,
+  inputSchema = [],
+}: {
+  declarations: string
+  inputSchema?: readonly FunctionInputDefinition[]
+}) => {
+  const hash = createHash("sha256").update(declarations)
+  if (inputSchema.length) {
+    hash.update(
+      JSON.stringify(
+        [...inputSchema]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(({ name, type }) => ({
+            name,
+            type,
+          }))
+      )
+    )
+  }
+  return hash.digest("hex")
 }

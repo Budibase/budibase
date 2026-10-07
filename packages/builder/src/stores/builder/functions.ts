@@ -45,6 +45,7 @@ const toUpdateRequest = (
   _rev: fn._rev!,
   name,
   source: fn.source,
+  inputSchema: fn.inputSchema,
   capabilities: toCapabilityInputs(fn),
 })
 
@@ -136,6 +137,7 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     return await this.create({
       name: duplicateName(fn.name, existingNames),
       source: fn.source,
+      inputSchema: fn.inputSchema,
       capabilities: toCapabilityInputs(fn),
     })
   }

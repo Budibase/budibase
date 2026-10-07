@@ -11,6 +11,7 @@ export const isolateBootstrap = `
   }
 
   const inputsValue = Reflect.get(globalThis, "__budibaseInputsValue")
+  Object.setPrototypeOf(inputsValue, null)
   const capabilityReference = Reflect.get(
     globalThis,
     "__budibaseInvokeCapabilityReference"

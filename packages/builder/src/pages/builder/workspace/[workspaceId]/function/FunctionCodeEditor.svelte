@@ -2,6 +2,7 @@
   import { themeStore } from "@/stores/portal"
   import type {
     FunctionBuildDiagnostic,
+    FunctionInputDefinition,
     FunctionQueryCapability,
   } from "@budibase/types"
   import {
@@ -18,14 +19,9 @@
     indentWithTab,
   } from "@codemirror/commands"
   import { javascript } from "@codemirror/lang-javascript"
-  import {
-    bracketMatching,
-    HighlightStyle,
-    syntaxHighlighting,
-  } from "@codemirror/language"
+  import { bracketMatching, syntaxTree } from "@codemirror/language"
   import { linter, setDiagnostics, type Diagnostic } from "@codemirror/lint"
   import { Compartment, EditorState } from "@codemirror/state"
-  import { oneDark, oneDarkHighlightStyle } from "@codemirror/theme-one-dark"
   import {
     drawSelection,
     EditorView,
@@ -34,14 +30,16 @@
     keymap,
     lineNumbers,
   } from "@codemirror/view"
-  import { tags } from "@lezer/highlight"
   import { onDestroy, onMount } from "svelte"
   import {
     getFunctionDatasourceCompletions,
+    getFunctionInputCompletions,
     getFunctionQueryCompletions,
   } from "./functionCompletions"
+  import { getFunctionEditorTheme } from "./functionEditorTheme"
 
   export let value = ""
+  export let inputSchema: FunctionInputDefinition[] = []
   export let capabilities: FunctionQueryCapability[] = []
   export let diagnostics: FunctionBuildDiagnostic[] = []
   export let readonly = false
@@ -57,19 +55,6 @@
   let editor: EditorView | undefined
   let currentTheme = $themeStore?.theme
   const themeConfig = new Compartment()
-
-  const lightHighlightStyle = HighlightStyle.define([
-    ...oneDarkHighlightStyle.specs,
-    { tag: tags.definition(tags.name), color: "#4b5563" },
-    { tag: [tags.modifier, tags.typeName], color: "#8a5a1e" },
-  ])
-
-  const themeExtensions = (isDark: boolean) => [
-    syntaxHighlighting(isDark ? oneDarkHighlightStyle : lightHighlightStyle, {
-      fallback: true,
-    }),
-    ...(isDark ? [oneDark] : []),
-  ]
 
   const complete = (context: CompletionContext) => {
     const before = context.state.doc.sliceString(0, context.pos)
@@ -95,6 +80,23 @@
       return {
         from: typedExport?.from ?? context.pos,
         options: virtualModuleExports,
+      }
+    }
+
+    const inputMatch = context.matchBefore(/inputs\.[\w$]*$/)
+    const inputNode = inputMatch
+      ? syntaxTree(context.state).resolveInner(inputMatch.from, 1)
+      : undefined
+    if (
+      inputMatch &&
+      inputSchema.length &&
+      inputNode?.name === "VariableName" &&
+      inputNode.from === inputMatch.from &&
+      inputNode.to === inputMatch.from + "inputs".length
+    ) {
+      return {
+        from: inputMatch.from + "inputs.".length,
+        options: getFunctionInputCompletions(inputSchema),
       }
     }
 
@@ -175,7 +177,7 @@
     currentTheme = $themeStore?.theme
     editor.dispatch({
       effects: themeConfig.reconfigure(
-        themeExtensions(!currentTheme?.includes("light"))
+        getFunctionEditorTheme({ isDark: !currentTheme?.includes("light") })
       ),
     })
   }
@@ -200,7 +202,7 @@
         bracketMatching(),
         closeBrackets(),
         javascript({ typescript: true }),
-        themeConfig.of(themeExtensions(isDark)),
+        themeConfig.of(getFunctionEditorTheme({ isDark })),
         linter(null),
         autocompletion({ override: [complete] }),
         keymap.of([

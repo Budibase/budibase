@@ -23,6 +23,14 @@ jest.mock("../automations/logging", () => ({
   storeLog: jest.fn(),
 }))
 
+jest.mock("../middleware/functionsEnabled", () => {
+  const actual = jest.requireActual("../middleware/functionsEnabled")
+  return {
+    ...actual,
+    areFunctionsEnabled: jest.fn(actual.areFunctionsEnabled),
+  }
+})
+
 import { context, events } from "@budibase/backend-core"
 import {
   ActionFailureReason,
@@ -35,6 +43,7 @@ import {
   AutomationTriggerStepId,
   AutomationStepResult,
   AutomationStatus,
+  FunctionErrorCode,
 } from "@budibase/types"
 import { Job } from "bull"
 import { BUILTIN_ACTION_DEFINITIONS, TRIGGER_DEFINITIONS } from "../automations"
@@ -45,6 +54,8 @@ import sdk from "../sdk"
 import { automations } from "@budibase/shared-core"
 import { storeLog } from "../automations/logging"
 import { automationQueue } from "../automations/bullboard"
+import { createAutomationBuilder } from "../automations/tests/utilities/AutomationTestBuilder"
+import { areFunctionsEnabled } from "../middleware/functionsEnabled"
 
 const isAutomationStepResult = (
   result: AutomationTestProgressEvent["result"]
@@ -86,6 +97,39 @@ describe("automation thread", () => {
       expect.any(Function)
     )
     overrideContext.mockClear()
+  })
+
+  it("returns a configuration error for a missing Function ID", async () => {
+    const appId = config.getDevWorkspaceId()
+    const automation = createAutomationBuilder(config)
+      .onAppAction()
+      .executeFunction({ functionId: "", inputs: {} })
+      .build()
+    Reflect.deleteProperty(automation.definition.steps[0].inputs, "functionId")
+    jest.mocked(areFunctionsEnabled).mockResolvedValueOnce(true)
+    const job = {
+      data: {
+        automation: { ...automation, _id: "automation_missing_function" },
+        event: { appId },
+      },
+    } as Job<AutomationData>
+
+    const result = await executeInThread(job)
+
+    expect(
+      result.steps.find(
+        step => step.stepId === AutomationActionStepId.EXECUTE_FUNCTION
+      )
+    ).toMatchObject({
+      outputs: {
+        success: false,
+        error: {
+          code: FunctionErrorCode.FUNCTION_CONFIGURATION_ERROR,
+          message:
+            "The Function automation step is missing required configuration",
+        },
+      },
+    })
   })
 
   it("does not disable a cron schedule when a repeatable job stalls", async () => {

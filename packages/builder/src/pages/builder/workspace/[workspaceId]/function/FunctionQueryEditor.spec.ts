@@ -63,7 +63,7 @@ describe("FunctionQueryEditor", () => {
     expect(
       screen.getByText("await queries.crm.findCustomer()")
     ).toBeInTheDocument()
-    expect(screen.getByText("customerId: string | null")).toBeInTheDocument()
+    expect(screen.queryByText("Parameters")).not.toBeInTheDocument()
   })
 
   it("copies the displayed query call", async () => {
@@ -95,13 +95,13 @@ describe("FunctionQueryEditor", () => {
       onSave,
     })
 
-    await fireEvent.click(screen.getByRole("button", { name: /Add queries/ }))
+    await fireEvent.click(screen.getByRole("button", { name: /Add query/ }))
     await fireEvent.click(
       screen.getByRole("menuitem", { name: /Find renamed customer/ })
     )
-    await fireEvent.click(screen.getByRole("button", { name: /Add queries/ }))
+    await fireEvent.click(screen.getByRole("button", { name: /Add query/ }))
     await fireEvent.click(screen.getByRole("menuitem", { name: /Send event/ }))
-    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
 
     expect(onSave).toHaveBeenCalledWith([
       {
@@ -125,12 +125,18 @@ describe("FunctionQueryEditor", () => {
     })
 
     expect(onDirtyChange).toHaveBeenLastCalledWith(false)
-    await fireEvent.click(screen.getByRole("button", { name: /Add queries/ }))
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled()
+    await fireEvent.click(screen.getByRole("button", { name: /Add query/ }))
     await fireEvent.click(
       screen.getByRole("menuitem", { name: /Find renamed customer/ })
     )
 
     expect(onDirtyChange).toHaveBeenLastCalledWith(true)
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled()
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Remove Find renamed customer" })
+    )
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled()
   })
 
   it("removes links, including saved queries that are now missing", async () => {
@@ -152,14 +158,11 @@ describe("FunctionQueryEditor", () => {
     await fireEvent.click(
       within(missing).getByRole("button", { expanded: false })
     )
-    expect(
-      within(missing).getByText("lastKnownId: string | null")
-    ).toBeInTheDocument()
 
     await fireEvent.click(
       within(missing).getByRole("button", { name: "Remove missing query" })
     )
-    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
 
     expect(onSave).toHaveBeenCalledWith([])
   })
@@ -189,7 +192,7 @@ describe("FunctionQueryEditor", () => {
     await fireEvent.input(view.container.querySelector("input")!, {
       target: { value: "customerData" },
     })
-    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Remove missing query links before saving"
@@ -202,7 +205,7 @@ describe("FunctionQueryEditor", () => {
         { name: "Remove missing query" }
       )
     )
-    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
 
     expect(onSave).toHaveBeenCalledWith([
       {
@@ -231,7 +234,7 @@ describe("FunctionQueryEditor", () => {
     await fireEvent.input(inputs[0], {
       target: { value: "invalid alias" },
     })
-    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
 
     expect(
       screen.getByText("Use a JavaScript identifier, for example customerData.")
@@ -274,7 +277,7 @@ describe("FunctionQueryEditor", () => {
       )
     )
     expect(screen.getByText(/Query parameters changed/)).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Save links" })).not.toHaveClass(
+    expect(screen.getByRole("button", { name: "Save" })).not.toHaveClass(
       "is-disabled"
     )
   })
