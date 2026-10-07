@@ -537,7 +537,9 @@ export async function resumeOperation({
         ? "This request timed out without a response."
         : "This request was rejected."
     const hasPending =
-      outcome === "expired" ? await hasPendingEscalations() : false
+      outcome === "expired" || !doc.requestId
+        ? await hasPendingEscalations()
+        : false
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
     if (outcome === "expired") {
@@ -567,7 +569,7 @@ export async function resumeOperation({
         await markEscalationRequestResolved(judged)
         await updatePlatformActionSessionStatus(judged.status)
       }
-    } else if (!(await hasPendingEscalations())) {
+    } else if (!hasPending) {
       // Without a request timeline there's nothing to judge the rejection
       // against, it settles the same way an untracked chat turn does
       await updatePlatformActionSessionStatus("completed")

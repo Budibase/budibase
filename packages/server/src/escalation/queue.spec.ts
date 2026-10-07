@@ -1149,6 +1149,33 @@ describe("resumeOperation", () => {
       })
     })
 
+    it("leaves a rejected escalation retryable when checking pending escalations fails", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const doc = baseDoc({
+          resolution: "resolved",
+          response: { accepted: false },
+        })
+        await context.getWorkspaceDB().put(doc)
+        listContextDocsMock.mockRejectedValueOnce(new Error("DB unavailable"))
+
+        await expect(
+          resumeOperation({
+            doc,
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("DB unavailable")
+
+        const stored = await context
+          .getWorkspaceDB()
+          .get<EscalationContextDoc>(doc._id!)
+        expect(stored.resolution).toBe("resolved")
+        expect(stored.resumeResultCompressed).toBeUndefined()
+        expect(enqueueLifecycleMock).not.toHaveBeenCalled()
+      })
+    })
+
     it("fails the session when the escalation expires without a response", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         await resumeOperation({
