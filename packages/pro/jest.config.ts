@@ -6,7 +6,9 @@ const config: Config = {
     "^.+\\.ts$": "@swc/jest",
     "^.+\\.js$": "@swc/jest",
   },
-  transformIgnorePatterns: ["/node_modules/(?!ai/|@ai-sdk/|@workflow/).*"],
+  transformIgnorePatterns: [
+    "/node_modules/(?!uuid/|ai/|@ai-sdk/|@workflow/).*",
+  ],
   setupFiles: ["./tests/jestEnv.ts"],
   globalSetup: "./../../globalSetup.ts",
   setupFilesAfterEnv: ["./tests/jestSetup.ts"],
