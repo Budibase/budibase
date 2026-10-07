@@ -1198,24 +1198,35 @@ describe("resumeOperation", () => {
       })
     })
 
-    it("keeps the session waiting when an escalation expires while another is pending", async () => {
-      await config.doInContext(config.getProdWorkspaceId(), async () => {
-        await context.getWorkspaceDB().put(
-          baseDoc({
-            _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+    it.each(["expired", "resolved"] as const)(
+      "reconfirms waiting when a non-approved escalation is %s while another is pending",
+      async resolution => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          await context.getWorkspaceDB().put(
+            baseDoc({
+              _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+            })
+          )
+
+          await resumeOperation({
+            doc: baseDoc({ response: { accepted: false } }),
+            escalationId: "esc_primary",
+            resolution,
+            ctx: baseCtx,
           })
-        )
 
-        await resumeOperation({
-          doc: baseDoc(),
-          escalationId: "esc_primary",
-          resolution: "expired",
-          ctx: baseCtx,
+          expect(enqueueLifecycleMock).toHaveBeenCalledTimes(1)
+          expect(enqueueLifecycleMock).toHaveBeenCalledWith({
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            signal: "waiting",
+            timestamp: expect.any(String),
+          })
+          expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+          expect(aiAgentFailedMock).not.toHaveBeenCalled()
         })
-
-        expect(enqueueLifecycleMock).not.toHaveBeenCalled()
-      })
-    })
+      }
+    )
   })
 
   it("records escalation_resolved with outcome expired", async () => {

@@ -542,17 +542,16 @@ export async function resumeOperation({
         : false
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
-    if (outcome === "expired") {
-      // Expiring without any response means this ask never got resolved,
-      // not a judgment call. Still not final, though, while other
-      // escalations on the same request await a human.
-      if (!hasPending) {
-        await markEscalationRequestResolved({
-          status: "failed",
-          error: "Escalation expired without a response",
-        })
-        await updatePlatformActionSessionStatus("failed")
-      }
+    if (hasPending) {
+      await updatePlatformActionSessionStatus("waiting")
+    } else if (outcome === "expired") {
+      // With no approvals pending, expiry without a response is a failure,
+      // not a judgment call.
+      await markEscalationRequestResolved({
+        status: "failed",
+        error: "Escalation expired without a response",
+      })
+      await updatePlatformActionSessionStatus("failed")
     } else if (doc.requestId) {
       // A rejection is a human decision, not automatically a failure, let
       // the outcome judge weigh it against the request's full timeline.
@@ -569,7 +568,7 @@ export async function resumeOperation({
         await markEscalationRequestResolved(judged)
         await updatePlatformActionSessionStatus(judged.status)
       }
-    } else if (!hasPending) {
+    } else {
       // Without a request timeline there's nothing to judge the rejection
       // against, it settles the same way an untracked chat turn does
       await updatePlatformActionSessionStatus("completed")
