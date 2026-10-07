@@ -120,6 +120,10 @@ export async function isTranslationsEnabled() {
   return areFeaturesEnabled(Feature.TRANSLATIONS)
 }
 
+export async function isCustomiseEmailsEnabled() {
+  return areFeaturesEnabled(Feature.CUSTOMISE_EMAILS)
+}
+
 // EXPANDED PUBLIC API
 
 export async function isExpandedPublicApiEnabled() {
