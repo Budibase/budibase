@@ -493,6 +493,13 @@ export async function resumeOperation({
       })
   }
 
+  let lastSessionTimestamp = 0
+  // Preserve causal order even when publication is delayed or signals share a millisecond.
+  const nextSessionTimestamp = () => {
+    lastSessionTimestamp = Math.max(Date.now(), lastSessionTimestamp + 1)
+    return lastSessionTimestamp
+  }
+
   const updatePlatformActionSessionStatus = async (
     signal: PlatformActionContainerStatus
   ) => {
@@ -501,6 +508,7 @@ export async function resumeOperation({
         sourceType: "agent_session",
         sourceId: ctx.sessionId,
         signal,
+        timestamp: new Date(nextSessionTimestamp()).toISOString(),
       })
       .catch(error => {
         console.error("Failed to update agent session status on escalation", {
@@ -576,15 +584,18 @@ export async function resumeOperation({
     if (hasEmittedTerminalAction) {
       return
     }
-    events.action.aiAgentFailed({
-      agentId: ctx.agentId,
-      sourceType: "agent_session",
-      sourceId: ctx.sessionId,
-      sessionId: ctx.sessionId,
-      requestId: doc.requestId,
-      reason: ActionFailureReason.ERROR,
-      errorMessage: error instanceof Error ? error.message : String(error),
-    })
+    events.action.aiAgentFailed(
+      {
+        agentId: ctx.agentId,
+        sourceType: "agent_session",
+        sourceId: ctx.sessionId,
+        sessionId: ctx.sessionId,
+        requestId: doc.requestId,
+        reason: ActionFailureReason.ERROR,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      },
+      nextSessionTimestamp()
+    )
     hasEmittedTerminalAction = true
   }
 
@@ -817,14 +828,17 @@ export async function resumeOperation({
       })
     })
 
-    events.action.aiAgentExecuted({
-      agentId: ctx.agentId,
-      sourceType: "agent_session",
-      sourceId: ctx.sessionId,
-      sessionId: ctx.sessionId,
-      requestId: doc.requestId,
-      ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
-    })
+    events.action.aiAgentExecuted(
+      {
+        agentId: ctx.agentId,
+        sourceType: "agent_session",
+        sourceId: ctx.sessionId,
+        sessionId: ctx.sessionId,
+        requestId: doc.requestId,
+        ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
+      },
+      nextSessionTimestamp()
+    )
     hasEmittedTerminalAction = true
 
     const text = assistantMessage ? messageText(assistantMessage) : ""

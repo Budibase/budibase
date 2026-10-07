@@ -47,8 +47,11 @@ function aiAgentExecuted(
   })
 }
 
-function aiAgentFailed(action: ActionAiAgentFailed) {
-  publishEvent(Event.ACTION_AI_AGENT_FAILED, action).catch(err => {
+function aiAgentFailed(
+  action: ActionAiAgentFailed,
+  timestamp?: string | number
+) {
+  publishEvent(Event.ACTION_AI_AGENT_FAILED, action, timestamp).catch(err => {
     console.error("aiAgentFailed telemetry failed", { action, err })
   })
 }

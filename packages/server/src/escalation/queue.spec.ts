@@ -459,7 +459,8 @@ describe("resumeOperation", () => {
       const [request] =
         await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
       expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-        expect.objectContaining({ requestId, awaitingEscalation: true })
+        expect.objectContaining({ requestId, awaitingEscalation: true }),
+        expect.any(Number)
       )
       expect(request.status).toEqual("needs_input")
       expect(request.actions).toEqual(
@@ -489,19 +490,24 @@ describe("resumeOperation", () => {
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "active",
+        timestamp: expect.any(String),
       })
       expect(enqueueLifecycleMock).toHaveBeenCalledWith({
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "completed",
+        timestamp: expect.any(String),
       })
-      expect(aiAgentExecutedMock).toHaveBeenCalledWith({
-        agentId: "agent_1",
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        sessionId: "session_1",
-        requestId,
-      })
+      expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+        {
+          agentId: "agent_1",
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          sessionId: "session_1",
+          requestId,
+        },
+        expect.any(Number)
+      )
     })
   })
 
@@ -553,16 +559,20 @@ describe("resumeOperation", () => {
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "active",
+        timestamp: expect.any(String),
       })
-      expect(aiAgentFailedMock).toHaveBeenCalledWith({
-        agentId: "agent_1",
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        sessionId: "session_1",
-        requestId,
-        reason: "error",
-        errorMessage: "Model unavailable",
-      })
+      expect(aiAgentFailedMock).toHaveBeenCalledWith(
+        {
+          agentId: "agent_1",
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          sessionId: "session_1",
+          requestId,
+          reason: "error",
+          errorMessage: "Model unavailable",
+        },
+        expect.any(Number)
+      )
     })
   })
 
@@ -605,6 +615,7 @@ describe("resumeOperation", () => {
           sourceType: "agent_session",
           sourceId: "session_1",
           signal: "waiting",
+          timestamp: expect.any(String),
         })
         const requests =
           await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
@@ -614,6 +625,42 @@ describe("resumeOperation", () => {
       })
     }
   )
+
+  it("timestamps the pending correction after the failure even within one millisecond", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await context.getWorkspaceDB().put(
+        baseDoc({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+        })
+      )
+      getOrThrowMock.mockRejectedValue(new Error("Agent unavailable"))
+      const now = Date.now()
+      const clock = jest.spyOn(Date, "now").mockReturnValue(now)
+      try {
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("Agent unavailable")
+
+        expect(aiAgentFailedMock).toHaveBeenCalledWith(
+          expect.objectContaining({ sourceId: "session_1" }),
+          now
+        )
+        expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          signal: "waiting",
+          timestamp: new Date(now + 1).toISOString(),
+        })
+      } finally {
+        clock.mockRestore()
+      }
+    })
+  })
 
   it("preserves the original resume error and request when the pending lookup fails", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -655,15 +702,18 @@ describe("resumeOperation", () => {
         })
       ).rejects.toThrow("Agent unavailable")
 
-      expect(aiAgentFailedMock).toHaveBeenCalledWith({
-        agentId: "agent_1",
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        sessionId: "session_1",
-        requestId,
-        reason: "error",
-        errorMessage: "Agent unavailable",
-      })
+      expect(aiAgentFailedMock).toHaveBeenCalledWith(
+        {
+          agentId: "agent_1",
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          sessionId: "session_1",
+          requestId,
+          reason: "error",
+          errorMessage: "Agent unavailable",
+        },
+        expect.any(Number)
+      )
     })
   })
 
@@ -698,7 +748,8 @@ describe("resumeOperation", () => {
       })
 
       expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-        expect.objectContaining({ requestId })
+        expect.objectContaining({ requestId }),
+        expect.any(Number)
       )
       expect(aiAgentFailedMock).not.toHaveBeenCalled()
     })
@@ -740,13 +791,15 @@ describe("resumeOperation", () => {
           // don't emit a second action (it would double-count actionCount),
           // correct the materialized session status instead.
           expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-            expect.objectContaining({ requestId })
+            expect.objectContaining({ requestId }),
+            expect.any(Number)
           )
           expect(aiAgentFailedMock).not.toHaveBeenCalled()
           expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
             sourceType: "agent_session",
             sourceId: "session_1",
             signal: hasPending ? "waiting" : "failed",
+            timestamp: expect.any(String),
           })
           const [request] =
             await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
@@ -841,6 +894,7 @@ describe("resumeOperation", () => {
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "waiting",
+        timestamp: expect.any(String),
       })
     })
   })
@@ -877,6 +931,7 @@ describe("resumeOperation", () => {
               sourceType: "agent_session",
               sourceId: "session_1",
               signal: "active",
+              timestamp: expect.any(String),
             },
           ],
         ])
@@ -904,15 +959,19 @@ describe("resumeOperation", () => {
               sourceType: "agent_session",
               sourceId: "session_1",
               signal: "active",
+              timestamp: expect.any(String),
             },
           ],
         ])
-        expect(aiAgentExecutedMock).toHaveBeenCalledWith({
-          agentId: "agent_1",
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          sessionId: "session_1",
-        })
+        expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+          {
+            agentId: "agent_1",
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            sessionId: "session_1",
+          },
+          expect.any(Number)
+        )
       })
     })
 
@@ -937,6 +996,7 @@ describe("resumeOperation", () => {
           sourceType: "agent_session",
           sourceId: "session_1",
           signal: "waiting",
+          timestamp: expect.any(String),
         })
       })
     })
@@ -976,7 +1036,8 @@ describe("resumeOperation", () => {
         })
 
         expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-          expect.objectContaining({ awaitingEscalation: true })
+          expect.objectContaining({ awaitingEscalation: true }),
+          expect.any(Number)
         )
       })
     })
@@ -1000,14 +1061,17 @@ describe("resumeOperation", () => {
           })
         ).rejects.toThrow("Model unavailable")
 
-        expect(aiAgentFailedMock).toHaveBeenCalledWith({
-          agentId: "agent_1",
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          sessionId: "session_1",
-          reason: "error",
-          errorMessage: "Model unavailable",
-        })
+        expect(aiAgentFailedMock).toHaveBeenCalledWith(
+          {
+            agentId: "agent_1",
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            sessionId: "session_1",
+            reason: "error",
+            errorMessage: "Model unavailable",
+          },
+          expect.any(Number)
+        )
       })
     })
 
@@ -1048,14 +1112,17 @@ describe("resumeOperation", () => {
         ).rejects.toThrow("Model unavailable")
 
         expect(aiAgentFailedMock).toHaveBeenCalledTimes(1)
-        expect(aiAgentFailedMock).toHaveBeenCalledWith({
-          agentId: "agent_1",
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          sessionId: "session_1",
-          reason: "error",
-          errorMessage: "Model unavailable",
-        })
+        expect(aiAgentFailedMock).toHaveBeenCalledWith(
+          {
+            agentId: "agent_1",
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            sessionId: "session_1",
+            reason: "error",
+            errorMessage: "Model unavailable",
+          },
+          expect.any(Number)
+        )
         expect(aiAgentExecutedMock).not.toHaveBeenCalled()
       })
     })
@@ -1075,6 +1142,7 @@ describe("resumeOperation", () => {
               sourceType: "agent_session",
               sourceId: "session_1",
               signal: "completed",
+              timestamp: expect.any(String),
             },
           ],
         ])
@@ -1096,6 +1164,7 @@ describe("resumeOperation", () => {
               sourceType: "agent_session",
               sourceId: "session_1",
               signal: "failed",
+              timestamp: expect.any(String),
             },
           ],
         ])
@@ -1149,6 +1218,7 @@ describe("resumeOperation", () => {
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "failed",
+        timestamp: expect.any(String),
       })
     })
   })
