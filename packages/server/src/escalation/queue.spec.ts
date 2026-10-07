@@ -21,6 +21,7 @@ import {
   processResume,
   resumeOperation,
 } from "./queue"
+import * as requestHelpers from "../sdk/workspace/ai/agentRequests/helpers"
 import * as slack from "./notifications/slack"
 import * as teams from "./notifications/ms-teams"
 import { ProviderResponseError } from "./notifications/utils"
@@ -43,6 +44,11 @@ jest.mock("../sdk/workspace/ai/agents", () => {
     getOrThrow: jest.fn(),
     prepareAgentChatRun: jest.fn(),
   }
+})
+
+jest.mock("../sdk/workspace/ai/agentRequests/helpers", () => {
+  const actual = jest.requireActual("../sdk/workspace/ai/agentRequests/helpers")
+  return { ...actual, analyzeAgentRequestLink: jest.fn() }
 })
 
 jest.mock("../sdk/workspace/ai/agentRequests", () => {
@@ -117,7 +123,11 @@ describe("resumeOperation", () => {
       userId: "user_1",
       sessionId: "session_1",
       latestPrompt: "Buy 1500 pens",
-      operation: { name: "Procurement", prompt: "Handle procurement." },
+      operation: {
+        id: "op_1",
+        name: "Procurement",
+        prompt: "Handle procurement.",
+      },
       source: "Chat",
     })
 
@@ -149,6 +159,10 @@ describe("resumeOperation", () => {
   }
 
   beforeEach(async () => {
+    jest.mocked(requestHelpers.analyzeAgentRequestLink).mockReset()
+    jest.mocked(requestHelpers.analyzeAgentRequestLink).mockResolvedValue({
+      decision: "new_thread",
+    })
     prepareAgentChatRunMock.mockReset()
     buildPromptAndToolsMock.mockReset()
     buildPromptAndToolsMock.mockResolvedValue({
@@ -323,6 +337,81 @@ describe("resumeOperation", () => {
         await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
       expect(request.status).toEqual("needs_input")
       expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it("resumes the original request after a new request starts in the same session", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const first = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId: first.requestId,
+        status: "needs_input",
+      })
+      const second = (await sdk.ai.agentRequests.initActiveRequest({
+        agentId: "agent_1",
+        userId: "user_1",
+        sessionId: "session_1",
+        latestPrompt: "Buy 200 notebooks",
+        operation: {
+          id: "op_1",
+          name: "Procurement",
+          prompt: "Handle procurement.",
+        },
+        source: "Chat",
+      }))!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId: second.requestId,
+        status: "needs_input",
+      })
+      await context.getWorkspaceDB().put(
+        baseDoc({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_second`,
+          requestId: second.requestId,
+        })
+      )
+      mockApprovedRun("Approved and booked.")
+      await resumeOperation({
+        doc: baseDoc({
+          requestId: first.requestId,
+          response: { accepted: true },
+        }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: baseCtx,
+      })
+
+      const requests =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(requests).toHaveLength(2)
+      expect(requests.find(request => request._id === first.requestId)).toEqual(
+        expect.objectContaining({
+          status: "completed",
+          actions: expect.arrayContaining([
+            expect.objectContaining({
+              type: "escalation_resolved",
+              escalationId: "esc_primary",
+              outcome: "approved",
+            }),
+            expect.objectContaining({
+              type: "tool_call",
+              toolName: "book_meeting",
+            }),
+          ]),
+        })
+      )
+      expect(
+        requests.find(request => request._id === second.requestId)
+      ).toEqual(
+        expect.objectContaining({
+          status: "needs_input",
+          actions: [
+            expect.objectContaining({
+              type: "status_changed",
+              to: "needs_input",
+            }),
+          ],
+        })
+      )
     })
   })
 
