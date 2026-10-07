@@ -36,6 +36,7 @@ import {
   listContextDocs,
   resolveRecipientLabel,
 } from "../../escalations"
+import { syncRequestInbox } from "./requestInbox"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -171,14 +172,17 @@ async function refineUserMessageActionSummary({
   }
 
   try {
-    return await saveRequest({
-      ...latest,
-      actions: (latest.actions ?? []).map(action =>
-        action.id === actionId && action.type === "user_message"
-          ? { ...action, summary }
-          : action
-      ),
-    })
+    return await saveRequest(
+      {
+        ...latest,
+        actions: (latest.actions ?? []).map(action =>
+          action.id === actionId && action.type === "user_message"
+            ? { ...action, summary }
+            : action
+        ),
+      },
+      { syncInbox: false }
+    )
   } catch (err) {
     // Best-effort upgrade - a concurrent writer (e.g. updateRequestStatus)
     // winning the race is an expected outcome, not a failure of this flow.
@@ -199,7 +203,10 @@ const sortRequests = (requests: AgentRequest[]) =>
       new Date(a.updatedAt || 0).getTime()
   )
 
-async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
+async function saveRequest(
+  request: AgentRequest,
+  { syncInbox = true }: { syncInbox?: boolean } = {}
+): Promise<AgentRequest> {
   const response = await context.getWorkspaceDB().put(request)
   const saved = {
     ...request,
@@ -209,6 +216,10 @@ async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   const workspaceId = context.getWorkspaceId()
   if (workspaceId) {
     builderSocket?.emitAgentRequestChange(context.getDevWorkspaceId(), saved)
+  }
+
+  if (syncInbox) {
+    await syncRequestInbox(saved)
   }
 
   return saved
@@ -246,11 +257,18 @@ async function appendAction(
     } as AgentRequestAction
 
     try {
-      await saveRequest({
-        ...request,
-        actions: [...(request.actions ?? []), fullAction],
-        updatedAt: nowIso(),
-      })
+      await saveRequest(
+        {
+          ...request,
+          actions: [...(request.actions ?? []), fullAction],
+          updatedAt: nowIso(),
+        },
+        {
+          syncInbox:
+            fullAction.type !== "user_message" &&
+            fullAction.type !== "tool_call",
+        }
+      )
       return fullAction
     } catch (err) {
       if (
@@ -285,14 +303,17 @@ async function refineToolCallActionSummary({
     }
 
     try {
-      await saveRequest({
-        ...latest,
-        actions: (latest.actions ?? []).map(action =>
-          action.id === actionId && action.type === "tool_call"
-            ? { ...action, summary }
-            : action
-        ),
-      })
+      await saveRequest(
+        {
+          ...latest,
+          actions: (latest.actions ?? []).map(action =>
+            action.id === actionId && action.type === "tool_call"
+              ? { ...action, summary }
+              : action
+          ),
+        },
+        { syncInbox: false }
+      )
       return
     } catch (err) {
       if (dbCore.isDocumentConflictError(err)) {
@@ -898,11 +919,14 @@ export async function createOrUpdateRequestForPrompt({
         return { request: latest ?? withTitle, created: false }
       }
 
-      const updated = await saveRequest({
-        ...latest,
-        title: latest.title ?? withTitle.title,
-        actions: [...(latest.actions ?? []), userMessageAction],
-      })
+      const updated = await saveRequest(
+        {
+          ...latest,
+          title: latest.title ?? withTitle.title,
+          actions: [...(latest.actions ?? []), userMessageAction],
+        },
+        { syncInbox: !latest.title && !!withTitle.title }
+      )
       return { request: updated, created: false }
     }
 
