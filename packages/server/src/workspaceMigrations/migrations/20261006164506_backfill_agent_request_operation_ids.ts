@@ -1,35 +1,60 @@
 import { context, docIds } from "@budibase/backend-core"
 import { DocumentType } from "@budibase/types"
-import type { Agent, AgentRequest, AgentRequestEntry } from "@budibase/types"
+import type {
+  Agent,
+  AgentRequest,
+  AgentRequestEntry,
+  Document,
+} from "@budibase/types"
 
 interface LegacyAgentRequest extends Omit<AgentRequest, "entries"> {
   entries: Array<AgentRequestEntry & { operationNames?: string[] }>
 }
 
+async function* pagedDocuments<T extends Document>({
+  documentType,
+}: {
+  documentType: DocumentType
+}) {
+  const db = context.getWorkspaceDB()
+  const params = docIds.getDocParams(documentType, undefined, {
+    include_docs: true,
+    limit: 100,
+  })
+  let cursor: string | undefined
+  while (true) {
+    const { rows } = await db.allDocs<T>({
+      ...params,
+      ...(cursor ? { startkey: cursor, skip: 1 } : {}),
+    })
+    const lastRow = rows[rows.length - 1]
+    if (!lastRow) {
+      return
+    }
+    for (const { doc } of rows) {
+      if (doc) {
+        yield doc
+      }
+    }
+    cursor = lastRow.id
+  }
+}
+
 const migration = async () => {
   const db = context.getWorkspaceDB()
-  const [requestDocs, agentDocs] = await Promise.all([
-    db.allDocs<LegacyAgentRequest>(
-      docIds.getDocParams(DocumentType.AGENT_REQUEST, undefined, {
-        include_docs: true,
-      })
-    ),
-    db.allDocs<Agent>(
-      docIds.getDocParams(DocumentType.AGENT, undefined, {
-        include_docs: true,
-      })
-    ),
-  ])
   const agents = new Map<string, Agent>()
-  for (const { doc } of agentDocs.rows) {
-    if (doc?._id) {
-      agents.set(doc._id, doc)
+  for await (const agent of pagedDocuments<Agent>({
+    documentType: DocumentType.AGENT,
+  })) {
+    if (agent._id) {
+      agents.set(agent._id, agent)
     }
   }
 
-  for (const { doc: request } of requestDocs.rows) {
+  for await (const request of pagedDocuments<LegacyAgentRequest>({
+    documentType: DocumentType.AGENT_REQUEST,
+  })) {
     if (
-      !request ||
       request.operationId ||
       (request.status !== "active" && request.status !== "needs_input")
     ) {
