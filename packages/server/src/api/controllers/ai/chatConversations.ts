@@ -141,6 +141,7 @@ const startAgentRequestTracking = async ({
   const operation =
     run.selectedOperation && run.operationIntent !== "query"
       ? {
+          id: run.selectedOperation.id,
           name: run.selectedOperation.name,
           prompt: run.selectedOperation.promptInstructions || "",
         }
@@ -157,6 +158,7 @@ const startAgentRequestTracking = async ({
         operation,
         userId,
         source: determineTrigger(sessionId),
+        recentChatContext: getRecentChatContext(chatMessages),
       })
       .catch(error => {
         console.error("Failed to init active agent request", {
