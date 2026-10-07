@@ -57,7 +57,7 @@ export const renderQueryResponseType = ({
     }
     properties.push(property)
   }
-  const type = `Record<string, JsonValue> & { data: (Record<string, JsonValue> & { ${properties.join("; ")} })[] }`
+  const type = `Record<string, JsonValue> & { data: { ${properties.join("; ")} }[] }`
   return byteLength(type) > FUNCTION_QUERY_RESPONSE_LIMITS.maxTypeBytes
     ? "JsonValue"
     : type
