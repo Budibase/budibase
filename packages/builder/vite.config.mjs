@@ -109,6 +109,7 @@ export default defineConfig(({ mode }) => {
       ...(isProduction ? [] : devOnlyPlugins),
     ],
     optimizeDeps: {
+      include: ["typescript", "@typescript/vfs"],
       // Let vite-plugin-svelte manage Svelte library prebundling
       exclude: ["@roxi/routify", "fsevents"],
     },
