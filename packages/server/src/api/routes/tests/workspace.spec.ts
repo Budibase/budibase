@@ -11,6 +11,7 @@ import {
   roles,
 } from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
+import { quotas } from "@budibase/pro"
 import { encodeJSBinding } from "@budibase/string-templates"
 import {
   type Workspace,
@@ -19,9 +20,11 @@ import {
   DocumentType,
   Feature,
   PermissionLevel,
+  QuotaUsageType,
   RowValue,
   Screen,
   SEPARATOR,
+  StaticQuotaName,
   Theme,
   WorkspaceApp,
 } from "@budibase/types"
@@ -42,6 +45,18 @@ import {
 } from "../../../tests/utilities/structures"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+
+jest.mock("@budibase/pro", () => {
+  const actual =
+    jest.requireActual<typeof import("@budibase/pro")>("@budibase/pro")
+  return {
+    ...actual,
+    quotas: {
+      ...actual.quotas,
+      removeApp: jest.fn(actual.quotas.removeApp),
+    },
+  }
+})
 
 const generateAppName = () => {
   return structures.generator.word({ length: 10 })
@@ -2058,6 +2073,73 @@ describe("/applications", () => {
         }
       }
     })
+
+    it.each(["workspace", "actions"])(
+      "updates deletion lifecycle only after workspace deletion when %s cleanup fails",
+      async failingDatabase => {
+        const actionsDbName = events.platformActions.getActionsDbName(
+          config.getProdWorkspaceId()
+        )
+        await db.getDB(actionsDbName).put({ _id: "test_doc" })
+        const failedDbName =
+          failingDatabase === "workspace"
+            ? config.getDevWorkspaceId()
+            : actionsDbName
+        nock(db.getCouchInfo().url, { allowUnmocked: true })
+          .persist()
+          .delete(`/${failedDbName}`)
+          .reply(500, {
+            error: "internal_server_error",
+            reason: "Cleanup failed",
+          })
+
+        try {
+          await config.api.workspace.delete(workspace.appId, { status: 500 })
+
+          const usage = await config.doInTenant(() =>
+            quotas.getCurrentUsageValues(
+              QuotaUsageType.STATIC,
+              StaticQuotaName.WORKSPACES
+            )
+          )
+          const workspaceDeleted = failingDatabase === "actions"
+          expect(usage.total).toBe(workspaceDeleted ? 0 : 1)
+          expect(events.app.deleted).toHaveBeenCalledTimes(
+            workspaceDeleted ? 1 : 0
+          )
+        } finally {
+          nock.cleanAll()
+          await db.getDB(actionsDbName, { skip_setup: true }).destroy()
+        }
+      }
+    )
+
+    it.each(["quota", "event"])(
+      "cleans up Actions when the deletion %s update fails",
+      async failingUpdate => {
+        const actionsDbName = events.platformActions.getActionsDbName(
+          config.getProdWorkspaceId()
+        )
+        try {
+          await db.getDB(actionsDbName).put({ _id: "test_doc" })
+          const error = new Error("Lifecycle update failed")
+          if (failingUpdate === "quota") {
+            jest.mocked(quotas.removeApp).mockRejectedValueOnce(error)
+          } else {
+            jest.mocked(events.app.deleted).mockRejectedValueOnce(error)
+          }
+
+          await config.api.workspace.delete(workspace.appId, { status: 500 })
+
+          expect(await db.dbExists(config.getDevWorkspaceId())).toBe(false)
+          expect(await db.dbExists(actionsDbName)).toBe(false)
+        } finally {
+          if (await db.dbExists(actionsDbName)) {
+            await db.getDB(actionsDbName, { skip_setup: true }).destroy()
+          }
+        }
+      }
+    )
 
     it("should not delete the shared Actions database on unpublish", async () => {
       const actionsDbName = events.platformActions.getActionsDbName(
