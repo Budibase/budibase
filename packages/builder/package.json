@@ -33,6 +33,7 @@
     "@dagrejs/dagre": "1.1.4",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
+    "@typescript/vfs": "1.6.4",
     "@xyflow/svelte": "^0.1.39",
     "codemirror": "^5.65.16",
     "dayjs": "^1.10.8",
@@ -47,6 +48,7 @@
     "svelte-loading-spinners": "^0.3.6",
     "svelte-portal": "^2.2.1",
     "to-json-schema": "0.2.5",
+    "typescript": "6.0.3",
     "uuid": "^14.0.0",
     "yup": "^0.32.11"
   },

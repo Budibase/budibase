@@ -13,12 +13,29 @@ export interface FunctionInputDefinition {
   type: FunctionInputType
 }
 
+export type FunctionQueryResponseFieldType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "json"
+  | "array"
+
+export interface FunctionQueryResponseField {
+  readonly name: string
+  readonly type: FunctionQueryResponseFieldType
+}
+
+export interface FunctionQueryResponseSchema {
+  readonly fields: readonly FunctionQueryResponseField[]
+}
+
 export interface FunctionQueryCapability {
   readonly capabilityId: string
   readonly queryId: string
   readonly datasourceAlias: string
   readonly queryAlias: string
   readonly parameterNames: readonly string[]
+  readonly responseSchema?: FunctionQueryResponseSchema
 }
 
 export interface FunctionBuildDiagnostic {

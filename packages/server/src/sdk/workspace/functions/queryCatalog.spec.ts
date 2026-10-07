@@ -18,7 +18,8 @@ jest.mock("@budibase/backend-core", () => {
 })
 
 import { SourceName } from "@budibase/types"
-import { getQueryCatalog } from "./queryCatalog"
+import { buildCapabilities, getQueryCatalog } from "./queryCatalog"
+import { basicQuery } from "../../../tests/utilities/structures"
 
 describe("getQueryCatalog", () => {
   beforeEach(() => {
@@ -119,4 +120,41 @@ describe("getQueryCatalog", () => {
       },
     ])
   })
+
+  it.each([SourceName.POSTGRES, SourceName.REST])(
+    "uses the same effective response schema for catalog and linked %s queries",
+    async source => {
+      const query = {
+        ...basicQuery("datasource_1"),
+        _id: "query_1",
+        schema: {
+          name: { name: "Display name", type: "string" },
+          count: "number",
+        },
+      }
+      const datasource = { _id: "datasource_1", name: "Inventory", source }
+      mockDbAllDocs.mockResolvedValue({ rows: [{ doc: query }] })
+      mockDbTryGet.mockImplementation(async id =>
+        id === query._id ? query : datasource
+      )
+      const catalog = await getQueryCatalog()
+      const capabilities = await buildCapabilities([
+        {
+          queryId: query._id,
+          datasourceAlias: "Inventory",
+          queryAlias: "find",
+        },
+      ])
+      const responseSchema = {
+        fields: [
+          { name: "count", type: "number" },
+          { name: "name", type: "string" },
+        ],
+      }
+      expect(catalog).toEqual([expect.objectContaining({ responseSchema })])
+      expect(capabilities).toEqual([
+        expect.objectContaining({ responseSchema }),
+      ])
+    }
+  )
 })

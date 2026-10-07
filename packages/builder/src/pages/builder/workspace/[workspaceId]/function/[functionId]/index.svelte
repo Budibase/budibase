@@ -31,6 +31,7 @@
   import FunctionLogs from "../FunctionLogs.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
   import { canManageFunctions } from "../permissions"
+  import { getFunctionEditorCapabilities } from "../functionCompletions"
 
   let fn: FunctionResponse | undefined
   let loading = true
@@ -71,6 +72,10 @@
     validationFailed ||
     diagnostics.length > 0
   $: displayedReadiness = draftDirty ? "build_required" : fn?.readiness
+  $: editorCapabilities = getFunctionEditorCapabilities({
+    capabilities: fn?.capabilities || [],
+    catalog: $functionStore.queryCatalog,
+  })
 
   const readinessLabels = {
     ready: "Ready",
@@ -405,7 +410,7 @@
             <div class="editor-body">
               <FunctionCodeEditor
                 bind:value={source}
-                capabilities={fn.capabilities}
+                capabilities={editorCapabilities}
                 inputSchema={fn.inputSchema}
                 {diagnostics}
               />

@@ -9,6 +9,7 @@ import {
   type Query,
   type QueryParameter,
 } from "@budibase/types"
+import { inferQueryResponseSchema } from "./responseTypes"
 
 interface ResolvedQuery {
   query: Query & { _id: string }
@@ -173,6 +174,7 @@ export const buildCapabilities = async (
       datasourceAlias: input.datasourceAlias,
       queryAlias: input.queryAlias,
       parameterNames: query.parameterNames,
+      responseSchema: inferQueryResponseSchema({ query: query.query }),
     }
   })
 }
@@ -187,6 +189,7 @@ const toCatalogEntry = (
   source: resolved.datasource.source,
   kind: resolved.datasource.source === SourceName.REST ? "api" : "data",
   parameters: resolved.parameterNames.map(name => ({ name })),
+  responseSchema: inferQueryResponseSchema({ query: resolved.query }),
 })
 
 export const getQueryCatalog = async () => {

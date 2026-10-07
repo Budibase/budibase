@@ -7,6 +7,7 @@ import {
   generateFunctionDeclarations,
   hashFunctionDeclarations,
 } from "./declarations"
+import { FUNCTION_QUERY_RESPONSE_LIMITS } from "./responseTypes"
 
 const getDiagnostics = (files: Map<string, string>) => {
   const options: ts.CompilerOptions = {
@@ -45,6 +46,47 @@ const getDiagnostics = (files: Map<string, string>) => {
 }
 
 describe("generateFunctionDeclarations", () => {
+  it("accepts omitted query parameters while checking provided overrides", () => {
+    const capabilities: FunctionQueryCapability[] = [
+      {
+        capabilityId: "capability_1",
+        queryId: "query_1",
+        datasourceAlias: "Inventory",
+        queryAlias: "findRooms",
+        parameterNames: ["building", "floor"],
+      },
+    ]
+    const declarations = generateFunctionDeclarations({ capabilities })
+    const usage = `import { queries } from "@budibase/functions"
+queries.Inventory.findRooms()
+queries.Inventory.findRooms({})
+queries.Inventory.findRooms({ building: "HQ" })
+queries.Inventory.findRooms({ floor: null })
+queries.Inventory.findRooms({ building: "HQ", floor: "2" })
+`
+    expect(
+      getDiagnostics(
+        new Map([
+          ["functions.d.ts", declarations],
+          ["usage.ts", usage],
+        ])
+      )
+    ).toEqual([])
+    const diagnostics = getDiagnostics(
+      new Map([
+        ["functions.d.ts", declarations],
+        [
+          "usage.ts",
+          `import { queries } from "@budibase/functions"
+queries.Inventory.findRooms({ building: 2 })
+queries.Inventory.findRooms({ missing: "value" })
+`,
+        ],
+      ])
+    )
+    expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([2322, 2353])
+  })
+
   it("generates valid declarations for parameter names requiring quoting", () => {
     const capabilities: FunctionQueryCapability[] = [
       {
@@ -73,6 +115,147 @@ queries.DataWarehouse.findRooms({
         ])
       )
     ).toEqual([])
+  })
+
+  it("checks typed response fields while accepting nullable, missing and extra data", () => {
+    const capabilities: FunctionQueryCapability[] = [
+      {
+        capabilityId: "capability_1",
+        queryId: "query_1",
+        datasourceAlias: "Inventory",
+        queryAlias: "findRooms",
+        parameterNames: [],
+        responseSchema: {
+          fields: [
+            { name: 'room "name"', type: "string" },
+            { name: "count", type: "number" },
+            { name: "enabled", type: "boolean" },
+            { name: "details", type: "json" },
+            { name: "items", type: "array" },
+          ],
+        },
+      },
+    ]
+    const declarations = generateFunctionDeclarations({ capabilities })
+    const source = `import { queries, type JsonValue, type FunctionResult } from "@budibase/functions"
+async function check(): Promise<FunctionResult> {
+  const response = await queries.Inventory.findRooms()
+  const row = response.data[0]
+  const name: string | null | undefined = row['room "name"']
+  const count: number | null | undefined = row.count
+  const enabled: boolean | null | undefined = row.enabled
+  const details: JsonValue | undefined = row.details
+  const items: JsonValue[] | null | undefined = row.items
+  const extraRow = { count: 2, extra: true, items: ["text", 1, true, null, {}, []], details: { nested: [] } }
+  const value: typeof response = { data: [{}, { count: null }, extraRow], pagination: null }
+  return { output: { response, value } }
+}`
+    expect(
+      getDiagnostics(
+        new Map([
+          ["functions.d.ts", declarations],
+          ["usage.ts", source],
+        ])
+      )
+    ).toEqual([])
+    const diagnostics = getDiagnostics(
+      new Map([
+        ["functions.d.ts", declarations],
+        [
+          "usage.ts",
+          `import { queries } from "@budibase/functions"
+async function check() {
+  const row = (await queries.Inventory.findRooms()).data[0]
+  const count: string = row.count
+  row.count.toUpperCase()
+  row.missing
+  row["missing"]
+}`,
+        ],
+      ])
+    )
+    expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual(
+      expect.arrayContaining([2322, 2339, 18049, 7053])
+    )
+  })
+
+  it("hashes the effective response contract independently of query and field order", () => {
+    const capability: FunctionQueryCapability = {
+      capabilityId: "capability_1",
+      queryId: "query_1",
+      datasourceAlias: "Inventory",
+      queryAlias: "findRooms",
+      parameterNames: [],
+      responseSchema: {
+        fields: [
+          { name: "name", type: "string" },
+          { name: "count", type: "number" },
+        ],
+      },
+    }
+    const hash = (capabilities: FunctionQueryCapability[]) =>
+      hashFunctionDeclarations({
+        declarations: generateFunctionDeclarations({ capabilities }),
+      })
+    const typedHash = hash([capability])
+    expect(
+      hash([
+        {
+          ...capability,
+          responseSchema: {
+            fields: [...capability.responseSchema!.fields].reverse(),
+          },
+        },
+      ])
+    ).toBe(typedHash)
+    expect(
+      hash([
+        {
+          ...capability,
+          responseSchema: {
+            fields: [
+              { name: "name", type: "number" },
+              { name: "count", type: "number" },
+            ],
+          },
+        },
+      ])
+    ).not.toBe(typedHash)
+    expect(hash([{ ...capability, responseSchema: undefined }])).not.toBe(
+      typedHash
+    )
+  })
+
+  it("bounds the total response declarations deterministically", () => {
+    const capabilities: FunctionQueryCapability[] = Array.from(
+      { length: 10 },
+      (_, i) => ({
+        capabilityId: `capability_${i}`,
+        queryId: `query_${i}`,
+        datasourceAlias: "Data",
+        queryAlias: `query${i}`,
+        parameterNames: [],
+        responseSchema: {
+          fields: Array.from({ length: 90 }, (_, j) => ({
+            name: `field${j}${"x".repeat(100)}`,
+            type: "string",
+          })),
+        },
+      })
+    )
+    const declarations = generateFunctionDeclarations({ capabilities })
+    expect(declarations).toContain("Promise<JsonValue>")
+    expect(Buffer.byteLength(declarations, "utf8")).toBeLessThan(
+      FUNCTION_QUERY_RESPONSE_LIMITS.maxTotalTypeBytes + 4096
+    )
+    expect(
+      generateFunctionDeclarations({
+        capabilities: [...capabilities].reverse(),
+      })
+    ).toBe(declarations)
+    expect(getDiagnostics(new Map([["functions.d.ts", declarations]]))).toEqual(
+      []
+    )
   })
 })
 

@@ -1,5 +1,6 @@
 import { context, docIds, events, features } from "@budibase/backend-core"
 import {
+  AutomationActionStepId,
   DocumentType,
   DEFAULT_FUNCTION_LIMITS,
   FeatureFlag,
@@ -7,6 +8,7 @@ import {
   WorkspaceResource,
   type FunctionDocument,
   type FunctionRunSummary,
+  type QuerySchema,
   prefixed,
 } from "@budibase/types"
 import { setEnv } from "../../../environment"
@@ -14,10 +16,12 @@ import { generateAutomationID } from "../../../db/utils"
 import sdk from "../../../sdk"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import {
+  basicAutomation,
   basicDatasource,
   basicQuery,
 } from "../../../tests/utilities/structures"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { executeFunction } from "../../../automations/steps/executeFunction"
 
 describe("/functions", () => {
   const config = new TestConfiguration()
@@ -370,7 +374,7 @@ export default async function () { return { output: { text: inputs.value?.toUppe
       expect(beforeRename.declarations).toContain('readonly "Inventory"')
       expect(beforeRename.declarations).toContain('readonly "findRooms"')
       expect(beforeRename.declarations).toContain(
-        'readonly "building": string | null'
+        'readonly "building"?: string | null'
       )
       expect(beforeRename.declarations).toContain("Promise<JsonValue>")
       expect(beforeRename.declarations).not.toContain("findAvailableRooms")
@@ -666,6 +670,222 @@ export default async function () { return { output: { text: inputs.value?.toUppe
       ).toBe("build_required")
     })
   })
+
+  it("invalidates response contracts through live and catalog readiness, execution and publish checks", async () => {
+    await withFunctionsEnabled(async () => {
+      let query = await createQuery()
+      query = await config.api.query.save({
+        ...query,
+        schema: { name: "string" },
+      })
+      const { function: created } = await config.api.function.create({
+        name: "Response contracts",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+      await config.api.function.build(created._id, { _rev: created._rev! })
+      let built = (await config.api.function.find(created._id)).function
+      const schemas: Record<string, QuerySchema | string>[] = [
+        { name: "number" },
+        {},
+        { name: "boolean" },
+        { name: "unsupported" },
+      ]
+      for (const schema of schemas) {
+        query = await config.api.query.save({ ...query, schema })
+        const current = (await config.api.function.find(built._id)).function
+        expect(current.readiness).toBe("build_required")
+        expect((await config.api.function.fetch()).functions).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              _id: built._id,
+              readiness: "build_required",
+            }),
+          ])
+        )
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const orchestrate = jest.fn()
+          const result = await executeFunction(
+            {
+              inputs: { functionId: built._id, inputs: {} },
+              appId: config.getDevWorkspaceId(),
+              automationId: "automation_test",
+              stepId: "step_test",
+              context: {},
+            },
+            {
+              functionsEnabled: async () => true,
+              getFunction: sdk.functions.get,
+              getReadiness: sdk.functions.getFunctionReadiness,
+              createRunId: () => "run_test",
+              orchestrate,
+            }
+          )
+          expect(result).toMatchObject({
+            success: false,
+            error: { code: FunctionErrorCode.FUNCTION_BUILD_REQUIRED },
+          })
+          expect(orchestrate).not.toHaveBeenCalled()
+          const automation = basicAutomation({
+            definition: {
+              steps: [
+                {
+                  stepId: AutomationActionStepId.EXECUTE_FUNCTION,
+                  inputs: { functionId: built._id, inputs: {} },
+                },
+              ],
+            },
+          })
+          await expect(
+            sdk.functions.validateFunctionAutomationReferences([automation])
+          ).rejects.toThrow("Function query bindings changed")
+        })
+        await config.api.function.build(built._id, { _rev: built._rev! })
+        const rebuilt = (await config.api.function.find(built._id)).function
+        expect(rebuilt.readiness).toBe("ready")
+        expect(rebuilt.artifact?.declarationsHash).not.toBe(
+          built.artifact?.declarationsHash
+        )
+        built = rebuilt
+      }
+      query = await config.api.query.save({
+        ...query,
+        schema: { another: "unsupported" },
+      })
+      expect(
+        (await config.api.function.find(built._id)).function.readiness
+      ).toBe("ready")
+      query = await config.api.query.save({
+        ...query,
+        schema: { created: "datetime", name: "string" },
+      })
+      await config.api.function.build(built._id, { _rev: built._rev! })
+      built = (await config.api.function.find(built._id)).function
+      await config.api.query.save({
+        ...query,
+        name: "Renamed",
+        fields: { sql: "select changed" },
+        schema: {
+          name: { type: "string", name: "Display only" },
+          created: "string",
+        },
+      })
+      expect(
+        (await config.api.function.find(built._id)).function.readiness
+      ).toBe("ready")
+    })
+  })
+
+  it("rechecks older Function source against the current linked response contract on rebuild", async () => {
+    await withFunctionsEnabled(async () => {
+      let query = await createQuery()
+      query = await config.api.query.save({
+        ...query,
+        parameters: [],
+        schema: { name: "string" },
+      })
+      const source = `import { queries } from "@budibase/functions"
+export default async function () {
+  const result = await queries.Inventory.findRooms()
+  return { output: { name: result.data[0].name?.toUpperCase() ?? null } }
+}`
+      const { function: created } = await config.api.function.create({
+        name: "Current response contract",
+        source,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+      await config.api.function.build(created._id, { _rev: created._rev! })
+      const built = (await config.api.function.find(created._id)).function
+      await config.api.query.save({ ...query, schema: { name: "number" } })
+      const { function: restored } = await config.api.function.update(
+        built._id,
+        {
+          _rev: built._rev!,
+          name: built.name,
+          source,
+          capabilities: toCapabilityInputs(built),
+        }
+      )
+      const { function: failed } = await config.api.function.build(
+        restored._id,
+        { _rev: restored._rev! }
+      )
+      expect(failed.readiness).toBe("build_failed")
+      expect(
+        (await config.api.function.find(restored._id)).function.lastBuild
+          ?.diagnostics
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            code: "TS2339",
+            message: expect.stringContaining("toUpperCase"),
+          }),
+        ])
+      )
+    })
+  })
+
+  it.each([
+    {
+      property: "calendar_last_scraped",
+      status: "success",
+      diagnostics: [],
+    },
+    {
+      property: "calendar_last_scrap",
+      status: "failed",
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({
+          code: "TS2551",
+          message: expect.stringContaining("calendar_last_scrap"),
+        }),
+      ]),
+    },
+  ])(
+    "builds with $status when accessing $property",
+    async ({ property, status, diagnostics }) => {
+      await withFunctionsEnabled(async () => {
+        const query = await createQuery()
+        await config.api.query.save({
+          ...query,
+          parameters: [],
+          schema: { calendar_last_scraped: "string" },
+        })
+        const { function: created } = await config.api.function.create({
+          name: "Response field access",
+          source: `import { queries } from "@budibase/functions"
+export default async function () {
+  const res = await queries.Inventory.findRooms()
+  res.data[0].${property}
+  return { output: {} }
+}`,
+          capabilities: [
+            {
+              queryId: query._id!,
+              datasourceAlias: "Inventory",
+              queryAlias: "findRooms",
+            },
+          ],
+        })
+        await config.api.function.build(created._id, { _rev: created._rev! })
+        const { function: built } = await config.api.function.find(created._id)
+        expect(built.lastBuild?.status).toBe(status)
+        expect(built.lastBuild?.diagnostics || []).toEqual(diagnostics)
+      })
+    }
+  )
 
   it("rejects datasource and query alias collisions", async () => {
     await withFunctionsEnabled(async () => {
