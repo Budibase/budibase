@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { agentsStore } from "@/stores/portal"
   import type {
     AgentRequest,
     AgentRequestAction,
@@ -77,12 +78,20 @@
 
     return request.entries[0]
   })
-  let requestOperations = $derived.by(() => {
-    if (!latestEntry) {
-      return []
+  let operationName = $derived.by(() => {
+    if (!request?.operationId) {
+      return ""
     }
-
-    return latestEntry.operationNames
+    const agent = $agentsStore.agents.find(
+      agent => agent._id === request.agentId
+    )
+    if (!agent) {
+      return ""
+    }
+    const operation = agent.operations?.find(
+      operation => operation.id === request.operationId
+    )
+    return operation?.name ?? "Deleted operation"
   })
   let details = $derived.by<ActivityDetail[]>(() => {
     if (!request) {
@@ -105,7 +114,7 @@
       {
         type: "text",
         label: "Operation",
-        value: requestOperations.join(", ") || "",
+        value: operationName,
         icon: "gear",
       },
       {

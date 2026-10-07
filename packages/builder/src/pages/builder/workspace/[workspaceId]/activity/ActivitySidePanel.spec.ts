@@ -5,13 +5,28 @@ import {
   waitFor,
   within,
 } from "@testing-library/svelte"
-import { describe, expect, it, vi } from "vitest"
-import type { AgentRequest } from "@budibase/types"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import type { Agent, AgentRequest } from "@budibase/types"
+import type { Writable } from "svelte/store"
+
+const agentsStore: Writable<{
+  agents: Pick<Agent, "_id" | "operations">[]
+}> = vi.hoisted(() => {
+  const { writable } = require("svelte/store")
+  return writable({ agents: [] })
+})
+
+vi.mock("@/stores/portal", async importOriginal => ({
+  ...(await importOriginal<typeof import("@/stores/portal")>()),
+  agentsStore,
+}))
+
 import ActivitySidePanel from "./ActivitySidePanel.svelte"
 
 const request: AgentRequest = {
   _id: "request-1",
-  agentId: "agent-1",
+  agentId: "agent_1",
+  operationId: "operation_1",
   userId: "user-1",
   status: "needs_input",
   createdAt: "2026-10-05T11:00:00.000Z",
@@ -19,7 +34,6 @@ const request: AgentRequest = {
     {
       sessionId: "session-1",
       source: "Slack",
-      operationNames: ["Update inventory"],
       createdAt: "2026-10-05T11:00:00.000Z",
       updatedAt: "2026-10-05T11:05:00.000Z",
       status: "needs_input",
@@ -48,6 +62,9 @@ const renderPanel = (onClose = vi.fn()) =>
   })
 
 describe("ActivitySidePanel", () => {
+  beforeEach(() => {
+    setOperation("Update inventory")
+  })
   it("renders the request details and timeline", () => {
     renderPanel()
 
@@ -124,5 +141,101 @@ describe("ActivitySidePanel", () => {
     })
 
     expect(screen.queryByText("Request details")).not.toBeInTheDocument()
+  })
+})
+
+const setOperation = (name: string) => {
+  agentsStore.set({
+    agents: [
+      {
+        _id: "agent_1",
+        operations: [
+          {
+            id: "operation_1",
+            name,
+            live: true,
+            allowKnowledgeSourceDownload: false,
+          },
+        ],
+      },
+    ],
+  })
+}
+
+const renderRequest = ({
+  operationId = "operation_1",
+}: { operationId?: string | null } = {}) => {
+  const request: AgentRequest = {
+    _id: "agentrequest_1",
+    agentId: "agent_1",
+    ...(operationId ? { operationId } : {}),
+    userId: "user_1",
+    status: "needs_input",
+    entries: [
+      {
+        sessionId: "session_1",
+        source: "Chat",
+        status: "needs_input",
+        createdAt: "2026-10-06T10:00:00.000Z",
+        updatedAt: "2026-10-06T10:00:00.000Z",
+      },
+    ],
+  }
+  return render(ActivitySidePanel, {
+    open: true,
+    title: "Buy some chips",
+    request,
+    agentName: "Purchasing agent",
+    createdBy: "Requester",
+    onClose: vi.fn(),
+  })
+}
+
+describe("ActivitySidePanel operation name", () => {
+  beforeEach(() => {
+    setOperation("Expenses")
+  })
+
+  it("shows a renamed operation on an existing request", async () => {
+    renderRequest()
+    setOperation("Purchases")
+
+    await waitFor(() => {
+      expect(screen.getByText("Purchases")).toBeInTheDocument()
+      expect(screen.queryByText("Expenses")).not.toBeInTheDocument()
+    })
+  })
+
+  it("does not label a legacy request without an operation ID as deleted", () => {
+    renderRequest({ operationId: null })
+    expect(screen.queryByText("Deleted operation")).not.toBeInTheDocument()
+    expect(
+      screen
+        .getByText("Operation")
+        .parentElement?.querySelector(".detail-text")
+        ?.textContent?.trim()
+    ).toBe("")
+  })
+
+  it("does not label an operation as deleted when the agent is unavailable", () => {
+    agentsStore.set({ agents: [] })
+    renderRequest()
+    expect(screen.queryByText("Deleted operation")).not.toBeInTheDocument()
+    expect(
+      screen
+        .getByText("Operation")
+        .parentElement?.querySelector(".detail-text")
+        ?.textContent?.trim()
+    ).toBe("")
+  })
+
+  it("shows a deleted operation without retaining its old name", async () => {
+    renderRequest()
+    agentsStore.set({ agents: [{ _id: "agent_1", operations: [] }] })
+
+    await waitFor(() => {
+      expect(screen.getByText("Deleted operation")).toBeInTheDocument()
+      expect(screen.queryByText("Expenses")).not.toBeInTheDocument()
+    })
   })
 })
