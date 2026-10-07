@@ -2,7 +2,7 @@ import type { FunctionInputType, JSONValue } from "@budibase/types"
 import {
   getFunctionInputError,
   validateFunctionInputSchema,
-} from "./functionInputs"
+} from "../functionInputs"
 
 interface InheritedPropertyTestCase {
   scenario: string
