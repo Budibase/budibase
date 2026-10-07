@@ -894,10 +894,26 @@ export async function resumeOperation({
     } else {
       emitAgentResumeFailure(error)
     }
-    await markEscalationRequestResolved({
-      status: "failed",
-      error: error instanceof Error ? error.message : String(error),
-    })
+    try {
+      if (await hasPendingEscalations()) {
+        await updatePlatformActionSessionStatus("waiting")
+      } else {
+        await markEscalationRequestResolved({
+          status: "failed",
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    } catch (lookupError) {
+      console.error(
+        "Failed to check pending escalations after resume failure",
+        {
+          escalationId,
+          agentId: ctx.agentId,
+          requestId: doc.requestId,
+          error: lookupError,
+        }
+      )
+    }
     throw error
   }
 }

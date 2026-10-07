@@ -566,6 +566,81 @@ describe("resumeOperation", () => {
     })
   })
 
+  it.each([true, false])(
+    "keeps pending approvals waiting after a stream failure (request tracking: %s)",
+    async tracking => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const requestId = tracking
+          ? (await createRequest())!.requestId
+          : undefined
+        if (requestId) {
+          await sdk.ai.agentRequests.updateRequestStatus({
+            requestId,
+            status: "needs_input",
+          })
+        }
+        await context.getWorkspaceDB().put(
+          baseDoc({
+            _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+            requestId,
+          })
+        )
+        prepareAgentChatRunMock.mockResolvedValue({
+          toolDisplayNames: {},
+          stream: jest.fn().mockRejectedValue(new Error("Model unavailable")),
+        })
+
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ requestId, response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("Model unavailable")
+
+        expect(aiAgentFailedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+        expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          signal: "waiting",
+        })
+        const requests =
+          await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+        expect(requests.map(request => request.status)).toEqual(
+          tracking ? ["needs_input"] : []
+        )
+      })
+    }
+  )
+
+  it("preserves the original resume error and request when the pending lookup fails", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      getOrThrowMock.mockRejectedValue(new Error("Agent unavailable"))
+      listContextDocsMock.mockRejectedValueOnce(new Error("Lookup unavailable"))
+
+      await expect(
+        resumeOperation({
+          doc: baseDoc({ requestId, response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+      ).rejects.toThrow("Agent unavailable")
+
+      expect(aiAgentFailedMock).toHaveBeenCalledTimes(1)
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("needs_input")
+    })
+  })
+
   it("emits a failed action when the resumed agent cannot be prepared", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
@@ -629,41 +704,59 @@ describe("resumeOperation", () => {
     })
   })
 
-  it("corrects a completed agent action to failed when finalizing the resume throws", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const { requestId } = (await createRequest())!
-      mockApprovedRun("Approved and booked.")
-      const resolveFinalRequestOutcomeSpy = jest
-        .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
-        .mockRejectedValueOnce(new Error("DB unavailable"))
-
-      try {
-        await expect(
-          resumeOperation({
-            doc: baseDoc({ requestId, response: { accepted: true } }),
-            escalationId: "esc_primary",
-            resolution: "resolved",
-            ctx: baseCtx,
+  it.each([false, true])(
+    "corrects the session without double-counting when finalizing fails (pending approval: %s)",
+    async hasPending => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createRequest())!
+        if (hasPending) {
+          await sdk.ai.agentRequests.updateRequestStatus({
+            requestId,
+            status: "needs_input",
           })
-        ).rejects.toThrow("DB unavailable")
+          await context.getWorkspaceDB().put(
+            baseDoc({
+              _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+              requestId,
+            })
+          )
+        }
+        mockApprovedRun("Approved and booked.")
+        const resolveFinalRequestOutcomeSpy = jest
+          .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
+          .mockRejectedValueOnce(new Error("DB unavailable"))
 
-        // The action was already emitted as completed before the failure -
-        // don't emit a second action (it would double-count actionCount),
-        // correct the materialized session status instead.
-        expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-          expect.objectContaining({ requestId })
-        )
-        expect(aiAgentFailedMock).not.toHaveBeenCalled()
-        expect(enqueueLifecycleMock).toHaveBeenCalledWith({
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          signal: "failed",
-        })
-      } finally {
-        resolveFinalRequestOutcomeSpy.mockRestore()
-      }
-    })
-  })
+        try {
+          await expect(
+            resumeOperation({
+              doc: baseDoc({ requestId, response: { accepted: true } }),
+              escalationId: "esc_primary",
+              resolution: "resolved",
+              ctx: baseCtx,
+            })
+          ).rejects.toThrow("DB unavailable")
+
+          // The action was already emitted as completed before the failure -
+          // don't emit a second action (it would double-count actionCount),
+          // correct the materialized session status instead.
+          expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+            expect.objectContaining({ requestId })
+          )
+          expect(aiAgentFailedMock).not.toHaveBeenCalled()
+          expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            signal: hasPending ? "waiting" : "failed",
+          })
+          const [request] =
+            await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+          expect(request.status).toEqual(hasPending ? "needs_input" : "failed")
+        } finally {
+          resolveFinalRequestOutcomeSpy.mockRestore()
+        }
+      })
+    }
+  )
 
   it("reconstructs an automation user with its requester role", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
