@@ -1,11 +1,9 @@
 import { ErrorCode, WebClient, type WebAPIPlatformError } from "@slack/web-api"
 import { context, HTTPError, locks, roles } from "@budibase/backend-core"
 import {
-  type AgentChannelProvider,
   type ChatConversation,
   type ChatConversationAttachment,
   type ContextUser,
-  type PlatformActionUserOrigin,
   ConversationAttachmentErrorCode,
   ConversationAttachmentStatus,
   ConversationAttachmentTurnStatus,
@@ -315,23 +313,14 @@ const processAttachment = async ({
 
 const getRequester = async ({
   turn,
-  provider,
 }: {
   turn: NonNullable<ChatConversation["pendingAttachmentTurns"]>[number]
-  provider: AgentChannelProvider
-}): Promise<{ user: ContextUser; triggeredBy: PlatformActionUserOrigin }> => {
+}): Promise<ContextUser> => {
   const { userId, linked, displayName } = turn.requester
   if (linked) {
-    const user = await getGlobalUser(userId)
-    return { user, triggeredBy: sdk.platformActions.getUserOrigin(user) }
+    return getGlobalUser(userId)
   }
-  return {
-    user: createTransientPublicUser({ userId, displayName }),
-    triggeredBy: sdk.platformActions.getTransientChatUserOrigin({
-      provider,
-      displayName,
-    }),
-  }
+  return createTransientPublicUser({ userId, displayName })
 }
 
 const getAttachmentFailureText = (
@@ -452,17 +441,14 @@ const processTurn = async ({
     messages = [...messages, turn.message]
     responseText = getAttachmentFailureText(failed)
   } else {
-    const { user, triggeredBy } = await getRequester({
-      turn,
-      provider: current.channel!.provider,
-    })
+    const user = await getRequester({ turn })
     const result = await webhookChat({
       chat: {
         ...current,
         messages: [...current.messages, turn.message],
       },
       user,
-      triggeredBy,
+      triggeredBy: turn.triggeredBy,
     })
     messages = result.messages
     responseText = await formatSlackAssistantReply({

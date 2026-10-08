@@ -787,6 +787,7 @@ export const handleChatMessage = async ({
       const now = new Date().toISOString()
       const turn: ConversationAttachmentTurn = {
         id: v4(),
+        triggeredBy,
         message: userMessage,
         attachmentIds: conversationAttachments
           .filter(

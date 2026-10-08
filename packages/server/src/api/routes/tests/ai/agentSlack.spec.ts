@@ -1460,6 +1460,13 @@ describe("agent slack integration provisioning", () => {
         ConversationAttachmentStatus.PROCESSING,
       ]).toContain(conversations[0]?.attachments?.[0]?.status)
       expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
+      const { _id, firstName, lastName } = config.getUser()
+      expect(
+        conversations[0]?.pendingAttachmentTurns?.map(turn => turn.triggeredBy)
+      ).toEqual([
+        { type: "user", id: _id, label: `${firstName} ${lastName}` },
+        { type: "user", id: _id, label: `${firstName} ${lastName}` },
+      ])
     })
 
     it("renews attachment expiry and preserves file context before invoking the model", async () => {

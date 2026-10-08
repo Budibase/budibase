@@ -92,6 +92,7 @@ import {
   ConversationAttachmentTurnStatus,
 } from "@budibase/types"
 import { processConversationAttachmentJob } from "./conversationAttachmentProcessor"
+import { getGlobalUser } from "../../../utilities/global"
 
 describe("conversation attachment processor", () => {
   let conversation: ChatConversation
@@ -129,6 +130,7 @@ describe("conversation attachment processor", () => {
       pendingAttachmentTurns: [
         {
           id: "turn_1",
+          triggeredBy: { type: "user", label: "John Doe (Slack)" },
           message: {
             id: "message_1",
             role: "user",
@@ -215,6 +217,40 @@ describe("conversation attachment processor", () => {
     expect(mockWebhookChat).toHaveBeenCalledWith(
       expect.objectContaining({
         triggeredBy: { type: "user", label: "John Doe (Slack)" },
+      })
+    )
+  })
+
+  it("preserves the queued origin after a linked user is renamed", async () => {
+    conversation.pendingAttachmentTurns![0].requester = {
+      userId: "us_1",
+      linked: true,
+    }
+    conversation.pendingAttachmentTurns![0].triggeredBy = {
+      type: "user",
+      id: "us_1",
+      label: "Original Name",
+    }
+    const currentUser = {
+      _id: "us_1",
+      tenantId: "tenant_1",
+      firstName: "Renamed",
+      lastName: "User",
+      email: "user@example.com",
+      roles: {},
+    }
+    jest.mocked(getGlobalUser).mockResolvedValue(currentUser)
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(mockWebhookChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user: currentUser,
+        triggeredBy: { type: "user", id: "us_1", label: "Original Name" },
       })
     )
   })
