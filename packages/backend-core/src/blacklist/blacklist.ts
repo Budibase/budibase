@@ -1,7 +1,8 @@
 import dns from "dns"
 import net from "net"
-import env from "../environment"
 import { promisify } from "util"
+import { Address6 } from "ip-address"
+import env from "../environment"
 
 const DEFAULT_BLACKLIST = [
   "127.0.0.0/8",
@@ -12,19 +13,42 @@ const DEFAULT_BLACKLIST = [
   "169.254.0.0/16",
   "0.0.0.0/8",
   "::1/128",
+  "2001::/32",
+  "64:ff9b:1::/48",
   "fc00::/7",
   "fe80::/10",
 ] as const
 
 let blackList: net.BlockList | undefined
 const performLookup = promisify(dns.lookup)
+const ipv4CompatiblePrefix = new Address6("::/96")
+const nat64Prefix = new Address6("64:ff9b::/96")
 
 function shouldApplyDefaultBlacklist() {
+  // Self-hosted BLACKLIST_IPS explicitly replaces the defaults; an empty value disables them.
   return !(env.SELF_HOSTED && env.BLACKLIST_IPS !== undefined)
 }
 
 function getIpVersion(address: string): "ipv4" | "ipv6" {
   return net.isIP(address) === 6 ? "ipv6" : "ipv4"
+}
+
+function extractEmbeddedIPv4(address: string): string | null {
+  if (net.isIP(address) !== 6) {
+    return null
+  }
+
+  const ipv6 = new Address6(address)
+
+  if (ipv6.isInSubnet(ipv4CompatiblePrefix) || ipv6.isInSubnet(nat64Prefix)) {
+    return ipv6.to4().correctForm()
+  }
+
+  if (ipv6.is6to4()) {
+    return ipv6.inspect6to4().gateway
+  }
+
+  return null
 }
 
 function getMaxPrefixLength(address: string): number | null {
@@ -152,5 +176,12 @@ export async function isBlacklisted(address: string): Promise<boolean> {
     }
     return shouldApplyDefaultBlacklist()
   }
-  return ips.some(ip => blackList!.check(ip, getIpVersion(ip)))
+  return ips.some(ip => {
+    const embeddedIPv4 = extractEmbeddedIPv4(ip)
+    if (embeddedIPv4 && blackList!.check(embeddedIPv4, "ipv4")) {
+      return true
+    }
+
+    return blackList!.check(ip, getIpVersion(ip))
+  })
 }
