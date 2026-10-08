@@ -4,11 +4,11 @@
   let {
     row,
   }: {
-    row: { triggeredByLabel: string; triggeredByPrefix?: string }
+    row: { triggeredByValue: string; triggeredByPrefix?: string }
   } = $props()
 </script>
 
 <ActivityOriginLabel
-  label={row.triggeredByLabel}
+  value={row.triggeredByValue}
   prefix={row.triggeredByPrefix}
 />

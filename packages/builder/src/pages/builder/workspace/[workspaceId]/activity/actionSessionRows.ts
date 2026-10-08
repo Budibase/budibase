@@ -20,6 +20,7 @@ export interface ActionSessionRow {
   typeIconColor: string
   assetLabel: string
   triggeredByLabel: string
+  triggeredByValue: string
   triggeredByPrefix?: string
   status: PlatformActionContainerStatus
   statusLabel: PlatformActionContainerStatus
@@ -53,48 +54,44 @@ const getSourceType = (session: ActionSession) => {
 const getAssetLabel = (session: ActionSession) =>
   session.assetLabel || "Unknown asset"
 
-const getTriggeredByLabel = (session: ActionSession) => {
+const formatOrigin = ({
+  prefix,
+  value,
+}: {
+  prefix: string
+  value?: string
+}) => ({
+  label: value ? `${prefix}: ${value}` : prefix,
+  prefix: value ? prefix : undefined,
+  value: value || prefix,
+})
+
+const getTriggeredBy = (session: ActionSession) => {
   const { triggeredByType, triggeredByLabel, triggeredById } = session
   switch (triggeredByType) {
     case "user":
-      return triggeredByLabel ? `User: ${triggeredByLabel}` : "User"
+      return formatOrigin({ prefix: "User", value: triggeredByLabel })
     case "agent":
-      return triggeredByLabel ? `Agent: ${triggeredByLabel}` : "Agent"
+      return formatOrigin({ prefix: "Agent", value: triggeredByLabel })
     case "automation":
-      return triggeredByLabel ? `Automation: ${triggeredByLabel}` : "Automation"
+      return formatOrigin({ prefix: "Automation", value: triggeredByLabel })
     case "schedule":
-      return "System: Schedule"
+      return formatOrigin({ prefix: "System", value: "Schedule" })
     case "webhook":
-      return "System: Webhook"
+      return formatOrigin({ prefix: "System", value: "Webhook" })
     case "system":
       switch (triggeredById) {
         case "row_change":
-          return "System: Row change"
+          return formatOrigin({ prefix: "System", value: "Row change" })
         case "email":
-          return "System: Email"
+          return formatOrigin({ prefix: "System", value: "Email" })
         case "reboot":
-          return "System: Reboot"
+          return formatOrigin({ prefix: "System", value: "Reboot" })
         default:
-          return "System"
+          return formatOrigin({ prefix: "System" })
       }
     default:
-      return triggeredByLabel || "Unknown"
-  }
-}
-
-const getTriggeredByPrefix = (session: ActionSession) => {
-  switch (session.triggeredByType) {
-    case "user":
-      return session.triggeredByLabel ? "User" : undefined
-    case "agent":
-      return session.triggeredByLabel ? "Agent" : undefined
-    case "automation":
-      return session.triggeredByLabel ? "Automation" : undefined
-    case "schedule":
-    case "webhook":
-      return "System"
-    case "system":
-      return getTriggeredByLabel(session) === "System" ? undefined : "System"
+      return formatOrigin({ prefix: triggeredByLabel || "Unknown" })
   }
 }
 
@@ -113,6 +110,7 @@ export const toActionSessionRow = ({
 }): ActionSessionRow => {
   const updatedAt = dayjs(session.updatedAt)
   const sourceType = getSourceType(session)
+  const triggeredBy = getTriggeredBy(session)
 
   return {
     _id: getActionSessionRowId(session),
@@ -120,8 +118,9 @@ export const toActionSessionRow = ({
     typeIcon: sourceType.icon,
     typeIconColor: sourceType.iconColor,
     assetLabel: getAssetLabel(session),
-    triggeredByLabel: getTriggeredByLabel(session),
-    triggeredByPrefix: getTriggeredByPrefix(session),
+    triggeredByLabel: triggeredBy.label,
+    triggeredByValue: triggeredBy.value,
+    triggeredByPrefix: triggeredBy.prefix,
     status: session.status,
     statusLabel: session.status,
     actionCount: session.actionCount,
@@ -136,6 +135,7 @@ export const getActionSessionDetails = (
   session: ActionSession
 ): ActivityDetail[] => {
   const sourceType = getSourceType(session)
+  const triggeredBy = getTriggeredBy(session)
 
   return [
     { type: "status-badge", label: "Status", status: session.status },
@@ -156,8 +156,8 @@ export const getActionSessionDetails = (
     {
       type: "text",
       label: "Triggered by",
-      value: getTriggeredByLabel(session),
-      prefix: getTriggeredByPrefix(session),
+      value: triggeredBy.value,
+      prefix: triggeredBy.prefix,
       icon: "user",
     },
     {

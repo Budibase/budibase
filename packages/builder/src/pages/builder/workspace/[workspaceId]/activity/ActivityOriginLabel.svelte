@@ -1,6 +1,6 @@
 <script lang="ts">
-  let { label, prefix }: { label?: string; prefix?: string } = $props()
-  let value = $derived(prefix ? label?.slice(prefix.length + 2) : label)
+  let { value, prefix }: { value?: string; prefix?: string } = $props()
+  let label = $derived(prefix ? `${prefix}: ${value}` : value)
 </script>
 
 <span class="origin" title={label}>

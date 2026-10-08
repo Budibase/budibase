@@ -59,7 +59,7 @@
           <span class="detail-text" class:underlined={detail.underline}>
             {#if detail.prefix}
               <ActivityOriginLabel
-                label={detail.value}
+                value={detail.value}
                 prefix={detail.prefix}
               />
             {:else}

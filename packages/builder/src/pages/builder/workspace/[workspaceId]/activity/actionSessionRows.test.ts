@@ -39,6 +39,7 @@ describe("toActionSessionRow", () => {
       typeIconColor: "var(--color-brand-400)",
       assetLabel: "Support agent",
       triggeredByLabel: "User: Jane Doe",
+      triggeredByValue: "Jane Doe",
       triggeredByPrefix: "User",
       status: "waiting",
       statusLabel: "waiting",
@@ -100,7 +101,7 @@ describe("toActionSessionRow", () => {
       expect(getActionSessionDetails(scheduledSession)).toContainEqual({
         type: "text",
         label: "Triggered by",
-        value: "System: Schedule",
+        value: "Schedule",
         prefix: "System",
         icon: "user",
       })
@@ -126,6 +127,10 @@ describe("Triggered by formatting", () => {
     {
       metadata: { triggeredByType: "user", triggeredByLabel: "Jane Doe" },
       expected: "User: Jane Doe",
+    },
+    {
+      metadata: { triggeredByType: "user", triggeredByLabel: "Team: Support" },
+      expected: "User: Team: Support",
     },
     {
       metadata: {
@@ -168,6 +173,10 @@ describe("Triggered by formatting", () => {
       metadata: { triggeredByLabel: "Legacy label" },
       expected: "Legacy label",
     },
+    {
+      metadata: { triggeredByLabel: "Legacy: label" },
+      expected: "Legacy: label",
+    },
     { metadata: {}, expected: "Unknown" },
   ])(
     "renders $expected consistently without changing metadata",
@@ -178,19 +187,23 @@ describe("Triggered by formatting", () => {
         ...metadata,
       }
       const original = { ...input }
+      const prefix =
+        expected.includes(": ") && metadata.triggeredByType
+          ? expected.split(": ")[0]
+          : undefined
+      const value = prefix ? expected.slice(prefix.length + 2) : expected
 
       expect(toActionSessionRow({ session: input, now })).toMatchObject({
         triggeredByLabel: expected,
+        triggeredByValue: value,
+        triggeredByPrefix: prefix,
         assetLabel: "Asset name",
       })
       expect(getActionSessionDetails(input)).toContainEqual({
         type: "text",
         label: "Triggered by",
-        value: expected,
-        prefix:
-          expected.includes(": ") && metadata.triggeredByType
-            ? expected.split(": ")[0]
-            : undefined,
+        value,
+        prefix,
         icon: "user",
       })
       expect(getActionSessionDetails(input)).toContainEqual({
