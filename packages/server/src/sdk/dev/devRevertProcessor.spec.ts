@@ -1,6 +1,10 @@
 import { db } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
-import { DevRevertQueueData } from "@budibase/types"
+import {
+  DevRevertQueueData,
+  RuntimeDocumentTypes,
+  SEPARATOR,
+} from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../tests/utilities/structures"
 import { devRevertProcessor } from "./devRevertProcessor"
@@ -40,6 +44,29 @@ describe("devRevertProcessor", () => {
     })
 
     await config.api.table.get(newDevTable._id!, { status: 404 })
+  })
+
+  it("should not copy runtime documents from production", async () => {
+    const runtimeDocIds = RuntimeDocumentTypes.map(
+      type => `${type}${SEPARATOR}${generator.guid()}`
+    )
+    await db
+      .getDB(config.getProdWorkspaceId())
+      .bulkDocs(runtimeDocIds.map(_id => ({ _id })))
+
+    const result = await devRevertProcessor().execute({
+      appId: config.getDevWorkspaceId(),
+      userId: generator.guid(),
+    })
+
+    expect(result).toEqual({
+      success: true,
+      result: { message: "Reverted changes successfully." },
+    })
+    const devDb = db.getDB(config.getDevWorkspaceId())
+    for (const id of runtimeDocIds) {
+      expect(await devDb.exists(id)).toBe(false)
+    }
   })
 
   describe("unhappy paths", () => {
