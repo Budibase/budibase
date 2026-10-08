@@ -233,7 +233,7 @@ const collectAssignableDependencyIds = ({
   return Array.from(ids).sort(compareResourceIds)
 }
 
-const getNewDirectDependencyIds = ({
+const getNewDependencyIds = ({
   analysis,
   rootResourceId,
   previousResource,
@@ -244,21 +244,29 @@ const getNewDirectDependencyIds = ({
   previousResource?: AnyDocument
   savedResource: AnyDocument
 }) => {
-  const { findReferencedResources } = analysis
-  const previousDependencyIds = new Set(
-    previousResource
+  const { graph, findReferencedResources } = analysis
+  const blockedResourceIds = [rootResourceId]
+  if (savedResource._id) {
+    blockedResourceIds.push(savedResource._id)
+  }
+  const previousDependencyIds = collectAssignableDependencyIds({
+    graph,
+    blockedResourceIds,
+    includeRoots: true,
+    resourceIds: previousResource
       ? findReferencedResources(previousResource).map(resource => resource.id)
-      : []
-  )
+      : [],
+  })
 
-  return findReferencedResources(savedResource)
-    .filter(
-      dependency =>
-        dependency.id !== rootResourceId &&
-        dependency.id !== savedResource._id &&
-        !previousDependencyIds.has(dependency.id)
-    )
-    .map(dependency => dependency.id)
+  // A new path to an existing dependency must preserve its prior exclusion.
+  return collectAssignableDependencyIds({
+    graph,
+    blockedResourceIds: [...blockedResourceIds, ...previousDependencyIds],
+    includeRoots: true,
+    resourceIds: findReferencedResources(savedResource).map(
+      resource => resource.id
+    ),
+  })
 }
 
 const mergePropagationOutcomes = (
@@ -398,19 +406,14 @@ export const propagateCreatedResourceDependencies = async ({
       includeDatasourceQueries: true,
     })
     const dependencyIds = savedResources.flatMap(savedResource =>
-      getNewDirectDependencyIds({
+      getNewDependencyIds({
         analysis,
         rootResourceId,
         savedResource,
       })
     )
     return await propagateProjectIdsToDependencyIds({
-      dependencyIds: collectAssignableDependencyIds({
-        blockedResourceIds: [rootResourceId],
-        graph: analysis.graph,
-        includeRoots: true,
-        resourceIds: dependencyIds,
-      }),
+      dependencyIds,
       projectIds,
     })
   } catch (error) {
@@ -434,19 +437,14 @@ const propagateNewResourceDependencies = async ({
   if (!projectIds.length) {
     return { status: "complete" }
   }
-  const dependencyIds = getNewDirectDependencyIds({
+  const dependencyIds = getNewDependencyIds({
     analysis,
     rootResourceId,
     previousResource,
     savedResource,
   })
   return await propagateProjectIdsToDependencyIds({
-    dependencyIds: collectAssignableDependencyIds({
-      blockedResourceIds: [rootResourceId],
-      graph: analysis.graph,
-      includeRoots: true,
-      resourceIds: dependencyIds,
-    }),
+    dependencyIds,
     projectIds,
   })
 }

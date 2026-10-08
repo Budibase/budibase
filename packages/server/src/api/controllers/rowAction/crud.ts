@@ -1,6 +1,7 @@
-import { events } from "@budibase/backend-core"
+import { events, features } from "@budibase/backend-core"
 import {
   CreateRowActionRequest,
+  FeatureFlag,
   Ctx,
   RowActionPermissions,
   RowActionPermissionsResponse,
@@ -61,15 +62,15 @@ async function createUnlocked(
     name: ctx.request.body.name,
   })
 
-  await withProjectPropagationWarning({
-    ctx,
-    propagation: sdk.projects.propagateProjectDependencyChanges({
-      rootResourceId: tableId,
-      currentProjectIds: table.projectIds,
-      previousProjectIds: table.projectIds,
-      savedResource: createdAction,
-    }),
-  })
+  if (await features.isEnabled(FeatureFlag.PROJECTS)) {
+    await withProjectPropagationWarning({
+      ctx,
+      propagation: sdk.projects.propagateProjectIdsToDependencyIds({
+        dependencyIds: [createdAction.automationId],
+        projectIds: table.projectIds || [],
+      }),
+    })
+  }
 
   await events.rowAction.created(createdAction)
 

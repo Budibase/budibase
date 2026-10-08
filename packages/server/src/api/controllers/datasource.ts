@@ -355,6 +355,7 @@ export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
   await validateCustomRestTemplate(ctx.request.body.datasource.restTemplateId)
+  validateDatasourceEntities(ctx.request.body.datasource)
   const { datasource, errors } = await sdk.datasources.prepareForSave(
     ctx.request.body
   )

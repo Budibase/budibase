@@ -177,13 +177,18 @@ const _import = async (
             const result = await importQueries(
               datasource.config?.staticVariables
             )
-            const response = await context
-              .getWorkspaceDB()
-              .put(sdk.tables.populateExternalTableSchemas(datasource))
-            datasource._rev = response.rev
-            await events.datasource.updated(datasource)
-            builderSocket?.emitDatasourceUpdate(ctx, datasource)
-            return result
+            try {
+              const response = await context
+                .getWorkspaceDB()
+                .put(sdk.tables.populateExternalTableSchemas(datasource))
+              datasource._rev = response.rev
+              await events.datasource.updated(datasource)
+              builderSocket?.emitDatasourceUpdate(ctx, datasource)
+              return result
+            } catch (error) {
+              await importer.rollbackQueries(result.queries)
+              throw error
+            }
           },
         })
       } else {
