@@ -53,10 +53,7 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { handleDataImport } from "./utils"
-import {
-  propagateProjectDependencyChangesWithWarning,
-  propagateProjectIdsToDependencySubtreesWithWarning,
-} from "../../../utilities/projects"
+import { withProjectPropagationWarning } from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
@@ -242,22 +239,26 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     const reciprocalProjectIds = (linkedTable.projectIds || []).filter(
       projectId => !existingProjectIds.has(projectId)
     )
-    await propagateProjectIdsToDependencySubtreesWithWarning({
+    await withProjectPropagationWarning({
       ctx,
-      blockedResourceIds: [linkedTable._id!],
-      dependencyIds: [savedTable._id!],
-      projectIds: reciprocalProjectIds,
+      propagation: sdk.projects.propagateProjectIdsToDependencySubtrees({
+        blockedResourceIds: [linkedTable._id!],
+        dependencyIds: [savedTable._id!],
+        projectIds: reciprocalProjectIds,
+      }),
     })
   }
 
   if (!isExternalTable(savedTable)) {
-    await propagateProjectDependencyChangesWithWarning({
+    await withProjectPropagationWarning({
       ctx,
-      rootResourceId: savedTable._id!,
-      currentProjectIds: savedTable.projectIds,
-      previousProjectIds: previousTable?.projectIds || [],
-      previousResource: previousTable,
-      savedResource: savedTable,
+      propagation: sdk.projects.propagateProjectDependencyChanges({
+        rootResourceId: savedTable._id!,
+        currentProjectIds: savedTable.projectIds,
+        previousProjectIds: previousTable?.projectIds || [],
+        previousResource: previousTable,
+        savedResource: savedTable,
+      }),
     })
   }
 
