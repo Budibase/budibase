@@ -57,7 +57,7 @@ describe("upsertPlatformActionSession", () => {
     await run(async () => {
       const sourceId = generator.guid()
 
-      await upsertPlatformActionSession({
+      const indexed = await upsertPlatformActionSession({
         sourceType: "agent_session",
         sourceId,
         environment: "prod",
@@ -68,6 +68,7 @@ describe("upsertPlatformActionSession", () => {
 
       const doc = await getSessionDoc(sourceId)
 
+      expect(indexed).toBe(true)
       expect(doc.actionCount).toBe(1)
       expect(doc.status).toBe("completed")
       expect(doc.startedAt).toBe("2026-08-31T00:00:00.000Z")
@@ -723,7 +724,7 @@ describe("upsertPlatformActionSession", () => {
         try {
           await destroyWorkspace(workspaceId)
 
-          await context.doInWorkspaceContext(workspaceId, () =>
+          const indexed = await context.doInWorkspaceContext(workspaceId, () =>
             upsertPlatformActionSession({
               sourceType: "agent_session",
               sourceId: generator.guid(),
@@ -734,6 +735,7 @@ describe("upsertPlatformActionSession", () => {
             })
           )
 
+          expect(indexed).toBe(false)
           expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
         } finally {
           await destroyWorkspace(workspaceId)

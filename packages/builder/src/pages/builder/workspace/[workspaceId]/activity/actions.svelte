@@ -1,9 +1,12 @@
 <script lang="ts">
   import { API } from "@/api"
+  import { builderStore } from "@/stores/builder"
   import { Select, Table } from "@budibase/bbui"
+  import { BuilderSocketEvent } from "@budibase/shared-core"
   import {
     PLATFORM_ACTION_CONTAINER_STATUSES,
     type ActionSession,
+    type ActionSessionChangeEvent,
     type ActionSessionsSummary,
     type ActionsPagination,
     type PlatformActionContainerStatus,
@@ -60,6 +63,12 @@
     page: number
     bookmark?: string
   }
+  interface LoadSessionsOptions {
+    request?: PageRequest
+    // Refreshes the current view without a loading state or clearing the
+    // selection, keeping the current data if it fails
+    background?: boolean
+  }
   type EnvironmentFilter = PlatformActionEnvironment | "all"
 
   const statusFilterOptions: { label: string; value: StatusFilter }[] = [
@@ -85,7 +94,12 @@
   let pagination = $state<ActionsPagination | null>(null)
   let currentPage = $state(1)
   let lastRequest: PageRequest = { page: 1 }
-  let selectedSessionId = $state<string | null>(null)
+  let loadInFlight = false
+  let refreshQueued = false
+  let destroyed = false
+  // Last known version of the selected session, kept while it's out of the
+  // current results so the panel doesn't close as sessions move around
+  let selectedSession = $state<ActionSession | undefined>()
   let statusFilter = $state<StatusFilter>("all")
   let environmentFilter = $state<EnvironmentFilter>("all")
   // Ticks on an interval purely to force updatedLabel to re-derive
@@ -95,10 +109,11 @@
     sessions.map(session => toActionSessionRow({ session, now }))
   )
 
-  let selectedSession = $derived(
-    sessions.find(
-      session => getActionSessionRowId(session) === selectedSessionId
-    )
+  const findSession = (id: string) =>
+    sessions.find(session => getActionSessionRowId(session) === id)
+
+  let selectedSessionOutdated = $derived(
+    !!selectedSession && !findSession(getActionSessionRowId(selectedSession))
   )
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
@@ -149,12 +164,20 @@
   const loadSessions = (() => {
     let requestSequence = 0
 
-    return async function loadSessions(request: PageRequest = { page: 1 }) {
+    return async function loadSessions({
+      request = { page: 1 },
+      background = false,
+    }: LoadSessionsOptions = {}) {
       const sequence = ++requestSequence
       lastRequest = request
-      selectedSessionId = null
-      loading = true
-      loadFailed = false
+      loadInFlight = true
+      if (!background) {
+        // This load already covers every change notified so far
+        refreshQueued = false
+        selectedSession = undefined
+        loading = true
+        loadFailed = false
+      }
       try {
         const response = await API.fetchActionSessions({
           env: environmentFilter === "all" ? undefined : environmentFilter,
@@ -165,12 +188,28 @@
         if (sequence !== requestSequence) {
           return
         }
+        // Sessions only move towards the first page as they change, so a
+        // later page can empty out. An empty page has no bookmarks to step
+        // back with, so start over from the first page instead.
+        if (response.sessions.length === 0 && request.page > 1) {
+          return loadSessions({ background })
+        }
         sessions = response.sessions
+        if (selectedSession) {
+          selectedSession =
+            findSession(getActionSessionRowId(selectedSession)) ??
+            selectedSession
+        }
         summary = response.summary
         pagination = response.pagination
         currentPage = request.page
+        loadFailed = false
       } catch (error) {
         if (sequence !== requestSequence) {
+          return
+        }
+        if (background) {
+          console.error("Failed to refresh action sessions", error)
           return
         }
         console.error("Failed to fetch action sessions", error)
@@ -181,10 +220,35 @@
       } finally {
         if (sequence === requestSequence) {
           loading = false
+          loadInFlight = false
+          if (refreshQueued && !destroyed) {
+            refreshQueued = false
+            loadSessions({ request: lastRequest, background: true })
+          }
         }
       }
     }
   })()
+
+  // Changes notified while a load is in flight may not be in its response,
+  // so they are coalesced into a single refresh once it settles
+  function refreshSessions() {
+    if (loadInFlight) {
+      refreshQueued = true
+      return
+    }
+    loadSessions({ request: lastRequest, background: true })
+  }
+
+  function handleActionSessionChange(event: ActionSessionChangeEvent) {
+    if (
+      environmentFilter !== "all" &&
+      event.environment !== environmentFilter
+    ) {
+      return
+    }
+    refreshSessions()
+  }
 
   function changeStatusFilter(nextFilter: StatusFilter) {
     if (nextFilter === statusFilter) {
@@ -207,9 +271,14 @@
     if (loading || !hasPrevPage) {
       return
     }
+    const page = currentPage - 1
+    // The first page is always loaded without a bookmark, so it shows the
+    // latest sessions instead of the ones just before the current page
     loadSessions({
-      page: Math.max(1, currentPage - 1),
-      bookmark: pagination?.previousBookmark,
+      request:
+        page > 1
+          ? { page, bookmark: pagination?.previousBookmark }
+          : { page: 1 },
     })
   }
 
@@ -218,21 +287,45 @@
       return
     }
     loadSessions({
-      page: currentPage + 1,
-      bookmark: pagination?.nextBookmark,
+      request: {
+        page: currentPage + 1,
+        bookmark: pagination?.nextBookmark,
+      },
     })
   }
 
   function selectSession(row: ActionSessionRow) {
-    selectedSessionId = row._id
+    selectedSession = findSession(row._id)
   }
 
   function closeSessionPanel() {
-    selectedSessionId = null
+    selectedSession = undefined
   }
 
   onMount(() => {
     loadSessions()
+    return () => {
+      destroyed = true
+    }
+  })
+
+  $effect(() => {
+    const socket = builderStore.websocket
+    if (!socket) {
+      return
+    }
+
+    socket.on(BuilderSocketEvent.ActionSessionChange, handleActionSessionChange)
+    // Notifications aren't replayed, so catch up on anything missed while
+    // disconnected
+    socket.on("connect", refreshSessions)
+    return () => {
+      socket.off(
+        BuilderSocketEvent.ActionSessionChange,
+        handleActionSessionChange
+      )
+      socket.off("connect", refreshSessions)
+    }
   })
 
   $effect(() => {
@@ -271,7 +364,7 @@
   {#if loadFailed}
     <ActivityLoadError
       message="Failed to load actions."
-      onRetry={() => loadSessions(lastRequest)}
+      onRetry={() => loadSessions({ request: lastRequest })}
     />
   {:else}
     <ActivityTablePanel>
@@ -305,5 +398,9 @@
     </ActivityTablePanel>
   {/if}
 
-  <ActionSessionPanel session={selectedSession} onClose={closeSessionPanel} />
+  <ActionSessionPanel
+    session={selectedSession}
+    outdated={selectedSessionOutdated}
+    onClose={closeSessionPanel}
+  />
 </ActivityPage>

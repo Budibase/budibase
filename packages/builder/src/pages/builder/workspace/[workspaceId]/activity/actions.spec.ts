@@ -6,7 +6,9 @@ import {
   within,
 } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { BuilderSocketEvent } from "@budibase/shared-core"
 import type {
+  ActionSessionChangeEvent,
   FetchActionSessionsResponse,
   FetchActionSessionsQuery,
 } from "@budibase/types"
@@ -16,6 +18,34 @@ const mocks = vi.hoisted(() => ({
   fetchActionSessions: vi.fn(),
   fetchActionSessionEvents: vi.fn(),
 }))
+
+const socket = vi.hoisted(() => {
+  type Handler = (payload?: ActionSessionChangeEvent) => void
+  const handlers = new Map<string, Set<Handler>>()
+  return {
+    on: (event: string, handler: Handler) => {
+      if (!handlers.has(event)) {
+        handlers.set(event, new Set())
+      }
+      handlers.get(event)!.add(handler)
+    },
+    off: (event: string, handler: Handler) => {
+      handlers.get(event)?.delete(handler)
+    },
+    trigger: (event: string, payload?: ActionSessionChangeEvent) => {
+      handlers.get(event)?.forEach(handler => handler(payload))
+    },
+    listenerCount: (event: string) => handlers.get(event)?.size ?? 0,
+    reset: () => handlers.clear(),
+  }
+})
+
+vi.mock("@/stores/builder", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/stores/builder")>()
+  // Keep the real store, other components subscribe to it
+  Object.assign(actual.builderStore, { websocket: socket })
+  return actual
+})
 
 vi.mock("@budibase/bbui", async importOriginal => {
   const { default: Select } = await import(
@@ -60,7 +90,7 @@ const deferred = <T>() => {
 }
 
 const renderPage = () => {
-  const { container } = render(ActivityActions)
+  const { container, unmount } = render(ActivityActions)
   const table = () =>
     within(container.querySelector<HTMLElement>(".spectrum-Table")!)
   const pageButton = (direction: "prev" | "next") =>
@@ -68,7 +98,7 @@ const renderPage = () => {
       `.spectrum-Pagination-${direction}Button`
     )
   const findInTable = (text: string) => waitFor(() => table().getByText(text))
-  return { table, pageButton, findInTable }
+  return { table, pageButton, findInTable, unmount }
 }
 
 const pageResponse = ({
@@ -86,6 +116,7 @@ const pageResponse = ({
 
 describe("Activity actions page", () => {
   beforeEach(() => {
+    socket.reset()
     mocks.fetchActionSessions.mockReset()
     mocks.fetchActionSessionEvents.mockResolvedValue({
       events: [],
@@ -248,7 +279,106 @@ describe("Activity actions page", () => {
 
     expect(
       mocks.fetchActionSessions.mock.calls.map(([query]) => query.bookmark)
-    ).toEqual([undefined, "next-1", "prev-2"])
+    ).toEqual([undefined, "next-1", undefined])
+  })
+
+  it("uses the previous bookmark when going back to a page after the first", async () => {
+    mocks.fetchActionSessions
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Second page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: true,
+            nextBookmark: "next-2",
+            previousBookmark: "prev-2",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Third page",
+          pagination: {
+            hasNextPage: false,
+            hasPreviousPage: true,
+            previousBookmark: "prev-3",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Second page again",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: true,
+            nextBookmark: "next-2",
+            previousBookmark: "prev-2",
+          },
+        })
+      )
+
+    const { findInTable, pageButton } = renderPage()
+    await findInTable("First page")
+    await fireEvent.click(pageButton("next")!)
+    await findInTable("Second page")
+    await fireEvent.click(pageButton("next")!)
+    await findInTable("Third page")
+    await fireEvent.click(pageButton("prev")!)
+
+    await findInTable("Second page again")
+    expect(screen.getByText("Page 2")).toBeInTheDocument()
+    expect(
+      mocks.fetchActionSessions.mock.calls.map(([query]) => query.bookmark)
+    ).toEqual([undefined, "next-1", "next-2", "prev-3"])
+  })
+
+  it("returns to the first page when a later page is empty", async () => {
+    mocks.fetchActionSessions
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1",
+          },
+        })
+      )
+      .mockResolvedValueOnce({
+        ...response,
+        sessions: [],
+        pagination: { hasNextPage: false, hasPreviousPage: false },
+      })
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page reloaded",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1b",
+          },
+        })
+      )
+
+    const { findInTable, pageButton } = renderPage()
+    await findInTable("First page")
+    await fireEvent.click(pageButton("next")!)
+
+    await findInTable("First page reloaded")
+    expect(screen.getByText("Page 1")).toBeInTheDocument()
+    expect(
+      mocks.fetchActionSessions.mock.calls.map(([query]) => query.bookmark)
+    ).toEqual([undefined, "next-1", undefined])
   })
 
   it("disables pagination while loading and restores it after the response", async () => {
@@ -493,6 +623,7 @@ describe("Activity actions page", () => {
     await waitFor(() => {
       expect(screen.getByText("No actions tracked yet.")).toBeInTheDocument()
     })
+    expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(1)
   })
 
   it("explains an empty result caused by the status filter", async () => {
@@ -584,5 +715,420 @@ describe("Activity actions page", () => {
     for (const value of ["15", "1", "2", "5", "7"]) {
       expect(screen.getByText(value)).toBeInTheDocument()
     }
+  })
+
+  describe("live updates", () => {
+    const SETTLE_MS = 50
+
+    const change = (
+      overrides: Partial<ActionSessionChangeEvent> = {}
+    ): ActionSessionChangeEvent => ({
+      environment: "prod",
+      sessions: [{ sourceType: "agent_session", sourceId: "session-1" }],
+      ...overrides,
+    })
+
+    const notify = (event: ActionSessionChangeEvent = change()) =>
+      socket.trigger(BuilderSocketEvent.ActionSessionChange, event)
+
+    const settle = () => new Promise(resolve => setTimeout(resolve, SETTLE_MS))
+
+    const queries = (): FetchActionSessionsQuery[] =>
+      mocks.fetchActionSessions.mock.calls.map(([query]) => query)
+
+    const panel = () =>
+      within(document.querySelector<HTMLElement>(".activity-panel-container")!)
+
+    it("refreshes the current page with the active filters and bookmark", async () => {
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "First page",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Second page",
+            pagination: {
+              hasNextPage: false,
+              hasPreviousPage: true,
+              previousBookmark: "prev-2",
+            },
+          })
+        )
+        .mockResolvedValueOnce({
+          ...pageResponse({
+            assetLabel: "Second page updated",
+            pagination: {
+              hasNextPage: false,
+              hasPreviousPage: true,
+              previousBookmark: "prev-2",
+            },
+          }),
+          summary: {
+            total: 22,
+            active: 1,
+            waiting: 2,
+            completed: 5,
+            failed: 8,
+          },
+        })
+
+      const { findInTable, pageButton } = renderPage()
+      await findInTable("Support agent")
+      await fireEvent.change(screen.getByDisplayValue("All statuses"), {
+        target: { value: "failed" },
+      })
+      await findInTable("First page")
+      await fireEvent.click(pageButton("next")!)
+      await findInTable("Second page")
+
+      notify()
+
+      await findInTable("Second page updated")
+      expect(queries().at(-1)).toEqual({
+        env: undefined,
+        status: "failed",
+        limit: 20,
+        bookmark: "next-1",
+      })
+      expect(screen.getByText("Page 2")).toBeInTheDocument()
+      expect(screen.getByText("22")).toBeInTheDocument()
+    })
+
+    it("keeps the open panel while refreshing in the background", async () => {
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockResolvedValueOnce({
+          ...response,
+          sessions: [{ ...response.sessions[0], actionCount: 6 }],
+        })
+
+      const { findInTable } = renderPage()
+      await fireEvent.click(await findInTable("Support agent"))
+
+      notify()
+
+      await waitFor(() => {
+        expect(panel().getByText("6")).toBeInTheDocument()
+      })
+    })
+
+    it("keeps the panel open with a warning while its session is out of the results", async () => {
+      const otherSession = {
+        ...response.sessions[0],
+        sourceId: "session-2",
+        assetLabel: "Other agent",
+      }
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockResolvedValueOnce({ ...response, sessions: [otherSession] })
+        .mockResolvedValueOnce({
+          ...response,
+          sessions: [{ ...response.sessions[0], actionCount: 7 }, otherSession],
+        })
+
+      const { findInTable } = renderPage()
+      await fireEvent.click(await findInTable("Support agent"))
+
+      notify()
+      await findInTable("Other agent")
+
+      expect(panel().getAllByText("Support agent").length).toBeGreaterThan(0)
+      expect(panel().getByText("4")).toBeInTheDocument()
+      expect(
+        panel().getByText("Details may be out of date")
+      ).toBeInTheDocument()
+
+      notify()
+
+      await waitFor(() => {
+        expect(panel().getByText("7")).toBeInTheDocument()
+      })
+      expect(
+        panel().queryByText("Details may be out of date")
+      ).not.toBeInTheDocument()
+    })
+
+    it("does not reopen a closed panel when its session is refreshed", async () => {
+      mocks.fetchActionSessions.mockResolvedValue(response)
+
+      const { findInTable } = renderPage()
+      await fireEvent.click(await findInTable("Support agent"))
+      await fireEvent.click(
+        document.querySelector<HTMLElement>(".activity-panel-overlay")!
+      )
+
+      notify()
+
+      await waitFor(() => expect(queries()).toHaveLength(2))
+      await settle()
+      expect(
+        document.querySelector(".activity-panel-container")
+      ).not.toBeInTheDocument()
+    })
+
+    it("ignores changes from an environment outside the filter", async () => {
+      mocks.fetchActionSessions.mockResolvedValue(response)
+
+      const { findInTable } = renderPage()
+      await findInTable("Support agent")
+      await fireEvent.change(screen.getByDisplayValue("All environments"), {
+        target: { value: "dev" },
+      })
+      await waitFor(() => expect(queries()).toHaveLength(2))
+
+      notify(change({ environment: "prod" }))
+      notify(change({ environment: "dev" }))
+
+      await waitFor(() => expect(queries()).toHaveLength(3))
+      await settle()
+      expect(queries()).toHaveLength(3)
+      expect(queries().at(-1)).toEqual(expect.objectContaining({ env: "dev" }))
+    })
+
+    it("coalesces changes received during a refresh into one more refresh", async () => {
+      const refresh = deferred<FetchActionSessionsResponse>()
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockReturnValueOnce(refresh.promise)
+        .mockResolvedValue(response)
+
+      const { findInTable } = renderPage()
+      await findInTable("Support agent")
+
+      notify()
+      notify()
+      notify()
+      notify()
+      refresh.resolve(response)
+
+      await waitFor(() => expect(queries()).toHaveLength(3))
+      await settle()
+      expect(queries()).toHaveLength(3)
+    })
+
+    it("refreshes again after a filter load that was in flight when a change arrived", async () => {
+      const filtered = deferred<FetchActionSessionsResponse>()
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockReturnValueOnce(filtered.promise)
+        .mockResolvedValueOnce({
+          ...response,
+          sessions: [{ ...response.sessions[0], assetLabel: "Refreshed" }],
+        })
+
+      const { findInTable } = renderPage()
+      await findInTable("Support agent")
+      await fireEvent.change(screen.getByDisplayValue("All statuses"), {
+        target: { value: "failed" },
+      })
+
+      notify()
+      filtered.resolve(response)
+
+      await findInTable("Refreshed")
+      expect(queries().at(-1)).toEqual(
+        expect.objectContaining({ status: "failed" })
+      )
+    })
+
+    it("discards a background response superseded by a filter change", async () => {
+      const refresh = deferred<FetchActionSessionsResponse>()
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockReturnValueOnce(refresh.promise)
+        .mockResolvedValueOnce({
+          ...response,
+          sessions: [
+            { ...response.sessions[0], assetLabel: "Failed sessions" },
+          ],
+        })
+
+      const { findInTable, table } = renderPage()
+      await findInTable("Support agent")
+
+      notify()
+      await fireEvent.change(screen.getByDisplayValue("All statuses"), {
+        target: { value: "failed" },
+      })
+      await findInTable("Failed sessions")
+      refresh.resolve({
+        ...response,
+        sessions: [{ ...response.sessions[0], assetLabel: "Stale refresh" }],
+      })
+
+      await settle()
+      expect(table().queryByText("Stale refresh")).not.toBeInTheDocument()
+      expect(table().getByText("Failed sessions")).toBeInTheDocument()
+    })
+
+    it("keeps the current rows when a background refresh fails", async () => {
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockRejectedValueOnce(new Error("boom"))
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+      const { findInTable, table } = renderPage()
+      await findInTable("Support agent")
+
+      notify()
+
+      await waitFor(() => expect(queries()).toHaveLength(2))
+      await settle()
+      expect(table().getByText("Support agent")).toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Try again" })
+      ).not.toBeInTheDocument()
+      errorSpy.mockRestore()
+    })
+
+    it("shows new sessions on the first page after going back to it", async () => {
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "First page",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Second page",
+            pagination: {
+              hasNextPage: false,
+              hasPreviousPage: true,
+              previousBookmark: "prev-2",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "First page again",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "New session",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1b",
+            },
+          })
+        )
+
+      const { findInTable, pageButton } = renderPage()
+      await findInTable("First page")
+      await fireEvent.click(pageButton("next")!)
+      await findInTable("Second page")
+      await fireEvent.click(pageButton("prev")!)
+      await findInTable("First page again")
+
+      notify()
+
+      await findInTable("New session")
+      expect(queries().at(-1)?.bookmark).toBeUndefined()
+      expect(pageButton("prev")).toHaveClass("is-disabled")
+    })
+
+    it("returns to the first page when a refresh empties a later page", async () => {
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "First page",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Second page",
+            pagination: {
+              hasNextPage: false,
+              hasPreviousPage: true,
+              previousBookmark: "prev-2",
+            },
+          })
+        )
+        .mockResolvedValueOnce({
+          ...response,
+          sessions: [],
+          pagination: { hasNextPage: false, hasPreviousPage: false },
+        })
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Moved to first page",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1b",
+            },
+          })
+        )
+
+      const { findInTable, pageButton } = renderPage()
+      await findInTable("First page")
+      await fireEvent.click(pageButton("next")!)
+      await findInTable("Second page")
+
+      notify()
+
+      await findInTable("Moved to first page")
+      expect(screen.getByText("Page 1")).toBeInTheDocument()
+      expect(queries().map(query => query.bookmark)).toEqual([
+        undefined,
+        "next-1",
+        "next-1",
+        undefined,
+      ])
+    })
+
+    it("refreshes when the socket reconnects", async () => {
+      mocks.fetchActionSessions.mockResolvedValue(response)
+
+      const { findInTable } = renderPage()
+      await findInTable("Support agent")
+
+      socket.trigger("connect")
+
+      await waitFor(() => expect(queries()).toHaveLength(2))
+    })
+
+    it("stops listening and drops queued refreshes when unmounted", async () => {
+      const initial = deferred<FetchActionSessionsResponse>()
+      mocks.fetchActionSessions
+        .mockReturnValueOnce(initial.promise)
+        .mockResolvedValue(response)
+
+      const { unmount } = renderPage()
+      notify()
+      unmount()
+      initial.resolve(response)
+
+      await settle()
+      expect(queries()).toHaveLength(1)
+      expect(socket.listenerCount(BuilderSocketEvent.ActionSessionChange)).toBe(
+        0
+      )
+      expect(socket.listenerCount("connect")).toBe(0)
+    })
   })
 })

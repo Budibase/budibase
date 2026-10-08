@@ -2,13 +2,15 @@ import { v4 as uuidv4 } from "uuid"
 import type {
   ActionSourceContext,
   PlatformActionContainerStatus,
+  PlatformActionSessionChange,
   PlatformActionSessionIndexJob,
+  PlatformActionSessionIndexedFn,
 } from "@budibase/types"
 import * as context from "../../../context"
 import { BudibaseQueue, JobQueue } from "../../../queue"
 import { upsertPlatformActionSession } from "./sessionIndex"
 
-const DEFAULT_INDEX_QUEUE_CONCURRENCY = 2
+const DEFAULT_INDEX_QUEUE_CONCURRENCY = 4
 const DEFAULT_INDEX_QUEUE_BACKOFF_MS = 5000
 const DEFAULT_INDEX_QUEUE_ATTEMPTS = 6
 
@@ -52,9 +54,34 @@ function getIndexQueue() {
   return platformActionSessionIndexQueue
 }
 
-export async function initPlatformActionSessionIndexQueue(
-  concurrency = DEFAULT_INDEX_QUEUE_CONCURRENCY
-): Promise<void> {
+export interface InitPlatformActionSessionIndexQueueOpts {
+  concurrency?: number
+  onSessionIndexed?: PlatformActionSessionIndexedFn
+}
+
+function notifySessionIndexed(
+  onSessionIndexed: PlatformActionSessionIndexedFn | undefined,
+  change: PlatformActionSessionChange
+) {
+  // The session is already committed - a failure here must not fail the job,
+  // as a Bull retry would count the action twice
+  try {
+    onSessionIndexed?.(change)
+  } catch (err) {
+    console.error("Failed to notify platform action session change", {
+      change,
+      err,
+    })
+  }
+}
+
+// Only processes that call this consume the queue - enqueuing alone never
+// starts a consumer, so jobs are not picked up by processes (e.g. automation
+// threads) that can't notify session changes
+export async function initPlatformActionSessionIndexQueue({
+  concurrency = DEFAULT_INDEX_QUEUE_CONCURRENCY,
+  onSessionIndexed,
+}: InitPlatformActionSessionIndexQueueOpts = {}): Promise<void> {
   if (platformActionSessionIndexQueueInitialised) {
     return
   }
@@ -65,9 +92,17 @@ export async function initPlatformActionSessionIndexQueue(
   try {
     processPromise = getIndexQueue().process(concurrency, async job => {
       const { workspaceId, ...indexInput } = job.data
-      await context.doInWorkspaceContext(workspaceId, async () => {
-        await upsertPlatformActionSession(indexInput)
-      })
+      const indexed = await context.doInWorkspaceContext(workspaceId, () =>
+        upsertPlatformActionSession(indexInput)
+      )
+      if (indexed) {
+        notifySessionIndexed(onSessionIndexed, {
+          workspaceId,
+          environment: indexInput.environment,
+          sourceType: indexInput.sourceType,
+          sourceId: indexInput.sourceId,
+        })
+      }
     })
   } catch (error) {
     platformActionSessionIndexQueueInitialised = false
@@ -87,7 +122,6 @@ export async function initPlatformActionSessionIndexQueue(
 export async function enqueuePlatformActionSessionIndex(
   job: PlatformActionSessionIndexJob
 ): Promise<void> {
-  initPlatformActionSessionIndexQueue()
   await getIndexQueue().add(job, { jobId: job.indexId })
 }
 

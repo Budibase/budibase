@@ -148,3 +148,19 @@ export interface PlatformActionSessionIndexJob extends ActionSourceContext {
   // forwarded to external analytics
   metadata?: PlatformActionSessionMetadata
 }
+
+export interface PlatformActionSessionChange extends ActionSourceContext {
+  workspaceId: string
+  environment: PlatformActionEnvironment
+}
+
+export type PlatformActionSessionIndexedFn = (
+  change: PlatformActionSessionChange
+) => void
+
+export interface ActionSessionChangeEvent {
+  environment: PlatformActionEnvironment
+  sessions: ActionSourceContext[]
+  // More sessions changed than were listed, any session may be stale
+  truncated?: boolean
+}
