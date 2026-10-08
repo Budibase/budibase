@@ -21,6 +21,7 @@ import {
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
 } from "@budibase/shared-core"
+import { rm } from "fs/promises"
 import Joi from "joi"
 import {
   AddWorkspaceSampleDataResponse,
@@ -620,7 +621,8 @@ async function performWorkspaceCreate(
   ctx: UserCtx<
     CreateWorkspaceRequest | OnboardingWorkspaceRequest,
     CreateWorkspaceResponse
-  >
+  >,
+  serverFilePath?: string
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
@@ -662,9 +664,9 @@ async function performWorkspaceCreate(
       path,
       password: encryptionPassword,
     }
-  } else if (typeof body.file?.path === "string") {
+  } else if (serverFilePath) {
     instanceConfig.file = {
-      path: body.file?.path,
+      path: serverFilePath,
     }
   }
 
@@ -937,9 +939,12 @@ async function workspacePostCreate(
 }
 
 export async function create(
-  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
+  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>,
+  serverFilePath?: string
 ) {
-  const newApplication = await quotas.addApp(() => performWorkspaceCreate(ctx))
+  const newApplication = await quotas.addApp(() =>
+    performWorkspaceCreate(ctx, serverFilePath)
+  )
   await workspacePostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
   ctx.body = newApplication
@@ -1310,7 +1315,11 @@ export async function duplicateWorkspace(
   } as UserCtx<CreateWorkspaceRequest, Workspace>
 
   // Build the new application
-  await create(createRequest)
+  try {
+    await create(createRequest, tmpPath)
+  } finally {
+    await rm(tmpPath, { recursive: true, force: true })
+  }
   const { body: newApplication } = createRequest
 
   if (!newApplication) {
