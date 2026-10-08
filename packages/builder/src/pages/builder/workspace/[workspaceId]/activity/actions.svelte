@@ -97,7 +97,9 @@
   let loadInFlight = false
   let refreshQueued = false
   let destroyed = false
-  let selectedSessionId = $state<string | null>(null)
+  // Last known version of the selected session, kept while it's out of the
+  // current results so the panel doesn't close as sessions move around
+  let selectedSession = $state<ActionSession | undefined>()
   let statusFilter = $state<StatusFilter>("all")
   let environmentFilter = $state<EnvironmentFilter>("all")
   // Ticks on an interval purely to force updatedLabel to re-derive
@@ -107,10 +109,11 @@
     sessions.map(session => toActionSessionRow({ session, now }))
   )
 
-  let selectedSession = $derived(
-    sessions.find(
-      session => getActionSessionRowId(session) === selectedSessionId
-    )
+  const findSession = (id: string) =>
+    sessions.find(session => getActionSessionRowId(session) === id)
+
+  let selectedSessionOutdated = $derived(
+    !!selectedSession && !findSession(getActionSessionRowId(selectedSession))
   )
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
@@ -171,7 +174,7 @@
       if (!background) {
         // This load already covers every change notified so far
         refreshQueued = false
-        selectedSessionId = null
+        selectedSession = undefined
         loading = true
         loadFailed = false
       }
@@ -192,6 +195,11 @@
           return loadSessions({ background })
         }
         sessions = response.sessions
+        if (selectedSession) {
+          selectedSession =
+            findSession(getActionSessionRowId(selectedSession)) ??
+            selectedSession
+        }
         summary = response.summary
         pagination = response.pagination
         currentPage = request.page
@@ -287,11 +295,11 @@
   }
 
   function selectSession(row: ActionSessionRow) {
-    selectedSessionId = row._id
+    selectedSession = findSession(row._id)
   }
 
   function closeSessionPanel() {
-    selectedSessionId = null
+    selectedSession = undefined
   }
 
   onMount(() => {
@@ -390,5 +398,9 @@
     </ActivityTablePanel>
   {/if}
 
-  <ActionSessionPanel session={selectedSession} onClose={closeSessionPanel} />
+  <ActionSessionPanel
+    session={selectedSession}
+    outdated={selectedSessionOutdated}
+    onClose={closeSessionPanel}
+  />
 </ActivityPage>

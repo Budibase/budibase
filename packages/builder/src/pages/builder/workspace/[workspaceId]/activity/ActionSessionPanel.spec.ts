@@ -1,14 +1,33 @@
-import { fireEvent, render, screen } from "@testing-library/svelte"
+import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
   Event,
   type ActionSession,
+  type ActionSessionChangeEvent,
   type FetchActionSessionEventsResponse,
 } from "@budibase/types"
 import ActionSessionPanel from "./ActionSessionPanel.svelte"
 
 const mocks = vi.hoisted(() => {
   const { writable } = require("svelte/store")
+  type Handler = (payload?: ActionSessionChangeEvent) => void
+  const handlers = new Map<string, Set<Handler>>()
+  const socket = {
+    on: (event: string, handler: Handler) => {
+      if (!handlers.has(event)) {
+        handlers.set(event, new Set())
+      }
+      handlers.get(event)!.add(handler)
+    },
+    off: (event: string, handler: Handler) => {
+      handlers.get(event)?.delete(handler)
+    },
+    trigger: (event: string, payload?: ActionSessionChangeEvent) => {
+      handlers.get(event)?.forEach(handler => handler(payload))
+    },
+    reset: () => handlers.clear(),
+  }
   return {
     fetchActionSessionEvents: vi.fn(),
     automationStore: writable({
@@ -19,7 +38,10 @@ const mocks = vi.hoisted(() => {
       },
     }),
     agentsStore: writable({ agents: [] }),
-    builderStore: writable({ isResizingPanel: false }),
+    socket,
+    builderStore: Object.assign(writable({ isResizingPanel: false }), {
+      websocket: socket,
+    }),
   }
 })
 
@@ -74,13 +96,17 @@ const deferred = <T>() => {
   return { promise, resolve }
 }
 
-const renderPanel = (panelSession: ActionSession | undefined) =>
+const renderPanel = (
+  panelSession: ActionSession | undefined,
+  { outdated = false }: { outdated?: boolean } = {}
+) =>
   render(ActionSessionPanel, {
-    props: { session: panelSession, onClose: vi.fn() },
+    props: { session: panelSession, outdated, onClose: vi.fn() },
   })
 
 describe("ActionSessionPanel", () => {
   beforeEach(() => {
+    mocks.socket.reset()
     mocks.fetchActionSessionEvents.mockReset()
     mocks.agentsStore.set({ agents: [] })
   })
@@ -281,5 +307,196 @@ describe("ActionSessionPanel", () => {
 
     expect(await screen.findByText(/Step executed: Create Row/)).toBeVisible()
     expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
+  })
+
+  it("warns that the details may be out of date", async () => {
+    mocks.fetchActionSessionEvents.mockResolvedValue(
+      eventsResponse({ ids: [] })
+    )
+
+    renderPanel(session, { outdated: true })
+
+    expect(await screen.findByText("Details may be out of date")).toBeVisible()
+    expect(
+      screen.getByText("This session is no longer in the current results.")
+    ).toBeVisible()
+  })
+
+  describe("live updates", () => {
+    const SETTLE_MS = 50
+
+    const change = (
+      overrides: Partial<ActionSessionChangeEvent> = {}
+    ): ActionSessionChangeEvent => ({
+      environment: session.environment,
+      sessions: [
+        { sourceType: session.sourceType, sourceId: session.sourceId },
+      ],
+      ...overrides,
+    })
+
+    const notify = (event: ActionSessionChangeEvent = change()) =>
+      mocks.socket.trigger(BuilderSocketEvent.ActionSessionChange, event)
+
+    const settle = () => new Promise(resolve => setTimeout(resolve, SETTLE_MS))
+
+    const bookmarks = () =>
+      mocks.fetchActionSessionEvents.mock.calls.map(([opts]) => opts.bookmark)
+
+    it("refreshes the current events page when its session changes", async () => {
+      mocks.fetchActionSessionEvents
+        .mockResolvedValueOnce(
+          eventsResponse({
+            ids: ["event-1"],
+            total: 21,
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          eventsResponse({
+            ids: ["event-21"],
+            total: 21,
+            pagination: {
+              hasNextPage: false,
+              hasPreviousPage: true,
+              previousBookmark: "prev-2",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          eventsResponse({
+            ids: ["event-21", "event-22"],
+            total: 22,
+            pagination: {
+              hasNextPage: false,
+              hasPreviousPage: true,
+              previousBookmark: "prev-2",
+            },
+          })
+        )
+
+      const { container } = renderPanel(session)
+      await screen.findByText("Showing 1–1 of 21 items")
+      await fireEvent.click(
+        container.ownerDocument.querySelector<HTMLElement>(
+          ".spectrum-Pagination-nextButton"
+        )!
+      )
+      await screen.findByText("Showing 21–21 of 21 items")
+
+      notify()
+
+      expect(await screen.findByText("Showing 21–22 of 22 items")).toBeVisible()
+      expect(screen.getAllByText(/Step executed/)).toHaveLength(2)
+      expect(bookmarks()).toEqual([undefined, "next-1", "next-1"])
+    })
+
+    it("ignores changes of other sessions and environments", async () => {
+      mocks.fetchActionSessionEvents.mockResolvedValue(
+        eventsResponse({ ids: ["event-1"] })
+      )
+
+      renderPanel(session)
+      await screen.findByText(/Step executed/)
+
+      notify(
+        change({
+          sessions: [{ sourceType: session.sourceType, sourceId: "other" }],
+        })
+      )
+      notify(change({ environment: "prod" }))
+      notify(change({ environment: "prod", truncated: true }))
+
+      await settle()
+      expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(1)
+    })
+
+    it("refreshes on a truncated change in its environment", async () => {
+      mocks.fetchActionSessionEvents.mockResolvedValue(
+        eventsResponse({ ids: ["event-1"] })
+      )
+
+      renderPanel(session)
+      await screen.findByText(/Step executed/)
+
+      notify(change({ sessions: [], truncated: true }))
+
+      await waitFor(() =>
+        expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
+      )
+    })
+
+    it("coalesces changes received during a refresh into one more refresh", async () => {
+      const refresh = deferred<FetchActionSessionEventsResponse>()
+      mocks.fetchActionSessionEvents
+        .mockResolvedValueOnce(eventsResponse({ ids: ["event-1"] }))
+        .mockReturnValueOnce(refresh.promise)
+        .mockResolvedValue(eventsResponse({ ids: ["event-1"] }))
+
+      renderPanel(session)
+      await screen.findByText(/Step executed/)
+
+      notify()
+      notify()
+      notify()
+      refresh.resolve(eventsResponse({ ids: ["event-1"] }))
+
+      await waitFor(() =>
+        expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(3)
+      )
+      await settle()
+      expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(3)
+    })
+
+    it("keeps the current events when a refresh fails", async () => {
+      mocks.fetchActionSessionEvents
+        .mockResolvedValueOnce(eventsResponse({ ids: ["event-1"] }))
+        .mockRejectedValueOnce(new Error("boom"))
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+      renderPanel(session)
+      await screen.findByText(/Step executed/)
+
+      notify()
+
+      await waitFor(() =>
+        expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
+      )
+      await settle()
+      expect(screen.getByText(/Step executed/)).toBeVisible()
+      expect(
+        screen.queryByRole("button", { name: "Try again" })
+      ).not.toBeInTheDocument()
+      errorSpy.mockRestore()
+    })
+
+    it("refreshes when the socket reconnects", async () => {
+      mocks.fetchActionSessionEvents.mockResolvedValue(
+        eventsResponse({ ids: ["event-1"] })
+      )
+
+      renderPanel(session)
+      await screen.findByText(/Step executed/)
+
+      mocks.socket.trigger("connect")
+
+      await waitFor(() =>
+        expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
+      )
+    })
+
+    it("does not refresh while closed", async () => {
+      renderPanel(undefined)
+
+      notify()
+      mocks.socket.trigger("connect")
+
+      await settle()
+      expect(mocks.fetchActionSessionEvents).not.toHaveBeenCalled()
+    })
   })
 })

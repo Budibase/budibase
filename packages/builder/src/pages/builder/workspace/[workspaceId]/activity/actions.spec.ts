@@ -820,6 +820,60 @@ describe("Activity actions page", () => {
       })
     })
 
+    it("keeps the panel open with a warning while its session is out of the results", async () => {
+      const otherSession = {
+        ...response.sessions[0],
+        sourceId: "session-2",
+        assetLabel: "Other agent",
+      }
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockResolvedValueOnce({ ...response, sessions: [otherSession] })
+        .mockResolvedValueOnce({
+          ...response,
+          sessions: [{ ...response.sessions[0], actionCount: 7 }, otherSession],
+        })
+
+      const { findInTable } = renderPage()
+      await fireEvent.click(await findInTable("Support agent"))
+
+      notify()
+      await findInTable("Other agent")
+
+      expect(panel().getAllByText("Support agent").length).toBeGreaterThan(0)
+      expect(panel().getByText("4")).toBeInTheDocument()
+      expect(
+        panel().getByText("Details may be out of date")
+      ).toBeInTheDocument()
+
+      notify()
+
+      await waitFor(() => {
+        expect(panel().getByText("7")).toBeInTheDocument()
+      })
+      expect(
+        panel().queryByText("Details may be out of date")
+      ).not.toBeInTheDocument()
+    })
+
+    it("does not reopen a closed panel when its session is refreshed", async () => {
+      mocks.fetchActionSessions.mockResolvedValue(response)
+
+      const { findInTable } = renderPage()
+      await fireEvent.click(await findInTable("Support agent"))
+      await fireEvent.click(
+        document.querySelector<HTMLElement>(".activity-panel-overlay")!
+      )
+
+      notify()
+
+      await waitFor(() => expect(queries()).toHaveLength(2))
+      await settle()
+      expect(
+        document.querySelector(".activity-panel-container")
+      ).not.toBeInTheDocument()
+    })
+
     it("ignores changes from an environment outside the filter", async () => {
       mocks.fetchActionSessions.mockResolvedValue(response)
 
