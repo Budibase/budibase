@@ -1,4 +1,5 @@
 import zlib from "zlib"
+import { readUIMessageStream, type UIMessageChunk } from "ai"
 import { context, events } from "@budibase/backend-core"
 import {
   Agent,
@@ -547,7 +548,8 @@ describe("resumeOperation", () => {
       const [request] =
         await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
       expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-        expect.objectContaining({ requestId, awaitingEscalation: true })
+        expect.objectContaining({ requestId, awaitingEscalation: true }),
+        expect.any(Number)
       )
       expect(request.status).toEqual("needs_input")
       expect(request.actions).toEqual(
@@ -577,19 +579,24 @@ describe("resumeOperation", () => {
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "active",
+        timestamp: expect.any(String),
       })
       expect(enqueueLifecycleMock).toHaveBeenCalledWith({
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "completed",
+        timestamp: expect.any(String),
       })
-      expect(aiAgentExecutedMock).toHaveBeenCalledWith({
-        agentId: "agent_1",
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        sessionId: "session_1",
-        requestId,
-      })
+      expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+        {
+          agentId: "agent_1",
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          sessionId: "session_1",
+          requestId,
+        },
+        expect.any(Number)
+      )
     })
   })
 
@@ -641,16 +648,169 @@ describe("resumeOperation", () => {
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "active",
+        timestamp: expect.any(String),
       })
-      expect(aiAgentFailedMock).toHaveBeenCalledWith({
-        agentId: "agent_1",
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        sessionId: "session_1",
+      expect(aiAgentFailedMock).toHaveBeenCalledWith(
+        {
+          agentId: "agent_1",
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          sessionId: "session_1",
+          requestId,
+          reason: "error",
+          errorMessage: "Model unavailable",
+        },
+        expect.any(Number)
+      )
+    })
+  })
+
+  it.each([true, false])(
+    "keeps pending approvals waiting after a stream failure (request tracking: %s)",
+    async tracking => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const requestId = tracking
+          ? (await createRequest())!.requestId
+          : undefined
+        if (requestId) {
+          await sdk.ai.agentRequests.updateRequestStatus({
+            requestId,
+            status: "needs_input",
+          })
+        }
+        await context.getWorkspaceDB().put(
+          baseDoc({
+            _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+            requestId,
+          })
+        )
+        prepareAgentChatRunMock.mockResolvedValue({
+          toolDisplayNames: {},
+          stream: jest.fn().mockRejectedValue(new Error("Model unavailable")),
+        })
+
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ requestId, response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("Model unavailable")
+
+        expect(aiAgentFailedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+        expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          signal: "waiting",
+          timestamp: expect.any(String),
+        })
+        const requests =
+          await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+        expect(requests.map(request => request.status)).toEqual(
+          tracking ? ["needs_input"] : []
+        )
+      })
+    }
+  )
+
+  it("timestamps the pending correction after the failure even within one millisecond", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await context.getWorkspaceDB().put(
+        baseDoc({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+        })
+      )
+      getOrThrowMock.mockRejectedValue(new Error("Agent unavailable"))
+      const now = Date.now()
+      const clock = jest.spyOn(Date, "now").mockReturnValue(now)
+      try {
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("Agent unavailable")
+
+        expect(aiAgentFailedMock).toHaveBeenCalledWith(
+          expect.objectContaining({ sourceId: "session_1" }),
+          now
+        )
+        expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          signal: "waiting",
+          timestamp: new Date(now + 1).toISOString(),
+        })
+      } finally {
+        clock.mockRestore()
+      }
+    })
+  })
+
+  it("preserves the original resume error and request when the pending lookup fails", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
         requestId,
-        reason: "error",
-        errorMessage: "Model unavailable",
+        status: "needs_input",
       })
+      getOrThrowMock.mockRejectedValue(new Error("Agent unavailable"))
+      listContextDocsMock.mockRejectedValueOnce(new Error("Lookup unavailable"))
+
+      await expect(
+        resumeOperation({
+          doc: baseDoc({ requestId, response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+      ).rejects.toThrow("Agent unavailable")
+
+      expect(aiAgentFailedMock).toHaveBeenCalledTimes(1)
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("needs_input")
+    })
+  })
+
+  it("preserves the original finalization error and request when the pending lookup fails", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      mockApprovedRun("Approved and booked.")
+      const resolveFinalRequestOutcomeSpy = jest
+        .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
+        .mockRejectedValueOnce(new Error("Finalization unavailable"))
+      listContextDocsMock.mockRejectedValueOnce(new Error("Lookup unavailable"))
+
+      try {
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ requestId, response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("Finalization unavailable")
+
+        expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        expect(
+          enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+        ).toEqual(["active", "failed"])
+        const [request] =
+          await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("needs_input")
+      } finally {
+        resolveFinalRequestOutcomeSpy.mockRestore()
+      }
     })
   })
 
@@ -668,15 +828,18 @@ describe("resumeOperation", () => {
         })
       ).rejects.toThrow("Agent unavailable")
 
-      expect(aiAgentFailedMock).toHaveBeenCalledWith({
-        agentId: "agent_1",
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        sessionId: "session_1",
-        requestId,
-        reason: "error",
-        errorMessage: "Agent unavailable",
-      })
+      expect(aiAgentFailedMock).toHaveBeenCalledWith(
+        {
+          agentId: "agent_1",
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          sessionId: "session_1",
+          requestId,
+          reason: "error",
+          errorMessage: "Agent unavailable",
+        },
+        expect.any(Number)
+      )
     })
   })
 
@@ -711,47 +874,71 @@ describe("resumeOperation", () => {
       })
 
       expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-        expect.objectContaining({ requestId })
+        expect.objectContaining({ requestId }),
+        expect.any(Number)
       )
       expect(aiAgentFailedMock).not.toHaveBeenCalled()
     })
   })
 
-  it("corrects a completed agent action to failed when finalizing the resume throws", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const { requestId } = (await createRequest())!
-      mockApprovedRun("Approved and booked.")
-      const resolveFinalRequestOutcomeSpy = jest
-        .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
-        .mockRejectedValueOnce(new Error("DB unavailable"))
-
-      try {
-        await expect(
-          resumeOperation({
-            doc: baseDoc({ requestId, response: { accepted: true } }),
-            escalationId: "esc_primary",
-            resolution: "resolved",
-            ctx: baseCtx,
+  it.each([false, true])(
+    "corrects the session without double-counting when finalizing fails (pending approval: %s)",
+    async hasPending => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createRequest())!
+        if (hasPending) {
+          await sdk.ai.agentRequests.updateRequestStatus({
+            requestId,
+            status: "needs_input",
           })
-        ).rejects.toThrow("DB unavailable")
+          await context.getWorkspaceDB().put(
+            baseDoc({
+              _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+              requestId,
+            })
+          )
+        }
+        mockApprovedRun("Approved and booked.")
+        const resolveFinalRequestOutcomeSpy = jest
+          .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
+          .mockRejectedValueOnce(new Error("DB unavailable"))
 
-        // The action was already emitted as completed before the failure -
-        // don't emit a second action (it would double-count actionCount),
-        // correct the materialized session status instead.
-        expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-          expect.objectContaining({ requestId })
-        )
-        expect(aiAgentFailedMock).not.toHaveBeenCalled()
-        expect(enqueueLifecycleMock).toHaveBeenCalledWith({
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          signal: "failed",
-        })
-      } finally {
-        resolveFinalRequestOutcomeSpy.mockRestore()
-      }
-    })
-  })
+        try {
+          await expect(
+            resumeOperation({
+              doc: baseDoc({ requestId, response: { accepted: true } }),
+              escalationId: "esc_primary",
+              resolution: "resolved",
+              ctx: baseCtx,
+            })
+          ).rejects.toThrow("DB unavailable")
+
+          // The action was already emitted as completed before the failure -
+          // don't emit a second action (it would double-count actionCount),
+          // correct the materialized session status instead.
+          expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+            expect.objectContaining({ requestId }),
+            expect.any(Number)
+          )
+          expect(aiAgentFailedMock).not.toHaveBeenCalled()
+          expect(
+            enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+          ).toEqual(["active", hasPending ? "waiting" : "failed"])
+          expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            signal: hasPending ? "waiting" : "failed",
+            timestamp: expect.any(String),
+          })
+          const [request] =
+            await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+          expect(request.status).toEqual(hasPending ? "needs_input" : "failed")
+        } finally {
+          resolveFinalRequestOutcomeSpy.mockRestore()
+        }
+      })
+    }
+  )
 
   it("reconstructs an automation user with its requester role", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -836,6 +1023,7 @@ describe("resumeOperation", () => {
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "waiting",
+        timestamp: expect.any(String),
       })
     })
   })
@@ -872,6 +1060,7 @@ describe("resumeOperation", () => {
               sourceType: "agent_session",
               sourceId: "session_1",
               signal: "active",
+              timestamp: expect.any(String),
             },
           ],
         ])
@@ -879,6 +1068,294 @@ describe("resumeOperation", () => {
         outcomeSpy.mockRestore()
       }
     })
+  })
+
+  describe("sessions without request tracking", () => {
+    it("marks the session active and emits the resumed action", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        mockApprovedRun("Approved and booked.")
+
+        await resumeOperation({
+          doc: baseDoc({ response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+
+        expect(enqueueLifecycleMock.mock.calls).toEqual([
+          [
+            {
+              sourceType: "agent_session",
+              sourceId: "session_1",
+              signal: "active",
+              timestamp: expect.any(String),
+            },
+          ],
+        ])
+        expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+          {
+            agentId: "agent_1",
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            sessionId: "session_1",
+          },
+          expect.any(Number)
+        )
+      })
+    })
+
+    it("keeps the session waiting while another escalation on the session is pending", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put(
+          baseDoc({
+            _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+          })
+        )
+        mockApprovedRun("Approved and booked.")
+
+        await resumeOperation({
+          doc: baseDoc({ response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+
+        expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
+        expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          signal: "waiting",
+          timestamp: expect.any(String),
+        })
+      })
+    })
+
+    it("flags a new approval raised during the resumed turn", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        prepareAgentChatRunMock.mockResolvedValue({
+          toolDisplayNames: {},
+          sessionLogIndexer: {
+            index: jest.fn().mockResolvedValue(undefined),
+          },
+          stream: jest.fn().mockImplementation(async options => {
+            options.onToolCallCompleted({
+              toolName: "book_meeting",
+              status: "success",
+              input: { title: "A different meeting" },
+              output: {
+                status: ApprovalToolResultStatus.PENDING_APPROVAL,
+                escalationId: "esc_next",
+              },
+            })
+            return {
+              finishReason: Promise.resolve("stop"),
+              toUIMessageStream: () =>
+                (async function* () {
+                  yield { id: "", role: "assistant", parts: [] }
+                })(),
+            }
+          }),
+        })
+
+        await resumeOperation({
+          doc: baseDoc({ response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+
+        expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+          expect.objectContaining({ awaitingEscalation: true }),
+          expect.any(Number)
+        )
+      })
+    })
+
+    it("emits a failed action when the resumed agent stream fails", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        prepareAgentChatRunMock.mockResolvedValue({
+          toolDisplayNames: {},
+          sessionLogIndexer: {
+            index: jest.fn().mockResolvedValue(undefined),
+          },
+          stream: jest.fn().mockRejectedValue(new Error("Model unavailable")),
+        })
+
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("Model unavailable")
+
+        expect(aiAgentFailedMock).toHaveBeenCalledWith(
+          {
+            agentId: "agent_1",
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            sessionId: "session_1",
+            reason: "error",
+            errorMessage: "Model unavailable",
+          },
+          expect.any(Number)
+        )
+      })
+    })
+
+    it("emits failure instead of success when the resumed stream contains an error chunk", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const ai = jest.requireActual<typeof import("ai")>("ai")
+        jest
+          .mocked(readUIMessageStream)
+          .mockImplementationOnce(ai.readUIMessageStream)
+        prepareAgentChatRunMock.mockResolvedValue({
+          toolDisplayNames: {},
+          sessionLogIndexer: {
+            index: jest.fn().mockResolvedValue(undefined),
+          },
+          stream: jest.fn().mockResolvedValue({
+            finishReason: Promise.resolve("error"),
+            toUIMessageStream: () =>
+              new ReadableStream<UIMessageChunk>({
+                start(controller) {
+                  controller.enqueue({ type: "start", messageId: "resume" })
+                  controller.enqueue({
+                    type: "error",
+                    errorText: "Model unavailable",
+                  })
+                  controller.close()
+                },
+              }),
+          }),
+        })
+
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("Model unavailable")
+
+        expect(aiAgentFailedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentFailedMock).toHaveBeenCalledWith(
+          {
+            agentId: "agent_1",
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            sessionId: "session_1",
+            reason: "error",
+            errorMessage: "Model unavailable",
+          },
+          expect.any(Number)
+        )
+        expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+      })
+    })
+
+    it("completes the session when the escalation is rejected", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await resumeOperation({
+          doc: baseDoc({ response: { accepted: false } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+
+        expect(enqueueLifecycleMock.mock.calls).toEqual([
+          [
+            {
+              sourceType: "agent_session",
+              sourceId: "session_1",
+              signal: "completed",
+              timestamp: expect.any(String),
+            },
+          ],
+        ])
+      })
+    })
+
+    it("leaves a rejected escalation retryable when checking pending escalations fails", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const doc = baseDoc({
+          resolution: "resolved",
+          response: { accepted: false },
+        })
+        await context.getWorkspaceDB().put(doc)
+        listContextDocsMock.mockRejectedValueOnce(new Error("DB unavailable"))
+
+        await expect(
+          resumeOperation({
+            doc,
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("DB unavailable")
+
+        const stored = await context
+          .getWorkspaceDB()
+          .get<EscalationContextDoc>(doc._id!)
+        expect(stored.resolution).toBe("resolved")
+        expect(stored.resumeResultCompressed).toBeUndefined()
+        expect(enqueueLifecycleMock).not.toHaveBeenCalled()
+      })
+    })
+
+    it("fails the session when the escalation expires without a response", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await resumeOperation({
+          doc: baseDoc(),
+          escalationId: "esc_primary",
+          resolution: "expired",
+          ctx: baseCtx,
+        })
+
+        expect(enqueueLifecycleMock.mock.calls).toEqual([
+          [
+            {
+              sourceType: "agent_session",
+              sourceId: "session_1",
+              signal: "failed",
+              timestamp: expect.any(String),
+            },
+          ],
+        ])
+      })
+    })
+
+    it.each(["expired", "resolved"] as const)(
+      "reconfirms waiting when a non-approved escalation is %s while another is pending",
+      async resolution => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          await context.getWorkspaceDB().put(
+            baseDoc({
+              _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+            })
+          )
+
+          await resumeOperation({
+            doc: baseDoc({ response: { accepted: false } }),
+            escalationId: "esc_primary",
+            resolution,
+            ctx: baseCtx,
+          })
+
+          expect(enqueueLifecycleMock).toHaveBeenCalledTimes(1)
+          expect(enqueueLifecycleMock).toHaveBeenCalledWith({
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            signal: "waiting",
+            timestamp: expect.any(String),
+          })
+          expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+          expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        })
+      }
+    )
   })
 
   it("records escalation_resolved with outcome expired", async () => {
@@ -908,6 +1385,7 @@ describe("resumeOperation", () => {
         sourceType: "agent_session",
         sourceId: "session_1",
         signal: "failed",
+        timestamp: expect.any(String),
       })
     })
   })
@@ -1021,7 +1499,7 @@ describe("resumeOperation", () => {
     })
   })
 
-  it("does nothing when the escalation has no associated request", async () => {
+  it("does not touch requests when the escalation has no associated request", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       mockApprovedRun("Approved and booked.")
 
@@ -1034,8 +1512,9 @@ describe("resumeOperation", () => {
         })
       ).resolves.toBeUndefined()
 
-      expect(enqueueLifecycleMock).not.toHaveBeenCalled()
-      expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+      expect(
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      ).toEqual([])
     })
   })
 

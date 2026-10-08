@@ -252,6 +252,7 @@ export async function run({
           sourceId: sessionId,
           sessionId,
           requestId: agentRun.sessionLogIndexer.getRequestIds().at(-1),
+          ...(agentRun.isSuspended() ? { awaitingEscalation: true } : {}),
         })
 
         return {
