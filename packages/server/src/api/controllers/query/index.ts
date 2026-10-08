@@ -49,11 +49,7 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
-import {
-  propagateCreatedResourceDependenciesWithWarning,
-  propagateProjectDependencyChangesWithWarning,
-  propagateMovedQueryDependenciesWithWarning,
-} from "../../../utilities/projects"
+import { withProjectPropagationWarning } from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
@@ -195,11 +191,13 @@ const _import = async (
       }
 
       const datasource = await sdk.datasources.get(datasourceId)
-      await propagateCreatedResourceDependenciesWithWarning({
+      await withProjectPropagationWarning({
         ctx,
-        rootResourceId: datasourceId,
-        projectIds: datasource.projectIds,
-        savedResources: result.queries,
+        propagation: sdk.projects.propagateCreatedResourceDependencies({
+          rootResourceId: datasourceId,
+          projectIds: datasource.projectIds,
+          savedResources: result.queries,
+        }),
       })
       return result
     }
@@ -299,22 +297,26 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   query._rev = response.rev
 
   if (!existingQuery || existingQuery.datasourceId === datasource._id) {
-    await propagateProjectDependencyChangesWithWarning({
+    await withProjectPropagationWarning({
       ctx,
-      rootResourceId: datasource._id!,
-      currentProjectIds: datasource.projectIds,
-      previousProjectIds: datasource.projectIds,
-      previousResource: existingQuery,
-      savedResource: query,
+      propagation: sdk.projects.propagateProjectDependencyChanges({
+        rootResourceId: datasource._id!,
+        currentProjectIds: datasource.projectIds,
+        previousProjectIds: datasource.projectIds,
+        previousResource: existingQuery,
+        savedResource: query,
+      }),
     })
   } else {
-    await propagateMovedQueryDependenciesWithWarning({
+    await withProjectPropagationWarning({
       ctx,
-      existingDatasource,
-      datasource,
-      existingQuery,
-      query,
-      referencingAgents,
+      propagation: sdk.projects.propagateMovedQueryDependencies({
+        existingDatasource,
+        datasource,
+        existingQuery,
+        query,
+        referencingAgents,
+      }),
     })
   }
 
