@@ -37,7 +37,9 @@ type RestQueryToolResult =
       error: string
     }
 
-const buildParametersSchema = (query: Query) => {
+export const buildParametersSchema = (query: {
+  parameters?: Query["parameters"]
+}) => {
   const schemaFields: Record<string, z.ZodTypeAny> = {}
 
   for (const param of query.parameters || []) {
@@ -47,7 +49,7 @@ const buildParametersSchema = (query: Query) => {
       .describe(`Parameter: ${param.name}`)
   }
 
-  return z.object(schemaFields)
+  return z.object(schemaFields).strict()
 }
 
 const createQueryTool = ({
