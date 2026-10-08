@@ -893,7 +893,7 @@ describe("agent teams integration provisioning", () => {
             role: "assistant",
             parts: [{ type: "text", text: "Answer with private sources" }],
           },
-        ] as any,
+        ],
         assistantText: "Answer with private sources",
         ragSources: [
           {
@@ -928,13 +928,12 @@ describe("agent teams integration provisioning", () => {
         },
       })
 
-      expect(response.body.messages).toContain("Answer with private sources")
-      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(response.body.messages).toEqual(["Answer with private sources"])
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
 
-    it("does not append Teams RAG source links when downloads are disabled", async () => {
+    it("shows personal reply source names without links when downloads are disabled", async () => {
       mockedWebhookChat.mockResolvedValueOnce({
         messages: [
           {
@@ -942,7 +941,7 @@ describe("agent teams integration provisioning", () => {
             role: "assistant",
             parts: [{ type: "text", text: "Answer without links" }],
           },
-        ] as any,
+        ],
         assistantText: "Answer without links",
         allowKnowledgeSourceDownload: false,
         ragSources: [
@@ -973,10 +972,83 @@ describe("agent teams integration provisioning", () => {
         },
       })
 
-      expect(response.body.messages).toContain("Answer without links")
-      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(response.body.messages).toEqual([
+        "Answer without links",
+        JSON.stringify({
+          type: "card",
+          title: "Sources",
+          children: [{ type: "text", text: "Source.pdf" }],
+        }),
+      ])
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
+    })
+
+    it("keeps personal reply source names when a download link cannot be generated", async () => {
+      mockedGetFileUrlForAgent
+        .mockRejectedValueOnce(new Error("Source file is unavailable"))
+        .mockResolvedValueOnce("https://example.com/source.pdf")
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Answer with sources" }],
+          },
+        ],
+        assistantText: "Answer with sources",
+        allowKnowledgeSourceDownload: true,
+        ragSources: [
+          {
+            sourceId: "source-1",
+            fileId: "file-1",
+            filename: "Unavailable [Source]\n@Draft.pdf",
+          },
+          {
+            sourceId: "source-2",
+            fileId: "file-2",
+            filename: "Available source.pdf",
+          },
+        ],
+        title: "Mock conversation",
+      })
+
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-rag-unavailable",
+          type: "message",
+          text: "hello teams",
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(response.body.messages).toEqual([
+        "Answer with sources",
+        JSON.stringify({
+          type: "card",
+          title: "Sources",
+          children: [
+            { type: "text", text: "Unavailable Source Draft.pdf" },
+            {
+              type: "actions",
+              children: [
+                {
+                  type: "link_button",
+                  label: "Available source.pdf",
+                  url: "https://example.com/source.pdf",
+                },
+              ],
+            },
+          ],
+        }),
+      ])
     })
 
     it("replaces the channel working indicator with the assistant reply in team channels", async () => {
