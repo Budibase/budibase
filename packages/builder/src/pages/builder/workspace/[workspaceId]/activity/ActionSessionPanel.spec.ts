@@ -82,7 +82,48 @@ const renderPanel = (panelSession: ActionSession | undefined) =>
 describe("ActionSessionPanel", () => {
   beforeEach(() => {
     mocks.fetchActionSessionEvents.mockReset()
+    mocks.agentsStore.set({ agents: [] })
   })
+
+  it.each([
+    {
+      scenario: "renamed",
+      agents: [{ _id: "agent-1", name: "Renamed agent" }],
+    },
+    { scenario: "deleted", agents: [] },
+  ])(
+    "keeps the historical name in the timeline of a $scenario agent",
+    async ({ agents }) => {
+      mocks.agentsStore.set({ agents })
+      const response: FetchActionSessionEventsResponse = {
+        events: [
+          {
+            id: "event-1",
+            eventName: Event.ACTION_AI_AGENT_EXECUTED,
+            timestamp: session.startedAt,
+            payload: { agentId: "agent-1" },
+          },
+        ],
+        summary: { total: 1 },
+        pagination: { hasNextPage: false, hasPreviousPage: false },
+      }
+      mocks.fetchActionSessionEvents.mockResolvedValue(response)
+
+      renderPanel({
+        ...session,
+        sourceType: "agent_session",
+        sourceId: "session-1",
+        actionCount: 1,
+        assetType: "agent",
+        assetId: "agent-1",
+        assetLabel: "Historical agent",
+      })
+
+      expect(
+        await screen.findByText("Agent executed: Historical agent")
+      ).toBeVisible()
+    }
+  )
 
   it("does not load events while closed", () => {
     renderPanel(undefined)
