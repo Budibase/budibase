@@ -554,7 +554,9 @@ export const retrieveContextForOperation = async (
   }
 
   return {
-    text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
+    text: Array.from(new Set(chunks.map(chunk => chunk.chunkText))).join(
+      "\n\n"
+    ),
     chunks,
     sources: toSourceMetadata(chunks, files),
   }

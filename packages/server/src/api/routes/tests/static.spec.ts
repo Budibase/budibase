@@ -1,9 +1,15 @@
 import { constants, objectStore, roles } from "@budibase/backend-core"
-import { BuiltinPermissionID, Datasource, SourceName } from "@budibase/types"
+import { mocks } from "@budibase/backend-core/tests"
+import {
+  BuiltinPermissionID,
+  Datasource,
+  Feature,
+  SourceName,
+} from "@budibase/types"
 import fsp from "fs/promises"
 import path from "path"
 import { tmpdir } from "os"
-import { setEnv } from "../../../environment"
+import env, { setEnv } from "../../../environment"
 import * as fileSystem from "../../../utilities/fileSystem"
 import { afterAll as _afterAll, getConfig, getRequest } from "./utilities"
 
@@ -82,6 +88,114 @@ describe("/static", () => {
         .expect(200)
 
       expect(res.body.appId).toBe(config.devWorkspaceId)
+    })
+
+    describe("app scripts", () => {
+      beforeAll(async () => {
+        await config.api.workspace.update(config.getDevWorkspaceId(), {
+          scripts: [
+            {
+              id: "head-script",
+              name: "Head script",
+              location: "Head",
+              html: '<script id="custom-head-script">window.customHead = true</script><style id="custom-style">body { color: red }</style>',
+              cspWhitelist: "https://example.com",
+            },
+            {
+              id: "body-script",
+              name: "Body script",
+              location: "Body",
+              html: '<script id="custom-body-script">window.customBody = true</script>',
+            },
+          ],
+        })
+        await config.publish()
+      })
+
+      afterEach(() => {
+        jest.restoreAllMocks()
+        mocks.licenses.useUnlimited()
+      })
+
+      const fetchAppScripts = async ({
+        authenticated,
+        licensed,
+      }: {
+        authenticated: boolean
+        licensed: boolean
+      }) => {
+        mocks.licenses.useUnlimited({
+          features: licensed ? [Feature.CUSTOM_APP_SCRIPTS] : [],
+        })
+        jest.spyOn(env, "isJest").mockReturnValue(false)
+        const headers = config.defaultHeaders()
+        delete headers[constants.Header.WORKSPACE_ID]
+        if (!authenticated) {
+          delete headers.Cookie
+        }
+
+        return await request
+          .get(`/app${config.getProdWorkspace().url}`)
+          .set(headers)
+      }
+
+      it("renders scripts and CSP for licensed public users", async () => {
+        const res = await fetchAppScripts({
+          authenticated: false,
+          licensed: true,
+        })
+
+        expect(res.text).toContain('id="custom-head-script"')
+        expect(res.text).toContain('id="custom-body-script"')
+        expect(res.text).toContain('id="custom-style"')
+        expect(res.headers["content-security-policy"]).toContain(
+          "https://example.com"
+        )
+      })
+
+      it("renders scripts and CSP for licensed authenticated users", async () => {
+        const res = await fetchAppScripts({
+          authenticated: true,
+          licensed: true,
+        })
+
+        expect(res.text).toContain('id="custom-head-script"')
+        expect(res.text).toContain('id="custom-body-script"')
+        expect(res.text).toContain('id="custom-style"')
+        expect(res.headers["content-security-policy"]).toContain(
+          "https://example.com"
+        )
+      })
+
+      it("omits scripts and CSP whitelist entries for unlicensed public users", async () => {
+        const res = await fetchAppScripts({
+          authenticated: false,
+          licensed: false,
+        })
+
+        expect(res.status).toBe(200)
+        expect(res.text).not.toContain('id="custom-head-script"')
+        expect(res.text).not.toContain('id="custom-body-script"')
+        expect(res.text).not.toContain('id="custom-style"')
+        expect(res.headers["content-security-policy"]).not.toContain(
+          "https://example.com"
+        )
+      })
+
+      it("omits scripts and CSP whitelist entries for unlicensed authenticated users", async () => {
+        const res = await fetchAppScripts({
+          authenticated: true,
+          licensed: false,
+        })
+
+        expect(res.status).toBe(200)
+        expect(res.text).not.toContain('id="custom-head-script"')
+        expect(res.text).not.toContain('id="custom-body-script"')
+        expect(res.text).not.toContain('id="custom-style"')
+        expect(res.headers["content-security-policy"]).not.toContain(
+          "https://example.com"
+        )
+      })
     })
   })
 

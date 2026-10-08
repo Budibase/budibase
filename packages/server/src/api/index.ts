@@ -74,8 +74,8 @@ if (apiEnabled()) {
       })
     )
     .use(middleware.activeTenant())
-    .use(pro.licensing())
     .use(currentWorkspace)
+    .use(pro.licensing())
 
   // Add CSP as soon as possible - depends on licensing and currentApp
   if (!coreEnv.DISABLE_CONTENT_SECURITY_POLICY) {
