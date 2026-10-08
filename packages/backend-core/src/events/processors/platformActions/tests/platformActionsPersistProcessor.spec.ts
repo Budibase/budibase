@@ -262,6 +262,8 @@ describe("PlatformActionPersistProcessor", () => {
         expect(rows).toHaveLength(1)
         expect(JSON.stringify(rows[0].doc)).not.toContain("HR assistant")
         expect(JSON.stringify(rows[0].doc)).not.toContain("John Doe")
+        expect(JSON.stringify(rows[0].doc)).not.toContain("agent-1")
+        expect(JSON.stringify(rows[0].doc)).not.toContain("us_1")
       })
     })
 
