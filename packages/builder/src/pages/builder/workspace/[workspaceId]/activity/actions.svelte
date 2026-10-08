@@ -185,6 +185,12 @@
         if (sequence !== requestSequence) {
           return
         }
+        // Sessions only move towards the first page as they change, so a
+        // later page can empty out. An empty page has no bookmarks to step
+        // back with, so start over from the first page instead.
+        if (response.sessions.length === 0 && request.page > 1) {
+          return loadSessions({ background })
+        }
         sessions = response.sessions
         summary = response.summary
         pagination = response.pagination
@@ -257,11 +263,14 @@
     if (loading || !hasPrevPage) {
       return
     }
+    const page = currentPage - 1
+    // The first page is always loaded without a bookmark, so it shows the
+    // latest sessions instead of the ones just before the current page
     loadSessions({
-      request: {
-        page: Math.max(1, currentPage - 1),
-        bookmark: pagination?.previousBookmark,
-      },
+      request:
+        page > 1
+          ? { page, bookmark: pagination?.previousBookmark }
+          : { page: 1 },
     })
   }
 

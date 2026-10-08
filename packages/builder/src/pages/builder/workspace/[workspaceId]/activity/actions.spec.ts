@@ -279,7 +279,106 @@ describe("Activity actions page", () => {
 
     expect(
       mocks.fetchActionSessions.mock.calls.map(([query]) => query.bookmark)
-    ).toEqual([undefined, "next-1", "prev-2"])
+    ).toEqual([undefined, "next-1", undefined])
+  })
+
+  it("uses the previous bookmark when going back to a page after the first", async () => {
+    mocks.fetchActionSessions
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Second page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: true,
+            nextBookmark: "next-2",
+            previousBookmark: "prev-2",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Third page",
+          pagination: {
+            hasNextPage: false,
+            hasPreviousPage: true,
+            previousBookmark: "prev-3",
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "Second page again",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: true,
+            nextBookmark: "next-2",
+            previousBookmark: "prev-2",
+          },
+        })
+      )
+
+    const { findInTable, pageButton } = renderPage()
+    await findInTable("First page")
+    await fireEvent.click(pageButton("next")!)
+    await findInTable("Second page")
+    await fireEvent.click(pageButton("next")!)
+    await findInTable("Third page")
+    await fireEvent.click(pageButton("prev")!)
+
+    await findInTable("Second page again")
+    expect(screen.getByText("Page 2")).toBeInTheDocument()
+    expect(
+      mocks.fetchActionSessions.mock.calls.map(([query]) => query.bookmark)
+    ).toEqual([undefined, "next-1", "next-2", "prev-3"])
+  })
+
+  it("returns to the first page when a later page is empty", async () => {
+    mocks.fetchActionSessions
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1",
+          },
+        })
+      )
+      .mockResolvedValueOnce({
+        ...response,
+        sessions: [],
+        pagination: { hasNextPage: false, hasPreviousPage: false },
+      })
+      .mockResolvedValueOnce(
+        pageResponse({
+          assetLabel: "First page reloaded",
+          pagination: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+            nextBookmark: "next-1b",
+          },
+        })
+      )
+
+    const { findInTable, pageButton } = renderPage()
+    await findInTable("First page")
+    await fireEvent.click(pageButton("next")!)
+
+    await findInTable("First page reloaded")
+    expect(screen.getByText("Page 1")).toBeInTheDocument()
+    expect(
+      mocks.fetchActionSessions.mock.calls.map(([query]) => query.bookmark)
+    ).toEqual([undefined, "next-1", undefined])
   })
 
   it("disables pagination while loading and restores it after the response", async () => {
@@ -524,6 +623,7 @@ describe("Activity actions page", () => {
     await waitFor(() => {
       expect(screen.getByText("No actions tracked yet.")).toBeInTheDocument()
     })
+    expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(1)
   })
 
   it("explains an empty result caused by the status filter", async () => {
@@ -833,6 +933,118 @@ describe("Activity actions page", () => {
         screen.queryByRole("button", { name: "Try again" })
       ).not.toBeInTheDocument()
       errorSpy.mockRestore()
+    })
+
+    it("shows new sessions on the first page after going back to it", async () => {
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "First page",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Second page",
+            pagination: {
+              hasNextPage: false,
+              hasPreviousPage: true,
+              previousBookmark: "prev-2",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "First page again",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "New session",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1b",
+            },
+          })
+        )
+
+      const { findInTable, pageButton } = renderPage()
+      await findInTable("First page")
+      await fireEvent.click(pageButton("next")!)
+      await findInTable("Second page")
+      await fireEvent.click(pageButton("prev")!)
+      await findInTable("First page again")
+
+      notify()
+
+      await findInTable("New session")
+      expect(queries().at(-1)?.bookmark).toBeUndefined()
+      expect(pageButton("prev")).toHaveClass("is-disabled")
+    })
+
+    it("returns to the first page when a refresh empties a later page", async () => {
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "First page",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Second page",
+            pagination: {
+              hasNextPage: false,
+              hasPreviousPage: true,
+              previousBookmark: "prev-2",
+            },
+          })
+        )
+        .mockResolvedValueOnce({
+          ...response,
+          sessions: [],
+          pagination: { hasNextPage: false, hasPreviousPage: false },
+        })
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Moved to first page",
+            pagination: {
+              hasNextPage: true,
+              hasPreviousPage: false,
+              nextBookmark: "next-1b",
+            },
+          })
+        )
+
+      const { findInTable, pageButton } = renderPage()
+      await findInTable("First page")
+      await fireEvent.click(pageButton("next")!)
+      await findInTable("Second page")
+
+      notify()
+
+      await findInTable("Moved to first page")
+      expect(screen.getByText("Page 1")).toBeInTheDocument()
+      expect(queries().map(query => query.bookmark)).toEqual([
+        undefined,
+        "next-1",
+        "next-1",
+        undefined,
+      ])
     })
 
     it("refreshes when the socket reconnects", async () => {
