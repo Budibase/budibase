@@ -6,8 +6,8 @@ import MockInput from "@/test/mocks/MockInput.svelte"
 import MockModalContent from "@/test/mocks/MockModalContent.svelte"
 import MockSlot from "@/test/mocks/MockSlot.svelte"
 
-vi.mock("@budibase/bbui", async () => {
-  const { default: Toggle } = await import("@budibase/bbui/Form/Toggle.svelte")
+vi.mock("@budibase/bbui", async importOriginal => {
+  const { Toggle } = await importOriginal<typeof import("@budibase/bbui")>()
   return {
     Body: MockBody,
     Dropzone: MockDropzone,
