@@ -103,6 +103,7 @@ class AutomationLayoutEngine {
   private readonly incoming = new Set<string>()
   private readonly measured = new Map<string, MeasuredSubtree>()
   private readonly layoutPath = new Set<string>()
+  private readonly laidOut = new Set<string>()
 
   constructor(
     private readonly graph: { nodes: FlowNode[]; edges: FlowEdge[] },
@@ -124,12 +125,15 @@ class AutomationLayoutEngine {
   }
 
   layout() {
-    const roots = this.graph.nodes.filter(
-      node => !node.parentId && !this.incoming.has(node.id)
-    )
+    const topLevelNodes = this.graph.nodes.filter(node => !node.parentId)
+    const roots = topLevelNodes.filter(node => !this.incoming.has(node.id))
+    const layoutRoots = roots.length > 0 ? roots : topLevelNodes
 
     let nextTop = 0
-    roots.forEach(root => {
+    layoutRoots.forEach(root => {
+      if (this.laidOut.has(root.id)) {
+        return
+      }
       const measured = this.measureSubtree(root.id)
       this.layoutSubtree({
         nodeId: root.id,
@@ -247,6 +251,7 @@ class AutomationLayoutEngine {
     }
     node.targetPosition = Position.Left
     node.sourcePosition = Position.Right
+    this.laidOut.add(nodeId)
 
     const childEdges = this.getChildEdges(nodeId)
     const nodeBounds = boundsFromSize(x, nodeTop, nodeSize)
