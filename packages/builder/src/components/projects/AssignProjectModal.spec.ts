@@ -144,6 +144,34 @@ describe("AssignProjectModal", () => {
     })
   })
 
+  it("clears existing projects without submitting dependencies", async () => {
+    const onConfirm = vi.fn()
+    const emptyPreview = {
+      ...preview,
+      dependencies: [],
+      dependencyFingerprint: "empty-project-selection",
+    }
+    render(AssignProjectModal, {
+      resource,
+      onPreview: vi
+        .fn()
+        .mockResolvedValueOnce(preview)
+        .mockResolvedValue(emptyPreview),
+      onConfirm,
+    })
+
+    await advancePreviewDebounce()
+    await selectProjects([])
+    await fireEvent.click(screen.getByText("Save changes"))
+
+    expect(onConfirm).toHaveBeenCalledWith({
+      resourceRev: resource.revision,
+      projectIds: [],
+      dependencyIds: [],
+      dependencyFingerprint: emptyPreview.dependencyFingerprint,
+    })
+  })
+
   it("retries a failed dependency preview before saving", async () => {
     const onConfirm = vi.fn()
     render(AssignProjectModal, {
