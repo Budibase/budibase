@@ -284,6 +284,17 @@ describe("user sync batching", () => {
     expect(mockSync).toHaveBeenCalledWith(["batch-user-1", "batch-user-2"])
   })
 
+  it("empties the queue when the backlog exceeds the limit", async () => {
+    const processor = getUserSyncProcessor()
+    const bullQueue = UserSyncProcessor.queue.getBullQueue()
+    jest.spyOn(bullQueue, "getWaitingCount").mockResolvedValueOnce(500_001)
+    const empty = jest.spyOn(bullQueue, "empty")
+
+    await processor.add(["backlog-user-1"])
+
+    expect(empty).toHaveBeenCalledTimes(1)
+  })
+
   it("syncs users from group", async () => {
     const group = await config.createGroup(roles.BUILTIN_ROLE_IDS.ADMIN)
 
