@@ -28,7 +28,7 @@ import * as redis from "../utilities/redis"
 import { generateApiKey, getChecklist } from "../utilities/workerRequests"
 import { watch } from "../watch"
 import { initialise as initialiseWebsockets } from "../websockets"
-import { notifyActionSessionChange } from "../websockets/actionSessionChanges"
+import { queueActionSessionChange } from "../websockets/actionSessionChanges"
 import * as workspaceMigrations from "../workspaceMigrations/queue"
 import { agentRequests, rag, tests as agentTests } from "../sdk/workspace/ai"
 import { processConversationAttachmentJob } from "../api/controllers/webhook/conversationAttachmentProcessor"
@@ -183,7 +183,7 @@ export async function startup(
   queuePromises.push(
     events.platformActions.init({
       concurrency: env.PLATFORM_ACTION_INDEX_QUEUE_CONCURRENCY,
-      onSessionIndexed: notifyActionSessionChange,
+      onSessionIndexed: queueActionSessionChange,
     })
   )
   queuePromises.push(sdk.ai.chatConversations.attachmentCleanupQueue.init())
