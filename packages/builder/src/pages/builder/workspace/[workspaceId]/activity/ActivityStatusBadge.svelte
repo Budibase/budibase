@@ -1,22 +1,21 @@
 <script lang="ts">
   import { Badge, Icon } from "@budibase/bbui"
-  import type { AgentRequestStatus } from "@budibase/types"
+  import { ACTIVITY_STATUS_LABELS, type ActivityStatus } from "./activityStatus"
 
   let {
     status,
   }: {
-    status: AgentRequestStatus
+    status: ActivityStatus
   } = $props()
 
   const statusConfig: Record<
-    AgentRequestStatus,
+    ActivityStatus,
     {
       icon: string
       iconWeight: "regular" | "fill"
       color: string
       backgroundColor: string
       textColor: string
-      label: string
     }
   > = {
     active: {
@@ -26,7 +25,6 @@
       backgroundColor:
         "color-mix(in srgb, var(--spectrum-global-color-blue-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
-      label: "Processing",
     },
     needs_input: {
       icon: "warning",
@@ -35,7 +33,14 @@
       backgroundColor:
         "color-mix(in srgb, var(--spectrum-global-color-yellow-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
-      label: "Needs input",
+    },
+    waiting: {
+      icon: "warning",
+      iconWeight: "fill",
+      color: "var(--spectrum-global-color-yellow-500)",
+      backgroundColor:
+        "color-mix(in srgb, var(--spectrum-global-color-yellow-500) 18%, transparent)",
+      textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     completed: {
       icon: "check-circle",
@@ -44,7 +49,6 @@
       backgroundColor:
         "color-mix(in srgb, var(--spectrum-global-color-green-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
-      label: "Completed",
     },
     failed: {
       icon: "x-circle",
@@ -53,7 +57,6 @@
       backgroundColor:
         "color-mix(in srgb, var(--spectrum-global-color-red-500) 18%, transparent)",
       textColor: "var(--spectrum-global-color-static-gray-50)",
-      label: "Failed",
     },
   }
 </script>
@@ -64,7 +67,7 @@
     backgroundColor={statusConfig[status].backgroundColor}
     textColor={statusConfig[status].textColor}
   >
-    {statusConfig[status].label}
+    {ACTIVITY_STATUS_LABELS[status]}
     <span class="status-icon">
       <Icon
         size="XS"
