@@ -19,11 +19,12 @@ export const createWorkspaceExportFilter = (excludeRows?: boolean) => {
     AUTOMATION_LOG_PREFIX,
     AGENT_LOG_SESSION_PREFIX,
     `${DocumentType.SLACK_APP_CONFIG}${SEPARATOR}`,
-    ...RuntimeDocumentTypes.map(prefixed),
   ]
+  const runtimePrefixes = RuntimeDocumentTypes.map(prefixed)
   if (excludeRows) {
     excludedIds.push(TABLE_ROW_PREFIX)
   }
   return (doc: { _id: string; [key: string]: unknown }) =>
+    !runtimePrefixes.some(prefix => doc._id.startsWith(prefix)) &&
     !excludedIds.some(excludedId => doc._id.includes(excludedId))
 }

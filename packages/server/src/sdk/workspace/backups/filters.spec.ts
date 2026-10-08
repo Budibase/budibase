@@ -21,4 +21,17 @@ describe("workspace export filter", () => {
 
     expect(filter({ _id: `${type}${SEPARATOR}id` })).toBe(false)
   })
+
+  it.each(RuntimeDocumentTypes)(
+    "keeps documents whose ID only contains %s",
+    type => {
+      const filter = createWorkspaceExportFilter()
+
+      expect(
+        filter({
+          _id: `${DocumentType.ROLE}${SEPARATOR}${type}${SEPARATOR}admin`,
+        })
+      ).toBe(true)
+    }
+  )
 })
