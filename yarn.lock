@@ -20234,10 +20234,10 @@ smtp-server@^3.13.4:
     nodemailer "9.0.1"
     punycode.js "2.3.1"
 
-snowflake-sdk@^3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/snowflake-sdk/-/snowflake-sdk-3.3.0.tgz#fc7db5908b91765d561c5758f489433c8bdd0acd"
-  integrity sha512-WJV5BZpYzNuReafTJuHLO5sjYFnrRvqB1T1/xW64UpRDo0GAgLbfKIVZP+S5iBQ0ick8nY9Cqbka2uowQC+JMA==
+snowflake-sdk@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/snowflake-sdk/-/snowflake-sdk-3.4.0.tgz#9463e0a7066e00c554158cfcc26aafed16c885da"
+  integrity sha512-hUTlJH0nXBs3RBBLmkYUt2n9K3k6DanwbfCgvR7kOpMXuodMDrkCM++tJMo0uEq2kIrKJ7S3wJ3F2v/IRPBDUQ==
   dependencies:
     "@aws-crypto/sha256-js" "^5.2.0"
     "@aws-sdk/client-s3" "^3.1051.0"
@@ -20269,7 +20269,7 @@ snowflake-sdk@^3.3.0:
     oauth4webapi "^3.0.1"
     open "^7.3.1"
     simple-lru-cache "^0.0.2"
-    toml "^3.0.0"
+    toml "^5.0.0"
     winston "^3.1.0"
 
 socket.io-adapter@~2.5.2:
@@ -21494,10 +21494,10 @@ toidentifier@1.0.1, toidentifier@~1.0.1:
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.1.tgz#3be34321a88a820ed1bd80dfaa33e479fbb8dd35"
   integrity sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==
 
-toml@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/toml/-/toml-3.0.0.tgz#342160f1af1904ec9d204d03a5d61222d762c5ee"
-  integrity sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==
+toml@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/toml/-/toml-5.0.0.tgz#687e98925aa3a5039719d8c652ca30c21a99b7f3"
+  integrity sha512-bsqEd+g7fzlrw7LEynQ6W6aOK/lTOlepz5x1sJyIV9fTZVJS2Q76nuju6FK+gZhW5bUpvB7mCEqdR0u4WziMFw==
 
 toposort@^2.0.2:
   version "2.0.2"
