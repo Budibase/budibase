@@ -1,9 +1,16 @@
 import * as dbCore from "../../../../db"
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
-import { getActionsDB, getActionsDbName } from "../db"
+import {
+  doWithActionsWorkspaceDeletionLock,
+  doWithActionsWorkspaceWriteLock,
+  doWithExistingActionsWorkspace,
+  getActionsDB,
+  getActionsDbName,
+} from "../db"
 import { upsertPlatformActionSession } from "../sessionIndex"
 import { getPlatformActionSessionId } from "../utils"
+import { createWorkspace, destroyWorkspace } from "./workspace"
 import type {
   PlatformActionEvent,
   PlatformActionSessionIndexDoc,
@@ -33,55 +40,62 @@ describe("getActionsDbName", () => {
 describe("getActionsDB", () => {
   it("isolates actions and session updates between workspaces in the same tenant", async () => {
     const tenantId = structures.tenant.id()
-    const firstWorkspaceId = dbCore.generateWorkspaceID(tenantId)
-    const secondWorkspaceId = dbCore.generateWorkspaceID(tenantId)
-    const source = {
-      environment: "prod" as const,
-      sourceType: "agent_session" as const,
-      sourceId: "shared-session",
-    }
-    const timestamp = "2026-09-22T10:00:00.000Z"
-    const actionId = "platform_action_shared-event"
+    const firstWorkspaceId = await createWorkspace(tenantId)
+    const workspaceIds = [firstWorkspaceId]
+    try {
+      const secondWorkspaceId = await createWorkspace(tenantId)
+      workspaceIds.push(secondWorkspaceId)
+      const source = {
+        environment: "prod" as const,
+        sourceType: "agent_session" as const,
+        sourceId: "shared-session",
+      }
+      const timestamp = "2026-09-22T10:00:00.000Z"
+      const actionId = "platform_action_shared-event"
 
-    for (const workspaceId of [firstWorkspaceId, secondWorkspaceId]) {
-      await context.doInWorkspaceContext(workspaceId, async () => {
-        await getActionsDB().put<PlatformActionEvent>({
-          _id: actionId,
-          ...source,
-          timestamp,
-          eventName: "action:ai_agent:executed",
-          payload: { workspaceId },
+      for (const workspaceId of [firstWorkspaceId, secondWorkspaceId]) {
+        await context.doInWorkspaceContext(workspaceId, async () => {
+          await getActionsDB().put<PlatformActionEvent>({
+            _id: actionId,
+            ...source,
+            timestamp,
+            eventName: "action:ai_agent:executed",
+            payload: { workspaceId },
+          })
+          await upsertPlatformActionSession({
+            ...source,
+            incrementsActionCount: true,
+            signal: "completed",
+            timestamp,
+          })
         })
+      }
+
+      await context.doInWorkspaceContext(firstWorkspaceId, async () => {
         await upsertPlatformActionSession({
           ...source,
-          incrementsActionCount: true,
-          signal: "completed",
-          timestamp,
+          incrementsActionCount: false,
+          signal: "active",
+          timestamp: "2026-09-22T11:00:00.000Z",
         })
       })
-    }
 
-    await context.doInWorkspaceContext(firstWorkspaceId, async () => {
-      await upsertPlatformActionSession({
-        ...source,
-        incrementsActionCount: false,
-        signal: "active",
-        timestamp: "2026-09-22T11:00:00.000Z",
-      })
-    })
-
-    for (const workspaceId of [firstWorkspaceId, secondWorkspaceId]) {
-      await context.doInWorkspaceContext(workspaceId, async () => {
-        const action = await getActionsDB().get<PlatformActionEvent>(actionId)
-        const session = await getActionsDB().get<PlatformActionSessionIndexDoc>(
-          getPlatformActionSessionId(source)
-        )
-        expect(action.payload).toEqual({ workspaceId })
-        expect(session.actionCount).toBe(1)
-        expect(session.status).toBe(
-          workspaceId === firstWorkspaceId ? "active" : "completed"
-        )
-      })
+      for (const workspaceId of [firstWorkspaceId, secondWorkspaceId]) {
+        await context.doInWorkspaceContext(workspaceId, async () => {
+          const action = await getActionsDB().get<PlatformActionEvent>(actionId)
+          const session =
+            await getActionsDB().get<PlatformActionSessionIndexDoc>(
+              getPlatformActionSessionId(source)
+            )
+          expect(action.payload).toEqual({ workspaceId })
+          expect(session.actionCount).toBe(1)
+          expect(session.status).toBe(
+            workspaceId === firstWorkspaceId ? "active" : "completed"
+          )
+        })
+      }
+    } finally {
+      await Promise.all(workspaceIds.map(destroyWorkspace))
     }
   })
 
@@ -120,5 +134,109 @@ describe("getActionsDB", () => {
         )
       })
     )
+  })
+})
+
+describe("Actions workspace lock", () => {
+  it("keeps deletion behind a write that exceeds the original lock TTL", async () => {
+    const workspaceId = await createWorkspace()
+    const order: string[] = []
+    // Exceed the production 10-second lease, allowing renewal timers to run.
+    const slowWriteMs = 12000
+    let started!: () => void
+    const writeStarted = new Promise<void>(resolve => {
+      started = resolve
+    })
+    const writer = context.doInWorkspaceContext(workspaceId, () =>
+      doWithExistingActionsWorkspace(async () => {
+        started()
+        await new Promise(resolve => setTimeout(resolve, slowWriteMs))
+        await getActionsDB().put({ _id: "slow-action" })
+        order.push("write")
+      })
+    )
+    await writeStarted
+    const deletion = destroyWorkspace(workspaceId).then(() => {
+      order.push("deletion")
+    })
+
+    try {
+      await Promise.all([writer, deletion])
+      expect(order).toEqual(["write", "deletion"])
+      expect(await dbCore.dbExists(getActionsDbName(workspaceId))).toBe(false)
+    } finally {
+      await Promise.allSettled([writer, deletion])
+      await destroyWorkspace(workspaceId)
+    }
+  }, 30000)
+
+  const holdDeletionLock = (workspaceId: string, order: string[]) => {
+    let release!: () => void
+    const released = new Promise<void>(resolve => {
+      release = resolve
+    })
+    let acquired!: () => void
+    const isAcquired = new Promise<void>(resolve => {
+      acquired = resolve
+    })
+    const done = doWithActionsWorkspaceDeletionLock({
+      workspaceId,
+      task: async () => {
+        acquired()
+        await released
+        order.push("deletion")
+      },
+    })
+    return { isAcquired, release, done }
+  }
+
+  it("serializes a dev writer behind a deletion holding the prod workspace lock", async () => {
+    const prodWorkspaceId = dbCore.generateWorkspaceID(structures.tenant.id())
+    const devWorkspaceId = dbCore.getDevWorkspaceID(prodWorkspaceId)
+    const order: string[] = []
+
+    const deletion = holdDeletionLock(prodWorkspaceId, order)
+    let writer: Promise<void> | undefined
+    try {
+      await deletion.isAcquired
+      writer = doWithActionsWorkspaceWriteLock({
+        workspaceId: devWorkspaceId,
+        task: async () => {
+          order.push("writer")
+        },
+      })
+      deletion.release()
+      await Promise.all([deletion.done, writer])
+
+      expect(order).toEqual(["deletion", "writer"])
+    } finally {
+      deletion.release()
+      await Promise.allSettled([deletion.done, writer])
+    }
+  })
+
+  it("does not serialize writers of different workspaces", async () => {
+    const tenantId = structures.tenant.id()
+    const lockedWorkspaceId = dbCore.generateWorkspaceID(tenantId)
+    const otherWorkspaceId = dbCore.generateWorkspaceID(tenantId)
+    const order: string[] = []
+
+    const deletion = holdDeletionLock(lockedWorkspaceId, order)
+    try {
+      await deletion.isAcquired
+      await doWithActionsWorkspaceWriteLock({
+        workspaceId: otherWorkspaceId,
+        task: async () => {
+          order.push("writer")
+        },
+      })
+      deletion.release()
+      await deletion.done
+
+      expect(order).toEqual(["writer", "deletion"])
+    } finally {
+      deletion.release()
+      await Promise.allSettled([deletion.done])
+    }
   })
 })
