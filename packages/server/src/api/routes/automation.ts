@@ -78,9 +78,6 @@ builderRoutes
   .post("/api/automations/logs/search", controller.logSearch)
   .delete("/api/automations/logs", controller.clearLogError)
   .delete("/api/automations/:id/:rev", paramResource("id"), controller.destroy)
-
-authorizedRoutes
-  .post("/api/automations/:id/trigger", paramResource("id"), controller.trigger)
   .post(
     "/api/automations/:id/test",
     appInfoMiddleware({ appType: AppType.DEV }),
@@ -93,3 +90,9 @@ authorizedRoutes
     paramResource("id"),
     controller.testStatus
   )
+
+authorizedRoutes.post(
+  "/api/automations/:id/trigger",
+  paramResource("id"),
+  controller.trigger
+)
