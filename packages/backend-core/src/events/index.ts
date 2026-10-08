@@ -4,6 +4,7 @@ export * as backfillCache from "./backfill"
 export { publishEvent } from "./events"
 export { default as identification } from "./identification"
 export * as processors from "./processors"
+export * as platformActions from "./processors/platformActions"
 export * from "./publishers"
 
 import { processors } from "./processors"
