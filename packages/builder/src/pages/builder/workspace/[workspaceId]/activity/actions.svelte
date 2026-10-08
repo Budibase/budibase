@@ -1,9 +1,12 @@
 <script lang="ts">
   import { API } from "@/api"
+  import { builderStore } from "@/stores/builder"
   import { Select, Table } from "@budibase/bbui"
+  import { BuilderSocketEvent } from "@budibase/shared-core"
   import {
     PLATFORM_ACTION_CONTAINER_STATUSES,
     type ActionSession,
+    type ActionSessionChangeEvent,
     type ActionSessionsSummary,
     type ActionsPagination,
     type PlatformActionContainerStatus,
@@ -60,6 +63,12 @@
     page: number
     bookmark?: string
   }
+  interface LoadSessionsOptions {
+    request?: PageRequest
+    // Refreshes the current view without a loading state or clearing the
+    // selection, keeping the current data if it fails
+    background?: boolean
+  }
   type EnvironmentFilter = PlatformActionEnvironment | "all"
 
   const statusFilterOptions: { label: string; value: StatusFilter }[] = [
@@ -85,6 +94,9 @@
   let pagination = $state<ActionsPagination | null>(null)
   let currentPage = $state(1)
   let lastRequest: PageRequest = { page: 1 }
+  let loadInFlight = false
+  let refreshQueued = false
+  let destroyed = false
   let selectedSessionId = $state<string | null>(null)
   let statusFilter = $state<StatusFilter>("all")
   let environmentFilter = $state<EnvironmentFilter>("all")
@@ -149,12 +161,20 @@
   const loadSessions = (() => {
     let requestSequence = 0
 
-    return async function loadSessions(request: PageRequest = { page: 1 }) {
+    return async function loadSessions({
+      request = { page: 1 },
+      background = false,
+    }: LoadSessionsOptions = {}) {
       const sequence = ++requestSequence
       lastRequest = request
-      selectedSessionId = null
-      loading = true
-      loadFailed = false
+      loadInFlight = true
+      if (!background) {
+        // This load already covers every change notified so far
+        refreshQueued = false
+        selectedSessionId = null
+        loading = true
+        loadFailed = false
+      }
       try {
         const response = await API.fetchActionSessions({
           env: environmentFilter === "all" ? undefined : environmentFilter,
@@ -169,8 +189,13 @@
         summary = response.summary
         pagination = response.pagination
         currentPage = request.page
+        loadFailed = false
       } catch (error) {
         if (sequence !== requestSequence) {
+          return
+        }
+        if (background) {
+          console.error("Failed to refresh action sessions", error)
           return
         }
         console.error("Failed to fetch action sessions", error)
@@ -181,10 +206,35 @@
       } finally {
         if (sequence === requestSequence) {
           loading = false
+          loadInFlight = false
+          if (refreshQueued && !destroyed) {
+            refreshQueued = false
+            loadSessions({ request: lastRequest, background: true })
+          }
         }
       }
     }
   })()
+
+  // Changes notified while a load is in flight may not be in its response,
+  // so they are coalesced into a single refresh once it settles
+  function refreshSessions() {
+    if (loadInFlight) {
+      refreshQueued = true
+      return
+    }
+    loadSessions({ request: lastRequest, background: true })
+  }
+
+  function handleActionSessionChange(event: ActionSessionChangeEvent) {
+    if (
+      environmentFilter !== "all" &&
+      event.environment !== environmentFilter
+    ) {
+      return
+    }
+    refreshSessions()
+  }
 
   function changeStatusFilter(nextFilter: StatusFilter) {
     if (nextFilter === statusFilter) {
@@ -208,8 +258,10 @@
       return
     }
     loadSessions({
-      page: Math.max(1, currentPage - 1),
-      bookmark: pagination?.previousBookmark,
+      request: {
+        page: Math.max(1, currentPage - 1),
+        bookmark: pagination?.previousBookmark,
+      },
     })
   }
 
@@ -218,8 +270,10 @@
       return
     }
     loadSessions({
-      page: currentPage + 1,
-      bookmark: pagination?.nextBookmark,
+      request: {
+        page: currentPage + 1,
+        bookmark: pagination?.nextBookmark,
+      },
     })
   }
 
@@ -233,6 +287,28 @@
 
   onMount(() => {
     loadSessions()
+    return () => {
+      destroyed = true
+    }
+  })
+
+  $effect(() => {
+    const socket = builderStore.websocket
+    if (!socket) {
+      return
+    }
+
+    socket.on(BuilderSocketEvent.ActionSessionChange, handleActionSessionChange)
+    // Notifications aren't replayed, so catch up on anything missed while
+    // disconnected
+    socket.on("connect", refreshSessions)
+    return () => {
+      socket.off(
+        BuilderSocketEvent.ActionSessionChange,
+        handleActionSessionChange
+      )
+      socket.off("connect", refreshSessions)
+    }
   })
 
   $effect(() => {
@@ -271,7 +347,7 @@
   {#if loadFailed}
     <ActivityLoadError
       message="Failed to load actions."
-      onRetry={() => loadSessions(lastRequest)}
+      onRetry={() => loadSessions({ request: lastRequest })}
     />
   {:else}
     <ActivityTablePanel>
