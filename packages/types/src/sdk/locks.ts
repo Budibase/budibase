@@ -30,6 +30,7 @@ export enum LockName {
   CUSTOM_REST_TEMPLATES = "custom_rest_templates",
   CONVERSATION_ATTACHMENT = "conversation_attachment",
   ESCALATION = "escalation",
+  REQUESTER_CONFIRMATION = "requester_confirmation",
 }
 
 export type LockOptions = {
