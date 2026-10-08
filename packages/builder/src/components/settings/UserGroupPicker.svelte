@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Icon, Search, Layout } from "@budibase/bbui"
+  import { Icon, Search, Layout, ProgressCircle } from "@budibase/bbui"
   import type { Component } from "svelte"
   import { createEventDispatcher } from "svelte"
 
@@ -22,6 +22,9 @@
     labelKey: "email" | "name"
     iconComponent?: Component | null
     extractIconProps?: (item: EnrichedPickerItem) => Record<string, unknown>
+    hasMore?: boolean
+    loading?: boolean
+    onLoadMore?: () => void
   }
 
   let {
@@ -31,7 +34,14 @@
     labelKey,
     iconComponent = null,
     extractIconProps = () => ({}),
+    hasMore = false,
+    loading = false,
+    onLoadMore,
   }: Props = $props()
+
+  const LOAD_MORE_THRESHOLD_PX = 40
+
+  let itemsContainer = $state<HTMLDivElement>()
 
   const dispatch = createEventDispatcher<{
     select: string
@@ -88,6 +98,22 @@
   const enrichedList = $derived(enrich(list, selected))
   const filteredList = $derived(filter(enrichedList, searchTerm))
   const sortedList = $derived(sort(filteredList))
+
+  const maybeLoadMore = () => {
+    if (!onLoadMore || !hasMore || loading || !itemsContainer) {
+      return
+    }
+    const { scrollTop, scrollHeight, clientHeight } = itemsContainer
+    if (scrollHeight - scrollTop - clientHeight <= LOAD_MORE_THRESHOLD_PX) {
+      onLoadMore()
+    }
+  }
+
+  // a list too short to scroll would never trigger on:scroll
+  $effect(() => {
+    sortedList.length
+    maybeLoadMore()
+  })
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -97,7 +123,7 @@
     <div class="header">
       <Search placeholder="Search" bind:value={searchTerm} />
     </div>
-    <div class="items">
+    <div class="items" bind:this={itemsContainer} on:scroll={maybeLoadMore}>
       {#each sortedList as item}
         <div
           on:click={() => {
@@ -124,6 +150,11 @@
           {/if}
         </div>
       {/each}
+      {#if loading && hasMore}
+        <div class="loading">
+          <ProgressCircle size="S" />
+        </div>
+      {/if}
     </div>
   </Layout>
 </div>
@@ -158,6 +189,11 @@
   .item:hover {
     background: var(--spectrum-global-color-gray-100);
     cursor: pointer;
+  }
+  .loading {
+    display: flex;
+    justify-content: center;
+    padding: var(--spacing-s) 0;
   }
   .text {
     flex: 1 1 auto;
