@@ -40,6 +40,7 @@ describe("enqueuePlatformActionSessionIndex", () => {
     const workspaceId = db.generateWorkspaceID(structures.tenant.id())
     const job: PlatformActionSessionIndexJob = {
       workspaceId,
+      environment: "prod",
       indexId: `platform_action_${structures.uuid()}`,
       sourceType: "agent_session",
       sourceId: "session-1",
@@ -78,6 +79,30 @@ describe("enqueuePlatformActionSessionIndex", () => {
         signal: "active",
         sourceType: "agent_session",
         sourceId: "session-1",
+        environment: "prod",
+      })
+    )
+  })
+
+  it("derives environment: dev when the current context is a dev workspace", async () => {
+    const prodWorkspaceId = db.generateWorkspaceID(structures.tenant.id())
+    const devWorkspaceId = db.getDevWorkspaceID(prodWorkspaceId)
+
+    await context.doInWorkspaceContext(devWorkspaceId, async () => {
+      await enqueuePlatformActionSessionLifecycle({
+        sourceType: "agent_session",
+        sourceId: "session-2",
+        signal: "active",
+        lifecycleId: "platform_action_lifecycle_test_dev",
+      })
+    })
+
+    await waitFor(() => mockUpsert.mock.calls.length > 0)
+
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: "session-2",
+        environment: "dev",
       })
     )
   })

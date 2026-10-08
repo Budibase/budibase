@@ -2,6 +2,7 @@ import { Event, PlatformActionEvent, type Identity } from "@budibase/types"
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
+import { getActionsDB, getActionsDbName } from "../db"
 
 jest.mock("../indexQueue")
 import { enqueuePlatformActionSessionIndex } from "../indexQueue"
@@ -29,6 +30,29 @@ describe("PlatformActionPersistProcessor", () => {
     mockEnqueue.mockReset()
   })
 
+  it("skips self-host cloud events without persisting, enqueueing or logging an error", async () => {
+    const tenantId = structures.tenant.id()
+    const workspaceId = db.generateWorkspaceID(tenantId)
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {})
+
+    try {
+      await context.doInWorkspaceContext(workspaceId, () =>
+        context.doInSelfHostTenantUsingCloud(tenantId, () =>
+          processor.processEvent(Event.ACTION_AI_AGENT_EXECUTED, identity, {
+            sourceType: "agent_session",
+            sourceId: "session-1",
+          })
+        )
+      )
+
+      expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+      expect(mockEnqueue).not.toHaveBeenCalled()
+      expect(errorSpy).not.toHaveBeenCalled()
+    } finally {
+      errorSpy.mockRestore()
+    }
+  })
+
   it("ignores events that are not action events", async () => {
     await run(async () => {
       await processor.processEvent(
@@ -38,9 +62,7 @@ describe("PlatformActionPersistProcessor", () => {
         undefined
       )
 
-      const { rows } = await context
-        .getWorkspaceDB()
-        .allDocs({ include_docs: false })
+      const { rows } = await getActionsDB().allDocs({ include_docs: false })
       expect(rows).toHaveLength(0)
       expect(mockEnqueue).not.toHaveBeenCalled()
     })
@@ -55,9 +77,7 @@ describe("PlatformActionPersistProcessor", () => {
         undefined
       )
 
-      const { rows } = await context
-        .getWorkspaceDB()
-        .allDocs({ include_docs: false })
+      const { rows } = await getActionsDB().allDocs({ include_docs: false })
       expect(rows).toHaveLength(0)
       expect(mockEnqueue).not.toHaveBeenCalled()
     })
@@ -89,9 +109,9 @@ describe("PlatformActionPersistProcessor", () => {
         "2026-08-31T14:10:15.959Z"
       )
 
-      const { rows } = await context
-        .getWorkspaceDB()
-        .allDocs<PlatformActionEvent>({ include_docs: true })
+      const { rows } = await getActionsDB().allDocs<PlatformActionEvent>({
+        include_docs: true,
+      })
 
       expect(rows).toHaveLength(1)
       const doc = rows[0].doc!
@@ -100,9 +120,34 @@ describe("PlatformActionPersistProcessor", () => {
       expect(doc._id).not.toMatch(/[:.]/)
       expect(doc.sourceType).toBe("agent_session")
       expect(doc.sourceId).toBe("session-1")
+      expect(doc.environment).toBe("prod")
       expect(doc.eventName).toBe(Event.ACTION_AI_AGENT_EXECUTED)
       expect(doc.timestamp).toBe("2026-08-31T14:10:15.959Z")
       expect(doc.payload).toEqual({ agentId: "agent-1" })
+    })
+  })
+
+  it("tags the persisted event and the enqueued job as dev when the current context is a dev workspace", async () => {
+    const prodWorkspaceId = db.generateWorkspaceID(structures.tenant.id())
+    const devWorkspaceId = db.getDevWorkspaceID(prodWorkspaceId)
+
+    await context.doInWorkspaceContext(devWorkspaceId, async () => {
+      await processor.processEvent(
+        Event.ACTION_AI_AGENT_EXECUTED,
+        identity,
+        { sourceType: "agent_session", sourceId: "session-1" },
+        undefined
+      )
+
+      const { rows } = await getActionsDB().allDocs<PlatformActionEvent>({
+        include_docs: true,
+      })
+
+      expect(rows).toHaveLength(1)
+      expect(rows[0].doc!.environment).toBe("dev")
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({ environment: "dev" })
+      )
     })
   })
 
