@@ -41,7 +41,7 @@ const mocks = vi.hoisted(() => {
 
   return {
     automationStore,
-    appStore: createStore({}),
+    workspaceStore: createStore({}),
     deploymentStore: createStore({}),
     permissions: createStore({}),
     selectedAutomation: createStore({
@@ -65,7 +65,7 @@ Object.assign(mocks.automationStore, {
 })
 
 vi.mock("@/stores/builder", () => ({
-  appStore: mocks.appStore,
+  workspaceStore: mocks.workspaceStore,
   automationStore: mocks.automationStore,
   deploymentStore: mocks.deploymentStore,
   permissions: mocks.permissions,

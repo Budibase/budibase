@@ -17,7 +17,7 @@
   import * as workspaceValidation from "@budibase/frontend-core/src/utils/validation/yup/workspace"
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
-  import type { AppTemplate } from "@/types"
+  import type { WorkspaceTemplate } from "@/types"
 
   $: goto = $gotoStore
 
@@ -39,7 +39,7 @@
 
   let creating = false
   let defaultAppName: string
-  let template: AppTemplate | null = null
+  let template: WorkspaceTemplate | null = null
 
   $: {
     const { url } = $values
@@ -81,7 +81,7 @@
       : `${workspacePrefix}${resolveAppUrl(template, $values.name)}`
   }`
 
-  const resolveAppUrl = (template: AppTemplate | null, name: string) => {
+  const resolveAppUrl = (template: WorkspaceTemplate | null, name: string) => {
     let parsedName
     const resolvedName = resolveAppName(template, name)
     parsedName = resolvedName ? resolvedName.toLowerCase() : ""
@@ -89,7 +89,7 @@
     return encodeURI(parsedUrl)
   }
 
-  const resolveAppName = (template: AppTemplate | null, name: string) => {
+  const resolveAppName = (template: WorkspaceTemplate | null, name: string) => {
     if (template && !template.fromFile) {
       return template.name
     }

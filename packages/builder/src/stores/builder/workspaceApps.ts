@@ -8,7 +8,7 @@ import {
   WorkspaceApp,
 } from "@budibase/types"
 import { derived, get, Readable } from "svelte/store"
-import { appStore } from "./workspace"
+import { workspaceStore } from "./workspace"
 import { sortedScreens } from "./screens"
 import { workspaceDeploymentStore } from "./workspaceDeployment"
 
@@ -173,7 +173,7 @@ export class WorkspaceAppStore extends DerivedBudiStore<
     const { deploymentStore } = await import("./deployment")
 
     await deploymentStore.publishApp()
-    appStore.refresh()
+    workspaceStore.refresh()
   }
 
   async toggleDisabled(workspaceAppId: string, state: boolean) {

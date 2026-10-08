@@ -17,7 +17,7 @@
   import { licensing } from "@/stores/portal/licensing"
   import { organisation } from "@/stores/portal/organisation"
   import { admin } from "@/stores/portal/admin"
-  import { appStore } from "@/stores/builder/workspace"
+  import { workspaceStore } from "@/stores/builder/workspace"
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
@@ -49,9 +49,9 @@
     User as UserDoc,
     UserGroup,
   } from "@budibase/types"
-  import { InternalTable } from "@budibase/types"
   import type { UserInfo } from "@/types"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+  import { generateTemporaryPassword } from "@/helpers/password"
   import {
     assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
@@ -86,7 +86,7 @@
   const PAGE_SIZE = 8
   const TABLE_MIN_HEIGHT = 36 + 55 * PAGE_SIZE
   const initialWorkspaceId = (() => {
-    const id = get(appStore).appId
+    const id = get(workspaceStore).appId
     return id ? sdk.workspaces.getProdWorkspaceID(id) : ""
   })()
 
@@ -94,12 +94,12 @@
     API,
     datasource: {
       type: "user",
-      tableId: InternalTable.USER_METADATA,
+      workspaceId: isWorkspaceOnly ? initialWorkspaceId : undefined,
     },
     options: {
       paginate: true,
       limit: PAGE_SIZE,
-      query: isWorkspaceOnly ? { workspaceId: initialWorkspaceId } : {},
+      query: {},
     },
   })
 
@@ -200,14 +200,16 @@
     if (isWorkspaceOnly && !workspaceId) {
       return
     }
-    const query: Record<string, any> = {}
-    if (isWorkspaceOnly) {
-      query.workspaceId = workspaceId
+    const datasource = {
+      type: "user" as const,
+      workspaceId: isWorkspaceOnly ? workspaceId : undefined,
     }
+    const query: Record<string, any> = {}
     if (email) {
       query.fuzzy = { email }
     }
-    fetch.update({ query })
+    const fetchOptions = { datasource, query }
+    fetch.update(fetchOptions)
   }
   const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
 
@@ -327,7 +329,7 @@
           usersRole === Constants.BudibaseRoles.AppUser
             ? usersAppRole || Constants.Roles.BASIC
             : undefined,
-        password: generatePassword(12),
+        password: generateTemporaryPassword({ policy: $admin.passwordPolicy }),
         forceResetPassword: true,
       }
 
@@ -515,14 +517,6 @@
     }
   }
 
-  const generatePassword = (length: number) => {
-    const array = new Uint8Array(length)
-    window.crypto.getRandomValues(array)
-    return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
-      .join("")
-      .slice(0, length)
-  }
-
   const onRowClick = ({ detail }: { detail: EnrichedUser }) => {
     if (isWorkspaceOnly) {
       selectedWorkspaceUser = {
@@ -540,13 +534,14 @@
   }
 
   const currentWorkspaceId = $derived(
-    $appStore.appId ? sdk.workspaces.getProdWorkspaceID($appStore.appId) : ""
+    $workspaceStore.appId
+      ? sdk.workspaces.getProdWorkspaceID($workspaceStore.appId)
+      : ""
   )
   const workspaceReady = $derived(!isWorkspaceOnly || !!currentWorkspaceId)
   const isWorkspaceQueryReady = $derived(
     !isWorkspaceOnly ||
-      ($fetch.query as { workspaceId?: string })?.workspaceId ===
-        currentWorkspaceId
+      fetch.options.datasource.workspaceId === currentWorkspaceId
   )
   const tableLoading = $derived(
     !workspaceReady || !isWorkspaceQueryReady || !$fetch.loaded || !groupsLoaded

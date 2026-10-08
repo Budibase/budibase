@@ -9,7 +9,7 @@ vi.mock("@/stores/builder", async () => {
     tables: writable({ list: [] }),
     datasources: writable({ list: [] }),
     flags: writable({}),
-    appStore: writable({ appId: "app_test" }),
+    workspaceStore: writable({ appId: "app_test" }),
   }
 })
 

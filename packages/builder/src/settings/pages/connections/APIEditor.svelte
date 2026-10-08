@@ -9,7 +9,7 @@
     EnrichedBinding,
   } from "@budibase/types"
   import { type UIWorkspaceConnection, AUTH_TYPE_OPTIONS } from "@/types"
-  import { appStore } from "@/stores/builder/workspace"
+  import { workspaceStore } from "@/stores/builder/workspace"
   import {
     datasources,
     hasRestTemplate,
@@ -534,8 +534,8 @@
       q => q.datasourceId === datasource!._id
     )
     const targetPath = firstQuery?._id
-      ? `/builder/workspace/${$appStore.appId}/apis/query/${firstQuery._id}`
-      : `/builder/workspace/${$appStore.appId}/apis/query/new/${datasource._id}`
+      ? `/builder/workspace/${$workspaceStore.appId}/apis/query/${firstQuery._id}`
+      : `/builder/workspace/${$workspaceStore.appId}/apis/query/new/${datasource._id}`
     if ($isActive(targetPath)) {
       bb.hideSettings()
       return
@@ -940,7 +940,7 @@
                 onRowClick={(dv: DynamicVariable) => {
                   bb.hideSettings()
                   $goto(
-                    `/builder/workspace/${$appStore.appId}/apis/query/${dv.queryId}`
+                    `/builder/workspace/${$workspaceStore.appId}/apis/query/${dv.queryId}`
                   )
                 }}
               />

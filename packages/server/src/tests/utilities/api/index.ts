@@ -29,6 +29,7 @@ import { RowActionAPI } from "./rowAction"
 import { ScreenAPI } from "./screen"
 import { TableAPI } from "./table"
 import { TemplateAPI } from "./template"
+import { EscalationAPI } from "./escalation"
 import { UserAPI } from "./user"
 import { ViewV2API } from "./viewV2"
 import { WebhookAPI } from "./webhook"
@@ -58,6 +59,7 @@ export default class API {
   screen: ScreenAPI
   table: TableAPI
   templates: TemplateAPI
+  escalation: EscalationAPI
   user: UserAPI
   viewV2: ViewV2API
   webhook: WebhookAPI
@@ -99,6 +101,7 @@ export default class API {
     this.screen = new ScreenAPI(config)
     this.table = new TableAPI(config)
     this.templates = new TemplateAPI(config)
+    this.escalation = new EscalationAPI(config)
     this.user = new UserAPI(config)
     this.viewV2 = new ViewV2API(config)
     this.webhook = new WebhookAPI(config)

@@ -13,7 +13,7 @@
     dedupeUsersByEmail,
     type UserData,
   } from "@/settings/pages/people/users/workspaceInviteUtils"
-  import { appStore, roles } from "@/stores/builder"
+  import { workspaceStore, roles } from "@/stores/builder"
   import { users } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
 
@@ -36,8 +36,8 @@
   let addedToWorkspaceEmails: string[] = []
   let createdUsers: UserData["users"] = []
 
-  $: currentWorkspaceId = $appStore.appId
-    ? sdk.workspaces.getProdWorkspaceID($appStore.appId)
+  $: currentWorkspaceId = $workspaceStore.appId
+    ? sdk.workspaces.getProdWorkspaceID($workspaceStore.appId)
     : ""
 
   const removeDuplicates = (userData: UserData): UserData => {

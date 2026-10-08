@@ -1,8 +1,8 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
 import {
-  INITIAL_APP_META_STATE,
-  AppMetaStore,
+  INITIAL_WORKSPACE_META_STATE,
+  WorkspaceMetaStore,
 } from "@/stores/builder/workspace"
 import {
   clientFeaturesResp,
@@ -33,35 +33,35 @@ vi.mock("@/stores/builder", async () => {
   }
 })
 
-describe("Application Meta Store", () => {
+describe("Workspace Meta Store", () => {
   beforeEach(async ctx => {
     vi.clearAllMocks()
 
-    const appStore = new AppMetaStore()
+    const workspaceStore = new WorkspaceMetaStore()
     ctx.test = {
       get store() {
-        return get(appStore)
+        return get(workspaceStore)
       },
-      appStore,
+      workspaceStore,
     }
   })
 
   it("Create base store with defaults", ctx => {
-    expect(ctx.test.store).toStrictEqual(INITIAL_APP_META_STATE)
+    expect(ctx.test.store).toStrictEqual(INITIAL_WORKSPACE_META_STATE)
   })
 
-  it("Reset the app metadata to default", ctx => {
+  it("Reset the workspace metadata to default", ctx => {
     const pkg = generateAppPackage({})
-    ctx.test.appStore.syncAppPackage(pkg)
+    ctx.test.workspaceStore.syncWorkspacePackage(pkg)
 
-    expect(ctx.test.store).not.toStrictEqual(INITIAL_APP_META_STATE)
+    expect(ctx.test.store).not.toStrictEqual(INITIAL_WORKSPACE_META_STATE)
 
-    ctx.test.appStore.reset()
+    ctx.test.workspaceStore.reset()
 
-    expect(ctx.test.store).toStrictEqual(INITIAL_APP_META_STATE)
+    expect(ctx.test.store).toStrictEqual(INITIAL_WORKSPACE_META_STATE)
   })
 
-  it("Sync app metadata from a new app package", async ctx => {
+  it("Sync workspace metadata from a new app package", async ctx => {
     const pkg = generateAppPackage({
       version: "2.5.0",
       revertableVersion: "2.5.6",
@@ -86,10 +86,10 @@ describe("Application Meta Store", () => {
       componentLibraries,
     } = app
 
-    ctx.test.appStore.syncAppPackage(pkg)
+    ctx.test.workspaceStore.syncWorkspacePackage(pkg)
 
     expect(ctx.test.store).toStrictEqual({
-      ...INITIAL_APP_META_STATE,
+      ...INITIAL_WORKSPACE_META_STATE,
       name,
       appId,
       url,
@@ -111,7 +111,9 @@ describe("Application Meta Store", () => {
   })
 
   it("Sync type support information to state", async ctx => {
-    ctx.test.appStore.syncClientTypeSupportPresets({ preset: "information" })
+    ctx.test.workspaceStore.syncClientTypeSupportPresets({
+      preset: "information",
+    })
 
     expect(ctx.test.store.typeSupportPresets).toStrictEqual({
       preset: "information",
@@ -119,12 +121,12 @@ describe("Application Meta Store", () => {
   })
 
   it("Sync component feature flags to state", async ctx => {
-    ctx.test.appStore.syncClientFeatures(clientFeaturesResp)
+    ctx.test.workspaceStore.syncClientFeatures(clientFeaturesResp)
 
     expect(ctx.test.store.clientFeatures).toStrictEqual(clientFeaturesResp)
   })
 
-  it("Sync app routes from the API", async ctx => {
+  it("Sync workspace routes from the API", async ctx => {
     const coreScreen = getScreenFixture()
     const existingDocId = getScreenDocId()
     coreScreen._json._id = existingDocId
@@ -134,14 +136,14 @@ describe("Application Meta Store", () => {
       .spyOn(API, "fetchAppRoutes")
       .mockResolvedValue({ routes: fakeRoutes })
 
-    await ctx.test.appStore.syncAppRoutes()
+    await ctx.test.workspaceStore.syncWorkspaceRoutes()
 
     expect(routeSpy).toBeCalled()
 
     expect(ctx.test.store.routes).toStrictEqual(fakeRoutes)
   })
 
-  it("Sync app metadata after socket update", ctx => {
+  it("Sync workspace metadata after socket update", ctx => {
     const fakeMetadata = {
       name: "updated_name",
       url: "/update-url",
@@ -151,10 +153,10 @@ describe("Application Meta Store", () => {
       },
     }
 
-    ctx.test.appStore.syncMetadata(fakeMetadata)
+    ctx.test.workspaceStore.syncMetadata(fakeMetadata)
 
     expect(ctx.test.store).toStrictEqual({
-      ...INITIAL_APP_META_STATE,
+      ...INITIAL_WORKSPACE_META_STATE,
       ...fakeMetadata,
     })
   })

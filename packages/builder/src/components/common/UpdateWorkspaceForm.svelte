@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
   import { initialise } from "@/stores/builder"
-  import { appStore } from "@/stores/builder/workspace"
+  import { workspaceStore } from "@/stores/builder/workspace"
   import { workspacesStore } from "@/stores/portal/workspaces"
   import { API } from "@/api"
   import { writable } from "svelte/store"
@@ -50,15 +50,15 @@
   let initialised = false
 
   $: filteredApps = $workspacesStore.apps.filter(
-    app => app.devId === $appStore.appId
+    app => app.devId === $workspaceStore.appId
   )
   $: app = filteredApps[0]
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
-  $: appName = $appStore.name
-  $: appURL = $appStore.url
-  $: appIconName = $appStore.icon?.name
-  $: appIconColor = $appStore.icon?.color
+  $: appName = $workspaceStore.name
+  $: appURL = $workspaceStore.url
+  $: appIconName = $workspaceStore.icon?.name
+  $: appIconColor = $workspaceStore.icon?.color
 
   $: appMeta = {
     name: appName,
@@ -139,7 +139,7 @@
 
   async function updateApp() {
     try {
-      await workspacesStore.save($appStore.appId, {
+      await workspacesStore.save($workspaceStore.appId, {
         name: $values.name?.trim(),
         url: $values.url?.trim(),
         icon: {
@@ -157,7 +157,7 @@
   }
 
   const initialiseApp = async () => {
-    const applicationPkg = await API.fetchAppPackage($appStore.appId)
+    const applicationPkg = await API.fetchAppPackage($workspaceStore.appId)
     await initialise(applicationPkg)
   }
 </script>

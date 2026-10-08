@@ -1,6 +1,6 @@
 <script lang="ts">
   import {
-    appStore,
+    workspaceStore,
     tables as tablesStore,
     userSelectedResourceMap,
     contextMenuStore,
@@ -86,7 +86,7 @@
     assignProjectModal?.hide()
 
     try {
-      await appStore.refresh()
+      await workspaceStore.refresh()
     } catch (error) {
       console.error(error)
       notifications.warning(
