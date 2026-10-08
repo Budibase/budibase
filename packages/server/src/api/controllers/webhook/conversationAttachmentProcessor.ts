@@ -1,9 +1,11 @@
 import { ErrorCode, WebClient, type WebAPIPlatformError } from "@slack/web-api"
 import { context, HTTPError, locks, roles } from "@budibase/backend-core"
 import {
+  type AgentChannelProvider,
   type ChatConversation,
   type ChatConversationAttachment,
   type ContextUser,
+  type PlatformActionUserOrigin,
   ConversationAttachmentErrorCode,
   ConversationAttachmentStatus,
   ConversationAttachmentTurnStatus,
@@ -311,15 +313,26 @@ const processAttachment = async ({
   }
 }
 
-const getRequester = async (
+const getRequester = async ({
+  turn,
+  provider,
+}: {
   turn: NonNullable<ChatConversation["pendingAttachmentTurns"]>[number]
-) =>
-  turn.requester.linked
-    ? await getGlobalUser(turn.requester.userId)
-    : createTransientPublicUser({
-        userId: turn.requester.userId,
-        displayName: turn.requester.displayName,
-      })
+  provider: AgentChannelProvider
+}): Promise<{ user: ContextUser; triggeredBy: PlatformActionUserOrigin }> => {
+  const { userId, linked, displayName } = turn.requester
+  if (linked) {
+    const user = await getGlobalUser(userId)
+    return { user, triggeredBy: sdk.platformActions.getUserOrigin(user) }
+  }
+  return {
+    user: createTransientPublicUser({ userId, displayName }),
+    triggeredBy: sdk.platformActions.getTransientChatUserOrigin({
+      provider,
+      displayName,
+    }),
+  }
+}
 
 const getAttachmentFailureText = (
   attachments: ChatConversationAttachment[]
@@ -439,13 +452,17 @@ const processTurn = async ({
     messages = [...messages, turn.message]
     responseText = getAttachmentFailureText(failed)
   } else {
-    const requester = await getRequester(turn)
+    const { user, triggeredBy } = await getRequester({
+      turn,
+      provider: current.channel!.provider,
+    })
     const result = await webhookChat({
       chat: {
         ...current,
         messages: [...current.messages, turn.message],
       },
-      user: requester,
+      user,
+      triggeredBy,
     })
     messages = result.messages
     responseText = await formatSlackAssistantReply({

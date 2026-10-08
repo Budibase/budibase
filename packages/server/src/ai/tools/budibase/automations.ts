@@ -10,6 +10,7 @@ import {
   ToolType,
   PermissionLevel,
   PermissionType,
+  type PlatformActionResourceOrigin,
   ToolExecutionPrincipal,
 } from "@budibase/types"
 import * as triggers from "../../../automations/triggers"
@@ -42,9 +43,11 @@ const getAutomationFieldsSummary = (automation: Automation) => {
 const triggerAutomationById = async ({
   automationId,
   fields,
+  triggeredBy,
 }: {
   automationId: string
   fields?: Record<string, AutomationFieldValue> | null
+  triggeredBy?: PlatformActionResourceOrigin
 }) => {
   const resolvedFields = fields ?? {}
 
@@ -66,6 +69,7 @@ const triggerAutomationById = async ({
     automation,
     {
       fields: resolvedFields,
+      triggeredBy,
     },
     { getResponses: true }
   )
@@ -150,9 +154,15 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
   },
 ]
 
-const createAutomationTools = (
-  automations: Automation[] = []
-): BudibaseToolDefinition[] => {
+// triggeredBy is the agent the tools are built for, so the runs they start
+// are attributed to it rather than to the principal the tool executes as
+const createAutomationTools = ({
+  automations = [],
+  triggeredBy,
+}: {
+  automations?: Automation[]
+  triggeredBy?: PlatformActionResourceOrigin
+}): BudibaseToolDefinition[] => {
   const automationTriggerTools = automations
     .filter(
       automation =>
@@ -212,6 +222,7 @@ const createAutomationTools = (
             return triggerAutomationById({
               automationId: automation._id!,
               fields,
+              triggeredBy,
             })
           },
         }),

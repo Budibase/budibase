@@ -124,6 +124,15 @@ export async function processEvent(job: AutomationJob) {
       ? job.data.automation.definition.trigger
       : null
 
+    // A repeatable job is fired by the scheduler, never by a person - this is
+    // a transport fact, unlike the configured trigger, which a manual test
+    // run shares
+    if (job.opts.repeat) {
+      job.data.event.triggeredBy = isEmailTrigger(trigger)
+        ? { type: "system", id: "email" }
+        : { type: "schedule" }
+    }
+
     const task = async () => {
       try {
         return await tracer.trace("task", async () => {

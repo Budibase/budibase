@@ -3,6 +3,7 @@ import nock from "nock"
 import type {
   PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
+  PlatformActionSessionMetadata,
 } from "@budibase/types"
 import { generator, mocks } from "../../../../../tests"
 import * as context from "../../../../context"
@@ -513,6 +514,201 @@ describe("upsertPlatformActionSession", () => {
       expect(prodDoc.actionCount).toBe(1)
       expect(devDoc.status).toBe("failed")
       expect(devDoc.actionCount).toBe(1)
+    })
+  })
+
+  describe("session metadata", () => {
+    const agentAsset = {
+      type: "agent" as const,
+      id: "agent-1",
+      label: "HR assistant",
+    }
+    const userOrigin = {
+      type: "user" as const,
+      id: "us_1",
+      label: "John Doe",
+    }
+
+    function upsert({
+      sourceId,
+      timestamp,
+      incrementsActionCount = true,
+      metadata,
+    }: {
+      sourceId: string
+      timestamp: string
+      incrementsActionCount?: boolean
+      metadata?: PlatformActionSessionMetadata
+    }) {
+      return upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "prod",
+        incrementsActionCount,
+        timestamp,
+        metadata,
+      })
+    }
+
+    it("stores the asset and origin of the first indexed action", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:00.000Z",
+          metadata: { asset: agentAsset, triggeredBy: userOrigin },
+        })
+
+        expect(await getSessionDoc(sourceId)).toMatchObject({
+          assetType: "agent",
+          assetId: "agent-1",
+          assetLabel: "HR assistant",
+          triggeredByType: "user",
+          triggeredById: "us_1",
+          triggeredByLabel: "John Doe",
+        })
+      })
+    })
+
+    it("keeps the first snapshot when later jobs carry different or no metadata", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:00.000Z",
+          metadata: { asset: agentAsset, triggeredBy: userOrigin },
+        })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:01.000Z",
+          metadata: {
+            asset: { ...agentAsset, label: "Renamed assistant" },
+            triggeredBy: { type: "schedule" },
+          },
+        })
+        await upsert({ sourceId, timestamp: "2026-08-31T00:00:02.000Z" })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:03.000Z",
+          incrementsActionCount: false,
+        })
+
+        const doc = await getSessionDoc(sourceId)
+        expect(doc).toMatchObject({
+          actionCount: 3,
+          assetLabel: "HR assistant",
+          triggeredByType: "user",
+          triggeredById: "us_1",
+          triggeredByLabel: "John Doe",
+        })
+      })
+    })
+
+    it("restores the earliest captured snapshot when an older job is delivered late", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:05.000Z",
+          metadata: {
+            asset: { ...agentAsset, label: "Renamed assistant" },
+            triggeredBy: userOrigin,
+          },
+        })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:00.000Z",
+          metadata: { asset: agentAsset, triggeredBy: { type: "schedule" } },
+        })
+
+        const doc = await getSessionDoc(sourceId)
+        expect(doc).toMatchObject({
+          actionCount: 2,
+          assetLabel: "HR assistant",
+          assetCapturedAt: "2026-08-31T00:00:00.000Z",
+          triggeredByType: "schedule",
+          triggeredByCapturedAt: "2026-08-31T00:00:00.000Z",
+        })
+        expect(doc.triggeredById).toBeUndefined()
+        expect(doc.triggeredByLabel).toBeUndefined()
+      })
+    })
+
+    it("keeps the indexed snapshot for a job captured at the same time", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+        const timestamp = "2026-08-31T00:00:00.000Z"
+
+        await upsert({ sourceId, timestamp, metadata: { asset: agentAsset } })
+        await upsert({
+          sourceId,
+          timestamp,
+          metadata: { asset: { ...agentAsset, label: "Renamed assistant" } },
+        })
+
+        expect(await getSessionDoc(sourceId)).toMatchObject({
+          assetLabel: "HR assistant",
+        })
+      })
+    })
+
+    it("fills metadata missing from an existing session, including from a lifecycle signal", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await upsert({ sourceId, timestamp: "2026-08-31T00:00:00.000Z" })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:01.000Z",
+          incrementsActionCount: false,
+          metadata: { asset: agentAsset },
+        })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:02.000Z",
+          incrementsActionCount: false,
+          metadata: {
+            asset: { ...agentAsset, label: "Renamed assistant" },
+            triggeredBy: { type: "system", id: "row_change" },
+          },
+        })
+
+        const doc = await getSessionDoc(sourceId)
+        expect(doc).toMatchObject({
+          actionCount: 1,
+          assetLabel: "HR assistant",
+          triggeredByType: "system",
+          triggeredById: "row_change",
+        })
+        expect(doc.triggeredByLabel).toBeUndefined()
+      })
+    })
+
+    it("does not create a session from a lifecycle signal carrying metadata", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await expect(
+          upsert({
+            sourceId,
+            timestamp: "2026-08-31T00:00:00.000Z",
+            incrementsActionCount: false,
+            metadata: { asset: agentAsset, triggeredBy: userOrigin },
+          })
+        ).rejects.toThrow("not indexed yet")
+
+        const doc = await getActionsDB().tryGet(
+          getPlatformActionSessionId({
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId,
+          })
+        )
+        expect(doc).toBeUndefined()
+      })
     })
   })
 

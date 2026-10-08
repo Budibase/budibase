@@ -1,4 +1,9 @@
-import { ActionFailureReason, Event, type ActionEvent } from "@budibase/types"
+import {
+  ActionFailureReason,
+  Event,
+  type ActionEvent,
+  type ActionSession,
+} from "@budibase/types"
 import type { ActivityTimelineItem } from "./ActivityTimeline.svelte"
 import { formatActivityDate } from "./activityDate"
 
@@ -31,16 +36,23 @@ export const toActionTimelineItem = ({
   event,
   stepNames,
   agentNames,
+  session,
 }: {
   event: ActionEvent
   stepNames: Record<string, string>
   agentNames: Record<string, string>
+  session?: ActionSession
 }): ActivityTimelineItem => {
   const { payload } = event
   const stepId = getString(payload, "stepId")
   const stepName = (stepId && stepNames[stepId]) || stepId || "Unknown step"
   const agentId = getString(payload, "agentId")
-  const agentName = (agentId && agentNames[agentId]) || "Unknown agent"
+  const historicalAgentName =
+    agentId && session?.assetType === "agent" && session.assetId === agentId
+      ? session.assetLabel
+      : undefined
+  const agentName =
+    historicalAgentName || (agentId && agentNames[agentId]) || "Unknown agent"
 
   const item = {
     id: event.id,

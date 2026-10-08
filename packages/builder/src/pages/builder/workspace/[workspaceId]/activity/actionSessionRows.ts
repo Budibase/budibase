@@ -20,6 +20,7 @@ export interface ActionSessionRow {
   typeIconColor: string
   assetLabel: string
   triggeredByLabel: string
+  triggeredByPrefix?: string
   status: PlatformActionContainerStatus
   statusLabel: PlatformActionContainerStatus
   actionCount: number
@@ -52,8 +53,50 @@ const getSourceType = (session: ActionSession) => {
 const getAssetLabel = (session: ActionSession) =>
   session.assetLabel || "Unknown asset"
 
-const getTriggeredByLabel = (session: ActionSession) =>
-  session.triggeredByLabel || "Unknown"
+const getTriggeredByLabel = (session: ActionSession) => {
+  const { triggeredByType, triggeredByLabel, triggeredById } = session
+  switch (triggeredByType) {
+    case "user":
+      return triggeredByLabel ? `User: ${triggeredByLabel}` : "User"
+    case "agent":
+      return triggeredByLabel ? `Agent: ${triggeredByLabel}` : "Agent"
+    case "automation":
+      return triggeredByLabel ? `Automation: ${triggeredByLabel}` : "Automation"
+    case "schedule":
+      return "System: Schedule"
+    case "webhook":
+      return "System: Webhook"
+    case "system":
+      switch (triggeredById) {
+        case "row_change":
+          return "System: Row change"
+        case "email":
+          return "System: Email"
+        case "reboot":
+          return "System: Reboot"
+        default:
+          return "System"
+      }
+    default:
+      return triggeredByLabel || "Unknown"
+  }
+}
+
+const getTriggeredByPrefix = (session: ActionSession) => {
+  switch (session.triggeredByType) {
+    case "user":
+      return session.triggeredByLabel ? "User" : undefined
+    case "agent":
+      return session.triggeredByLabel ? "Agent" : undefined
+    case "automation":
+      return session.triggeredByLabel ? "Automation" : undefined
+    case "schedule":
+    case "webhook":
+      return "System"
+    case "system":
+      return getTriggeredByLabel(session) === "System" ? undefined : "System"
+  }
+}
 
 export const getActionSessionRowId = ({
   environment,
@@ -78,6 +121,7 @@ export const toActionSessionRow = ({
     typeIconColor: sourceType.iconColor,
     assetLabel: getAssetLabel(session),
     triggeredByLabel: getTriggeredByLabel(session),
+    triggeredByPrefix: getTriggeredByPrefix(session),
     status: session.status,
     statusLabel: session.status,
     actionCount: session.actionCount,
@@ -113,6 +157,7 @@ export const getActionSessionDetails = (
       type: "text",
       label: "Triggered by",
       value: getTriggeredByLabel(session),
+      prefix: getTriggeredByPrefix(session),
       icon: "user",
     },
     {

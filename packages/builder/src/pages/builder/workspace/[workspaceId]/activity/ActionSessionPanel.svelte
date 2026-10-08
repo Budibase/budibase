@@ -62,7 +62,9 @@
   )
 
   let timelineItems = $derived(
-    events.map(event => toActionTimelineItem({ event, stepNames, agentNames }))
+    events.map(event =>
+      toActionTimelineItem({ event, stepNames, agentNames, session })
+    )
   )
 
   let hasPrevPage = $derived(

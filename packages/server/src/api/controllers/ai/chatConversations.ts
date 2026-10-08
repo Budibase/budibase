@@ -10,12 +10,14 @@ import {
 import { v4 } from "uuid"
 import {
   ActionFailureReason,
+  Agent,
   ChatAgentRequest,
   ChatConversation,
   ChatConversationRequest,
   ApprovalToolResultStatus,
   FeatureFlag,
   ContextUser,
+  PlatformActionUserOrigin,
   UserCtx,
   WebhookChatCompleteResult,
 } from "@budibase/types"
@@ -472,15 +474,18 @@ const createAssistantTextStream = async function* (
   }
 }
 
-export async function webhookChat({
-  chat,
-  user,
-  onAssistantStream,
-}: {
+interface WebhookChatParams {
   chat: ChatConversationRequest
   user: ContextUser
+  triggeredBy: PlatformActionUserOrigin
   onAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
-}): Promise<WebhookChatCompleteResult> {
+}
+
+export async function webhookChat({
+  triggeredBy,
+  ...params
+}: WebhookChatParams): Promise<WebhookChatCompleteResult> {
+  const { chat } = params
   const agentId = chat.agentId
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -493,6 +498,28 @@ export async function webhookChat({
   }
   const chatId = chat._id ?? docIds.generateChatConversationID()
   const sessionId = `${provider}:${chatId}`
+
+  return await sdk.platformActions.doInAgentSessionScope({
+    sessionId,
+    agentId,
+    agentName: agent.name,
+    triggeredBy,
+    task: () => runWebhookChat({ ...params, agentId, agent, sessionId }),
+  })
+}
+
+const runWebhookChat = async ({
+  chat,
+  user,
+  onAssistantStream,
+  agentId,
+  agent,
+  sessionId,
+}: Omit<WebhookChatParams, "triggeredBy"> & {
+  agentId: string
+  agent: Agent
+  sessionId: string
+}): Promise<WebhookChatCompleteResult> => {
   const suspendedModelMessages =
     await sdk.ai.chatConversations.prepareModelMessages(chat.messages)
   const modelMessages =
@@ -704,8 +731,37 @@ export async function webhookChat({
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
-  const { agentId, chat, userId, user } = await resolveChatStreamRequest(ctx)
+  const request = await resolveChatStreamRequest(ctx)
+  const { agentId, chat } = request
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const sessionId = resolvePreviewSessionId({
+    sessionId: chat.sessionId,
+    fallbackId: chat._id ?? docIds.generateChatConversationID(),
+  })
 
+  await sdk.platformActions.doInAgentSessionScope({
+    sessionId,
+    agentId,
+    agentName: agent.name,
+    // The developer who started the chat, regardless of the preview role
+    triggeredBy: sdk.platformActions.getUserOrigin(ctx.user),
+    task: () => streamAgentChat({ ctx, ...request, agent, sessionId }),
+  })
+}
+
+const streamAgentChat = async ({
+  ctx,
+  agentId,
+  chat,
+  userId,
+  user,
+  agent,
+  sessionId,
+}: ResolvedChatStreamRequest & {
+  ctx: UserCtx<ChatAgentRequest, void>
+  agent: Agent
+  sessionId: string
+}) => {
   ctx.status = 200
   ctx.set("Content-Type", "text/event-stream")
   ctx.set("Cache-Control", "no-cache")
@@ -714,18 +770,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("X-Accel-Buffering", "no")
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
   await sdk.ai.agents.assertAgentHasValidConfig(agent)
 
   let trackingHandle: AgentRequestTrackingHandle
-  let sessionId = ""
 
   try {
-    const chatId = chat._id ?? docIds.generateChatConversationID()
-    sessionId = resolvePreviewSessionId({
-      sessionId: chat.sessionId,
-      fallbackId: chatId,
-    })
     const run = await prepareAgentChatRun({
       agent,
       agentId,

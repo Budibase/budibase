@@ -63,6 +63,9 @@ jest.mock("../../../sdk", () => ({
         ingestGeminiFile: (args: object) => mockIngestFile(args),
       },
     },
+    platformActions: jest.requireActual(
+      "../../../sdk/workspace/platformActions/metadata"
+    ),
   },
 }))
 
@@ -136,7 +139,7 @@ describe("conversation attachment processor", () => {
           requester: {
             userId: "slack:T1:U1",
             linked: false,
-            displayName: "User",
+            displayName: "John Doe",
           },
           createdAt: now,
           updatedAt: now,
@@ -208,6 +211,11 @@ describe("conversation attachment processor", () => {
     )
     expect(mockReply).toHaveBeenCalledWith(
       expect.objectContaining({ text: "The report says content." })
+    )
+    expect(mockWebhookChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        triggeredBy: { type: "user", label: "John Doe (Slack)" },
+      })
     )
   })
 

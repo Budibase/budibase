@@ -18,6 +18,7 @@ import type {
   ContextUser,
   ConversationAttachmentTurn,
   EscalationRespondResult,
+  PlatformActionUserOrigin,
   WebhookChatCompleteResult,
 } from "@budibase/types"
 import {
@@ -575,6 +576,7 @@ export const handleChatMessage = async ({
     const linkingRequired = requireUserLink !== false
     let chatUser: ContextUser
     let userId: string
+    let triggeredBy: PlatformActionUserOrigin
 
     if (existingLink) {
       try {
@@ -599,6 +601,7 @@ export const handleChatMessage = async ({
         return
       }
       userId = linkedUserId
+      triggeredBy = sdk.platformActions.getUserOrigin(chatUser)
     } else if (linkingRequired) {
       if (provider === AgentChannelProvider.MSTEAMS) {
         const providerScopeKey = channel.tenantId || channel.teamId
@@ -633,6 +636,10 @@ export const handleChatMessage = async ({
       })
       chatUser = createTransientPublicUser({
         userId,
+        displayName: user.displayName,
+      })
+      triggeredBy = sdk.platformActions.getTransientChatUserOrigin({
+        provider,
         displayName: user.displayName,
       })
     }
@@ -923,6 +930,7 @@ export const handleChatMessage = async ({
       result = await webhookChat({
         chat: draftChat,
         user: chatUser,
+        triggeredBy,
         ...(replyWithAssistantStream
           ? {
               onAssistantStream: async stream => {

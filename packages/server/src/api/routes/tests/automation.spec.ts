@@ -26,6 +26,10 @@ import {
   TRIGGER_DEFINITIONS,
 } from "../../../automations"
 import * as emailAutomation from "../../../automations/email"
+import {
+  captureAutomationResults,
+  captureRunMetadata,
+} from "../../../automations/tests/utilities"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import sdk from "../../../sdk"
 import { basicTable } from "../../../tests/utilities/structures"
@@ -619,6 +623,42 @@ describe("/automations", () => {
             value: [1, 2, 3],
           },
         }
+      )
+    })
+
+    it("attributes a synchronous trigger to the authenticated user", async () => {
+      mocks.licenses.useSyncAutomations()
+      const { automation } =
+        await config.api.automation.post(collectAutomation())
+
+      const metadata = await captureRunMetadata(() =>
+        config.api.automation.trigger(automation._id!, {
+          fields: {},
+          timeout: 1000,
+        })
+      )
+
+      const { _id, firstName, lastName } = config.getUser()
+      expect(metadata.map(run => run?.triggeredBy)).toEqual([
+        { type: "user", id: _id, label: `${firstName} ${lastName}` },
+      ])
+    })
+
+    it("ignores a client-supplied origin on an asynchronous trigger", async () => {
+      const { automation } = await config.api.automation.post(newAutomation())
+      const request = {
+        fields: {},
+        timeout: 1000,
+        triggeredBy: { type: "schedule" },
+      }
+
+      const results = await captureAutomationResults(automation, () =>
+        config.api.automation.trigger(automation._id!, request)
+      )
+
+      expect(results).toHaveLength(1)
+      expect(results[0].data.event.triggeredBy).toEqual(
+        expect.objectContaining({ type: "user", id: config.getUser()._id })
       )
     })
 
