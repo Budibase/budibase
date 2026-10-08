@@ -11,7 +11,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { propagateProjectDependencyChangesWithWarning } from "../../utilities/projects"
+import { withProjectPropagationWarning } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
@@ -55,16 +55,18 @@ async function saveUnlocked(
   // Screens don't carry their own projectIds - resources they reference
   // (e.g. a button that triggers an automation) are attributed to the owning
   // workspace app in the dependency graph, so propagate from there.
-  await propagateProjectDependencyChangesWithWarning({
+  await withProjectPropagationWarning({
     ctx,
-    rootResourceId: owningWorkspaceApp._id!,
-    currentProjectIds: owningWorkspaceApp.projectIds,
-    previousProjectIds: owningWorkspaceApp.projectIds,
-    previousResource:
-      previousScreen?.workspaceAppId === owningWorkspaceApp._id
-        ? previousScreen
-        : undefined,
-    savedResource: savedScreen,
+    propagation: sdk.projects.propagateProjectDependencyChanges({
+      rootResourceId: owningWorkspaceApp._id!,
+      currentProjectIds: owningWorkspaceApp.projectIds,
+      previousProjectIds: owningWorkspaceApp.projectIds,
+      previousResource:
+        previousScreen?.workspaceAppId === owningWorkspaceApp._id
+          ? previousScreen
+          : undefined,
+      savedResource: savedScreen,
+    }),
   })
 
   const pluginAdded = await sdk.plugins.addUsedPluginsForScreen(

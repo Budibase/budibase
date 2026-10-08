@@ -8,7 +8,7 @@ import {
   RowActionsResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
+import { withProjectPropagationWarning } from "../../../utilities/projects"
 
 async function getTable(ctx: Ctx) {
   const { tableId } = ctx.params
@@ -61,12 +61,14 @@ async function createUnlocked(
     name: ctx.request.body.name,
   })
 
-  await propagateProjectDependencyChangesWithWarning({
+  await withProjectPropagationWarning({
     ctx,
-    rootResourceId: tableId,
-    currentProjectIds: table.projectIds,
-    previousProjectIds: table.projectIds,
-    savedResource: createdAction,
+    propagation: sdk.projects.propagateProjectDependencyChanges({
+      rootResourceId: tableId,
+      currentProjectIds: table.projectIds,
+      previousProjectIds: table.projectIds,
+      savedResource: createdAction,
+    }),
   })
 
   await events.rowAction.created(createdAction)
