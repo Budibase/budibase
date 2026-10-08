@@ -23,7 +23,10 @@ describe("ImportProjectResultModal", () => {
         createdAt: "2026-01-01T00:00:00.000Z",
         updatedAt: "2026-01-01T00:00:00.000Z",
       },
-      resources: { [ResourceType.AGENT]: ["agent_1"] },
+      resources: {
+        [ResourceType.AGENT]: ["agent_1"],
+        [ResourceType.DATASOURCE]: ["datasource_2"],
+      },
       dataImport: { tables: 2, rows: 3, relationships: 1, attachments: 1 },
       requirements: [
         {
@@ -37,6 +40,12 @@ describe("ImportProjectResultModal", () => {
           resourceId: "agent_1",
           name: "Support agent",
           reason: "Choose an AI model.",
+        },
+        {
+          type: "datasource_secrets",
+          resourceId: "datasource_2",
+          name: "Customer database",
+          reason: "Reconnect the database.",
         },
       ],
       unsupportedContent: [
@@ -54,7 +63,11 @@ describe("ImportProjectResultModal", () => {
     })
 
     const buttons = screen.getAllByRole("button", { name: "Support agent" })
+    const databaseButton = screen.getByRole("button", {
+      name: "Customer database",
+    })
     expect(buttons).toHaveLength(1)
+    expect(screen.getByText("Reconnect the database.")).toBeTruthy()
     expect(screen.getByText("Reconnect the Slack integration.")).toBeTruthy()
     expect(screen.getByText("Choose an AI model.")).toBeTruthy()
     expect(screen.getByText(response.unsupportedContent[0].reason)).toBeTruthy()
@@ -69,5 +82,7 @@ describe("ImportProjectResultModal", () => {
     expect(onOpenResource).toHaveBeenCalledExactlyOnceWith(
       response.requirements[0]
     )
+    await fireEvent.click(databaseButton)
+    expect(onOpenResource).toHaveBeenLastCalledWith(response.requirements[2])
   })
 })
