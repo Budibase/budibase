@@ -1,0 +1,343 @@
+import { context } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
+import {
+  DEFAULT_FUNCTION_LIMITS,
+  FunctionErrorCode,
+  type FunctionDocument,
+  type FunctionRunRequest,
+  type FunctionRunResult,
+  type FunctionRunSummary,
+} from "@budibase/types"
+import {
+  createFunctionInvocationScope,
+  FunctionRunOrchestrator,
+  type FunctionInvocationScopeInput,
+} from "@budibase/functions-runtime"
+import {
+  createRunSummary,
+  finalizeRunSummary,
+} from "../../sdk/workspace/functions/history"
+import { functionRunSupervisor } from "./supervisor"
+import { functionRunOrchestrator } from "./orchestrator"
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    context: {
+      ...actual.context,
+      doInWorkspaceContext: jest.fn(),
+    },
+  }
+})
+
+jest.mock("@budibase/pro", () => ({
+  quotas: { addAction: jest.fn() },
+}))
+
+jest.mock("../../api/controllers/query/executeAsAutomation", () => ({
+  executeQueryAsAutomation: jest.fn(async (ctx: { body?: object }) => {
+    ctx.body = { data: [] }
+  }),
+}))
+
+jest.mock("@budibase/functions-runtime", () => {
+  const actual = jest.requireActual("@budibase/functions-runtime")
+  return {
+    ...actual,
+    createFunctionInvocationScope: jest.fn(
+      actual.createFunctionInvocationScope
+    ),
+  }
+})
+
+jest.mock("../../sdk/workspace/functions/history", () => ({
+  createRunSummary: jest.fn(),
+  finalizeRunSummary: jest.fn(),
+}))
+
+jest.mock("./supervisor", () => ({
+  functionRunSupervisor: {
+    execute: jest.fn(),
+  },
+}))
+
+const request: FunctionRunRequest = {
+  runId: "run-1",
+  artifact: {
+    compiledJavaScript: "export default async function run() {}",
+    capabilityIds: [],
+    sourceHash: "source-hash",
+    declarationsHash: "declarations-hash",
+    compiledAt: "2026-01-01T00:00:00.000Z",
+  },
+  inputs: {},
+  limits: DEFAULT_FUNCTION_LIMITS.run,
+}
+
+const capabilityScope: FunctionInvocationScopeInput = {
+  runId: request.runId,
+  workspaceId: "workspace-1",
+  functionId: "function-1",
+  sourceHash: request.artifact.sourceHash,
+  invocation: {
+    type: "automation",
+    automationId: "automation-1",
+    automationStepId: "step-1",
+  },
+  capabilities: [],
+  limits: DEFAULT_FUNCTION_LIMITS.run,
+}
+
+const fn: FunctionDocument = {
+  _id: capabilityScope.functionId,
+  name: "Test Function",
+  appId: capabilityScope.workspaceId,
+  source: "export default async function run() {}",
+  capabilities: [],
+  artifact: request.artifact,
+  createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-01T00:00:00.000Z",
+}
+
+const result: FunctionRunResult = {
+  runId: request.runId,
+  status: "success",
+  output: {},
+  metrics: {
+    durationMs: 10,
+    queryCount: 0,
+    outputBytes: 2,
+    logBytes: 0,
+  },
+}
+
+const summary: FunctionRunSummary = {
+  _id: "run-log-1",
+  runId: request.runId,
+  functionId: capabilityScope.functionId,
+  functionName: "Test Function",
+  sourceHash: capabilityScope.sourceHash,
+  environment: "development",
+  status: "running",
+  invocation: capabilityScope.invocation,
+  startedAt: "2026-01-01T00:00:00.000Z",
+  queryCount: 0,
+}
+
+const execute = jest.mocked(functionRunSupervisor.execute)
+const mockedCreateFunctionInvocationScope = jest.mocked(
+  createFunctionInvocationScope
+)
+const mockedCreateRunSummary = jest.mocked(createRunSummary)
+const mockedFinalizeRunSummary = jest.mocked(finalizeRunSummary)
+const consoleError = jest.spyOn(console, "error").mockImplementation()
+
+afterAll(() => {
+  consoleError.mockRestore()
+})
+
+const run = () =>
+  functionRunOrchestrator.execute({
+    runId: request.runId,
+    workspaceId: capabilityScope.workspaceId,
+    definition: {
+      id: fn._id,
+      name: fn.name,
+      artifact: request.artifact,
+      capabilities: fn.capabilities,
+    },
+    inputs: request.inputs,
+    limits: request.limits,
+    invocation: capabilityScope.invocation,
+  })
+
+describe("server FunctionRunOrchestrator", () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockedCreateRunSummary.mockResolvedValue(summary)
+    mockedFinalizeRunSummary.mockResolvedValue(summary)
+  })
+
+  it("creates and finalizes a run summary around a successful run", async () => {
+    execute.mockResolvedValue(result)
+
+    await expect(run()).resolves.toEqual(result)
+
+    expect(mockedCreateRunSummary).toHaveBeenCalledWith({
+      runId: request.runId,
+      functionId: capabilityScope.functionId,
+      functionName: "Test Function",
+      sourceHash: capabilityScope.sourceHash,
+      automationId: capabilityScope.invocation.automationId,
+      stepId: capabilityScope.invocation.automationStepId,
+    })
+    expect(mockedFinalizeRunSummary).toHaveBeenCalledWith(request.runId, result)
+    expect(execute).toHaveBeenCalledWith({
+      request,
+      context: expect.any(Object),
+      signal: undefined,
+    })
+    expect(mockedCreateFunctionInvocationScope).toHaveBeenCalledWith(
+      expect.objectContaining({ limits: request.limits })
+    )
+  })
+
+  it("meters a Function query within its workspace context", async () => {
+    let activeWorkspaceId: string | undefined
+    const workspaceContext = jest
+      .mocked(context.doInWorkspaceContext)
+      .mockImplementation(async (workspaceId, task) => {
+        activeWorkspaceId = workspaceId
+        try {
+          return await task()
+        } finally {
+          activeWorkspaceId = undefined
+        }
+      })
+    const addAction = jest
+      .mocked(quotas.addAction)
+      .mockImplementation(async (_action, action) => {
+        expect(activeWorkspaceId).toBe(capabilityScope.workspaceId)
+        return await action()
+      })
+    execute.mockImplementation(async ({ context: executionContext }) => {
+      await executionContext.invokeCapability({
+        runId: request.runId,
+        capabilityId: "capability-1",
+        parameters: {},
+        signal: new AbortController().signal,
+      })
+      return result
+    })
+
+    try {
+      await functionRunOrchestrator.execute({
+        runId: request.runId,
+        workspaceId: capabilityScope.workspaceId,
+        definition: {
+          id: fn._id,
+          name: fn.name,
+          artifact: request.artifact,
+          capabilities: [
+            {
+              capabilityId: "capability-1",
+              queryId: "query-1",
+              datasourceAlias: "Data",
+              queryAlias: "read",
+              parameterNames: [],
+            },
+          ],
+        },
+        inputs: request.inputs,
+        limits: request.limits,
+        invocation: capabilityScope.invocation,
+      })
+
+      expect(addAction).toHaveBeenCalledTimes(1)
+      expect(workspaceContext).toHaveBeenCalledWith(
+        capabilityScope.workspaceId,
+        expect.any(Function)
+      )
+    } finally {
+      workspaceContext.mockReset()
+      addAction.mockReset()
+    }
+  })
+
+  it("finalizes an error summary when execution fails", async () => {
+    const error = new Error("execution failed")
+    execute.mockRejectedValue(error)
+
+    await expect(run()).rejects.toBe(error)
+
+    expect(mockedFinalizeRunSummary).toHaveBeenCalledWith(request.runId, {
+      status: "error",
+      code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+    })
+  })
+
+  it("executes without finalizing when run summary creation fails", async () => {
+    mockedCreateRunSummary.mockRejectedValue(new Error("creation failed"))
+    execute.mockResolvedValue(result)
+
+    await expect(run()).resolves.toEqual(result)
+
+    expect(execute).toHaveBeenCalledTimes(1)
+    expect(mockedFinalizeRunSummary).not.toHaveBeenCalled()
+  })
+
+  it("preserves a successful result when run summary finalization fails", async () => {
+    mockedFinalizeRunSummary.mockRejectedValue(new Error("finalization failed"))
+    execute.mockResolvedValue(result)
+
+    await expect(run()).resolves.toEqual(result)
+
+    expect(mockedFinalizeRunSummary).toHaveBeenCalledWith(request.runId, result)
+  })
+
+  it("finalizes an error summary when execution returns a different run ID", async () => {
+    const mismatchedResult = {
+      ...result,
+      runId: "run-2",
+    }
+    execute.mockResolvedValue(mismatchedResult)
+
+    await expect(run()).resolves.toEqual(mismatchedResult)
+
+    expect(mockedFinalizeRunSummary).toHaveBeenCalledWith(request.runId, {
+      status: "error",
+      code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+    })
+  })
+})
+
+describe("shared FunctionRunOrchestrator", () => {
+  it("executes a supervised run with a scoped capability session", async () => {
+    const abortController = new AbortController()
+    const invokeCapability = jest.fn(async () => ({}))
+    const close = jest.fn()
+    const createCapabilitySession = jest.fn().mockResolvedValue({
+      invokeCapability,
+      close,
+    })
+    const execute = jest.fn().mockResolvedValue(result)
+    const orchestrator = new FunctionRunOrchestrator({
+      createCapabilitySession,
+      execute,
+    })
+
+    await expect(
+      orchestrator.execute({
+        request,
+        capabilityScope,
+        signal: abortController.signal,
+      })
+    ).resolves.toEqual(result)
+
+    expect(createCapabilitySession).toHaveBeenCalledWith(capabilityScope)
+    expect(execute).toHaveBeenCalledWith({
+      request,
+      context: { invokeCapability },
+      signal: abortController.signal,
+    })
+    expect(close).toHaveBeenCalledTimes(1)
+  })
+
+  it("closes the capability session when execution fails", async () => {
+    const executionError = new Error("execution failed")
+    const close = jest.fn()
+    const orchestrator = new FunctionRunOrchestrator({
+      createCapabilitySession: jest.fn().mockResolvedValue({
+        invokeCapability: jest.fn(async () => ({})),
+        close,
+      }),
+      execute: jest.fn().mockRejectedValue(executionError),
+    })
+
+    await expect(
+      orchestrator.execute({ request, capabilityScope })
+    ).rejects.toBe(executionError)
+    expect(close).toHaveBeenCalledTimes(1)
+  })
+})

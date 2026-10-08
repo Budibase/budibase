@@ -68,7 +68,7 @@
     getPendingToolInsertion,
     type PendingToolInsertion,
   } from "../../toolAutocomplete"
-  import { createSaveCoordinator } from "../../operationSaveCoordinator"
+  import { createSaveCoordinator } from "../../../../saveCoordinator"
   import {
     getToolConditionFields,
     getToolReviewFields,

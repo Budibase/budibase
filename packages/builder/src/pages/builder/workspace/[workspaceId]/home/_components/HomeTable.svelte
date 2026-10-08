@@ -10,7 +10,7 @@
     HomeType,
   } from "@budibase/types"
   import HomeEmptyState from "./HomeEmptyState.svelte"
-  import { getTypeLabel } from "./rows"
+  import { getHomeIconWeight, getTypeLabel } from "./rows"
   import { getAgentStatusLabel, getPublishResourceStatusLabel } from "./status"
 
   dayjs.extend(relativeTime)
@@ -84,15 +84,22 @@
       return getAgentStatusLabel(row.resource)
     }
 
+    if (row.type === "function") {
+      return row.status
+    }
+
     return "-"
   }
 
   const getStatusColor = (status: string) => {
-    if (status === "Live") {
+    if (status === "Live" || status === "Ready") {
       return "var(--color-green-500)"
     }
-    if (status === "Stopped") {
+    if (status === "Stopped" || status === "Build required") {
       return "var(--color-orange-400)"
+    }
+    if (status === "Build failed") {
+      return "var(--spectrum-global-color-red-700)"
     }
     return "var(--spectrum-global-color-gray-600)"
   }
@@ -107,8 +114,8 @@
 
   const gridColumns = $derived(
     projectsEnabled
-      ? "1fr 140px 140px 140px 140px 60px"
-      : "1fr 140px 140px 140px 60px"
+      ? "1fr 140px 140px 180px 140px 60px"
+      : "1fr 140px 180px 140px 60px"
   )
 </script>
 
@@ -239,7 +246,7 @@
               name={row.icon}
               size="S"
               color={row.iconColor}
-              weight="fill"
+              weight={getHomeIconWeight(row.type)}
             />
             <div class="name-content">
               <Body size="S" color="var(--spectrum-global-color-gray-800)"
@@ -262,7 +269,7 @@
             </div>
           {/if}
 
-          <div class="cell">
+          <div class="cell status-cell" title={getRowStatusLabel(row)}>
             <Body size="S" color={getStatusColor(getRowStatusLabel(row))}>
               {getRowStatusLabel(row)}
             </Body>
@@ -463,6 +470,13 @@
 
   .name-cell {
     gap: 12px;
+  }
+
+  .status-cell :global(.spectrum-Body) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .actions {

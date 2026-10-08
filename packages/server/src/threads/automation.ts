@@ -334,6 +334,7 @@ class Orchestrator {
   private readonly job: AutomationJob
   private emitter: ContextEmitter
   private stopped: boolean
+  private readonly cancellationController = new AbortController()
   private readonly onProgress?: (event: AutomationTestProgressEvent) => void
   private readonly isTestRun: boolean
 
@@ -549,6 +550,7 @@ class Orchestrator {
         }
       } catch (err: any) {
         if (err.errno === "ETIME") {
+          this.cancellationController.abort()
           span.addTags({ timeout: true })
           result.status = AutomationStatus.TIMED_OUT
           stepResults = ctx._stepResults
@@ -666,6 +668,7 @@ class Orchestrator {
           result.inputs?.continueOnError === true &&
           [
             AutomationActionStepId.API_REQUEST,
+            AutomationActionStepId.EXECUTE_FUNCTION,
             AutomationActionStepId.EXECUTE_QUERY,
             AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
           ].includes(result.stepId)
@@ -1062,17 +1065,19 @@ class Orchestrator {
 
       let outputs
       try {
-        outputs = await tracer.trace("fn", () =>
-          fn({
-            inputs,
-            appId: this.appId,
-            emitter: this.emitter,
-            context: ctx,
-            automationId: this.automation._id,
-            stepId: step.id,
-            isTestRun: this.isTestRun,
-          })
-        )
+        const actionInput = {
+          inputs,
+          appId: this.appId,
+          emitter: this.emitter,
+          context: ctx,
+          automationId: this.automation._id,
+          stepId: step.id,
+          isTestRun: this.isTestRun,
+          ...(step.stepId === AutomationActionStepId.EXECUTE_FUNCTION
+            ? { signal: this.cancellationController.signal }
+            : {}),
+        }
+        outputs = await tracer.trace("fn", () => fn(actionInput))
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
         return stepFailure(step, {
@@ -1091,6 +1096,13 @@ class Orchestrator {
       }
       if (
         step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
+        "status" in outputs &&
+        outputs.status === AutomationStatus.STOPPED
+      ) {
+        this.stopped = true
+      }
+      if (
+        step.stepId === AutomationActionStepId.EXECUTE_FUNCTION &&
         "status" in outputs &&
         outputs.status === AutomationStatus.STOPPED
       ) {

@@ -22,6 +22,7 @@ export function getPermissionType(resourceId: string) {
     case DocumentType.DATASOURCE_PLUS:
       return permissions.PermissionType.TABLE
     case DocumentType.AUTOMATION:
+    case DocumentType.FUNCTION:
       return permissions.PermissionType.AUTOMATION
     case DocumentType.WEBHOOK:
       return permissions.PermissionType.WEBHOOK
