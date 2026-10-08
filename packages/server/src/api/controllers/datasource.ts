@@ -42,7 +42,7 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
-import { propagateProjectDependencyChangesWithWarning } from "../../utilities/projects"
+import { withProjectPropagationWarning } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
@@ -313,13 +313,15 @@ async function updateUnlocked(
     : await persistDatasource()
   datasource._rev = response.rev
 
-  await propagateProjectDependencyChangesWithWarning({
+  await withProjectPropagationWarning({
     ctx,
-    rootResourceId: datasource._id!,
-    currentProjectIds: datasource.projectIds,
-    previousProjectIds: baseDatasource.projectIds,
-    previousResource: baseDatasource,
-    savedResource: datasource,
+    propagation: sdk.projects.propagateProjectDependencyChanges({
+      rootResourceId: datasource._id!,
+      currentProjectIds: datasource.projectIds,
+      previousProjectIds: baseDatasource.projectIds,
+      previousResource: baseDatasource,
+      savedResource: datasource,
+    }),
   })
 
   ctx.message = "Datasource saved successfully."
@@ -377,12 +379,14 @@ export async function save(
       await persistDatasource()
     }
 
-    await propagateProjectDependencyChangesWithWarning({
+    await withProjectPropagationWarning({
       ctx,
-      rootResourceId: datasource._id!,
-      currentProjectIds: datasource.projectIds,
-      previousProjectIds: [],
-      savedResource: datasource,
+      propagation: sdk.projects.propagateProjectDependencyChanges({
+        rootResourceId: datasource._id!,
+        currentProjectIds: datasource.projectIds,
+        previousProjectIds: [],
+        savedResource: datasource,
+      }),
     })
   })
 

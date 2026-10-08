@@ -59,7 +59,7 @@ import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { getValidProjectIdsForDuplication } from "../../sdk/workspace/projects/utils"
 import { isQsTrue } from "../../utilities"
-import { propagateProjectDependencyChangesWithWarning } from "../../utilities/projects"
+import { withProjectPropagationWarning } from "../../utilities/projects"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
 
@@ -114,13 +114,15 @@ async function createUnlocked(
 
   // A history restore replays the saved snapshot, including its exclusions.
   if (!restoringDeletedAutomation) {
-    await propagateProjectDependencyChangesWithWarning({
+    await withProjectPropagationWarning({
       ctx,
-      rootResourceId: createdAutomation._id!,
-      currentProjectIds: createdAutomation.projectIds,
-      previousProjectIds: sourceAutomation?.projectIds,
-      previousResource: sourceAutomation,
-      savedResource: createdAutomation,
+      propagation: sdk.projects.propagateProjectDependencyChanges({
+        rootResourceId: createdAutomation._id!,
+        currentProjectIds: createdAutomation.projectIds,
+        previousProjectIds: sourceAutomation?.projectIds,
+        previousResource: sourceAutomation,
+        savedResource: createdAutomation,
+      }),
     })
   }
 
@@ -151,13 +153,15 @@ async function updateUnlocked(
   })
 
   const updatedAutomation = await sdk.automations.update(automation)
-  await propagateProjectDependencyChangesWithWarning({
+  await withProjectPropagationWarning({
     ctx,
-    rootResourceId: updatedAutomation._id!,
-    currentProjectIds: updatedAutomation.projectIds,
-    previousProjectIds: existingAutomation.projectIds,
-    previousResource: existingAutomation,
-    savedResource: updatedAutomation,
+    propagation: sdk.projects.propagateProjectDependencyChanges({
+      rootResourceId: updatedAutomation._id!,
+      currentProjectIds: updatedAutomation.projectIds,
+      previousProjectIds: existingAutomation.projectIds,
+      previousResource: existingAutomation,
+      savedResource: updatedAutomation,
+    }),
   })
 
   ctx.body = {

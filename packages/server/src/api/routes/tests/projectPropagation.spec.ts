@@ -94,6 +94,155 @@ describe("project dependency propagation", () => {
     workspaceAppId,
   })
 
+  const assignResourceWithoutDependencies = async ({
+    resourceId,
+    projectIds,
+  }: {
+    resourceId: string
+    projectIds: string[]
+  }) => {
+    const preview = await config.api.project.previewAssignment({
+      resourceId,
+      projectIds,
+    })
+    await config.api.project.updateAssignment(resourceId, {
+      dependencyFingerprint: preview.dependencyFingerprint,
+      resourceRev: preview.resourceRev,
+      projectIds,
+      dependencyIds: [],
+    })
+  }
+
+  const createAutomationWithAnExcludedTable = async () => {
+    const { project: existingProject } = await config.api.project.create({
+      name: "Existing project",
+    })
+    const { project: addedProject } = await config.api.project.create({
+      name: "Added project",
+    })
+    const excludedTable = await config.api.table.save(
+      basicTable(undefined, { name: "Excluded existing dependency" })
+    )
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction({})
+      .createRow({ row: { tableId: excludedTable._id!, name: "Existing row" } })
+      .save()
+    await assignResourceWithoutDependencies({
+      resourceId: automation._id!,
+      projectIds: [existingProject._id],
+    })
+    return {
+      existingProject,
+      addedProject,
+      excludedTable,
+      automation: await config.api.automation.get(automation._id!),
+    }
+  }
+
+  const createTableWithLinkedSibling = async ({ name }: { name: string }) => {
+    const sibling = await config.api.table.save(
+      basicTable(undefined, { name: `${name} sibling` })
+    )
+    const definition = basicTable(undefined, { name })
+    const table = await config.api.table.save({
+      ...definition,
+      schema: {
+        ...definition.schema,
+        sibling: {
+          type: FieldType.LINK,
+          name: `${name} sibling`,
+          fieldName: name.toLowerCase(),
+          relationshipType: RelationshipType.MANY_TO_MANY,
+          tableId: sibling._id!,
+        },
+      },
+    })
+    return { table, sibling }
+  }
+
+  const createQueryMoveFixture = async () => {
+    const { project: sharedProject } = await config.api.project.create({
+      name: "Shared project",
+    })
+    const { project: destinationProject } = await config.api.project.create({
+      name: "Destination project",
+    })
+    const { project: agentProject } = await config.api.project.create({
+      name: "Agent project",
+    })
+    const { project: excludedAgentProject } = await config.api.project.create({
+      name: "Excluded agent project",
+    })
+    const excludedTable = await config.api.table.save(
+      basicTable(undefined, { name: "Excluded reference" })
+    )
+    const addedTable = await config.api.table.save(
+      basicTable(undefined, { name: "Added reference" })
+    )
+    const sourceDatasource = await config.api.datasource.create({
+      ...basicDatasource().datasource,
+      name: "Source datasource",
+    })
+    const destinationDatasource = await config.api.datasource.create({
+      ...basicDatasource().datasource,
+      name: "Destination datasource",
+    })
+    await assignResourceWithoutDependencies({
+      resourceId: destinationDatasource._id!,
+      projectIds: [sharedProject._id, destinationProject._id],
+    })
+    const query = await config.api.query.save({
+      ...basicQuery(sourceDatasource._id!),
+      parameters: [
+        { name: "existing", default: `{{ ${excludedTable._id}.name }}` },
+      ],
+    })
+    await assignResourceWithoutDependencies({
+      resourceId: sourceDatasource._id!,
+      projectIds: [sharedProject._id, agentProject._id],
+    })
+    const existingBindings = getQueryToolBindingsForResource({
+      datasource: sourceDatasource,
+      query,
+    })
+    const agent = await config.api.agent.createWithOperation(
+      {
+        name: "Query agent",
+      },
+      {
+        id: "operation_1",
+        name: "Run query",
+        live: false,
+        promptInstructions: `Use {{ ${existingBindings.readableBinding} }}.`,
+        enabledTools: [
+          {
+            toolName: existingBindings.runtimeBinding,
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          },
+        ],
+        allowKnowledgeSourceDownload: true,
+      }
+    )
+    await assignResourceWithoutDependencies({
+      resourceId: agent._id!,
+      projectIds: [
+        sharedProject._id,
+        agentProject._id,
+        excludedAgentProject._id,
+      ],
+    })
+    return {
+      sharedProject,
+      destinationProject,
+      agentProject,
+      excludedTable,
+      addedTable,
+      destinationDatasource,
+      query,
+      agent,
+    }
+  }
+
   describe("propagates project ids to dependencies on save", () => {
     it("allows other saves during schema discovery and revalidates projects afterwards", async () => {
       await withProjectsEnabled(async () => {
@@ -371,6 +520,58 @@ describe("project dependency propagation", () => {
       })
     })
 
+    it("adds another project without restoring existing dependency exclusions", async () => {
+      await withProjectsEnabled(async () => {
+        const { existingProject, addedProject, excludedTable, automation } =
+          await createAutomationWithAnExcludedTable()
+
+        await config.api.automation.update({
+          ...automation,
+          projectIds: [existingProject._id, addedProject._id],
+        })
+
+        expect(
+          (await config.api.table.get(excludedTable._id!)).projectIds
+        ).toEqual([addedProject._id])
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([existingProject._id, addedProject._id])
+      })
+    })
+
+    it("propagates a new dependency to both projects while preserving an existing exclusion", async () => {
+      await withProjectsEnabled(async () => {
+        const { existingProject, addedProject, excludedTable, automation } =
+          await createAutomationWithAnExcludedTable()
+        const addedTable = await config.api.table.save(
+          basicTable(undefined, { name: "New dependency" })
+        )
+        const updatedDefinition = createAutomationBuilder(config)
+          .onAppAction({})
+          .createRow({
+            row: { tableId: excludedTable._id!, name: "Existing row" },
+          })
+          .createRow({ row: { tableId: addedTable._id!, name: "Added row" } })
+          .build().definition
+
+        await config.api.automation.update({
+          ...automation,
+          definition: updatedDefinition,
+          projectIds: [existingProject._id, addedProject._id],
+        })
+
+        expect(
+          (await config.api.table.get(excludedTable._id!)).projectIds
+        ).toEqual([addedProject._id])
+        expect(
+          new Set((await config.api.table.get(addedTable._id!)).projectIds)
+        ).toEqual(new Set([existingProject._id, addedProject._id]))
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([existingProject._id, addedProject._id])
+      })
+    })
+
     it("adds the project id to an automation triggered from a screen button", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
@@ -521,101 +722,16 @@ describe("project dependency propagation", () => {
 
     it("propagates new query references during a move while preserving exclusions and tool bindings", async () => {
       await withProjectsEnabled(async () => {
-        const { project: sharedProject } = await config.api.project.create({
-          name: "Shared project",
-        })
-        const { project: destinationProject } = await config.api.project.create(
-          {
-            name: "Destination project",
-          }
-        )
-        const { project: agentProject } = await config.api.project.create({
-          name: "Agent project",
-        })
-        const { project: excludedAgentProject } =
-          await config.api.project.create({
-            name: "Excluded agent project",
-          })
-        const excludedTable = await config.api.table.save(
-          basicTable(undefined, { name: "Excluded reference" })
-        )
-        const addedTable = await config.api.table.save(
-          basicTable(undefined, { name: "Added reference" })
-        )
-        const sourceDatasource = await config.api.datasource.create({
-          ...basicDatasource().datasource,
-          name: "Source datasource",
-        })
-        const destinationDatasource = await config.api.datasource.create({
-          ...basicDatasource().datasource,
-          name: "Destination datasource",
-        })
-        const datasourcePreview = await config.api.project.previewAssignment({
-          resourceId: destinationDatasource._id!,
-          projectIds: [sharedProject._id, destinationProject._id],
-        })
-        await config.api.project.updateAssignment(destinationDatasource._id!, {
-          dependencyFingerprint: datasourcePreview.dependencyFingerprint,
-          resourceRev: destinationDatasource._rev!,
-          projectIds: [sharedProject._id, destinationProject._id],
-          dependencyIds: [],
-        })
-        const query = await config.api.query.save({
-          ...basicQuery(sourceDatasource._id!),
-          parameters: [
-            { name: "existing", default: `{{ ${excludedTable._id}.name }}` },
-          ],
-        })
-        const sourcePreview = await config.api.project.previewAssignment({
-          resourceId: sourceDatasource._id!,
-          projectIds: [sharedProject._id, agentProject._id],
-        })
-        await config.api.project.updateAssignment(sourceDatasource._id!, {
-          dependencyFingerprint: sourcePreview.dependencyFingerprint,
-          resourceRev: sourceDatasource._rev!,
-          projectIds: [sharedProject._id, agentProject._id],
-          dependencyIds: [],
-        })
-        const existingBindings = getQueryToolBindingsForResource({
-          datasource: sourceDatasource,
+        const {
+          sharedProject,
+          destinationProject,
+          agentProject,
+          excludedTable,
+          addedTable,
+          destinationDatasource,
           query,
-        })
-        const agent = await config.api.agent.createWithOperation(
-          {
-            name: "Query agent",
-          },
-          {
-            id: "operation_1",
-            name: "Run query",
-            live: false,
-            promptInstructions: `Use {{ ${existingBindings.readableBinding} }}.`,
-            enabledTools: [
-              {
-                toolName: existingBindings.runtimeBinding,
-                executionPrincipal: ToolExecutionPrincipal.ADMIN,
-              },
-            ],
-            allowKnowledgeSourceDownload: true,
-          }
-        )
-        const preview = await config.api.project.previewAssignment({
-          resourceId: agent._id!,
-          projectIds: [
-            sharedProject._id,
-            agentProject._id,
-            excludedAgentProject._id,
-          ],
-        })
-        await config.api.project.updateAssignment(agent._id!, {
-          dependencyFingerprint: preview.dependencyFingerprint,
-          resourceRev: agent._rev!,
-          projectIds: [
-            sharedProject._id,
-            agentProject._id,
-            excludedAgentProject._id,
-          ],
-          dependencyIds: [],
-        })
+          agent,
+        } = await createQueryMoveFixture()
         const analyseDependencies = jest.fn(
           sdk.resources.analyseResourceDependencies
         )
@@ -686,59 +802,17 @@ describe("project dependency propagation", () => {
         const { project: targetProject } = await config.api.project.create({
           name: "Target project",
         })
-        const sourceSibling = await config.api.table.save(
-          basicTable(undefined, { name: "Source sibling" })
-        )
-        const targetSibling = await config.api.table.save(
-          basicTable(undefined, { name: "Target sibling" })
-        )
-        const sourceDefinition = basicTable(undefined, { name: "Source" })
-        const source = await config.api.table.save({
-          ...sourceDefinition,
-          schema: {
-            ...sourceDefinition.schema,
-            sourceSibling: {
-              type: FieldType.LINK,
-              name: "Source sibling",
-              fieldName: "source",
-              relationshipType: RelationshipType.MANY_TO_MANY,
-              tableId: sourceSibling._id!,
-            },
-          },
-        })
-        const targetDefinition = basicTable(undefined, { name: "Target" })
-        const target = await config.api.table.save({
-          ...targetDefinition,
-          schema: {
-            ...targetDefinition.schema,
-            targetSibling: {
-              type: FieldType.LINK,
-              name: "Target sibling",
-              fieldName: "target",
-              relationshipType: RelationshipType.MANY_TO_MANY,
-              tableId: targetSibling._id!,
-            },
-          },
-        })
-        const sourcePreview = await config.api.project.previewAssignment({
+        const { table: source, sibling: sourceSibling } =
+          await createTableWithLinkedSibling({ name: "Source" })
+        const { table: target, sibling: targetSibling } =
+          await createTableWithLinkedSibling({ name: "Target" })
+        await assignResourceWithoutDependencies({
           resourceId: source._id!,
           projectIds: [sourceProject._id],
         })
-        await config.api.project.updateAssignment(source._id!, {
-          dependencyFingerprint: sourcePreview.dependencyFingerprint,
-          resourceRev: source._rev!,
-          projectIds: [sourceProject._id],
-          dependencyIds: [],
-        })
-        const targetPreview = await config.api.project.previewAssignment({
+        await assignResourceWithoutDependencies({
           resourceId: target._id!,
           projectIds: [targetProject._id, sourceProject._id],
-        })
-        await config.api.project.updateAssignment(target._id!, {
-          dependencyFingerprint: targetPreview.dependencyFingerprint,
-          resourceRev: target._rev!,
-          projectIds: [targetProject._id, sourceProject._id],
-          dependencyIds: [],
         })
 
         const persistedSource = await config.api.table.get(source._id!)
