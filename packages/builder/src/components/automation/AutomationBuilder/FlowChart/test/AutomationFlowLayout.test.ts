@@ -63,6 +63,53 @@ const layoutGraph = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
 }
 
 describe("layoutAutomationGraph", () => {
+  it.each(["first", "second"])(
+    "stops traversing a cycle from second back to %s",
+    target => {
+      const graph = layoutGraph({
+        nodes: [stepNode("trigger"), stepNode("first"), stepNode("second")],
+        edges: [
+          edge("trigger", "first"),
+          edge("first", "second"),
+          edge("second", target),
+        ],
+      })
+
+      expectNodeRightOf(graph, "first", "trigger", ranksep)
+      expectNodeRightOf(graph, "second", "first", ranksep)
+    }
+  )
+
+  it("stops traversing a branch cycle while laying out the other lane", () => {
+    const graph = layoutGraph({
+      nodes: [
+        stepNode("trigger"),
+        stepNode("source"),
+        stepNode("upper"),
+        stepNode("lower"),
+      ],
+      edges: [
+        edge("trigger", "source"),
+        edge("source", "upper", {
+          isBranchEdge: true,
+          branchStepId: "branch",
+          branchIdx: 0,
+        }),
+        edge("upper", "source"),
+        edge("source", "lower", {
+          isBranchEdge: true,
+          branchStepId: "branch",
+          branchIdx: 1,
+        }),
+      ],
+    })
+
+    expectNodeRightOf(graph, "source", "trigger", ranksep)
+    expectNodeRightOf(graph, "upper", "source", ranksep)
+    expectNodeRightOf(graph, "lower", "source", ranksep)
+    expectNodeBelow(graph, "lower", "upper", nodesep)
+  })
+
   it("falls back to default horizontal spacing for non-positive rank separation", () => {
     const graph = layoutAutomationGraph(
       {
