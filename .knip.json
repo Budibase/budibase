@@ -1,7 +1,7 @@
 {
   "workspaces": {
     "packages/server": {
-      "ignoreDependencies": ["bcrypt", "pouchdb"]
+      "ignoreDependencies": ["bcrypt", "pouchdb", "chance", "tedious", "buffer"]
     },
     "packages/worker": {
       "ignoreDependencies": ["bcrypt", "bull", "knex", "pouchdb"]
