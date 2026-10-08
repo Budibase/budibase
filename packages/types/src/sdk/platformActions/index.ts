@@ -148,3 +148,15 @@ export interface PlatformActionSessionIndexJob extends ActionSourceContext {
   // forwarded to external analytics
   metadata?: PlatformActionSessionMetadata
 }
+
+export interface ActionSessionChangeEvent extends ActionSourceContext {
+  environment: PlatformActionEnvironment
+}
+
+export interface PlatformActionSessionChange extends ActionSessionChangeEvent {
+  workspaceId: string
+}
+
+export type PlatformActionSessionIndexedFn = (
+  change: PlatformActionSessionChange
+) => void

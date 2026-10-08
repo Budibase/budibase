@@ -11,11 +11,27 @@ import { upsertPlatformActionSession } from "../sessionIndex"
 import {
   enqueuePlatformActionSessionIndex,
   enqueuePlatformActionSessionLifecycle,
+  initPlatformActionSessionIndexQueue,
 } from "../indexQueue"
 
 const mockUpsert = upsertPlatformActionSession as jest.MockedFunction<
   typeof upsertPlatformActionSession
 >
+const mockOnSessionIndexed = jest.fn()
+
+const buildJob = (
+  overrides: Partial<PlatformActionSessionIndexJob> = {}
+): PlatformActionSessionIndexJob => ({
+  workspaceId: db.generateWorkspaceID(structures.tenant.id()),
+  environment: "prod",
+  indexId: `platform_action_${structures.uuid()}`,
+  sourceType: "agent_session",
+  sourceId: "session-1",
+  incrementsActionCount: true,
+  signal: "completed",
+  timestamp: new Date().toISOString(),
+  ...overrides,
+})
 
 const POLL_INTERVAL_MS = 10
 const WAIT_TIMEOUT_MS = 1000
@@ -34,23 +50,20 @@ async function waitFor(predicate: () => boolean, timeoutMs = WAIT_TIMEOUT_MS) {
 }
 
 describe("enqueuePlatformActionSessionIndex", () => {
+  beforeAll(() => {
+    initPlatformActionSessionIndexQueue({
+      onSessionIndexed: mockOnSessionIndexed,
+    })
+  })
+
   beforeEach(() => {
-    mockUpsert.mockClear()
-    mockUpsert.mockResolvedValue(undefined)
+    mockUpsert.mockReset()
+    mockUpsert.mockResolvedValue(true)
+    mockOnSessionIndexed.mockReset()
   })
 
   it("does not materialize a job twice when enqueued twice with the same indexId", async () => {
-    const workspaceId = db.generateWorkspaceID(structures.tenant.id())
-    const job: PlatformActionSessionIndexJob = {
-      workspaceId,
-      environment: "prod",
-      indexId: `platform_action_${structures.uuid()}`,
-      sourceType: "agent_session",
-      sourceId: "session-1",
-      incrementsActionCount: true,
-      signal: "completed",
-      timestamp: new Date().toISOString(),
-    }
+    const job = buildJob()
 
     await enqueuePlatformActionSessionIndex(job)
     await enqueuePlatformActionSessionIndex(job)
@@ -136,11 +149,84 @@ describe("enqueuePlatformActionSessionIndex", () => {
       })
     )
   })
+
+  it("notifies the session change once the session doc is written", async () => {
+    const job = buildJob({
+      environment: "dev",
+      sourceType: "automation_run",
+      sourceId: "run-notified",
+    })
+
+    await enqueuePlatformActionSessionIndex(job)
+
+    await waitFor(() => mockOnSessionIndexed.mock.calls.length > 0)
+
+    expect(mockOnSessionIndexed).toHaveBeenCalledWith({
+      workspaceId: job.workspaceId,
+      environment: "dev",
+      sourceType: "automation_run",
+      sourceId: "run-notified",
+    })
+  })
+
+  it("does not notify when the write is discarded", async () => {
+    mockUpsert.mockResolvedValue(false)
+
+    await enqueuePlatformActionSessionIndex(buildJob())
+
+    await waitFor(() => mockUpsert.mock.calls.length > 0)
+    await new Promise(resolve => setTimeout(resolve, SETTLE_MS))
+
+    expect(mockOnSessionIndexed).not.toHaveBeenCalled()
+  })
+
+  it("notifies only for the retry that writes after a failed attempt", async () => {
+    mockUpsert.mockRejectedValueOnce(new Error("lock not acquired"))
+
+    await enqueuePlatformActionSessionIndex(buildJob())
+
+    await waitFor(() => mockOnSessionIndexed.mock.calls.length > 0)
+    await new Promise(resolve => setTimeout(resolve, SETTLE_MS))
+
+    expect(mockUpsert).toHaveBeenCalledTimes(2)
+    expect(mockOnSessionIndexed).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not retry the job when the notification fails", async () => {
+    mockOnSessionIndexed.mockImplementation(() => {
+      throw new Error("socket unavailable")
+    })
+    const errorSpy = jest.spyOn(console, "error").mockImplementation()
+
+    await enqueuePlatformActionSessionIndex(buildJob())
+
+    await waitFor(() => mockOnSessionIndexed.mock.calls.length > 0)
+    // InMemoryQueue retries a failed job after 100ms
+    await new Promise(resolve => setTimeout(resolve, 150))
+
+    expect(mockUpsert).toHaveBeenCalledTimes(1)
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to notify platform action session change",
+      expect.objectContaining({ err: expect.any(Error) })
+    )
+    errorSpy.mockRestore()
+  })
 })
 
 describe("initPlatformActionSessionIndexQueue", () => {
   afterEach(() => {
     jest.restoreAllMocks()
+  })
+
+  it("is not started by enqueuing a job", async () => {
+    jest.resetModules()
+    const freshQueue = await import("../../../../queue")
+    const processSpy = jest.spyOn(freshQueue.BudibaseQueue.prototype, "process")
+    const freshIndexQueue = await import("../indexQueue")
+
+    await freshIndexQueue.enqueuePlatformActionSessionIndex(buildJob())
+
+    expect(processSpy).not.toHaveBeenCalled()
   })
 
   it("resets the initialised guard when process() rejects asynchronously, then stops retrying once it succeeds", async () => {
