@@ -6,6 +6,8 @@ import {
   type Agent,
 } from "@budibase/types"
 import type { Tool } from "ai"
+import { z } from "zod"
+import { toToolSet, type AiToolDefinition } from "../../../../ai/tools"
 import { requesterTools } from "../tests/utils"
 
 jest.mock("../../..", () => ({
@@ -69,8 +71,9 @@ jest.mock("../../../../ai/tools", () => ({
     (_tool, config) =>
       config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
   ),
-  toToolSet: (tools: any[]) =>
-    Object.fromEntries(tools.map(t => [t.name, t.tool])),
+  toToolSet: jest.fn((tools: AiToolDefinition[]) =>
+    Object.fromEntries(tools.map(t => [t.name, t.tool]))
+  ),
 }))
 
 jest.mock("../../../../ai/tools/authorization", () => ({
@@ -97,7 +100,6 @@ import {
   authorizeAgentToolCall,
   canRequesterReadAgentToolResource,
 } from "../../../../ai/tools/authorization"
-
 describe("getEscalationToolDisplayName", () => {
   it.each([undefined, "API", "api"])(
     "omits a redundant REST source label (%s)",
@@ -354,6 +356,7 @@ describe("buildPromptAndTools", () => {
 
   it("redacts restricted table definitions without removing the tools", async () => {
     jest.mocked(canRequesterReadAgentToolResource).mockResolvedValue(false)
+    const authoritativeInputSchema = z.object({ email: z.string() })
     const restrictedTool = {
       description: "Create Row on the configured resource",
     } as Tool
@@ -374,7 +377,10 @@ describe("buildPromptAndTools", () => {
           permissionLevel: PermissionLevel.WRITE,
           resourceId: "ta_employees",
         },
-        tool: { description: "Fields: Email, Employee Level" } as Tool,
+        tool: {
+          description: "Fields: Email, Employee Level",
+          inputSchema: authoritativeInputSchema,
+        } as Tool,
         requesterRedactedTool: restrictedTool,
       },
       {
@@ -429,8 +435,22 @@ describe("buildPromptAndTools", () => {
       },
     })
 
-    expect(result.tools.ta_employees_create_row).toBe(restrictedTool)
-    expect(result.tools.ta_employees_search_rows).toBe(restrictedTool)
+    expect(result.tools.ta_employees_create_row).toEqual(
+      expect.objectContaining(restrictedTool)
+    )
+    expect(result.tools.ta_employees_search_rows).toEqual(
+      expect.objectContaining(restrictedTool)
+    )
+    const calls = jest.mocked(toToolSet).mock.calls
+    const toolDefinitions = calls[calls.length - 1][0]
+    expect(toolDefinitions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "ta_employees_create_row",
+          authoritativeInputSchema,
+        }),
+      ])
+    )
     expect(canRequesterReadAgentToolResource).toHaveBeenCalledTimes(1)
   })
 })
