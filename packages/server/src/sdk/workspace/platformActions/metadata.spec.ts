@@ -1,4 +1,5 @@
-import { getUserOrigin } from "./metadata"
+import { AgentChannelProvider } from "@budibase/types"
+import { getTransientChatUserOrigin, getUserOrigin } from "./metadata"
 
 describe("getUserOrigin", () => {
   it("prefers the user's name over their email", () => {
@@ -51,5 +52,32 @@ describe("getUserOrigin", () => {
         email: "jane@example.com",
       })
     ).toEqual({ type: "user", id: "user-1", label: "jane@example.com" })
+  })
+})
+
+describe("getTransientChatUserOrigin", () => {
+  describe.each([
+    { provider: AgentChannelProvider.SLACK, label: "Slack" },
+    { provider: AgentChannelProvider.MSTEAMS, label: "Microsoft Teams" },
+  ])("$provider", ({ provider, label }) => {
+    it.each([undefined, "", "   "])(
+      "retains the provider when the display name is %p",
+      displayName => {
+        expect(getTransientChatUserOrigin({ provider, displayName })).toEqual({
+          type: "user",
+          label,
+        })
+      }
+    )
+
+    it.each(["John Doe", "  John Doe  "])(
+      "includes the trimmed display name and provider for %p",
+      displayName => {
+        expect(getTransientChatUserOrigin({ provider, displayName })).toEqual({
+          type: "user",
+          label: `John Doe (${label})`,
+        })
+      }
+    )
   })
 })

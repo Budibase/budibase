@@ -43,12 +43,14 @@ export const getTransientChatUserOrigin = ({
 }: {
   provider: AgentChannelProvider
   displayName?: string
-}): PlatformActionUserOrigin => ({
-  type: "user",
-  ...(displayName
-    ? { label: `${displayName} (${CHAT_PROVIDER_LABELS[provider]})` }
-    : {}),
-})
+}): PlatformActionUserOrigin => {
+  const name = displayName?.trim()
+  const providerLabel = CHAT_PROVIDER_LABELS[provider]
+  return {
+    type: "user",
+    label: name ? `${name} (${providerLabel})` : providerLabel,
+  }
+}
 
 export const getAutomationOrigin = ({
   automationId,
