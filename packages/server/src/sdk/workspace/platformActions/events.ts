@@ -1,10 +1,11 @@
-import { events } from "@budibase/backend-core"
+import { events, HTTPError } from "@budibase/backend-core"
 import type {
   ActionEvent,
   ActionEventsSummary,
   FetchActionSessionEventsResponse,
   PlatformActionEnvironment,
   PlatformActionEvent,
+  PlatformActionSessionIndexDoc,
   PlatformActionSourceType,
 } from "@budibase/types"
 import {
@@ -55,6 +56,19 @@ export async function fetchSessionEvents({
     }),
     fetchSessionEventsSummary({ environment, sourceType, sourceId }),
   ])
+
+  if (summary.total === 0) {
+    const session = await workspaceDb.tryGet<PlatformActionSessionIndexDoc>(
+      events.platformActions.getPlatformActionSessionId({
+        environment,
+        sourceType,
+        sourceId,
+      })
+    )
+    if (!session) {
+      throw new HTTPError("Session not found", 404)
+    }
+  }
 
   return {
     events: page.items.map(toActionEvent),
