@@ -27,6 +27,7 @@ describe("toActionSessionRow", () => {
           ...session,
           sourceType: "agent_session",
           assetLabel: "Support agent",
+          triggeredByType: "user",
           triggeredByLabel: "Jane Doe",
         },
         now,
@@ -37,7 +38,9 @@ describe("toActionSessionRow", () => {
       typeIcon: "sparkle",
       typeIconColor: "var(--color-brand-400)",
       assetLabel: "Support agent",
-      triggeredByLabel: "Jane Doe",
+      triggeredByLabel: "User: Jane Doe",
+      triggeredByValue: "Jane Doe",
+      triggeredByPrefix: "User",
       status: "waiting",
       statusLabel: "waiting",
       actionCount: 3,
@@ -61,6 +64,50 @@ describe("toActionSessionRow", () => {
     })
   })
 
+  it.each([undefined, ""])(
+    "labels a user without a name as User (%s)",
+    triggeredByLabel => {
+      const userSession: ActionSession = {
+        ...session,
+        triggeredByType: "user",
+        triggeredById: "user-1",
+        triggeredByLabel,
+      }
+
+      expect(
+        toActionSessionRow({ session: userSession, now }).triggeredByLabel
+      ).toBe("User")
+      expect(getActionSessionDetails(userSession)).toContainEqual({
+        type: "text",
+        label: "Triggered by",
+        value: "User",
+        icon: "user",
+      })
+    }
+  )
+
+  it.each([undefined, ""])(
+    "labels a scheduled execution without a label as System: Schedule (%s)",
+    triggeredByLabel => {
+      const scheduledSession: ActionSession = {
+        ...session,
+        triggeredByType: "schedule",
+        triggeredByLabel,
+      }
+
+      expect(
+        toActionSessionRow({ session: scheduledSession, now }).triggeredByLabel
+      ).toBe("System: Schedule")
+      expect(getActionSessionDetails(scheduledSession)).toContainEqual({
+        type: "text",
+        label: "Triggered by",
+        value: "Schedule",
+        prefix: "System",
+        icon: "user",
+      })
+    }
+  )
+
   it("distinguishes the same source across environments", () => {
     const prodRow = toActionSessionRow({ session, now })
     const devRow = toActionSessionRow({
@@ -70,6 +117,104 @@ describe("toActionSessionRow", () => {
 
     expect(prodRow._id).not.toBe(devRow._id)
   })
+})
+
+describe("Triggered by formatting", () => {
+  it.each<{
+    metadata: Partial<ActionSession>
+    expected: string
+  }>([
+    {
+      metadata: { triggeredByType: "user", triggeredByLabel: "Jane Doe" },
+      expected: "User: Jane Doe",
+    },
+    {
+      metadata: { triggeredByType: "user", triggeredByLabel: "Team: Support" },
+      expected: "User: Team: Support",
+    },
+    {
+      metadata: {
+        triggeredByType: "user",
+        triggeredByLabel: "jane@example.com",
+      },
+      expected: "User: jane@example.com",
+    },
+    {
+      metadata: { triggeredByType: "agent", triggeredByLabel: "HR assistant" },
+      expected: "Agent: HR assistant",
+    },
+    {
+      metadata: {
+        triggeredByType: "automation",
+        triggeredByLabel: "Ticket triage",
+      },
+      expected: "Automation: Ticket triage",
+    },
+    {
+      metadata: { triggeredByType: "agent", triggeredByLabel: "" },
+      expected: "Agent",
+    },
+    { metadata: { triggeredByType: "automation" }, expected: "Automation" },
+    { metadata: { triggeredByType: "webhook" }, expected: "System: Webhook" },
+    {
+      metadata: { triggeredByType: "system", triggeredById: "row_change" },
+      expected: "System: Row change",
+    },
+    {
+      metadata: { triggeredByType: "system", triggeredById: "email" },
+      expected: "System: Email",
+    },
+    {
+      metadata: { triggeredByType: "system", triggeredById: "reboot" },
+      expected: "System: Reboot",
+    },
+    { metadata: { triggeredByType: "system" }, expected: "System" },
+    {
+      metadata: { triggeredByLabel: "Legacy label" },
+      expected: "Legacy label",
+    },
+    {
+      metadata: { triggeredByLabel: "Legacy: label" },
+      expected: "Legacy: label",
+    },
+    { metadata: {}, expected: "Unknown" },
+  ])(
+    "renders $expected consistently without changing metadata",
+    ({ metadata, expected }) => {
+      const input: ActionSession = {
+        ...session,
+        assetLabel: "Asset name",
+        ...metadata,
+      }
+      const original = { ...input }
+      const prefix =
+        expected.includes(": ") && metadata.triggeredByType
+          ? expected.split(": ")[0]
+          : undefined
+      const value = prefix ? expected.slice(prefix.length + 2) : expected
+
+      expect(toActionSessionRow({ session: input, now })).toMatchObject({
+        triggeredByLabel: expected,
+        triggeredByValue: value,
+        triggeredByPrefix: prefix,
+        assetLabel: "Asset name",
+      })
+      expect(getActionSessionDetails(input)).toContainEqual({
+        type: "text",
+        label: "Triggered by",
+        value,
+        prefix,
+        icon: "user",
+      })
+      expect(getActionSessionDetails(input)).toContainEqual({
+        type: "text",
+        label: "Asset",
+        value: "Asset name",
+        icon: "cube",
+      })
+      expect(input).toEqual(original)
+    }
+  )
 })
 
 describe("getActionSessionTitle", () => {

@@ -25,6 +25,8 @@ function toActionSession(doc: PlatformActionSessionIndexDoc): ActionSession {
     _deleted,
     createdAt: _createdAt,
     statusUpdatedAt: _statusUpdatedAt,
+    assetCapturedAt: _assetCapturedAt,
+    triggeredByCapturedAt: _triggeredByCapturedAt,
     ...session
   } = doc
   return session

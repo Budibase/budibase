@@ -88,6 +88,7 @@ describe("conversation attachment cleanup", () => {
           attachmentIds: ["attachment_1"],
           status: ConversationAttachmentTurnStatus.QUEUED,
           requester: { userId: "user_1", linked: true },
+          triggeredBy: { type: "user", id: "user_1" },
           createdAt: now,
           updatedAt: now,
         },

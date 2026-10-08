@@ -128,6 +128,7 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
       incrementsActionCount: true,
       signal: getSessionSignal(event, properties),
       timestamp: isoTimestamp,
+      metadata: context.getPlatformActionSessionMetadata(doc),
     }
 
     for (let attempt = 1; attempt <= ENQUEUE_MAX_ATTEMPTS; attempt++) {

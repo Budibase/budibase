@@ -3,6 +3,7 @@ import {
   PlatformActionEvent,
   type Identity,
   type PlatformActionSessionIndexDoc,
+  type PlatformActionSessionMetadata,
 } from "@budibase/types"
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
@@ -232,6 +233,62 @@ describe("PlatformActionPersistProcessor", () => {
       })
     }
   )
+
+  describe("session metadata", () => {
+    const metadata: PlatformActionSessionMetadata = {
+      asset: { type: "agent", id: "agent-1", label: "HR assistant" },
+      triggeredBy: { type: "user", id: "us_1", label: "John Doe" },
+    }
+
+    it("attaches the scope's metadata to the index job only, never to the persisted event", async () => {
+      await run(async () => {
+        await context.doInPlatformActionSessionContext(
+          { sourceType: "agent_session", sourceId: "session-1", ...metadata },
+          () =>
+            processor.processEvent(
+              Event.ACTION_AI_AGENT_EXECUTED,
+              identity,
+              { sourceType: "agent_session", sourceId: "session-1" },
+              undefined
+            )
+        )
+
+        expect(mockEnqueue).toHaveBeenCalledWith(
+          expect.objectContaining({ metadata })
+        )
+        const { rows } = await getActionsDB().allDocs<PlatformActionEvent>({
+          include_docs: true,
+        })
+        expect(rows).toHaveLength(1)
+        expect(JSON.stringify(rows[0].doc)).not.toContain("HR assistant")
+        expect(JSON.stringify(rows[0].doc)).not.toContain("John Doe")
+        expect(JSON.stringify(rows[0].doc)).not.toContain("agent-1")
+        expect(JSON.stringify(rows[0].doc)).not.toContain("us_1")
+      })
+    })
+
+    it("does not attach metadata scoped to a different source", async () => {
+      await run(async () => {
+        await context.doInPlatformActionSessionContext(
+          { sourceType: "agent_session", sourceId: "session-1", ...metadata },
+          () =>
+            processor.processEvent(
+              Event.ACTION_AI_AGENT_EXECUTED,
+              identity,
+              { sourceType: "agent_session", sourceId: "session-2" },
+              undefined
+            )
+        )
+
+        expect(mockEnqueue).toHaveBeenCalledWith(
+          expect.objectContaining({
+            sourceId: "session-2",
+            metadata: undefined,
+          })
+        )
+      })
+    })
+  })
 
   it("marks an agent action as waiting only when it awaits an escalation", async () => {
     await run(async () => {

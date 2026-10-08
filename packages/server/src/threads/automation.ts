@@ -514,13 +514,33 @@ class Orchestrator {
     })
   }
 
+  // The automation is captured here, after any reload, so the run keeps the
+  // name it executed under. A resumed run carries its suspended snapshot.
   async execute(): Promise<AutomationResults> {
+    const { sourceType, sourceId } = this.actionSourceContext
+    return await context.doInPlatformActionSessionContext(
+      {
+        sourceType,
+        sourceId,
+        asset: {
+          type: "automation",
+          id: this.automation._id!,
+          label: this.automation.name,
+        },
+        triggeredBy: this.job.data.event.triggeredBy,
+      },
+      () => this.executeRun()
+    )
+  }
+
+  private async executeRun(): Promise<AutomationResults> {
     return await tracer.trace("execute", async span => {
       span.addTags({ appId: this.appId, automationId: this.automation._id })
 
       const data = cloneDeep(this.job.data)
       delete data.event.appId
       delete data.event.metadata
+      delete data.event.triggeredBy
 
       if (this.isCron() && !data.event.timestamp) {
         data.event.timestamp = Date.now()
@@ -1134,6 +1154,7 @@ class Orchestrator {
             emitter: this.emitter,
             context: ctx,
             automationId: this.automation._id,
+            automationName: this.automation.name,
             stepId: step.id,
             isTestRun: this.isTestRun,
           })

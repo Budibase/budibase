@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 import dayjs from "dayjs"
-import { ActionFailureReason, Event, type ActionEvent } from "@budibase/types"
+import {
+  ActionFailureReason,
+  Event,
+  type ActionEvent,
+  type ActionSession,
+} from "@budibase/types"
 import { toActionTimelineItem } from "./actionEventTimeline"
 
 const timestamp = "2026-10-05T11:00:00.000Z"
@@ -20,6 +25,74 @@ const toItem = (event: Partial<ActionEvent>) =>
   })
 
 describe("toActionTimelineItem", () => {
+  const session: ActionSession = {
+    sourceType: "agent_session",
+    sourceId: "session-1",
+    environment: "dev",
+    status: "completed",
+    actionCount: 1,
+    startedAt: timestamp,
+    updatedAt: timestamp,
+    assetType: "agent",
+    assetId: "agent-1",
+    assetLabel: "Historical agent",
+  }
+
+  it.each([
+    {
+      currentName: "Renamed agent",
+      eventName: Event.ACTION_AI_AGENT_EXECUTED,
+      verb: "executed",
+    },
+    {
+      currentName: undefined,
+      eventName: Event.ACTION_AI_AGENT_EXECUTED,
+      verb: "executed",
+    },
+    {
+      currentName: "Renamed agent",
+      eventName: Event.ACTION_AI_AGENT_FAILED,
+      verb: "failed",
+    },
+  ])(
+    "uses the snapshot for $verb with current name $currentName",
+    ({ currentName, eventName, verb }) => {
+      expect(
+        toActionTimelineItem({
+          event: {
+            id: "event-1",
+            eventName,
+            timestamp,
+            payload: { agentId: "agent-1" },
+          },
+          stepNames: {},
+          agentNames: currentName ? { "agent-1": currentName } : {},
+          session,
+        }).label
+      ).toBe(`Agent ${verb}: Historical agent`)
+    }
+  )
+
+  it.each([
+    { assetId: "another-agent" },
+    { assetType: "automation" },
+    { assetLabel: undefined },
+  ])("keeps the lookup fallback for an unusable snapshot %j", overrides => {
+    expect(
+      toActionTimelineItem({
+        event: {
+          id: "event-1",
+          eventName: Event.ACTION_AI_AGENT_EXECUTED,
+          timestamp,
+          payload: { agentId: "agent-1" },
+        },
+        stepNames: {},
+        agentNames: { "agent-1": "Current agent" },
+        session: { ...session, ...overrides },
+      }).label
+    ).toBe("Agent executed: Current agent")
+  })
+
   it("labels an executed automation step with its name", () => {
     expect(toItem({ payload: { stepId: "CREATE_ROW" } })).toEqual({
       id: "event-1",
