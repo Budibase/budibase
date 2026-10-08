@@ -2,6 +2,7 @@ import { routeStore } from "./routes"
 import { appStore } from "./app"
 import { orgStore } from "./org"
 import { recaptchaStore } from "./recaptcha"
+import { offlineQueueStore } from "./offlineQueue"
 import { get } from "svelte/store"
 
 export async function initialise() {
@@ -11,4 +12,5 @@ export async function initialise() {
     await recaptchaStore.actions.checkVerified()
   }
   await orgStore.actions.init()
+  offlineQueueStore.actions.init()
 }

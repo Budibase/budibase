@@ -24,6 +24,7 @@ export { sidePanelStore } from "./sidePanel"
 export { modalStore } from "./modal"
 export { hoverStore } from "./hover"
 export { recaptchaStore } from "./recaptcha"
+export { offlineQueueStore } from "./offlineQueue"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"

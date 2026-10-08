@@ -80,6 +80,11 @@
       text="Do not display default notification"
       bind:value={parameters.notificationOverride}
     />
+    <Label small />
+    <Checkbox
+      text="Queue new rows when offline and sync when reconnected"
+      bind:value={parameters.queueWhenOffline}
+    />
     <ConfirmationSettings {parameters} {bindings} />
   </div>
 

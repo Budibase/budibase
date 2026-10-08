@@ -31,6 +31,7 @@
     recaptchaStore,
   } from "@/stores"
   import NotificationDisplay from "./overlay/NotificationDisplay.svelte"
+  import OfflineQueueDisplay from "./overlay/OfflineQueueDisplay.svelte"
   import SessionAuthBanner from "./overlay/SessionAuthBanner.svelte"
   import ConfirmationDisplay from "./overlay/ConfirmationDisplay.svelte"
   import PeekScreenDisplay from "./overlay/PeekScreenDisplay.svelte"
@@ -294,6 +295,7 @@
 
                                 <!-- Layers on top of app -->
                                 <NotificationDisplay />
+                                <OfflineQueueDisplay />
                                 <ConfirmationDisplay />
                                 <PeekScreenDisplay />
                                 <InstallPrompt />

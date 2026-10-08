@@ -13,7 +13,9 @@ import {
   rowSelectionStore,
   sidePanelStore,
   modalStore,
+  offlineQueueStore,
 } from "@/stores"
+import { isNetworkError } from "@/stores/offlineQueue"
 import { API } from "@/api"
 import { ActionTypes, PeekMessages } from "@/constants"
 import { enrichDataBindings } from "./enrichDataBinding"
@@ -70,9 +72,24 @@ export const getActionDependentContextKeys = action => {
   return []
 }
 
+const queueOfflineRow = (payload, notificationOverride) => {
+  offlineQueueStore.actions.enqueue(payload)
+  if (!notificationOverride) {
+    notificationStore.actions.info(
+      "You're offline. Row saved and will sync when you reconnect"
+    )
+  }
+  return { row: payload }
+}
+
 const saveRowHandler = async (action, context) => {
-  const { fields, providerId, tableId, notificationOverride } =
-    action.parameters
+  const {
+    fields,
+    providerId,
+    tableId,
+    notificationOverride,
+    queueWhenOffline,
+  } = action.parameters
   let payload
   if (providerId) {
     payload = { ...context[providerId] }
@@ -91,6 +108,12 @@ const saveRowHandler = async (action, context) => {
       payload.tableId = tableId
     }
   }
+  // Only new rows can be queued, as updating existing rows offline could
+  // conflict with changes made by other users
+  const canQueue = queueWhenOffline && !payload._id
+  if (canQueue && !navigator.onLine) {
+    return queueOfflineRow(payload, notificationOverride)
+  }
   try {
     const row = await API.saveRow(payload)
     if (!notificationOverride) {
@@ -102,6 +125,9 @@ const saveRowHandler = async (action, context) => {
     })
     return { row }
   } catch (error) {
+    if (canQueue && isNetworkError(error)) {
+      return queueOfflineRow(payload, notificationOverride)
+    }
     // Abort next actions
     return false
   }
