@@ -46,7 +46,7 @@ vi.mock("@/stores/portal", async () => {
   return { featureFlags: writable({ [FeatureFlag.PROJECTS]: false }) }
 })
 
-const renderEditor = (onSubmit: ReturnType<typeof vi.fn>) =>
+const renderEditor = (onSubmit: () => void) =>
   render(ConfigEditor, {
     integration: {
       name: SourceName.REST,
