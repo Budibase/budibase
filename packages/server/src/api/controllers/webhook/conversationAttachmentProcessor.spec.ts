@@ -255,6 +255,50 @@ describe("conversation attachment processor", () => {
     )
   })
 
+  it("derives the origin for a legacy linked-user turn without a snapshot", async () => {
+    delete conversation.pendingAttachmentTurns![0].triggeredBy
+    conversation.pendingAttachmentTurns![0].requester = {
+      userId: "us_1",
+      linked: true,
+    }
+    jest.mocked(getGlobalUser).mockResolvedValue({
+      _id: "us_1",
+      tenantId: "tenant_1",
+      firstName: "Current",
+      lastName: "Name",
+      email: "user@example.com",
+      roles: {},
+    })
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(mockWebhookChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        triggeredBy: { type: "user", id: "us_1", label: "Current Name" },
+      })
+    )
+  })
+
+  it("derives the provider origin for a legacy unlinked turn without a snapshot", async () => {
+    delete conversation.pendingAttachmentTurns![0].triggeredBy
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(mockWebhookChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        triggeredBy: { type: "user", label: "John Doe (Slack)" },
+      })
+    )
+  })
+
   it("retries transient failures before recording a final failure", async () => {
     jest
       .mocked(globalThis.fetch)

@@ -442,13 +442,23 @@ const processTurn = async ({
     responseText = getAttachmentFailureText(failed)
   } else {
     const user = await getRequester({ turn })
+    let triggeredBy = turn.triggeredBy
+    // Turns queued before origin snapshots were introduced have no metadata.
+    if (!triggeredBy) {
+      triggeredBy = turn.requester.linked
+        ? sdk.platformActions.getUserOrigin(user)
+        : sdk.platformActions.getTransientChatUserOrigin({
+            provider: current.channel!.provider,
+            displayName: turn.requester.displayName,
+          })
+    }
     const result = await webhookChat({
       chat: {
         ...current,
         messages: [...current.messages, turn.message],
       },
       user,
-      triggeredBy: turn.triggeredBy,
+      triggeredBy,
     })
     messages = result.messages
     responseText = await formatSlackAssistantReply({
