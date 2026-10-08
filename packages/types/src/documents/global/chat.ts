@@ -75,7 +75,7 @@ export enum ConversationAttachmentTurnStatus {
 
 export interface ConversationAttachmentTurn {
   id: string
-  triggeredBy?: PlatformActionUserOrigin
+  triggeredBy: PlatformActionUserOrigin
   message: UIMessage<AgentMessageMetadata>
   attachmentIds: string[]
   status: ConversationAttachmentTurnStatus
