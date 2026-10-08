@@ -63,7 +63,7 @@ const layoutGraph = (graph: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
 }
 
 describe("layoutAutomationGraph", () => {
-  it.each(["first", "second"])(
+  it.each(["trigger", "first", "second"])(
     "stops traversing a cycle from second back to %s",
     target => {
       const graph = layoutGraph({
@@ -79,6 +79,55 @@ describe("layoutAutomationGraph", () => {
       expectNodeRightOf(graph, "second", "first", ranksep)
     }
   )
+
+  it("lays out disconnected cycles once each when there are no roots", () => {
+    const graph = layoutGraph({
+      nodes: [
+        stepNode("first"),
+        stepNode("second"),
+        stepNode("third"),
+        stepNode("fourth"),
+      ],
+      edges: [
+        edge("first", "second"),
+        edge("second", "first"),
+        edge("third", "fourth"),
+        edge("fourth", "third"),
+      ],
+    })
+
+    expect(getNode(graph, "first").position).toEqual({ x: 0, y: 0 })
+    expectNodeRightOf(graph, "second", "first", ranksep)
+    expectNodeRightOf(graph, "fourth", "third", ranksep)
+    expectNodeBelow(graph, "third", "first", nodesep)
+    expect(getNode(graph, "third").position.x).toBe(0)
+  })
+
+  it("preserves child positions when a cycle has no top-level root", () => {
+    const childPosition = { x: 40, y: 50 }
+    const graph = layoutAutomationGraph(
+      {
+        nodes: [
+          stepNode("loop", FLOW_NODE_TYPE.LOOP_SUBFLOW, {
+            width: 520,
+            height: 300,
+          }),
+          { ...stepNode("child"), parentId: "loop" },
+          stepNode("after-loop"),
+        ],
+        edges: [edge("loop", "after-loop"), edge("after-loop", "loop")],
+      },
+      {
+        ranksep,
+        nodesep,
+        subflowNodePositions: { child: childPosition },
+      }
+    )
+
+    expectNodeRightOf(graph, "after-loop", "loop", LOOP.clearance)
+    expect(getNode(graph, "loop").position).toEqual({ x: 0, y: 0 })
+    expect(getNode(graph, "child").position).toEqual(childPosition)
+  })
 
   it("stops traversing a branch cycle while laying out the other lane", () => {
     const graph = layoutGraph({
