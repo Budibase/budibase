@@ -288,9 +288,10 @@ describe("user sync batching", () => {
     const processor = getUserSyncProcessor()
     const bullQueue = UserSyncProcessor.queue.getBullQueue()
     jest.spyOn(bullQueue, "getWaitingCount").mockResolvedValueOnce(500_001)
-    const empty = jest.spyOn(bullQueue, "empty")
+    const empty = jest.spyOn(bullQueue, "empty").mockResolvedValueOnce()
 
     await processor.add(["backlog-user-1"])
+    await utils.queue.processMessages(bullQueue)
 
     expect(empty).toHaveBeenCalledTimes(1)
   })
