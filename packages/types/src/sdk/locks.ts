@@ -27,6 +27,7 @@ export enum LockName {
   LITELLM_KEY = "litellm_key",
   AGENT_RAG_KNOWLEDGE_BASE = "agent_rag_knowledge_base",
   GEMINI_INGESTION_COOLDOWN = "gemini_ingestion_cooldown",
+  PROJECT_ASSIGNMENTS = "project_assignments",
   CUSTOM_REST_TEMPLATES = "custom_rest_templates",
   CONVERSATION_ATTACHMENT = "conversation_attachment",
   ESCALATION = "escalation",
