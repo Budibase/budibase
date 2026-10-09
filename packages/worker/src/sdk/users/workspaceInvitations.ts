@@ -152,14 +152,23 @@ export const inviteExistingUserToWorkspace = async ({
           const groupBuilderApps = await groups.getGroupBuilderAppIds(user, {
             appId: prodWorkspaceId,
           })
-          let path = `/app${workspace.url}`
+          let path = "/builder/apps"
           if (
             users.isAdminOrBuilder(user, prodWorkspaceId) ||
             groupBuilderApps.includes(prodWorkspaceId)
           ) {
             path = `/builder/workspace/${devWorkspaceId}/home`
-          } else if (!workspace.url) {
-            path = "/builder/apps"
+          } else {
+            const publishedWorkspace = await context.doInWorkspaceContext(
+              prodWorkspaceId,
+              () =>
+                context
+                  .getWorkspaceDB()
+                  .tryGet<Workspace>(dbCore.DocumentType.WORKSPACE_METADATA)
+            )
+            if (publishedWorkspace?.url) {
+              path = `/app${publishedWorkspace.url}`
+            }
           }
           await sendEmail(
             user.email,

@@ -55,6 +55,18 @@ describe("workspace invitations for existing users", () => {
       })
     )
 
+  const publishWorkspace = async ({ url = "/research" } = {}) =>
+    config.doInTenant(() =>
+      context.doInWorkspaceContext(workspaceId, () =>
+        context.getWorkspaceDB().put({
+          ...structures.apps.app(workspaceId),
+          tenantId: config.tenantId,
+          name: "Research & Development",
+          url,
+        })
+      )
+    )
+
   const createGroup = async ({
     role = "BASIC",
     scim = false,
@@ -71,6 +83,7 @@ describe("workspace invitations for existing users", () => {
   }
 
   it("sends an informational email with the inviter, workspace and tenant link", async () => {
+    await publishWorkspace()
     const response = await withEnv(
       { PLATFORM_URL: "https://example.com" },
       () => invite()
@@ -106,6 +119,32 @@ describe("workspace invitations for existing users", () => {
     expect(
       await config.doInTenant(() => cache.invite.getInviteCodes())
     ).toEqual([])
+  })
+
+  it("uses the published URL when the development URL has changed", async () => {
+    await publishWorkspace({ url: "/published-research" })
+    await invite()
+
+    expect(
+      load(sendMailMock.mock.calls[0][0].html)("a.button").attr("href")
+    ).toContain("/app/published-research")
+  })
+
+  it("links app users to the app portal when the workspace is unpublished", async () => {
+    await invite()
+
+    expect(
+      load(sendMailMock.mock.calls[0][0].html)("a.button").attr("href")
+    ).toContain("/builder/apps")
+  })
+
+  it("links app users to the app portal when the published URL is missing", async () => {
+    await publishWorkspace({ url: "" })
+    await invite()
+
+    expect(
+      load(sendMailMock.mock.calls[0][0].html)("a.button").attr("href")
+    ).toContain("/builder/apps")
   })
 
   it("links creators to the workspace builder", async () => {
