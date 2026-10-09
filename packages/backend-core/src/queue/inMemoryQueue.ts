@@ -53,6 +53,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   _opts?: QueueOptions
   _messages: TestQueueMessage<T>[]
   _queuedJobIds: Set<string>
+  _activeMessages: Set<TestQueueMessage<T>>
   _emitter: NodeJS.EventEmitter<{
     message: [TestQueueMessage<T>]
     completed: [Job<T>, any]
@@ -77,6 +78,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     this._runCount = 0
     this._addCount = 0
     this._queuedJobIds = new Set<string>()
+    this._activeMessages = new Set()
     this._attempts = opts?.defaultJobOptions?.attempts || 1
   }
 
@@ -114,6 +116,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         })
       }
 
+      this._activeMessages.add(message)
       const maxAttempts = this._attempts
 
       async function retryFunc(fnc: any, attempt = 0) {
@@ -143,6 +146,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         console.error(e)
         this._emitter.emit("error", message as Job<T>, e)
       }
+      this._activeMessages.delete(message)
 
       this._runCount++
       const jobId = message.opts?.jobId?.toString()
@@ -304,17 +308,21 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     return this._messages.length
   }
 
+  private waitingMessages() {
+    return this._messages.filter(m => !this._activeMessages.has(m))
+  }
+
   async getWaitingCount() {
-    return this._messages.length
+    return this.waitingMessages().length
   }
 
   async getWaiting(start = 0, end = -1) {
     const stop = end < 0 ? undefined : end + 1
-    return this._messages.slice(start, stop) as Job[]
+    return this.waitingMessages().slice(start, stop) as Job[]
   }
 
   async empty() {
-    this._messages.length = 0
+    this._messages = this._messages.filter(m => this._activeMessages.has(m))
   }
 
   async getCompletedCount() {
