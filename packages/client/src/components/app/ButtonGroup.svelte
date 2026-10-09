@@ -56,6 +56,7 @@
             disabled: button?.disabled,
             icon: button?.icon,
             gap: button?.gap,
+            fullWidthOnMobile: button?.fullWidthOnMobile,
             size: button?.size || "M",
             _conditions: button?._conditions || button?.conditions,
           }}

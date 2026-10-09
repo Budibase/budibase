@@ -757,6 +757,12 @@
         "key": "disabled"
       },
       {
+        "type": "boolean",
+        "label": "Full width on mobile",
+        "key": "fullWidthOnMobile",
+        "defaultValue": false
+      },
+      {
         "type": "phosphorIcon",
         "label": "Icon",
         "key": "icon"

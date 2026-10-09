@@ -5,6 +5,7 @@
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
+  const context = getContext("context")
 
   export let disabled = false
   export let text = ""
@@ -14,6 +15,7 @@
   export let quiet = false
   export let icon = null
   export let gap = "M"
+  export let fullWidthOnMobile = false
 
   // For internal use only for now - not defined in the manifest
   export let active = false
@@ -75,6 +77,7 @@
     class:spectrum-Button--quiet={quiet}
     class:custom={customBg}
     class:active
+    class:full-width-mobile={fullWidthOnMobile && $context.device?.mobile}
     bind:this={node}
     on:click={handleOnClick}
     on:blur={$component.editing ? updateText : null}
@@ -96,6 +99,12 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  button.full-width-mobile {
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
   button.custom {
     transition: filter 130ms ease-out;
