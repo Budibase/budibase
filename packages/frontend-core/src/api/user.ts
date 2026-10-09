@@ -17,6 +17,7 @@ import {
   FindUserResponse,
   GetUserInvitesResponse,
   InviteUsersRequest,
+  type InviteExistingUserToWorkspaceRequest,
   InviteUsersResponse,
   LookupAccountHolderResponse,
   SaveUserResponse,
@@ -70,6 +71,9 @@ export interface UserEndpoints {
     userId: string,
     role: string,
     rev: string
+  ) => Promise<SaveUserResponse>
+  inviteExistingUserToWorkspace: (
+    data: InviteExistingUserToWorkspaceRequest & { userId: string }
   ) => Promise<SaveUserResponse>
   removeUserFromWorkspace: (
     userId: string,
@@ -200,6 +204,15 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
       body: {
         _rev: rev,
       },
+    })
+  },
+  inviteExistingUserToWorkspace: async ({ userId, ...body }) => {
+    return await API.post<
+      InviteExistingUserToWorkspaceRequest,
+      SaveUserResponse
+    >({
+      url: `/api/global/users/${userId}/workspace/invite`,
+      body,
     })
   },
   removeUserFromWorkspace: async (userId, rev) => {

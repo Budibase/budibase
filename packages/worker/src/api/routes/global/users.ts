@@ -133,6 +133,19 @@ builderOrAdminRoutes
     controller.removeWorkspaceIdFromInvite
   )
   .post(
+    "/api/global/users/:userId/workspace/invite",
+    auth.joiValidator.body(
+      Joi.object({
+        role: Joi.string().optional(),
+        groups: Joi.array().items(Joi.string().required()).optional(),
+        admin: Joi.boolean().optional(),
+      })
+        .required()
+        .unknown(false)
+    ),
+    controller.inviteExistingUserToWorkspace
+  )
+  .post(
     "/api/global/users/:userId/permission/:role",
     controller.addUserToWorkspace
   )
