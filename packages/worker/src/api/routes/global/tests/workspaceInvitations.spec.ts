@@ -4,6 +4,7 @@ import { db as proDb, groups } from "@budibase/pro"
 import type {
   InviteExistingUserToWorkspaceRequest,
   User,
+  WorkspaceApp,
 } from "@budibase/types"
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 
@@ -55,16 +56,26 @@ describe("workspace invitations for existing users", () => {
       })
     )
 
-  const publishWorkspace = async ({ url = "/research" } = {}) =>
+  const publishWorkspace = async ({
+    url = "/research",
+    apps = [{ url: "/dashboard" }],
+  }: { url?: string; apps?: Partial<WorkspaceApp>[] } = {}) =>
     config.doInTenant(() =>
-      context.doInWorkspaceContext(workspaceId, () =>
-        context.getWorkspaceDB().put({
+      context.doInWorkspaceContext(workspaceId, async () => {
+        const workspaceDb = context.getWorkspaceDB()
+        await workspaceDb.put({
           ...structures.apps.app(workspaceId),
           tenantId: config.tenantId,
           name: "Research & Development",
           url,
         })
-      )
+        await workspaceDb.bulkDocs(
+          apps.map((app, index) => ({
+            ...structures.workspaceApps.workspaceApp(app),
+            _id: `${db.DocumentType.WORKSPACE_APP}_${index}`,
+          }))
+        )
+      })
     )
 
   const createGroup = async ({
@@ -110,7 +121,7 @@ describe("workspace invitations for existing users", () => {
       await config.doInTenant(() =>
         Promise.resolve(
           tenancy.addTenantToUrl(
-            `https://${config.tenantId}.example.com/app/research`
+            `https://${config.tenantId}.example.com/app/research/dashboard`
           )
         )
       )
@@ -127,8 +138,52 @@ describe("workspace invitations for existing users", () => {
 
     expect(
       load(sendMailMock.mock.calls[0][0].html)("a.button").attr("href")
-    ).toContain("/app/published-research")
+    ).toContain("/app/published-research/dashboard")
   })
+
+  it.each(["", "/"])(
+    "links to apps published at the root path '%s'",
+    async url => {
+      await publishWorkspace({ apps: [{ url }] })
+      await invite()
+
+      const link = load(sendMailMock.mock.calls[0][0].html)("a.button").attr(
+        "href"
+      )!
+      expect(new URL(link).pathname).toBe(`/app/research${url}`)
+    }
+  )
+
+  it("skips disabled published apps when selecting the invitation link", async () => {
+    await publishWorkspace({
+      apps: [{ url: "/disabled", disabled: true }, { url: "/dashboard" }],
+    })
+    await invite()
+
+    const link = load(sendMailMock.mock.calls[0][0].html)("a.button").attr(
+      "href"
+    )!
+    expect(new URL(link).pathname).toBe("/app/research/dashboard")
+  })
+
+  it.each([
+    { description: "no apps", apps: [] },
+    {
+      description: "only disabled apps",
+      apps: [{ url: "/dashboard", disabled: true }],
+    },
+  ])(
+    "links to the app portal when the workspace has $description",
+    async ({ apps }) => {
+      await publishWorkspace({ apps })
+      await invite()
+
+      const link = load(sendMailMock.mock.calls[0][0].html)("a.button").attr(
+        "href"
+      )!
+      expect(new URL(link).pathname).toBe("/builder/apps")
+    }
+  )
 
   it("links app users to the app portal when the workspace is unpublished", async () => {
     await invite()

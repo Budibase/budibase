@@ -17,6 +17,7 @@ import {
   type InviteExistingUserToWorkspaceRequest,
   type User,
   type Workspace,
+  type WorkspaceApp,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { checkSlashesInUrl } from "../../utilities"
@@ -159,15 +160,29 @@ export const inviteExistingUserToWorkspace = async ({
           ) {
             path = `/builder/workspace/${devWorkspaceId}/home`
           } else {
-            const publishedWorkspace = await context.doInWorkspaceContext(
+            const publishedAppPath = await context.doInWorkspaceContext(
               prodWorkspaceId,
-              () =>
-                context
-                  .getWorkspaceDB()
-                  .tryGet<Workspace>(dbCore.DocumentType.WORKSPACE_METADATA)
+              async () => {
+                const db = context.getWorkspaceDB()
+                const publishedWorkspace = await db.tryGet<Workspace>(
+                  dbCore.DocumentType.WORKSPACE_METADATA
+                )
+                if (!publishedWorkspace?.url) {
+                  return
+                }
+                const apps = await db.allDocs<WorkspaceApp>(
+                  dbCore.getWorkspaceAppParams(null, { include_docs: true })
+                )
+                const app = apps.rows
+                  .map(row => row.doc!)
+                  .find(app => !app.disabled)
+                if (app) {
+                  return `/app${publishedWorkspace.url}${app.url}`
+                }
+              }
             )
-            if (publishedWorkspace?.url) {
-              path = `/app${publishedWorkspace.url}`
+            if (publishedAppPath) {
+              path = publishedAppPath
             }
           }
           await sendEmail(
