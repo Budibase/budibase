@@ -304,6 +304,19 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     return this._messages.length
   }
 
+  async getWaitingCount() {
+    return this._messages.length
+  }
+
+  async getWaiting(start = 0, end = -1) {
+    const stop = end < 0 ? undefined : end + 1
+    return this._messages.slice(start, stop) as Job[]
+  }
+
+  async empty() {
+    this._messages.length = 0
+  }
+
   async getCompletedCount() {
     return this._runCount
   }
