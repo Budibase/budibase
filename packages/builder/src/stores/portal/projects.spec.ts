@@ -111,30 +111,101 @@ describe("ProjectsStore", () => {
     expect(getProjects(store)).toEqual([project("second_project")])
   })
 
-  it("returns the import response and allows retry when refresh fails", async () => {
+  it("returns import setup details and adds the project to the current workspace", async () => {
     const store = new ProjectsStore()
+    const existing = project("project_2")
+    fetchProjects.mockResolvedValueOnce({ projects: [existing] })
+    await store.fetch()
     const response: ImportProjectResponse = {
       project: project("project_1"),
       resources: {
         [ResourceType.PROJECT]: ["project_1"],
+        [ResourceType.DATASOURCE]: ["datasource_1"],
       },
       unsupportedContent: [],
-      requirements: [],
+      requirements: [
+        {
+          type: "datasource_secrets",
+          resourceId: "datasource_1",
+          name: "Customer database",
+          reason: "Reconnect the database.",
+        },
+      ],
     }
     const file = new File(["project"], "project.tar.gz")
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {})
-
     importBundle.mockResolvedValue(response)
-    fetchProjects.mockRejectedValue(new Error("refresh failed"))
 
     await expect(store.importProject(file)).resolves.toEqual(response)
-    expect(fetchProjects).toHaveBeenCalledTimes(1)
-    expect(consoleWarn).toHaveBeenCalledWith(
-      "Failed to refresh projects after import",
-      expect.any(Error)
-    )
+    expect(getProjects(store)).toEqual([response.project, existing])
+  })
 
-    consoleWarn.mockRestore()
+  const startConcurrentFetchAndImport = async () => {
+    const store = new ProjectsStore()
+    const existing = project("project_2")
+    fetchProjects.mockResolvedValueOnce({ projects: [existing] })
+    await store.fetch()
+
+    const pendingFetch = defer<FetchProjectsResponse>()
+    const pendingImport = defer<ImportProjectResponse>()
+    const importResponse: ImportProjectResponse = {
+      project: project("project_1", { _rev: "2-rev" }),
+      resources: {},
+      requirements: [],
+      unsupportedContent: [],
+    }
+    fetchProjects.mockReturnValueOnce(pendingFetch.promise)
+    importBundle.mockReturnValueOnce(pendingImport.promise)
+    const fetchPromise = store.fetch()
+    const importPromise = store.importProject(
+      new File(["project"], "project.tar.gz")
+    )
+    return {
+      store,
+      existing,
+      pendingFetch,
+      pendingImport,
+      importResponse,
+      fetchPromise,
+      importPromise,
+    }
+  }
+
+  it("keeps one imported project when the fetch finishes before the import", async () => {
+    const {
+      store,
+      existing,
+      pendingFetch,
+      pendingImport,
+      importResponse,
+      fetchPromise,
+      importPromise,
+    } = await startConcurrentFetchAndImport()
+
+    pendingFetch.resolve({ projects: [existing, project("project_1")] })
+    await fetchPromise
+    pendingImport.resolve(importResponse)
+    await importPromise
+
+    expect(getProjects(store)).toEqual([importResponse.project, existing])
+  })
+
+  it("keeps the imported project when an older fetch finishes after the import", async () => {
+    const {
+      store,
+      existing,
+      pendingFetch,
+      pendingImport,
+      importResponse,
+      fetchPromise,
+      importPromise,
+    } = await startConcurrentFetchAndImport()
+
+    pendingImport.resolve(importResponse)
+    await importPromise
+    pendingFetch.resolve({ projects: [existing] })
+    await fetchPromise
+
+    expect(getProjects(store)).toEqual([importResponse.project, existing])
   })
 
   it("does not let an in-flight fetch overwrite a created project", async () => {
