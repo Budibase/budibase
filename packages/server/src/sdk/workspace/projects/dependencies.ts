@@ -1,15 +1,25 @@
 import { createHash } from "crypto"
-import { context } from "@budibase/backend-core"
+import { context, features } from "@budibase/backend-core"
 import {
+  type Agent,
   type AnyDocument,
+  type Datasource,
+  type Query,
+  FeatureFlag,
   type PreviewProjectAssignmentResponse,
   type ProjectAssignmentDependency,
   ResourceType,
 } from "@budibase/types"
+import isEqual from "lodash/isEqual"
 import sdk from "../.."
-import { collectTransitiveResourceDependencies } from "../resources"
+import {
+  collectTransitiveResourceDependencies,
+  type ResourceDependencyAnalysis,
+  type ResourceDependencyGraph,
+} from "../resources"
 import {
   compareResourceIds,
+  getResourceType,
   isAllowedProjectAssignmentResourceId,
 } from "../resources/utils"
 import {
@@ -36,6 +46,26 @@ interface ProjectDependencyPreviewInput {
 export interface SelectiveProjectPropagationInput {
   dependencyIds: string[]
   projectIds: string[]
+}
+
+export interface ProjectDependencyChangeInput {
+  rootResourceId: string
+  currentProjectIds?: string[]
+  previousProjectIds?: string[]
+  previousResource?: AnyDocument
+  savedResource: AnyDocument
+}
+
+export interface ProjectDependencySubtreePropagationInput {
+  blockedResourceIds?: string[]
+  dependencyIds: string[]
+  projectIds?: string[]
+}
+
+export interface CreatedResourceDependencyPropagationInput {
+  rootResourceId: string
+  projectIds?: string[]
+  savedResources: AnyDocument[]
 }
 
 const incompletePropagation = ({
@@ -164,6 +194,95 @@ const getProjectAssignableDependencies = async (resourceId: string) => {
     )
 }
 
+const withoutRevisionMetadata = (resource: AnyDocument) => {
+  const { _rev: _revision, updatedAt: _updatedAt, ...comparable } = resource
+  return comparable
+}
+
+const collectAssignableDependencyIds = ({
+  blockedResourceIds = [],
+  graph,
+  includeRoots = false,
+  resourceIds,
+}: {
+  blockedResourceIds?: string[]
+  graph: ResourceDependencyGraph
+  includeRoots?: boolean
+  resourceIds: string[]
+}) => {
+  const blocked = new Set(blockedResourceIds)
+  const ids = new Set<string>()
+  for (const resourceId of resourceIds) {
+    if (includeRoots && !blocked.has(resourceId)) {
+      const type = getResourceType(resourceId)
+      if (type && isAssignableDependency({ id: resourceId, type })) {
+        ids.add(resourceId)
+      }
+    }
+    const dependencies = collectTransitiveResourceDependencies(
+      graph,
+      resourceId,
+      new Set(blocked)
+    )
+    for (const dependency of dependencies) {
+      if (isAssignableDependency(dependency)) {
+        ids.add(dependency.id)
+      }
+    }
+  }
+  return Array.from(ids).sort(compareResourceIds)
+}
+
+const getNewDependencyIds = ({
+  analysis,
+  rootResourceId,
+  previousResource,
+  savedResource,
+}: {
+  analysis: ResourceDependencyAnalysis
+  rootResourceId: string
+  previousResource?: AnyDocument
+  savedResource: AnyDocument
+}) => {
+  const { graph, findReferencedResources } = analysis
+  const blockedResourceIds = [rootResourceId]
+  if (savedResource._id) {
+    blockedResourceIds.push(savedResource._id)
+  }
+  const previousDependencyIds = collectAssignableDependencyIds({
+    graph,
+    blockedResourceIds,
+    includeRoots: true,
+    resourceIds: previousResource
+      ? findReferencedResources(previousResource).map(resource => resource.id)
+      : [],
+  })
+
+  // A new path to an existing dependency must preserve its prior exclusion.
+  return collectAssignableDependencyIds({
+    graph,
+    blockedResourceIds: [...blockedResourceIds, ...previousDependencyIds],
+    includeRoots: true,
+    resourceIds: findReferencedResources(savedResource).map(
+      resource => resource.id
+    ),
+  })
+}
+
+const mergePropagationOutcomes = (
+  outcomes: ProjectPropagationOutcome[]
+): ProjectPropagationOutcome => {
+  const failedResourceIds = outcomes.flatMap(outcome =>
+    outcome.status === "incomplete" ? outcome.resourceIds : []
+  )
+  return failedResourceIds.length
+    ? {
+        status: "incomplete",
+        resourceIds: Array.from(new Set(failedResourceIds)),
+      }
+    : { status: "complete" }
+}
+
 export const propagateProjectIdsToDependencyIds = async ({
   dependencyIds,
   projectIds,
@@ -236,4 +355,259 @@ export const propagateProjectIdsToDependencyIds = async ({
   }
 
   return { status: "complete" }
+}
+
+export const propagateProjectIdsToDependencySubtrees = async ({
+  blockedResourceIds,
+  dependencyIds,
+  projectIds = [],
+}: ProjectDependencySubtreePropagationInput): Promise<ProjectPropagationOutcome> => {
+  if (!dependencyIds.length || !projectIds.length) {
+    return { status: "complete" }
+  }
+
+  try {
+    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
+      return { status: "complete" }
+    }
+    const { graph } = await sdk.resources.analyseResourceDependencies({
+      includeProjects: false,
+      includeDatasourceQueries: true,
+    })
+    return await propagateProjectIdsToDependencyIds({
+      dependencyIds: collectAssignableDependencyIds({
+        blockedResourceIds,
+        graph,
+        includeRoots: true,
+        resourceIds: dependencyIds,
+      }),
+      projectIds,
+    })
+  } catch (error) {
+    return incompletePropagation({ resourceIds: dependencyIds, error })
+  }
+}
+
+export const propagateCreatedResourceDependencies = async ({
+  rootResourceId,
+  projectIds = [],
+  savedResources,
+}: CreatedResourceDependencyPropagationInput): Promise<ProjectPropagationOutcome> => {
+  if (!savedResources.length || !projectIds.length) {
+    return { status: "complete" }
+  }
+
+  try {
+    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
+      return { status: "complete" }
+    }
+    const analysis = await sdk.resources.analyseResourceDependencies({
+      includeProjects: false,
+      includeDatasourceQueries: true,
+    })
+    const dependencyIds = savedResources.flatMap(savedResource =>
+      getNewDependencyIds({
+        analysis,
+        rootResourceId,
+        savedResource,
+      })
+    )
+    return await propagateProjectIdsToDependencyIds({
+      dependencyIds,
+      projectIds,
+    })
+  } catch (error) {
+    return incompletePropagation({ resourceIds: [rootResourceId], error })
+  }
+}
+
+const propagateNewResourceDependencies = async ({
+  analysis,
+  rootResourceId,
+  previousResource,
+  savedResource,
+  projectIds,
+}: {
+  analysis: ResourceDependencyAnalysis
+  rootResourceId: string
+  previousResource?: AnyDocument
+  savedResource: AnyDocument
+  projectIds: string[]
+}): Promise<ProjectPropagationOutcome> => {
+  if (!projectIds.length) {
+    return { status: "complete" }
+  }
+  const dependencyIds = getNewDependencyIds({
+    analysis,
+    rootResourceId,
+    previousResource,
+    savedResource,
+  })
+  return await propagateProjectIdsToDependencyIds({
+    dependencyIds,
+    projectIds,
+  })
+}
+
+export const propagateProjectDependencyChanges = async ({
+  rootResourceId,
+  currentProjectIds = [],
+  previousProjectIds = [],
+  previousResource,
+  savedResource,
+}: ProjectDependencyChangeInput): Promise<ProjectPropagationOutcome> => {
+  if (!currentProjectIds.length) {
+    return { status: "complete" }
+  }
+
+  const previousProjects = new Set(previousProjectIds)
+  const addedProjectIds = currentProjectIds.filter(
+    projectId => !previousProjects.has(projectId)
+  )
+  const existingProjectIds = currentProjectIds.filter(projectId =>
+    previousProjects.has(projectId)
+  )
+  const resourceContentChanged =
+    !previousResource ||
+    !isEqual(
+      withoutRevisionMetadata(previousResource),
+      withoutRevisionMetadata(savedResource)
+    )
+
+  if (!addedProjectIds.length && !resourceContentChanged) {
+    return { status: "complete" }
+  }
+
+  let analysis: ResourceDependencyAnalysis
+  try {
+    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
+      return { status: "complete" }
+    }
+    analysis = await sdk.resources.analyseResourceDependencies({
+      includeProjects: false,
+      includeDatasourceQueries: true,
+    })
+  } catch (error) {
+    return incompletePropagation({ resourceIds: [rootResourceId], error })
+  }
+  const { graph } = analysis
+
+  const outcomes: ProjectPropagationOutcome[] = []
+
+  if (addedProjectIds.length) {
+    outcomes.push(
+      await propagateProjectIdsToDependencyIds({
+        dependencyIds: collectAssignableDependencyIds({
+          graph,
+          resourceIds: [rootResourceId],
+        }),
+        projectIds: addedProjectIds,
+      })
+    )
+  }
+
+  if (existingProjectIds.length && resourceContentChanged) {
+    outcomes.push(
+      await propagateNewResourceDependencies({
+        analysis,
+        rootResourceId,
+        previousResource,
+        savedResource,
+        projectIds: existingProjectIds,
+      })
+    )
+  }
+
+  return mergePropagationOutcomes(outcomes)
+}
+
+export interface MovedQueryDependencyPropagationInput {
+  existingDatasource: Datasource
+  datasource: Datasource
+  existingQuery: Query
+  query: Query
+  referencingAgents: Agent[]
+}
+
+export const propagateMovedQueryDependencies = async ({
+  existingDatasource,
+  datasource,
+  existingQuery,
+  query,
+  referencingAgents,
+}: MovedQueryDependencyPropagationInput): Promise<ProjectPropagationOutcome> => {
+  const outcomes: ProjectPropagationOutcome[] = []
+  const sourceProjectIds = new Set(existingDatasource.projectIds || [])
+  const destinationProjectIds = new Set(datasource.projectIds || [])
+  const sharedProjectIds = Array.from(destinationProjectIds).filter(projectId =>
+    sourceProjectIds.has(projectId)
+  )
+  const destinationOnlyProjectIds = Array.from(destinationProjectIds).filter(
+    projectId => !sourceProjectIds.has(projectId)
+  )
+
+  const newAgentProjectIds = Array.from(
+    new Set(referencingAgents.flatMap(agent => agent.projectIds || []))
+  ).filter(
+    projectId =>
+      sourceProjectIds.has(projectId) && !destinationProjectIds.has(projectId)
+  )
+  if (!destinationProjectIds.size && !newAgentProjectIds.length) {
+    return { status: "complete" }
+  }
+  let analysis: ResourceDependencyAnalysis
+  try {
+    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
+      return { status: "complete" }
+    }
+    analysis = await sdk.resources.analyseResourceDependencies({
+      includeProjects: false,
+      includeDatasourceQueries: true,
+    })
+  } catch (error) {
+    return incompletePropagation({ resourceIds: [datasource._id!], error })
+  }
+
+  outcomes.push(
+    await propagateNewResourceDependencies({
+      analysis,
+      rootResourceId: datasource._id!,
+      projectIds: sharedProjectIds,
+      previousResource: existingQuery,
+      savedResource: query,
+    })
+  )
+  outcomes.push(
+    await propagateNewResourceDependencies({
+      analysis,
+      rootResourceId: datasource._id!,
+      projectIds: destinationOnlyProjectIds,
+      savedResource: query,
+    })
+  )
+
+  outcomes.push(
+    await propagateNewResourceDependencies({
+      analysis,
+      rootResourceId: datasource._id!,
+      projectIds: newAgentProjectIds,
+      previousResource: existingQuery,
+      savedResource: query,
+    })
+  )
+
+  if (newAgentProjectIds.length) {
+    outcomes.push(
+      await propagateProjectIdsToDependencyIds({
+        dependencyIds: collectAssignableDependencyIds({
+          blockedResourceIds: [query._id!],
+          graph: analysis.graph,
+          includeRoots: true,
+          resourceIds: [datasource._id!],
+        }),
+        projectIds: newAgentProjectIds,
+      })
+    )
+  }
+  return mergePropagationOutcomes(outcomes)
 }

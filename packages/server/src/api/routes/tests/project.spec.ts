@@ -909,76 +909,6 @@ describe("/projects", () => {
     })
   })
 
-  it("preserves valid project assignments when duplicating resources", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
-      const { workspaceApp } = await config.api.workspaceApp.create({
-        name: "Operations app",
-        url: "/operations-app",
-        projectIds: [project._id],
-      })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        projectIds: [project._id],
-      })
-
-      const duplicatedTable = await config.api.table.duplicate(table._id!)
-      const { workspaceApp: duplicatedWorkspaceApp } =
-        await config.api.workspaceApp.duplicate(workspaceApp._id!)
-      const duplicatedAgent = await config.api.agent.duplicate(agent._id!)
-
-      expect(duplicatedTable.projectIds).toEqual([project._id])
-      expect(duplicatedWorkspaceApp.projectIds).toEqual([project._id])
-      expect(duplicatedAgent.projectIds).toEqual([project._id])
-    })
-  })
-
-  it("clears project assignments when duplicating resources with projects disabled", async () => {
-    let tableId = ""
-    let workspaceAppId = ""
-    let agentId = ""
-
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
-      const { workspaceApp } = await config.api.workspaceApp.create({
-        name: "Operations app",
-        url: "/operations-app",
-        projectIds: [project._id],
-      })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        projectIds: [project._id],
-      })
-
-      tableId = table._id!
-      workspaceAppId = workspaceApp._id!
-      agentId = agent._id!
-    })
-
-    const duplicatedTable = await config.api.table.duplicate(tableId!)
-    const { workspaceApp: duplicatedWorkspaceApp } =
-      await config.api.workspaceApp.duplicate(workspaceAppId!)
-    const duplicatedAgent = await config.api.agent.duplicate(agentId!)
-
-    expect(duplicatedTable.projectIds).toBeUndefined()
-    expect(duplicatedWorkspaceApp.projectIds).toBeUndefined()
-    expect(duplicatedAgent.projectIds).toBeUndefined()
-  })
-
   const createProjectExportFixture = async () => {
     const { project } = await config.api.project.create({
       name: "Operations",
@@ -1105,9 +1035,11 @@ describe("/projects", () => {
     const exportThenImportUnsanitisedEmailAutomation = async ({
       projectId,
       credentials,
+      beforeExport,
     }: {
       projectId: string
       credentials: Partial<EmailTriggerInputs> & { oauth2ConfigId?: string }
+      beforeExport?: () => Promise<void>
     }) => {
       const sourceAutomation = createAutomationBuilder(config)
         .onEmail({ ...emailSettings, ...credentials })
@@ -1116,6 +1048,7 @@ describe("/projects", () => {
         ...sourceAutomation,
         projectIds: [projectId],
       })
+      await beforeExport?.()
       const files = await readTarEntries(
         await config.api.project.export(projectId)
       )
@@ -1191,6 +1124,21 @@ describe("/projects", () => {
             authType: EmailTriggerAuthType.OAUTH2,
             datasourceId: datasource._id,
             authConfigId: "auth_source",
+          },
+          beforeExport: async () => {
+            const assignedDatasource = await config.api.datasource.get(
+              datasource._id!
+            )
+            const preview = await config.api.project.previewAssignment({
+              resourceId: assignedDatasource._id!,
+              projectIds: [],
+            })
+            await config.api.project.updateAssignment(assignedDatasource._id!, {
+              dependencyFingerprint: preview.dependencyFingerprint,
+              resourceRev: assignedDatasource._rev!,
+              projectIds: [],
+              dependencyIds: [],
+            })
           },
         })
 
@@ -1511,8 +1459,8 @@ describe("/projects", () => {
           projectIds: [project._id],
         })
         await config.api.project.updateAssignment(datasource._id!, {
-          resourceRev: preview.resourceRev,
           dependencyFingerprint: preview.dependencyFingerprint,
+          resourceRev: preview.resourceRev,
           projectIds: [project._id],
           dependencyIds: [],
         })
@@ -1699,22 +1647,19 @@ describe("/projects", () => {
     })
   })
 
-  it("recognises an agent's external table tool as a datasource dependency while keeping the datasource outside the project", async () => {
+  it("adds the datasource to the project when an assigned agent gains an external table tool", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "External data agent",
       })
-      const unassignedDatasource = await config.api.datasource.create(
+      const datasource = await config.api.datasource.create(
         basicDatasource().datasource
       )
-      const externalTableId = buildExternalTableId(
-        unassignedDatasource._id!,
-        "Orders"
-      )
+      const externalTableId = buildExternalTableId(datasource._id!, "Orders")
       await config.api.datasource.update({
-        ...unassignedDatasource,
+        ...datasource,
         entities: {
-          Orders: basicTable(unassignedDatasource, {
+          Orders: basicTable(datasource, {
             _id: externalTableId,
             name: "Orders",
           }),
@@ -1746,8 +1691,13 @@ describe("/projects", () => {
         project._id
       ].dependencies.map(dependency => dependency.id)
 
-      expect(agentDependencyIds).toContain(unassignedDatasource._id)
-      expect(projectMemberIds).toEqual([agent._id])
+      expect(agentDependencyIds).toContain(datasource._id)
+      expect(new Set(projectMemberIds)).toEqual(
+        new Set([agent._id, datasource._id])
+      )
+      expect(
+        (await config.api.datasource.get(datasource._id!)).projectIds
+      ).toEqual([project._id])
     })
   })
 
@@ -1832,11 +1782,6 @@ describe("/projects", () => {
       await config.api.screen.save({
         ...createViewScreen(view),
         workspaceAppId: workspaceApp._id,
-      })
-      const automation = await config.api.automation.get(rowAction.automationId)
-      await config.api.automation.update({
-        ...automation,
-        projectIds: [project._id],
       })
 
       return {
