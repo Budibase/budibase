@@ -32,10 +32,6 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { apiFileReturn } from "../../../utilities/fileSystem"
-import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
 
 const SLACK_OAUTH_STATE_TTL_SECONDS = 600
@@ -326,7 +322,7 @@ export async function createAgent(
   const body = ctx.request.body
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
-  const projectIds = await resolveProjectIds(body.projectIds)
+  const projectIds = await sdk.projects.resolveProjectIds(body.projectIds)
 
   const createRequest: Parameters<typeof sdk.ai.agents.create>[number] = {
     name: body.name,
@@ -355,10 +351,10 @@ export async function updateAgent(
 ) {
   const body = ctx.request.body
   const existing = await sdk.ai.agents.getOrThrow(body._id)
-  const projectIds = await resolveUpdatedProjectIds(
-    body.projectIds,
-    existing.projectIds
-  )
+  const projectIds = await sdk.projects.resolveUpdatedProjectIds({
+    projectIds: body.projectIds,
+    currentProjectIds: existing.projectIds,
+  })
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,

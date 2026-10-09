@@ -20,6 +20,7 @@ export enum Header {
   CSRF_TOKEN = "x-csrf-token",
   CORRELATION_ID = "x-budibase-correlation-id",
   AUTHORIZATION = "authorization",
+  API_WARNING = "x-budibase-api-warning",
   MIGRATING_APP = "x-budibase-migrating-app",
   SKIP_MIGRATING_WAIT = "x-budibase-migrating-app-skip-wait",
   COOKIE = "cookie",

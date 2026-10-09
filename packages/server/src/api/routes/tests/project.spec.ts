@@ -28,6 +28,7 @@ import {
   type ImportProjectResponse,
   type Project,
   type ProjectPackageDependencyIndex,
+  type Query,
   type RowActionTriggerInputs,
   type Webhook,
 } from "@budibase/types"
@@ -309,7 +310,56 @@ describe("/projects", () => {
   }
 
   it("returns 404 when the feature flag is disabled", async () => {
-    await config.api.project.fetch({ status: 404 })
+    await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.PROJECTS]: false },
+      async () => {
+        await config.api.project.fetch({ status: 404 })
+        await config.api.project.previewAssignment(
+          { resourceId: "workspace_app_test", projectIds: [] },
+          { status: 404 }
+        )
+        await config.api.project.updateAssignment(
+          "workspace_app_test",
+          {
+            resourceRev: "1-test",
+            projectIds: [],
+            dependencyIds: [],
+            dependencyFingerprint: "unavailable-while-feature-disabled",
+          },
+          { status: 404 }
+        )
+      }
+    )
+  })
+
+  it("preserves dormant project assignments on omitted updates when the feature flag is disabled", async () => {
+    const workspaceApp = await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      return await createAssignedWorkspaceApp(project._id)
+    })
+
+    await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.PROJECTS]: false },
+      async () => {
+        await config.api.workspaceApp.update({
+          _id: workspaceApp._id,
+          _rev: workspaceApp._rev,
+          name: workspaceApp.name,
+          url: workspaceApp.url,
+          navigation: workspaceApp.navigation,
+          theme: workspaceApp.theme,
+          customTheme: workspaceApp.customTheme,
+          disabled: workspaceApp.disabled,
+        })
+
+        const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+          workspaceApp._id!
+        )
+        expect(fetchedWorkspaceApp.projectIds).toEqual(workspaceApp.projectIds)
+      }
+    )
   })
 
   it("creates, fetches, and updates projects", async () => {
@@ -465,7 +515,7 @@ describe("/projects", () => {
     })
   })
 
-  it("rejects assigning an unknown project id", async () => {
+  it("rejects unknown direct project ids", async () => {
     await withProjectsEnabled(async () => {
       await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
@@ -801,17 +851,21 @@ describe("/projects", () => {
       await config.doInContext(undefined, async () => {
         const bulkDocs = jest
           .spyOn(DatabaseImpl.prototype, "bulkDocs")
-          .mockImplementationOnce(async docs =>
-            docs.map((doc, index) =>
-              index === 0
-                ? { id: doc._id!, rev: "2-mock" }
-                : {
-                    id: doc._id!,
-                    error: "conflict",
-                    reason: "cleanup failed",
-                  }
-            )
-          )
+          .mockImplementationOnce(async docs => {
+            const results = []
+            for (const doc of docs) {
+              if (doc._id === workspaceApp._id) {
+                results.push(await context.getWorkspaceDB().put(doc))
+              } else {
+                results.push({
+                  id: doc._id!,
+                  error: "conflict",
+                  reason: "cleanup failed",
+                })
+              }
+            }
+            return results
+          })
 
         try {
           await expect(
@@ -819,6 +873,32 @@ describe("/projects", () => {
           ).rejects.toThrow("Failed to clear project assignments.")
         } finally {
           bulkDocs.mockRestore()
+        }
+      })
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
+    })
+  })
+
+  it("restores assignments when deleting the project fails", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+
+      await config.doInContext(undefined, async () => {
+        const remove = jest
+          .spyOn(DatabaseImpl.prototype, "remove")
+          .mockRejectedValueOnce(new Error("Project deletion failed"))
+
+        try {
+          await expect(
+            projects.remove(project._id, project._rev)
+          ).rejects.toThrow("Project deletion failed")
+        } finally {
+          remove.mockRestore()
         }
       })
 
@@ -918,13 +998,22 @@ describe("/projects", () => {
     const datasource = await config.api.datasource.create({
       ...basicDatasource().datasource,
       config: {
-        password: "super-secret",
+        password: "super-secret {{ env.DB_PASSWORD }}",
       },
       projectIds: [project._id],
     })
     const query = await config.api.query.save({
       ...basicQuery(datasource._id!),
       projectIds: [project._id],
+    })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const persistedQuery = await context
+        .getWorkspaceDB()
+        .get<Query>(query._id!)
+      await context.getWorkspaceDB().put({
+        ...persistedQuery,
+        projectIds: [project._id],
+      })
     })
     const table = await config.api.table.save({
       ...basicTable(),
@@ -1417,9 +1506,15 @@ describe("/projects", () => {
           ...basicQuery(datasource._id!),
           name: `Docs for ${unrelatedAgent._id}.json`,
         })
-        await config.api.datasource.update({
-          ...datasource,
+        const preview = await config.api.project.previewAssignment({
+          resourceId: datasource._id!,
           projectIds: [project._id],
+        })
+        await config.api.project.updateAssignment(datasource._id!, {
+          resourceRev: preview.resourceRev,
+          dependencyFingerprint: preview.dependencyFingerprint,
+          projectIds: [project._id],
+          dependencyIds: [],
         })
 
         const files = await readTarEntries(
@@ -1550,6 +1645,14 @@ describe("/projects", () => {
       const view = await config.api.viewV2.create({
         tableId: externalTableId,
         name: "External view",
+      })
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const storedDatasource = await db.get<Datasource>(datasource._id!)
+        storedDatasource.entities![externalTable.name].projectIds = [
+          project._id,
+        ]
+        await db.put(storedDatasource)
       })
 
       const body = await config.api.project.export(project._id)

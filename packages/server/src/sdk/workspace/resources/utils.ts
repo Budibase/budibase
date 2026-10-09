@@ -31,7 +31,7 @@ export const isExternalTableEntityId = (id: string) =>
   id.startsWith(prefixed(DocumentType.DATASOURCE)) &&
   id.includes(`${SEPARATOR}${SEPARATOR}`)
 
-export const isDisallowedProjectAssignmentResourceId = (id: string) =>
-  id === INTERNAL_TABLE_SOURCE_ID ||
-  id === InternalTable.USER_METADATA ||
-  isExternalTableEntityId(id)
+export const isAllowedProjectAssignmentResourceId = (id: string) =>
+  id !== INTERNAL_TABLE_SOURCE_ID &&
+  id !== InternalTable.USER_METADATA &&
+  !isExternalTableEntityId(id)

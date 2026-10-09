@@ -26,7 +26,7 @@ import { collectTransitiveResourceDependencies } from "../../resources"
 import {
   compareResourceIds,
   getResourceType,
-  isDisallowedProjectAssignmentResourceId,
+  isAllowedProjectAssignmentResourceId,
 } from "../../resources/utils"
 import {
   MAX_PROJECT_ARCHIVE_SIZE_BYTES,
@@ -98,7 +98,7 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
       if (
         !doc._id ||
         !hasProject(doc, projectId) ||
-        isDisallowedProjectAssignmentResourceId(doc._id)
+        !isAllowedProjectAssignmentResourceId(doc._id)
       ) {
         return []
       }
@@ -134,7 +134,7 @@ async function getExcludedDependencies({
       .filter(
         dependency =>
           isProjectAssignableResourceType(dependency.type) &&
-          !isDisallowedProjectAssignmentResourceId(dependency.id)
+          isAllowedProjectAssignmentResourceId(dependency.id)
       )
       .map(dependency => [dependency.id, dependency])
   )
