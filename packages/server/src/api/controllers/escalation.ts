@@ -43,7 +43,10 @@ export async function resolve(ctx: UserCtx) {
   })
   const status = await sdk.escalations.withEscalationLock(id, async () => {
     const doc = await sdk.escalations.getContextDoc(id)
-    if (doc && doc.resolution !== "pending") {
+    if (!doc) {
+      ctx.throw(404, `Escalation not found: ${id}`)
+    }
+    if (doc.resolution !== "pending") {
       return "closed"
     }
     await escalationProcessor.resolve(id, ctx.request.body?.response)

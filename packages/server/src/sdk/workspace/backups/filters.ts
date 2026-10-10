@@ -1,4 +1,9 @@
-import { DocumentType, SEPARATOR } from "@budibase/types"
+import {
+  DocumentType,
+  prefixed,
+  RuntimeDocumentTypes,
+  SEPARATOR,
+} from "@budibase/types"
 import {
   AGENT_LOG_SESSION_PREFIX,
   AUTOMATION_LOG_PREFIX,
@@ -15,9 +20,11 @@ export const createWorkspaceExportFilter = (excludeRows?: boolean) => {
     AGENT_LOG_SESSION_PREFIX,
     `${DocumentType.SLACK_APP_CONFIG}${SEPARATOR}`,
   ]
+  const runtimePrefixes = RuntimeDocumentTypes.map(prefixed)
   if (excludeRows) {
     excludedIds.push(TABLE_ROW_PREFIX)
   }
   return (doc: { _id: string; [key: string]: unknown }) =>
+    !runtimePrefixes.some(prefix => doc._id.startsWith(prefix)) &&
     !excludedIds.some(excludedId => doc._id.includes(excludedId))
 }

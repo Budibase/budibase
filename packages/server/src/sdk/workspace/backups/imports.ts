@@ -17,6 +17,8 @@ import {
   LiteLLMKeyConfig,
   Row,
   RowAttachment,
+  RowValue,
+  RuntimeDocumentTypes,
   WebhookTriggerInputs,
 } from "@budibase/types"
 import fs from "fs"
@@ -244,6 +246,22 @@ async function sanitizeLiteLLMImportData(db: Database) {
   })
 }
 
+// exports made before these were filtered out can still contain them
+async function removeRuntimeDocuments(db: Database) {
+  const responses = await Promise.all(
+    RuntimeDocumentTypes.map(type => db.allDocs(docIds.getDocParams(type)))
+  )
+  const refs = responses.flatMap(response =>
+    response.rows.map(row => ({
+      _id: row.id,
+      _rev: (row.value as RowValue).rev,
+    }))
+  )
+  if (refs.length) {
+    await db.bulkRemove(refs)
+  }
+}
+
 export const importApp: ImportWorkspaceFn = async (
   appId,
   db,
@@ -354,6 +372,7 @@ export const importApp: ImportWorkspaceFn = async (
   if (!ok) {
     throw "Error loading database dump from template."
   }
+  await removeRuntimeDocuments(db)
   if (importOpts.updateAttachmentColumns) {
     await updateAttachmentColumns(prodAppId, db)
   }
