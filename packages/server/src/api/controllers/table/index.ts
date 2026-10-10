@@ -365,7 +365,15 @@ async function publishTableInternal(
 
   const seedProductionTables = !!ctx.request.body?.seedProductionTables
   if (!prodPublished) {
-    await publishWorkspaceInternal(ctx, seedProductionTables, [tableId])
+    await publishWorkspaceInternal(
+      {
+        appId,
+        createdBy: ctx.user._id,
+        seedProductionTables,
+        tablesToSeed: [tableId],
+      },
+      ctx
+    )
   }
 
   if (seedProductionTables) {

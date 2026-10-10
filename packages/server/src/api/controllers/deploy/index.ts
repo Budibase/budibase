@@ -21,13 +21,12 @@ import {
   LockType,
   MAX_DEPLOYMENT_HISTORY,
   PublishStatusResponse,
-  PublishTableRequest,
-  PublishTableResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
   Table,
   UserCtx,
   Workspace,
+  type Ctx,
 } from "@budibase/types"
 import {
   clearMetadata,
@@ -42,6 +41,8 @@ import {
 } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
+import { Thread, ThreadType } from "../../../threads"
+import type { PublishWorkspaceJob } from "../../../threads/definitions"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../workspaceMigrations"
 import Deployment from "./Deployment"
@@ -368,20 +369,18 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
   }
 }
 
-type PublishContext = UserCtx<
-  PublishWorkspaceRequest | PublishTableRequest,
-  PublishWorkspaceResponse | PublishTableResponse
->
+type PublishWorkspaceOptions = PublishWorkspaceJob
+
+const publishRunner = env.isTest()
+  ? undefined
+  : new Thread(ThreadType.PUBLISH, { count: 1 })
 
 export const publishWorkspaceInternal = async (
-  ctx: PublishContext,
-  seedProductionTables?: boolean,
-  tablesToSeed?: string[]
+  options: PublishWorkspaceOptions,
+  publishCtx?: Ctx
 ) => {
-  const seedTables =
-    seedProductionTables !== undefined
-      ? seedProductionTables
-      : ctx.request.body?.seedProductionTables
+  const { appId, createdBy, seedProductionTables, tablesToSeed } = options
+  const seedTables = seedProductionTables
   const tablesToPublish = tablesToSeed?.length
     ? new Set<string>(tablesToSeed)
     : undefined
@@ -413,8 +412,6 @@ export const publishWorkspaceInternal = async (
       tablesToSync = []
     }
   }
-
-  const appId = context.getOrThrowWorkspaceId()
 
   let migrationResult: { app: Workspace; prodWorkspaceId: string }
   try {
@@ -464,7 +461,7 @@ export const publishWorkspaceInternal = async (
 
         if (await backups.isEnabled()) {
           await backups.triggerWorkspaceBackup(prodId, BackupTrigger.PUBLISH, {
-            createdBy: ctx.user._id,
+            createdBy,
           })
         }
         const config = {
@@ -653,7 +650,10 @@ export const publishWorkspaceInternal = async (
 
   await events.app.published(migrationResult.app)
 
-  builderSocket?.emitAppPublish(ctx)
+  if (publishCtx) {
+    builderSocket?.emitAppPublish(publishCtx)
+  }
+
   return deployment
 }
 
@@ -685,5 +685,17 @@ export const publishWorkspace = async function (
     )
   }
 
-  ctx.body = await withPublishLock(() => publishWorkspaceInternal(ctx))
+  const job: PublishWorkspaceJob = {
+    appId: context.getOrThrowWorkspaceId(),
+    createdBy: ctx.user._id,
+    seedProductionTables: ctx.request.body?.seedProductionTables,
+  }
+  ctx.body = await withPublishLock(() =>
+    publishRunner
+      ? publishRunner.run<Deployment>(job)
+      : publishWorkspaceInternal(job, ctx)
+  )
+  if (publishRunner) {
+    builderSocket?.emitAppPublish(ctx)
+  }
 }

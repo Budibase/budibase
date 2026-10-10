@@ -1,11 +1,12 @@
 import workerFarm, { Workers, FarmOptions } from "worker-farm"
 import env from "../environment"
 import { AutomationJob } from "@budibase/types"
-import { QueryEvent } from "./definitions"
+import { type PublishWorkspaceJob, QueryEvent } from "./definitions"
 
 export enum ThreadType {
   QUERY = "query",
   AUTOMATION = "automation",
+  PUBLISH = "publish",
 }
 
 // child_process inherits the parent's execArgv when execArgv isn't given, which
@@ -29,6 +30,9 @@ function typeToFile(type: ThreadType) {
       break
     case ThreadType.AUTOMATION:
       filename = "./automation"
+      break
+    case ThreadType.PUBLISH:
+      filename = "./publish"
       break
     default:
       throw "Unknown thread type"
@@ -96,7 +100,7 @@ export class Thread {
     )
   }
 
-  run<T>(job: AutomationJob | QueryEvent): Promise<T> {
+  run<T>(job: AutomationJob | PublishWorkspaceJob | QueryEvent): Promise<T> {
     const timeout = this.timeoutMs
     return new Promise((resolve, reject) => {
       function fire(worker: any) {
