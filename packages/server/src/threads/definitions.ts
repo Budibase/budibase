@@ -9,6 +9,13 @@ import {
 
 export type WorkerCallback = (error: any, response?: any) => void
 
+export interface PublishWorkspaceJob {
+  appId: string
+  createdBy?: string
+  seedProductionTables?: boolean
+  tablesToSeed?: string[]
+}
+
 export interface QueryEventCtx {
   user?: Omit<ContextUser, "account" | "license"> | SSOUser
   auth?: {
