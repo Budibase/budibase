@@ -4,6 +4,7 @@ import {
   BulkUserResponse,
   CreateAdminUserRequest,
   InviteUsersRequest,
+  type InviteExistingUserToWorkspaceRequest,
   SearchUsersRequest,
   User,
 } from "@budibase/types"
@@ -225,6 +226,23 @@ export class UserAPI extends TestAPI {
     return this.request
       .post(`/api/global/users/${userId}/permission/${role}`)
       .send({ _rev })
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(status)
+  }
+
+  inviteExistingUserToWorkspace = ({
+    userId,
+    body,
+    status = 200,
+  }: {
+    userId: string
+    body: InviteExistingUserToWorkspaceRequest
+    status?: number
+  }) => {
+    return this.request
+      .post(`/api/global/users/${userId}/workspace/invite`)
+      .send(body)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status)

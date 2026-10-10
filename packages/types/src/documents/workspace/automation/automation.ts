@@ -127,6 +127,11 @@ export interface SendEmailOpts {
   contents?: string
   // subject A custom subject can be specified if the config one is not desired.
   subject: string
+  workspaceInvitation?: {
+    inviterName: string
+    workspaceName: string
+    workspaceUrl: string
+  }
   // info Pass in a structure of information to be stored alongside the invitation.
   info?: any
   cc?: string

@@ -80,12 +80,14 @@ const {
       fetch: vi.fn(async () => []),
     },
     searchUsersMock: vi.fn(async () => ({ data: [] as SearchUser[] })),
-    assignExistingUsersToWorkspaceMock: vi.fn(async (userData: any) => ({
-      usersToInvite: userData.users,
-      addedToWorkspaceEmails: [],
-      assignedCount: 0,
-      failedCount: 0,
-    })),
+    assignExistingUsersToWorkspaceMock: vi.fn(
+      async ({ userData }: { userData: { users: { email: string }[] } }) => ({
+        usersToInvite: userData.users,
+        addedToWorkspaceEmails: [],
+        assignedCount: 0,
+        failedCount: 0,
+      })
+    ),
   }
 })
 

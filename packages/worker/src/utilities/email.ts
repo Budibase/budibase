@@ -22,6 +22,7 @@ const TYPE = TemplateType.EMAIL
 
 const FULL_EMAIL_PURPOSES = [
   EmailTemplatePurpose.INVITATION,
+  EmailTemplatePurpose.WORKSPACE_INVITATION,
   EmailTemplatePurpose.PASSWORD_RECOVERY,
   EmailTemplatePurpose.WELCOME,
   EmailTemplatePurpose.CUSTOM,
@@ -160,6 +161,9 @@ export async function sendEmail(
       break
   }
   let context = await getSettingsTemplateContext(purpose, code)
+  if (purpose === EmailTemplatePurpose.WORKSPACE_INVITATION) {
+    context = { ...context, ...opts.workspaceInvitation }
+  }
 
   let message: Parameters<typeof transport.sendMail>[0] = {
     from: opts?.from || config?.from,

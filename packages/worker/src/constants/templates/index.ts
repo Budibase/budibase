@@ -13,6 +13,9 @@ export const EmailTemplates = {
   [EmailTemplatePurpose.INVITATION]: readStaticFile(
     join(__dirname, "invitation.hbs")
   ),
+  [EmailTemplatePurpose.WORKSPACE_INVITATION]: readStaticFile(
+    join(__dirname, "workspaceInvitation.hbs")
+  ),
   [EmailTemplatePurpose.BASE]: readStaticFile(join(__dirname, "base.hbs")),
   [EmailTemplatePurpose.WELCOME]: readStaticFile(
     join(__dirname, "welcome.hbs")
