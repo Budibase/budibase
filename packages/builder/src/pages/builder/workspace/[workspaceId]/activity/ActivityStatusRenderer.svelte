@@ -4,7 +4,8 @@
 
   export let row: {
     status: ActivityStatus
+    statusLabel: string
   }
 </script>
 
-<ActivityStatusBadge status={row.status} />
+<ActivityStatusBadge status={row.status} label={row.statusLabel} />

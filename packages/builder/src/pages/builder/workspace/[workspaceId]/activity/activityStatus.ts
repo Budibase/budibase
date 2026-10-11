@@ -6,7 +6,7 @@ import type {
 export type ActivityStatus = AgentRequestStatus | PlatformActionContainerStatus
 
 export const ACTIVITY_STATUS_LABELS: Record<ActivityStatus, string> = {
-  active: "Processing",
+  active: "Active",
   needs_input: "Needs input",
   waiting: "Waiting",
   completed: "Completed",
