@@ -103,6 +103,7 @@
         type: "status-badge",
         label: "Status",
         status: request.status,
+        statusLabel: statusChangedLabelByStatus[request.status],
       },
       {
         type: "text",

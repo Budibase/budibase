@@ -42,7 +42,7 @@ describe("toActionSessionRow", () => {
       triggeredByValue: "Jane Doe",
       triggeredByPrefix: "User",
       status: "waiting",
-      statusLabel: "waiting",
+      statusLabel: "Waiting",
       actionCount: 3,
       updatedLabel: "5 minutes ago",
     })
