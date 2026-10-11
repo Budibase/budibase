@@ -80,6 +80,28 @@ describe("ActivitySidePanel", () => {
     expect(panel.getByText("Restock item 42")).toBeInTheDocument()
   })
 
+  it("shows Unknown time for invalid creation and timeline dates", async () => {
+    const { rerender } = renderPanel()
+    await rerender({
+      request: {
+        ...request,
+        createdAt: "invalid-date",
+        actions: [
+          {
+            id: "action-1",
+            type: "user_message",
+            summary: "Restock item 42",
+            timestamp: "invalid-date",
+          },
+        ],
+      },
+    })
+
+    expect(screen.getByText("Unknown time")).toBeInTheDocument()
+    expect(screen.getByText("Unknown time -")).toBeInTheDocument()
+    expect(screen.queryByText("Invalid Date")).not.toBeInTheDocument()
+  })
+
   it("closes when clicking outside the panel", async () => {
     const onClose = vi.fn()
     renderPanel(onClose)
