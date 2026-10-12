@@ -11,6 +11,7 @@ import "@spectrum-css/page/dist/index-vars.css"
 import "./global.css"
 import { suppressWarnings } from "./helpers/warnings"
 import { mount } from "svelte"
+import "./api"
 import App from "./App.svelte"
 
 // Suppress svelte runtime warnings
