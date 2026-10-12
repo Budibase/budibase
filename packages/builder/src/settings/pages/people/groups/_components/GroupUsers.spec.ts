@@ -166,4 +166,31 @@ describe("group users table refresh", () => {
     expect(getTable().getByText(bob.email)).toBeInTheDocument()
     expect(groups.removeUser).toHaveBeenCalledWith("group-1", alice._id)
   })
+
+  it("keeps pagination visible while the first page refreshes after selecting a user", async () => {
+    const page = deferredPage()
+    getGroupUsers
+      .mockResolvedValueOnce({
+        users: [alice],
+        bookmark: "page-2",
+        hasNextPage: true,
+      })
+      .mockReturnValueOnce(page.promise)
+
+    const { container } = render(GroupUsers, {
+      props: { groupId: "group-1", readonly: false },
+    })
+    await getTable().findByText(alice.email)
+
+    await fireEvent.click(await screen.findByText(bob.email))
+    await waitFor(() => expect(getGroupUsers).toHaveBeenCalledTimes(2))
+
+    expect(container.querySelector(".pagination")).toBeInTheDocument()
+    expect(container.querySelectorAll(".spectrum-Table-row")).toHaveLength(5)
+
+    page.resolve({ users: [alice, bob], bookmark: "" })
+    await getTable().findByText(bob.email)
+    expect(container.querySelector(".pagination")).not.toBeInTheDocument()
+    expect(container.querySelectorAll(".spectrum-Table-row")).toHaveLength(2)
+  })
 })
