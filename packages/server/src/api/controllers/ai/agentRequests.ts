@@ -1,8 +1,11 @@
 import { HTTPError } from "@budibase/backend-core"
 import {
   AGENT_REQUEST_STATUSES,
+  SortOrder,
   type AgentRequestStatus,
   type FetchAgentRequestsResponse,
+  type FetchRequestsResponse,
+  type FindRequestResponse,
   type UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -81,4 +84,87 @@ export async function fetchAgentRequests(
     requests,
     summary,
   }
+}
+
+const sanitizeOneOfQuery = <T extends string>(
+  value: string | undefined,
+  allowed: readonly T[],
+  name: string
+): T | undefined => {
+  const normalized = value?.trim()
+  if (!normalized) {
+    return undefined
+  }
+  const match = allowed.find(option => option === normalized)
+  if (!match) {
+    throw new HTTPError(`Invalid ${name} query`, 400)
+  }
+  return match
+}
+
+const sanitizeBooleanQuery = (
+  value: string | undefined,
+  name: string
+): boolean | undefined => {
+  const match = sanitizeOneOfQuery(value, ["true", "false"], name)
+  return match === undefined ? undefined : match === "true"
+}
+
+const trimmedQuery = (value: string | undefined) => value?.trim() || undefined
+
+export async function fetchUserRequests(
+  ctx: UserCtx<void, FetchRequestsResponse>
+) {
+  const query = ctx.query as Record<string, string | undefined>
+  const page = sanitizePageQuery(query.page)
+  const limit = sanitizeLimitQuery(query.limit)
+  const filters = {
+    isRequester: sanitizeBooleanQuery(query.isRequester, "isRequester"),
+    isApprover: sanitizeBooleanQuery(query.isApprover, "isApprover"),
+    awaitingResponse: sanitizeBooleanQuery(
+      query.awaitingResponse,
+      "awaitingResponse"
+    ),
+    respondedPending: sanitizeBooleanQuery(
+      query.respondedPending,
+      "respondedPending"
+    ),
+    status: sanitizeStatusQuery(query.status),
+    workspaceId: trimmedQuery(query.workspaceId),
+    agentId: trimmedQuery(query.agentId),
+    operationId: trimmedQuery(query.operationId),
+  }
+  const order =
+    sanitizeOneOfQuery(query.order, ["asc", "desc"], "order") === "asc"
+      ? SortOrder.ASCENDING
+      : SortOrder.DESCENDING
+
+  const globalUserId = ctx.user?.globalId || ctx.user?._id
+  if (!globalUserId) {
+    ctx.body = { requests: [], page, hasNextPage: false }
+    return
+  }
+  ctx.body = await sdk.ai.agentRequests.fetchRequestsForUser({
+    globalUserId,
+    filters,
+    order,
+    page,
+    limit,
+  })
+}
+
+export async function findUserRequest(
+  ctx: UserCtx<void, FindRequestResponse, { id: string }>
+) {
+  const globalUserId = ctx.user?.globalId
+  const request = globalUserId
+    ? await sdk.ai.agentRequests.findRequestForUser({
+        requestId: ctx.params.id,
+        globalUserId,
+      })
+    : undefined
+  if (!request) {
+    throw new HTTPError("Request not found", 404)
+  }
+  ctx.body = request
 }
