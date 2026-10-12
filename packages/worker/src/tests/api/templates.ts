@@ -23,6 +23,16 @@ export class TemplatesAPI extends TestAPI {
       .expect(opts?.status ? opts.status : 200)
   }
 
+  deleteTemplate = (
+    { id, rev }: { id: string; rev: string },
+    opts?: TestAPIOpts
+  ) => {
+    return this.request
+      .delete(`/api/global/template/${id}/${rev}`)
+      .set(opts?.headers ? opts.headers : this.config.defaultHeaders())
+      .expect(opts?.status ? opts.status : 200)
+  }
+
   exportTemplates = (
     req?: { type?: string; data?: any },
     opts?: TestAPIOpts

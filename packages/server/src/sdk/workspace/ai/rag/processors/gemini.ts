@@ -15,6 +15,7 @@ import {
 } from "../../knowledgeBase/geminiFileStore"
 import { updateKnowledgeBaseFile } from "../../knowledgeBase"
 import { prepareTabularKnowledgeFileForRagIngestion } from "./tabularText"
+import { GeminiRateLimitError } from "../geminiRateLimit"
 
 export class GeminiRagProcessor implements RagProcessor {
   private knowledgeBase: WithRequired<GeminiKnowledgeBase, "_id">
@@ -79,6 +80,9 @@ export class GeminiRagProcessor implements RagProcessor {
         processor: this.knowledgeBase.type,
       })
     } catch (error) {
+      if (error instanceof GeminiRateLimitError) {
+        throw error
+      }
       console.error("Failed Gemini RAG file ingestion", {
         knowledgeBaseId,
         vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
@@ -97,10 +101,30 @@ export class GeminiRagProcessor implements RagProcessor {
       query: question,
     })
 
-    const results = rows.map<RetrievedContextChunk>(row => ({
-      source: getChunkSource(row),
-      chunkText: getChunkText(row),
-    }))
+    const results = rows.flatMap<RetrievedContextChunk>(row => {
+      const chunkText = getChunkText(row)
+      const groundingIndices = asRecord(row.attributes)?.grounding_chunk_indices
+      if (!Array.isArray(groundingIndices)) {
+        return [{ source: getChunkSource(row), chunkText }]
+      }
+
+      const sources = new Set<string>()
+      for (const index of groundingIndices) {
+        if (typeof index !== "number" || !Number.isInteger(index)) {
+          continue
+        }
+        const groundingChunk = rows[index]
+        if (!groundingChunk) {
+          continue
+        }
+        const source = getChunkSource(groundingChunk)
+        if (source) {
+          sources.add(source)
+        }
+      }
+
+      return Array.from(sources, source => ({ source, chunkText }))
+    })
 
     return results
   }

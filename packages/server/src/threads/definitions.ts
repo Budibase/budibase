@@ -3,11 +3,20 @@ import {
   Row,
   Query,
   ContextUser,
+  IdentityContext,
   RestPreviewConfig,
   SSOUser,
 } from "@budibase/types"
 
 export type WorkerCallback = (error: any, response?: any) => void
+
+export interface PublishWorkspaceJob {
+  appId: string
+  createdBy?: string
+  identity?: IdentityContext
+  seedProductionTables?: boolean
+  tablesToSeed?: string[]
+}
 
 export interface QueryEventCtx {
   user?: Omit<ContextUser, "account" | "license"> | SSOUser

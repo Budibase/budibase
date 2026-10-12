@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 ARG BASEIMG=budibase/database:2.1.0
-FROM public.ecr.aws/x1w3a5n5/third-party:minio-RELEASE.2025-09-07T16-13-09Z AS minio
+FROM budibase/minio:final AS minio
 
 FROM node:22-slim AS build
 

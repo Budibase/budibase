@@ -1,6 +1,11 @@
-import controller from "../../controllers/public/views"
 import { Endpoint } from "@budibase/backend-core"
-import { viewValidator, nameValidator } from "../utils/validators"
+import { viewSearch } from "../../controllers/public/rows"
+import controller from "../../controllers/public/views"
+import {
+  externalSearchValidator,
+  nameValidator,
+  viewValidator,
+} from "../utils/validators"
 
 const read = [],
   write = []
@@ -159,6 +164,40 @@ read.push(new Endpoint("get", "/views/:viewId", controller.read))
 read.push(
   new Endpoint("post", "/views/search", controller.search).addMiddleware(
     nameValidator()
+  )
+)
+
+/**
+ * @openapi
+ * /views/{viewId}/rows/search:
+ *   post:
+ *     operationId: rowViewSearch
+ *     summary: Search for rows in a view
+ *     tags:
+ *       - rows
+ *     parameters:
+ *       - $ref: '#/components/parameters/viewId'
+ *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/rowSearch'
+ *     responses:
+ *       200:
+ *         description: The response will contain an array of rows that match the search parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/searchOutput'
+ *             examples:
+ *               search:
+ *                 $ref: '#/components/examples/rows'
+ */
+read.push(
+  new Endpoint("post", "/views/:viewId/rows/search", viewSearch).addMiddleware(
+    externalSearchValidator()
   )
 )
 

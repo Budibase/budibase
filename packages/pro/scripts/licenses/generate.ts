@@ -1,5 +1,5 @@
 import * as pro from "../../src"
-import { Feature, License, PlanType } from "@budibase/types"
+import { Feature, Hosting, License, PlanType } from "@budibase/types"
 import jwt from "jsonwebtoken"
 import fs from "fs"
 import { join } from "path"
@@ -16,8 +16,11 @@ const DEVELOPER_LICENSE: License = {
 }
 
 function generate(planType: PlanType) {
-  const license = DEVELOPER_LICENSE
-  license.plan.type = planType
+  const license: License = {
+    ...DEVELOPER_LICENSE,
+    plan: { ...DEVELOPER_LICENSE.plan, type: planType },
+    quotas: pro.licensing.quotas.getQuotas(Hosting.SELF, planType),
+  }
 
   const signedLicense = jwt.sign(license, PRIVATE_KEY, {
     encoding: "utf-8",

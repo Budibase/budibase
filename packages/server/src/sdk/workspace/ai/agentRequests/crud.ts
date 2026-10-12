@@ -7,6 +7,7 @@ import {
 } from "@budibase/backend-core"
 import { ApprovalToolResultStatus } from "@budibase/types"
 import type {
+  AgentRequestOperation,
   AgentRequest,
   AgentRequestAction,
   AgentRequestEntry,
@@ -18,6 +19,7 @@ import type {
   ToolCallAction,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
+import type { AgentRequestLinkAnalysis } from "./helpers"
 import {
   analyzeAgentRequestLink,
   generateAgentRequestTitle,
@@ -45,14 +47,9 @@ const nowIso = () => new Date().toISOString()
 
 const buildEntry = ({
   sessionId,
-  operation,
   source,
 }: {
   sessionId: string
-  operation?: {
-    name: string
-    prompt: string
-  }
   source: string
 }): AgentRequestEntry => {
   const timestamp = nowIso()
@@ -60,7 +57,6 @@ const buildEntry = ({
   return {
     sessionId,
     source,
-    operationNames: operation?.name ? [operation.name] : [],
     createdAt: timestamp,
     updatedAt: timestamp,
     status: "active",
@@ -70,11 +66,13 @@ const buildEntry = ({
 const buildThread = ({
   agentId,
   userId,
+  operationId,
   entry,
   actions = [],
 }: {
   agentId: string
   userId: string
+  operationId: string
   entry: AgentRequestEntry
   actions?: AgentRequestAction[]
 }): AgentRequest => {
@@ -83,6 +81,7 @@ const buildThread = ({
     title: undefined,
     agentId,
     userId,
+    operationId,
     entries: [entry],
     actions,
     createdAt: entry.createdAt,
@@ -463,10 +462,7 @@ async function generateAndSaveRequestTitleIfMissing({
   agentId: string
   sessionId: string
   latestPrompt: string
-  operation?: {
-    name: string
-    prompt: string
-  }
+  operation?: AgentRequestOperation
 }): Promise<AgentRequest> {
   if (request.title) {
     return request
@@ -506,10 +502,7 @@ async function createNewRequest({
   agentId: string
   sessionId: string
   latestPrompt: string
-  operation?: {
-    name: string
-    prompt: string
-  }
+  operation?: AgentRequestOperation
   source: string
   userId: string
 }): Promise<AgentRequest | undefined> {
@@ -523,11 +516,8 @@ async function createNewRequest({
     buildThread({
       agentId,
       userId,
-      entry: buildEntry({
-        sessionId,
-        operation,
-        source,
-      }),
+      operationId: operation.id,
+      entry: buildEntry({ sessionId, source }),
       actions: [fallbackAction],
     })
   )
@@ -674,17 +664,57 @@ export async function resolveFinalRequestOutcome({
   }
 }
 
-export async function fetchRequestsByAgentAndUser(
-  agentId: string,
+export async function fetchRequestsByAgentAndUser({
+  agentId,
+  userId,
+  operationId,
+}: {
+  agentId: string
   userId: string
-): Promise<AgentRequest[]> {
+  operationId?: string
+}): Promise<AgentRequest[]> {
   const requests = await fetchRequestsByAgent(agentId)
   const cutoff = Date.now() - THREAD_LOOKBACK_DAYS * Duration.fromDays(1).toMs()
 
   return requests
     .filter(request => request.userId === userId)
     .filter(request => new Date(request.updatedAt || 0).getTime() >= cutoff)
+    .filter(request => !isTerminalStatus(request.status))
+    .filter(request => !operationId || request.operationId === operationId)
     .slice(0, THREAD_CANDIDATE_LIMIT)
+}
+
+const linkRequestEntries = ({
+  request,
+  sessionId,
+  source,
+  entryAction,
+}: {
+  request: AgentRequest
+  sessionId: string
+  source: string
+  entryAction?: "append_latest_entry" | "create_new_entry"
+}): AgentRequestEntry[] => {
+  const timestamp = nowIso()
+  const nextEntries = [...request.entries]
+  if (entryAction === "append_latest_entry" && nextEntries.length > 0) {
+    const latestEntry = nextEntries[nextEntries.length - 1]
+
+    nextEntries[nextEntries.length - 1] = {
+      ...latestEntry,
+      sessionId,
+      source,
+      updatedAt: timestamp,
+      status: request.status,
+    }
+  } else {
+    nextEntries.push({
+      ...buildEntry({ sessionId, source }),
+      status: request.status,
+    })
+  }
+
+  return nextEntries
 }
 
 export async function initActiveRequest({
@@ -694,33 +724,85 @@ export async function initActiveRequest({
   latestPrompt,
   operation,
   source,
+  recentChatContext,
 }: {
   agentId: string
   userId: string
   sessionId: string
   latestPrompt: string
-  operation?: {
-    name: string
-    prompt: string
-  }
+  operation?: AgentRequestOperation
   source: string
+  recentChatContext?: Array<{
+    role: "user" | "assistant"
+    content: string
+  }>
 }): Promise<{ requestId: string } | undefined> {
   if (!operation?.name) {
     return undefined
   }
 
-  const candidates = await fetchRequestsByAgentAndUser(agentId, userId)
-  const existing = candidates.find(
-    r =>
-      !isTerminalStatus(r.status) &&
-      r.entries.some(e => e.sessionId === sessionId)
-  )
-  if (existing && existing._id) {
-    return { requestId: existing._id }
+  const candidates = await fetchRequestsByAgentAndUser({
+    agentId,
+    userId,
+    operationId: operation.id,
+  })
+  let decision: AgentRequestLinkAnalysis = { decision: "new_thread" }
+  if (candidates.length > 0) {
+    try {
+      decision = await analyzeAgentRequestLink({
+        latestPrompt,
+        candidateRequests: candidates,
+        recentChatContext,
+        agentId,
+        sessionId,
+      })
+    } catch (error) {
+      console.error("Failed to analyze agent request, creating a new request", {
+        agentId,
+        sessionId,
+        error,
+      })
+    }
+  }
+  if (decision.decision === "existing_thread" && decision.requestId) {
+    for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
+      const existing = await context
+        .getWorkspaceDB()
+        .tryGet<AgentRequest>(decision.requestId)
+      if (!existing || isTerminalStatus(existing.status)) {
+        break
+      }
+      try {
+        const updated = await saveRequest({
+          ...existing,
+          entries: linkRequestEntries({
+            request: existing,
+            sessionId,
+            source,
+            entryAction: decision.entryAction,
+          }),
+          updatedAt: nowIso(),
+        })
+        return { requestId: updated._id! }
+      } catch (error) {
+        if (
+          dbCore.isDocumentConflictError(error) &&
+          attempt < MAX_CONFLICT_RETRIES - 1
+        ) {
+          continue
+        }
+        throw error
+      }
+    }
   }
 
-  const entry = buildEntry({ sessionId, operation, source })
-  const thread = buildThread({ agentId, userId, entry })
+  const entry = buildEntry({ sessionId, source })
+  const thread = buildThread({
+    agentId,
+    userId,
+    operationId: operation.id,
+    entry,
+  })
 
   let title: string | undefined
   try {
@@ -849,10 +931,7 @@ export async function createOrUpdateRequestForPrompt({
     role: "user" | "assistant"
     content: string
   }>
-  operation?: {
-    name: string
-    prompt: string
-  }
+  operation?: AgentRequestOperation
   source: string
   userId: string
   existingRequestId?: string
@@ -860,6 +939,7 @@ export async function createOrUpdateRequestForPrompt({
   const prompt = latestUserPrompt.trim()
   const resolvedOperation = operation
     ? {
+        id: operation.id,
         name: operation.name.trim(),
         prompt: operation.prompt.trim(),
       }
@@ -913,10 +993,11 @@ export async function createOrUpdateRequestForPrompt({
     })
   }
 
-  const candidateRequests = await fetchRequestsByAgentAndUser(agentId, userId)
-  const activeCandidates = candidateRequests.filter(
-    r => !isTerminalStatus(r.status)
-  )
+  const activeCandidates = await fetchRequestsByAgentAndUser({
+    agentId,
+    userId,
+    operationId: resolvedOperation?.id,
+  })
   const linkDecision = await analyzeAgentRequestLink({
     latestPrompt: prompt,
     candidateRequests: activeCandidates,
@@ -967,34 +1048,6 @@ export async function createOrUpdateRequestForPrompt({
   }
 
   const timestamp = nowIso()
-  let nextEntries = [...request.entries]
-  if (
-    linkDecision.entryAction === "append_latest_entry" &&
-    nextEntries.length > 0
-  ) {
-    const latestEntry = nextEntries[nextEntries.length - 1]
-    const operationNames = new Set(latestEntry.operationNames)
-    if (resolvedOperation?.name) {
-      operationNames.add(resolvedOperation.name)
-    }
-
-    nextEntries[nextEntries.length - 1] = {
-      ...latestEntry,
-      sessionId,
-      source: resolvedSource,
-      operationNames: [...operationNames],
-      updatedAt: timestamp,
-      status: "active",
-    }
-  } else {
-    nextEntries.push(
-      buildEntry({
-        sessionId,
-        source: resolvedSource,
-        operation: resolvedOperation,
-      })
-    )
-  }
 
   const userMessageAction = await buildUserMessageActionForTurn({
     agentId,
@@ -1013,7 +1066,12 @@ export async function createOrUpdateRequestForPrompt({
   return {
     request: await saveRequest({
       ...latestRequest,
-      entries: nextEntries,
+      entries: linkRequestEntries({
+        request: latestRequest,
+        sessionId,
+        source: resolvedSource,
+        entryAction: linkDecision.entryAction,
+      }),
       actions: [...(latestRequest.actions ?? []), userMessageAction],
       updatedAt: timestamp,
       // Linking a follow-up prompt into this thread isn't a response to the

@@ -15,6 +15,9 @@
   import { CHANGELOG_URL } from "@/constants"
   import { admin } from "@/stores/portal"
 
+  const formatClientVersionForDisplay = version =>
+    version?.replace(/-cloud(?:\.\d+)?$/, "")
+
   export function show() {
     updateModal.show()
   }
@@ -35,6 +38,13 @@
       $workspaceStore.upgradableVersion !== $workspaceStore.version) ||
     $admin.isDev
   $: revertAvailable = $workspaceStore.revertableVersion != null
+  $: displayedVersion = formatClientVersionForDisplay($workspaceStore.version)
+  $: displayedUpgradableVersion = formatClientVersionForDisplay(
+    $workspaceStore.upgradableVersion
+  )
+  $: displayedRevertableVersion = formatClientVersionForDisplay(
+    $workspaceStore.revertableVersion
+  )
 
   const refreshAppPackage = async () => {
     try {
@@ -52,7 +62,7 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App updated successfully to version ${$workspaceStore.upgradableVersion}`
+        `App updated successfully to version ${formatClientVersionForDisplay($workspaceStore.upgradableVersion)}`
       )
       onComplete()
     } catch (err) {
@@ -70,7 +80,7 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `Workspace reverted successfully to version ${$workspaceStore.revertableVersion}`
+        `Workspace reverted successfully to version ${formatClientVersionForDisplay($workspaceStore.revertableVersion)}`
       )
     } catch (err) {
       notifications.error(err?.message || err || "Error reverting app")
@@ -105,15 +115,20 @@
     </div>
     {#if updateAvailable}
       <Body size="S">
-        This workspace is currently using version
-        <b>{$workspaceStore.version}</b>, but version
-        <b>{$workspaceStore.upgradableVersion}</b> is available. Updates can contain
-        new features, performance improvements and bug fixes.
+        {#if displayedVersion && displayedUpgradableVersion && displayedVersion === displayedUpgradableVersion}
+          This workspace is currently using version <b>{displayedVersion}</b>. A
+          newer client build is available.
+        {:else}
+          This workspace is currently using version
+          <b>{displayedVersion}</b>, but version
+          <b>{displayedUpgradableVersion}</b> is available.
+        {/if}
+        Updates can contain new features, performance improvements and bug fixes.
       </Body>
     {:else}
       <Body size="S">
         This workspace is currently using version
-        <b>{$workspaceStore.version}</b> which is the latest version available.
+        <b>{displayedVersion}</b> which is the latest version available.
       </Body>
     {/if}
     <Body size="S">
@@ -125,7 +140,7 @@
     {#if revertAvailable}
       <Body size="S">
         You can revert this workspace to client version
-        <b>{$workspaceStore.revertableVersion}</b>
+        <b>{displayedRevertableVersion}</b>
         if you're experiencing issues with the current version.
       </Body>
     {/if}

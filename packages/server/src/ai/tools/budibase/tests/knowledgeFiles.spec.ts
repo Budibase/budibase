@@ -360,6 +360,33 @@ describe("AI Tools - Knowledge search", () => {
     jest.mocked(features.isEnabled).mockResolvedValue(true)
   })
 
+  it("returns context and all sources without repeating the text in raw chunks", async () => {
+    jest.spyOn(sdk.ai.agents, "getOrThrow").mockResolvedValue({
+      _id: "agent_1",
+      name: "Agent",
+      aiconfig: "aiconfig_1",
+    })
+    const context = "Submit notes monthly and save twice."
+    const sources = [
+      { sourceId: "source-policy", fileId: "file_1", filename: "policy.md" },
+      { sourceId: "source-guide", fileId: "file_2", filename: "guide.md" },
+    ]
+    jest.spyOn(sdk.ai.rag, "retrieveContextForOperation").mockResolvedValue({
+      text: context,
+      chunks: [
+        { source: "source-policy", chunkText: context },
+        { source: "source-guide", chunkText: context },
+      ],
+      sources,
+    })
+
+    const result = await executeSearchTool("agent_1", {
+      question: "How should I submit notes?",
+    })
+
+    expect(result).toEqual({ context, sources })
+  })
+
   it("hard-fails with a clear message when Gemini retrieval is unavailable", async () => {
     jest
       .spyOn(sdk.ai.agents, "getOrThrow")

@@ -29,6 +29,9 @@
   } from "@budibase/bbui"
   import CloneResourcesModal from "../_components/CloneResourcesModal.svelte"
 
+  const formatClientVersionForDisplay = (version?: string) =>
+    version?.replace(/-cloud(?:\.\d+)?$/, "")
+
   let versionModal: VersionModal
   let exportModal: Modal
   let importModal: Modal
@@ -40,6 +43,10 @@
 
   $: updateAvailable =
     $workspaceStore.upgradableVersion !== $workspaceStore.version
+  $: displayedVersion = formatClientVersionForDisplay($workspaceStore.version)
+  $: displayedUpgradableVersion = formatClientVersionForDisplay(
+    $workspaceStore.upgradableVersion
+  )
   $: revertAvailable = $workspaceStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
   $: hasOnlyOneWorkspace = $workspacesStore.apps.length <= 1
@@ -141,10 +148,15 @@
       </Body>
     {:else if updateAvailable}
       <Body size="S">
-        The workspace is currently using version
-        <strong>{$workspaceStore.version}</strong>
-        but version <strong>{$workspaceStore.upgradableVersion}</strong> is
-        available.
+        {#if displayedVersion && displayedUpgradableVersion && displayedVersion === displayedUpgradableVersion}
+          The workspace is currently using version
+          <strong>{displayedVersion}</strong>. A newer client build is
+          available.
+        {:else}
+          The workspace is currently using version
+          <strong>{displayedVersion}</strong>
+          but version <strong>{displayedUpgradableVersion}</strong> is available.
+        {/if}
         <br />
         Updates can contain new features, performance improvements and bug fixes.
       </Body>
@@ -182,7 +194,7 @@
     {:else}
       <Body size="S">
         The workspace is currently using version
-        <strong>{$workspaceStore.version}</strong>.
+        <strong>{displayedVersion}</strong>.
         <br />
         You're running the latest!
       </Body>
