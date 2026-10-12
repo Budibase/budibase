@@ -1,4 +1,5 @@
 import fs from "fs"
+import path from "path"
 import { Readable } from "stream"
 
 jest.mock("@budibase/backend-core", () => {
@@ -25,7 +26,7 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-import { utils } from "@budibase/backend-core"
+import { objectStore, utils } from "@budibase/backend-core"
 import { uploadFile, uploadUrl } from "../fileUtils"
 
 describe("fileUtils.uploadUrl", () => {
@@ -51,6 +52,10 @@ describe("fileUtils.uploadUrl", () => {
 })
 
 describe("fileUtils.uploadFile", () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   it("reuses an existing file for repeated uploads", async () => {
     const file = {
       fileName: "document",
@@ -61,8 +66,27 @@ describe("fileUtils.uploadFile", () => {
     await expect(uploadFile(file)).resolves.toEqual(
       expect.objectContaining({ name: "document.txt" })
     )
-    await expect(uploadFile(file)).resolves.toEqual(
-      expect.objectContaining({ name: "document.txt" })
+    await expect(
+      uploadFile({ ...file, content: "replacement" })
+    ).resolves.toEqual(expect.objectContaining({ name: "document.txt" }))
+
+    const destination = path.join(
+      objectStore.budibaseTempDir(),
+      "ai-downloads",
+      "document.txt"
     )
+    expect(fs.readFileSync(destination, "utf8")).toBe("hello")
+  })
+
+  it("rejects filenames that escape the temp directory", async () => {
+    await expect(
+      uploadFile({
+        fileName: "../outside",
+        extension: ".txt",
+        content: "must not be written",
+      })
+    ).rejects.toThrow("Path must be within the Budibase temp directory.")
+
+    expect(objectStore.upload).not.toHaveBeenCalled()
   })
 })
