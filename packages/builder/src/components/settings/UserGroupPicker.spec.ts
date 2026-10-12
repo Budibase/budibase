@@ -1,10 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/svelte"
 import { describe, expect, it, vi } from "vitest"
+import MockButton from "@/test/mocks/MockButton.svelte"
 import MockIcon from "@/test/mocks/MockIcon.svelte"
 import MockLayout from "@/test/mocks/MockLayout.svelte"
 import MockSearch from "@/test/mocks/MockSearch.svelte"
 
 vi.mock("@budibase/bbui", () => ({
+  ActionButton: MockButton,
   Icon: MockIcon,
   Layout: MockLayout,
   ProgressCircle: MockIcon,
@@ -27,6 +29,17 @@ const setScrollMetrics = (
     Object.defineProperty(element, key, { configurable: true, value })
   }
 }
+
+const getLabels = () =>
+  Array.from(document.querySelectorAll(".item .text")).map(el =>
+    el.textContent?.trim()
+  )
+
+const outOfOrderUsers = [
+  { _id: "user-1", email: "carol@example.com" },
+  { _id: "user-2", email: "alice@example.com" },
+  { _id: "user-3", email: "bob@example.com" },
+]
 
 const getItemsContainer = () =>
   screen.getByText("user00@example.com").closest(".items") as HTMLElement
@@ -103,5 +116,56 @@ describe("UserGroupPicker", () => {
     })
     await fireEvent.scroll(items)
     expect(onLoadMore).toHaveBeenCalledTimes(1)
+  })
+
+  it("sorts selected items first, then by label, by default", () => {
+    render(UserGroupPicker, {
+      props: {
+        labelKey: "email",
+        list: outOfOrderUsers,
+        selected: ["user-1"],
+      },
+    })
+
+    expect(getLabels()).toEqual([
+      "carol@example.com",
+      "alice@example.com",
+      "bob@example.com",
+    ])
+  })
+
+  it("keeps the given order when preserveOrder is set", async () => {
+    const { rerender } = render(UserGroupPicker, {
+      props: {
+        labelKey: "email",
+        list: outOfOrderUsers,
+        selected: [],
+        preserveOrder: true,
+      },
+    })
+    const fetchedOrder = outOfOrderUsers.map(user => user.email)
+    expect(getLabels()).toEqual(fetchedOrder)
+
+    await rerender({ selected: ["user-3"] })
+    expect(getLabels()).toEqual(fetchedOrder)
+  })
+
+  it("shows a retry action instead of loading more after a failure", async () => {
+    const onLoadMore = vi.fn()
+    const onRetry = vi.fn()
+    render(UserGroupPicker, {
+      props: {
+        labelKey: "email",
+        list: buildUsers(2),
+        hasMore: false,
+        loadFailed: true,
+        onLoadMore,
+        onRetry,
+      },
+    })
+
+    expect(onLoadMore).not.toHaveBeenCalled()
+    await fireEvent.click(screen.getByText("Retry"))
+    expect(onRetry).toHaveBeenCalledTimes(1)
   })
 })

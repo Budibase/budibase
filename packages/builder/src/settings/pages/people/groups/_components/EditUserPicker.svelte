@@ -20,6 +20,9 @@
   let nextPage = $state<string | undefined>()
   let hasNextPage = $state(false)
   let loading = $state(false)
+  let pageLoadFailed = $state(false)
+  // the page to request again when retrying a failed load
+  let failedBookmark: string | undefined
   // used to discard responses from outdated searches
   let searchId = 0
 
@@ -34,6 +37,7 @@
   }) => {
     const id = bookmark ? searchId : ++searchId
     loading = true
+    pageLoadFailed = false
     try {
       const response = await API.searchUsers({
         bookmark,
@@ -47,6 +51,8 @@
       nextPage = response.nextPage || undefined
     } catch (error) {
       if (id === searchId) {
+        pageLoadFailed = true
+        failedBookmark = bookmark
         notifications.error("Error getting user list")
       }
     } finally {
@@ -57,10 +63,17 @@
   }
 
   const loadMore = () => {
-    if (loading || !hasNextPage || !nextPage) {
+    if (loading || pageLoadFailed || !hasNextPage || !nextPage) {
       return
     }
     fetchUsers({ search: searchTerm, bookmark: nextPage })
+  }
+
+  const retry = () => {
+    if (loading) {
+      return
+    }
+    fetchUsers({ search: searchTerm, bookmark: failedBookmark })
   }
 
   $effect(() => {
@@ -78,9 +91,12 @@
     labelKey="email"
     selected={group?.users?.map(user => user._id)}
     list={userList}
-    hasMore={hasNextPage}
+    hasMore={hasNextPage && !pageLoadFailed}
     {loading}
     onLoadMore={loadMore}
+    preserveOrder
+    loadFailed={pageLoadFailed}
+    onRetry={retry}
     on:select={async e => {
       await groups.addUser(groupId, e.detail)
       onUsersUpdated()
