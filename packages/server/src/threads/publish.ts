@@ -12,7 +12,5 @@ export function execute(job: PublishWorkspaceJob, callback: WorkerCallback) {
   const result = identity
     ? context.identity.doInIdentityContext(identity, run)
     : run()
-  result
-    .then(result => callback(null, result))
-    .catch(error => callback(error))
+  result.then(result => callback(null, result)).catch(error => callback(error))
 }
