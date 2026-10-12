@@ -1,0 +1,224 @@
+<script lang="ts" module>
+  let lastTabId = "all"
+</script>
+
+<script lang="ts">
+  import { onMount } from "svelte"
+  import {
+    ActionButton,
+    Body,
+    Button,
+    Divider,
+    Heading,
+    Icon,
+    notifications,
+  } from "@budibase/bbui"
+  import type { RequestRow } from "@budibase/types"
+  import dayjs from "dayjs"
+  import { API } from "@/api"
+
+  interface RequestTab {
+    id: string
+    label: string
+    empty: string
+    filters: { awaitingResponse?: boolean; isRequester?: boolean }
+  }
+
+  const tabs: RequestTab[] = [
+    {
+      id: "needsInput",
+      label: "Needs input",
+      empty: "Nothing needs your input",
+      filters: { awaitingResponse: true },
+    },
+    {
+      id: "mine",
+      label: "My requests",
+      empty: "You haven't raised any requests",
+      filters: { isRequester: true },
+    },
+    { id: "all", label: "All", empty: "No requests yet", filters: {} },
+  ]
+
+  let activeTab = $state.raw(tabs.find(tab => tab.id === lastTabId) ?? tabs[0])
+  let requests = $state<RequestRow[]>([])
+  let page = $state(1)
+  let hasNextPage = $state(false)
+  let loading = $state(true)
+
+  const isClosed = (request: RequestRow) =>
+    request.status === "completed" || request.status === "failed"
+
+  const dotClass = (request: RequestRow) => {
+    if (request.awaitingResponse) {
+      return "awaiting"
+    }
+    return isClosed(request) ? "closed" : "open"
+  }
+
+  const load = async ({
+    tab,
+    nextPage,
+  }: {
+    tab: RequestTab
+    nextPage: number
+  }) => {
+    loading = true
+    try {
+      const result = await API.fetchUserRequests({
+        ...tab.filters,
+        page: nextPage,
+      })
+      if (tab !== activeTab) {
+        return
+      }
+      requests =
+        nextPage === 1 ? result.requests : [...requests, ...result.requests]
+      page = result.page
+      hasNextPage = result.hasNextPage
+    } catch (error) {
+      notifications.error("Error loading requests")
+    } finally {
+      if (tab === activeTab) {
+        loading = false
+      }
+    }
+  }
+
+  const selectTab = (tab: RequestTab) => {
+    if (tab === activeTab) {
+      return
+    }
+    activeTab = tab
+    lastTabId = tab.id
+    requests = []
+    hasNextPage = false
+    load({ tab, nextPage: 1 })
+  }
+
+  onMount(() => {
+    load({ tab: activeTab, nextPage: 1 })
+  })
+</script>
+
+<div class="title">
+  <Heading size="M">Requests</Heading>
+  <div class="tabs">
+    {#each tabs as tab (tab.id)}
+      <ActionButton
+        quiet
+        selected={activeTab === tab}
+        on:click={() => selectTab(tab)}
+      >
+        {tab.label}
+      </ActionButton>
+    {/each}
+  </div>
+</div>
+<Divider noMargin />
+
+{#if requests.length}
+  <div class="requests">
+    {#each requests as request (`${request.workspaceId}_${request.requestId}`)}
+      <a
+        class="request"
+        class:closed={isClosed(request)}
+        href={`/requests/${request.workspaceId}/${request.requestId}`}
+      >
+        <span class="dot {dotClass(request)}"></span>
+        <span class="request-title">{request.title || request.requestId}</span>
+        <span class="meta">
+          {request.createdAt ? dayjs(request.createdAt).format("D MMM") : ""}
+        </span>
+        <Icon name="caret-right" size="S" />
+      </a>
+    {/each}
+  </div>
+  {#if hasNextPage}
+    <div class="more">
+      <Button
+        secondary
+        disabled={loading}
+        on:click={() => load({ tab: activeTab, nextPage: page + 1 })}
+      >
+        Load more
+      </Button>
+    </div>
+  {/if}
+{:else if !loading}
+  <Body size="S">{activeTab.empty}</Body>
+{/if}
+
+<style>
+  .title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: var(--border-radius-s);
+    background: var(--spectrum-global-color-gray-100);
+  }
+  .tabs :global(.spectrum-ActionButton) {
+    border-radius: var(--border-radius-s);
+    border: 1px solid transparent;
+    padding: 2px 8px;
+    height: auto;
+  }
+  .tabs :global(.spectrum-ActionButton.is-selected) {
+    background: var(--spectrum-global-color-gray-300);
+  }
+  .requests {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+  .request {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: var(--spacing-l);
+    padding: var(--spacing-l) var(--spacing-xl);
+    border-radius: var(--border-radius-s);
+    background-color: var(--background);
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .request:hover {
+    background: var(--spectrum-global-color-gray-200);
+    transition: background-color 130ms ease-in-out;
+  }
+  .request.closed {
+    color: var(--spectrum-global-color-gray-700);
+  }
+  .request-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .meta {
+    font-size: var(--font-size-s);
+    color: var(--spectrum-global-color-gray-600);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .dot.awaiting {
+    background: var(--spectrum-global-color-orange-500);
+  }
+  .dot.open {
+    background: var(--spectrum-global-color-blue-500);
+  }
+  .dot.closed {
+    background: var(--spectrum-global-color-gray-500);
+  }
+  .more {
+    display: flex;
+    justify-content: center;
+  }
+</style>
