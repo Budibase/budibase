@@ -102,7 +102,9 @@
       : []
   )
   const tableRows = $derived(
-    $fetchGroupUsers.loading ? loadingRows : [...loadedRows, ...fillerRows]
+    $fetchGroupUsers.loading && !$fetchGroupUsers.loaded
+      ? loadingRows
+      : [...loadedRows, ...fillerRows]
   )
 
   const removeUser = async (id: string) => {
