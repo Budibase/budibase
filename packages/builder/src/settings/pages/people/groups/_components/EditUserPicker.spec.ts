@@ -17,6 +17,7 @@ const { searchUsers } = vi.hoisted(() => ({
 }))
 
 vi.mock("@budibase/bbui", () => ({
+  ActionButton: MockButton,
   Button: MockButton,
   Icon: MockIcon,
   Layout: MockLayout,
@@ -41,7 +42,21 @@ vi.mock("@/stores/portal/groups", async () => {
   }
 })
 
+import { notifications } from "@budibase/bbui"
+import { groups } from "@/stores/portal/groups"
 import EditUserPicker from "./EditUserPicker.svelte"
+
+const getLabels = () =>
+  Array.from(document.querySelectorAll(".item .text")).map(el =>
+    el.textContent?.trim()
+  )
+
+const user = (_id: string, email: string): StrippedUser => ({
+  _id,
+  userId: _id,
+  tenantId: "default",
+  email,
+})
 
 const buildUsers = ({
   prefix,
@@ -60,6 +75,8 @@ const buildUsers = ({
 describe("EditUserPicker", () => {
   beforeEach(() => {
     searchUsers.mockReset()
+    vi.mocked(notifications.error).mockClear()
+    groups.set([{ _id: "group-1", users: [] }] as any)
   })
 
   it("appends the next page of users to the list", async () => {
@@ -136,5 +153,77 @@ describe("EditUserPicker", () => {
       expect(screen.queryByText("stale-00@example.com")).not.toBeInTheDocument()
     })
     expect(screen.getByText("match-00@example.com")).toBeInTheDocument()
+  })
+
+  it("keeps users in fetched order across pages, including selected users", async () => {
+    // IDs and emails sort differently, and the selected user is on page 2
+    const firstPage = [
+      user("us_z", "anna@example.com"),
+      user("us_y", "beth@example.com"),
+    ]
+    const secondPage = [
+      user("us_a", "cara@example.com"),
+      user("us_b", "dina@example.com"),
+    ]
+    groups.set([{ _id: "group-1", users: [{ _id: "us_b" }] }] as any)
+    searchUsers.mockImplementation(async ({ bookmark }) =>
+      bookmark
+        ? { data: secondPage }
+        : { data: firstPage, hasNextPage: true, nextPage: "cara@example.com" }
+    )
+
+    render(EditUserPicker, {
+      props: { groupId: "group-1", onUsersUpdated: vi.fn() },
+    })
+
+    await screen.findByText("dina@example.com")
+    const fetchedOrder = [...firstPage, ...secondPage].map(u => u.email)
+    expect(getLabels()).toEqual(fetchedOrder)
+
+    // changing membership must not move rows
+    groups.set([{ _id: "group-1", users: [{ _id: "us_y" }] }] as any)
+    await waitFor(() => expect(getLabels()).toEqual(fetchedOrder))
+  })
+
+  it("does not retry a failed page automatically, and retries it on request", async () => {
+    let failNextPage = true
+    let failures = 0
+    searchUsers.mockImplementation(async ({ bookmark }) => {
+      if (!bookmark) {
+        return {
+          data: buildUsers({ prefix: "page1-", count: 2 }),
+          hasNextPage: true,
+          nextPage: "page-2",
+        }
+      }
+      // capped so a retry loop fails the assertions below rather than hanging
+      if (failNextPage && failures < 5) {
+        failures++
+        throw new Error("Service unavailable")
+      }
+      return { data: buildUsers({ prefix: "page2-", count: 2 }) }
+    })
+
+    render(EditUserPicker, {
+      props: { groupId: "group-1", onUsersUpdated: vi.fn() },
+    })
+
+    const retryButton = await screen.findByText("Retry")
+    // give any automatic reload a chance to happen
+    await new Promise(resolve => setTimeout(resolve, 50))
+    expect(searchUsers).toHaveBeenCalledTimes(2)
+    expect(notifications.error).toHaveBeenCalledTimes(1)
+
+    failNextPage = false
+    await fireEvent.click(retryButton)
+
+    await screen.findByText("page2-01@example.com")
+    expect(searchUsers).toHaveBeenCalledTimes(3)
+    expect(searchUsers).toHaveBeenLastCalledWith({
+      bookmark: "page-2",
+      query: { string: { email: "" } },
+    })
+    expect(screen.queryByText("Retry")).not.toBeInTheDocument()
+    expect(notifications.error).toHaveBeenCalledTimes(1)
   })
 })

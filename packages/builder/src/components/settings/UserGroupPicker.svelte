@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { Icon, Search, Layout, ProgressCircle } from "@budibase/bbui"
+  import {
+    ActionButton,
+    Icon,
+    Search,
+    Layout,
+    ProgressCircle,
+  } from "@budibase/bbui"
   import type { Component } from "svelte"
   import { createEventDispatcher } from "svelte"
 
@@ -25,6 +31,11 @@
     hasMore?: boolean
     loading?: boolean
     onLoadMore?: () => void
+    // keeps items in the given order, so paginated pages append below the
+    // viewport and selecting an item doesn't move it
+    preserveOrder?: boolean
+    loadFailed?: boolean
+    onRetry?: () => void
   }
 
   let {
@@ -37,6 +48,9 @@
     hasMore = false,
     loading = false,
     onLoadMore,
+    preserveOrder = false,
+    loadFailed = false,
+    onRetry,
   }: Props = $props()
 
   const LOAD_MORE_THRESHOLD_PX = 40
@@ -97,7 +111,7 @@
 
   const enrichedList = $derived(enrich(list, selected))
   const filteredList = $derived(filter(enrichedList, searchTerm))
-  const sortedList = $derived(sort(filteredList))
+  const sortedList = $derived(preserveOrder ? filteredList : sort(filteredList))
 
   const maybeLoadMore = () => {
     if (!onLoadMore || !hasMore || loading || !itemsContainer) {
@@ -155,6 +169,11 @@
           <ProgressCircle size="S" />
         </div>
       {/if}
+      {#if loadFailed && onRetry}
+        <div class="retry">
+          <ActionButton size="S" on:click={onRetry}>Retry</ActionButton>
+        </div>
+      {/if}
     </div>
   </Layout>
 </div>
@@ -190,7 +209,8 @@
     background: var(--spectrum-global-color-gray-100);
     cursor: pointer;
   }
-  .loading {
+  .loading,
+  .retry {
     display: flex;
     justify-content: center;
     padding: var(--spacing-s) 0;
