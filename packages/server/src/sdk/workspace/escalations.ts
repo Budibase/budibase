@@ -25,6 +25,7 @@ import {
 import { IsolatedVM } from "../../jsRunner/vm"
 import { RESOLUTION_STRATEGY_SNIPPETS } from "../../escalation/resolutionStrategies"
 import { getFullUser } from "../../utilities/users"
+import { syncRequestInboxForEscalation } from "./ai/agentRequests/requestInbox"
 
 const getDocId = (escalationId: string): string =>
   `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
@@ -225,9 +226,13 @@ export async function respond(
   response: EscalationResponse,
   resolve: (escalationId: string, response: EscalationResponse) => Promise<void>
 ): Promise<EscalationRespondResult> {
-  return await withEscalationLock(escalationId, () =>
+  const result = await withEscalationLock(escalationId, () =>
     respondUnderLock(escalationId, notificationDocId, response, resolve)
   )
+  if (result.status === "recorded") {
+    await syncRequestInboxForEscalation(escalationId)
+  }
+  return result
 }
 
 const respondUnderLock = async (
@@ -299,6 +304,9 @@ const respondUnderLock = async (
       actionId: response.actionId,
       respondedAt: new Date().toISOString(),
       ...(notificationDocId ? { notificationDocId } : {}),
+      ...(typeof response.note === "string" && response.note
+        ? { note: response.note }
+        : {}),
     })
     if (approved.status === "already_responded") {
       return { status: "already_responded" }

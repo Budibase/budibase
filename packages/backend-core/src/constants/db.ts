@@ -76,6 +76,9 @@ export const StaticDatabases = {
   SCIM_LOGS: {
     name: "scim-logs",
   },
+  REQUEST_INBOX: {
+    name: "request-inbox",
+  },
   // Used by self-host users making use of Budicloud resources. Introduced when
   // we started letting self-host users use Budibase AI in the cloud.
   SELF_HOST_CLOUD: {
