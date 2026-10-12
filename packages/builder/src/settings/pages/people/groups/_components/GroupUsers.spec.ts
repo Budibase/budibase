@@ -135,6 +135,7 @@ describe("group users table refresh", () => {
     await fireEvent.click(await picker.findByText(alice.email))
     await waitFor(() => expect(getGroupUsers).toHaveBeenCalledTimes(2))
 
+    expect(getTable().getByText(alice.email)).toBeInTheDocument()
     expect(getTable().getByText(bob.email)).toBeInTheDocument()
 
     page.resolve({ users: [bob], bookmark: "" })
@@ -157,6 +158,7 @@ describe("group users table refresh", () => {
     await fireEvent.click(getTable().getAllByText("Remove")[0])
     await waitFor(() => expect(getGroupUsers).toHaveBeenCalledTimes(2))
 
+    expect(getTable().getByText(alice.email)).toBeInTheDocument()
     expect(getTable().getByText(bob.email)).toBeInTheDocument()
 
     page.resolve({ users: [bob], bookmark: "" })
