@@ -1,6 +1,7 @@
 import { Knex, knex } from "knex"
 import * as dbCore from "../db"
 import {
+  breakRowIdField,
   extractDate,
   getNativeSql,
   isExternalTable,
@@ -197,6 +198,12 @@ class InternalBuilder {
         field?.type === FieldType.OPTIONS
       )
     },
+    POSTGRES_UUID: (field: FieldSchema | undefined) => {
+      return (
+        this.client === SqlClient.POSTGRES &&
+        field?.externalType?.toLowerCase() === "uuid"
+      )
+    },
     MSSQL_DATES: (field: FieldSchema | undefined) => {
       return (
         this.client === SqlClient.MS_SQL &&
@@ -215,6 +222,13 @@ class InternalBuilder {
   }
 
   getFieldSchema(key: string): FieldSchema | undefined {
+    for (const table of Object.values(this.query.tables)) {
+      const prefix = `${this.query.tableAliases?.[table.name] || table.name}.`
+      if (key.startsWith(prefix)) {
+        const { column } = this.splitter.run(key.slice(prefix.length))
+        return table.schema[column]
+      }
+    }
     const { column } = this.splitter.run(key)
     return this.table.schema[column]
   }
@@ -724,8 +738,25 @@ class InternalBuilder {
         value: any
       ) => {
         const [filterTableName, ...otherProperties] = key.split(".")
-        const property = otherProperties.join(".")
+        let property = otherProperties.join(".")
         const alias = getTableAlias(filterTableName)
+        const { tableName } = builder.splitter.run(key)
+        const relatedTable = builder.query.tables[tableName || filterTableName]
+        if (
+          property === "_id" &&
+          relatedTable &&
+          isExternalTable(relatedTable)
+        ) {
+          if (relatedTable.primary?.length !== 1) {
+            throw new Error(
+              "Filtering by a related row ID requires a single-column primary key"
+            )
+          }
+          property = relatedTable.primary[0]
+          value = Array.isArray(value)
+            ? value.map(id => breakRowIdField(id)[0])
+            : breakRowIdField(value)[0]
+        }
         return q.andWhere(subquery =>
           fn(subquery, alias ? `${alias}.${property}` : property, value)
         )
@@ -797,6 +828,12 @@ class InternalBuilder {
         return q.whereRaw(`LOWER(??) LIKE ?`, [
           this.rawQuotedIdentifier(key),
           `%${value.toLowerCase()}%`,
+        ])
+      }
+      if (this.SPECIAL_SELECT_CASES.POSTGRES_UUID(this.getFieldSchema(key))) {
+        return q.whereRaw(`??::text ilike ?`, [
+          this.rawQuotedIdentifier(key),
+          `%${value}%`,
         ])
       }
       return q.whereILike(
@@ -1041,9 +1078,12 @@ class InternalBuilder {
           ])
         } else {
           const schema = this.getFieldSchema(key)
-          if (this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema)) {
+          if (
+            this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema) ||
+            this.SPECIAL_SELECT_CASES.POSTGRES_UUID(schema)
+          ) {
             return q.whereRaw(`??::text ilike ?`, [
-              this.knex.raw(this.quote(schema!.name)),
+              this.rawQuotedIdentifier(key),
               `${value}%`,
             ])
           } else {
@@ -1860,7 +1900,11 @@ class InternalBuilder {
     query = this.addFilters(query, filters, { relationship: true })
 
     // handle relationships with a CTE for all others
-    if (relationships?.length && aggregations.length === 0) {
+    if (
+      operation !== Operation.COUNT &&
+      relationships?.length &&
+      aggregations.length === 0
+    ) {
       const mainTable = this.query.tableAliases?.[table.name] || table.name
       const cte = this.addSorting(
         this.knex

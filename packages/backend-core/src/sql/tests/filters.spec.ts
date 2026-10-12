@@ -141,6 +141,89 @@ describe("SQL filter parameterization", () => {
     expect(result.bindings).toEqual(expect.arrayContaining([`${malicious}%`]))
   })
 
+  it.each(["string", "fuzzy"] as const)(
+    "casts PostgreSQL UUID columns to text for %s filters",
+    operator => {
+      const table = buildTable({
+        person_id: {
+          name: "person_id",
+          type: FieldType.STRING,
+          externalType: "uuid",
+          constraints: baseConstraints,
+        },
+      })
+      const value = "f69d' OR '1'='1"
+      const query = buildQuery(table, { [operator]: { person_id: value } })
+
+      const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+      expect(result.sql).toContain('"tbl"."person_id"::text ilike $1')
+      expect(result.sql).not.toContain(value)
+      expect(result.bindings?.[0]).toEqual(
+        operator === "string" ? `${value}%` : `%${value}%`
+      )
+    }
+  )
+
+  it("keeps native UUID equality comparisons", () => {
+    const table = buildTable({
+      person_id: {
+        name: "person_id",
+        type: FieldType.STRING,
+        externalType: "uuid",
+        constraints: baseConstraints,
+      },
+    })
+    const value = "f69df1ee-4c9e-561b-a24d-1af57af203bf"
+    const query = buildQuery(table, { equal: { person_id: value } })
+
+    const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+    expect(result.sql).toContain('"tbl"."person_id" = $1')
+    expect(result.sql).not.toContain("::text")
+    expect(result.bindings?.[0]).toBe(value)
+  })
+
+  it.each(["string", "fuzzy"] as const)(
+    "uses the related table schema for UUID %s filters",
+    operator => {
+      const table = buildTable({
+        person_id: {
+          name: "person_id",
+          type: FieldType.STRING,
+          externalType: "text",
+          constraints: baseConstraints,
+        },
+      })
+      const relatedTable = {
+        ...table,
+        name: "persons",
+        schema: {
+          ...table.schema,
+          person_id: {
+            ...table.schema.person_id,
+            externalType: "uuid",
+          },
+        },
+      }
+      const query = buildQuery(table, {
+        [operator]: { "person.person_id": "F69D" },
+      })
+      query.tables.persons = relatedTable
+      query.tableAliases = { tbl: "a", persons: "b" }
+      query.relationships = [
+        { tableName: "persons", column: "person", from: "id", to: "id" },
+      ]
+
+      const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+      expect(result.sql).toContain('"b"."person_id"::text ilike $1')
+      expect(result.bindings?.[0]).toEqual(
+        operator === "string" ? "F69D%" : "%F69D%"
+      )
+    }
+  )
+
   it("parameterizes Postgres array contains filters", () => {
     const table = buildTable({
       tags: {

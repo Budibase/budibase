@@ -118,7 +118,7 @@ export const getQueryableFields = async (
     extractOpts?: { noRelationships?: boolean }
   ): Promise<string[]> => {
     const result = []
-    if (isInternal({ table })) {
+    if (isInternal({ table }) || table.primary?.length === 1) {
       result.push("_id")
     }
 
