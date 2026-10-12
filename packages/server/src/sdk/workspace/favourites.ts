@@ -44,7 +44,5 @@ export async function remove(favouriteId: string, favouriteRev: string) {
 
 export async function findByResourceId(resourceId: string) {
   const favourites = await fetchAll()
-  return favourites
-    .filter(favourite => favourite.resourceId === resourceId)
-    .slice(0, 1)
+  return favourites.filter(favourite => favourite.resourceId === resourceId)
 }

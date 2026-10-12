@@ -52,6 +52,7 @@ type ProgressEdgeHighlightArgs = Omit<
  */
 export const CONTINUE_ON_ERROR_STEP_IDS = [
   AutomationActionStepId.API_REQUEST,
+  AutomationActionStepId.EXECUTE_FUNCTION,
   AutomationActionStepId.EXECUTE_QUERY,
   AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
 ] as string[]

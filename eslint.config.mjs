@@ -72,7 +72,7 @@ export default [
       "no-useless-constructor": "error",
       "no-useless-rename": "error",
       "no-var": "error",
-      "no-void": "error",
+      "no-void": ["error", { allowAsStatement: true }],
 
       "no-unused-vars": [
         "error",

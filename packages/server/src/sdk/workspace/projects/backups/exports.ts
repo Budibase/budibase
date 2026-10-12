@@ -128,6 +128,9 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
       .filter(query => isDirectProjectResource(query, "query_", projectId))
       .map(query => asUsedResource(query, ResourceType.QUERY)),
     ...assignedDocs
+      .filter(fn => isDirectProjectResource(fn, "fn_", projectId))
+      .map(fn => asUsedResource(fn, ResourceType.FUNCTION)),
+    ...assignedDocs
       .filter(automation =>
         isDirectProjectResource(automation, "au_", projectId)
       )

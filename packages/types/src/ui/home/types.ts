@@ -1,4 +1,8 @@
-import type { CreateProjectRequest, PublishResourceState } from "../../api"
+import type {
+  CreateProjectRequest,
+  FunctionSummary,
+  PublishResourceState,
+} from "../../api"
 import type {
   Agent,
   Datasource,
@@ -8,11 +12,18 @@ import type {
 import type { UIAutomation } from "../stores/automations"
 import type { UIWorkspaceApp } from "../workspaceApps"
 
-export type HomeType = "all" | "app" | "automation" | "agent" | "data"
+export type HomeType =
+  | "all"
+  | "app"
+  | "automation"
+  | "agent"
+  | "function"
+  | "data"
 export type HomeRowType =
   | "app"
   | "automation"
   | "agent"
+  | "function"
   | "datasource"
   | "table"
 
@@ -50,6 +61,12 @@ export interface AgentRow extends HomeRowBase {
   live: boolean
 }
 
+export interface FunctionRow extends HomeRowBase {
+  type: "function"
+  resource: FunctionSummary
+  status: string
+}
+
 export interface DatasourceRow extends HomeRowBase {
   type: "datasource"
   resource: Datasource
@@ -64,6 +81,7 @@ export type HomeRow =
   | AppRow
   | AutomationRow
   | AgentRow
+  | FunctionRow
   | DatasourceRow
   | TableRow
 

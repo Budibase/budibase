@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { functionsAvailable } from "@/stores/builder/functionsAvailability"
   import {
     Context,
     ActionMenu,
@@ -29,12 +30,14 @@
     queries,
     viewsV2,
   } from "@/stores/builder"
+  import { functionStore } from "@/stores/builder/functions"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
     workspacesStore,
     licensing,
     enrichedApps,
     agentsStore,
+    auth,
     featureFlags,
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
@@ -42,6 +45,7 @@
   import { onDestroy, setContext } from "svelte"
   import {
     type Datasource,
+    type FunctionSummary,
     FeatureFlag,
     type Query,
     type Table,
@@ -66,6 +70,7 @@
   import AgentModal from "@/pages/builder/workspace/[workspaceId]/agent/AgentModal.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
+  import { canManageFunctions } from "@/pages/builder/workspace/[workspaceId]/function/permissions"
 
   export const show = () => {
     pinned.set(true)
@@ -102,6 +107,7 @@
     tables: Table[]
     queries: Query[]
     views: ViewV2[]
+    functions: FunctionSummary[]
   }
 
   setContext(Context.PopoverRoot, ".nav .popover-container")
@@ -115,6 +121,7 @@
     [WorkspaceResource.QUERY]: "database", // regular db queries
     [WorkspaceResource.VIEW]: "table",
     [WorkspaceResource.AGENT]: "cpu",
+    [WorkspaceResource.FUNCTION]: "function",
   }
 
   const datasourceLookup = datasources.lookup
@@ -132,6 +139,7 @@
   let createWorkspaceModal: Modal | undefined
   let workspaceMenuOpen = false
   let createMenuOpen = false
+  let functionsFetchedForWorkspace = ""
 
   let createAutomationModal: ModalAPI
   let webhookModal: ModalAPI
@@ -187,6 +195,10 @@
     keepCollapsed()
   }
 
+  const openFunctions = () => {
+    goToCreate("home?type=function&create=function")
+  }
+
   const handleTableSave = async (table: Table) => {
     if (!workspaceId) {
       return
@@ -216,8 +228,26 @@
 
   // Ignore resources without names
   $: favourites = $workspaceFavouriteStore
-    .filter(f => $resourceLookup?.[f.resourceId])
+    .filter(
+      f =>
+        $resourceLookup?.[f.resourceId] &&
+        (f.resourceType !== WorkspaceResource.FUNCTION ||
+          ($functionsAvailable && canManageFunctions($auth.user, workspaceId)))
+    )
     .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
+
+  $: if (
+    workspaceId &&
+    $functionsAvailable &&
+    canManageFunctions($auth.user, workspaceId) &&
+    $workspaceFavouriteStore.some(
+      favourite => favourite.resourceType === WorkspaceResource.FUNCTION
+    ) &&
+    functionsFetchedForWorkspace !== workspaceId
+  ) {
+    functionsFetchedForWorkspace = workspaceId
+    functionStore.fetch()
+  }
 
   const initResourceStores = (): Readable<AllResourceStores> =>
     derived(
@@ -229,6 +259,7 @@
         queries,
         viewsV2,
         agentsStore,
+        functionStore,
         workspaceFavouriteStore,
       ],
       ([
@@ -239,6 +270,7 @@
         $queries,
         $views,
         $agents,
+        $functions,
       ]) => ({
         automations: $automations.automations,
         apps: $apps.workspaceApps,
@@ -247,6 +279,7 @@
         queries: $queries.list,
         views: $views.list,
         agents: $agents.agents,
+        functions: $functions.functions,
       })
     )
 
@@ -365,6 +398,8 @@
       },
       [WorkspaceResource.AGENT]: (id: string) =>
         `${workspacePrefix}/agent/${id}/config`,
+      [WorkspaceResource.FUNCTION]: (id: string) =>
+        `${workspacePrefix}/function/${id}`,
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)
@@ -551,6 +586,19 @@
                 <MenuItem icon="path" on:click={openCreateAutomation}>
                   Automation
                 </MenuItem>
+                {#if $functionsAvailable && canManageFunctions($auth.user, workspaceId)}
+                  <MenuItem
+                    icon="function"
+                    iconColour="var(--spectrum-global-color-magenta-400)"
+                    iconWeight="bold"
+                    on:click={openFunctions}
+                  >
+                    Function
+                    <div slot="right">
+                      <Tag emphasized>Alpha</Tag>
+                    </div>
+                  </MenuItem>
+                {/if}
                 <MenuItem icon="browsers" on:click={openCreateApp}>
                   App
                 </MenuItem>

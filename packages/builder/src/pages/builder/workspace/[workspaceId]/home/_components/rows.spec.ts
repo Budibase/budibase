@@ -256,6 +256,46 @@ const buildTable = (overrides: Partial<Table> = {}): Table =>
   }) as Table
 
 describe("buildHomeRows", () => {
+  it.each([
+    ["ready", "Ready"],
+    ["build_required", "Build required"],
+    ["build_failed", "Build failed"],
+  ] as const)("shows Function readiness %s as %s", (readiness, status) => {
+    const rows = buildHomeRows({
+      apps: [],
+      automations: [],
+      agents: [],
+      functions: [
+        {
+          _id: "fn_1",
+          _rev: "1-abc",
+          appId: "app_1",
+          name: "Customer lookup",
+          createdAt: "2026-09-01T00:00:00.000Z",
+          updatedAt: "2026-09-02T00:00:00.000Z",
+          readiness,
+          linkedQueryCount: 1,
+        },
+      ],
+      datasources: [],
+      tables: [],
+      getFavourite: noopGetFavourite,
+    })
+
+    expect(rows).toEqual([
+      expect.objectContaining({
+        id: "fn_1",
+        name: "Customer lookup",
+        type: "function",
+        status,
+        favourite: expect.objectContaining({
+          resourceType: WorkspaceResource.FUNCTION,
+          resourceId: "fn_1",
+        }),
+      }),
+    ])
+  })
+
   it("builds assignable data rows for external datasources and internal tables", () => {
     const rows = buildHomeRows({
       apps: [],

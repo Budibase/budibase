@@ -157,6 +157,9 @@ export enum Event {
   AUTOMATION_STEP_DELETED = "automation:step:deleted",
   AUTOMATION_TRIGGER_UPDATED = "automation:trigger:updated",
 
+  // FUNCTION
+  FUNCTION_DELETED = "function:deleted",
+
   // LICENSE
   LICENSE_PLAN_CHANGED = "license:plan:changed",
   LICENSE_ACTIVATED = "license:activated",
@@ -245,6 +248,7 @@ export const WorkspaceUserSyncEvents: Event[] = [
 // Favourites
 export const WorkspaceResourceEvents: Event[] = [
   Event.AUTOMATION_DELETED,
+  Event.FUNCTION_DELETED,
   Event.WORKSPACE_APP_DELETED,
   Event.DATASOURCE_DELETED,
   Event.TABLE_DELETED,
@@ -368,6 +372,9 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.AUTOMATION_TESTED]: undefined,
   [Event.AUTOMATIONS_RUN]: undefined,
   [Event.AUTOMATION_TRIGGER_UPDATED]: undefined,
+
+  // FUNCTION
+  [Event.FUNCTION_DELETED]: `Function "{{ name }}" deleted`,
 
   // SCREEN
   [Event.SCREEN_CREATED]: `Screen "{{ name }}" created`,
