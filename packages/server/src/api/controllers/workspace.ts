@@ -1159,6 +1159,7 @@ async function destroyWorkspace(ctx: UserCtx) {
   await events.app.deleted(app)
 
   await deleteAppFiles(prodWorkspaceId)
+  await sdk.ai.agentRequests.deleteWorkspaceRows(prodWorkspaceId)
 
   await removeWorkspaceFromUserRoles(ctx, ctx.params.appId)
   await invalidateWorkspaceCache(prodWorkspaceId)
