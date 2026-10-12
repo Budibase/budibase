@@ -688,6 +688,7 @@ export const publishWorkspace = async function (
   const job: PublishWorkspaceJob = {
     appId: context.getOrThrowWorkspaceId(),
     createdBy: ctx.user._id,
+    identity: context.getIdentity(),
     seedProductionTables: ctx.request.body?.seedProductionTables,
   }
   ctx.body = await withPublishLock(() =>
