@@ -657,6 +657,18 @@ export const publishWorkspaceInternal = async (
   return deployment
 }
 
+export const runPublishWorkspaceJob = async (
+  job: PublishWorkspaceJob,
+  ctx: Ctx
+) => {
+  if (!publishRunner) {
+    return publishWorkspaceInternal(job, ctx)
+  }
+  const deployment = await publishRunner.run<Deployment>(job)
+  builderSocket?.emitAppPublish(ctx)
+  return deployment
+}
+
 export async function withPublishLock<T>(fn: () => Promise<T>): Promise<T> {
   const lockResult = await locks.doWithLock(
     {
@@ -691,12 +703,5 @@ export const publishWorkspace = async function (
     identity: context.getIdentity(),
     seedProductionTables: ctx.request.body?.seedProductionTables,
   }
-  ctx.body = await withPublishLock(() =>
-    publishRunner
-      ? publishRunner.run<Deployment>(job)
-      : publishWorkspaceInternal(job, ctx)
-  )
-  if (publishRunner) {
-    builderSocket?.emitAppPublish(ctx)
-  }
+  ctx.body = await withPublishLock(() => runPublishWorkspaceJob(job, ctx))
 }
