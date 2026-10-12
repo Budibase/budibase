@@ -6,8 +6,13 @@ import threadUtils from "./utils"
 threadUtils.threadSetup()
 
 export function execute(job: PublishWorkspaceJob, callback: WorkerCallback) {
-  context
-    .doInWorkspaceContext(job.appId, () => publishWorkspaceInternal(job))
+  const run = () =>
+    context.doInWorkspaceContext(job.appId, () => publishWorkspaceInternal(job))
+  const { identity } = job
+  const result = identity
+    ? context.identity.doInIdentityContext(identity, run)
+    : run()
+  result
     .then(result => callback(null, result))
     .catch(error => callback(error))
 }
