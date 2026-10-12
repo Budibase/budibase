@@ -31,6 +31,10 @@ export const setWorkspaceRole = ({
   workspaceId: string
   role?: string
 }) => {
+  const independentBuilderApps = (user.builder?.apps || []).filter(
+    appId => user.roles[appId] !== "CREATOR"
+  )
+
   if (role) {
     user.roles[workspaceId] = role
   } else {
@@ -44,9 +48,17 @@ export const setWorkspaceRole = ({
   if (user.builder?.creator || creatorForApps.length) {
     user.builder ??= {}
     user.builder.creator = true
-    user.builder.apps = creatorForApps
   } else {
     delete user.builder?.creator
+  }
+
+  const builderApps = [
+    ...new Set([...independentBuilderApps, ...creatorForApps]),
+  ]
+  if (user.builder?.creator || builderApps.length) {
+    user.builder ??= {}
+    user.builder.apps = builderApps
+  } else {
     delete user.builder?.apps
   }
 }

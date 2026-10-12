@@ -212,6 +212,31 @@ describe("workspace invitations for existing users", () => {
     ).toContain(`/builder/workspace/${db.getDevWorkspaceID(workspaceId)}/home`)
   })
 
+  it.each([
+    { role: "BASIC", creator: false },
+    { role: "BASIC", creator: true },
+    { role: "CREATOR", creator: false },
+    { role: "CREATOR", creator: true },
+  ])(
+    "preserves independent builder access when inviting as $role with creator=$creator",
+    async ({ role, creator }) => {
+      const otherWorkspaceId = db.generateWorkspaceID()
+      user = await config.createUser({
+        roles: { [otherWorkspaceId]: "POWER" },
+        builder: { creator, apps: [workspaceId, otherWorkspaceId] },
+      })
+
+      await invite({ role })
+
+      const updatedUser = await config.getUser(user.email)
+      expect(updatedUser.roles).toEqual({
+        [otherWorkspaceId]: "POWER",
+        [workspaceId]: role,
+      })
+      expect(updatedUser.builder?.apps).toEqual([workspaceId, otherWorkspaceId])
+    }
+  )
+
   it("sends only one email for repeat invitations and subsequent role changes", async () => {
     await invite()
     await invite()
