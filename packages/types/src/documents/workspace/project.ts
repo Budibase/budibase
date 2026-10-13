@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import type { ProjectImportSetup } from "../../api/web/workspace/project"
 
 export interface Project extends Omit<Document, "createdAt" | "updatedAt"> {
   name: string
@@ -6,4 +7,5 @@ export interface Project extends Omit<Document, "createdAt" | "updatedAt"> {
   color?: string
   createdAt: string
   updatedAt: string
+  importSetup?: ProjectImportSetup
 }

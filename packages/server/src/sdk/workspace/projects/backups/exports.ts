@@ -267,6 +267,7 @@ function sanitiseProjectForExport(project: Project) {
   const sanitised = structuredClone(project)
   const createdAt = getProjectCreatedAt(project)
   delete sanitised._rev
+  delete sanitised.importSetup
   sanitised.createdAt = createdAt
   sanitised.updatedAt = toTimestamp(project.updatedAt) ?? createdAt
   return sanitised

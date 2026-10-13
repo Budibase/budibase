@@ -1001,6 +1001,210 @@ describe("/projects", () => {
     }
   }
 
+  describe("import setup", () => {
+    const importSetupProject = async () => {
+      const project = await createAssignedProject()
+      await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        source: SourceName.REST,
+        projectIds: [project._id],
+        config: {
+          url: "https://example.com",
+          authConfigs: [
+            {
+              _id: "auth_import_setup",
+              name: "API credentials",
+              type: RestAuthType.BASIC,
+              config: { username: "demo", password: "exported-secret" },
+            },
+          ],
+        },
+      })
+      await config.api.agent.create({
+        name: "Imported assistant",
+        aiconfig: "default",
+        projectIds: [project._id],
+      })
+      return await config.api.project.import(
+        await config.api.project.export(project._id)
+      )
+    }
+
+    it("persists the import checklist and returns it on a fresh project fetch", async () => {
+      await withProjectsEnabled(async () => {
+        const imported = await importSetupProject()
+        const { projects } = await config.api.project.fetch()
+        const project = projects.find(
+          project => project._id === imported.project._id
+        )
+        const stored = await config.doInContext(undefined, () =>
+          context.getWorkspaceDB().get<Project>(imported.project._id)
+        )
+
+        expect(project?.importSetup).toEqual({
+          resources: imported.resources,
+          unsupportedContent: imported.unsupportedContent,
+          requirements: imported.requirements,
+        })
+        expect(stored.importSetup).toEqual(project?.importSetup)
+        expect(project?.importSetup?.requirements).toHaveLength(2)
+        expect(JSON.stringify(project)).not.toContain("exported-secret")
+      })
+    })
+
+    it("keeps masked credentials pending after saving unrelated connection changes", async () => {
+      await withProjectsEnabled(async () => {
+        const imported = await importSetupProject()
+        const datasource = await config.api.datasource.get(
+          imported.resources.datasource![0]
+        )
+        await config.api.datasource.update({
+          ...datasource,
+          name: "Renamed API connection",
+        })
+        const { projects } = await config.api.project.fetch()
+        const project = projects.find(
+          project => project._id === imported.project._id
+        )
+
+        expect(project?.importSetup?.requirements).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: "datasource_secrets",
+              name: "Renamed API connection",
+            }),
+            expect.objectContaining({ type: "agent_ai_config" }),
+          ])
+        )
+        expect(project?.importSetup?.requirements).toHaveLength(2)
+      })
+    })
+
+    it("clears completed setup after real configuration saves and keeps the import report", async () => {
+      await withProjectsEnabled(async () => {
+        const imported = await importSetupProject()
+        const datasource = await config.api.datasource.get(
+          imported.resources.datasource![0]
+        )
+        await config.api.datasource.update({
+          ...datasource,
+          config: {
+            ...datasource.config,
+            authConfigs: [
+              {
+                _id: "auth_import_setup",
+                name: "API credentials",
+                type: RestAuthType.BASIC,
+                config: { username: "demo", password: "saved-secret" },
+              },
+            ],
+          },
+        })
+        const { agents } = await config.api.agent.fetch()
+        const agent = agents.find(
+          agent => agent._id === imported.resources.agent![0]
+        )!
+        await config.api.agent.update({ ...agent, aiconfig: "default" })
+        const { projects } = await config.api.project.fetch()
+        const project = projects.find(
+          project => project._id === imported.project._id
+        )
+        const exported = await readTarEntries(
+          await config.api.project.export(imported.project._id)
+        )
+
+        expect(project?.importSetup).toEqual({
+          resources: imported.resources,
+          unsupportedContent: imported.unsupportedContent,
+          requirements: [],
+        })
+        expect(JSON.stringify(project)).not.toContain("saved-secret")
+        expect(
+          JSON.parse(exported.get("project.json")!.toString())
+        ).not.toHaveProperty("importSetup")
+      })
+    })
+
+    it("does not require credentials for an unauthenticated REST connection", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          source: SourceName.REST,
+          projectIds: [project._id],
+          config: { url: "https://example.com" },
+        })
+        const imported = await config.api.project.import(
+          await config.api.project.export(project._id)
+        )
+        const { projects } = await config.api.project.fetch()
+
+        expect(imported.requirements).toEqual([])
+        expect(
+          projects.find(project => project._id === imported.project._id)
+            ?.importSetup?.requirements
+        ).toEqual([])
+      })
+    })
+
+    it("keeps a preserved credential binding pending when its environment variable is missing", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          source: SourceName.REST,
+          projectIds: [project._id],
+          config: {
+            url: "https://example.com",
+            authConfigs: [
+              {
+                _id: "auth_environment",
+                name: "Environment credentials",
+                type: RestAuthType.BEARER,
+                config: { token: "{{ env.IMPORT_SETUP_TOKEN }}" },
+              },
+            ],
+          },
+        })
+        const imported = await config.api.project.import(
+          await config.api.project.export(project._id)
+        )
+        const { projects } = await config.api.project.fetch()
+
+        expect(
+          projects.find(project => project._id === imported.project._id)
+            ?.importSetup?.requirements
+        ).toEqual([
+          expect.objectContaining({
+            type: "datasource_secrets",
+            resourceId: imported.resources.datasource![0],
+          }),
+        ])
+      })
+    })
+
+    it("removes deleted and unassigned resources from the pending checklist", async () => {
+      await withProjectsEnabled(async () => {
+        const imported = await importSetupProject()
+        const datasource = await config.api.datasource.get(
+          imported.resources.datasource![0]
+        )
+        await config.api.datasource.delete(datasource)
+        const { agents } = await config.api.agent.fetch()
+        const agent = agents.find(
+          agent => agent._id === imported.resources.agent![0]
+        )!
+        await config.api.agent.update({ ...agent, projectIds: [] })
+        const { projects } = await config.api.project.fetch()
+
+        expect(
+          projects.find(project => project._id === imported.project._id)
+            ?.importSetup?.requirements
+        ).toEqual([])
+      })
+    })
+  })
+
   describe("exports project tarballs", () => {
     const emailSettings = {
       host: "imap.example.com",
@@ -1256,6 +1460,50 @@ describe("/projects", () => {
             resourceId: result.imported.resources.automation![0],
           },
         ])
+      })
+    })
+
+    it("clears email setup after selecting a configured standalone OAuth2 connection", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        const { imported } = await exportThenImportUnsanitisedEmailAutomation({
+          projectId: project._id,
+          credentials: { password: "mailbox-secret" },
+        })
+        const oauth = await config.doInContext(undefined, () =>
+          sdk.oauth2.create({
+            name: "Mailbox OAuth2 connection",
+            url: "https://example.com/oauth/token",
+            clientId: "mailbox-client",
+            clientSecret: "saved-mailbox-secret",
+            method: OAuth2CredentialsMethod.BODY,
+            grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+          })
+        )
+        const automation = await config.api.automation.get(
+          imported.resources.automation![0]
+        )
+        await config.api.automation.update({
+          ...automation,
+          definition: {
+            ...automation.definition,
+            trigger: {
+              ...automation.definition.trigger,
+              inputs: {
+                ...emailSettings,
+                authType: EmailTriggerAuthType.OAUTH2,
+                datasourceId: oauth._id,
+                authConfigId: oauth._id,
+              },
+            },
+          },
+        })
+        const { projects } = await config.api.project.fetch()
+
+        expect(
+          projects.find(project => project._id === imported.project._id)
+            ?.importSetup?.requirements
+        ).toEqual([])
       })
     })
 
