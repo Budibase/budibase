@@ -10,6 +10,7 @@ import type {
 import { getRowIcon, getRowIconColor } from "../home/_components/rows"
 import type { ActivityDetail } from "./ActivityDetailsList.svelte"
 import { formatActivityDate } from "./activityDate"
+import { ACTIVITY_STATUS_LABELS } from "./activityStatus"
 
 dayjs.extend(relativeTime)
 
@@ -23,7 +24,7 @@ export interface ActionSessionRow {
   triggeredByValue: string
   triggeredByPrefix?: string
   status: PlatformActionContainerStatus
-  statusLabel: PlatformActionContainerStatus
+  statusLabel: string
   actionCount: number
   updatedLabel: string
 }
@@ -122,7 +123,7 @@ export const toActionSessionRow = ({
     triggeredByValue: triggeredBy.value,
     triggeredByPrefix: triggeredBy.prefix,
     status: session.status,
-    statusLabel: session.status,
+    statusLabel: ACTIVITY_STATUS_LABELS[session.status],
     actionCount: session.actionCount,
     updatedLabel: updatedAt.isValid() ? updatedAt.from(now) : "Unknown time",
   }

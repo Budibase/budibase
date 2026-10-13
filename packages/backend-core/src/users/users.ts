@@ -266,8 +266,10 @@ export async function paginatedUsers({
   } else if (appId) {
     userList = await searchGlobalUsersByApp(appId, opts)
     getKey = (doc: any) => getGlobalUserByAppPage(appId, doc)
-  } else if (query?.string?.email) {
-    userList = await searchGlobalUsersByEmail(query?.string?.email, opts)
+  } else if (query?.string?.email !== undefined) {
+    // an empty email search still pages in email order, so results can be
+    // appended in the same order they are displayed
+    userList = await searchGlobalUsersByEmail(query.string.email, opts)
     property = "email"
   } else if (query?.oneOf?._id) {
     userList = await bulkGetGlobalUsersById(query?.oneOf?._id, {

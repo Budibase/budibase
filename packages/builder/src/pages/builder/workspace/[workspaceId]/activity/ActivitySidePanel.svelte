@@ -6,7 +6,7 @@
     AgentRequestStatus,
     EscalationResolvedAction,
   } from "@budibase/types"
-  import dayjs from "dayjs"
+  import { formatActivityDate } from "./activityDate"
   import ActivityDetailsList, {
     type ActivityDetail,
   } from "./ActivityDetailsList.svelte"
@@ -103,6 +103,7 @@
         type: "status-badge",
         label: "Status",
         status: request.status,
+        statusLabel: statusChangedLabelByStatus[request.status],
       },
       {
         type: "text",
@@ -133,7 +134,7 @@
         type: "text",
         label: "Created at",
         value: request.createdAt
-          ? dayjs(request.createdAt).format("MMM D, YYYY h:mm A")
+          ? formatActivityDate(request.createdAt)
           : undefined,
         icon: "calendar",
       },
@@ -152,7 +153,7 @@
       .map(action => ({
         id: action.id,
         label: formatActionLabel(action),
-        timestamp: dayjs(action.timestamp).format("MMM D, YYYY h:mm A"),
+        timestamp: formatActivityDate(action.timestamp),
       }))
   })
 </script>
