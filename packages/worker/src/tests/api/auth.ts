@@ -46,11 +46,9 @@ export class AuthAPI extends TestAPI {
     cookie: string
     opts?: TestAPIOpts
   }) => {
-    const headers = this.config.defaultHeaders()
     return this.request
       .get("/api/global/auth/init")
-      .set(headers)
-      .set("Cookie", [headers.Cookie, cookie].filter(Boolean).join("; "))
+      .set("Cookie", cookie)
       .expect("Content-Type", /json/)
       .expect(opts?.status ? opts.status : 200)
   }

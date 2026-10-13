@@ -15,6 +15,7 @@ import {
   PreviewProjectAssignmentResponse,
   Project,
   ProjectResponse,
+  SetInitInfoRequest,
   UpdateProjectAssignmentRequest,
   UpdateProjectAssignmentResponse,
   UpdateProjectRequest,
@@ -298,7 +299,17 @@ export async function importTemplate(
         catalogueVersion: downloaded.template.catalogueVersion,
       },
     }
-    backendCoreUtils.clearCookie(ctx, constants.Cookie.Init)
+    try {
+      const initInfo = backendCoreUtils.getCookie<SetInitInfoRequest>(
+        ctx,
+        constants.Cookie.Init
+      )
+      if (initInfo?.projectTemplate?.templateKey === downloaded.template.key) {
+        backendCoreUtils.clearCookie(ctx, constants.Cookie.Init)
+      }
+    } catch {
+      // An invalid init cookie must not fail an import that already succeeded.
+    }
   } finally {
     await fsp.rm(downloaded.path, { force: true }).catch(error => {
       console.log("Failed to remove downloaded Project template", error)

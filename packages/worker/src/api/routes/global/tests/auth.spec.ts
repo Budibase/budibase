@@ -55,6 +55,30 @@ describe("/api/global/auth", () => {
   }
 
   describe("Project template init info", () => {
+    it("preserves template intent before a user or tenant has been selected", async () => {
+      const user = config.user
+      config.user = undefined
+      try {
+        await config.api.auth.setInitInfo({
+          body: {
+            projectTemplate: {
+              templateKey: "project/expense-approval",
+            },
+          },
+        })
+
+        const response = await config.api.auth.getInitInfo()
+
+        expect(response.body).toEqual({
+          projectTemplate: {
+            templateKey: "project/expense-approval",
+          },
+        })
+      } finally {
+        config.user = user
+      }
+    })
+
     it("persists an allow-listed Project template intent in the signed init cookie", async () => {
       const setResponse = await config.api.auth.setInitInfo({
         body: {
