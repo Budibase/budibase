@@ -53,7 +53,7 @@ function isCreatorByGroupMembership(
   groups?: UserGroup[]
 ) {
   const userGroups = groups?.filter(
-    group => user.userGroups?.indexOf(group._id!) !== -1
+    group => user.userGroups?.includes(group._id!)
   )
   if (userGroups && userGroups.length > 0) {
     return userGroups.some(group =>

@@ -4,8 +4,47 @@ import {
   InviteUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
+  type SaveUserOpts,
+  type SaveSSOUserFunction,
+  type User,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
+import {
+  getInitialUserGroups,
+  recordGroupChanges,
+  validateGroupChanges,
+} from "./groups"
+
+export const save = async ({
+  user,
+  options,
+}: {
+  user: User
+  options?: SaveUserOpts
+}) => {
+  const previousUser = user._id
+    ? await tenancy.getGlobalDB().tryGet<User>(user._id)
+    : undefined
+  if (!previousUser) {
+    const userGroups = await getInitialUserGroups({
+      userGroups: user.userGroups,
+    })
+    user = { ...user, ...(userGroups !== undefined && { userGroups }) }
+  }
+  const changes = await validateGroupChanges({
+    userGroups: user.userGroups,
+    previousGroups: previousUser?.userGroups,
+  })
+  const saved = await usersCore.UserDB.save(user, {
+    ...options,
+    assignDefaultGroup: false,
+  })
+  await recordGroupChanges({ changes, userIds: [saved._id!] })
+  return saved
+}
+
+export const saveSSO: SaveSSOUserFunction = (user, options) =>
+  save({ user, options })
 
 export async function invite(
   users: InviteUsersRequest
@@ -37,6 +76,7 @@ export async function invite(
   const tenantId = tenancy.getTenantId()
   for (let user of users) {
     try {
+      await validateGroupChanges({ userGroups: user.userInfo?.userGroups })
       let userInfo = user.userInfo
       if (!userInfo) {
         userInfo = {}

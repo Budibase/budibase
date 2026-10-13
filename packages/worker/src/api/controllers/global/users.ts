@@ -95,9 +95,12 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
       }
     }
 
-    const user = await userSdk.db.save(requestUser, {
-      currentUserId,
-      skipPasswordRegexValidation: requestUser.forceResetPassword === true,
+    const user = await userSdk.save({
+      user: requestUser,
+      options: {
+        currentUserId,
+        skipPasswordRegexValidation: requestUser.forceResetPassword === true,
+      },
     })
 
     ctx.body = {
@@ -196,7 +199,18 @@ const bulkCreate = async (users: User[], groupIds: string[]) => {
       "Max limit for upload is 1000 users. Please reduce file size and try again."
     )
   }
-  return await userSdk.db.bulkCreate(users, groupIds)
+  const userGroups = await userSdk.getInitialUserGroups({
+    userGroups: groupIds,
+  })
+  const changes = await userSdk.validateGroupChanges({ userGroups })
+  const created = await userSdk.db.bulkCreate(users, userGroups, {
+    assignDefaultGroup: false,
+  })
+  await userSdk.recordGroupChanges({
+    changes,
+    userIds: created.successful.map(user => user._id!),
+  })
+  return created
 }
 
 export const bulkUpdate = async (
@@ -825,7 +839,7 @@ export const inviteAccept = async (
             ...users.deriveUserFieldsFromInvite(info),
           }
 
-          const saved = await userSdk.db.save(request)
+          const saved = await userSdk.save({ user: request })
           await events.user.inviteAccepted(saved)
           return saved
         })

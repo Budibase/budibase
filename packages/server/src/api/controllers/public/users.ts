@@ -5,9 +5,10 @@ import {
   saveGlobalUser,
 } from "../../../utilities/workerRequests"
 import { publicApiUserFix } from "../../../utilities/users"
-import { db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, users } from "@budibase/backend-core"
 import { search as stringSearch } from "./utils"
 import type { UserCtx, User } from "@budibase/types"
+import { Feature } from "@budibase/types"
 import type { Next } from "koa"
 import { sdk } from "@budibase/pro"
 import { isEqual, cloneDeep } from "lodash"
@@ -29,6 +30,15 @@ const NO_ROLES_MSG =
   "Roles/admin/builder can only be set on business/enterprise licenses - input ignored."
 
 async function createUpdateResponse(ctx: UserCtx, user?: User) {
+  if (ctx.request.body.userGroups !== undefined) {
+    if (!users.isAdmin(ctx.user)) {
+      ctx.throw(403, "Only global admins can update user group memberships.")
+    }
+    await sdk.features.checkFeatures([
+      Feature.EXPANDED_PUBLIC_API,
+      Feature.USER_GROUPS,
+    ])
+  }
   const base = cloneDeep(ctx.request.body)
   ctx = await sdk.publicApi.users.roleCheck(ctx, user)
   const requestedApps = ctx.request.body.builder?.apps

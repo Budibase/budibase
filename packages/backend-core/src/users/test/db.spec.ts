@@ -218,6 +218,74 @@ describe("UserDB", () => {
         )
       })
 
+      it.each([true, false])(
+        "accounts for creator membership changes when adding is %s",
+        async adding => {
+          await config.doInTenant(async () => {
+            const groupId = `gr_${generator.guid()}`
+            await getGlobalDB().put<UserGroup>({
+              ...structures.userGroups.userGroup(),
+              _id: groupId,
+              roles: { app_example: "CREATOR" },
+            })
+            if (!adding) {
+              user = await db.save({ ...user, userGroups: [groupId] })
+            }
+            jest.clearAllMocks()
+
+            const saved = await db.save({
+              ...user,
+              userGroups: adding ? [groupId] : [],
+            })
+
+            expect(saved.userGroups).toEqual(adding ? [groupId] : [])
+            expect(quotas.addUsers).toHaveBeenCalledWith(
+              0,
+              adding ? 1 : 0,
+              expect.any(Function)
+            )
+            if (adding) {
+              expect(quotas.removeUsers).not.toHaveBeenCalled()
+            } else {
+              expect(quotas.removeUsers).toHaveBeenCalledWith(0, 1)
+            }
+          })
+        }
+      )
+
+      it("preserves creator memberships and quotas during partial updates", async () => {
+        await config.doInTenant(async () => {
+          const groupId = `gr_${generator.guid()}`
+          await getGlobalDB().put<UserGroup>({
+            ...structures.userGroups.userGroup(),
+            _id: groupId,
+            roles: { app_example: "CREATOR" },
+          })
+          user = await db.save({ ...user, userGroups: [groupId] })
+          jest.clearAllMocks()
+
+          const saved = await db.save({
+            _id: user._id,
+            _rev: user._rev,
+            email: user.email,
+            tenantId: user.tenantId,
+            roles: user.roles,
+            firstName: "Updated",
+          })
+
+          expect(saved).toMatchObject({
+            firstName: "Updated",
+            userGroups: [groupId],
+          })
+          expect(quotas.addUsers).toHaveBeenCalledWith(
+            0,
+            0,
+            expect.any(Function)
+          )
+          expect(quotas.removeUsers).not.toHaveBeenCalled()
+        })
+      })
+
       it("can update user properties", async () => {
         await config.doInTenant(async () => {
           const updatedName = generator.first()

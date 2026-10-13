@@ -91,6 +91,18 @@ const userSchema = object(
           "A map of app ID (production app ID, minus the _dev component) to a role ID, e.g. ADMIN.",
       },
     },
+    userGroups: {
+      description:
+        "The IDs of the user's groups. Requires a global admin and the user groups and expanded public API features. " +
+        "On update, replaces memberships; omit to preserve them or provide an empty array to remove all memberships. " +
+        "SCIM-managed memberships cannot be added or removed. New users without group assignments receive the default group, if configured.",
+      type: "array",
+      uniqueItems: true,
+      items: {
+        type: "string",
+        pattern: "^gr_",
+      },
+    },
   },
   { required: ["email"] }
 )
