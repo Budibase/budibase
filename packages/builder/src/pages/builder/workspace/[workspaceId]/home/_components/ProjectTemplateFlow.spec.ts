@@ -34,6 +34,7 @@ vi.mock("@/stores/portal", () => ({
 
 import ProjectTemplateFlow from "./ProjectTemplateFlow.svelte"
 import HomeProjectTabs from "./HomeProjectTabs.svelte"
+import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
 
 const template = {
   key: "project/support",
@@ -98,7 +99,15 @@ describe("ProjectTemplateFlow", () => {
 
   it("imports a discovered template directly into the current workspace", async () => {
     const onImported = vi.fn()
-    const { component } = renderFlow({ onImported })
+    const { component: tabs } = render(HomeProjectTabs)
+    const opener = screen.getByRole("button", {
+      name: "Project create and import actions",
+    })
+    const { component } = renderFlow({
+      onImported,
+      onGalleryClose: () => tabs.focusCreateAction(),
+    })
+    opener.focus()
 
     await component.showGallery()
     await screen.findByRole("heading", { name: "Project templates" })
@@ -121,6 +130,85 @@ describe("ProjectTemplateFlow", () => {
         screen.queryByRole("heading", { name: "Project templates" })
       ).not.toBeInTheDocument()
     )
+    expect(opener).toHaveFocus()
+  })
+
+  it("lets the import summary own focus after the gallery closes", async () => {
+    const { component: tabs } = render(HomeProjectTabs)
+    const { component: summary } = render(ConfirmDialog, {
+      props: { title: "Project imported", okText: "Done", warning: false },
+    })
+    const { component } = renderFlow({
+      onGalleryClose: () => tabs.focusCreateAction(),
+      onImported: async () => {
+        summary.show()
+        await tick()
+      },
+    })
+
+    await component.showGallery()
+    await fireEvent.click(
+      await screen.findByRole("button", { name: "Use Support Template" })
+    )
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Done" })).toHaveFocus()
+    )
+  })
+
+  it("ignores import completion after the current workspace changes", async () => {
+    let resolveImport!: (response: typeof importResponse) => void
+    mocks.importTemplate.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveImport = resolve
+      })
+    )
+    const onImported = vi.fn()
+    const onGalleryClose = vi.fn()
+    const { component, rerender } = renderFlow({ onImported, onGalleryClose })
+    await component.showGallery()
+    await fireEvent.click(
+      await screen.findByRole("button", { name: "Use Support Template" })
+    )
+    await rerender({
+      currentWorkspaceId: "app_dev_other",
+      currentWorkspaceName: "Finance",
+      onImported,
+      onGalleryClose,
+    })
+    resolveImport(importResponse)
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Use Support Template" })
+      ).toBeEnabled()
+    )
+    expect(mocks.importTemplate).toHaveBeenCalledWith({
+      templateKey: template.key,
+      workspaceId: "app_dev_current",
+    })
+    expect(onImported).not.toHaveBeenCalled()
+    expect(onGalleryClose).not.toHaveBeenCalled()
+  })
+
+  it("ignores import completion after leaving the gallery page", async () => {
+    let resolveImport!: (response: typeof importResponse) => void
+    const importing = new Promise<typeof importResponse>(resolve => {
+      resolveImport = resolve
+    })
+    mocks.importTemplate.mockReturnValueOnce(importing)
+    const onImported = vi.fn()
+    const { component, unmount } = renderFlow({ onImported })
+    await component.showGallery()
+    await fireEvent.click(
+      await screen.findByRole("button", { name: "Use Support Template" })
+    )
+    unmount()
+    resolveImport(importResponse)
+    await importing
+    await tick()
+
+    expect(onImported).not.toHaveBeenCalled()
   })
 
   it("shows discovery while the catalogue loads and ignores re-entry", async () => {
@@ -251,7 +339,7 @@ describe("ProjectTemplateFlow", () => {
       name: "Project create and import actions",
     })
     const { component } = renderFlow({
-      onGalleryCancel: () => tabs.focusCreateAction(),
+      onGalleryClose: () => tabs.focusCreateAction(),
     })
     opener.focus()
 

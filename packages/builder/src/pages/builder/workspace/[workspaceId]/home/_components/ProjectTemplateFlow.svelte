@@ -9,6 +9,7 @@
     type ImportProjectTemplateResponse,
     type ProjectTemplateMetadata,
   } from "@budibase/types"
+  import { onDestroy } from "svelte"
   import ProjectTemplateGalleryModal from "./ProjectTemplateGalleryModal.svelte"
 
   interface ImportCompletedPayload {
@@ -20,14 +21,14 @@
     currentWorkspaceId?: string
     currentWorkspaceName?: string
     onImported?: (_payload: ImportCompletedPayload) => unknown
-    onGalleryCancel?: () => void
+    onGalleryClose?: () => void
   }
 
   let {
     currentWorkspaceId = "",
     currentWorkspaceName = "",
     onImported = () => {},
-    onGalleryCancel = () => {},
+    onGalleryClose = () => {},
   }: Props = $props()
 
   let galleryModal = $state<ModalAPI>()
@@ -36,6 +37,7 @@
   let galleryError = $state("")
   let isGalleryImporting = $state(false)
   let selectedGalleryTemplateKey = $state("")
+  let isDestroyed = false
 
   const templatesEnabled = $derived(
     $featureFlags[FeatureFlag.PROJECTS] && $featureFlags[FeatureFlag.TEMPLATES]
@@ -62,15 +64,20 @@
       return
     }
 
+    const workspaceId = currentWorkspaceId
     selectedGalleryTemplateKey = selectedTemplate.key
     isGalleryImporting = true
     try {
       const response = await projectsStore.importTemplate({
         templateKey: selectedTemplate.key,
-        workspaceId: currentWorkspaceId,
+        workspaceId,
       })
+      if (isDestroyed || workspaceId !== currentWorkspaceId) {
+        return
+      }
       galleryModal?.hide()
-      await completeImport({ response, workspaceId: currentWorkspaceId })
+      onGalleryClose()
+      await completeImport({ response, workspaceId })
     } catch (error) {
       console.error(error)
       notifications.error(
@@ -109,13 +116,17 @@
     galleryModal?.show()
     await loadGalleryTemplates()
   }
+
+  onDestroy(() => {
+    isDestroyed = true
+  })
 </script>
 
 {#if templatesEnabled}
   <Modal
     bind:this={galleryModal}
     disableCancel={isGalleryImporting}
-    on:cancel={onGalleryCancel}
+    on:cancel={onGalleryClose}
   >
     <ProjectTemplateGalleryModal
       templates={galleryTemplates}

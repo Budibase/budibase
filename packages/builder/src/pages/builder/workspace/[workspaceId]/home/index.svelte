@@ -1235,7 +1235,7 @@
     currentWorkspaceId={$workspaceStore.appId}
     currentWorkspaceName={$workspaceStore.name}
     onImported={handleProjectTemplateImported}
-    onGalleryCancel={() => homeProjectTabs?.focusCreateAction()}
+    onGalleryClose={() => homeProjectTabs?.focusCreateAction()}
   />
 
   <Modal bind:this={importProjectResultModal}>
