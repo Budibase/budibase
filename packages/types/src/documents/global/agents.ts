@@ -264,6 +264,7 @@ export interface AgentMessageUsage {
 }
 
 export interface AgentApprovalClarification {
+  action: "approve" | "reject"
   options: Array<{ escalationId: string; label: string }>
 }
 

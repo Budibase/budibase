@@ -140,7 +140,11 @@ describe("approval messages", () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       await createApproval({ id: "esc_200", price: 200 })
       await createApproval({ id: "esc_500", price: 500 })
-      decide({ decision: "ambiguous", escalationIds: ["esc_200", "esc_500"] })
+      decide({
+        decision: "ambiguous",
+        action: "approve",
+        escalationIds: ["esc_200", "esc_500"],
+      })
       const clarification = await respondToApprovalMessage(inputs)
       expect(text(clarification)).toContain(
         "Which request do you want to approve?"
@@ -191,47 +195,67 @@ describe("approval messages", () => {
     })
   })
 
-  it("approves through the original notification when recipients identify the approver", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      await createApproval({ id: "esc_200", price: 200, approvers: [] })
-      const db = context.getWorkspaceDB()
-      const recipient = {
-        type: EscalationNotificationChannel.SLACK,
-        config: { globalUserId: "approver_1" },
-      }
-      const doc = await db.get<EscalationContextDoc>(
-        "escalation_context_esc_200"
-      )
-      await db.put({ ...doc, recipients: [recipient] })
-      const notificationId = `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}notification_200`
-      await db.put({
-        _id: notificationId,
-        escalationId: "esc_200",
-        appId: config.getProdWorkspaceId(),
-        tenantId: config.getTenantId(),
-        recipient,
-        status: "sent",
-      })
-      decide({ decision: "approve", escalationId: "esc_200" })
-      const result = await respondToApprovalMessage(inputs)
-      expect(text(result)).toContain("Your approval was recorded")
-      expect(
-        (await db.get<EscalationContextDoc>("escalation_context_esc_200"))
-          .resolution
-      ).toEqual("resolved")
-      expect(await db.get(notificationId)).toEqual(
-        expect.objectContaining({
-          responses: [
-            expect.objectContaining({
-              userId: "approver_1",
-              actionId: EscalationAction.APPROVE,
-            }),
-          ],
+  it.each([
+    {
+      decision: "approve",
+      label: "approval",
+      actionId: EscalationAction.APPROVE,
+      accepted: true,
+    },
+    {
+      decision: "reject",
+      label: "rejection",
+      actionId: EscalationAction.REJECT,
+      accepted: false,
+    },
+  ])(
+    "records $decision through the original notification",
+    async ({ decision, label, actionId, accepted }) => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await createApproval({ id: "esc_200", price: 200, approvers: [] })
+        const db = context.getWorkspaceDB()
+        const recipient = {
+          type: EscalationNotificationChannel.SLACK,
+          config: { globalUserId: "approver_1" },
+        }
+        const doc = await db.get<EscalationContextDoc>(
+          "escalation_context_esc_200"
+        )
+        await db.put({ ...doc, recipients: [recipient] })
+        const notificationId = `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}notification_200`
+        await db.put({
+          _id: notificationId,
+          escalationId: "esc_200",
+          appId: config.getProdWorkspaceId(),
+          tenantId: config.getTenantId(),
+          recipient,
+          status: "sent",
         })
-      )
-      expect(escalationProcessor.resolve).toHaveBeenCalledTimes(1)
-    })
-  })
+        decide({ decision, escalationId: "esc_200" })
+        const result = await respondToApprovalMessage(inputs)
+        expect(text(result)).toContain(`Your ${label} was recorded`)
+        expect(
+          (await db.get<EscalationContextDoc>("escalation_context_esc_200"))
+            .resolution
+        ).toEqual("resolved")
+        expect(await db.get(notificationId)).toEqual(
+          expect.objectContaining({
+            responses: [
+              expect.objectContaining({
+                userId: "approver_1",
+                actionId,
+              }),
+            ],
+          })
+        )
+        expect(escalationProcessor.resolve).toHaveBeenCalledTimes(1)
+        expect(escalationProcessor.resolve).toHaveBeenCalledWith(
+          "esc_200",
+          expect.objectContaining({ accepted })
+        )
+      })
+    }
+  )
 
   it("counts a recipient's repeated text approval once while other recipients are pending", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -277,6 +301,79 @@ describe("approval messages", () => {
     })
   })
 
+  it("rejects the original purchase by message without approving it", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await createApproval({ id: "esc_200", price: 200 })
+      decide({ decision: "reject", escalationId: "esc_200" })
+      const result = await respondToApprovalMessage({
+        ...inputs,
+        latestPrompt: "Rechaza la compra del portátil de 200 euros",
+      })
+      const doc = await context
+        .getWorkspaceDB()
+        .get<EscalationContextDoc>("escalation_context_esc_200")
+      expect(text(result)).toContain(
+        "Your rejection was recorded for: Laptop costing 200"
+      )
+      expect(doc.approvals).toEqual([
+        expect.objectContaining({
+          userId: "approver_1",
+          actionId: EscalationAction.REJECT,
+        }),
+      ])
+      expect(escalationProcessor.resolve).toHaveBeenCalledTimes(1)
+      expect(escalationProcessor.resolve).toHaveBeenCalledWith(
+        "esc_200",
+        expect.objectContaining({ accepted: false })
+      )
+    })
+  })
+
+  it("preserves rejection intent when choosing a numbered option", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await createApproval({ id: "esc_200", price: 200 })
+      await createApproval({ id: "esc_500", price: 500 })
+      decide({
+        decision: "ambiguous",
+        action: "reject",
+        escalationIds: ["esc_200", "esc_500"],
+      })
+      const clarification = await respondToApprovalMessage({
+        ...inputs,
+        latestPrompt: "Rechaza la compra del portátil",
+      })
+      const options =
+        clarification?.metadata?.approvalClarification?.options || []
+      if (!clarification || !options.length)
+        throw new Error("Expected rejection clarification")
+      const index =
+        options.findIndex(option => option.escalationId === "esc_200") + 1
+      const selection = {
+        ...inputs,
+        latestPrompt: String(index),
+        messages: [clarification],
+      }
+      await respondToApprovalMessage(selection)
+      await respondToApprovalMessage(selection)
+      const db = context.getWorkspaceDB()
+      expect(
+        (await db.get<EscalationContextDoc>("escalation_context_esc_200"))
+          .approvals
+      ).toEqual([
+        expect.objectContaining({ actionId: EscalationAction.REJECT }),
+      ])
+      expect(
+        (await db.get<EscalationContextDoc>("escalation_context_esc_500"))
+          .resolution
+      ).toEqual("pending")
+      expect(escalationProcessor.resolve).toHaveBeenCalledTimes(1)
+      expect(escalationProcessor.resolve).toHaveBeenCalledWith(
+        "esc_200",
+        expect.objectContaining({ accepted: false })
+      )
+    })
+  })
+
   it("preserves unanimous approval requirements", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       await createApproval({
@@ -316,7 +413,11 @@ describe("approval messages", () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       await createApproval({ id: "esc_200", price: 200 })
       await createApproval({ id: "esc_500", price: 500 })
-      decide({ decision: "ambiguous", escalationIds: ["esc_200", "esc_500"] })
+      decide({
+        decision: "ambiguous",
+        action: "approve",
+        escalationIds: ["esc_200", "esc_500"],
+      })
       const clarification = await respondToApprovalMessage(inputs)
       if (!clarification) throw new Error("Expected approval clarification")
       const db = context.getWorkspaceDB()

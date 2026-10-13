@@ -112,7 +112,7 @@ const buildRequestResponseMessage = ({
           text: [
             "This request is already waiting for approval:",
             initialization.pendingApproval.label,
-            "You can reply with an explicit approval, such as 'approve this request', or use the buttons on the original approval message. No new approval or action was created.",
+            "You can explicitly reply 'approve this request' or 'reject this request', or use the buttons on the original approval message. No new approval or action was created.",
           ].join("\n\n"),
         },
       ],
@@ -135,7 +135,7 @@ const buildRequestResponseMessage = ({
     introduction,
     ...options,
     options.length
-      ? "Reply with the option number or enough detail to identify one request. To approve a request, explicitly say you approve it."
+      ? "Reply with the option number or enough detail to identify one request. To approve or reject a request, explicitly state your decision."
       : "No matching pending request remains. Please describe the request you want to continue.",
   ].join("\n\n")
 
