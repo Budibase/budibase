@@ -567,36 +567,43 @@ describe("resumeOperation", () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
       mockApprovedRun("Approved and booked.")
+      const now = Date.parse("2026-10-13T10:00:00.000Z")
+      const clock = jest.spyOn(Date, "now").mockReturnValue(now)
+      try {
+        await resumeOperation({
+          doc: baseDoc({ requestId, response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
 
-      await resumeOperation({
-        doc: baseDoc({ requestId, response: { accepted: true } }),
-        escalationId: "esc_primary",
-        resolution: "resolved",
-        ctx: baseCtx,
-      })
-
-      expect(enqueueLifecycleMock).toHaveBeenCalledWith({
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        signal: "active",
-        timestamp: expect.any(String),
-      })
-      expect(enqueueLifecycleMock).toHaveBeenCalledWith({
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        signal: "completed",
-        timestamp: expect.any(String),
-      })
-      expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-        {
-          agentId: "agent_1",
+        // With a fixed clock, nextSessionTimestamp() advances by 1 ms per emission:
+        // active at now, executed at now + 1, then completed at now + 2.
+        expect(enqueueLifecycleMock).toHaveBeenCalledWith({
           sourceType: "agent_session",
           sourceId: "session_1",
-          sessionId: "session_1",
-          requestId,
-        },
-        expect.any(Number)
-      )
+          signal: "active",
+          timestamp: new Date(now).toISOString(),
+        })
+        expect(enqueueLifecycleMock).toHaveBeenCalledWith({
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          signal: "completed",
+          timestamp: new Date(now + 2).toISOString(),
+        })
+        expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+          {
+            agentId: "agent_1",
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            sessionId: "session_1",
+            requestId,
+          },
+          now + 1
+        )
+      } finally {
+        clock.mockRestore()
+      }
     })
   })
 
