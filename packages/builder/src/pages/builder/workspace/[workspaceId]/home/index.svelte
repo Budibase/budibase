@@ -1002,6 +1002,14 @@
       projectsEnabled,
     })
 
+    const pendingImport = takeProjectImportResult({
+      workspaceId,
+      userId: currentUserId,
+    })
+    if (pendingImport) {
+      await completeProjectImport(pendingImport)
+    }
+
     await Promise.all([
       agentsStore.fetchAgents(),
       ...(projectsEnabled
@@ -1013,13 +1021,6 @@
           ]
         : []),
     ])
-    const pendingImport = takeProjectImportResult({
-      workspaceId,
-      userId: currentUserId,
-    })
-    if (pendingImport) {
-      await completeProjectImport(pendingImport)
-    }
   })
 </script>
 
