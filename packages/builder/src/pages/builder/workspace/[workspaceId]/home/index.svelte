@@ -33,6 +33,7 @@
     agentsStore,
     workspacesStore,
     auth,
+    enrichedApps,
     featureFlags,
     licensing,
     projectsStore,
@@ -71,6 +72,7 @@
     type WorkspaceResource,
     SourceName,
   } from "@budibase/types"
+  import { sdk } from "@budibase/shared-core"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import { goto as gotoStore, url as urlStore } from "@roxi/routify"
   import { onMount } from "svelte"
@@ -148,6 +150,17 @@
   $: currentUserId = $auth.user?._id || ""
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: templatesEnabled = projectsEnabled && $featureFlags[FeatureFlag.TEMPLATES]
+  $: canCreateProjectTemplateWorkspace =
+    !!$auth.user &&
+    sdk.users.canCreateApps($auth.user) &&
+    !$licensing.isFreePlan
+  $: projectTemplateWorkspaces = $enrichedApps
+    .filter(workspace => workspace.editable && workspace.devId)
+    .map(workspace => ({
+      id: workspace.devId!,
+      name: workspace.name?.trim() || "Untitled workspace",
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: selectedProjectResource = selectedRow
     ? {
@@ -574,9 +587,19 @@
 
   const handleProjectTemplateImported = async ({
     response,
+    workspaceId,
   }: {
     response: ImportProjectTemplateResponse
+    workspaceId: string
   }) => {
+    if (workspaceId !== $workspaceStore.appId) {
+      goto(
+        `/builder/workspace/${workspaceId}/home?project=${encodeURIComponent(
+          response.project._id
+        )}`
+      )
+      return
+    }
     await completeProjectImport(response)
   }
 
@@ -1232,8 +1255,10 @@
 
   <ProjectTemplateFlow
     bind:this={projectTemplateFlow}
+    workspaces={projectTemplateWorkspaces}
     currentWorkspaceId={$workspaceStore.appId}
     currentWorkspaceName={$workspaceStore.name}
+    canCreateWorkspace={canCreateProjectTemplateWorkspace}
     onImported={handleProjectTemplateImported}
     onGalleryClose={() => homeProjectTabs?.focusCreateAction()}
   />
