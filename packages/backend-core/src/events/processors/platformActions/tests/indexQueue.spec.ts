@@ -218,6 +218,35 @@ describe("initPlatformActionSessionIndexQueue", () => {
     jest.restoreAllMocks()
   })
 
+  it.each([undefined, NaN, 0, -1, Infinity, -Infinity, 1.5])(
+    "uses the default concurrency when given %s",
+    async concurrency => {
+      jest.resetModules()
+      const freshQueue = await import("../../../../queue")
+      const processSpy = jest
+        .spyOn(freshQueue.BudibaseQueue.prototype, "process")
+        .mockResolvedValue(undefined)
+      const freshIndexQueue = await import("../indexQueue")
+
+      await freshIndexQueue.initPlatformActionSessionIndexQueue({ concurrency })
+
+      expect(processSpy).toHaveBeenCalledWith(4, expect.any(Function))
+    }
+  )
+
+  it.each([1, 8])("preserves a valid concurrency of %s", async concurrency => {
+    jest.resetModules()
+    const freshQueue = await import("../../../../queue")
+    const processSpy = jest
+      .spyOn(freshQueue.BudibaseQueue.prototype, "process")
+      .mockResolvedValue(undefined)
+    const freshIndexQueue = await import("../indexQueue")
+
+    await freshIndexQueue.initPlatformActionSessionIndexQueue({ concurrency })
+
+    expect(processSpy).toHaveBeenCalledWith(concurrency, expect.any(Function))
+  })
+
   it("is not started by enqueuing a job", async () => {
     jest.resetModules()
     const freshQueue = await import("../../../../queue")

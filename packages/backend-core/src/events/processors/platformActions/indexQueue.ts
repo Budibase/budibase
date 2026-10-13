@@ -86,6 +86,10 @@ export async function initPlatformActionSessionIndexQueue({
     return
   }
 
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    concurrency = DEFAULT_INDEX_QUEUE_CONCURRENCY
+  }
+
   platformActionSessionIndexQueueInitialised = true
 
   let processPromise: Promise<void>
