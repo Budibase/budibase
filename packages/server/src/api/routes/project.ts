@@ -1,6 +1,7 @@
 import { middleware } from "@budibase/backend-core"
 import Joi from "joi"
 import { projectsEnabled } from "../../middleware/projectsEnabled"
+import { projectTemplatesEnabled } from "../../middleware/projectTemplatesEnabled"
 import {
   AppType,
   middleware as appInfoMiddleware,
@@ -16,6 +17,11 @@ const baseSchema = {
 
 builderRoutes
   .get("/api/projects", projectsEnabled, controller.fetch)
+  .get(
+    "/api/projects/templates",
+    projectTemplatesEnabled,
+    controller.fetchTemplates
+  )
   .post(
     "/api/projects/assignments/preview",
     projectsEnabled,

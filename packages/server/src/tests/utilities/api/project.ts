@@ -2,6 +2,7 @@ import {
   CreateProjectRequest,
   CreateProjectResponse,
   ExportProjectRequest,
+  FetchProjectTemplatesResponse,
   FetchProjectsResponse,
   ImportProjectRequest,
   ImportProjectResponse,
@@ -25,6 +26,15 @@ export class ProjectAPI extends TestAPI {
     return await this._get<FetchProjectsResponse>("/api/projects", {
       expectations,
     })
+  }
+
+  fetchTemplates = async (expectations?: Expectations) => {
+    return await this._get<FetchProjectTemplatesResponse>(
+      "/api/projects/templates",
+      {
+        expectations,
+      }
+    )
   }
 
   create = async (

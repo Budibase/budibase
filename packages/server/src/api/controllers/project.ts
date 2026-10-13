@@ -4,6 +4,7 @@ import {
   Ctx,
   ExportProjectRequest,
   ExportProjectResponse,
+  FetchProjectTemplatesResponse,
   FetchProjectsResponse,
   ImportProjectRequest,
   ImportProjectResponse,
@@ -262,4 +263,10 @@ export async function importBundle(
       encryptPassword: ctx.request.body?.encryptPassword || undefined,
     }
   )
+}
+
+export async function fetchTemplates(
+  ctx: Ctx<void, FetchProjectTemplatesResponse>
+) {
+  ctx.body = await sdk.projects.fetchProjectTemplates()
 }
