@@ -36,6 +36,12 @@ interface MeasuredSubtree extends Dimensions {
   rootCenterY: number
 }
 
+interface SubtreeLayoutOptions {
+  nodeId: string
+  x: number
+  centerY: number
+}
+
 const POST_LOOP_BRANCH_CLEARANCE = 120
 
 const applySubflowNodePositions = (
@@ -96,6 +102,8 @@ class AutomationLayoutEngine {
   private readonly outgoing: Record<string, FlowEdge[]> = {}
   private readonly incoming = new Set<string>()
   private readonly measured = new Map<string, MeasuredSubtree>()
+  private readonly layoutPath = new Set<string>()
+  private readonly laidOut = new Set<string>()
 
   constructor(
     private readonly graph: { nodes: FlowNode[]; edges: FlowEdge[] },
@@ -117,14 +125,21 @@ class AutomationLayoutEngine {
   }
 
   layout() {
-    const roots = this.graph.nodes.filter(
-      node => !node.parentId && !this.incoming.has(node.id)
-    )
+    const topLevelNodes = this.graph.nodes.filter(node => !node.parentId)
+    const roots = topLevelNodes.filter(node => !this.incoming.has(node.id))
+    const layoutRoots = roots.length > 0 ? roots : topLevelNodes
 
     let nextTop = 0
-    roots.forEach(root => {
+    layoutRoots.forEach(root => {
+      if (this.laidOut.has(root.id)) {
+        return
+      }
       const measured = this.measureSubtree(root.id)
-      this.layoutSubtree(root.id, 0, nextTop + measured.rootCenterY)
+      this.layoutSubtree({
+        nodeId: root.id,
+        x: 0,
+        centerY: nextTop + measured.rootCenterY,
+      })
       nextTop += measured.height + this.nodesep
     })
 
@@ -222,9 +237,9 @@ class AutomationLayoutEngine {
     }
   }
 
-  private layoutSubtree(nodeId: string, x: number, centerY: number): Bounds {
+  private layoutSubtree({ nodeId, x, centerY }: SubtreeLayoutOptions): Bounds {
     const node = this.nodesById[nodeId]
-    if (!node) {
+    if (!node || this.layoutPath.has(nodeId)) {
       return boundsFromSize(x, centerY, { width: 0, height: 0 })
     }
 
@@ -236,6 +251,7 @@ class AutomationLayoutEngine {
     }
     node.targetPosition = Position.Left
     node.sourcePosition = Position.Right
+    this.laidOut.add(nodeId)
 
     const childEdges = this.getChildEdges(nodeId)
     const nodeBounds = boundsFromSize(x, nodeTop, nodeSize)
@@ -244,13 +260,18 @@ class AutomationLayoutEngine {
       return nodeBounds
     }
 
-    const branchEdges = this.getBranchEdges(childEdges)
-    const childBounds =
-      branchEdges.length > 0
-        ? this.layoutBranchSubtrees(node, nodeBounds, branchEdges)
-        : this.layoutSequentialSubtree(node, nodeBounds, childEdges[0])
+    this.layoutPath.add(nodeId)
+    try {
+      const branchEdges = this.getBranchEdges(childEdges)
+      const childBounds =
+        branchEdges.length > 0
+          ? this.layoutBranchSubtrees(node, nodeBounds, branchEdges)
+          : this.layoutSequentialSubtree(node, nodeBounds, childEdges[0])
 
-    return unionBounds([nodeBounds, childBounds])
+      return unionBounds([nodeBounds, childBounds])
+    } finally {
+      this.layoutPath.delete(nodeId)
+    }
   }
 
   private layoutSequentialSubtree(
@@ -261,11 +282,11 @@ class AutomationLayoutEngine {
     const child = this.measureSubtree(edge.target)
     const nodeCenterY = nodeBounds.top + getNodeDimensions(node).height / 2
     const childTop = nodeCenterY - child.height / 2
-    return this.layoutSubtree(
-      edge.target,
-      nodeBounds.right + this.getSequentialGap(node),
-      childTop + child.rootCenterY
-    )
+    return this.layoutSubtree({
+      nodeId: edge.target,
+      x: nodeBounds.right + this.getSequentialGap(node),
+      centerY: childTop + child.rootCenterY,
+    })
   }
 
   private layoutBranchSubtrees(
@@ -292,11 +313,11 @@ class AutomationLayoutEngine {
     const bounds: Bounds[] = []
     lanes.forEach(lane => {
       bounds.push(
-        this.layoutSubtree(
-          lane.edge.target,
-          childX,
-          nextTop + lane.measured.rootCenterY
-        )
+        this.layoutSubtree({
+          nodeId: lane.edge.target,
+          x: childX,
+          centerY: nextTop + lane.measured.rootCenterY,
+        })
       )
       nextTop += lane.measured.height + this.nodesep
     })
