@@ -77,7 +77,7 @@ describe("row action creation navigation", () => {
       target: { value: "Approve" },
     })
     await fireEvent.click(
-      screen.getByRole("button", { name: "Create", exact: true })
+      screen.getByRole("button", { name: "Create" })
     )
 
     await waitFor(() =>
