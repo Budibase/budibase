@@ -4,6 +4,10 @@ import { WorkspaceBackupQueueData } from "@budibase/types"
 let backupQueue: queue.BudibaseQueue<WorkspaceBackupQueueData>
 
 export function init() {
+  if (backupQueue) {
+    return
+  }
+
   backupQueue = new queue.BudibaseQueue<WorkspaceBackupQueueData>(
     queue.JobQueue.APP_BACKUP,
     {
