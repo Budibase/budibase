@@ -76,9 +76,7 @@ describe("row action creation navigation", () => {
     await fireEvent.input(screen.getByLabelText("Name"), {
       target: { value: "Approve" },
     })
-    await fireEvent.click(
-      screen.getByRole("button", { name: "Create" })
-    )
+    await fireEvent.click(screen.getByRole("button", { name: "Create" }))
 
     await waitFor(() =>
       expect(mocks.goto).toHaveBeenCalledWith(
