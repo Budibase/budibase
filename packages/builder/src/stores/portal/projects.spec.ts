@@ -3,6 +3,7 @@ import {
   ResourceType,
   type FetchProjectsResponse,
   type ImportProjectResponse,
+  type ImportProjectTemplateResponse,
   type ProjectResponse,
   type UpdateProjectResponse,
 } from "@budibase/types"
@@ -20,6 +21,8 @@ vi.mock("@/api", () => {
         delete: vi.fn(),
         exportBundle: vi.fn(),
         importBundle: vi.fn(),
+        fetchTemplates: vi.fn(),
+        importTemplate: vi.fn(),
       },
     },
   }
@@ -36,6 +39,7 @@ const createProject = vi.mocked(API.projects.create)
 const updateProject = vi.mocked(API.projects.update)
 const deleteProject = vi.mocked(API.projects.delete)
 const importBundle = vi.mocked(API.projects.importBundle)
+const importTemplate = vi.mocked(API.projects.importTemplate)
 
 const defer = <T>() => {
   let resolve!: (value: T) => void
@@ -206,6 +210,87 @@ describe("ProjectsStore", () => {
     await fetchPromise
 
     expect(getProjects(store)).toEqual([importResponse.project, existing])
+  })
+
+  const templateResponse = (): ImportProjectTemplateResponse => ({
+    project: project("project_imported"),
+    resources: { [ResourceType.PROJECT]: ["project_imported"] },
+    unsupportedContent: [],
+    requirements: [],
+    template: {
+      key: "project/operations",
+      version: "1.0.0",
+      packageVersion: 2,
+      catalogueVersion: "2026-10-07.1",
+    },
+  })
+
+  it("imports into the selected destination without changing current projects", async () => {
+    const store = new ProjectsStore()
+    const current = project("project_current")
+    const response = templateResponse()
+    importTemplate.mockResolvedValue(response)
+    fetchProjects.mockResolvedValue({ projects: [current] })
+    await store.fetch("app_dev_current")
+
+    await expect(
+      store.importTemplate({
+        templateKey: "project/operations",
+        workspaceId: "app_dev_destination",
+      })
+    ).resolves.toEqual(response)
+
+    expect(importTemplate).toHaveBeenCalledWith({
+      templateKey: "project/operations",
+      workspaceId: "app_dev_destination",
+    })
+    expect(getProjects(store)).toEqual([current])
+  })
+
+  it("keeps a template import when an older fetch finishes afterwards", async () => {
+    const store = new ProjectsStore()
+    const current = project("project_current")
+    const response = templateResponse()
+    const staleFetch = defer<FetchProjectsResponse>()
+    fetchProjects
+      .mockResolvedValueOnce({ projects: [current] })
+      .mockReturnValueOnce(staleFetch.promise)
+    importTemplate.mockResolvedValue(response)
+    await store.fetch("app_dev_current")
+    const fetching = store.fetch("app_dev_current")
+
+    await store.importTemplate({
+      templateKey: "project/operations",
+      workspaceId: "app_dev_current",
+    })
+    staleFetch.resolve({ projects: [current] })
+    await fetching
+
+    expect(getProjects(store)).toEqual([current, response.project])
+  })
+
+  it("does not let a late template import discard the next workspace's fetch", async () => {
+    const store = new ProjectsStore()
+    const importing = defer<ImportProjectTemplateResponse>()
+    const nextFetch = defer<FetchProjectsResponse>()
+    const nextProject = project("next_workspace_project")
+    fetchProjects
+      .mockResolvedValueOnce({ projects: [] })
+      .mockReturnValueOnce(nextFetch.promise)
+    importTemplate.mockReturnValueOnce(importing.promise)
+    await store.fetch("app_dev_current")
+    const importPromise = store.importTemplate({
+      templateKey: "project/operations",
+      workspaceId: "app_dev_current",
+    })
+    const fetching = store.fetch("app_dev_next")
+
+    importing.resolve(templateResponse())
+    await importPromise
+    nextFetch.resolve({ projects: [nextProject] })
+    await fetching
+
+    expect(getProjects(store)).toEqual([nextProject])
   })
 
   it("does not let an in-flight fetch overwrite a created project", async () => {

@@ -5,7 +5,10 @@ import type {
   ExportProjectRequest,
   ImportProjectRequest,
   ImportProjectResponse,
+  ImportProjectTemplateRequest,
+  ImportProjectTemplateResponse,
   PreviewProjectAssignmentRequest,
+  ProjectTemplateMetadata,
   ProjectResponse,
   UpdateProjectAssignmentRequest,
   UpdateProjectRequest,
@@ -95,21 +98,51 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     await downloadStream(response)
   }
 
+  private addImportedProject = ({
+    project,
+    workspaceId,
+  }: {
+    project: ProjectResponse
+    workspaceId: string | undefined
+  }) => {
+    if (this.workspaceId !== workspaceId) {
+      return
+    }
+    this.invalidateFetch()
+    this.update(state =>
+      sortProjectsByName([
+        ...state.filter(existing => existing._id !== project._id),
+        project,
+      ])
+    )
+  }
+
   importProject = async (
     file: File,
     body?: ImportProjectRequest
   ): Promise<ImportProjectResponse> => {
     const workspaceId = this.workspaceId
     const response = await API.projects.importBundle(file, body)
-    if (this.workspaceId === workspaceId) {
-      this.invalidateFetch()
-      this.update(state =>
-        sortProjectsByName([
-          ...state.filter(project => project._id !== response.project._id),
-          response.project,
-        ])
-      )
-    }
+    this.addImportedProject({ project: response.project, workspaceId })
+    return response
+  }
+
+  fetchTemplates = async (): Promise<ProjectTemplateMetadata[]> => {
+    const response = await API.projects.fetchTemplates()
+    return response.templates
+  }
+
+  importTemplate = async ({
+    templateKey,
+    workspaceId,
+  }: ImportProjectTemplateRequest & {
+    workspaceId: string
+  }): Promise<ImportProjectTemplateResponse> => {
+    const response = await API.projects.importTemplate({
+      templateKey,
+      workspaceId,
+    })
+    this.addImportedProject({ project: response.project, workspaceId })
     return response
   }
 
