@@ -58,18 +58,20 @@ export const initialiseBuilderWithTemplateIntent = async ({
         result.intent ? { projectTemplate: result.intent } : {}
       )
     } catch (error) {
-      console.error("Unable to preserve Project template intent", error)
+      console.error("Unable to update Project template intent", error)
       throw new Error(
-        "Unable to preserve the Project template link. Try again."
+        result.intent
+          ? "Unable to preserve the Project template link. Try again."
+          : "Unable to clear the previous Project template link. Try again."
       )
     }
     window.history.replaceState(
       {},
       "",
-      removeProjectTemplateFromUrl({
+      `${removeProjectTemplateFromUrl({
         pathname: window.location.pathname,
         search: window.location.search,
-      })
+      })}${window.location.hash}`
     )
     if (!result.intent) {
       notifications.error("This Project template link is invalid.")
