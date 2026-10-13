@@ -225,6 +225,40 @@ describe("ProjectsStore", () => {
     },
   })
 
+  it.each(["create", "import", "template"])(
+    "keeps the initial project list when a project is added by %s",
+    async action => {
+      const store = new ProjectsStore()
+      const initialFetch = defer<FetchProjectsResponse>()
+      const existing = project("project_existing")
+      const added = project("project_imported", { _rev: "2-rev" })
+      const response = { ...templateResponse(), project: added }
+      fetchProjects.mockReturnValueOnce(initialFetch.promise)
+      createProject.mockResolvedValue({ project: added })
+      importBundle.mockResolvedValue(response)
+      importTemplate.mockResolvedValue(response)
+      const fetching = store.fetch("app_dev_current")
+
+      if (action === "create") {
+        await store.create({ name: added.name })
+      } else if (action === "import") {
+        await store.importProject(new File(["project"], "project.tar.gz"))
+      } else {
+        await store.importTemplate({
+          templateKey: "project/operations",
+          workspaceId: "app_dev_current",
+        })
+      }
+      initialFetch.resolve({
+        projects: [existing, { ...added, _rev: "1-rev" }],
+      })
+      await fetching
+
+      expect(getProjects(store)).toEqual([existing, added])
+      expect(store.hasFetched()).toBe(true)
+    }
+  )
+
   it("imports into the selected destination without changing current projects", async () => {
     const store = new ProjectsStore()
     const current = project("project_current")

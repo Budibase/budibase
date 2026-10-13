@@ -46,8 +46,16 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     const promise = API.projects
       .fetch()
       .then(({ projects }) => {
-        const sortedProjects = sortProjectsByName(projects)
+        let sortedProjects = sortProjectsByName(projects)
         if (this.fetchPromise === promise && this.workspaceId === workspaceId) {
+          if (!this.loaded) {
+            const addedProjects = get(this.store)
+            const addedIds = new Set(addedProjects.map(project => project._id))
+            sortedProjects = sortProjectsByName([
+              ...projects.filter(project => !addedIds.has(project._id)),
+              ...addedProjects,
+            ])
+          }
           this.loaded = true
           this.set(sortedProjects)
         }
@@ -82,11 +90,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   create = async (project: CreateProjectRequest) => {
     const workspaceId = this.workspaceId
     const response = await API.projects.create(project)
-    if (this.workspaceId !== workspaceId) {
-      return response.project
-    }
-    this.invalidateFetch()
-    this.update(state => sortProjectsByName([...state, response.project]))
+    this.addProject({ project: response.project, workspaceId })
     return response.project
   }
 
@@ -98,7 +102,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     await downloadStream(response)
   }
 
-  private addImportedProject = ({
+  private addProject = ({
     project,
     workspaceId,
   }: {
@@ -108,7 +112,9 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     if (this.workspaceId !== workspaceId) {
       return
     }
-    this.invalidateFetch()
+    if (this.loaded) {
+      this.invalidateFetch()
+    }
     this.update(state =>
       sortProjectsByName([
         ...state.filter(existing => existing._id !== project._id),
@@ -123,7 +129,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   ): Promise<ImportProjectResponse> => {
     const workspaceId = this.workspaceId
     const response = await API.projects.importBundle(file, body)
-    this.addImportedProject({ project: response.project, workspaceId })
+    this.addProject({ project: response.project, workspaceId })
     return response
   }
 
@@ -142,7 +148,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
       templateKey,
       workspaceId,
     })
-    this.addImportedProject({ project: response.project, workspaceId })
+    this.addProject({ project: response.project, workspaceId })
     return response
   }
 
