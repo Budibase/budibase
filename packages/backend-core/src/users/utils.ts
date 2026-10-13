@@ -52,8 +52,8 @@ function isCreatorByGroupMembership(
   user: User | ContextUser,
   groups?: UserGroup[]
 ) {
-  const userGroups = groups?.filter(
-    group => user.userGroups?.includes(group._id!)
+  const userGroups = groups?.filter(group =>
+    user.userGroups?.includes(group._id!)
   )
   if (userGroups && userGroups.length > 0) {
     return userGroups.some(group =>
