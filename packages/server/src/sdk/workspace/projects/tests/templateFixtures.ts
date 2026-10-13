@@ -62,7 +62,7 @@ export const mockCatalogue = (
     .update(new Uint8Array(catalogue))
     .digest("hex")
 
-  nock(repositoryUrl)
+  return nock(repositoryUrl)
     .get("/catalogue/project/v1/current.json")
     .reply(200, { schemaVersion: 1, catalogueVersion, sha256 })
     .get(`/catalogue/project/v1/releases/${catalogueVersion}.json`)

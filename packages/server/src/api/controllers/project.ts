@@ -276,6 +276,7 @@ export async function fetchTemplates(
 export async function importTemplate(
   ctx: Ctx<ImportProjectTemplateRequest, ImportProjectTemplateResponse>
 ) {
+  ctx.req.setTimeout(0)
   const downloaded = await sdk.projects.downloadProjectTemplate(
     ctx.request.body.templateKey
   )

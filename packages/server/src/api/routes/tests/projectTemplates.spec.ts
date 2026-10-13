@@ -7,6 +7,7 @@ import {
   type ImportProjectTemplateResponse,
   type RowAttachment,
 } from "@budibase/types"
+import type { IncomingMessage } from "http"
 import nock from "nock"
 import { Readable } from "stream"
 import { buffer } from "stream/consumers"
@@ -119,6 +120,36 @@ describe("Project template catalogue API", () => {
       expect(response.project.name).toBe(project.name)
       expect(response.project._id).not.toBe(project._id)
       expect(response.resources.project).toEqual([response.project._id])
+    })
+  })
+
+  it("disables the socket timeout before reading the template repository", async () => {
+    await withProjectTemplatesEnabled(async () => {
+      const { project } = await config.api.project.create({ name: "Support" })
+      const artifact = await config.api.project.export(project._id)
+      const template = templateEntry({ artifact })
+      let importRequest: IncomingMessage | undefined
+      let timeoutAtRepositoryRead: number | undefined
+      const captureRequest = (request: IncomingMessage) => {
+        importRequest = request
+      }
+      mockCatalogue([template]).once("request", () => {
+        timeoutAtRepositoryRead = importRequest?.socket.timeout
+      })
+      nock(repositoryUrl)
+        .get("/artifacts/project/support/1.0.0/project.tar.gz")
+        .reply(200, artifact)
+      config.server!.once("request", captureRequest)
+
+      try {
+        await withEnv({ PROJECT_TEMPLATE_REPOSITORY_URL: repositoryUrl }, () =>
+          config.api.project.importTemplate({ templateKey: template.key })
+        )
+      } finally {
+        config.server!.off("request", captureRequest)
+      }
+
+      expect(timeoutAtRepositoryRead).toBe(0)
     })
   })
 
