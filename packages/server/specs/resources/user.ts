@@ -111,6 +111,10 @@ const userOutputSchema = {
   ...userSchema,
   properties: {
     ...userSchema.properties,
+    userGroups: {
+      ...userSchema.properties.userGroups,
+      description: "The IDs of the groups the user belongs to.",
+    },
     _id: {
       description: "The ID of the user.",
       type: "string",
