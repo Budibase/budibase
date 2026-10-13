@@ -9,6 +9,7 @@ import {
   EscalationSource,
   SEPARATOR,
 } from "@budibase/types"
+import sdk from "../../sdk"
 import { addEscalationJob, EscalationJob, getQueue } from "../queue"
 import {
   CreateEscalationInput,
@@ -124,10 +125,9 @@ export class BullEscalationProcessor implements IEscalationProcessor {
     maxRetries = 3
   ): Promise<void> {
     const db = context.getWorkspaceDB()
-    const docId = getDocId(escalationId)
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
-      const doc = await db.tryGet<EscalationContextDoc>(docId)
+      const doc = await sdk.escalations.getContextDoc(escalationId)
 
       if (!doc) {
         throw new Error(`Escalation ${escalationId} not found`)
@@ -180,8 +180,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
 
   async cancel(escalationId: string): Promise<void> {
     const db = context.getWorkspaceDB()
-    const docId = getDocId(escalationId)
-    const doc = await db.tryGet<EscalationContextDoc>(docId)
+    const doc = await sdk.escalations.getContextDoc(escalationId)
 
     if (!doc || doc.resolution !== "pending") {
       return
