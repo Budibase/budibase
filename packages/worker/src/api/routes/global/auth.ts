@@ -27,6 +27,23 @@ function buildResetUpdateValidation() {
   }).required().unknown(false))
 }
 
+function buildInitInfoValidation() {
+  return auth.joiValidator.body(
+    Joi.object({
+      projectTemplate: Joi.object({
+        templateKey: Joi.string()
+          .pattern(/^project\/[a-z0-9]+(?:-[a-z0-9]+)*$/)
+          .max(200)
+          .required(),
+      })
+        .unknown(false)
+        .optional(),
+    })
+      .required()
+      .unknown(false)
+  )
+}
+
 loggedInRoutes
   // PASSWORD
   .post(
@@ -48,7 +65,11 @@ loggedInRoutes
     authController.resetUpdate
   )
   // INIT
-  .post("/api/global/auth/init", authController.setInitInfo)
+  .post(
+    "/api/global/auth/init",
+    buildInitInfoValidation(),
+    authController.setInitInfo
+  )
   .get("/api/global/auth/init", authController.getInitInfo)
 
   // DATASOURCE - MULTI TENANT

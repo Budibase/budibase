@@ -20,7 +20,11 @@ import {
   UpdateProjectRequest,
   UpdateProjectResponse,
 } from "@budibase/types"
-import { HTTPError } from "@budibase/backend-core"
+import {
+  constants,
+  HTTPError,
+  utils as backendCoreUtils,
+} from "@budibase/backend-core"
 import fsp from "fs/promises"
 import type { Next } from "koa"
 import sdk from "../../sdk"
@@ -294,6 +298,7 @@ export async function importTemplate(
         catalogueVersion: downloaded.template.catalogueVersion,
       },
     }
+    backendCoreUtils.clearCookie(ctx, constants.Cookie.Init)
   } finally {
     await fsp.rm(downloaded.path, { force: true }).catch(error => {
       console.log("Failed to remove downloaded Project template", error)

@@ -108,6 +108,9 @@ describe("Project template catalogue API", () => {
         () =>
           config.api.project.importTemplate({
             templateKey: template.key,
+            expectations: {
+              headers: { "set-cookie": /budibase:init=;/i },
+            },
           })
       )
 

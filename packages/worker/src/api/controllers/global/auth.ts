@@ -35,6 +35,7 @@ import * as userSdk from "../../../sdk/users"
 const { Cookie, Header } = constants
 const { passport, ssoCallbackUrl, google, oidc } = authCore
 const { setCookie, getCookie, clearCookie } = utilsCore
+const PROJECT_TEMPLATE_INTENT_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 // LOGIN / LOGOUT
 
@@ -168,7 +169,16 @@ export const setInitInfo = (
   ctx: UserCtx<SetInitInfoRequest, SetInitInfoResponse>
 ) => {
   const initInfo = ctx.request.body
-  setCookie(ctx, initInfo, Cookie.Init)
+  if (!initInfo.projectTemplate) {
+    clearCookie(ctx, Cookie.Init)
+  } else {
+    setCookie(ctx, initInfo, Cookie.Init, {
+      sign: true,
+      httpOnly: true,
+      sameSite: "lax",
+      expires: new Date(Date.now() + PROJECT_TEMPLATE_INTENT_TTL_MS),
+    })
+  }
   ctx.body = {
     message: "Init info updated.",
   }
@@ -176,7 +186,12 @@ export const setInitInfo = (
 
 export const getInitInfo = (ctx: UserCtx<void, GetInitInfoResponse>) => {
   try {
-    ctx.body = getCookie(ctx, Cookie.Init) || {}
+    const initInfo = getCookie<SetInitInfoRequest>(ctx, Cookie.Init)
+    ctx.body = initInfo?.projectTemplate
+      ? {
+          projectTemplate: initInfo.projectTemplate,
+        }
+      : {}
   } catch (err) {
     clearCookie(ctx, Cookie.Init)
     ctx.body = {}

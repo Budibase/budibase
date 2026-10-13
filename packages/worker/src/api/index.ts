@@ -83,6 +83,10 @@ const NO_TENANCY_ENDPOINTS = [
     route: "/api/global/users/init",
     method: "POST",
   },
+  {
+    route: "/api/global/auth/init",
+    method: "POST",
+  },
   // tenant is retrieved from the user found by the requested email
   {
     route: "/api/global/users/sso",
