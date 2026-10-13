@@ -6,6 +6,8 @@ import {
   FetchProjectsResponse,
   ImportProjectRequest,
   ImportProjectResponse,
+  ImportProjectTemplateRequest,
+  ImportProjectTemplateResponse,
   PreviewProjectAssignmentRequest,
   PreviewProjectAssignmentResponse,
   UpdateProjectRequest,
@@ -94,6 +96,22 @@ export class ProjectAPI extends TestAPI {
       },
       expectations: params.expectations,
     })
+  }
+
+  importTemplate = async ({
+    templateKey,
+    expectations,
+  }: ImportProjectTemplateRequest & { expectations?: Expectations }) => {
+    return await this._post<ImportProjectTemplateResponse>(
+      "/api/projects/templates/import",
+      {
+        body: { templateKey },
+        expectations: {
+          status: 201,
+          ...expectations,
+        },
+      }
+    )
   }
 
   update = async (

@@ -157,6 +157,17 @@ export interface FetchProjectTemplatesResponse {
   templates: ProjectTemplateMetadata[]
 }
 
+export interface ImportProjectTemplateRequest {
+  templateKey: string
+}
+
+export interface ImportProjectTemplateResponse extends ImportProjectResponse {
+  template: Pick<
+    ProjectTemplateMetadata,
+    "key" | "version" | "packageVersion" | "catalogueVersion"
+  >
+}
+
 export interface ProjectManifestSummary {
   _id: string
   name: string
