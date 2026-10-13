@@ -50,11 +50,14 @@ export const withEscalationLock = async <T>(
   return result
 }
 
+// A copy of another workspace's escalation (e.g. from an old export) keeps the
+// original's appId - acting on it would resume or cancel the original
 export async function getContextDoc(
   escalationId: string
 ): Promise<EscalationContextDoc | undefined> {
   const db = context.getWorkspaceDB()
-  return db.tryGet<EscalationContextDoc>(getDocId(escalationId))
+  const doc = await db.tryGet<EscalationContextDoc>(getDocId(escalationId))
+  return doc?.appId === context.getWorkspaceId() ? doc : undefined
 }
 
 // Lean poll payload for the originating chat - inflates the resumed assistant
