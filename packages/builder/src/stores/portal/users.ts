@@ -6,6 +6,7 @@ import { sdk } from "@budibase/shared-core"
 import {
   DeleteInviteUsersRequest,
   InviteUsersRequest,
+  type InviteExistingUserToWorkspaceRequest,
   SearchUsersRequest,
   SearchUsersResponse,
   UnsavedUser,
@@ -121,6 +122,12 @@ class UserStore extends BudiStore<UserState> {
 
   async addUserToWorkspace(userId: string, role: string, rev: string) {
     return API.addUserToWorkspace(userId, role, rev)
+  }
+
+  async inviteExistingUserToWorkspace(
+    data: InviteExistingUserToWorkspaceRequest & { userId: string }
+  ) {
+    return API.inviteExistingUserToWorkspace(data)
   }
 
   async removeUserFromWorkspace(userId: string, rev: string) {

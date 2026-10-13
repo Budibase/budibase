@@ -236,11 +236,12 @@
     let usersForInvite = userData?.users ?? []
     let assignedExistingUsers = false
     if (isWorkspaceOnly) {
-      const result = await assignExistingUsersToWorkspace(
+      const result = await assignExistingUsersToWorkspace({
         userData,
-        currentWorkspaceId,
-        $groups
-      )
+        workspaceId: currentWorkspaceId,
+        allGroups: $groups,
+        sendInvitation: true,
+      })
       usersForInvite = result.usersToInvite
       const shouldShowInviteModal = usersForInvite.length > 0
       assignedExistingUsers = result.assignedCount > 0
@@ -360,11 +361,11 @@
         : dedupeUsersByEmail(userData)
 
       if (isWorkspaceOnly) {
-        const result = await assignExistingUsersToWorkspace(
-          usersForCreation,
-          currentWorkspaceId,
-          $groups
-        )
+        const result = await assignExistingUsersToWorkspace({
+          userData: usersForCreation,
+          workspaceId: currentWorkspaceId,
+          allGroups: $groups,
+        })
         usersForCreation = { ...usersForCreation, users: result.usersToInvite }
         addedToWorkspaceEmails = result.addedToWorkspaceEmails
 

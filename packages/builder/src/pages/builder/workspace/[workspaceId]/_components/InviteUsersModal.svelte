@@ -45,10 +45,11 @@
   }
 
   const inviteUsers = async (userData: UserData) => {
-    const result = await assignExistingUsersToWorkspace(
+    const result = await assignExistingUsersToWorkspace({
       userData,
-      currentWorkspaceId
-    )
+      workspaceId: currentWorkspaceId,
+      sendInvitation: true,
+    })
     const usersForInvite = result.usersToInvite
 
     if (result.assignedCount && !usersForInvite.length) {
@@ -78,10 +79,10 @@
   }
 
   const createUsers = async (userData: UserData) => {
-    const result = await assignExistingUsersToWorkspace(
+    const result = await assignExistingUsersToWorkspace({
       userData,
-      currentWorkspaceId
-    )
+      workspaceId: currentWorkspaceId,
+    })
     const usersForCreation = { ...userData, users: result.usersToInvite }
     createdUsers = usersForCreation.users
     addedToWorkspaceEmails = result.addedToWorkspaceEmails

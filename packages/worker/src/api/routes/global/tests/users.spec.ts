@@ -1689,6 +1689,48 @@ describe("/api/global/users", () => {
       expect(updatedUser.builder?.apps).toEqual([workspaceId2])
     })
 
+    it.each(["BASIC", undefined])(
+      "preserves independent builder access when changing a CREATOR role to %s",
+      async role => {
+        const workspaceId = "app_creator"
+        const otherCreatorWorkspaceId = "app_other_creator"
+        const independentWorkspaceId = "app_independent"
+        const user = await config.createUser({
+          roles: {
+            [workspaceId]: "CREATOR",
+            [otherCreatorWorkspaceId]: "CREATOR",
+            [independentWorkspaceId]: "POWER",
+          },
+          builder: {
+            creator: true,
+            apps: [
+              workspaceId,
+              otherCreatorWorkspaceId,
+              independentWorkspaceId,
+            ],
+          },
+        })
+
+        await config.withApp(workspaceId, () =>
+          role
+            ? config.api.users.addUserToWorkspace(user._id!, user._rev!, role)
+            : config.api.users.removeUserFromWorkspace(user._id!, user._rev!)
+        )
+
+        const updatedUser = await config.getUser(user.email)
+        expect(updatedUser.roles).toEqual({
+          ...(role ? { [workspaceId]: role } : {}),
+          [otherCreatorWorkspaceId]: "CREATOR",
+          [independentWorkspaceId]: "POWER",
+        })
+        expect(updatedUser.builder?.creator).toBe(true)
+        expect(updatedUser.builder?.apps).toEqual([
+          independentWorkspaceId,
+          otherCreatorWorkspaceId,
+        ])
+      }
+    )
+
     it("should handle non-CREATOR role assignments without affecting builder properties", async () => {
       const user = await config.createUser()
       const workspaceId = "app_123456789"

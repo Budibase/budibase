@@ -226,6 +226,19 @@ describe("/api/global/email", () => {
     expect(res.message).toBeDefined()
   })
 
+  it("rejects workspace invitations through the generic email endpoint", async () => {
+    const res = await config.api.emails.sendEmail(
+      {
+        email: "to@example.com",
+        subject: "Workspace invitation",
+        purpose: EmailTemplatePurpose.WORKSPACE_INVITATION,
+      },
+      { status: 400 }
+    )
+
+    expect(res.message).toContain('Invalid body - "purpose"')
+  })
+
   it("should fail to send a password reset email without a userId", async () => {
     const res = await config.api.emails.sendEmail(
       {

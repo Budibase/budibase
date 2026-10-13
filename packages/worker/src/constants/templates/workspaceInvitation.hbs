@@ -1,0 +1,31 @@
+<tr>
+  <td class="email-body" width="570" cellpadding="0" cellspacing="0">
+    <table class="email-body_inner" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
+      <tr>
+        <td class="content-cell">
+          <div class="f-fallback">
+            <h1>Hi, {{ email }}!</h1>
+            <p>{{ inviterName }} has added you to the {{ workspaceName }} workspace.</p>
+            <p>You can access it using your existing {{ company }} account.</p>
+            <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+              <tr>
+                <td align="center">
+                  <a href="{{ workspaceUrl }}" class="f-fallback button" target="_blank">Open workspace</a>
+                </td>
+              </tr>
+            </table>
+            <p>If you have any questions, contact your Budibase platform administrator.</p>
+            <table class="body-sub" role="presentation">
+              <tr>
+                <td>
+                  <p class="f-fallback sub">If you’re having trouble with the button above, copy and paste the URL below into your web browser.</p>
+                  <p class="f-fallback sub">{{ workspaceUrl }}</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>

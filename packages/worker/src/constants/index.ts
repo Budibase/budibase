@@ -25,6 +25,7 @@ export enum TemplateMetadataNames {
   PASSWORD_RECOVERY = "Password recovery",
   WELCOME = "User welcome",
   INVITATION = "User invitation",
+  WORKSPACE_INVITATION = "Workspace invitation",
   CUSTOM = "Custom",
 }
 
@@ -45,6 +46,9 @@ export enum InternalTemplateBinding {
   RESET_CODE = "resetCode",
   INVITE_URL = "inviteUrl",
   INVITE_CODE = "inviteCode",
+  INVITER_NAME = "inviterName",
+  WORKSPACE_NAME = "workspaceName",
+  WORKSPACE_URL = "workspaceUrl",
   CONTENTS = "contents",
 }
 
@@ -153,6 +157,28 @@ export const TemplateMetadata = {
           name: InternalTemplateBinding.INVITE_CODE,
           description:
             "The temporary invite code used in the recipients invitation URL.",
+        },
+      ],
+    },
+    {
+      name: TemplateMetadataNames.WORKSPACE_INVITATION,
+      description:
+        "When an existing user is invited to a workspace, they receive this notification.",
+      category: "user management",
+      purpose: EmailTemplatePurpose.WORKSPACE_INVITATION,
+      bindings: [
+        {
+          name: InternalTemplateBinding.INVITER_NAME,
+          description:
+            "The name or email address of the person inviting the user.",
+        },
+        {
+          name: InternalTemplateBinding.WORKSPACE_NAME,
+          description: "The name of the workspace the user has been added to.",
+        },
+        {
+          name: InternalTemplateBinding.WORKSPACE_URL,
+          description: "The URL used to access the workspace.",
         },
       ],
     },

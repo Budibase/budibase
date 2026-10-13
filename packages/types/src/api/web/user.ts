@@ -81,6 +81,12 @@ export interface InviteUserRequest {
   email: string
   userInfo: InviteInfo
 }
+
+export interface InviteExistingUserToWorkspaceRequest {
+  role?: string
+  groups?: string[]
+  admin?: boolean
+}
 export interface InviteUserResponse {
   message: string
   successful: { email: string }[]

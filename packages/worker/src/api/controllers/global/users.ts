@@ -41,6 +41,7 @@ import {
   GetUserInvitesResponse,
   Hosting,
   InviteUserRequest,
+  InviteExistingUserToWorkspaceRequest,
   InviteUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
@@ -866,6 +867,25 @@ export const addUserToWorkspace = async (
   >
 ) => handleUserWorkspacePermission(ctx, ctx.params.userId, ctx.params.role)
 
+export const inviteExistingUserToWorkspace = async (
+  ctx: UserCtx<
+    InviteExistingUserToWorkspaceRequest,
+    SaveUserResponse,
+    { userId: string }
+  >
+) => {
+  const workspaceId = await backendCoreUtils.getWorkspaceIdFromCtx(ctx)
+  if (!workspaceId) {
+    ctx.throw(400, "Workspace id not set")
+  }
+  ctx.body = await userSdk.inviteExistingUserToWorkspace({
+    ...ctx.request.body,
+    userId: ctx.params.userId,
+    workspaceId,
+    inviter: ctx.user,
+  })
+}
+
 export const removeUserFromWorkspace = async (
   ctx: UserCtx<
     EditUserPermissionsResponse,
@@ -894,26 +914,11 @@ async function handleUserWorkspacePermission(
 
   const existingUser = await users.getById(userId)
   existingUser._rev = ctx.request.body._rev
-  if (role) {
-    existingUser.roles[prodWorkspaceId] = role
-  } else {
-    delete existingUser.roles[prodWorkspaceId]
-  }
-
-  const creatorForApps = Object.entries(existingUser.roles)
-    .filter(([_appId, role]) => role === "CREATOR")
-    .map(([appId]) => appId)
-
-  const shouldHaveCreatorRole =
-    existingUser.builder?.creator || creatorForApps.length
-  if (!shouldHaveCreatorRole) {
-    delete existingUser.builder?.creator
-    delete existingUser.builder?.apps
-  } else {
-    existingUser.builder ??= {}
-    existingUser.builder.creator = true
-    existingUser.builder.apps = creatorForApps
-  }
+  userSdk.setWorkspaceRole({
+    user: existingUser,
+    workspaceId: prodWorkspaceId,
+    role,
+  })
 
   const user = await userSdk.db.save(existingUser, {
     currentUserId,

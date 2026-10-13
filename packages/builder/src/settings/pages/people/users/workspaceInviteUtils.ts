@@ -166,11 +166,17 @@ export const shouldUseGroupWorkspaceRole = ({
   })
 }
 
-export const assignExistingUsersToWorkspace = async (
-  userData: UserData,
-  workspaceId: string,
-  allGroups: UserGroup[] = []
-): Promise<WorkspaceExistingUserResult> => {
+export const assignExistingUsersToWorkspace = async ({
+  userData,
+  workspaceId,
+  allGroups = [],
+  sendInvitation = false,
+}: {
+  userData: UserData
+  workspaceId: string
+  allGroups?: UserGroup[]
+  sendInvitation?: boolean
+}): Promise<WorkspaceExistingUserResult> => {
   const dedupedUserData = dedupeUsersByEmail(userData)
   if (!workspaceId) {
     return {
@@ -242,6 +248,15 @@ export const assignExistingUsersToWorkspace = async (
   const assignmentResults = await Promise.allSettled(
     usersToAssign.map(
       async ({ user, role, selectedRole, email, groupIdsToAdd }) => {
+        if (sendInvitation && user._id) {
+          await users.inviteExistingUserToWorkspace({
+            userId: user._id,
+            role,
+            groups: groupIdsToAdd,
+            admin: shouldSyncGlobalRole(selectedRole, user),
+          })
+          return email
+        }
         let rev = user._rev
         let fullUser = user
         if (

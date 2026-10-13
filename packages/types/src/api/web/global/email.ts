@@ -6,6 +6,7 @@ export enum EmailTemplatePurpose {
   BASE = "base",
   PASSWORD_RECOVERY = "password_recovery",
   INVITATION = "invitation",
+  WORKSPACE_INVITATION = "workspace_invitation",
   WELCOME = "welcome",
   CUSTOM = "custom",
 }
