@@ -400,7 +400,7 @@ describe("approval messages", () => {
     })
   })
 
-  it("skips the classifier when no escalation or saved decision is pending", async () => {
+  it("lets the model classify a new request when no approval is pending", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       decide({ decision: "not_approval" })
       expect(
@@ -409,28 +409,85 @@ describe("approval messages", () => {
           latestPrompt: "Buy a laptop",
         })
       ).toBeUndefined()
-      expect(createLLM).not.toHaveBeenCalled()
+      expect(createLLM).toHaveBeenCalledTimes(1)
       expect(escalationProcessor.resolve).not.toHaveBeenCalled()
     })
   })
 
-  it("retains decision context so a repeated approval cannot rerun a completed purchase", async () => {
+  it("blocks replay of the same completed escalation without retaining active options", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       await createApproval({ id: "esc_200", price: 200 })
       decide({ decision: "approve", escalationId: "esc_200" })
       const response = await respondToApprovalMessage(inputs)
       if (!response) throw new Error("Expected approval response")
-      decide({ decision: "approve", escalationId: "unavailable" })
+      decide({ decision: "approve", escalationId: "esc_200" })
       const repeated = await respondToApprovalMessage({
         ...inputs,
         messages: [response],
       })
       expect(text(repeated)).toContain("No approval was changed")
       expect(escalationProcessor.resolve).toHaveBeenCalledTimes(1)
-      expect(response.metadata?.approvalClarification).toEqual({
-        action: "approve",
-        options: [{ escalationId: "esc_200", label: "Laptop costing 200" }],
+      expect(response.metadata?.approvalClarification).toBeUndefined()
+    })
+  })
+
+  it.each([
+    { prompt: "Go ahead, buy it", decision: "approve" },
+    { prompt: "Approve this purchase", decision: "approve" },
+    { prompt: "Aprueba la compra", decision: "approve" },
+    { prompt: "Rechaza la compra", decision: "reject" },
+    { prompt: "Reject the purchase", decision: "reject" },
+    { prompt: "Tienes mi visto bueno", decision: "approve" },
+    { prompt: "Me opongo a esta compra", decision: "reject" },
+  ])(
+    "stops $prompt without pending escalations or saved clarification",
+    async ({ prompt, decision }) => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        decide({ decision, escalationId: "unavailable" })
+        const result = await respondToApprovalMessage({
+          ...inputs,
+          latestPrompt: prompt,
+        })
+        expect(text(result)).toContain("No approval was changed")
+        expect(createLLM).toHaveBeenCalledTimes(1)
+        expect(escalationProcessor.resolve).not.toHaveBeenCalled()
       })
+    }
+  )
+
+  it("does not leave active options on an already recorded response", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await createApproval({
+        id: "esc_200",
+        price: 200,
+        approvers: ["approver_1", "approver_2"],
+        strategy: ResolutionStrategy.UNANIMOUS,
+      })
+      decide({ decision: "approve", escalationId: "esc_200" })
+      await respondToApprovalMessage(inputs)
+      const repeated = await respondToApprovalMessage(inputs)
+      expect(text(repeated)).toContain("already recorded")
+      expect(repeated?.metadata?.approvalClarification).toBeUndefined()
+      expect(escalationProcessor.resolve).not.toHaveBeenCalled()
+    })
+  })
+
+  it("lets a numeric reply after a completed decision reach the agent", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await createApproval({ id: "esc_200", price: 200 })
+      decide({ decision: "approve", escalationId: "esc_200" })
+      const response = await respondToApprovalMessage(inputs)
+      if (!response) throw new Error("Expected approval response")
+      jest.mocked(createLLM).mockClear()
+      decide({ decision: "not_approval" })
+      const result = await respondToApprovalMessage({
+        ...inputs,
+        latestPrompt: "1",
+        messages: [response],
+      })
+      expect(result).toBeUndefined()
+      expect(createLLM).toHaveBeenCalledTimes(1)
+      expect(escalationProcessor.resolve).toHaveBeenCalledTimes(1)
     })
   })
 

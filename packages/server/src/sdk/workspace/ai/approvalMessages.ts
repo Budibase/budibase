@@ -87,9 +87,6 @@ export const respondToApprovalMessage = async ({
     agentId,
     resolution: "pending",
   })
-  if (!pending.length && !previous) {
-    return undefined
-  }
   const authorized = pending.filter(
     doc =>
       doc.source === EscalationSource.OPERATION && isApprover({ doc, userId })
@@ -249,6 +246,5 @@ export const respondToApprovalMessage = async ({
       unlinked:
         "Please link your Budibase account before responding to this approval. No approval was changed.",
     }[result.status],
-    clarification: { action: decision.decision, options: [selected] },
   })
 }
