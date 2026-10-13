@@ -300,14 +300,14 @@ export async function run({
           errorName: err?.name,
           errorMessage,
         })
-        const requestId = agentRun?.sessionLogIndexer.getRequestIds().at(-1)
+        const lastRequestId = agentRun?.sessionLogIndexer.getRequestIds().at(-1)
         inSessionScope(() =>
           events.action.aiAgentFailed({
             agentId,
             sourceType: "agent_session",
             sourceId: sessionId,
             sessionId,
-            requestId,
+            requestId: lastRequestId,
             reason: ActionFailureReason.ERROR,
             errorMessage,
           })
