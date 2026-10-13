@@ -31,9 +31,11 @@ export const getInitialUserGroups = async ({
 export const validateGroupChanges = async ({
   userGroups,
   previousGroups = [],
+  isDefaultAssignment = false,
 }: {
   userGroups?: string[]
   previousGroups?: string[]
+  isDefaultAssignment?: boolean
 }): Promise<GroupChanges> => {
   if (userGroups === undefined) {
     return { added: [], removed: [] }
@@ -54,7 +56,9 @@ export const validateGroupChanges = async ({
     return { added: [], removed: [] }
   }
 
-  await features.checkFeature(Feature.USER_GROUPS)
+  if (!isDefaultAssignment) {
+    await features.checkFeature(Feature.USER_GROUPS)
+  }
   const changedGroups = await groups.getBulk(changedIds, { enriched: false })
   if (
     changedGroups.length !== changedIds.length ||

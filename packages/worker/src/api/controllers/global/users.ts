@@ -202,7 +202,10 @@ const bulkCreate = async (users: User[], groupIds: string[]) => {
   const userGroups = await userSdk.getInitialUserGroups({
     userGroups: groupIds,
   })
-  const changes = await userSdk.validateGroupChanges({ userGroups })
+  const changes = await userSdk.validateGroupChanges({
+    userGroups,
+    isDefaultAssignment: !groupIds?.length,
+  })
   const created = await userSdk.db.bulkCreate(users, userGroups, {
     assignDefaultGroup: false,
   })

@@ -25,7 +25,11 @@ export const save = async ({
   const previousUser = user._id
     ? await tenancy.getGlobalDB().tryGet<User>(user._id)
     : undefined
-  if (!previousUser && options?.assignDefaultGroup !== false) {
+  const isDefaultAssignment =
+    !previousUser &&
+    options?.assignDefaultGroup !== false &&
+    !user.userGroups?.length
+  if (isDefaultAssignment) {
     const userGroups = await getInitialUserGroups({
       userGroups: user.userGroups,
     })
@@ -34,6 +38,7 @@ export const save = async ({
   const changes = await validateGroupChanges({
     userGroups: user.userGroups,
     previousGroups: previousUser?.userGroups,
+    isDefaultAssignment,
   })
   const saved = await usersCore.UserDB.save(user, {
     ...options,
