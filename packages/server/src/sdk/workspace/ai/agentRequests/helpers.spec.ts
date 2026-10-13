@@ -230,6 +230,33 @@ describe("analyzeAgentRequestLink", () => {
     }
   )
 
+  it.each([
+    {
+      decision: "ambiguous",
+      requestIds: ["agentrequest_thread_1", "agentrequest_saved"],
+    },
+    {
+      decision: "existing_thread",
+      requestId: "agentrequest_saved",
+      entryAction: "append_latest_entry",
+    },
+  ])("accepts saved clarification references for $decision", async decision => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult(JSON.stringify(decision))
+    )
+    await expect(
+      analyzeAgentRequestLink({
+        latestPrompt: "the saved laptop",
+        candidateRequests: [buildThread()],
+        clarificationOptions: [
+          { requestId: "agentrequest_saved", label: "Laptop 200" },
+        ],
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).resolves.toEqual(decision)
+  })
+
   it("throws when the model returns an unknown request id", async () => {
     generateTextMock.mockResolvedValue(
       buildGenerateTextResult(

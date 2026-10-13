@@ -763,7 +763,7 @@ const buildRequestClarification = ({
           other =>
             other.requestId !== option.requestId && other.label === option.label
         )
-          ? `${option.label} (requested ${option.requestedAt} via ${option.source})`
+          ? `${option.label} (requested ${option.requestedAt} via ${option.source}, request ${option.requestId})`
           : option.label,
       })),
     },
@@ -803,6 +803,24 @@ export async function initActiveRequest({
   })
   let enrichedCandidates: AgentRequestLinkCandidate[]
   try {
+    const savedRequests = await Promise.all(
+      (clarification?.options || []).map(option =>
+        context.getWorkspaceDB().tryGet<AgentRequest>(option.requestId)
+      )
+    )
+    for (const request of savedRequests) {
+      if (
+        !request ||
+        isTerminalStatus(request.status) ||
+        request.userId !== userId ||
+        request.agentId !== agentId ||
+        request.operationId !== operation.id ||
+        candidates.some(candidate => candidate._id === request._id)
+      ) {
+        continue
+      }
+      candidates.push(request)
+    }
     enrichedCandidates = await Promise.all(
       candidates.map(async request => {
         const approvals = await listContextDocs({
@@ -826,7 +844,7 @@ export async function initActiveRequest({
       })
     )
   } catch (error) {
-    console.log("Failed to load agent request approval details", {
+    console.error("Failed to load agent request approval details", {
       agentId,
       sessionId,
       error,
@@ -856,8 +874,17 @@ export async function initActiveRequest({
     : undefined
   if (choice !== undefined && clarification) {
     const option = clarification.options[choice - 1]
-    if (!option || clarification.operationId !== operation.id) {
-      return clarify({ reason: "ambiguous" })
+    if (
+      !option ||
+      clarification.operationId !== operation.id ||
+      !enrichedCandidates.some(request => request._id === option.requestId)
+    ) {
+      return clarify({
+        reason: "ambiguous",
+        requests: enrichedCandidates.filter(request =>
+          clarification.options.some(saved => saved.requestId === request._id)
+        ),
+      })
     }
     decision = {
       decision: "existing_thread",
@@ -875,12 +902,12 @@ export async function initActiveRequest({
         sessionId,
       })
     } catch (error) {
-      console.log("Failed to analyze agent request", {
+      console.error("Failed to analyze agent request", {
         agentId,
         sessionId,
         error,
       })
-      if (candidates.length > 1 || clarification) {
+      if (candidates.length > 0 || clarification) {
         return clarify({ reason: "analysis_failed" })
       }
     }

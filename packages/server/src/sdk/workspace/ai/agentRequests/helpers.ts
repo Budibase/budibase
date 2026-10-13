@@ -145,7 +145,10 @@ export async function analyzeAgentRequestLink({
 
   if (
     decision.decision === "existing_thread" &&
-    !candidateRequests.some(request => request._id === decision.requestId)
+    !candidateRequests.some(request => request._id === decision.requestId) &&
+    !clarificationOptions?.some(
+      option => option.requestId === decision.requestId
+    )
   ) {
     throw new Error(
       `Invalid agent request link response: unknown requestId "${decision.requestId}"`
@@ -156,7 +159,9 @@ export async function analyzeAgentRequestLink({
     decision.decision === "ambiguous" &&
     (new Set(decision.requestIds).size < 2 ||
       decision.requestIds.some(
-        id => !candidateRequests.some(request => request._id === id)
+        id =>
+          !candidateRequests.some(request => request._id === id) &&
+          !clarificationOptions?.some(option => option.requestId === id)
       ))
   ) {
     throw new Error("Invalid ambiguous agent request candidates")

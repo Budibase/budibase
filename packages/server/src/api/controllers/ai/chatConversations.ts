@@ -829,22 +829,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId: chat.sessionId,
       fallbackId: chatId,
     })
-    if (
-      context.isProdWorkspace() &&
-      (await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))
-    ) {
-      const approvalMessage = await respondToApprovalMessage({
-        agent,
-        userId,
-        sessionId,
-        latestPrompt: sdk.ai.chatConversations.findLatestUserQuestion(chat),
-        messages: chat.messages,
-      })
-      if (approvalMessage) {
-        pipeAssistantMessage({ ctx, message: approvalMessage })
-        return
-      }
-    }
     const run = await prepareAgentChatRun({
       agent,
       agentId,

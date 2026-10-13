@@ -400,12 +400,37 @@ describe("approval messages", () => {
     })
   })
 
-  it("does not rerun a purchase when no pending approval remains", async () => {
+  it("skips the classifier when no escalation or saved decision is pending", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
-      decide({ decision: "approve", escalationId: "unavailable" })
-      const result = await respondToApprovalMessage(inputs)
-      expect(text(result)).toContain("No approval was changed")
+      decide({ decision: "not_approval" })
+      expect(
+        await respondToApprovalMessage({
+          ...inputs,
+          latestPrompt: "Buy a laptop",
+        })
+      ).toBeUndefined()
+      expect(createLLM).not.toHaveBeenCalled()
       expect(escalationProcessor.resolve).not.toHaveBeenCalled()
+    })
+  })
+
+  it("retains decision context so a repeated approval cannot rerun a completed purchase", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await createApproval({ id: "esc_200", price: 200 })
+      decide({ decision: "approve", escalationId: "esc_200" })
+      const response = await respondToApprovalMessage(inputs)
+      if (!response) throw new Error("Expected approval response")
+      decide({ decision: "approve", escalationId: "unavailable" })
+      const repeated = await respondToApprovalMessage({
+        ...inputs,
+        messages: [response],
+      })
+      expect(text(repeated)).toContain("No approval was changed")
+      expect(escalationProcessor.resolve).toHaveBeenCalledTimes(1)
+      expect(response.metadata?.approvalClarification).toEqual({
+        action: "approve",
+        options: [{ escalationId: "esc_200", label: "Laptop costing 200" }],
+      })
     })
   })
 

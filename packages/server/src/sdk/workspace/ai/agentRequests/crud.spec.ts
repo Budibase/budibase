@@ -218,6 +218,39 @@ describe("agentRequests crud", () => {
       }
     )
 
+    it("distinguishes identical requests created at the same time", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+          latestPrompt: "Buy a laptop",
+        }
+        const first = await initLinkedRequest(inputs)
+        const second = await initLinkedRequest(inputs)
+        const db = context.getWorkspaceDB()
+        for (const requestId of [first.requestId, second.requestId]) {
+          const request = await db.get<AgentRequest>(requestId)
+          await db.put({ ...request, createdAt: "2026-10-13T08:00:00.000Z" })
+        }
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "ambiguous",
+          requestIds: [first.requestId, second.requestId],
+        })
+        const result = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "buy it",
+        })
+        const options = result?.clarification?.options || []
+        expect(options).toHaveLength(2)
+        expect(new Set(options.map(option => option.label)).size).toEqual(2)
+        for (const option of options)
+          expect(option.label).toContain(option.requestId)
+      })
+    })
+
     it("uses pending approval prices to distinguish requests with identical titles", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const inputs = {
@@ -337,40 +370,82 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("continues a displayed option even when newer requests push it outside the candidate limit", async () => {
-      await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const inputs = {
-          agentId: "agent_1",
-          userId: "user_1",
-          sessionId: "session_1",
-          source: "Slack",
-          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
-        }
-        const first = await initLinkedRequest({
-          ...inputs,
-          latestPrompt: "Buy a laptop costing 200",
-        })
-        for (let index = 0; index < 10; index++) {
-          await initLinkedRequest({
+    it.each(["la opción 1", "the laptop costing 200"])(
+      "continues %s outside the candidate limit",
+      async latestPrompt => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const inputs = {
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            source: "Slack",
+            operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+          }
+          const first = await initLinkedRequest({
             ...inputs,
-            latestPrompt: `Buy item ${index}`,
+            latestPrompt: "Buy a laptop costing 200",
           })
-        }
+          for (let index = 0; index < 10; index++) {
+            await initLinkedRequest({
+              ...inputs,
+              latestPrompt: `Buy item ${index}`,
+            })
+          }
 
-        const result = await initActiveRequest({
-          ...inputs,
-          latestPrompt: "la opción 1",
-          clarification: {
-            operationId: "op_buy",
-            reason: "ambiguous",
-            options: [{ requestId: first.requestId, label: "Laptop 200" }],
-          },
+          analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+            decision: "existing_thread",
+            requestId: first.requestId,
+            entryAction: "append_latest_entry",
+          })
+          const result = await initActiveRequest({
+            ...inputs,
+            latestPrompt,
+            clarification: {
+              operationId: "op_buy",
+              reason: "ambiguous",
+              options: [{ requestId: first.requestId, label: "Laptop 200" }],
+            },
+          })
+
+          expect(result).toEqual({ requestId: first.requestId })
+          expect(await fetchRequestsByAgent("agent_1")).toHaveLength(11)
         })
+      }
+    )
 
-        expect(result).toEqual({ requestId: first.requestId })
-        expect(await fetchRequestsByAgent("agent_1")).toHaveLength(11)
-      })
-    })
+    it.each(["completed", "failed"])(
+      "does not resume a saved option that is now %s",
+      async status => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const inputs = {
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            source: "Slack",
+            operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+          }
+          const first = await initLinkedRequest({
+            ...inputs,
+            latestPrompt: "Buy a laptop",
+          })
+          const db = context.getWorkspaceDB()
+          const request = await db.get<AgentRequest>(first.requestId)
+          await db.put({ ...request, status })
+          const before = await fetchRequestsByAgent("agent_1")
+          const result = await initActiveRequest({
+            ...inputs,
+            latestPrompt: "1",
+            clarification: {
+              operationId: "op_buy",
+              reason: "ambiguous",
+              options: [{ requestId: first.requestId, label: "Laptop" }],
+            },
+          })
+          expect(result?.clarification?.options).toEqual([])
+          expect(await fetchRequestsByAgent("agent_1")).toEqual(before)
+        })
+      }
+    )
 
     it("stops on analyzer failure with multiple pending requests", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -992,7 +1067,7 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it("creates a new request when boundary analysis fails", async () => {
+    it("asks for clarification when boundary analysis fails with one pending request", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const inputs = {
           agentId: "agent_1",
@@ -1016,23 +1091,16 @@ describe("agentRequests crud", () => {
         analyzeAgentRequestLinkMock.mockRejectedValueOnce(
           new Error("Invalid analysis")
         )
-        await initLinkedRequest({
+        const result = await initActiveRequest({
           ...inputs,
           latestPrompt: "Raise a mayonnaise expense",
         })
 
+        expect(result?.clarification?.reason).toEqual("analysis_failed")
         const requests = await fetchRequestsByAgent("agent_1")
-        expect(requests).toHaveLength(2)
-        expect(
-          requests.find(request => request._id === first.requestId)?.status
-        ).toEqual("needs_input")
-        expect(
-          requests.find(request => request._id !== first.requestId)?.entries
-        ).toEqual([
-          expect.objectContaining({
-            status: "active",
-          }),
-        ])
+        expect(requests).toHaveLength(1)
+        expect(requests[0]._id).toEqual(first.requestId)
+        expect(requests[0].status).toEqual("needs_input")
       })
     })
 

@@ -1085,77 +1085,61 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("approval messages", () => {
-    it.each(["webhook", "stream"])(
-      "handles approval in %s without rerunning or tracking the operation",
-      async channel => {
-        jest.mocked(respondToApprovalMessage).mockResolvedValue({
-          id: "approval-response",
-          role: "assistant",
-          parts: [
-            {
-              type: "text",
-              text: "Your approval was recorded for: Laptop costing 200",
-            },
-          ],
-          metadata: { createdAt: Date.now() },
-        })
-        jest.mocked(context.isProdWorkspace).mockReturnValue(true)
-        jest
-          .mocked(sdk.ai.agents.getOrThrow)
-          .mockResolvedValue(buildWebhookTestAgent())
-        const messages = [
+    it("handles webhook approval without rerunning or tracking the operation", async () => {
+      jest.mocked(respondToApprovalMessage).mockResolvedValue({
+        id: "approval-response",
+        role: "assistant",
+        parts: [
           {
-            id: "user-1",
-            role: "user" as const,
-            parts: [{ type: "text" as const, text: "Go ahead, buy it" }],
+            type: "text",
+            text: "Your approval was recorded for: Laptop costing 200",
           },
-        ]
-        await features.testutils.withFeatureFlags(
-          config.getTenantId(),
-          { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
-          async () => {
-            if (channel === "webhook") {
-              await context.doInWorkspaceContext(
-                config.getProdWorkspaceId(),
-                async () => {
-                  const result = await webhookChat({
-                    chat: {
-                      agentId,
-                      channel: {
-                        provider: AgentChannelProvider.SLACK,
-                        channelId: "C123",
-                        externalUserId: "slack-user-1",
-                      },
-                      messages,
-                    },
-                    user: config.getUser(),
-                  })
-                  expect(result.assistantText).toContain(
-                    "Your approval was recorded"
-                  )
-                }
+        ],
+        metadata: { createdAt: Date.now() },
+      })
+      jest
+        .mocked(sdk.ai.agents.getOrThrow)
+        .mockResolvedValue(buildWebhookTestAgent())
+      const messages = [
+        {
+          id: "user-1",
+          role: "user" as const,
+          parts: [{ type: "text" as const, text: "Go ahead, buy it" }],
+        },
+      ]
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              const result = await webhookChat({
+                chat: {
+                  agentId,
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C123",
+                    externalUserId: "slack-user-1",
+                  },
+                  messages,
+                },
+                user: config.getUser(),
+              })
+              expect(result.assistantText).toContain(
+                "Your approval was recorded"
               )
-            } else {
-              const response = await config
-                .getRequest()!
-                .post(agentPreviewStreamPath(agentId))
-                .set(await config.defaultHeaders())
-                .send({ agentId, isPreview: true, messages })
-              expect(response.status).toEqual(200)
-              expect(response.text).toContain("Your approval was recorded")
             }
-            expect(streamText).not.toHaveBeenCalled()
-            expect(
-              sdk.ai.agentRequests.initActiveRequest
-            ).not.toHaveBeenCalled()
-            expect(
-              sdk.ai.agentRequests.enqueueRequestTracking
-            ).not.toHaveBeenCalled()
-            expect(addActionMock).not.toHaveBeenCalled()
-          }
-        )
-      }
-    )
+          )
+          expect(streamText).not.toHaveBeenCalled()
+          expect(sdk.ai.agentRequests.initActiveRequest).not.toHaveBeenCalled()
+          expect(
+            sdk.ai.agentRequests.enqueueRequestTracking
+          ).not.toHaveBeenCalled()
+          expect(addActionMock).not.toHaveBeenCalled()
+        }
+      )
+    })
   })
 
   describe("request clarification", () => {
@@ -1386,6 +1370,7 @@ describe("Agent chat tool call tracking", () => {
           ],
         })
 
+      expect(respondToApprovalMessage).not.toHaveBeenCalled()
       expect(res.status).toBe(200)
       expect(addActionMock).toHaveBeenCalledTimes(2)
     })
