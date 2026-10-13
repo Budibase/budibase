@@ -241,14 +241,10 @@ describe("UserDB", () => {
             expect(saved.userGroups).toEqual(adding ? [groupId] : [])
             expect(quotas.addUsers).toHaveBeenCalledWith(
               0,
-              adding ? 1 : 0,
+              adding ? 1 : -1,
               expect.any(Function)
             )
-            if (adding) {
-              expect(quotas.removeUsers).not.toHaveBeenCalled()
-            } else {
-              expect(quotas.removeUsers).toHaveBeenCalledWith(0, 1)
-            }
+            expect(quotas.removeUsers).not.toHaveBeenCalled()
           })
         }
       )

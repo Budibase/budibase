@@ -400,15 +400,7 @@ export class UserDB {
         }
       }
     }
-    const savedUser = await UserDB.quotas.addUsers(
-      change,
-      Math.max(creatorsChange, 0),
-      saveUser
-    )
-    if (creatorsChange < 0) {
-      await UserDB.quotas.removeUsers(0, -creatorsChange)
-    }
-    return savedUser
+    return UserDB.quotas.addUsers(change, creatorsChange, saveUser)
   }
 
   static async bulkCreate(
