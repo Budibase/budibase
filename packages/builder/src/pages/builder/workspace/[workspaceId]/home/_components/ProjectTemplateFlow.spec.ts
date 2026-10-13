@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
+import { tick } from "svelte"
 import { ResourceType } from "@budibase/types"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -32,6 +33,7 @@ vi.mock("@/stores/portal", () => ({
 }))
 
 import ProjectTemplateFlow from "./ProjectTemplateFlow.svelte"
+import HomeProjectTabs from "./HomeProjectTabs.svelte"
 
 const template = {
   key: "project/support",
@@ -203,5 +205,40 @@ describe("ProjectTemplateFlow", () => {
     expect(
       screen.getByRole("button", { name: "Use Support Template" })
     ).toBeEnabled()
+  })
+
+  it("returns focus to Project actions when discovery is cancelled during retry", async () => {
+    let resolveTemplates!: (templates: (typeof template)[]) => void
+    mocks.fetchTemplates
+      .mockRejectedValueOnce(new Error("unavailable"))
+      .mockReturnValueOnce(
+        new Promise(resolve => {
+          resolveTemplates = resolve
+        })
+      )
+    const { component: tabs } = render(HomeProjectTabs)
+    const opener = screen.getByRole("button", {
+      name: "Project create and import actions",
+    })
+    const { component } = renderFlow({
+      onGalleryCancel: () => tabs.focusCreateAction(),
+    })
+    opener.focus()
+
+    await component.showGallery()
+    await fireEvent.click(
+      await screen.findByRole("button", { name: "Try again" })
+    )
+    await screen.findByText("Loading templates…")
+    await fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
+    resolveTemplates([template])
+    await tick()
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Project templates" })
+      ).not.toBeInTheDocument()
+    )
+    expect(opener).toHaveFocus()
   })
 })
