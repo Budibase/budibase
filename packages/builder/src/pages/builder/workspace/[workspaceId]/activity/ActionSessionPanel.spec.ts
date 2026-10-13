@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { tick } from "svelte"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
   Event,
@@ -323,8 +324,6 @@ describe("ActionSessionPanel", () => {
   })
 
   describe("live updates", () => {
-    const SETTLE_MS = 50
-
     const change = (
       overrides: Partial<ActionSessionChangeEvent> = {}
     ): ActionSessionChangeEvent => ({
@@ -337,8 +336,6 @@ describe("ActionSessionPanel", () => {
 
     const notify = (event: ActionSessionChangeEvent = change()) =>
       mocks.socket.trigger(BuilderSocketEvent.ActionSessionChange, event)
-
-    const settle = () => new Promise(resolve => setTimeout(resolve, SETTLE_MS))
 
     const bookmarks = () =>
       mocks.fetchActionSessionEvents.mock.calls.map(([opts]) => opts.bookmark)
@@ -396,9 +393,9 @@ describe("ActionSessionPanel", () => {
     })
 
     it("ignores changes of other sessions and environments", async () => {
-      mocks.fetchActionSessionEvents.mockResolvedValue(
-        eventsResponse({ ids: ["event-1"] })
-      )
+      mocks.fetchActionSessionEvents
+        .mockResolvedValueOnce(eventsResponse({ ids: ["event-1"] }))
+        .mockResolvedValueOnce(eventsResponse({ ids: ["event-1", "event-2"] }))
 
       renderPanel(session)
       await screen.findByText(/Step executed/)
@@ -410,9 +407,10 @@ describe("ActionSessionPanel", () => {
       )
       notify(change({ environment: "prod" }))
       notify(change({ environment: "prod", truncated: true }))
+      notify()
 
-      await settle()
-      expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(1)
+      await screen.findByText("Showing 1–2 of 2 items")
+      expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
     })
 
     it("refreshes on a truncated change in its environment", async () => {
@@ -435,7 +433,7 @@ describe("ActionSessionPanel", () => {
       mocks.fetchActionSessionEvents
         .mockResolvedValueOnce(eventsResponse({ ids: ["event-1"] }))
         .mockReturnValueOnce(refresh.promise)
-        .mockResolvedValue(eventsResponse({ ids: ["event-1"] }))
+        .mockResolvedValueOnce(eventsResponse({ ids: ["event-1", "event-2"] }))
 
       renderPanel(session)
       await screen.findByText(/Step executed/)
@@ -445,10 +443,7 @@ describe("ActionSessionPanel", () => {
       notify()
       refresh.resolve(eventsResponse({ ids: ["event-1"] }))
 
-      await waitFor(() =>
-        expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(3)
-      )
-      await settle()
+      await screen.findByText("Showing 1–2 of 2 items")
       expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(3)
     })
 
@@ -464,9 +459,12 @@ describe("ActionSessionPanel", () => {
         notify()
 
         await waitFor(() =>
-          expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
+          expect(errorSpy).toHaveBeenCalledWith(
+            "Failed to refresh action session events",
+            expect.any(Error)
+          )
         )
-        await settle()
+        await tick()
         expect(screen.getByText(/Step executed/)).toBeVisible()
         expect(
           screen.queryByRole("button", { name: "Try again" })
@@ -493,11 +491,11 @@ describe("ActionSessionPanel", () => {
 
     it("does not refresh while closed", async () => {
       renderPanel(undefined)
+      await tick()
 
       notify()
       mocks.socket.trigger("connect")
 
-      await settle()
       expect(mocks.fetchActionSessionEvents).not.toHaveBeenCalled()
     })
   })

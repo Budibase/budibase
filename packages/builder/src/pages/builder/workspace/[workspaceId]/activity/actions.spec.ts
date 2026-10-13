@@ -6,6 +6,7 @@ import {
   within,
 } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { tick } from "svelte"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import type {
   ActionSessionChangeEvent,
@@ -718,8 +719,6 @@ describe("Activity actions page", () => {
   })
 
   describe("live updates", () => {
-    const SETTLE_MS = 50
-
     const change = (
       overrides: Partial<ActionSessionChangeEvent> = {}
     ): ActionSessionChangeEvent => ({
@@ -730,8 +729,6 @@ describe("Activity actions page", () => {
 
     const notify = (event: ActionSessionChangeEvent = change()) =>
       socket.trigger(BuilderSocketEvent.ActionSessionChange, event)
-
-    const settle = () => new Promise(resolve => setTimeout(resolve, SETTLE_MS))
 
     const queries = (): FetchActionSessionsQuery[] =>
       mocks.fetchActionSessions.mock.calls.map(([query]) => query)
@@ -857,7 +854,14 @@ describe("Activity actions page", () => {
     })
 
     it("does not reopen a closed panel when its session is refreshed", async () => {
-      mocks.fetchActionSessions.mockResolvedValue(response)
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Refreshed",
+            pagination: response.pagination,
+          })
+        )
 
       const { findInTable } = renderPage()
       await fireEvent.click(await findInTable("Support agent"))
@@ -867,28 +871,39 @@ describe("Activity actions page", () => {
 
       notify()
 
-      await waitFor(() => expect(queries()).toHaveLength(2))
-      await settle()
+      await findInTable("Refreshed")
       expect(
         document.querySelector(".activity-panel-container")
       ).not.toBeInTheDocument()
     })
 
     it("ignores changes from an environment outside the filter", async () => {
-      mocks.fetchActionSessions.mockResolvedValue(response)
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Dev sessions",
+            pagination: response.pagination,
+          })
+        )
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Dev refreshed",
+            pagination: response.pagination,
+          })
+        )
 
       const { findInTable } = renderPage()
       await findInTable("Support agent")
       await fireEvent.change(screen.getByDisplayValue("All environments"), {
         target: { value: "dev" },
       })
-      await waitFor(() => expect(queries()).toHaveLength(2))
+      await findInTable("Dev sessions")
 
       notify(change({ environment: "prod" }))
       notify(change({ environment: "dev" }))
 
-      await waitFor(() => expect(queries()).toHaveLength(3))
-      await settle()
+      await findInTable("Dev refreshed")
       expect(queries()).toHaveLength(3)
       expect(queries().at(-1)).toEqual(expect.objectContaining({ env: "dev" }))
     })
@@ -898,7 +913,12 @@ describe("Activity actions page", () => {
       mocks.fetchActionSessions
         .mockResolvedValueOnce(response)
         .mockReturnValueOnce(refresh.promise)
-        .mockResolvedValue(response)
+        .mockResolvedValueOnce(
+          pageResponse({
+            assetLabel: "Final refresh",
+            pagination: response.pagination,
+          })
+        )
 
       const { findInTable } = renderPage()
       await findInTable("Support agent")
@@ -909,8 +929,7 @@ describe("Activity actions page", () => {
       notify()
       refresh.resolve(response)
 
-      await waitFor(() => expect(queries()).toHaveLength(3))
-      await settle()
+      await findInTable("Final refresh")
       expect(queries()).toHaveLength(3)
     })
 
@@ -964,7 +983,8 @@ describe("Activity actions page", () => {
         sessions: [{ ...response.sessions[0], assetLabel: "Stale refresh" }],
       })
 
-      await settle()
+      await refresh.promise
+      await tick()
       expect(table().queryByText("Stale refresh")).not.toBeInTheDocument()
       expect(table().getByText("Failed sessions")).toBeInTheDocument()
     })
@@ -980,8 +1000,13 @@ describe("Activity actions page", () => {
 
         notify()
 
-        await waitFor(() => expect(queries()).toHaveLength(2))
-        await settle()
+        await waitFor(() =>
+          expect(errorSpy).toHaveBeenCalledWith(
+            "Failed to refresh action sessions",
+            expect.any(Error)
+          )
+        )
+        await tick()
         expect(table().getByText("Support agent")).toBeInTheDocument()
         expect(
           screen.queryByRole("button", { name: "Try again" })
@@ -1125,7 +1150,8 @@ describe("Activity actions page", () => {
       unmount()
       initial.resolve(response)
 
-      await settle()
+      await initial.promise
+      await tick()
       expect(queries()).toHaveLength(1)
       expect(socket.listenerCount(BuilderSocketEvent.ActionSessionChange)).toBe(
         0
