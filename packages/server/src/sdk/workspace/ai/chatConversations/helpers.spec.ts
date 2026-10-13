@@ -46,6 +46,42 @@ describe("prepareChatConversationForSave", () => {
     expect(result.updatedAt).toBeDefined()
   })
 
+  it("persists clarification option IDs with the assistant message", () => {
+    const messages: ChatConversation["messages"] = [
+      {
+        id: "clarification_1",
+        role: "assistant",
+        parts: [{ type: "text", text: "1. Laptop 200\n2. Laptop 500" }],
+        metadata: {
+          requestClarification: {
+            operationId: "op_buy",
+            reason: "ambiguous",
+            options: [
+              { requestId: "request_200", label: "Laptop 200" },
+              { requestId: "request_500", label: "Laptop 500" },
+            ],
+          },
+        },
+      },
+    ]
+
+    const saved = prepareChatConversationForSave({
+      chatId: "chat_1",
+      userId: "user_1",
+      messages,
+      chat: { agentId: "agent_1" },
+    })
+
+    expect(saved.messages[0].metadata?.requestClarification).toEqual({
+      operationId: "op_buy",
+      reason: "ambiguous",
+      options: [
+        { requestId: "request_200", label: "Laptop 200" },
+        { requestId: "request_500", label: "Laptop 500" },
+      ],
+    })
+  })
+
   it("truncates oversized tool output when persisting", () => {
     const longOutput = "x".repeat(9000)
     const messages = [

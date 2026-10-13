@@ -10,17 +10,23 @@ import {
 import { v4 } from "uuid"
 import {
   ActionFailureReason,
+  ApprovalToolResultStatus,
+  FeatureFlag,
+} from "@budibase/types"
+import type {
   ChatAgentRequest,
   ChatConversation,
   ChatConversationRequest,
-  ApprovalToolResultStatus,
-  FeatureFlag,
   ContextUser,
   UserCtx,
   WebhookChatCompleteResult,
+  AgentRequestInitialization,
+  AgentMessageMetadata,
 } from "@budibase/types"
 import {
   consumeStream,
+  createUIMessageStream,
+  pipeUIMessageStreamToResponse,
   readUIMessageStream,
   type LanguageModelUsage,
   type UIMessage,
@@ -35,6 +41,7 @@ import {
   type AgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
+import { getRequestClarificationChoice } from "../../../sdk/workspace/ai/agentRequests"
 import { truncateTitle } from "../../../sdk/workspace/ai/chatConversations"
 import {
   determineTrigger,
@@ -81,6 +88,69 @@ const getRecentChatContext = (
     .slice(-limit)
 }
 
+const getPendingRequestClarification = (
+  messages: ChatConversation["messages"]
+) =>
+  messages.findLast(message => message.role === "assistant")?.metadata
+    ?.requestClarification
+
+const buildRequestResponseMessage = ({
+  initialization,
+  run,
+}: {
+  initialization: Exclude<AgentRequestInitialization, { requestId: string }>
+  run: AgentChatRun
+}): UIMessage<AgentMessageMetadata> => {
+  if (initialization.pendingApproval) {
+    return {
+      id: v4(),
+      role: "assistant",
+      parts: [
+        {
+          type: "text",
+          text: [
+            "This request is already waiting for approval:",
+            initialization.pendingApproval.label,
+            "Use the Approve or Reject buttons on the original approval message. Selecting a request does not approve it. No new approval or action was created.",
+          ].join("\n\n"),
+        },
+      ],
+      metadata: {
+        selectedOperationId: run.selectedOperation?.id,
+        selectedOperationName: run.selectedOperation?.name,
+        createdAt: Date.now(),
+      },
+    }
+  }
+  const clarification = initialization.clarification
+  const introduction =
+    clarification.reason === "analysis_failed"
+      ? "I couldn't determine which request your message refers to. No requests were changed and no actions were taken."
+      : "Which request do you mean? No requests were changed and no actions were taken."
+  const options = clarification.options.map(
+    (option, index) => `${index + 1}. ${option.label}`
+  )
+  const text = [
+    introduction,
+    ...options,
+    options.length
+      ? "Reply with the option number or enough detail to identify one request. Pending approvals still require their approval buttons."
+      : "No matching pending request remains. Please describe the request you want to continue.",
+  ].join("\n\n")
+
+  return {
+    id: v4(),
+    role: "assistant",
+    parts: [{ type: "text", text }],
+    metadata: {
+      requestClarification: clarification,
+      selectedOperationId: clarification.operationId,
+      selectedOperationName: run.selectedOperation?.name,
+      createdAt: Date.now(),
+    },
+  }
+}
+
 type AgentRequestTrackingHandle = { requestId: string } | undefined
 
 const startAgentRequestTracking = async ({
@@ -95,7 +165,7 @@ const startAgentRequestTracking = async ({
   run: AgentChatRun
   userId: string
   chatMessages: ChatConversation["messages"]
-}): Promise<AgentRequestTrackingHandle> => {
+}): Promise<AgentRequestInitialization | undefined> => {
   if (
     !context.isProdWorkspace() ||
     !(await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))
@@ -112,7 +182,7 @@ const startAgentRequestTracking = async ({
         }
       : undefined
 
-  let trackingHandle: AgentRequestTrackingHandle
+  let trackingHandle: AgentRequestInitialization | undefined
 
   if (operation) {
     trackingHandle = await sdk.ai.agentRequests
@@ -124,6 +194,7 @@ const startAgentRequestTracking = async ({
         userId,
         source: determineTrigger(sessionId),
         recentChatContext: getRecentChatContext(chatMessages),
+        clarification: getPendingRequestClarification(chatMessages),
       })
       .catch(error => {
         console.error("Failed to init active agent request", {
@@ -133,6 +204,10 @@ const startAgentRequestTracking = async ({
         })
         return undefined
       })
+
+    if (trackingHandle?.clarification || trackingHandle?.pendingApproval) {
+      return trackingHandle
+    }
 
     sdk.ai.agentRequests
       .enqueueRequestTracking({
@@ -467,6 +542,12 @@ export async function webhookChat({
     sessionId,
     user,
     modelMessages,
+    operationId:
+      getRequestClarificationChoice(
+        sdk.ai.chatConversations.findLatestUserQuestion(chat)
+      ) !== undefined
+        ? getPendingRequestClarification(chat.messages)?.operationId
+        : undefined,
     getRequestId: () => trackingHandle?.requestId,
   })
   const title = run.latestQuestion
@@ -474,13 +555,37 @@ export async function webhookChat({
     : chat.title
 
   const userId = user.globalId || user.userId || user._id || ""
-  trackingHandle = await startAgentRequestTracking({
+  const trackingResult = await startAgentRequestTracking({
     agentId,
     sessionId,
     run,
     userId,
     chatMessages: chat.messages,
   })
+  if (trackingResult?.clarification || trackingResult?.pendingApproval) {
+    const message = buildRequestResponseMessage({
+      initialization: trackingResult,
+      run,
+    })
+    const text = getAssistantMessageText(message)
+    if (onAssistantStream) {
+      await onAssistantStream(
+        new ReadableStream<string>({
+          start(controller) {
+            controller.enqueue(text)
+            controller.close()
+          },
+        })
+      )
+    }
+    return {
+      messages: [...chat.messages, message],
+      assistantText: text,
+      title,
+      ragSources: [],
+    }
+  }
+  trackingHandle = trackingResult
 
   const pendingToolCalls = new Set<string>()
   const unrecoveredToolFailures = new Set<string>()
@@ -668,16 +773,51 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       errorLabel: "chat stream",
       sessionId,
       user,
+      operationId:
+        getRequestClarificationChoice(
+          sdk.ai.chatConversations.findLatestUserQuestion(chat)
+        ) !== undefined
+          ? getPendingRequestClarification(chat.messages)?.operationId
+          : undefined,
       getRequestId: () => trackingHandle?.requestId,
     })
 
-    trackingHandle = await startAgentRequestTracking({
+    const trackingResult = await startAgentRequestTracking({
       agentId,
       sessionId,
       run,
       userId,
       chatMessages: chat.messages,
     })
+    if (trackingResult?.clarification || trackingResult?.pendingApproval) {
+      const message = buildRequestResponseMessage({
+        initialization: trackingResult,
+        run,
+      })
+      ctx.respond = false
+      pipeUIMessageStreamToResponse({
+        response: ctx.res,
+        stream: createUIMessageStream<UIMessage<AgentMessageMetadata>>({
+          execute: ({ writer }) => {
+            writer.write({
+              type: "start",
+              messageId: message.id,
+              messageMetadata: message.metadata,
+            })
+            writer.write({ type: "text-start", id: message.id })
+            writer.write({
+              type: "text-delta",
+              id: message.id,
+              delta: getAssistantMessageText(message),
+            })
+            writer.write({ type: "text-end", id: message.id })
+            writer.write({ type: "finish", finishReason: "stop" })
+          },
+        }),
+      })
+      return
+    }
+    trackingHandle = trackingResult
 
     const pendingToolCalls = new Set<string>()
     const unrecoveredToolFailures = new Set<string>()

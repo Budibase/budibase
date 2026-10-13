@@ -2,6 +2,7 @@ import { Document } from "../../"
 import type { UIMessage } from "ai"
 import type { ArrayOperator, BasicOperator } from "../../sdk"
 import type { FieldType } from "../workspace/row"
+import type { AgentRequestClarification } from "./agentRequests"
 import {
   EscalationAction,
   EscalationRecipient,
@@ -263,6 +264,7 @@ export interface AgentMessageUsage {
 }
 
 export interface AgentMessageMetadata {
+  requestClarification?: AgentRequestClarification
   ragSources?: AgentMessageRagSource[]
   toolDisplayNames?: Record<string, string>
   selectedOperationId?: string

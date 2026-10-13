@@ -8,6 +8,8 @@ import {
 import { ApprovalToolResultStatus } from "@budibase/types"
 import type {
   AgentRequestOperation,
+  AgentRequestClarification,
+  AgentRequestInitialization,
   AgentRequest,
   AgentRequestAction,
   AgentRequestEntry,
@@ -19,9 +21,13 @@ import type {
   ToolCallAction,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
-import type { AgentRequestLinkAnalysis } from "./helpers"
+import type {
+  AgentRequestLinkAnalysis,
+  AgentRequestLinkCandidate,
+} from "./helpers"
 import {
   analyzeAgentRequestLink,
+  getRequestClarificationChoice,
   generateAgentRequestTitle,
   generateInteractionSummary,
   generateRequestOutcome,
@@ -69,16 +75,19 @@ const buildThread = ({
   operationId,
   entry,
   actions = [],
+  initialPrompt,
 }: {
   agentId: string
   userId: string
   operationId: string
   entry: AgentRequestEntry
   actions?: AgentRequestAction[]
+  initialPrompt: string
 }): AgentRequest => {
   return {
     _id: docIds.generateAgentRequestID(),
     title: undefined,
+    initialPrompt,
     agentId,
     userId,
     operationId,
@@ -519,6 +528,7 @@ async function createNewRequest({
       operationId: operation.id,
       entry: buildEntry({ sessionId, source }),
       actions: [fallbackAction],
+      initialPrompt: latestPrompt,
     })
   )
 
@@ -717,6 +727,49 @@ const linkRequestEntries = ({
   return nextEntries
 }
 
+const buildRequestClarification = ({
+  candidates,
+  operationId,
+  reason,
+}: {
+  candidates: AgentRequestLinkCandidate[]
+  operationId: string
+  reason: AgentRequestClarification["reason"]
+}): AgentRequestInitialization => {
+  const options = candidates.flatMap(request => {
+    if (!request._id) {
+      return []
+    }
+    const label = [
+      request.initialPrompt || request.title || "Pending request",
+      ...(request.approvalDescriptions || []),
+    ].join(" | ")
+    return [
+      {
+        requestId: request._id,
+        label,
+        requestedAt: request.createdAt,
+        source: request.entries[0]?.source,
+      },
+    ]
+  })
+  return {
+    clarification: {
+      operationId,
+      reason,
+      options: options.map(option => ({
+        requestId: option.requestId,
+        label: options.some(
+          other =>
+            other.requestId !== option.requestId && other.label === option.label
+        )
+          ? `${option.label} (requested ${option.requestedAt} via ${option.source})`
+          : option.label,
+      })),
+    },
+  }
+}
+
 export async function initActiveRequest({
   agentId,
   userId,
@@ -725,6 +778,7 @@ export async function initActiveRequest({
   operation,
   source,
   recentChatContext,
+  clarification,
 }: {
   agentId: string
   userId: string
@@ -732,11 +786,12 @@ export async function initActiveRequest({
   latestPrompt: string
   operation?: AgentRequestOperation
   source: string
+  clarification?: AgentRequestClarification
   recentChatContext?: Array<{
     role: "user" | "assistant"
     content: string
   }>
-}): Promise<{ requestId: string } | undefined> {
+}): Promise<AgentRequestInitialization | undefined> {
   if (!operation?.name) {
     return undefined
   }
@@ -746,31 +801,129 @@ export async function initActiveRequest({
     userId,
     operationId: operation.id,
   })
+  let enrichedCandidates: AgentRequestLinkCandidate[]
+  try {
+    enrichedCandidates = await Promise.all(
+      candidates.map(async request => {
+        const approvals = await listContextDocs({
+          requestId: request._id,
+          resolution: "pending",
+        })
+        return {
+          ...request,
+          approvalDescriptions: approvals.map(approval =>
+            [
+              approval.title,
+              approval.summary,
+              ...(approval.reviewContext?.parameters || []).map(
+                parameter => `${parameter.name}: ${parameter.value}`
+              ),
+            ]
+              .filter(Boolean)
+              .join(" | ")
+          ),
+        }
+      })
+    )
+  } catch (error) {
+    console.log("Failed to load agent request approval details", {
+      agentId,
+      sessionId,
+      error,
+    })
+    return buildRequestClarification({
+      candidates,
+      operationId: operation.id,
+      reason: "analysis_failed",
+    })
+  }
+  const clarify = ({
+    reason,
+    requests = enrichedCandidates,
+  }: {
+    reason: AgentRequestClarification["reason"]
+    requests?: AgentRequestLinkCandidate[]
+  }) =>
+    buildRequestClarification({
+      candidates: requests,
+      operationId: operation.id,
+      reason,
+    })
+
   let decision: AgentRequestLinkAnalysis = { decision: "new_thread" }
-  if (candidates.length > 0) {
+  const choice = clarification
+    ? getRequestClarificationChoice(latestPrompt)
+    : undefined
+  if (choice !== undefined && clarification) {
+    const option = clarification.options[choice - 1]
+    if (!option || clarification.operationId !== operation.id) {
+      return clarify({ reason: "ambiguous" })
+    }
+    decision = {
+      decision: "existing_thread",
+      requestId: option.requestId,
+      entryAction: "append_latest_entry",
+    }
+  } else if (candidates.length > 0 || clarification?.options.length) {
     try {
       decision = await analyzeAgentRequestLink({
         latestPrompt,
-        candidateRequests: candidates,
+        candidateRequests: enrichedCandidates,
         recentChatContext,
+        clarificationOptions: clarification?.options,
         agentId,
         sessionId,
       })
     } catch (error) {
-      console.error("Failed to analyze agent request, creating a new request", {
+      console.log("Failed to analyze agent request", {
         agentId,
         sessionId,
         error,
       })
+      if (candidates.length > 1 || clarification) {
+        return clarify({ reason: "analysis_failed" })
+      }
     }
+  }
+  if (decision.decision === "ambiguous") {
+    return clarify({
+      reason: "ambiguous",
+      requests: enrichedCandidates.filter(request =>
+        decision.requestIds.includes(request._id!)
+      ),
+    })
   }
   if (decision.decision === "existing_thread" && decision.requestId) {
     for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
       const existing = await context
         .getWorkspaceDB()
         .tryGet<AgentRequest>(decision.requestId)
-      if (!existing || isTerminalStatus(existing.status)) {
-        break
+      if (
+        !existing ||
+        isTerminalStatus(existing.status) ||
+        existing.userId !== userId ||
+        existing.agentId !== agentId ||
+        existing.operationId !== operation.id
+      ) {
+        return clarify({
+          reason: "ambiguous",
+          requests: enrichedCandidates.filter(
+            request => request._id !== decision.requestId
+          ),
+        })
+      }
+      const pendingApprovals = await listContextDocs({
+        requestId: existing._id,
+        resolution: "pending",
+      })
+      if (pendingApprovals.length > 0) {
+        return {
+          pendingApproval: {
+            requestId: decision.requestId,
+            label:
+              existing.initialPrompt || existing.title || "Pending request",
+          },
+        }
       }
       try {
         const updated = await saveRequest({
@@ -802,6 +955,7 @@ export async function initActiveRequest({
     userId,
     operationId: operation.id,
     entry,
+    initialPrompt: latestPrompt,
   })
 
   let title: string | undefined
@@ -1006,7 +1160,11 @@ export async function createOrUpdateRequestForPrompt({
     sessionId,
   })
 
-  if (linkDecision.decision === "new_thread" || !linkDecision.requestId) {
+  if (linkDecision.decision === "ambiguous") {
+    return undefined
+  }
+
+  if (linkDecision.decision === "new_thread") {
     const createdRequest = await createNewRequest({
       agentId,
       sessionId,

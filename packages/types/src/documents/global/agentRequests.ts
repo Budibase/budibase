@@ -77,6 +77,7 @@ export type AgentRequestAction =
 
 export interface AgentRequest extends Document {
   title?: string
+  initialPrompt?: string
   agentId: string
   operationId?: string
   userId: string
@@ -86,3 +87,36 @@ export interface AgentRequest extends Document {
   error?: string
   completedAt?: string
 }
+
+export interface AgentRequestClarificationOption {
+  requestId: string
+  label: string
+}
+
+export interface AgentRequestClarification {
+  operationId: string
+  reason: "ambiguous" | "analysis_failed"
+  options: AgentRequestClarificationOption[]
+}
+
+export interface AgentRequestPendingApproval {
+  requestId: string
+  label: string
+}
+
+export type AgentRequestInitialization =
+  | {
+      requestId: string
+      clarification?: never
+      pendingApproval?: never
+    }
+  | {
+      clarification: AgentRequestClarification
+      requestId?: never
+      pendingApproval?: never
+    }
+  | {
+      pendingApproval: AgentRequestPendingApproval
+      requestId?: never
+      clarification?: never
+    }

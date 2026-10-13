@@ -6,6 +6,7 @@ import {
   EscalationSource,
   SEPARATOR,
 } from "@budibase/types"
+import type { AgentRequest } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { builderSocket } from "../../../../websockets"
 import backfillOperationIds from "../../../../workspaceMigrations/migrations/20261006164506_backfill_agent_request_operation_ids"
@@ -30,6 +31,7 @@ import {
 } from "./helpers"
 
 jest.mock("./helpers", () => ({
+  ...jest.requireActual("./helpers"),
   analyzeAgentRequestLink: jest.fn(),
   generateAgentRequestTitle: jest.fn(),
   generateInteractionSummary: jest.fn(),
@@ -49,6 +51,16 @@ jest.mock("../../../../websockets", () => ({
     }
   ),
 }))
+
+const initLinkedRequest = async (
+  params: Parameters<typeof initActiveRequest>[0]
+) => {
+  const result = await initActiveRequest(params)
+  if (!result?.requestId) {
+    throw new Error("Expected an active request in the test fixture")
+  }
+  return { requestId: result.requestId }
+}
 
 describe("agentRequests crud", () => {
   const config = new TestConfiguration()
@@ -80,9 +92,346 @@ describe("agentRequests crud", () => {
   })
 
   describe("initActiveRequest", () => {
+    it.each([
+      ["Buy a laptop", "Buy a melon", "go ahead, buy it"],
+      [
+        "Buy a laptop costing 200",
+        "Buy a laptop costing 500",
+        "buy the laptop",
+      ],
+    ])(
+      "clarifies %s and %s without changing requests",
+      async (firstPrompt, secondPrompt, followUp) => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const inputs = {
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            source: "Slack",
+            operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+          }
+          const first = await initActiveRequest({
+            ...inputs,
+            latestPrompt: firstPrompt,
+          })
+          const second = await initActiveRequest({
+            ...inputs,
+            latestPrompt: secondPrompt,
+          })
+          const before = await fetchRequestsByAgent("agent_1")
+          analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+            decision: "ambiguous",
+            requestIds: [first?.requestId, second?.requestId],
+          })
+
+          const result = await initActiveRequest({
+            ...inputs,
+            latestPrompt: followUp,
+          })
+
+          expect(result).toEqual({
+            clarification: {
+              operationId: "op_buy",
+              reason: "ambiguous",
+              options: expect.arrayContaining([
+                { requestId: first?.requestId, label: firstPrompt },
+                { requestId: second?.requestId, label: secondPrompt },
+              ]),
+            },
+          })
+          expect(await fetchRequestsByAgent("agent_1")).toEqual(before)
+        })
+      }
+    )
+
+    it.each([
+      { latestPrompt: "2", showOptions: true },
+      { latestPrompt: "the laptop costing 200", showOptions: true },
+      { latestPrompt: "approve the laptop costing 200", showOptions: false },
+    ])(
+      "keeps the original approval pending when choosing $latestPrompt",
+      async ({ latestPrompt, showOptions }) => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const inputs = {
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            source: "Slack",
+            operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+          }
+          const first = await initLinkedRequest({
+            ...inputs,
+            latestPrompt: "Buy a laptop costing 200",
+          })
+          const second = await initLinkedRequest({
+            ...inputs,
+            latestPrompt: "Buy a laptop costing 500",
+          })
+          const db = context.getWorkspaceDB()
+          for (const requestId of [first.requestId, second.requestId]) {
+            await db.put({
+              _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${requestId}`,
+              source: EscalationSource.OPERATION,
+              appId: config.getProdWorkspaceId(),
+              tenantId: config.getTenantId(),
+              agentId: "agent_1",
+              requestId,
+              resolution: "pending",
+            })
+            await updateRequestStatus({ requestId, status: "needs_input" })
+          }
+          const before = await fetchRequestsByAgent("agent_1")
+          analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+            decision: "existing_thread",
+            requestId: first.requestId,
+            entryAction: "append_latest_entry",
+          })
+
+          const result = await initActiveRequest({
+            ...inputs,
+            latestPrompt,
+            clarification: showOptions
+              ? {
+                  operationId: "op_buy",
+                  reason: "ambiguous",
+                  options: [
+                    { requestId: second.requestId, label: "Laptop 500" },
+                    { requestId: first.requestId, label: "Laptop 200" },
+                  ],
+                }
+              : undefined,
+          })
+
+          expect(result).toEqual({
+            pendingApproval: {
+              requestId: first.requestId,
+              label: "Buy a laptop costing 200",
+            },
+          })
+          expect(await fetchRequestsByAgent("agent_1")).toEqual(before)
+          expect(
+            await db.get(
+              `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${first.requestId}`
+            )
+          ).toEqual(expect.objectContaining({ resolution: "pending" }))
+        })
+      }
+    )
+
+    it("uses pending approval prices to distinguish requests with identical titles", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+        }
+        const first = await initLinkedRequest({
+          ...inputs,
+          latestPrompt: "Buy laptop 200",
+        })
+        const second = await initLinkedRequest({
+          ...inputs,
+          latestPrompt: "Buy laptop 500",
+        })
+        for (const [index, requestId] of [
+          first.requestId,
+          second.requestId,
+        ].entries()) {
+          const db = context.getWorkspaceDB()
+          const { initialPrompt: _initialPrompt, ...request } =
+            await db.get<AgentRequest>(requestId)
+          await db.put({
+            ...request,
+            title: "Buy laptop",
+            status: "needs_input",
+          })
+          await db.put({
+            _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}laptop_${index}`,
+            source: EscalationSource.OPERATION,
+            appId: config.getProdWorkspaceId(),
+            tenantId: config.getTenantId(),
+            agentId: "agent_1",
+            requestId,
+            resolution: "pending",
+            reviewContext: {
+              requestedBy: "user_1",
+              operation: "Buy",
+              action: "Create purchase",
+              parameters: [
+                { name: "Price", value: index === 0 ? "200" : "500" },
+              ],
+            },
+          })
+        }
+        const before = await fetchRequestsByAgent("agent_1")
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "ambiguous",
+          requestIds: [first.requestId, second.requestId],
+        })
+
+        const result = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "buy the laptop",
+        })
+
+        expect(result?.clarification?.options).toEqual(
+          expect.arrayContaining([
+            { requestId: first.requestId, label: "Buy laptop | Price: 200" },
+            { requestId: second.requestId, label: "Buy laptop | Price: 500" },
+          ])
+        )
+        expect(await fetchRequestsByAgent("agent_1")).toEqual(before)
+      })
+    })
+
+    it("uses the displayed option mapping when candidate ordering changes", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+        }
+        const first = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Buy a laptop costing 200",
+        })
+        const second = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "Buy a laptop costing 500",
+        })
+        await updateRequestStatus({
+          requestId: first!.requestId!,
+          status: "needs_input",
+        })
+        await updateRequestStatus({
+          requestId: second!.requestId!,
+          status: "needs_input",
+        })
+        const before = await fetchRequestsByAgent("agent_1")
+
+        const result = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "option 2",
+          clarification: {
+            operationId: "op_buy",
+            reason: "ambiguous",
+            options: [
+              { requestId: second!.requestId!, label: "Laptop 500" },
+              { requestId: first!.requestId!, label: "Laptop 200" },
+            ],
+          },
+        })
+
+        expect(result).toEqual({ requestId: first?.requestId })
+        const after = await fetchRequestsByAgent("agent_1")
+        expect(
+          after.find(request => request._id === second?.requestId)
+        ).toEqual(before.find(request => request._id === second?.requestId))
+        expect(
+          after.find(request => request._id === first?.requestId)?.status
+        ).toEqual("needs_input")
+      })
+    })
+
+    it("continues a displayed option even when newer requests push it outside the candidate limit", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+        }
+        const first = await initLinkedRequest({
+          ...inputs,
+          latestPrompt: "Buy a laptop costing 200",
+        })
+        for (let index = 0; index < 10; index++) {
+          await initLinkedRequest({
+            ...inputs,
+            latestPrompt: `Buy item ${index}`,
+          })
+        }
+
+        const result = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "la opción 1",
+          clarification: {
+            operationId: "op_buy",
+            reason: "ambiguous",
+            options: [{ requestId: first.requestId, label: "Laptop 200" }],
+          },
+        })
+
+        expect(result).toEqual({ requestId: first.requestId })
+        expect(await fetchRequestsByAgent("agent_1")).toHaveLength(11)
+      })
+    })
+
+    it("stops on analyzer failure with multiple pending requests", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+        }
+        await initActiveRequest({ ...inputs, latestPrompt: "Buy a laptop" })
+        await initActiveRequest({ ...inputs, latestPrompt: "Buy a melon" })
+        const before = await fetchRequestsByAgent("agent_1")
+        analyzeAgentRequestLinkMock.mockRejectedValueOnce(
+          new Error("Unavailable model")
+        )
+
+        const result = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "buy it",
+        })
+
+        expect(result?.clarification?.reason).toEqual("analysis_failed")
+        expect(await fetchRequestsByAgent("agent_1")).toEqual(before)
+      })
+    })
+
+    it("does not continue an option belonging to another user", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+        }
+        const other = await initActiveRequest({
+          ...inputs,
+          userId: "user_2",
+          latestPrompt: "Buy a laptop",
+        })
+        const before = await fetchRequestsByAgent("agent_1")
+
+        const result = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "1",
+          clarification: {
+            operationId: "op_buy",
+            reason: "ambiguous",
+            options: [{ requestId: other!.requestId!, label: "Laptop" }],
+          },
+        })
+
+        expect(result?.clarification?.options).toEqual([])
+        expect(await fetchRequestsByAgent("agent_1")).toEqual(before)
+      })
+    })
+
     it("creates a request with active status and generated title", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const result = await initActiveRequest({
+        const result = await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -108,7 +457,7 @@ describe("agentRequests crud", () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         emitAgentRequestChangeMock.mockClear()
 
-        const result = await initActiveRequest({
+        const result = await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -133,7 +482,7 @@ describe("agentRequests crud", () => {
 
     it("reuses a request when boundary analysis identifies a follow-up", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const first = await initActiveRequest({
+        const first = await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -152,7 +501,7 @@ describe("agentRequests crud", () => {
           entryAction: "append_latest_entry",
         })
 
-        const second = await initActiveRequest({
+        const second = await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -178,7 +527,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           source: "Slack",
         }
-        const first = (await initActiveRequest({
+        const first = (await initLinkedRequest({
           ...inputs,
           latestPrompt: "Raise a chips expense",
           operation: {
@@ -196,7 +545,7 @@ describe("agentRequests crud", () => {
           requestId: first.requestId,
           entryAction: "append_latest_entry",
         })
-        const followUp = await initActiveRequest({
+        const followUp = await initLinkedRequest({
           ...inputs,
           latestPrompt: "Change that expense to 25 pounds",
           operation: {
@@ -231,7 +580,7 @@ describe("agentRequests crud", () => {
           sessionId: "session_1",
           source: "Chat",
         }
-        const first = (await initActiveRequest({
+        const first = (await initLinkedRequest({
           ...inputs,
           latestPrompt: "Raise a chips expense",
           operation: {
@@ -245,7 +594,7 @@ describe("agentRequests crud", () => {
           requestId: first.requestId,
           entryAction: "append_latest_entry",
         })
-        await initActiveRequest({
+        await initLinkedRequest({
           ...inputs,
           latestPrompt: "Create a book",
           operation: {
@@ -279,7 +628,7 @@ describe("agentRequests crud", () => {
               prompt: "Create expenses.",
             },
           }
-          const first = (await initActiveRequest({
+          const first = (await initLinkedRequest({
             ...inputs,
             latestPrompt: "Raise a chips expense",
           }))!
@@ -320,7 +669,7 @@ describe("agentRequests crud", () => {
               return { decision: "new_thread" }
             }
           )
-          const followUp = await initActiveRequest({
+          const followUp = await initLinkedRequest({
             ...inputs,
             latestPrompt: "Change that expense to 25 pounds",
           })
@@ -332,7 +681,7 @@ describe("agentRequests crud", () => {
       }
     )
 
-    it("creates a fresh tracked request if the selected request is deleted during analysis", async () => {
+    it("asks again without creating a request if the selected request is deleted during analysis", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const inputs = {
           agentId: "agent_1",
@@ -345,7 +694,7 @@ describe("agentRequests crud", () => {
             prompt: "Create expenses.",
           },
         }
-        const first = (await initActiveRequest({
+        const first = (await initLinkedRequest({
           ...inputs,
           latestPrompt: "Raise a chips expense",
         }))!
@@ -364,11 +713,14 @@ describe("agentRequests crud", () => {
           latestPrompt: "Change that expense to 25 pounds",
         })
 
-        const requests = await fetchRequestsByAgent("agent_1")
-        expect(requests).toHaveLength(1)
-        expect(followUp?.requestId).toEqual(requests[0]._id)
-        expect(followUp?.requestId).not.toEqual(first.requestId)
-        expect(requests[0].operationId).toEqual("op_expenses")
+        expect(await fetchRequestsByAgent("agent_1")).toEqual([])
+        expect(followUp).toEqual({
+          clarification: {
+            operationId: "op_expenses",
+            reason: "ambiguous",
+            options: [],
+          },
+        })
       })
     })
 
@@ -420,7 +772,7 @@ describe("agentRequests crud", () => {
               : { decision: "new_thread" }
           }
         )
-        const followUp = await initActiveRequest({
+        const followUp = await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -451,7 +803,7 @@ describe("agentRequests crud", () => {
         ]
         for (const [index, ask] of asks.entries()) {
           generateAgentRequestTitleMock.mockResolvedValueOnce(ask.prompt)
-          const { requestId } = (await initActiveRequest({
+          const { requestId } = (await initLinkedRequest({
             agentId: "agent_1",
             userId: "user_1",
             sessionId: "session_1",
@@ -551,7 +903,7 @@ describe("agentRequests crud", () => {
 
     it("keeps requests from different operations separate", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const first = (await initActiveRequest({
+        const first = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -568,7 +920,7 @@ describe("agentRequests crud", () => {
           requestId: first.requestId,
           entryAction: "append_latest_entry",
         })
-        await initActiveRequest({
+        await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -599,7 +951,7 @@ describe("agentRequests crud", () => {
           },
           source: "Slack",
         }
-        const first = (await initActiveRequest({
+        const first = (await initLinkedRequest({
           ...inputs,
           latestPrompt: "Raise a chips expense",
         }))!
@@ -620,7 +972,7 @@ describe("agentRequests crud", () => {
             return db.put(doc)
           })
         try {
-          const result = await initActiveRequest({
+          const result = await initLinkedRequest({
             ...inputs,
             latestPrompt: "Change that expense to 20 pounds",
           })
@@ -653,7 +1005,7 @@ describe("agentRequests crud", () => {
           },
           source: "Slack",
         }
-        const first = (await initActiveRequest({
+        const first = (await initLinkedRequest({
           ...inputs,
           latestPrompt: "Raise a chips expense",
         }))!
@@ -664,7 +1016,7 @@ describe("agentRequests crud", () => {
         analyzeAgentRequestLinkMock.mockRejectedValueOnce(
           new Error("Invalid analysis")
         )
-        await initActiveRequest({
+        await initLinkedRequest({
           ...inputs,
           latestPrompt: "Raise a mayonnaise expense",
         })
@@ -695,7 +1047,7 @@ describe("agentRequests crud", () => {
             prompt: "Create expenses.",
           },
         }
-        const first = (await initActiveRequest({
+        const first = (await initLinkedRequest({
           ...inputs,
           sessionId: "session_1",
           source: "Slack",
@@ -706,7 +1058,7 @@ describe("agentRequests crud", () => {
           requestId: first.requestId,
           entryAction: "create_new_entry",
         })
-        await initActiveRequest({
+        await initLinkedRequest({
           ...inputs,
           sessionId: "session_2",
           source: "Chat",
@@ -751,7 +1103,7 @@ describe("agentRequests crud", () => {
       generateAgentRequestTitleMock.mockRejectedValue(new Error("LLM error"))
 
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const result = await initActiveRequest({
+        const result = await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -775,7 +1127,7 @@ describe("agentRequests crud", () => {
   describe("updateRequestStatus", () => {
     it("marks a request as completed with completedAt", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -803,7 +1155,7 @@ describe("agentRequests crud", () => {
       // Agent activity runs in the prod workspace context, but the builder's
       // Activity tab (and its socket room) only ever exists in dev.
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -829,7 +1181,7 @@ describe("agentRequests crud", () => {
 
     it("marks a request as failed with error message", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -859,7 +1211,7 @@ describe("agentRequests crud", () => {
 
     it("marks a request as needs_input without completedAt", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -886,7 +1238,7 @@ describe("agentRequests crud", () => {
       "keeps request and entry needs_input for a follow-up using %s",
       async entryAction => {
         await config.doInContext(config.getProdWorkspaceId(), async () => {
-          const first = (await initActiveRequest({
+          const first = (await initLinkedRequest({
             agentId: "agent_1",
             userId: "user_1",
             sessionId: "session_1",
@@ -910,7 +1262,7 @@ describe("agentRequests crud", () => {
             entryAction,
           })
 
-          const second = await initActiveRequest({
+          const second = await initLinkedRequest({
             agentId: "agent_1",
             userId: "user_1",
             sessionId: "session_1",
@@ -942,7 +1294,7 @@ describe("agentRequests crud", () => {
 
     it("does not overwrite a request that is already failed", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -970,7 +1322,7 @@ describe("agentRequests crud", () => {
 
     it("does not overwrite a request that is already completed", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1009,7 +1361,7 @@ describe("agentRequests crud", () => {
 
     it("does not move a needs_input request away without isHumanResponse", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1037,7 +1389,7 @@ describe("agentRequests crud", () => {
 
     it("moves a needs_input request when isHumanResponse is set (escalation resolved)", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1066,7 +1418,7 @@ describe("agentRequests crud", () => {
   describe("status_changed actions", () => {
     it("records a status_changed action when transitioning to completed", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1099,7 +1451,7 @@ describe("agentRequests crud", () => {
 
     it("records the error on the status_changed action when failing", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1135,7 +1487,7 @@ describe("agentRequests crud", () => {
 
     it("records a status_changed action for each real transition", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1168,7 +1520,7 @@ describe("agentRequests crud", () => {
 
     it("does not record a duplicate action on a defensive re-entry to the same status", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1194,7 +1546,7 @@ describe("agentRequests crud", () => {
 
     it("does not record an action when a transition is blocked by a terminal status", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1226,7 +1578,7 @@ describe("agentRequests crud", () => {
 
     it("does not record an action when the needs_input guard blocks the transition", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1255,7 +1607,7 @@ describe("agentRequests crud", () => {
 
   describe("tool_call actions", () => {
     const createBookingRequest = () =>
-      initActiveRequest({
+      initLinkedRequest({
         agentId: "agent_1",
         userId: "user_1",
         sessionId: "session_1",
@@ -1422,7 +1774,7 @@ describe("agentRequests crud", () => {
 
   describe("escalation_raised actions", () => {
     const createBookingRequest = () =>
-      initActiveRequest({
+      initLinkedRequest({
         agentId: "agent_1",
         userId: "user_1",
         sessionId: "session_1",
@@ -1593,7 +1945,7 @@ describe("agentRequests crud", () => {
 
   describe("escalation_resolved actions", () => {
     const createBookingRequest = () =>
-      initActiveRequest({
+      initLinkedRequest({
         agentId: "agent_1",
         userId: "user_1",
         sessionId: "session_1",
@@ -1690,7 +2042,7 @@ describe("agentRequests crud", () => {
           prompt: "Schedule meetings.",
         }
 
-        await initActiveRequest({
+        await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_active",
@@ -1699,7 +2051,7 @@ describe("agentRequests crud", () => {
           source: "Chat",
         })
 
-        const completed = (await initActiveRequest({
+        const completed = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_completed",
@@ -1712,7 +2064,7 @@ describe("agentRequests crud", () => {
           status: "completed",
         })
 
-        const failed = (await initActiveRequest({
+        const failed = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_failed",
@@ -1726,7 +2078,7 @@ describe("agentRequests crud", () => {
           error: "Tool calls incomplete",
         })
 
-        const needsInput = (await initActiveRequest({
+        const needsInput = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_needs_input",
@@ -1759,7 +2111,7 @@ describe("agentRequests crud", () => {
           prompt: "Schedule meetings.",
         }
 
-        const first = (await initActiveRequest({
+        const first = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -1767,7 +2119,7 @@ describe("agentRequests crud", () => {
           operation,
           source: "Chat",
         }))!
-        const second = (await initActiveRequest({
+        const second = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_2",
@@ -1796,7 +2148,7 @@ describe("agentRequests crud", () => {
           prompt: "Schedule meetings.",
         }
 
-        const active = (await initActiveRequest({
+        const active = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_active",
@@ -1805,7 +2157,7 @@ describe("agentRequests crud", () => {
           source: "Chat",
         }))!
 
-        const completed = (await initActiveRequest({
+        const completed = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_completed",
@@ -1850,7 +2202,7 @@ describe("agentRequests crud", () => {
         }
 
         for (const sessionId of ["session_1", "session_2", "session_3"]) {
-          await initActiveRequest({
+          await initLinkedRequest({
             agentId: "agent_1",
             userId: "user_1",
             sessionId,
@@ -1914,7 +2266,7 @@ describe("agentRequests crud", () => {
 
   describe("resolveFinalRequestOutcome", () => {
     const createSchedulingRequest = () =>
-      initActiveRequest({
+      initLinkedRequest({
         agentId: "agent_1",
         userId: "user_1",
         sessionId: "session_1",
@@ -2156,7 +2508,7 @@ describe("agentRequests crud", () => {
 
     it("updates title on the existing doc when existingRequestId is provided", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",
@@ -2516,7 +2868,7 @@ describe("agentRequests crud", () => {
 
     it("appends a new user_message action for a follow-up turn via existingRequestId", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
-        const { requestId } = (await initActiveRequest({
+        const { requestId } = (await initLinkedRequest({
           agentId: "agent_1",
           userId: "user_1",
           sessionId: "session_1",

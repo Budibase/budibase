@@ -96,11 +96,21 @@ const mockApprovedRun = (text: string) => {
   })
 }
 
+const initLinkedRequest = async (
+  params: Parameters<typeof sdk.ai.agentRequests.initActiveRequest>[0]
+) => {
+  const result = await sdk.ai.agentRequests.initActiveRequest(params)
+  if (!result?.requestId) {
+    throw new Error("Expected an active request in the test fixture")
+  }
+  return { requestId: result.requestId }
+}
+
 describe("resumeOperation", () => {
   const config = new TestConfiguration()
 
   const createRequest = () =>
-    sdk.ai.agentRequests.initActiveRequest({
+    initLinkedRequest({
       agentId: "agent_1",
       userId: "user_1",
       sessionId: "session_1",
@@ -326,7 +336,7 @@ describe("resumeOperation", () => {
         requestId: first.requestId,
         status: "needs_input",
       })
-      const second = (await sdk.ai.agentRequests.initActiveRequest({
+      const second = (await initLinkedRequest({
         agentId: "agent_1",
         userId: "user_1",
         sessionId: "session_1",

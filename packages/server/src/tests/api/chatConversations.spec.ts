@@ -8,6 +8,7 @@ import {
 import type {
   Agent,
   AgentOperation,
+  AgentRequestClarification,
   ChatConversation,
   ChatConversationRequest,
   User,
@@ -22,6 +23,21 @@ import { requesterTools } from "../../sdk/workspace/ai/tests/utils"
 import type { LanguageModelV4 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV4 } from "ai/test"
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    context: {
+      ...actual.context,
+      isProdWorkspace: jest.fn(actual.context.isProdWorkspace),
+    },
+  }
+})
+
+const actualContext = jest.requireActual<
+  typeof import("@budibase/backend-core")
+>("@budibase/backend-core").context
 
 const mockAiConfigsFind = jest.fn()
 
@@ -120,6 +136,19 @@ jest.mock("../../sdk/workspace/ai/agentLogs", () => {
     createSessionLogIndexer: jest.fn(),
   }
 })
+
+jest.mock("../../sdk/workspace/ai/agentRequests", () => {
+  const actual = jest.requireActual("../../sdk/workspace/ai/agentRequests")
+  return {
+    ...actual,
+    initActiveRequest: jest.fn(actual.initActiveRequest),
+    enqueueRequestTracking: jest.fn(actual.enqueueRequestTracking),
+  }
+})
+
+const actualAgentRequests = jest.requireActual<
+  typeof import("../../sdk/workspace/ai/agentRequests")
+>("../../sdk/workspace/ai/agentRequests")
 
 const createMockSessionLogIndexer = () => ({
   addRequestId: jest.fn(),
@@ -994,6 +1023,17 @@ describe("Agent chat tool call tracking", () => {
   })
 
   beforeEach(() => {
+    jest
+      .mocked(context.isProdWorkspace)
+      .mockReset()
+      .mockImplementation(actualContext.isProdWorkspace)
+
+    jest
+      .mocked(sdk.ai.agentRequests.initActiveRequest)
+      .mockReset()
+      .mockImplementation(actualAgentRequests.initActiveRequest)
+    jest.mocked(sdk.ai.agentRequests.enqueueRequestTracking).mockClear()
+
     addActionMock.mockClear()
     jest.mocked(streamText).mockClear()
     sessionLogIndexer = createMockSessionLogIndexer()
@@ -1036,6 +1076,209 @@ describe("Agent chat tool call tracking", () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
+  })
+
+  describe("request clarification", () => {
+    const options = [
+      { requestId: "agentrequest_200", label: "Laptop costing 200" },
+      { requestId: "agentrequest_500", label: "Laptop costing 500" },
+    ]
+
+    it.each([
+      "ambiguous",
+      "analysis_failed",
+    ] satisfies AgentRequestClarification["reason"][])(
+      "returns a Slack clarification for %s without executing or enqueueing activity",
+      async reason => {
+        const clarification: AgentRequestClarification = {
+          operationId: "op-1",
+          reason,
+          options,
+        }
+        jest.mocked(sdk.ai.agentRequests.initActiveRequest).mockResolvedValue({
+          clarification,
+        })
+        const enqueue = jest.spyOn(
+          sdk.ai.agentRequests,
+          "enqueueRequestTracking"
+        )
+        jest
+          .mocked(sdk.ai.agents.getOrThrow)
+          .mockResolvedValue(buildWebhookTestAgent())
+
+        await features.testutils.withFeatureFlags(
+          config.getTenantId(),
+          { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+          async () => {
+            await context.doInWorkspaceContext(
+              config.getProdWorkspaceId(),
+              async () => {
+                const result = await webhookChat({
+                  chat: {
+                    agentId,
+                    channel: {
+                      provider: AgentChannelProvider.SLACK,
+                      channelId: "C123",
+                      externalUserId: "slack-user-1",
+                    },
+                    messages: [
+                      {
+                        id: "msg-1",
+                        role: "user",
+                        parts: [{ type: "text", text: "buy the laptop" }],
+                      },
+                    ],
+                  },
+                  user: config.getUser(),
+                })
+
+                expect(result.assistantText).toContain("1. Laptop costing 200")
+                expect(result.assistantText).toContain("2. Laptop costing 500")
+                expect(
+                  result.messages.at(-1)?.metadata?.requestClarification
+                ).toEqual(clarification)
+                expect(streamText).not.toHaveBeenCalled()
+                expect(enqueue).not.toHaveBeenCalled()
+                expect(addActionMock).not.toHaveBeenCalled()
+              }
+            )
+          }
+        )
+      }
+    )
+
+    it("returns the original approval reminder after selecting a request without running tools", async () => {
+      jest
+        .mocked(streamText)
+        .mockImplementation(
+          makeWebhookStreamTextMock({ text: "Created another purchase" })
+        )
+      jest.mocked(sdk.ai.agentRequests.initActiveRequest).mockResolvedValue({
+        pendingApproval: {
+          requestId: "agentrequest_200",
+          label: "Laptop costing 200",
+        },
+      })
+      const enqueue = jest.mocked(sdk.ai.agentRequests.enqueueRequestTracking)
+      jest
+        .mocked(sdk.ai.agents.getOrThrow)
+        .mockResolvedValue(buildWebhookTestAgent())
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              const result = await webhookChat({
+                chat: {
+                  agentId,
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C123",
+                    externalUserId: "slack-user-1",
+                  },
+                  messages: [
+                    {
+                      id: "clarification-1",
+                      role: "assistant",
+                      parts: [{ type: "text", text: "Which laptop?" }],
+                      metadata: {
+                        requestClarification: {
+                          operationId: "op-1",
+                          reason: "ambiguous",
+                          options,
+                        },
+                      },
+                    },
+                    {
+                      id: "msg-2",
+                      role: "user",
+                      parts: [{ type: "text", text: "1" }],
+                    },
+                  ],
+                },
+                user: config.getUser(),
+              })
+
+              expect(result.assistantText).toContain("Laptop costing 200")
+              expect(result.assistantText).toContain(
+                "already waiting for approval"
+              )
+              expect(result.assistantText).toContain(
+                "original approval message"
+              )
+              expect(streamText).not.toHaveBeenCalled()
+              expect(enqueue).not.toHaveBeenCalled()
+              expect(addActionMock).not.toHaveBeenCalled()
+            }
+          )
+        }
+      )
+    })
+
+    it.each(["clarification", "pending approval"])(
+      "streams %s without executing the operation",
+      async responseType => {
+        const clarification: AgentRequestClarification = {
+          operationId: "op-1",
+          reason: "ambiguous",
+          options,
+        }
+        jest.mocked(sdk.ai.agentRequests.initActiveRequest).mockResolvedValue(
+          responseType === "clarification"
+            ? { clarification }
+            : {
+                pendingApproval: {
+                  requestId: "agentrequest_200",
+                  label: "Laptop costing 200",
+                },
+              }
+        )
+        const enqueue = jest.mocked(sdk.ai.agentRequests.enqueueRequestTracking)
+        jest.mocked(context.isProdWorkspace).mockReturnValue(true)
+        jest
+          .mocked(sdk.ai.agents.getOrThrow)
+          .mockResolvedValue(buildWebhookTestAgent())
+
+        await features.testutils.withFeatureFlags(
+          config.getTenantId(),
+          { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+          async () => {
+            const response = await config
+              .getRequest()!
+              .post(agentPreviewStreamPath(agentId))
+              .set(await config.defaultHeaders())
+              .send({
+                agentId,
+                isPreview: true,
+                messages: [
+                  {
+                    id: "msg-1",
+                    role: "user",
+                    parts: [{ type: "text", text: "buy the laptop" }],
+                  },
+                ],
+              })
+
+            expect(response.status).toEqual(200)
+            if (responseType === "clarification") {
+              expect(response.text).toContain("1. Laptop costing 200")
+              expect(response.text).toContain("2. Laptop costing 500")
+              expect(response.text).toContain('"requestClarification"')
+              expect(response.text).toContain('"requestId":"agentrequest_200"')
+            } else {
+              expect(response.text).toContain("Laptop costing 200")
+              expect(response.text).toContain("already waiting for approval")
+              expect(response.text).toContain("original approval message")
+            }
+            expect(streamText).not.toHaveBeenCalled()
+            expect(enqueue).not.toHaveBeenCalled()
+          }
+        )
+      }
+    )
   })
 
   describe("agentChatStream", () => {

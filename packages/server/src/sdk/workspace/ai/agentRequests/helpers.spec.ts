@@ -172,6 +172,64 @@ describe("analyzeAgentRequestLink", () => {
     )
   })
 
+  it("returns ambiguity instead of linking a laptop follow-up to either laptop", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult(
+        JSON.stringify({
+          decision: "ambiguous",
+          requestIds: ["agentrequest_200", "agentrequest_500"],
+        })
+      )
+    )
+
+    await expect(
+      analyzeAgentRequestLink({
+        latestPrompt: "buy the laptop",
+        candidateRequests: [
+          buildThread({
+            _id: "agentrequest_200",
+            initialPrompt: "Buy a laptop costing 200",
+          }),
+          buildThread({
+            _id: "agentrequest_500",
+            initialPrompt: "Buy a laptop costing 500",
+          }),
+        ],
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).resolves.toEqual({
+      decision: "ambiguous",
+      requestIds: ["agentrequest_200", "agentrequest_500"],
+    })
+  })
+
+  it.each([
+    ["agentrequest_thread_1", "unknown"],
+    ["agentrequest_thread_1", "agentrequest_thread_1"],
+  ])(
+    "rejects invalid ambiguity candidates %s and %s",
+    async (firstId, secondId) => {
+      generateTextMock.mockResolvedValue(
+        buildGenerateTextResult(
+          JSON.stringify({
+            decision: "ambiguous",
+            requestIds: [firstId, secondId],
+          })
+        )
+      )
+
+      await expect(
+        analyzeAgentRequestLink({
+          latestPrompt: "buy it",
+          candidateRequests: [buildThread()],
+          agentId: "agent_1",
+          sessionId: "session_1",
+        })
+      ).rejects.toThrow("Invalid ambiguous agent request candidates")
+    }
+  )
+
   it("throws when the model returns an unknown request id", async () => {
     generateTextMock.mockResolvedValue(
       buildGenerateTextResult(
