@@ -25,7 +25,7 @@ export const save = async ({
   const previousUser = user._id
     ? await tenancy.getGlobalDB().tryGet<User>(user._id)
     : undefined
-  if (!previousUser) {
+  if (!previousUser && options?.assignDefaultGroup !== false) {
     const userGroups = await getInitialUserGroups({
       userGroups: user.userGroups,
     })
