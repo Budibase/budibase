@@ -39,7 +39,7 @@ describe("toActionSessionRow", () => {
       assetLabel: "Support agent",
       triggeredByLabel: "Jane Doe",
       status: "waiting",
-      statusLabel: "waiting",
+      statusLabel: "Waiting",
       actionCount: 3,
       updatedLabel: "5 minutes ago",
     })

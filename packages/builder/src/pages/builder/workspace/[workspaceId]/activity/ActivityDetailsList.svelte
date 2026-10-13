@@ -5,6 +5,7 @@
     type: "status-badge"
     label: string
     status: ActivityStatus
+    statusLabel?: string
   }
 
   interface TextDetail {
@@ -43,7 +44,10 @@
 
       <div class="detail-value">
         {#if detail.type === "status-badge"}
-          <ActivityStatusBadge status={detail.status} />
+          <ActivityStatusBadge
+            status={detail.status}
+            label={detail.statusLabel}
+          />
         {:else}
           {#if detail.icon}
             <Icon

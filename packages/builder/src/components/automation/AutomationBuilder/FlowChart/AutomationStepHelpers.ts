@@ -42,20 +42,18 @@ const getDefinitionChildren = (step: AutomationStep): AutomationStep[] => {
   return []
 }
 
-const findStep = (
-  steps: AutomationStep[],
-  id: string
-): AutomationStep | undefined => {
-  for (const step of steps) {
-    if (step.id === id) {
-      return step
-    }
+const getRootStepsById = (steps: AutomationStep[]) => {
+  const rootStepsById = new Map<string, AutomationStep>()
 
-    const match = findStep(getDefinitionChildren(step), id)
-    if (match) {
-      return match
+  for (const rootStep of steps) {
+    const addStep = (step: AutomationStep) => {
+      rootStepsById.set(step.id, rootStep)
+      getDefinitionChildren(step).forEach(addStep)
     }
+    addStep(rootStep)
   }
+
+  return rootStepsById
 }
 
 const getLogStepInputs = (
@@ -85,7 +83,10 @@ export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
   let blocks: AutomationBlock[] = []
 
   if (viewMode === ViewMode.LOGS && selectedLog) {
-    blocks = processLogSteps({ ...automation, blockDefinitions }, selectedLog)
+    blocks = processLogSteps({
+      automation: { ...automation, blockDefinitions },
+      selectedLog,
+    })
   } else {
     if (automation.definition.trigger) {
       blocks.push(automation.definition.trigger)
@@ -95,16 +96,29 @@ export const getBlocks = (automation: Automation, viewMode: ViewMode) => {
   return blocks
 }
 
-export const processLogSteps = (
-  automation: Automation & { blockDefinitions: BlockDefinitions },
+interface ProcessLogStepsOptions {
+  automation: Automation & { blockDefinitions: BlockDefinitions }
   selectedLog: AutomationLog
-) => {
-  let blocks: AutomationBlock[] = []
+}
+
+export const processLogSteps = ({
+  automation,
+  selectedLog,
+}: ProcessLogStepsOptions) => {
+  const blocks: AutomationBlock[] = []
   if (automation.definition.trigger) {
     blocks.push(automation.definition.trigger)
   }
 
   const branchChildStepIds = getBranchChildStepIds(selectedLog.steps)
+  const rootStepsById = getRootStepsById(automation.definition.steps || [])
+  const logStepsById = new Map<string, AutomationLogStep>()
+  for (const logStep of selectedLog.steps) {
+    if (!logStepsById.has(logStep.id)) {
+      logStepsById.set(logStep.id, logStep)
+    }
+  }
+  const renderedStepIds = new Set(blocks.map(block => block.id))
 
   selectedLog.steps
     .filter(
@@ -113,20 +127,32 @@ export const processLogSteps = (
     )
     .filter((logStep: AutomationLogStep) => !branchChildStepIds.has(logStep.id))
     .forEach((logStep: AutomationLogStep) => {
-      const definitionStep = findStep(
-        automation.definition.steps || [],
-        logStep.id
-      )
+      const definitionStep = rootStepsById.get(logStep.id)
+      const rootStepId = definitionStep?.id || logStep.id
+      if (renderedStepIds.has(rootStepId)) {
+        return
+      }
+      renderedStepIds.add(rootStepId)
+
+      const rootLogStep = logStepsById.get(rootStepId)
+      if (!rootLogStep) {
+        // A timeout can leave child results without a result for their container.
+        if (definitionStep) {
+          blocks.push(definitionStep)
+        }
+        return
+      }
+
       const stepDefinition = getStepDefinition(
         automation.blockDefinitions,
-        logStep.stepId
+        rootLogStep.stepId
       )
       blocks.push({
         ...definitionStep,
-        ...logStep,
-        inputs: getLogStepInputs(definitionStep, logStep),
-        name: stepDefinition?.name || logStep.name || "",
-        icon: stepDefinition?.icon || logStep.icon || "",
+        ...rootLogStep,
+        inputs: getLogStepInputs(definitionStep, rootLogStep),
+        name: stepDefinition?.name || rootLogStep.name || "",
+        icon: stepDefinition?.icon || rootLogStep.icon || "",
       })
     })
   return blocks

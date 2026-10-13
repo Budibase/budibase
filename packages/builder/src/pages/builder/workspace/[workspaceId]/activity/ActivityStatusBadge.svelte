@@ -4,8 +4,10 @@
 
   let {
     status,
+    label,
   }: {
     status: ActivityStatus
+    label?: string
   } = $props()
 
   const statusConfig: Record<
@@ -67,7 +69,7 @@
     backgroundColor={statusConfig[status].backgroundColor}
     textColor={statusConfig[status].textColor}
   >
-    {ACTIVITY_STATUS_LABELS[status]}
+    {label ?? ACTIVITY_STATUS_LABELS[status]}
     <span class="status-icon">
       <Icon
         size="XS"
