@@ -1056,6 +1056,38 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(user.email)
     })
 
+    it("should page an empty email search in email order", async () => {
+      // emails sort in the reverse of creation order, so they are unlikely to
+      // match the (random) user ID order
+      const prefix = structures.uuid().slice(0, 8)
+      for (const letter of ["e", "d", "c", "b", "a"]) {
+        await config.createUser({
+          email: `${prefix}-${letter}@example.com`,
+        })
+      }
+
+      const emails: string[] = []
+      let bookmark: string | undefined
+      do {
+        const response = await config.api.users.searchUsers({
+          query: { string: { email: "" } },
+          bookmark,
+          limit: 2,
+        })
+        emails.push(...response.body.data.map((user: User) => user.email))
+        bookmark = response.body.hasNextPage
+          ? response.body.nextPage
+          : undefined
+      } while (bookmark)
+
+      const lowerEmails = emails.map(email => email.toLowerCase())
+      expect(lowerEmails).toEqual([...lowerEmails].sort())
+      expect(new Set(lowerEmails).size).toBe(lowerEmails.length)
+      expect(emails.filter(email => email.startsWith(prefix))).toEqual(
+        ["a", "b", "c", "d", "e"].map(l => `${prefix}-${l}@example.com`)
+      )
+    })
+
     it("should support fuzzy email fragments", async () => {
       const email = structures.users.newEmail()
       await config.createUser({ email })
