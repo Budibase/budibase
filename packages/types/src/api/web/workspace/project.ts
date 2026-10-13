@@ -122,6 +122,41 @@ export interface ProjectPackageData {
   attachments: ProjectPackageAttachment[]
 }
 
+export type ProjectTemplateStatus = "active" | "deprecated" | "withdrawn"
+
+export interface ProjectTemplateCompatibility {
+  minBudibaseVersion: string
+  maxBudibaseVersionExclusive?: string
+  requiredFeatures: string[]
+}
+
+export interface ProjectTemplateDeprecation {
+  message: string
+  replacementKey?: string
+}
+
+export interface ProjectTemplateMetadata {
+  key: string
+  version: string
+  packageVersion: number
+  catalogueVersion: string
+  name: string
+  description: string
+  category: string
+  image?: string
+  icon?: string
+  background?: string
+  status: ProjectTemplateStatus
+  owner: string
+  compatibility: ProjectTemplateCompatibility
+  deprecation?: ProjectTemplateDeprecation
+}
+
+export interface FetchProjectTemplatesResponse {
+  catalogueVersion: string
+  templates: ProjectTemplateMetadata[]
+}
+
 export interface ProjectManifestSummary {
   _id: string
   name: string
