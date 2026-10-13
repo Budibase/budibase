@@ -77,15 +77,20 @@ export interface PlatformActionResourceOrigin {
 
 export interface PlatformActionScheduleOrigin {
   type: "schedule"
+  id?: never
+  label?: never
 }
 
 export interface PlatformActionWebhookOrigin {
   type: "webhook"
+  id?: never
+  label?: never
 }
 
 export interface PlatformActionSystemOriginRef {
   type: "system"
   id: PlatformActionSystemOrigin
+  label?: never
 }
 
 export type PlatformActionOrigin =

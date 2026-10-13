@@ -82,12 +82,8 @@ export function getSessionMetadataFields({
     isEarlierCapture(timestamp, existing?.triggeredByCapturedAt)
   ) {
     fields.triggeredByType = triggeredBy.type
-    fields.triggeredById =
-      "id" in triggeredBy && triggeredBy.id ? triggeredBy.id : undefined
-    fields.triggeredByLabel =
-      "label" in triggeredBy && triggeredBy.label
-        ? triggeredBy.label
-        : undefined
+    fields.triggeredById = triggeredBy.id || undefined
+    fields.triggeredByLabel = triggeredBy.label || undefined
     fields.triggeredByCapturedAt = timestamp
   }
   return fields
