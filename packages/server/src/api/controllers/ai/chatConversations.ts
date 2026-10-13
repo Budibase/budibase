@@ -41,6 +41,7 @@ import {
   type AgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
+import { respondToApprovalMessage } from "../../../sdk/workspace/ai/approvalMessages"
 import { getRequestClarificationChoice } from "../../../sdk/workspace/ai/agentRequests"
 import { truncateTitle } from "../../../sdk/workspace/ai/chatConversations"
 import {
@@ -111,7 +112,7 @@ const buildRequestResponseMessage = ({
           text: [
             "This request is already waiting for approval:",
             initialization.pendingApproval.label,
-            "Use the Approve or Reject buttons on the original approval message. Selecting a request does not approve it. No new approval or action was created.",
+            "You can reply with an explicit approval, such as 'approve this request', or use the buttons on the original approval message. No new approval or action was created.",
           ].join("\n\n"),
         },
       ],
@@ -134,7 +135,7 @@ const buildRequestResponseMessage = ({
     introduction,
     ...options,
     options.length
-      ? "Reply with the option number or enough detail to identify one request. Pending approvals still require their approval buttons."
+      ? "Reply with the option number or enough detail to identify one request. To approve a request, explicitly say you approve it."
       : "No matching pending request remains. Please describe the request you want to continue.",
   ].join("\n\n")
 
@@ -526,6 +527,38 @@ export async function webhookChat({
   }
   const chatId = chat._id ?? docIds.generateChatConversationID()
   const sessionId = `${provider}:${chatId}`
+  const latestPrompt = sdk.ai.chatConversations.findLatestUserQuestion(chat)
+  if (
+    context.isProdWorkspace() &&
+    (await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))
+  ) {
+    const approvalMessage = await respondToApprovalMessage({
+      agent,
+      userId: user.globalId || user.userId || user._id || "",
+      sessionId,
+      latestPrompt,
+      messages: chat.messages,
+    })
+    if (approvalMessage) {
+      const text = getAssistantMessageText(approvalMessage)
+      if (onAssistantStream) {
+        await onAssistantStream(
+          new ReadableStream<string>({
+            start(controller) {
+              controller.enqueue(text)
+              controller.close()
+            },
+          })
+        )
+      }
+      return {
+        messages: [...chat.messages, approvalMessage],
+        assistantText: text,
+        title: latestPrompt ? truncateTitle(latestPrompt) : chat.title,
+        ragSources: [],
+      }
+    }
+  }
   const suspendedModelMessages =
     await sdk.ai.chatConversations.prepareModelMessages(chat.messages)
   const modelMessages =
@@ -743,6 +776,36 @@ export async function webhookChat({
   }
 }
 
+const pipeAssistantMessage = ({
+  ctx,
+  message,
+}: {
+  ctx: UserCtx<ChatAgentRequest, void>
+  message: UIMessage<AgentMessageMetadata>
+}) => {
+  ctx.respond = false
+  pipeUIMessageStreamToResponse({
+    response: ctx.res,
+    stream: createUIMessageStream<UIMessage<AgentMessageMetadata>>({
+      execute: ({ writer }) => {
+        writer.write({
+          type: "start",
+          messageId: message.id,
+          messageMetadata: message.metadata,
+        })
+        writer.write({ type: "text-start", id: message.id })
+        writer.write({
+          type: "text-delta",
+          id: message.id,
+          delta: getAssistantMessageText(message),
+        })
+        writer.write({ type: "text-end", id: message.id })
+        writer.write({ type: "finish", finishReason: "stop" })
+      },
+    }),
+  })
+}
+
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const { agentId, chat, userId, user } = await resolveChatStreamRequest(ctx)
 
@@ -766,6 +829,22 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       sessionId: chat.sessionId,
       fallbackId: chatId,
     })
+    if (
+      context.isProdWorkspace() &&
+      (await features.isEnabled(FeatureFlag.AI_AGENT_ACTIVITY))
+    ) {
+      const approvalMessage = await respondToApprovalMessage({
+        agent,
+        userId,
+        sessionId,
+        latestPrompt: sdk.ai.chatConversations.findLatestUserQuestion(chat),
+        messages: chat.messages,
+      })
+      if (approvalMessage) {
+        pipeAssistantMessage({ ctx, message: approvalMessage })
+        return
+      }
+    }
     const run = await prepareAgentChatRun({
       agent,
       agentId,
@@ -794,27 +873,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         initialization: trackingResult,
         run,
       })
-      ctx.respond = false
-      pipeUIMessageStreamToResponse({
-        response: ctx.res,
-        stream: createUIMessageStream<UIMessage<AgentMessageMetadata>>({
-          execute: ({ writer }) => {
-            writer.write({
-              type: "start",
-              messageId: message.id,
-              messageMetadata: message.metadata,
-            })
-            writer.write({ type: "text-start", id: message.id })
-            writer.write({
-              type: "text-delta",
-              id: message.id,
-              delta: getAssistantMessageText(message),
-            })
-            writer.write({ type: "text-end", id: message.id })
-            writer.write({ type: "finish", finishReason: "stop" })
-          },
-        }),
-      })
+      pipeAssistantMessage({ ctx, message })
       return
     }
     trackingHandle = trackingResult
