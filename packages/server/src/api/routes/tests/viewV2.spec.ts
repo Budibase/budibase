@@ -4935,6 +4935,48 @@ if (descriptions.length) {
                 },
                 expected: [],
               },
+              ...["", null, undefined].flatMap(value =>
+                [false, true].map(hasViewFilter => ({
+                  name: `empty request filter ${String(value)} returns none with saved view filter ${hasViewFilter}`,
+                  insert: [{ string: "foo" }],
+                  query: hasViewFilter
+                    ? simpleQuery({
+                        operator: BasicOperator.EQUAL,
+                        field: "string",
+                        value: "foo",
+                      })
+                    : {},
+                  searchOpts: {
+                    query: {
+                      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                      $and: {
+                        conditions: [{ equal: { string: value } }],
+                      },
+                    },
+                  },
+                  expected: [],
+                }))
+              ),
+              {
+                name: "populated request filter respects saved view filters",
+                insert: [
+                  { string: "foo", number: 1 },
+                  { string: "foo", number: 2 },
+                  { string: "bar", number: 1 },
+                ],
+                query: simpleQuery({
+                  operator: BasicOperator.EQUAL,
+                  field: "string",
+                  value: "foo",
+                }),
+                searchOpts: {
+                  query: {
+                    onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                    equal: { number: 1 },
+                  },
+                },
+                expected: [{ string: "foo", number: 1 }],
+              },
               {
                 name: "simple string search",
                 insert: [{ string: "foo" }],
