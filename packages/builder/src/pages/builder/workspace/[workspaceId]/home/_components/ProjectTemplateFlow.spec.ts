@@ -116,9 +116,11 @@ describe("ProjectTemplateFlow", () => {
       response: importResponse,
       workspaceId: "app_dev_current",
     })
-    expect(
-      screen.queryByRole("heading", { name: "Use Support Template" })
-    ).not.toBeInTheDocument()
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Project templates" })
+      ).not.toBeInTheDocument()
+    )
   })
 
   it("shows discovery while the catalogue loads and ignores re-entry", async () => {
@@ -132,9 +134,11 @@ describe("ProjectTemplateFlow", () => {
 
     const loading = component.showGallery()
     expect(await screen.findByText("Loading templates…")).toBeInTheDocument()
-    expect(screen.getByRole("dialog").contains(document.activeElement)).toBe(
-      true
-    )
+    expect(
+      screen
+        .getByRole("dialog", { name: "Project templates" })
+        .contains(document.activeElement)
+    ).toBe(true)
     expect(screen.getByText(/Imports a new project into/)).toHaveTextContent(
       "Operations"
     )
@@ -187,6 +191,32 @@ describe("ProjectTemplateFlow", () => {
       true
     )
     expect(mocks.fetchTemplates).toHaveBeenCalledTimes(2)
+  })
+
+  it("reopens discovery while the original catalogue request is pending", async () => {
+    let resolveTemplates!: (templates: (typeof template)[]) => void
+    mocks.fetchTemplates.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveTemplates = resolve
+      })
+    )
+    const { component } = renderFlow()
+
+    const loading = component.showGallery()
+    await screen.findByText("Loading templates…")
+    await fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    )
+    await component.showGallery()
+    await screen.findByText("Loading templates…")
+    resolveTemplates([template])
+    await loading
+
+    expect(
+      await screen.findByRole("button", { name: "Use Support Template" })
+    ).toBeEnabled()
+    expect(mocks.fetchTemplates).toHaveBeenCalledOnce()
   })
 
   it("keeps discovery open when an import fails", async () => {

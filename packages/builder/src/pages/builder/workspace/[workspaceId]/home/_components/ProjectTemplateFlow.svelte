@@ -101,7 +101,7 @@
   }
 
   export const showGallery = async () => {
-    if (!templatesEnabled || isLoadingGallery || isGalleryImporting) {
+    if (!templatesEnabled || isGalleryImporting) {
       return
     }
 
