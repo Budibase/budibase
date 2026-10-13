@@ -24,9 +24,10 @@ import type {
   EnrichedQueryJson,
   PreSaveSQLiteDefinition,
   RequestInboxDoc,
+  SearchFilters,
   Table,
 } from "@budibase/types"
-import { FILTER_FIELDS, workspaceRowPrefix } from "./inboxRows"
+import { EQUAL_FILTER_FIELDS, workspaceRowPrefix } from "./inboxRows"
 import type { RequestInboxFilters } from "./inboxRows"
 
 const MAX_CONFLICT_RETRIES = 3
@@ -34,9 +35,8 @@ const REQUEST_INBOX_LOCK_TTL_MS = Duration.fromSeconds(10).toMs()
 
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 
-const ROW_FIELDS = [
+const DOC_FIELDS = [
   "type",
-  "globalUserId",
   "workspaceId",
   "requestId",
   "title",
@@ -44,21 +44,25 @@ const ROW_FIELDS = [
   "operationId",
   "status",
   "needsInput",
-  "isRequester",
-  "isApprover",
-  "awaitingResponse",
-  "respondedPending",
+  "requester",
+  "approvers",
+  "pendingApprovers",
+  "respondedApprovers",
   "expiresAt",
   "createdAt",
 ] as const
 
-const BOOLEAN_FIELDS = [
-  "needsInput",
-  "isRequester",
-  "isApprover",
-  "awaitingResponse",
-  "respondedPending",
+const ARRAY_FIELDS = [
+  "approvers",
+  "pendingApprovers",
+  "respondedApprovers",
 ] as const
+
+const USER_ARRAY_FOR_FILTER = {
+  isApprover: "approvers",
+  awaitingResponse: "pendingApprovers",
+  respondedPending: "respondedApprovers",
+} as const
 
 function inboxTable(): Table {
   return {
@@ -67,12 +71,19 @@ function inboxTable(): Table {
     name: REQUEST_INBOX_TYPE,
     sourceId: SQS_DATASOURCE_INTERNAL,
     primary: ["_id"],
-    schema: Object.fromEntries(
-      BOOLEAN_FIELDS.map(field => [
-        field,
-        { name: field, type: FieldType.BOOLEAN },
-      ])
-    ),
+    schema: {
+      needsInput: { name: "needsInput", type: FieldType.BOOLEAN },
+      ...Object.fromEntries(
+        ARRAY_FIELDS.map(field => [
+          field,
+          {
+            name: field,
+            type: FieldType.ARRAY,
+            constraints: { inclusion: [] },
+          },
+        ])
+      ),
+    },
   }
 }
 
@@ -82,7 +93,6 @@ export async function createDesignDoc() {
     [REQUEST_INBOX_TYPE]: {
       fields: {
         type: SQLiteType.TEXT,
-        globalUserId: SQLiteType.TEXT,
         workspaceId: SQLiteType.TEXT,
         requestId: SQLiteType.TEXT,
         title: SQLiteType.TEXT,
@@ -90,10 +100,10 @@ export async function createDesignDoc() {
         operationId: SQLiteType.TEXT,
         status: SQLiteType.TEXT,
         needsInput: SQLiteType.NUMERIC,
-        isRequester: SQLiteType.NUMERIC,
-        isApprover: SQLiteType.NUMERIC,
-        awaitingResponse: SQLiteType.NUMERIC,
-        respondedPending: SQLiteType.NUMERIC,
+        requester: SQLiteType.TEXT,
+        approvers: SQLiteType.TEXT,
+        pendingApprovers: SQLiteType.TEXT,
+        respondedApprovers: SQLiteType.TEXT,
         expiresAt: SQLiteType.TEXT,
         createdAt: SQLiteType.TEXT,
         updatedAt: SQLiteType.TEXT,
@@ -127,12 +137,36 @@ export async function searchRequestInbox(
   },
   opts: { isRetry?: boolean } = {}
 ): Promise<{ rows: RequestInboxDoc[]; hasNextPage: boolean }> {
-  const equal: Record<string, string | boolean> = { globalUserId }
-  for (const field of FILTER_FIELDS) {
+  const equal: Record<string, string> = {}
+  const notEqual: Record<string, string> = {}
+  const contains: Record<string, string[]> = {}
+  const notContains: Record<string, string[]> = {}
+  for (const field of EQUAL_FILTER_FIELDS) {
     const value = filters[field]
     if (value !== undefined) {
       equal[field] = value
     }
+  }
+  if (filters.isRequester !== undefined) {
+    ;(filters.isRequester ? equal : notEqual).requester = globalUserId
+  }
+  for (const [field, column] of Object.entries(USER_ARRAY_FOR_FILTER)) {
+    const value = filters[field as keyof typeof USER_ARRAY_FOR_FILTER]
+    if (value !== undefined) {
+      ;(value ? contains : notContains)[column] = [globalUserId]
+    }
+  }
+  const searchFilters: SearchFilters = {
+    $or: {
+      conditions: [
+        { equal: { requester: globalUserId } },
+        { contains: { approvers: [globalUserId] } },
+      ],
+    },
+    equal,
+    notEqual,
+    contains,
+    notContains,
   }
   const request: EnrichedQueryJson = {
     operation: Operation.READ,
@@ -142,7 +176,7 @@ export async function searchRequestInbox(
       limit: limit + 1,
       offset: (page - 1) * limit,
     },
-    filters: { equal },
+    filters: searchFilters,
     resource: {
       fields: [],
     },
@@ -186,8 +220,11 @@ export async function searchRequestInbox(
   }
 }
 
+const docFingerprint = (doc: RequestInboxDoc) =>
+  JSON.stringify(DOC_FIELDS.map(field => doc[field]))
+
 const isSameRow = (row: RequestInboxDoc, existing?: RequestInboxDoc) =>
-  !!existing && ROW_FIELDS.every(field => existing[field] === row[field])
+  !!existing && docFingerprint(existing) === docFingerprint(row)
 
 export async function writeRows(rows: RequestInboxDoc[]) {
   const db = context.getRequestInboxDB()

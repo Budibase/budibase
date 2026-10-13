@@ -16,7 +16,6 @@ export type RequestEscalationState = (typeof REQUEST_ESCALATION_STATES)[number]
 export interface RequestInboxDoc extends Document {
   _id: string
   type: typeof REQUEST_INBOX_TYPE
-  globalUserId: string
   workspaceId: string
   requestId: string
   title?: string
@@ -24,9 +23,9 @@ export interface RequestInboxDoc extends Document {
   operationId?: string
   status: AgentRequestStatus
   needsInput: boolean
-  isRequester: boolean
-  isApprover: boolean
-  awaitingResponse: boolean
-  respondedPending: boolean
+  requester: string
+  approvers: string[]
+  pendingApprovers: string[]
+  respondedApprovers: string[]
   expiresAt?: string
 }

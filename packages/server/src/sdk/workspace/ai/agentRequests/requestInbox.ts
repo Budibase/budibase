@@ -12,11 +12,12 @@ import { getContextDoc } from "../../escalations"
 import { getFullUser } from "../../../../utilities/users"
 import {
   AGENT_REQUEST_PREFIX,
-  buildRequestInboxRows,
+  buildRequestInboxDoc,
   getEscalationState,
   getEscalationExpiry,
   hasResponded,
   isApproverOn,
+  isInvolved,
   matchesFilters,
   getRaisedEscalationIds,
   toRequestRow,
@@ -56,13 +57,14 @@ async function syncRequestRows(requestId: string) {
       return
     }
     const escalations = await loadRaisedEscalations(request)
-    await writeRows(
-      buildRequestInboxRows({
-        request,
-        escalations,
-        workspaceId: dbCore.getProdWorkspaceID(workspaceId),
-      })
-    )
+    const doc = buildRequestInboxDoc({
+      request,
+      escalations,
+      workspaceId: dbCore.getProdWorkspaceID(workspaceId),
+    })
+    if (doc) {
+      await writeRows([doc])
+    }
   })
 }
 
@@ -105,38 +107,29 @@ async function verifyWorkspaceRows({
   workspaceId,
   rows,
   filters,
+  globalUserId,
 }: {
   workspaceId: string
   rows: RequestInboxDoc[]
   filters: RequestInboxFilters
+  globalUserId: string
 }): Promise<Map<string, RequestRow>> {
   return await context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
-    const requestIds = [...new Set(rows.map(row => row.requestId))]
-    const freshRows = new Map<string, RequestInboxDoc>()
-    for (const requestId of requestIds) {
-      const request = await db.tryGet<AgentRequest>(requestId)
+    const verified = new Map<string, RequestRow>()
+    for (const row of rows) {
+      const request = await db.tryGet<AgentRequest>(row.requestId)
       if (!request) {
         continue
       }
       const escalations = await loadRaisedEscalations(request)
-      for (const fresh of buildRequestInboxRows({
-        request,
-        escalations,
-        workspaceId,
-      })) {
-        freshRows.set(fresh._id, fresh)
-      }
-    }
-    const verified = new Map<string, RequestRow>()
-    for (const row of rows) {
-      const fresh = freshRows.get(row._id)
+      const fresh = buildRequestInboxDoc({ request, escalations, workspaceId })
       if (
         fresh &&
-        fresh.globalUserId === row.globalUserId &&
-        matchesFilters(fresh, filters)
+        isInvolved(fresh, globalUserId) &&
+        matchesFilters(fresh, filters, globalUserId)
       ) {
-        verified.set(row._id, toRequestRow(fresh))
+        verified.set(row._id, toRequestRow(fresh, globalUserId))
       }
     }
     return verified
@@ -170,6 +163,7 @@ export async function fetchRequestsForUser({
         workspaceId,
         rows: rows.filter(row => row.workspaceId === workspaceId),
         filters,
+        globalUserId,
       })
     )
   )
@@ -221,19 +215,16 @@ export async function findRequestForUser({
   }
   const workspaceId = dbCore.getProdWorkspaceID(currentWorkspaceId)
   const escalations = await loadRaisedEscalations(request)
-  const userRow = buildRequestInboxRows({
-    request,
-    escalations,
-    workspaceId,
-  }).find(row => row.globalUserId === globalUserId)
-  if (!userRow) {
+  const doc = buildRequestInboxDoc({ request, escalations, workspaceId })
+  if (!doc || !isInvolved(doc, globalUserId)) {
     return undefined
   }
+  const isRequester = doc.requester === globalUserId
 
   const visibleEscalations = filterVisibleEscalations({
     escalations,
     globalUserId,
-    isRequester: userRow.isRequester,
+    isRequester,
   })
   const recipientsByEscalation = new Map<
     string,
@@ -270,7 +261,7 @@ export async function findRequestForUser({
     createdAt: request.createdAt,
     submittedBy: await resolveSubmittedBy(request, escalations),
     source: request.entries.at(-1)?.source,
-    isRequester: userRow.isRequester,
+    isRequester,
     escalations: visibleEscalations.map(({ escalationId, doc }) => ({
       escalationId,
       title: doc.title,
