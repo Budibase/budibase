@@ -1,4 +1,4 @@
-import { DocumentType } from "@budibase/types"
+import { DocumentType, RuntimeDocumentTypes } from "@budibase/types"
 import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
 import Replication from "./Replication"
 
@@ -724,6 +724,62 @@ describe("Replication", () => {
       ).toBe(false)
     })
 
+    const directions = [
+      {
+        direction: "to production",
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      },
+      {
+        direction: "to development",
+        source: `${DocumentType.WORKSPACE}_source`,
+        target: `${DocumentType.WORKSPACE_DEV}_target`,
+      },
+    ]
+
+    it.each(
+      directions.flatMap(direction =>
+        RuntimeDocumentTypes.flatMap(type => [
+          { ...direction, type, _deleted: false },
+          { ...direction, type, _deleted: true },
+        ])
+      )
+    )(
+      "should filter out $type documents $direction (deleted: $_deleted)",
+      ({ source, target, type, _deleted }) => {
+        const replication = new Replication({ source, target })
+        const opts = replication.appReplicateOpts({
+          isCreation: false,
+          tombstoneIds: [`${type}${SEPARATOR}id`],
+        })
+
+        expect(
+          (opts.filter as Function)(
+            { _id: `${type}${SEPARATOR}id`, _deleted },
+            {}
+          )
+        ).toBe(false)
+      }
+    )
+
+    it.each(directions)(
+      "should exclude runtime documents from the selector $direction",
+      ({ source, target }) => {
+        const replication = new Replication({ source, target })
+        const opts = replication.appReplicateOpts({ isCreation: false })
+
+        expect(opts.selector).toEqual(
+          expect.objectContaining({
+            $and: expect.arrayContaining(
+              RuntimeDocumentTypes.map(type => ({
+                $nor: [{ _id: { $regex: `^${type}${SEPARATOR}` } }],
+              }))
+            ),
+          })
+        )
+      }
+    )
+
     it("should only replicate user metadata when its table is selected", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
@@ -1078,7 +1134,7 @@ describe("Replication", () => {
       })
       const selector = opts.selector as { $and: object[] }
 
-      expect(selector.$and[2]).toEqual({
+      expect(selector.$and).toContainEqual({
         $and: expect.arrayContaining([{ _id: { $in: [rowId] } }]),
       })
     })
