@@ -143,6 +143,20 @@ function isJsonColumn(
   )
 }
 
+const decodeRelatedRowId = (value: unknown): unknown => {
+  if (typeof value !== "string" || value === "") {
+    return value ?? null
+  }
+  try {
+    return breakRowIdField(value)[0] ?? null
+  } catch (err) {
+    if (err instanceof URIError) {
+      return value
+    }
+    throw err
+  }
+}
+
 const allowEmptyRelationships: Record<SearchFilterKey, boolean> = {
   [BasicOperator.EQUAL]: false,
   [BasicOperator.NOT_EQUAL]: true,
@@ -754,8 +768,8 @@ class InternalBuilder {
           }
           property = relatedTable.primary[0]
           value = Array.isArray(value)
-            ? value.map(id => breakRowIdField(id)[0])
-            : breakRowIdField(value)[0]
+            ? value.map(decodeRelatedRowId)
+            : decodeRelatedRowId(value)
         }
         return q.andWhere(subquery =>
           fn(subquery, alias ? `${alias}.${property}` : property, value)

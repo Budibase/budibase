@@ -1,4 +1,5 @@
 import Sql from "../sql"
+import { generateRowIdField } from "../utils"
 import {
   EnrichedQueryJson,
   FieldConstraints,
@@ -223,6 +224,69 @@ describe("SQL filter parameterization", () => {
       )
     }
   )
+
+  describe("external related row ID values", () => {
+    const buildRelatedIdQuery = (filters: SearchFilters) => {
+      const table = buildTable({
+        person_id: {
+          name: "person_id",
+          type: FieldType.STRING,
+          externalType: "text",
+          constraints: baseConstraints,
+        },
+      })
+      const query = buildQuery(table, filters)
+      query.tables.persons = {
+        ...table,
+        name: "persons",
+        primary: ["person_id"],
+      }
+      query.tableAliases = { tbl: "a", persons: "b" }
+      query.relationships = [
+        {
+          tableName: "persons",
+          column: "person",
+          from: "person_id",
+          to: "person_id",
+        },
+      ]
+      return query
+    }
+
+    it.each([
+      { value: "50%off", expected: "50%off" },
+      { value: null, expected: null },
+      { value: 0, expected: 0 },
+      { value: generateRowIdField(["person-123"]), expected: "person-123" },
+    ])("preserves the equality binding for $value", ({ value, expected }) => {
+      const query = buildRelatedIdQuery({ equal: { "person._id": value } })
+
+      const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+      expect(result.sql).toContain('"b"."person_id" = $1')
+      expect(result.bindings).toEqual([expected, 25])
+    })
+
+    it.each(["oneOf", "notOneOf"] as const)(
+      "preserves mixed raw, encoded, and null values in %s filters",
+      operator => {
+        const query = buildRelatedIdQuery({
+          [operator]: {
+            "person._id": [
+              "50%off",
+              generateRowIdField(["person-123"]),
+              null,
+              0,
+            ],
+          },
+        })
+
+        const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+        expect(result.bindings).toEqual(["50%off", "person-123", null, 0, 25])
+      }
+    )
+  })
 
   it("parameterizes Postgres array contains filters", () => {
     const table = buildTable({

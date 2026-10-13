@@ -134,6 +134,16 @@ if (descriptions.length) {
         ])
       })
 
+      it("preserves null entries alongside encoded related IDs", async () => {
+        const result = await config.api.row.search(profiles._id!, {
+          query: { oneOf: { "person._id": [relatedId, null] } },
+        })
+
+        expect(result.rows.map(row => row.candidate_profile_id)).toEqual([
+          profileId,
+        ])
+      })
+
       it("supports related ID filters saved in a view", async () => {
         const view = await config.api.viewV2.create({
           tableId: profiles._id!,
