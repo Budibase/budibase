@@ -457,21 +457,23 @@ describe("ActionSessionPanel", () => {
         .mockResolvedValueOnce(eventsResponse({ ids: ["event-1"] }))
         .mockRejectedValueOnce(new Error("boom"))
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+      try {
+        renderPanel(session)
+        await screen.findByText(/Step executed/)
 
-      renderPanel(session)
-      await screen.findByText(/Step executed/)
+        notify()
 
-      notify()
-
-      await waitFor(() =>
-        expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
-      )
-      await settle()
-      expect(screen.getByText(/Step executed/)).toBeVisible()
-      expect(
-        screen.queryByRole("button", { name: "Try again" })
-      ).not.toBeInTheDocument()
-      errorSpy.mockRestore()
+        await waitFor(() =>
+          expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
+        )
+        await settle()
+        expect(screen.getByText(/Step executed/)).toBeVisible()
+        expect(
+          screen.queryByRole("button", { name: "Try again" })
+        ).not.toBeInTheDocument()
+      } finally {
+        errorSpy.mockRestore()
+      }
     })
 
     it("refreshes when the socket reconnects", async () => {

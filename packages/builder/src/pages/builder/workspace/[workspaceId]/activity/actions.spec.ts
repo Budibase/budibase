@@ -974,19 +974,21 @@ describe("Activity actions page", () => {
         .mockResolvedValueOnce(response)
         .mockRejectedValueOnce(new Error("boom"))
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+      try {
+        const { findInTable, table } = renderPage()
+        await findInTable("Support agent")
 
-      const { findInTable, table } = renderPage()
-      await findInTable("Support agent")
+        notify()
 
-      notify()
-
-      await waitFor(() => expect(queries()).toHaveLength(2))
-      await settle()
-      expect(table().getByText("Support agent")).toBeInTheDocument()
-      expect(
-        screen.queryByRole("button", { name: "Try again" })
-      ).not.toBeInTheDocument()
-      errorSpy.mockRestore()
+        await waitFor(() => expect(queries()).toHaveLength(2))
+        await settle()
+        expect(table().getByText("Support agent")).toBeInTheDocument()
+        expect(
+          screen.queryByRole("button", { name: "Try again" })
+        ).not.toBeInTheDocument()
+      } finally {
+        errorSpy.mockRestore()
+      }
     })
 
     it("shows new sessions on the first page after going back to it", async () => {

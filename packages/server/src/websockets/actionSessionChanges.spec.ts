@@ -141,15 +141,18 @@ describe("queueActionSessionChange", () => {
     })
     const errorSpy = jest.spyOn(console, "error").mockImplementation()
 
-    queueActionSessionChange(change())
+    try {
+      queueActionSessionChange(change())
 
-    expect(() =>
-      jest.advanceTimersByTime(ACTION_SESSION_CHANGE_FLUSH_MS)
-    ).not.toThrow()
-    expect(errorSpy).toHaveBeenCalledWith(
-      "Failed to emit action session changes",
-      expect.objectContaining({ room: devWorkspaceId, environment: "prod" })
-    )
-    errorSpy.mockRestore()
+      expect(() =>
+        jest.advanceTimersByTime(ACTION_SESSION_CHANGE_FLUSH_MS)
+      ).not.toThrow()
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Failed to emit action session changes",
+        expect.objectContaining({ room: devWorkspaceId, environment: "prod" })
+      )
+    } finally {
+      errorSpy.mockRestore()
+    }
   })
 })
