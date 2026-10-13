@@ -1,3 +1,4 @@
+import type { Knex } from "knex"
 import { generator } from "@budibase/backend-core/tests"
 import { BasicOperator, type Table } from "@budibase/types"
 import { DatabaseName, datasourceDescribe } from "./utils"
@@ -15,31 +16,33 @@ if (descriptions.length) {
       const profileId = "603e1cf2-b411-5fc7-b8d2-5d4e36939cfc"
       const otherProfileId = "bbbbbbbb-b411-5fc7-b8d2-5d4e36939cfc"
       const unlinkedProfileId = "cccccccc-b411-5fc7-b8d2-5d4e36939cfc"
+      const suffix = generator.guid().replaceAll("-", "")
+      const personTableName = `persons_${suffix}`
+      const profileTableName = `profiles_${suffix}`
+      let client: Knex
       let persons: Table
       let profiles: Table
       let relatedId: string
 
       beforeAll(async () => {
-        const { datasource, client } = await dsProvider()
-        const suffix = generator.guid().replaceAll("-", "")
-        const personTableName = `persons_${suffix}`
-        const profileTableName = `profiles_${suffix}`
+        const { datasource, client: dbClient } = await dsProvider()
+        client = dbClient!
 
-        await client!.schema.createTable(personTableName, table => {
+        await client.schema.createTable(personTableName, table => {
           table.uuid("person_id").primary()
         })
-        await client!.schema.createTable(profileTableName, table => {
+        await client.schema.createTable(profileTableName, table => {
           table.uuid("candidate_profile_id").primary()
           table
             .uuid("person_id")
             .references("person_id")
             .inTable(personTableName)
         })
-        await client!(personTableName).insert([
+        await client(personTableName).insert([
           { person_id: personId },
           { person_id: otherPersonId },
         ])
-        await client!(profileTableName).insert([
+        await client(profileTableName).insert([
           { candidate_profile_id: profileId, person_id: personId },
           { candidate_profile_id: otherProfileId, person_id: otherPersonId },
           { candidate_profile_id: unlinkedProfileId, person_id: null },
@@ -67,7 +70,14 @@ if (descriptions.length) {
         relatedId = rows.find(row => row.person_id === personId)!._id!
       })
 
-      afterAll(config.end)
+      afterAll(async () => {
+        try {
+          await client.schema.dropTableIfExists(profileTableName)
+          await client.schema.dropTableIfExists(personTableName)
+        } finally {
+          config.end()
+        }
+      })
 
       it.each(["relationship", "table"])(
         "filters by a related encoded UUID using the %s name",
