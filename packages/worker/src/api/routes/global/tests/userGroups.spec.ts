@@ -38,7 +38,7 @@ describe("user group assignments", () => {
   it("persists assignments to an existing local group", async () => {
     const group = await createGroup()
     const user = await config.createUser({
-      email: generator.email({ domain: "example.com" }),
+      email: structures.users.newEmail(),
     })
 
     await config.api.users.saveUser({ ...user, userGroups: [group._id!] })
@@ -55,7 +55,7 @@ describe("user group assignments", () => {
   it("creates a user with groups and records the membership", async () => {
     const group = await createGroup()
     const user = await config.createUser({
-      email: generator.email({ domain: "example.com" }),
+      email: structures.users.newEmail(),
       userGroups: [group._id!],
     })
 
@@ -74,7 +74,7 @@ describe("user group assignments", () => {
     })
     const second = await createGroup()
     const user = await config.createUser({
-      email: generator.email({ domain: "example.com" }),
+      email: structures.users.newEmail(),
       userGroups: [first._id!],
     })
     await config.doInTenant(() => cache.user.getUser({ userId: user._id! }))
@@ -131,7 +131,7 @@ describe("user group assignments", () => {
       scimInfo: { externalId: generator.guid(), isSync: true },
     })
     const user = await config.createUser({
-      email: generator.email({ domain: "example.com" }),
+      email: structures.users.newEmail(),
     })
 
     await config.api.groups.updateGroupUsers(
@@ -234,7 +234,7 @@ describe("user group assignments", () => {
   it("rejects creator membership when the creator quota is full", async () => {
     const group = await createGroup({ roles: { app_example: "CREATOR" } })
     const user = await config.createUser({
-      email: generator.email({ domain: "example.com" }),
+      email: structures.users.newEmail(),
     })
     const creators = await config.doInTenant(() => users.getCreatorCount())
     await mocks.licenses.setCreatorsQuota(creators)
@@ -271,7 +271,7 @@ describe("user group assignments", () => {
     const group = await createGroup({
       scimInfo: { externalId: generator.guid(), isSync: true },
     })
-    const email = generator.email({ domain: "example.com" })
+    const email = structures.users.newEmail()
     await config.request
       .post("/api/global/users/bulk")
       .set(config.defaultHeaders())
@@ -295,7 +295,7 @@ describe("user group assignments", () => {
       [
         {
           ...structures.users.user(),
-          email: generator.email({ domain: "example.com" }),
+          email: structures.users.newEmail(),
         },
       ],
       [group._id!]
@@ -312,7 +312,7 @@ describe("user group assignments", () => {
     const group = await createGroup({
       scimInfo: { externalId: generator.guid(), isSync: true },
     })
-    const email = generator.email({ domain: "example.com" })
+    const email = structures.users.newEmail()
     const response = await config.api.users.sendMultiUserInvite([
       { email, userInfo: { userGroups: [group._id!] } },
     ])
@@ -349,7 +349,7 @@ describe("user group assignments", () => {
           isDefault: true,
           scimInfo: { externalId: generator.guid(), isSync },
         })
-        const email = generator.email({ domain: "example.com" })
+        const email = structures.users.newEmail()
         const user = { ...structures.users.user(), email }
         await config.request
           .post(bulk ? "/api/global/users/bulk" : "/api/global/users")
@@ -411,7 +411,7 @@ describe("user group assignments", () => {
             isSync: restriction === "SCIM",
           },
         })
-        const email = generator.email({ domain: "example.com" })
+        const email = structures.users.newEmail()
         const code = await config.doInTenant(() =>
           cache.invite.createCode(email, { userGroups: [group._id!] })
         )
@@ -435,7 +435,7 @@ describe("user group assignments", () => {
 
     it("accepts a local-group invitation and preserves it on repeat login", async () => {
       const group = await createGroup()
-      const email = generator.email({ domain: "example.com" })
+      const email = structures.users.newEmail()
       const providerUserId = generator.guid()
       await config.doInTenant(() =>
         cache.invite.createCode(email, { userGroups: [group._id!] })
