@@ -21,6 +21,10 @@
   import ImportProjectResultModal from "./_components/ImportProjectResultModal.svelte"
   import ProjectTemplateFlow from "./_components/ProjectTemplateFlow.svelte"
   import {
+    saveProjectImportResult,
+    takeProjectImportResult,
+  } from "@/helpers/projectImportResult"
+  import {
     workspaceStore,
     automationStore,
     contextMenuStore,
@@ -593,6 +597,7 @@
     workspaceId: string
   }) => {
     if (workspaceId !== $workspaceStore.appId) {
+      saveProjectImportResult({ workspaceId, userId: currentUserId, response })
       goto(
         `/builder/workspace/${workspaceId}/home?project=${encodeURIComponent(
           response.project._id
@@ -1008,6 +1013,13 @@
           ]
         : []),
     ])
+    const pendingImport = takeProjectImportResult({
+      workspaceId,
+      userId: currentUserId,
+    })
+    if (pendingImport) {
+      await completeProjectImport(pendingImport)
+    }
   })
 </script>
 
