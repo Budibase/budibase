@@ -172,6 +172,47 @@ describe("AssignProjectModal", () => {
     })
   })
 
+  it("keeps the current preview visible during debounce without saving stale selections", async () => {
+    const nextPreview = createPendingPreview()
+    const onConfirm = vi.fn()
+    const onPreview = vi
+      .fn()
+      .mockResolvedValueOnce(preview)
+      .mockReturnValueOnce(nextPreview.promise)
+    render(AssignProjectModal, { resource, onPreview, onConfirm })
+
+    await advancePreviewDebounce()
+    await fireEvent.click(screen.getByLabelText(automation.name))
+    const projectSelect = screen.getByLabelText("Projects")
+    const reporting = within(projectSelect).getByRole("option", {
+      name: "Reporting",
+    }) as HTMLOptionElement
+    reporting.selected = true
+    await fireEvent.change(projectSelect)
+
+    expect(screen.getByLabelText(automation.name)).not.toBeChecked()
+    expect(screen.getByText("1 related resource excluded")).toBeTruthy()
+    expect(screen.queryByText("Finding related resources")).toBeNull()
+    expect(screen.getByText("Save changes")).toBeDisabled()
+    await fireEvent.click(screen.getByText("Save changes"))
+    expect(onConfirm).not.toHaveBeenCalled()
+    expect(onPreview).toHaveBeenCalledTimes(1)
+
+    await advancePreviewDebounce()
+    expect(screen.getByText("Finding related resources")).toBeTruthy()
+    expect(screen.getByText("Save changes")).toBeDisabled()
+    nextPreview.resolve({ ...preview, dependencies: [datasource] })
+    await tick()
+    await fireEvent.click(screen.getByText("Save changes"))
+
+    expect(onConfirm).toHaveBeenCalledWith({
+      resourceRev: resource.revision,
+      projectIds: ["project_1", "project_2"],
+      dependencyIds: [datasource.id],
+      dependencyFingerprint: preview.dependencyFingerprint,
+    })
+  })
+
   it("retries a failed dependency preview before saving", async () => {
     const onConfirm = vi.fn()
     render(AssignProjectModal, {
