@@ -243,6 +243,86 @@ export async function handleDataImport(
   return table
 }
 
+export async function importInternalTableRows({
+  table,
+  rows,
+  identifierFields,
+  userId,
+}: {
+  table: Table
+  rows: Row[]
+  identifierFields?: string[]
+  userId?: string
+}) {
+  const db = context.getWorkspaceDB()
+  const tableId = table._id!
+  const originalSchema = cloneDeep(table.schema)
+  let importedRows: Row[] = []
+  const importedTable = await handleDataImport(table, {
+    importRows: rows,
+    identifierFields,
+    userId,
+    onRowsImported: rows => {
+      importedRows = rows
+    },
+  })
+  const importedSchema = cloneDeep(importedTable.schema)
+  // Keep only import-added options before reconciling any column renames.
+  for (const [name, column] of Object.entries(importedSchema)) {
+    if (column.type !== FieldType.OPTIONS && column.type !== FieldType.ARRAY) {
+      continue
+    }
+    const originalValues = originalSchema[name].constraints?.inclusion || []
+    column.constraints = {
+      ...column.constraints,
+      inclusion: (column.constraints?.inclusion || []).filter(
+        value => !originalValues.includes(value)
+      ),
+    }
+  }
+
+  return await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
+    const currentTable = await db.get<Table>(tableId)
+    // Schema saves can finish their row cleanup while this import is writing.
+    // Repair only this import's rows under the schema-save lock.
+    const reconciledSchema = await reconcileImportedRows({
+      importedTable: { ...importedTable, schema: importedSchema },
+      currentTable,
+      rows: importedRows,
+    })
+    let schemaChanged = false
+    for (const [name, importedColumn] of Object.entries(reconciledSchema)) {
+      const currentColumn = currentTable.schema[name]
+      if (
+        (importedColumn.type !== FieldType.OPTIONS &&
+          importedColumn.type !== FieldType.ARRAY) ||
+        currentColumn?.type !== importedColumn.type
+      ) {
+        continue
+      }
+      const existingValues = currentColumn.constraints?.inclusion || []
+      const addedValues = (importedColumn.constraints?.inclusion || []).filter(
+        value => !existingValues.includes(value)
+      )
+      if (addedValues.length) {
+        currentColumn.constraints = {
+          ...currentColumn.constraints,
+          inclusion: [...new Set([...existingValues, ...addedValues])].sort(),
+        }
+        schemaChanged = true
+      }
+    }
+    if (!schemaChanged) {
+      return currentTable
+    }
+    const { table: savedTable } = await sdk.tables.internal.save(currentTable, {
+      tableId,
+      userId,
+    })
+    return savedTable
+  })
+}
+
 export async function reconcileImportedRows({
   importedTable,
   currentTable,
