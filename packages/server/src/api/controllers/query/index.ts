@@ -29,6 +29,7 @@ import {
   JsonFieldSubType,
   PreviewQueryRequest,
   PreviewQueryResponse,
+  ProjectAssignmentResult,
   Query,
   QueryResponse,
   QuerySchema,
@@ -49,7 +50,11 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
-import { withProjectPropagationWarning } from "../../../utilities/projects"
+import {
+  projectAssignmentResult,
+  mergeProjectAssignmentResults,
+  withoutProjectAssignmentResult,
+} from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
@@ -94,6 +99,7 @@ const _import = async (
     : body
   const importer = await createImporter(importerInput)
   const importInfo = importer.getInfo()
+  const projectAssignments: ProjectAssignmentResult[] = []
 
   let datasourceId
   if (!body.datasourceId) {
@@ -130,6 +136,9 @@ const _import = async (
     })
     await saveDatasource(datasourceCtx)
     datasourceId = datasourceCtx.body.datasource._id
+    if (datasourceCtx.body.projectAssignment) {
+      projectAssignments.push(datasourceCtx.body.projectAssignment)
+    }
   } else {
     datasourceId = body.datasourceId
   }
@@ -191,15 +200,20 @@ const _import = async (
       }
 
       const datasource = await sdk.datasources.get(datasourceId)
-      await withProjectPropagationWarning({
-        ctx,
-        propagation: sdk.projects.propagateCreatedResourceDependencies({
+      const projectAssignment = await projectAssignmentResult(
+        sdk.projects.propagateCreatedResourceDependencies({
           rootResourceId: datasourceId,
           projectIds: datasource.projectIds,
           savedResources: result.queries,
-        }),
-      })
-      return result
+        })
+      )
+      return {
+        ...result,
+        projectAssignment: mergeProjectAssignmentResults([
+          ...projectAssignments,
+          projectAssignment,
+        ]),
+      }
     }
   )
 
@@ -241,7 +255,7 @@ export async function importInfo(
 
 async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()
-  const query: Query = ctx.request.body
+  const query: Query = withoutProjectAssignmentResult(ctx.request.body)
   delete query.projectIds
 
   // Validate query name
@@ -296,31 +310,30 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   await eventFn()
   query._rev = response.rev
 
+  let projectAssignment
   if (!existingQuery || existingQuery.datasourceId === datasource._id) {
-    await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateProjectDependencyChanges({
+    projectAssignment = await projectAssignmentResult(
+      sdk.projects.propagateProjectDependencyChanges({
         rootResourceId: datasource._id!,
         currentProjectIds: datasource.projectIds,
         previousProjectIds: datasource.projectIds,
         previousResource: existingQuery,
         savedResource: query,
-      }),
-    })
+      })
+    )
   } else {
-    await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateMovedQueryDependencies({
+    projectAssignment = await projectAssignmentResult(
+      sdk.projects.propagateMovedQueryDependencies({
         existingDatasource,
         datasource,
         existingQuery,
         query,
         referencingAgents,
-      }),
-    })
+      })
+    )
   }
 
-  ctx.body = query
+  ctx.body = { ...query, projectAssignment }
 }
 
 export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
@@ -387,7 +400,7 @@ export async function preview(
   // this stops dynamic variables from calling the same query
   const queryId = ctx.request.body.queryId
   // the body contains the makings of a query, which has not been saved yet
-  const query: Query = ctx.request.body
+  const query: Query = withoutProjectAssignmentResult(ctx.request.body)
   // hasn't been saved, new query
   if (!queryId && !query._id) {
     query.nullDefaultSupport = true

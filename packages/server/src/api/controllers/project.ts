@@ -21,7 +21,6 @@ import { HTTPError } from "@budibase/backend-core"
 import fsp from "fs/promises"
 import type { Next } from "koa"
 import sdk from "../../sdk"
-import { withProjectPropagationWarning } from "../../utilities/projects"
 
 export const toProjectResponse = (project: Project): ProjectResponse => {
   return {
@@ -158,12 +157,9 @@ export async function updateAssignment(
         resourceRev,
         projectIds,
       })
-    const outcome = await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateProjectIdsToDependencyIds({
-        dependencyIds: selectedDependencyIds,
-        projectIds,
-      }),
+    const outcome = await sdk.projects.propagateProjectIdsToDependencyIds({
+      dependencyIds: selectedDependencyIds,
+      projectIds,
     })
     const failedIds = new Set(
       outcome.status === "incomplete" ? outcome.resourceIds : []
@@ -173,6 +169,7 @@ export async function updateAssignment(
       resourceId,
       resourceRev: updatedResource._rev,
       projectIds,
+      failedDependencyIds: Array.from(failedIds),
       assignedDependencyIds: selectedDependencyIds.filter(
         dependencyId => !failedIds.has(dependencyId)
       ),

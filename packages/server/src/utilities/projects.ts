@@ -1,24 +1,36 @@
-import { Header } from "@budibase/shared-core"
-import { APIWarningCode } from "@budibase/types"
+import type {
+  ProjectAssignmentResult,
+  ProjectAssignmentResponse,
+} from "@budibase/types"
 import type { ProjectPropagationOutcome } from "../sdk/workspace/projects/dependencies"
 
-interface ResponseHeaderContext {
-  set: (field: string, value: string) => void
+export const withoutProjectAssignmentResult = <T>(resource: T): T => {
+  const { projectAssignment: _result, ...saved } = resource as T &
+    ProjectAssignmentResponse
+  return saved as T
 }
 
-export const withProjectPropagationWarning = async ({
-  ctx,
-  propagation,
-}: {
-  ctx: ResponseHeaderContext
+export const projectAssignmentResult = async (
   propagation: Promise<ProjectPropagationOutcome>
-}) => {
+): Promise<ProjectAssignmentResult> => {
   const outcome = await propagation
-  if (outcome.status === "incomplete") {
-    ctx.set(
-      Header.API_WARNING,
-      APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE
-    )
+  return {
+    assignedDependencyIds: outcome.assignedResourceIds || [],
+    failedDependencyIds:
+      outcome.status === "incomplete" ? outcome.resourceIds : [],
   }
-  return outcome
+}
+
+export const mergeProjectAssignmentResults = (
+  results: ProjectAssignmentResult[]
+): ProjectAssignmentResult => {
+  const failedDependencyIds = Array.from(
+    new Set(results.flatMap(result => result.failedDependencyIds))
+  )
+  return {
+    assignedDependencyIds: Array.from(
+      new Set(results.flatMap(result => result.assignedDependencyIds))
+    ).filter(id => !failedDependencyIds.includes(id)),
+    failedDependencyIds,
+  }
 }

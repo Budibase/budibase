@@ -118,6 +118,7 @@
   let importProjectModal: ModalAPI
   let createProjectModalKey = 0
   let editProjectModalKey = 0
+  // Reopening during Modal's outro keeps its slot alive; reset that instance too.
   let assignProjectModalKey = 0
   let exportProjectModalKey = 0
   let importProjectModalKey = 0
@@ -938,17 +939,7 @@
       projectsEnabled,
     })
 
-    await Promise.all([
-      agentsStore.fetchAgents(),
-      ...(projectsEnabled
-        ? [
-            tables.fetch(),
-            datasources.fetch(),
-            automationStore.actions.fetch(),
-            workspaceAppStore.fetch(),
-          ]
-        : []),
-    ])
+    await agentsStore.fetchAgents()
   })
 </script>
 

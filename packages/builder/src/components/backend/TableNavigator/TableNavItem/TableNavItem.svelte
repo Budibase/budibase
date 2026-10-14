@@ -42,6 +42,7 @@
   let editModal: ModalRef
   let deleteConfirmationModal: ModalRef
   let assignProjectModal: ModalAPI
+  // Reopening during Modal's outro keeps its slot alive; reset that instance too.
   let assignProjectModalKey = 0
 
   $: favourite = tableId ? $favourites[tableId] : undefined

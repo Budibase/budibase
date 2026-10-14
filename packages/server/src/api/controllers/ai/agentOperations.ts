@@ -6,7 +6,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import { withProjectPropagationWarning } from "../../../utilities/projects"
+import { projectAssignmentResult } from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
 
 async function createAgentOperationUnlocked(
@@ -29,18 +29,17 @@ async function createAgentOperationUnlocked(
     approvalPolicies: body.approvalPolicies,
     allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload ?? true,
   })
-  await withProjectPropagationWarning({
-    ctx,
-    propagation: sdk.projects.propagateProjectDependencyChanges({
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectDependencyChanges({
       rootResourceId: agent._id!,
       currentProjectIds: agent.projectIds,
       previousProjectIds: existing.projectIds,
       previousResource: existing,
       savedResource: agent,
-    }),
-  })
+    })
+  )
 
-  ctx.body = toAgentResponse(agent)
+  ctx.body = { ...toAgentResponse(agent), projectAssignment }
   ctx.status = 201
 }
 
@@ -72,18 +71,17 @@ async function updateAgentOperationUnlocked(
 
   const existing = await sdk.ai.agents.getOrThrow(agentId)
   const agent = await sdk.ai.agents.updateOperation(agentId, operationId, body)
-  await withProjectPropagationWarning({
-    ctx,
-    propagation: sdk.projects.propagateProjectDependencyChanges({
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectDependencyChanges({
       rootResourceId: agent._id!,
       currentProjectIds: agent.projectIds,
       previousProjectIds: existing.projectIds,
       previousResource: existing,
       savedResource: agent,
-    }),
-  })
+    })
+  )
 
-  ctx.body = toAgentResponse(agent)
+  ctx.body = { ...toAgentResponse(agent), projectAssignment }
   ctx.status = 200
 }
 

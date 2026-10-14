@@ -53,7 +53,11 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { handleDataImport } from "./utils"
-import { withProjectPropagationWarning } from "../../../utilities/projects"
+import {
+  projectAssignmentResult,
+  mergeProjectAssignmentResults,
+  withoutProjectAssignmentResult,
+} from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
@@ -182,6 +186,7 @@ export async function find(ctx: UserCtx<void, FindTableResponse>) {
 
 async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
+  ctx.request.body = withoutProjectAssignmentResult(ctx.request.body)
   const { rows, ...table } = ctx.request.body
   const isImport = rows
   const renaming = ctx.request.body._rename
@@ -230,6 +235,7 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     await events.table.imported(savedTable)
   }
 
+  const projectAssignments = []
   const newLinkedTableIds = !isExternalTable(savedTable)
     ? getNewLinkedTableIds({ previousTable, savedTable })
     : []
@@ -239,27 +245,29 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     const reciprocalProjectIds = (linkedTable.projectIds || []).filter(
       projectId => !existingProjectIds.has(projectId)
     )
-    await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateProjectIdsToDependencySubtrees({
-        blockedResourceIds: [linkedTable._id!],
-        dependencyIds: [savedTable._id!],
-        projectIds: reciprocalProjectIds,
-      }),
-    })
+    projectAssignments.push(
+      await projectAssignmentResult(
+        sdk.projects.propagateProjectIdsToDependencySubtrees({
+          blockedResourceIds: [linkedTable._id!],
+          dependencyIds: [savedTable._id!],
+          projectIds: reciprocalProjectIds,
+        })
+      )
+    )
   }
 
   if (!isExternalTable(savedTable)) {
-    await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateProjectDependencyChanges({
-        rootResourceId: savedTable._id!,
-        currentProjectIds: savedTable.projectIds,
-        previousProjectIds: previousTable?.projectIds || [],
-        previousResource: previousTable,
-        savedResource: savedTable,
-      }),
-    })
+    projectAssignments.push(
+      await projectAssignmentResult(
+        sdk.projects.propagateProjectDependencyChanges({
+          rootResourceId: savedTable._id!,
+          currentProjectIds: savedTable.projectIds,
+          previousProjectIds: previousTable?.projectIds || [],
+          previousResource: previousTable,
+          savedResource: savedTable,
+        })
+      )
+    )
   }
 
   if (newLinkedTableIds.length) {
@@ -271,7 +279,10 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, appId, { ...savedTable })
 
-  ctx.body = savedTable
+  ctx.body = {
+    ...savedTable,
+    projectAssignment: mergeProjectAssignmentResults(projectAssignments),
+  }
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 

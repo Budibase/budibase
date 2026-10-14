@@ -2,7 +2,6 @@ import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import { getQueryToolBindings, Header } from "@budibase/shared-core"
 import {
-  APIWarningCode,
   FeatureFlag,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
@@ -606,13 +605,10 @@ describe("project dependency assignments", () => {
           },
           {
             status: 200,
-            headers: {
-              [Header.API_WARNING]:
-                APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE,
-            },
           }
         )
         expect(response.assignedDependencyIds).toEqual([automation._id])
+        expect(response.failedDependencyIds).toEqual([secondAutomation._id])
         expect(
           (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
         ).toEqual([project._id])
@@ -639,6 +635,7 @@ describe("project dependency assignments", () => {
           dependencyIds: [secondAutomation._id!],
         }
       )
+      expect(retried.failedDependencyIds).toEqual([])
       expect(retried.assignedDependencyIds).toEqual([secondAutomation._id])
       expect(
         (await config.api.automation.get(secondAutomation._id!)).projectIds
