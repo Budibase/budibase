@@ -237,13 +237,14 @@ class InternalBuilder {
 
   getFieldSchema(key: string): FieldSchema | undefined {
     key = dbCore.removeKeyNumbering(key)
+    const { tableName, column } = this.splitter.run(key)
+    if (tableName) {
+      return this.query.tables[tableName]?.schema[column]
+    }
     for (const table of Object.values(this.query.tables)) {
-      const prefixes = [table.name, this.query.tableAliases?.[table.name]]
-      const prefix = prefixes.find(
-        prefix => prefix && key.startsWith(`${prefix}.`)
-      )
-      if (prefix) {
-        const { column } = this.splitter.run(key.slice(prefix.length + 1))
+      const prefix = `${table.name}.`
+      if (key.startsWith(prefix)) {
+        const { column } = this.splitter.run(key.slice(prefix.length))
         return table.schema[column]
       }
     }
@@ -254,7 +255,6 @@ class InternalBuilder {
         return this.query.tables[relationship.tableName]?.schema[column]
       }
     }
-    const { column } = this.splitter.run(key)
     return this.table.schema[column]
   }
 

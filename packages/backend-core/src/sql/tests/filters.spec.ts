@@ -225,6 +225,43 @@ describe("SQL filter parameterization", () => {
     }
   )
 
+  it.each(["string", "fuzzy"] as const)(
+    "prioritizes aliases over table names for UUID %s filters",
+    operator => {
+      const table = buildTable({
+        person_id: {
+          name: "person_id",
+          type: FieldType.STRING,
+          externalType: "uuid",
+          constraints: baseConstraints,
+        },
+      })
+      const otherTable: Table = {
+        ...table,
+        _id: "a",
+        name: "a",
+        schema: {
+          ...table.schema,
+          person_id: {
+            ...table.schema.person_id,
+            externalType: "text",
+          },
+        },
+      }
+      const query = buildQuery(table, { [operator]: { person_id: "F69D" } })
+      query.tables = { a: otherTable, tbl: table }
+      query.tableAliases = { a: "b", tbl: "a" }
+
+      const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+      expect(result.sql).toContain('"a"."person_id"::text ilike $1')
+      expect(result.bindings).toEqual([
+        operator === "string" ? "F69D%" : "%F69D%",
+        25,
+      ])
+    }
+  )
+
   describe.each(["rel", "related", "b", "1:rel"])(
     "related date-only filters using %s",
     prefix => {
