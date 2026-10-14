@@ -34,7 +34,8 @@
   let workspaceReady = false
   let projectsRequested = false
   let packageKey = `${workspaceId}:${$params.screenId || ""}`
-  let promise = getPackage(workspaceId)
+  let packageInitialisation = Promise.resolve()
+  let promise = getPackage({ appId: workspaceId, requestKey: packageKey })
   let sideNav: SideNav
   let showInviteUsersModal = false
   $: projectSetupReturn = getProjectSetupRequest({
@@ -45,7 +46,7 @@
     const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
     if (nextPackageKey !== packageKey) {
       packageKey = nextPackageKey
-      promise = getPackage(workspaceId)
+      promise = getPackage({ appId: workspaceId, requestKey: packageKey })
     }
   }
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
@@ -76,7 +77,13 @@
     }
   }
 
-  async function getPackage(appId: string) {
+  async function getPackage({
+    appId,
+    requestKey,
+  }: {
+    appId: string
+    requestKey: string
+  }) {
     try {
       if ($admin.maintenance.length) {
         return
@@ -88,8 +95,22 @@
         reset()
         workspaceStore.update(state => ({ ...state, appId }))
         const pkg = await API.fetchAppPackage(appId)
+        if (requestKey !== packageKey) {
+          return
+        }
 
-        await initialise(pkg)
+        const currentInitialisation = packageInitialisation.then(async () => {
+          if (requestKey !== packageKey) {
+            return
+          }
+          await initialise(pkg)
+          if (requestKey === packageKey) {
+            await deploymentStore.load()
+          }
+        })
+        packageInitialisation = currentInitialisation.catch(() => {})
+        await currentInitialisation
+        return
       }
       await deploymentStore.load()
       if ($featureFlags[FeatureFlag.PROJECTS]) {
@@ -104,6 +125,9 @@
           )
       }
     } catch (error: any) {
+      if (requestKey !== packageKey) {
+        return
+      }
       console.error(`Error initialising app: ${error?.message}`)
       sideNav.show()
 
