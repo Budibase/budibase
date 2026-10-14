@@ -9,7 +9,7 @@ import {
   Table,
 } from "@budibase/types"
 import sdk from "../.."
-import { isInternal } from "../tables/utils"
+import { hasSinglePrimaryKey, isInternal } from "../tables/utils"
 
 const ALLOWED_FILTER_META_KEYS: (keyof SearchFilters)[] = [
   "allOr",
@@ -118,7 +118,7 @@ export const getQueryableFields = async (
     extractOpts?: { noRelationships?: boolean }
   ): Promise<string[]> => {
     const result = []
-    if (isInternal({ table }) || table.primary?.length === 1) {
+    if (isInternal({ table }) || hasSinglePrimaryKey({ table })) {
       result.push("_id")
     }
 
