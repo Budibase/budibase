@@ -118,8 +118,6 @@
   let importProjectModal: ModalAPI
   let createProjectModalKey = 0
   let editProjectModalKey = 0
-  // Reopening during Modal's outro keeps its slot alive; reset that instance too.
-  let assignProjectModalKey = 0
   let exportProjectModalKey = 0
   let importProjectModalKey = 0
 
@@ -280,7 +278,6 @@
   }
 
   const openAssignProjectModal = () => {
-    assignProjectModalKey += 1
     assignProjectModal?.show()
   }
 
@@ -1133,15 +1130,13 @@
   </Modal>
 
   <Modal bind:this={assignProjectModal}>
-    {#key assignProjectModalKey}
-      {#if selectedProjectResource}
-        <AssignProjectModal
-          resource={selectedProjectResource}
-          onPreview={projectsStore.previewAssignment}
-          onConfirm={assignProject}
-        />
-      {/if}
-    {/key}
+    {#if selectedProjectResource}
+      <AssignProjectModal
+        resource={selectedProjectResource}
+        onPreview={projectsStore.previewAssignment}
+        onConfirm={assignProject}
+      />
+    {/if}
   </Modal>
 
   <Modal bind:this={editProjectModal}>
