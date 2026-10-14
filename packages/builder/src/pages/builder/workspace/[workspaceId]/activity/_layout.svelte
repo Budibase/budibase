@@ -1,26 +1,28 @@
 <script lang="ts">
   import { featureFlags } from "@/stores/portal"
-  import { FeatureFlag } from "@budibase/types"
-  import { goto, isActive } from "@roxi/routify"
+  import { goto, isActive, redirect } from "@roxi/routify"
   import AgentTabList from "../agent/[agentId]/AgentTabList.svelte"
+  import { ACTIVITY_TABS, getEnabledActivityTabs } from "./activityTabs"
 
   $goto
+  $redirect
 
-  let activityEnabled = $derived($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY])
-
-  const tabs = [
-    { label: "Requests", url: "./requests" },
-    { label: "Actions", url: "./actions" },
-  ]
+  let tabs = $derived(getEnabledActivityTabs($featureFlags))
+  let activityEnabled = $derived(tabs.length > 0)
+  let disabledTabActive = $derived(
+    ACTIVITY_TABS.some(tab => !tabs.includes(tab) && $isActive(tab.url))
+  )
 
   $effect(() => {
     if (!activityEnabled) {
       $goto("../home")
+    } else if (disabledTabActive) {
+      $redirect(tabs[0].url)
     }
   })
 </script>
 
-{#if activityEnabled}
+{#if activityEnabled && !disabledTabActive}
   <div class="activity-layout">
     <AgentTabList ariaLabel="Activity" bordered>
       {#each tabs as tab}
