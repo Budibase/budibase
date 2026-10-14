@@ -33,6 +33,7 @@
 
   let workspaceReady = false
   let projectsRequested = false
+  let packageKey = `${workspaceId}:${$params.screenId || ""}`
   let promise = getPackage(workspaceId)
   let sideNav: SideNav
   let showInviteUsersModal = false
@@ -40,6 +41,13 @@
     workspaceId,
     homeUrl: $params.returnTo,
   })
+  $: {
+    const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
+    if (nextPackageKey !== packageKey) {
+      packageKey = nextPackageKey
+      promise = getPackage(workspaceId)
+    }
+  }
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
   $: canManageConnections =
     $auth.user != null &&
