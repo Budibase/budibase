@@ -166,6 +166,7 @@ describe("enqueuePlatformActionSessionIndex", () => {
       environment: "dev",
       sourceType: "automation_run",
       sourceId: "run-notified",
+      signal: "completed",
     })
   })
 

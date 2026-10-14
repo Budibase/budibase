@@ -2,6 +2,7 @@ import { events } from "@budibase/backend-core"
 import type {
   ActionSession,
   ActionSessionsSummary,
+  Database,
   FetchActionSessionsResponse,
   PlatformActionContainerStatus,
   PlatformActionEnvironment,
@@ -12,6 +13,8 @@ import {
   decodeKeysetBookmark,
   resolveLimit,
 } from "./pagination"
+import { clearOldHistory } from "./cleanup"
+import { getRetentionCutoff, isExpiredSession } from "./retention"
 import {
   getSessionKeysetKey,
   querySessions,
@@ -47,6 +50,8 @@ export async function fetchSessions({
   const token =
     bookmark === undefined ? undefined : decodeKeysetBookmark(bookmark)
   const direction = token?.direction ?? "next"
+  await clearOldHistory()
+  const cutoff = await getRetentionCutoff()
 
   const [page, summary] = await Promise.all([
     querySessions({
@@ -56,12 +61,17 @@ export async function fetchSessions({
       limit: resolveLimit(limit),
       bookmark: token,
       direction,
+      cutoff,
     }),
-    fetchSessionsSummary({ environment }),
+    getSessionsSummary({ workspaceDb, environment, cutoff }),
   ])
 
+  // Bookmarks come from the unfiltered page, so a page made only of expired
+  // sessions still advances
   return {
-    sessions: page.items.map(toActionSession),
+    sessions: page.items
+      .filter(session => !isExpiredSession({ session, cutoff }))
+      .map(toActionSession),
     summary,
     pagination: buildPagination({
       items: page.items,
@@ -79,8 +89,27 @@ export async function fetchSessionsSummary({
 }: {
   environment?: PlatformActionEnvironment
 }): Promise<ActionSessionsSummary> {
-  const workspaceDb = events.platformActions.getActionsDB()
-  const counts = await querySessionsStatusCounts({ workspaceDb, environment })
+  return getSessionsSummary({
+    workspaceDb: events.platformActions.getActionsDB(),
+    environment,
+    cutoff: await getRetentionCutoff(),
+  })
+}
+
+async function getSessionsSummary({
+  workspaceDb,
+  environment,
+  cutoff,
+}: {
+  workspaceDb: Database
+  environment?: PlatformActionEnvironment
+  cutoff?: string
+}): Promise<ActionSessionsSummary> {
+  const counts = await querySessionsStatusCounts({
+    workspaceDb,
+    environment,
+    cutoff,
+  })
   return {
     total: counts.active + counts.waiting + counts.completed + counts.failed,
     active: counts.active,

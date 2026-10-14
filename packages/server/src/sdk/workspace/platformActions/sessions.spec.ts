@@ -1,5 +1,6 @@
 import tk from "timekeeper"
 import { db, events } from "@budibase/backend-core"
+import { mocks } from "@budibase/backend-core/tests"
 import { DocumentType, SEPARATOR } from "@budibase/types"
 import type {
   PlatformActionContainerStatus,
@@ -10,6 +11,14 @@ import type {
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { fetchSessions, fetchSessionsSummary } from "./sessions"
 import { encodeKeysetBookmark } from "./pagination"
+import { clearOldHistory } from "./cleanup"
+
+jest.mock("./cleanup", () => {
+  const actual = jest.requireActual("./cleanup")
+  return { ...actual, clearOldHistory: jest.fn(actual.clearOldHistory) }
+})
+
+const actualClearOldHistory = jest.requireActual("./cleanup").clearOldHistory
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 5))
 
@@ -633,6 +642,217 @@ describe("platformActions sessions", () => {
         completed: 0,
         failed: 0,
       })
+    })
+  })
+
+  describe("retention", () => {
+    const ONE_DAY_MILLIS = 1000 * 60 * 60 * 24
+    // Expired sessions stay stored, so reads have to hide them on their own
+    beforeEach(() => {
+      mocks.licenses.setPlatformActionsRetentionQuota(30)
+      jest.mocked(clearOldHistory).mockResolvedValue()
+    })
+
+    afterEach(() => {
+      jest.mocked(clearOldHistory).mockImplementation(actualClearOldHistory)
+      mocks.licenses.useUnlimited()
+    })
+
+    async function createSessionDaysAgo({
+      daysAgo,
+      ...session
+    }: {
+      daysAgo: number
+      sourceId: string
+      environment?: PlatformActionEnvironment
+      status?: PlatformActionContainerStatus
+    }) {
+      tk.freeze(new Date(Date.now() - daysAgo * ONE_DAY_MILLIS))
+      try {
+        await createSession(session)
+      } finally {
+        tk.reset()
+      }
+    }
+
+    async function createMixedSessions() {
+      await createSessionDaysAgo({ sourceId: "old-active", daysAgo: 60 })
+      await createSessionDaysAgo({
+        sourceId: "old-waiting",
+        daysAgo: 50,
+        status: "waiting",
+      })
+      await createSessionDaysAgo({
+        sourceId: "expired-completed",
+        daysAgo: 40,
+        status: "completed",
+      })
+      await createSessionDaysAgo({
+        sourceId: "expired-failed",
+        daysAgo: 35,
+        status: "failed",
+      })
+      await createSessionDaysAgo({
+        sourceId: "recent-failed",
+        daysAgo: 2,
+        status: "failed",
+      })
+      await createSessionDaysAgo({
+        sourceId: "recent-completed",
+        daysAgo: 1,
+        status: "completed",
+      })
+    }
+
+    it.each([{}, { environment: "prod" as const }])(
+      "hides expired terminal sessions but keeps old active and waiting ones: %j",
+      async filters => {
+        await createMixedSessions()
+
+        const result = await withContext(() => fetchSessions(filters))
+
+        expect(result.sessions.map(session => session.sourceId)).toEqual([
+          "recent-completed",
+          "recent-failed",
+          "old-waiting",
+          "old-active",
+        ])
+      }
+    )
+
+    it.each([
+      { status: "completed" as const, expected: ["recent-completed"] },
+      { status: "failed" as const, expected: ["recent-failed"] },
+    ])(
+      "excludes expired sessions from the $status filter",
+      async ({ status, expected }) => {
+        await createMixedSessions()
+
+        const [all, prod] = await withContext(() =>
+          Promise.all([
+            fetchSessions({ status }),
+            fetchSessions({ status, environment: "prod" }),
+          ])
+        )
+
+        expect(all.sessions.map(session => session.sourceId)).toEqual(expected)
+        expect(prod.sessions.map(session => session.sourceId)).toEqual(expected)
+      }
+    )
+
+    it("keeps paging through pages made only of expired sessions", async () => {
+      await createMixedSessions()
+
+      const collected: string[] = []
+      let bookmark: string | undefined
+      do {
+        const page = await withContext(() =>
+          fetchSessions({ limit: 1, bookmark })
+        )
+        collected.push(...page.sessions.map(session => session.sourceId))
+        bookmark = page.pagination.nextBookmark
+      } while (bookmark)
+
+      expect(collected).toEqual([
+        "recent-completed",
+        "recent-failed",
+        "old-waiting",
+        "old-active",
+      ])
+    })
+
+    it("returns an empty page for a next bookmark older than the cutoff", async () => {
+      await createMixedSessions()
+      const bookmark = encodeKeysetBookmark({
+        direction: "next",
+        key: [
+          "completed",
+          new Date(Date.now() - 40 * ONE_DAY_MILLIS).toISOString(),
+        ],
+        id: "anything",
+      })
+
+      const result = await withContext(() =>
+        fetchSessions({ status: "completed", bookmark })
+      )
+
+      expect(result.sessions).toEqual([])
+      expect(result.pagination).toEqual({
+        hasNextPage: false,
+        hasPreviousPage: false,
+      })
+    })
+
+    it("pages back from a bookmark older than the cutoff without expired sessions", async () => {
+      await createMixedSessions()
+      const bookmark = encodeKeysetBookmark({
+        direction: "prev",
+        key: [
+          "completed",
+          new Date(Date.now() - 50 * ONE_DAY_MILLIS).toISOString(),
+        ],
+        id: "anything",
+      })
+
+      const result = await withContext(() =>
+        fetchSessions({ status: "completed", bookmark })
+      )
+
+      expect(result.sessions.map(session => session.sourceId)).toEqual([
+        "recent-completed",
+      ])
+    })
+
+    it.each([undefined, "prod"] as const)(
+      "excludes expired sessions from counts with environment %s",
+      async environment => {
+        await createMixedSessions()
+
+        const summary = await withContext(() =>
+          fetchSessionsSummary({ environment })
+        )
+
+        expect(summary).toEqual({
+          total: 4,
+          active: 1,
+          waiting: 1,
+          completed: 1,
+          failed: 1,
+        })
+      }
+    )
+
+    it("keeps every session with an unlimited quota", async () => {
+      mocks.licenses.useUnlimited()
+      await createMixedSessions()
+
+      const result = await withContext(() => fetchSessions({}))
+
+      expect(result.sessions).toHaveLength(6)
+      expect(result.summary.total).toBe(6)
+    })
+
+    it("deletes expired sessions before listing", async () => {
+      jest.mocked(clearOldHistory).mockImplementation(actualClearOldHistory)
+      await createMixedSessions()
+
+      await withContext(() => fetchSessions({}))
+
+      const storedIds = await withContext(async () => {
+        const response = await events.platformActions
+          .getActionsDB()
+          .allDocs<PlatformActionSessionIndexDoc>({ include_docs: true })
+        return response.rows
+          .map(row => row.doc!.sourceId)
+          .filter(sourceId => sourceId !== undefined)
+          .sort()
+      })
+      expect(storedIds).toEqual([
+        "old-active",
+        "old-waiting",
+        "recent-completed",
+        "recent-failed",
+      ])
     })
   })
 })
