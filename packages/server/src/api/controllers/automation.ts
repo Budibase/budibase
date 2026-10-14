@@ -59,7 +59,7 @@ import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { getValidProjectIdsForDuplication } from "../../sdk/workspace/projects/utils"
 import { isQsTrue } from "../../utilities"
-import { withProjectPropagationWarning } from "../../utilities/projects"
+import { projectAssignmentResult } from "../../utilities/projects"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
 
@@ -112,23 +112,24 @@ async function createUnlocked(
     createdAutomation = await sdk.automations.create(automation)
   }
 
+  let projectAssignment
   // A history restore replays the saved snapshot, including its exclusions.
   if (!restoringDeletedAutomation) {
-    await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateProjectDependencyChanges({
+    projectAssignment = await projectAssignmentResult(
+      sdk.projects.propagateProjectDependencyChanges({
         rootResourceId: createdAutomation._id!,
         currentProjectIds: createdAutomation.projectIds,
         previousProjectIds: sourceAutomation?.projectIds,
         previousResource: sourceAutomation,
         savedResource: createdAutomation,
-      }),
-    })
+      })
+    )
   }
 
   ctx.body = {
     message: "Automation created successfully",
     automation: createdAutomation,
+    projectAssignment,
   }
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
@@ -153,20 +154,20 @@ async function updateUnlocked(
   })
 
   const updatedAutomation = await sdk.automations.update(automation)
-  await withProjectPropagationWarning({
-    ctx,
-    propagation: sdk.projects.propagateProjectDependencyChanges({
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectDependencyChanges({
       rootResourceId: updatedAutomation._id!,
       currentProjectIds: updatedAutomation.projectIds,
       previousProjectIds: existingAutomation.projectIds,
       previousResource: existingAutomation,
       savedResource: updatedAutomation,
-    }),
-  })
+    })
+  )
 
   ctx.body = {
     message: `Automation ${automation._id} updated successfully.`,
     automation: updatedAutomation,
+    projectAssignment,
   }
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }

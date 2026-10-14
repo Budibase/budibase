@@ -1,17 +1,20 @@
 import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { Header, helpers } from "@budibase/shared-core"
+import { helpers } from "@budibase/shared-core"
 import {
-  APIWarningCode,
   FeatureFlag,
   FieldType,
+  SaveScreenResponse,
   RelationshipType,
+  TableSourceType,
   ToolExecutionPrincipal,
+  type Row,
   type Screen,
 } from "@budibase/types"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import sdk from "../../../sdk"
+import { withPublishLock } from "../../controllers/deploy"
 import * as projectLock from "../../../sdk/workspace/projects/lock"
 import { getQueryToolBindingsForResource } from "../../../sdk/workspace/ai/agents/queryToolReferences"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -374,6 +377,440 @@ describe("project dependency propagation", () => {
           resources.restore()
         }
       })
+    })
+
+    it("keeps a shared transitive dependency excluded when adding another branch", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const excludedTable = await config.api.table.save(basicTable())
+        const { automation: first } = await createAutomationBuilder(config)
+          .onAppAction({})
+          .createRow({ row: { tableId: excludedTable._id!, name: "First" } })
+          .save()
+        const { automation: second } = await createAutomationBuilder(config)
+          .onAppAction({})
+          .createRow({ row: { tableId: excludedTable._id!, name: "Second" } })
+          .save()
+        const { workspaceApp } = await config.api.workspaceApp.create({
+          name: "Operations app",
+          url: "/operations",
+        })
+        const screen = await config.api.screen.save(
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: first._id!,
+          })
+        )
+        await assignResourceWithoutDependencies({
+          resourceId: workspaceApp._id!,
+          projectIds: [project._id],
+        })
+        const secondButton = createAutomationButtonScreen({
+          workspaceAppId: workspaceApp._id!,
+          automationId: second._id!,
+        }).props._children![0]
+        await config.api.screen.save({
+          ...screen,
+          props: {
+            ...screen.props,
+            _children: [
+              ...screen.props._children!,
+              { ...secondButton, _id: "second-button" },
+            ],
+          },
+        })
+        expect(
+          (await config.api.automation.get(second._id!)).projectIds
+        ).toEqual([project._id])
+        expect(
+          (await config.api.automation.get(first._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.table.get(excludedTable._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("keeps existing row actions excluded when creating another action", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const table = await config.api.table.save(basicTable())
+        const excluded = await config.api.rowAction.save(table._id!, {
+          name: "Excluded action",
+        })
+        await assignResourceWithoutDependencies({
+          resourceId: table._id!,
+          projectIds: [project._id],
+        })
+        const added = await config.api.rowAction.save(table._id!, {
+          name: "Added action",
+        })
+        expect(
+          (await config.api.automation.get(added.automationId)).projectIds
+        ).toEqual([project._id])
+        expect(
+          (await config.api.automation.get(excluded.automationId)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it.each([false, true])(
+      "uses the external table owner's projects for reciprocal links (stale entity: %s)",
+      async staleEntity => {
+        await withProjectsEnabled(async () => {
+          const { project: owner } = await config.api.project.create({
+            name: "Owner",
+          })
+          const { project: stale } = await config.api.project.create({
+            name: "Stale entity membership",
+          })
+          const datasourceId = "datasource_external_owner"
+          const externalTableId = `${datasourceId}__items`
+          await config.api.datasource.create({
+            ...basicDatasource().datasource,
+            _id: datasourceId,
+            projectIds: [owner._id],
+            entities: {
+              items: {
+                ...basicTable(),
+                _id: externalTableId,
+                sourceId: datasourceId,
+                sourceType: TableSourceType.EXTERNAL,
+                projectIds: staleEntity ? [stale._id] : undefined,
+              },
+            },
+          })
+          const definition = basicTable()
+          const saved = await config.api.table.save({
+            ...definition,
+            schema: {
+              ...definition.schema,
+              external: {
+                type: FieldType.LINK,
+                name: "External",
+                fieldName: "source",
+                relationshipType: RelationshipType.MANY_TO_MANY,
+                tableId: externalTableId,
+              },
+            },
+          })
+          expect((await config.api.table.get(saved._id!)).projectIds).toEqual([
+            owner._id,
+          ])
+        })
+      }
+    )
+
+    it.each(["create", "update"])(
+      "allows project assignment during a table row import (%s)",
+      async operation => {
+        await withProjectsEnabled(async () => {
+          const { project } = await config.api.project.create({
+            name: "During import",
+          })
+          const definition = basicTable(undefined, { name: "Import target" })
+          definition.schema.status = {
+            name: "status",
+            type: FieldType.OPTIONS,
+            constraints: { inclusion: ["old"] },
+          }
+          const table =
+            operation === "create"
+              ? definition
+              : await config.api.table.save(definition)
+          let importStarted!: (tableId: string) => void
+          let releaseImport!: () => void
+          const ready = new Promise<string>(
+            resolve => (importStarted = resolve)
+          )
+          const pending = new Promise<void>(
+            resolve => (releaseImport = resolve)
+          )
+          const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
+          let paused = false
+          const bulkDocs = jest
+            .spyOn(DatabaseImpl.prototype, "bulkDocs")
+            .mockImplementation(async function (this: DatabaseImpl, docs) {
+              const row = docs.find(
+                doc => doc.type === "row" && doc.name === "Imported row"
+              )
+              if (row && !paused) {
+                paused = true
+                importStarted(row.tableId)
+                await pending
+              }
+              return originalBulkDocs.call(this, docs)
+            })
+          const saving = config.api.table.save({
+            ...table,
+            rows: [{ name: "Imported row", status: "new" }],
+          })
+          try {
+            const tableId = await helpers.withTimeout(5000, () => ready)
+            await helpers.withTimeout(5000, () =>
+              assignResourceWithoutDependencies({
+                resourceId: tableId,
+                projectIds: [project._id],
+              })
+            )
+          } finally {
+            releaseImport()
+            await saving.finally(() => bulkDocs.mockRestore())
+          }
+          const saved = await saving
+          const persisted = await config.api.table.get(saved._id!)
+          expect(persisted.projectIds).toEqual([project._id])
+          expect(persisted.schema.status.constraints?.inclusion).toEqual([
+            "new",
+            "old",
+          ])
+          expect(await config.api.row.fetch(saved._id!)).toEqual([
+            expect.objectContaining({ name: "Imported row", status: "new" }),
+          ])
+        })
+      }
+    )
+
+    it.each([
+      { change: "delete", concurrentRowEdit: false },
+      { change: "rename", concurrentRowEdit: false },
+      { change: "rename", concurrentRowEdit: true },
+    ])(
+      "reconciles imported rows after a concurrent $change (row edit: $concurrentRowEdit)",
+      async ({ change, concurrentRowEdit }) => {
+        await withProjectsEnabled(async () => {
+          const definition = basicTable()
+          definition.schema.description = {
+            name: "description",
+            type: FieldType.OPTIONS,
+            constraints: { inclusion: ["old"] },
+          }
+          const table = await config.api.table.save(definition)
+          let importStarted!: () => void
+          let releaseImport!: () => void
+          const ready = new Promise<void>(resolve => (importStarted = resolve))
+          const pending = new Promise<void>(
+            resolve => (releaseImport = resolve)
+          )
+          const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
+          let paused = false
+          let conflicted = false
+          let importedRowId: string | undefined
+          const bulkDocs = jest
+            .spyOn(DatabaseImpl.prototype, "bulkDocs")
+            .mockImplementation(async function (this: DatabaseImpl, docs) {
+              const row = docs.find(
+                doc => doc.type === "row" && doc.name === "Imported row"
+              )
+              if (row && !paused) {
+                paused = true
+                importedRowId = row._id
+                importStarted()
+                await pending
+              }
+              if (
+                row &&
+                row.description === undefined &&
+                concurrentRowEdit &&
+                !conflicted
+              ) {
+                conflicted = true
+                const persisted = await this.get<Row>(row._id!)
+                await this.put({
+                  ...persisted,
+                  name: "Edited during reconciliation",
+                })
+              }
+              return originalBulkDocs.call(this, docs)
+            })
+          const saving = config.api.table.save({
+            ...table,
+            rows: [{ name: "Imported row", description: "Keep on rename" }],
+          })
+          try {
+            await helpers.withTimeout(5000, () => ready)
+            await helpers.withTimeout(5000, async () => {
+              const current = await config.api.table.get(table._id!)
+              const { description, ...schema } = current.schema
+              await config.api.table.save({
+                ...current,
+                ...(change === "rename"
+                  ? { _rename: { old: "description", updated: "notes" } }
+                  : {}),
+                schema: {
+                  ...schema,
+                  ...(change === "rename"
+                    ? { notes: { ...description, name: "notes" } }
+                    : {}),
+                },
+              })
+            })
+          } finally {
+            releaseImport()
+            await saving.finally(() => bulkDocs.mockRestore())
+          }
+
+          const saved = await saving
+          expect(conflicted).toBe(concurrentRowEdit)
+          expect(saved.schema.description).toBeUndefined()
+          if (change === "rename") {
+            expect(saved.schema.notes.constraints?.inclusion).toEqual([
+              "Keep on rename",
+              "old",
+            ])
+          }
+          await config.doInContext(config.getDevWorkspaceId(), async () => {
+            // Read the document directly: row responses can hide obsolete fields.
+            const persisted = await context
+              .getWorkspaceDB()
+              .get<Row>(importedRowId!)
+            expect(persisted.name).toBe(
+              concurrentRowEdit
+                ? "Edited during reconciliation"
+                : "Imported row"
+            )
+            expect(persisted.description).toBeUndefined()
+            expect(persisted.notes).toBe(
+              change === "rename" ? "Keep on rename" : undefined
+            )
+          })
+        })
+      }
+    )
+
+    it("rejects an import before changing its table while publishing holds the lock", async () => {
+      await withProjectsEnabled(async () => {
+        const table = await config.api.table.save(basicTable())
+        await config.doInContext(config.getDevWorkspaceId(), () =>
+          withPublishLock(async () => {
+            await config.api.table.save(
+              {
+                ...table,
+                name: "Should not save",
+                rows: [{ name: "New row" }],
+              },
+              { status: 429 }
+            )
+            const emptyTable = await config.api.table.save({
+              ...basicTable(),
+              rows: [],
+            })
+            expect(emptyTable._id).toBeDefined()
+          })
+        )
+        expect((await config.api.table.get(table._id!)).name).toBe(table.name)
+        expect(await config.api.row.fetch(table._id!)).toEqual([])
+      })
+    })
+
+    it("preserves an imported value when publishing would clear a concurrent rename", async () => {
+      await withProjectsEnabled(async () => {
+        const definition = basicTable()
+        definition.schema.description = {
+          name: "description",
+          type: FieldType.OPTIONS,
+          constraints: { inclusion: ["old"] },
+        }
+        const original = await config.api.table.save(definition)
+        const { description, ...schema } = original.schema
+        const table = await config.api.table.save({
+          ...original,
+          _rename: { old: "description", updated: "notes" },
+          schema: { ...schema, notes: { ...description, name: "notes" } },
+        })
+        expect(table.pendingColumnRenames).toHaveLength(1)
+
+        let importStarted!: () => void
+        let releaseImport!: () => void
+        const ready = new Promise<void>(resolve => (importStarted = resolve))
+        const pending = new Promise<void>(resolve => (releaseImport = resolve))
+        const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
+        let importedRowId: string | undefined
+        let paused = false
+        const bulkDocs = jest
+          .spyOn(DatabaseImpl.prototype, "bulkDocs")
+          .mockImplementation(async function (this: DatabaseImpl, docs) {
+            const row = docs.find(
+              doc => doc.type === "row" && doc.name === "Imported row"
+            )
+            if (row && !paused) {
+              paused = true
+              importedRowId = row._id
+              importStarted()
+              await pending
+            }
+            return originalBulkDocs.call(this, docs)
+          })
+        const saving = config.api.table.save({
+          ...table,
+          rows: [{ name: "Imported row", notes: "Keep on rename" }],
+        })
+        try {
+          await helpers.withTimeout(5000, () => ready)
+          const current = await config.api.table.get(table._id!)
+          const { notes, ...currentSchema } = current.schema
+          await config.api.table.save({
+            ...current,
+            _rename: { old: "notes", updated: "summary" },
+            schema: {
+              ...currentSchema,
+              summary: { ...notes, name: "summary" },
+            },
+          })
+          await config.api.workspace.publish(config.getDevWorkspaceId(), {
+            status: 429,
+          })
+          const unpublished = await config.api.table.get(table._id!)
+          expect(unpublished.pendingColumnRenames).toHaveLength(2)
+        } finally {
+          releaseImport()
+          await saving.finally(() => bulkDocs.mockRestore())
+        }
+
+        const saved = await saving
+        expect(saved.schema.summary.constraints?.inclusion).toEqual([
+          "Keep on rename",
+          "old",
+        ])
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const persisted = await context
+            .getWorkspaceDB()
+            .get<Row>(importedRowId!)
+          expect(persisted.summary).toBe("Keep on rename")
+          expect(persisted.notes).toBeUndefined()
+          expect(persisted.description).toBeUndefined()
+        })
+        await config.api.workspace.publish(config.getDevWorkspaceId())
+        expect(
+          (await config.api.table.get(table._id!)).pendingColumnRenames
+        ).toEqual([])
+      })
+    })
+
+    it("rejects malformed datasource entities before schema discovery", async () => {
+      const prepare = jest
+        .spyOn(sdk.datasources, "prepareForSave")
+        .mockRejectedValueOnce(new Error("Schema discovery should not run"))
+      try {
+        await config
+          .request!.post("/api/datasources")
+          .set(config.defaultHeaders())
+          .send({
+            datasource: {
+              ...basicDatasource().datasource,
+              entities: { invalid: null },
+            },
+            fetchSchema: true,
+          })
+          .expect(400)
+        expect(prepare).not.toHaveBeenCalled()
+      } finally {
+        prepare.mockRestore()
+      }
     })
 
     it("keeps a deselected dependency excluded on an unchanged save", async () => {
@@ -1052,7 +1489,7 @@ describe("project dependency propagation", () => {
       })
     })
 
-    it("returns an explicit warning when automatic propagation fails", async () => {
+    it("returns explicit assignment results when automatic propagation fails", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -1078,7 +1515,7 @@ describe("project dependency propagation", () => {
             }))
           )
 
-        let savedScreen: Screen
+        let savedScreen: SaveScreenResponse
         try {
           savedScreen = await config.api.screen.save(
             {
@@ -1087,20 +1524,29 @@ describe("project dependency propagation", () => {
             },
             {
               status: 200,
-              headers: {
-                [Header.API_WARNING]:
-                  APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE,
-              },
             }
           )
         } finally {
           bulkDocs.mockRestore()
         }
 
+        expect(savedScreen!.projectAssignment).toEqual({
+          assignedDependencyIds: [],
+          failedDependencyIds: expect.arrayContaining([datasource._id!]),
+        })
+
         const persistedScreen = (await config.api.screen.list()).find(
           screen => screen._id === savedScreen!._id
         )
         expect(persistedScreen).toBeDefined()
+        expect(persistedScreen).not.toHaveProperty("projectAssignment")
+        const resavedScreen = await config.api.screen.save(savedScreen!)
+        expect(resavedScreen).not.toHaveProperty("projectAssignment")
+        expect(
+          (await config.api.screen.list()).find(
+            screen => screen._id === savedScreen!._id
+          )
+        ).not.toHaveProperty("projectAssignment")
 
         const updatedDatasource = await config.api.datasource.get(
           datasource._id!
@@ -1161,15 +1607,17 @@ describe("project dependency propagation", () => {
           )
 
         try {
-          await config.api.screen.save(
+          const response = await config.api.screen.save(
             { ...screen, workspaceAppId: workspaceApp._id },
             {
               status: 200,
-              headers: {
-                [Header.API_WARNING]:
-                  APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE,
-              },
             }
+          )
+          expect(response.projectAssignment?.assignedDependencyIds).toContain(
+            firstDatasource._id
+          )
+          expect(response.projectAssignment?.failedDependencyIds).toContain(
+            secondDatasource._id
           )
         } finally {
           bulkDocs.mockRestore()

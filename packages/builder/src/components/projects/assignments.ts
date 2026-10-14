@@ -13,7 +13,11 @@ export const saveProjectAssignment = async ({
     resourceId,
     request: selection,
   })
-  if (result.assignedDependencyIds.length === selection.dependencyIds.length) {
+  if (result.failedDependencyIds.length) {
+    notifications.warning(
+      "Projects updated, but some dependent resources could not be added. Retry the project assignment."
+    )
+  } else {
     notifications.success("Projects updated successfully")
   }
 }

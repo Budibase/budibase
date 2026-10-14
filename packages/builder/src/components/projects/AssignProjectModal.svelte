@@ -14,6 +14,7 @@
     UpdateProjectAssignmentRequest,
   } from "@budibase/types"
   import ProjectSelect from "@/components/common/ProjectSelect.svelte"
+  import { capitalise } from "@/helpers/helpers"
   import { getErrorMessage } from "@/helpers/errors"
 
   interface AssignableProjectResource {
@@ -41,7 +42,8 @@
   let preview = $state<PreviewProjectAssignmentResponse>()
   const dependencies = $derived(preview?.dependencies || [])
   let deselectedDependencyIds = $state<Set<string>>(new Set())
-  let previewLoading = $state(false)
+  let previewPending = $state(true)
+  let previewLoading = $state(true)
   let previewError = $state("")
   let saveError = $state("")
   let assignmentStale = $state(false)
@@ -61,10 +63,8 @@
     ).length
   )
 
-  const formatTypeLabel = (type: string) => {
-    const label = type.replaceAll("_", " ")
-    return `${label.charAt(0).toUpperCase()}${label.slice(1)}`
-  }
+  const formatTypeLabel = (type: string) =>
+    capitalise(type.replaceAll("_", " "))
 
   const setDependencySelected = ({
     dependencyId,
@@ -120,11 +120,12 @@
       refreshResource: refreshingResource,
     }
     latestPreviewRequest = request
-    previewLoading = true
-    previewError = ""
-    preview = undefined
+    previewPending = true
 
     const timeout = setTimeout(async () => {
+      previewLoading = true
+      previewError = ""
+      preview = undefined
       try {
         const response = await onPreview({
           resourceId: request.resourceId,
@@ -148,6 +149,7 @@
         }
       } finally {
         if (request === latestPreviewRequest) {
+          previewPending = false
           previewLoading = false
         }
       }
@@ -160,7 +162,7 @@
   })
 
   const confirm = async () => {
-    if (!preview) {
+    if (previewPending || previewLoading || assignmentStale || !preview) {
       return keepOpen
     }
     saveError = ""
@@ -187,7 +189,7 @@
   title="Assign to projects"
   confirmText="Save changes"
   size="M"
-  disabled={previewLoading || !!previewError || assignmentStale || !preview}
+  disabled={previewPending || !!previewError || assignmentStale || !preview}
   onConfirm={confirm}
 >
   <Body size="S" color="var(--spectrum-global-color-gray-700)">

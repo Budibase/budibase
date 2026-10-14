@@ -83,7 +83,11 @@
     normaliseHomeSortColumn,
     type HomeUrlState,
   } from "./_components/urlState"
-  import { withWorkspaceHomeReturn } from "@/helpers/workspaceHomeNavigation"
+  import {
+    buildProjectSetupHomeUrl,
+    getProjectSetupRequest,
+    withWorkspaceHomeReturn,
+  } from "@/helpers/workspaceHomeNavigation"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
@@ -123,9 +127,12 @@
   let importProjectModal: ModalAPI
   let importProjectResultModal: ModalAPI
   let importResult: ImportProjectResponse | undefined
+  let isSetupReview = false
+  let setupSettingsContext:
+    | { workspaceId: string; projectId: string }
+    | undefined
   let createProjectModalKey = 0
   let editProjectModalKey = 0
-  let assignProjectModalKey = 0
   let exportProjectModalKey = 0
   let importProjectModalKey = 0
 
@@ -286,7 +293,6 @@
   }
 
   const openAssignProjectModal = () => {
-    assignProjectModalKey += 1
     assignProjectModal?.show()
   }
 
@@ -507,21 +513,62 @@
     type,
     resourceId,
   }: ProjectImportRequirement) => {
+    const workspaceId = $workspaceStore.appId
+    const projectId = selectedProjectId
+    if (!workspaceId || !projectId) {
+      return
+    }
+    const homeUrl = buildProjectSetupHomeUrl({ workspaceId, projectId })
     importProjectResultModal.hide()
     let route: string
     if (type === "datasource_secrets") {
       const datasource = $datasources.list.find(item => item._id === resourceId)
       if (datasource?.source === SourceName.REST) {
-        bb.settings(`/connections/api-connections/${resourceId}`)
+        bb.settings(`/connections/api-connections/${resourceId}`, {
+          projectSetupReturnTo: homeUrl,
+        })
+        setupSettingsContext = { workspaceId, projectId }
         return
       }
       route = `../data/datasource/${resourceId}`
     } else if (type === "automation_credentials") {
       route = `../automation/${resourceId}`
+    } else if (type === "agent_secrets") {
+      route = `../agent/${resourceId}/deployment`
     } else {
       route = `../agent/${resourceId}/config`
     }
-    goToResource(route)
+    goto(withWorkspaceHomeReturn(url(route), homeUrl))
+  }
+
+  const openProjectSetup = async () => {
+    const projectId = selectedProjectId
+    const workspaceId = $workspaceStore.appId
+    if (!projectId || !workspaceId) {
+      return
+    }
+
+    try {
+      const projects = await projectsStore.fetch(workspaceId)
+      if (
+        selectedProjectId !== projectId ||
+        $workspaceStore.appId !== workspaceId
+      ) {
+        return
+      }
+      const project = projects.find(project => project._id === projectId)
+      if (!project?.importSetup) {
+        return
+      }
+      importResult = { project, ...project.importSetup }
+      isSetupReview = true
+      importProjectResultModal.show()
+    } catch (error) {
+      console.error(error)
+      notifications.error(
+        getErrorMessage(error) || "Unable to load project setup"
+      )
+    }
   }
 
   const handleImportProject = async ({
@@ -536,11 +583,18 @@
         encryptPassword,
       })
       importProjectModal?.hide()
-      notifications.success(`Imported project '${response.project.name}'`)
+      const showImportResult =
+        response.requirements.length > 0 ||
+        response.unsupportedContent.length > 0 ||
+        !!response.dataImport
+      if (!showImportResult) {
+        notifications.success(`Imported project '${response.project.name}'`)
+      }
       selectedProjectId = response.project._id
       typeFilter = "all"
       searchTerm = ""
       importResult = response
+      isSetupReview = false
       try {
         await workspaceStore.refresh()
       } catch (error) {
@@ -549,11 +603,7 @@
           "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
         )
       }
-      if (
-        response.requirements.length ||
-        response.unsupportedContent.length ||
-        response.dataImport
-      ) {
+      if (showImportResult) {
         importProjectResultModal?.show()
       }
     } catch (error) {
@@ -785,12 +835,28 @@
   const loadProjects = async (workspaceId: string) => {
     try {
       projectsRequestedForWorkspace = workspaceId
-      await projectsStore.ensureFetched(workspaceId)
+      await projectsStore.fetch(workspaceId)
     } catch (error) {
       projectsRequestedForWorkspace = ""
       if ($workspaceStore.appId === workspaceId && projectsEnabled) {
         notifications.error(getErrorMessage(error) || "Unable to load projects")
       }
+    }
+  }
+
+  $: if (
+    setupSettingsContext &&
+    !$bb.settings.open &&
+    !$bb.settings.pendingPath
+  ) {
+    const { workspaceId, projectId } = setupSettingsContext
+    setupSettingsContext = undefined
+    if (
+      projectsEnabled &&
+      $workspaceStore.appId === workspaceId &&
+      selectedProjectId === projectId
+    ) {
+      openProjectSetup()
     }
   }
 
@@ -928,6 +994,13 @@
     }
 
     const { q, type, project, sort, order } = readUrlState()
+    const setupRequest = getProjectSetupRequest({
+      workspaceId,
+      homeUrl: window.location.href,
+    })
+    if (setupRequest) {
+      history.replaceState({}, "", setupRequest.cleanUrl)
+    }
     if (q) {
       searchTerm = q
     }
@@ -957,17 +1030,10 @@
       projectsEnabled,
     })
 
-    await Promise.all([
-      agentsStore.fetchAgents(),
-      ...(projectsEnabled
-        ? [
-            tables.fetch(),
-            datasources.fetch(),
-            automationStore.actions.fetch(),
-            workspaceAppStore.fetch(),
-          ]
-        : []),
-    ])
+    await agentsStore.fetchAgents()
+    if (setupRequest && projectsEnabled) {
+      await openProjectSetup()
+    }
   })
 </script>
 
@@ -1042,6 +1108,7 @@
           onDeleteProject={() => confirmDeleteProjectDialog?.show()}
           onImportProject={importProject}
           onExportProject={exportProject}
+          onSetupProject={openProjectSetup}
           exportProjectDisabled={selectedProjectExportDisabled}
         />
 
@@ -1161,15 +1228,13 @@
   </Modal>
 
   <Modal bind:this={assignProjectModal}>
-    {#key assignProjectModalKey}
-      {#if selectedProjectResource}
-        <AssignProjectModal
-          resource={selectedProjectResource}
-          onPreview={projectsStore.previewAssignment}
-          onConfirm={assignProject}
-        />
-      {/if}
-    {/key}
+    {#if selectedProjectResource}
+      <AssignProjectModal
+        resource={selectedProjectResource}
+        onPreview={projectsStore.previewAssignment}
+        onConfirm={assignProject}
+      />
+    {/if}
   </Modal>
 
   <Modal bind:this={editProjectModal}>
@@ -1214,6 +1279,7 @@
     {#if importResult}
       <ImportProjectResultModal
         response={importResult}
+        {isSetupReview}
         onOpenResource={openImportedResource}
       />
     {/if}
