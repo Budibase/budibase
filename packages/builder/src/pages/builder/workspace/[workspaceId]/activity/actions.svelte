@@ -188,19 +188,9 @@
         if (sequence !== requestSequence) {
           return
         }
-        // Retention can hide every row while bookmarks still allow navigation.
-        // Only restart when an empty page no longer has a way forward or back.
-        if (
-          response.sessions.length === 0 &&
-          request.page > 1 &&
-          !(
-            response.pagination.hasNextPage && response.pagination.nextBookmark
-          ) &&
-          !(
-            response.pagination.hasPreviousPage &&
-            response.pagination.previousBookmark
-          )
-        ) {
+        // Updates or cleanup can empty a previously reachable page. The SDK
+        // returns no bookmarks for an empty result, so restart at the first page.
+        if (response.sessions.length === 0 && request.page > 1) {
           return loadSessions({ background })
         }
         sessions = response.sessions
@@ -393,7 +383,7 @@
         on:click={({ detail }) => selectSession(detail)}
       />
 
-      {#if rows.length > 0 || hasPrevPage || hasNextPage}
+      {#if rows.length > 0}
         <ActivityTableFooter
           label={paginationLabel}
           page={currentPage}
