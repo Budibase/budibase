@@ -270,6 +270,7 @@ if (descriptions.length) {
             query: { string: { [`${prefix}.status`]: "act" } },
             countRows: true,
             paginate: true,
+            limit: 10,
           })
 
           expect(result.rows.map(row => row.candidate_profile_id)).toEqual([
