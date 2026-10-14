@@ -12,6 +12,7 @@ import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { fetchSessions, fetchSessionsSummary } from "./sessions"
 import { encodeKeysetBookmark } from "./pagination"
 import { clearOldHistory } from "./cleanup"
+import { querySessions } from "./views"
 
 jest.mock("./cleanup", () => {
   const actual = jest.requireActual("./cleanup")
@@ -646,6 +647,72 @@ describe("platformActions sessions", () => {
   })
 
   describe("retention", () => {
+    it.each([
+      { direction: "next", sameTimestamp: false },
+      { direction: "prev", sameTimestamp: false },
+      { direction: "next", sameTimestamp: true },
+      { direction: "prev", sameTimestamp: true },
+    ] as const)(
+      "deduplicates a session changing status during $direction pagination (same timestamp: $sameTimestamp)",
+      async ({ direction, sameTimestamp }) => {
+        const active: PlatformActionSessionIndexDoc = {
+          _id: "pas_moving",
+          _rev: "1-old",
+          sourceId: "moving",
+          sourceType: "agent_session",
+          environment: "prod",
+          status: "active",
+          actionCount: 1,
+          startedAt: "2026-10-14T10:00:00.000Z",
+          updatedAt: "2026-10-14T11:00:00.000Z",
+        }
+        const completed: PlatformActionSessionIndexDoc = {
+          ...active,
+          _rev: "2-new",
+          status: "completed",
+          updatedAt: sameTimestamp
+            ? active.updatedAt
+            : "2026-10-14T12:00:00.000Z",
+        }
+        const other: PlatformActionSessionIndexDoc = {
+          ...active,
+          _id: "pas_other",
+          sourceId: "other",
+          status: "waiting",
+          updatedAt: "2026-10-14T10:00:00.000Z",
+        }
+        const result = await withContext(async () => {
+          const database = events.platformActions.getActionsDB()
+          const query = jest.spyOn(database, "query")
+          // The active read sees the old revision; the completed read sees
+          // the same session after its transition, within the same request.
+          for (const docs of [[active], [other], [completed], []]) {
+            query.mockResolvedValueOnce({
+              total_rows: docs.length,
+              offset: 0,
+              rows: docs.map(doc => ({
+                id: doc._id!,
+                key: doc._id!,
+                value: doc,
+                doc,
+              })),
+            })
+          }
+          try {
+            return await querySessions({
+              workspaceDb: database,
+              limit: 2,
+              direction,
+              cutoff: "2026-10-01T00:00:00.000Z",
+            })
+          } finally {
+            query.mockRestore()
+          }
+        })
+        expect(result).toEqual({ items: [completed, other], hasMore: false })
+      }
+    )
+
     const ONE_DAY_MILLIS = 1000 * 60 * 60 * 24
     // Expired sessions stay stored, so reads have to hide them on their own
     beforeEach(() => {

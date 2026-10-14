@@ -382,17 +382,29 @@ export const querySessions = async ({
       })
     )
     const descending = direction === "next"
-    const items = pages
-      .flatMap(page => page.items)
-      .sort((a, b) => {
-        const aKey = a.updatedAt === b.updatedAt ? a._id! : a.updatedAt
-        const bKey = a.updatedAt === b.updatedAt ? b._id! : b.updatedAt
-        if (aKey === bKey) {
-          return 0
-        }
-        const comparison = aKey < bKey ? -1 : 1
-        return descending ? -comparison : comparison
-      })
+    const sessionsById = new Map<string, PlatformActionSessionIndexDoc>()
+    // Independent status reads can observe different revisions of one session.
+    for (const session of pages.flatMap(page => page.items)) {
+      const existing = sessionsById.get(session._id!)
+      if (
+        !existing ||
+        session.updatedAt > existing.updatedAt ||
+        (session.updatedAt === existing.updatedAt &&
+          Number.parseInt(session._rev ?? "0", 10) >
+            Number.parseInt(existing._rev ?? "0", 10))
+      ) {
+        sessionsById.set(session._id!, session)
+      }
+    }
+    const items = [...sessionsById.values()].sort((a, b) => {
+      const aKey = a.updatedAt === b.updatedAt ? a._id! : a.updatedAt
+      const bKey = a.updatedAt === b.updatedAt ? b._id! : b.updatedAt
+      if (aKey === bKey) {
+        return 0
+      }
+      const comparison = aKey < bKey ? -1 : 1
+      return descending ? -comparison : comparison
+    })
     const page = items.slice(0, limit)
     return {
       items: descending ? page : page.reverse(),
