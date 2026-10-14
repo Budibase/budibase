@@ -4918,6 +4918,103 @@ if (descriptions.length) {
               return { groups: [{ filters }] }
             }
 
+            const searchWithEmptyRequestFilter = async ({
+              value,
+              onEmptyFilter,
+              viewQuery = {},
+            }: {
+              value: string | null | undefined
+              onEmptyFilter: EmptyFilterOption
+              viewQuery?: UISearchFilter
+            }) => {
+              await config.api.row.bulkImport(table._id!, {
+                rows: [{ string: "foo" }, { string: "bar" }],
+              })
+
+              const view = await config.api.viewV2.create({
+                tableId: table._id!,
+                name: generator.guid(),
+                queryUI: viewQuery,
+                schema: { string: { visible: true } },
+              })
+
+              return config.api.viewV2.search(view.id, {
+                query: {
+                  onEmptyFilter,
+                  $and: {
+                    conditions: [{ equal: { string: value } }],
+                  },
+                },
+              })
+            }
+
+            describe("empty filter return all", () => {
+              it.each(["", null, undefined])(
+                "returns all rows without saved view filters for %p",
+                async value => {
+                  const { rows } = await searchWithEmptyRequestFilter({
+                    value,
+                    onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+                  })
+
+                  expect(rows.map(row => row.string).sort()).toEqual([
+                    "bar",
+                    "foo",
+                  ])
+                }
+              )
+
+              it.each(["", null, undefined])(
+                "respects saved view filters for %p",
+                async value => {
+                  const { rows } = await searchWithEmptyRequestFilter({
+                    value,
+                    onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+                    viewQuery: simpleQuery({
+                      operator: BasicOperator.EQUAL,
+                      field: "string",
+                      value: "foo",
+                    }),
+                  })
+
+                  expect(rows).toEqual([
+                    expect.objectContaining({ string: "foo" }),
+                  ])
+                }
+              )
+            })
+
+            describe("empty filter return none", () => {
+              it.each(["", null, undefined])(
+                "returns no rows without saved view filters for %p",
+                async value => {
+                  const { rows } = await searchWithEmptyRequestFilter({
+                    value,
+                    onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                  })
+
+                  expect(rows).toEqual([])
+                }
+              )
+
+              it.each(["", null, undefined])(
+                "returns no rows with saved view filters for %p",
+                async value => {
+                  const { rows } = await searchWithEmptyRequestFilter({
+                    value,
+                    onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                    viewQuery: simpleQuery({
+                      operator: BasicOperator.EQUAL,
+                      field: "string",
+                      value: "foo",
+                    }),
+                  })
+
+                  expect(rows).toEqual([])
+                }
+              )
+            })
+
             const testCases: TestCase[] = [
               {
                 name: "empty query return all",
@@ -4935,28 +5032,6 @@ if (descriptions.length) {
                 },
                 expected: [],
               },
-              ...["", null, undefined].flatMap(value =>
-                [false, true].map(hasViewFilter => ({
-                  name: `empty request filter ${String(value)} returns none with saved view filter ${hasViewFilter}`,
-                  insert: [{ string: "foo" }],
-                  query: hasViewFilter
-                    ? simpleQuery({
-                        operator: BasicOperator.EQUAL,
-                        field: "string",
-                        value: "foo",
-                      })
-                    : {},
-                  searchOpts: {
-                    query: {
-                      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-                      $and: {
-                        conditions: [{ equal: { string: value } }],
-                      },
-                    },
-                  },
-                  expected: [],
-                }))
-              ),
               {
                 name: "populated request filter respects saved view filters",
                 insert: [
