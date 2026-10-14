@@ -188,10 +188,19 @@
         if (sequence !== requestSequence) {
           return
         }
-        // Sessions only move towards the first page as they change, so a
-        // later page can empty out. An empty page has no bookmarks to step
-        // back with, so start over from the first page instead.
-        if (response.sessions.length === 0 && request.page > 1) {
+        // Retention can hide every row while bookmarks still allow navigation.
+        // Only restart when an empty page no longer has a way forward or back.
+        if (
+          response.sessions.length === 0 &&
+          request.page > 1 &&
+          !(
+            response.pagination.hasNextPage && response.pagination.nextBookmark
+          ) &&
+          !(
+            response.pagination.hasPreviousPage &&
+            response.pagination.previousBookmark
+          )
+        ) {
           return loadSessions({ background })
         }
         sessions = response.sessions
@@ -384,7 +393,7 @@
         on:click={({ detail }) => selectSession(detail)}
       />
 
-      {#if rows.length > 0}
+      {#if rows.length > 0 || hasPrevPage || hasNextPage}
         <ActivityTableFooter
           label={paginationLabel}
           page={currentPage}
