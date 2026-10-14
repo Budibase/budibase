@@ -44,7 +44,11 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import environment from "../environment"
-import { dataFilters, helpers } from "@budibase/shared-core"
+import {
+  dataFilters,
+  hasSinglePrimaryKey,
+  helpers,
+} from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
 
 type QueryFunction = (query: SqlQuery | SqlQuery[], operation: Operation) => any
@@ -777,12 +781,12 @@ class InternalBuilder {
           relatedTable &&
           isExternalTable(relatedTable)
         ) {
-          if (relatedTable.primary?.length !== 1) {
+          if (!hasSinglePrimaryKey({ table: relatedTable })) {
             throw new Error(
               "Filtering by a related row ID requires a single-column primary key"
             )
           }
-          property = relatedTable.primary[0]
+          property = relatedTable.primary![0]
           value = Array.isArray(value)
             ? value.map(decodeRelatedRowId)
             : decodeRelatedRowId(value)

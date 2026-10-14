@@ -18,9 +18,6 @@ export function isInternal(opts: { table?: Table; tableId?: string }): boolean {
   return !isExternal(opts)
 }
 
-export const hasSinglePrimaryKey = ({ table }: { table: Table }): boolean =>
-  table.primary?.length === 1
-
 export function isTable(table: any): table is Table {
   return table._id && isTableIdOrExternalTableId(table._id)
 }

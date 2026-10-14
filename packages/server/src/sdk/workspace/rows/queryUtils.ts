@@ -1,4 +1,5 @@
 import { db, HTTPError } from "@budibase/backend-core"
+import { hasSinglePrimaryKey } from "@budibase/shared-core"
 import {
   FieldType,
   isArraySearchOperator,
@@ -9,7 +10,7 @@ import {
   Table,
 } from "@budibase/types"
 import sdk from "../.."
-import { hasSinglePrimaryKey, isInternal } from "../tables/utils"
+import { isInternal } from "../tables/utils"
 
 const ALLOWED_FILTER_META_KEYS: (keyof SearchFilters)[] = [
   "allOr",
