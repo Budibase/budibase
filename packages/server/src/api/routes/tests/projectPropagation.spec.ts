@@ -1431,7 +1431,7 @@ describe("project dependency propagation", () => {
         expect(persistedScreen).toBeDefined()
         expect(persistedScreen).not.toHaveProperty("projectAssignment")
         const resavedScreen = await config.api.screen.save(savedScreen!)
-        expect(resavedScreen.projectAssignment?.failedDependencyIds).toEqual([])
+        expect(resavedScreen).not.toHaveProperty("projectAssignment")
         expect(
           (await config.api.screen.list()).find(
             screen => screen._id === savedScreen!._id

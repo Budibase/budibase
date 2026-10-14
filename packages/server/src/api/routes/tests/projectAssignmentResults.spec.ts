@@ -1,5 +1,5 @@
-import { context } from "@budibase/backend-core"
-import { SourceName, type Table } from "@budibase/types"
+import { context, features } from "@budibase/backend-core"
+import { FeatureFlag, SourceName, type Table } from "@budibase/types"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
 import sdk from "../../../sdk"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -12,6 +12,22 @@ describe("project assignment response results", () => {
     await config.newTenant()
   })
   afterAll(() => config.end())
+
+  it.each([false, true])(
+    "keeps ordinary resource responses unchanged when propagation has no work (projects=%s)",
+    async enabled => {
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.PROJECTS]: enabled },
+        async () => {
+          const table = await config.api.table.save(basicTable())
+          expect(table).not.toHaveProperty("projectAssignment")
+          const persisted = await config.api.table.get(table._id!)
+          expect(persisted).not.toHaveProperty("projectAssignment")
+        }
+      )
+    }
+  )
 
   it("returns partial assignment results when updating a datasource", async () => {
     const datasource = await config.api.datasource.create({

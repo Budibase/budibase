@@ -12,18 +12,32 @@ export const withoutProjectAssignmentResult = <T>(resource: T): T => {
 
 export const projectAssignmentResult = async (
   propagation: Promise<ProjectPropagationOutcome>
-): Promise<ProjectAssignmentResult> => {
+): Promise<ProjectAssignmentResult | undefined> => {
   const outcome = await propagation
-  return {
+  const result = {
     assignedDependencyIds: outcome.assignedResourceIds || [],
     failedDependencyIds:
       outcome.status === "incomplete" ? outcome.resourceIds : [],
   }
+  // Preserve ordinary resource responses when propagation had no work to do.
+  if (
+    !result.assignedDependencyIds.length &&
+    !result.failedDependencyIds.length
+  ) {
+    return undefined
+  }
+  return result
 }
 
 export const mergeProjectAssignmentResults = (
-  results: ProjectAssignmentResult[]
-): ProjectAssignmentResult => {
+  outcomes: (ProjectAssignmentResult | undefined)[]
+): ProjectAssignmentResult | undefined => {
+  const results = outcomes.filter(
+    (result): result is ProjectAssignmentResult => !!result
+  )
+  if (!results.length) {
+    return undefined
+  }
   const failedDependencyIds = Array.from(
     new Set(results.flatMap(result => result.failedDependencyIds))
   )
