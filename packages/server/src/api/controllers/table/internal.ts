@@ -1,11 +1,8 @@
-import { context } from "@budibase/backend-core"
-import { cloneDeep } from "lodash"
 import { generateTableID } from "../../../db/utils"
-import { handleDataImport } from "./utils"
+import { importInternalTableRows } from "./utils"
 import {
   BulkImportRequest,
   BulkImportResponse,
-  FieldType,
   RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
@@ -14,6 +11,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { withPublishLock } from "../deploy"
 
 export async function updateTable(
   ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
@@ -67,48 +65,13 @@ export async function destroy(ctx: UserCtx) {
 export async function bulkImport(
   ctx: UserCtx<BulkImportRequest, BulkImportResponse>
 ) {
-  const table = await sdk.tables.getTable(ctx.params.tableId)
-  const originalSchema = cloneDeep(table.schema)
   const { rows, identifierFields } = ctx.request.body
-  await handleDataImport(table, {
-    importRows: rows,
-    identifierFields,
-    userId: ctx.user._id,
-  })
-  return await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
-    const currentTable = await context.getWorkspaceDB().get<Table>(table._id!)
-    let schemaChanged = false
-    // Merge only import-added options into the latest table definition.
-    for (const [name, importedColumn] of Object.entries(table.schema)) {
-      const currentColumn = currentTable.schema[name]
-      if (
-        (importedColumn.type !== FieldType.OPTIONS &&
-          importedColumn.type !== FieldType.ARRAY) ||
-        currentColumn?.type !== importedColumn.type
-      ) {
-        continue
-      }
-      const originalValues = originalSchema[name].constraints?.inclusion || []
-      const existingValues = currentColumn.constraints?.inclusion || []
-      const addedValues = (importedColumn.constraints?.inclusion || []).filter(
-        value =>
-          !originalValues.includes(value) && !existingValues.includes(value)
-      )
-      if (addedValues.length) {
-        currentColumn.constraints = {
-          ...currentColumn.constraints,
-          inclusion: [...new Set([...existingValues, ...addedValues])].sort(),
-        }
-        schemaChanged = true
-      }
-    }
-    if (!schemaChanged) {
-      return currentTable
-    }
-    const { table: savedTable } = await sdk.tables.internal.save(currentTable, {
-      tableId: currentTable._id,
+  const importRows = async () =>
+    importInternalTableRows({
+      table: await sdk.tables.getTable(ctx.params.tableId),
+      rows,
+      identifierFields,
       userId: ctx.user._id,
     })
-    return savedTable
-  })
+  return rows?.length ? await withPublishLock(importRows) : await importRows()
 }
