@@ -1,12 +1,11 @@
 import Joi from "joi"
-import { events, HTTPError, utils } from "@budibase/backend-core"
+import { events, HTTPError } from "@budibase/backend-core"
 import { features, groups } from "@budibase/pro"
 import {
   DocumentType,
   Feature,
   prefixed,
   type UserGroup,
-  type UserGroupMembershipEvent,
 } from "@budibase/types"
 
 interface GroupChanges {
@@ -75,21 +74,20 @@ export const validateGroupChanges = async ({
   }
 }
 
-export const prepareGroupEvents = async ({
+export const recordGroupChanges = async ({
   changes,
+  userIds,
 }: {
   changes: GroupChanges
-}): Promise<UserGroupMembershipEvent[]> => {
-  if (!changes.added.length && !changes.removed.length) {
-    return []
+  userIds: string[]
+}) => {
+  if (!userIds.length) {
+    return
   }
-  const identity = await events.identification.getCurrentIdentity()
-  const timestamp = Date.now()
-  const pending: UserGroupMembershipEvent[] = []
-  for (const action of ["added", "removed"] as const) {
-    for (const group of changes[action]) {
-      pending.push({ id: utils.newid(), action, group, identity, timestamp })
-    }
+  for (const group of changes.added) {
+    await events.group.usersAdded(userIds.length, group, userIds)
   }
-  return pending
+  for (const group of changes.removed) {
+    await events.group.usersDeleted(userIds.length, group, userIds)
+  }
 }

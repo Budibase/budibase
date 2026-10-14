@@ -1,6 +1,5 @@
 import { Document } from "../document"
 import { ContextUser } from "../../sdk"
-import type { UserGroupMembershipEvent } from "../../sdk/user"
 
 export type ScreenLayoutType = "grid" | "flex"
 
@@ -98,8 +97,6 @@ export interface User
   status?: UserStatus
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
   userGroups?: string[]
-  // Internal outbox, written atomically with membership changes.
-  pendingGroupEvents?: UserGroupMembershipEvent[]
   freeTrialConfirmedAt?: string
   scimInfo?: { isSync: true } & Record<string, any>
   appFavourites?: string[]

@@ -1,15 +1,4 @@
-import {
-  BulkUserCreated,
-  DocumentType,
-  Hosting,
-  IdentityType,
-  prefixed,
-  User,
-  UserGroup,
-  UserStatus,
-  type UserGroupEventOutbox,
-  type UserGroupMembershipEvent,
-} from "@budibase/types"
+import { BulkUserCreated, User, UserGroup, UserStatus } from "@budibase/types"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import * as accounts from "../../accounts"
 import * as cache from "../../cache"
@@ -17,7 +6,6 @@ import { getGlobalDB } from "../../context"
 import { withEnv } from "../../environment"
 import { hash } from "../../utils"
 import { UserDB } from "../db"
-import { archiveUserGroupEvents } from "../groupEvents"
 import { searchExistingEmails } from "../lookup"
 
 const db = UserDB
@@ -79,71 +67,6 @@ describe("UserDB", () => {
           tenantId: config.getTenantId(),
         })
         expect(refreshedUser.firstName).toBe("Updated")
-      })
-    })
-  })
-
-  describe("deleting users with pending group events", () => {
-    const createUserWithPendingEvents = async () => {
-      const event: UserGroupMembershipEvent = {
-        id: generator.guid(),
-        action: "added",
-        group: structures.userGroups.userGroup(),
-        identity: {
-          id: generator.guid(),
-          type: IdentityType.USER,
-          hosting: Hosting.SELF,
-          environment: "test",
-        },
-        timestamp: Date.now(),
-      }
-      return db.save(
-        structures.users.user({ tenantId: config.getTenantId() }),
-        { groupMembershipEvents: [event] }
-      )
-    }
-
-    it.each(["destroy", "bulkDelete"] as const)(
-      "preserves pending events when %s removes a user",
-      async method => {
-        await config.doInTenant(async () => {
-          const user = await createUserWithPendingEvents()
-
-          if (method === "destroy") {
-            await db.destroy(user._id!)
-          } else {
-            await db.bulkDelete([{ userId: user._id!, email: user.email }])
-          }
-
-          const globalDb = getGlobalDB()
-          const archive = await globalDb.get<UserGroupEventOutbox>(
-            `${prefixed(DocumentType.USER_GROUP_EVENT_OUTBOX)}${user._id}_${user._rev}`
-          )
-          expect(await globalDb.tryGet(user._id!)).toBeUndefined()
-          expect(archive).toMatchObject({
-            userId: user._id,
-            sourceUserRev: user._rev,
-            pendingGroupEvents: user.pendingGroupEvents,
-          })
-        })
-      }
-    )
-
-    it("preserves acknowledgement progress when archiving the same revision again", async () => {
-      await config.doInTenant(async () => {
-        const user = await createUserWithPendingEvents()
-        await archiveUserGroupEvents({ user })
-        const globalDb = getGlobalDB()
-        const archiveId = `${prefixed(DocumentType.USER_GROUP_EVENT_OUTBOX)}${user._id}_${user._rev}`
-        const archive = await globalDb.get<UserGroupEventOutbox>(archiveId)
-        await globalDb.put({ ...archive, pendingGroupEvents: [] })
-
-        await archiveUserGroupEvents({ user })
-
-        const persisted = await globalDb.get<UserGroupEventOutbox>(archiveId)
-        const persistedUser = await globalDb.get<User>(user._id!)
-        expect(persisted.pendingGroupEvents).toEqual([])
-        expect(persistedUser).toEqual(user)
       })
     })
   })

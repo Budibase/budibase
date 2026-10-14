@@ -83,15 +83,6 @@ export const createNewUserEmailView = async () => {
   await createView(db, viewJs, ViewName.USER_BY_EMAIL)
 }
 
-const createPendingUserGroupEventsView = async () => {
-  const viewJs = `function(doc) {
-    if ((doc._id.startsWith("${DocumentType.USER}${SEPARATOR}") || doc._id.startsWith("${DocumentType.USER_GROUP_EVENT_OUTBOX}${SEPARATOR}")) && doc.pendingGroupEvents && doc.pendingGroupEvents.length) {
-      emit(doc._id, null)
-    }
-  }`
-  await createView(getGlobalDB(), viewJs, ViewName.USER_PENDING_GROUP_EVENTS)
-}
-
 export const createUserAppView = async () => {
   const db = getGlobalDB()
   const viewJs = `function(doc) {
@@ -225,7 +216,6 @@ export const queryPlatformView = async <T extends Document>(
 
 const CreateFuncByName: any = {
   [ViewName.USER_BY_EMAIL]: createNewUserEmailView,
-  [ViewName.USER_PENDING_GROUP_EVENTS]: createPendingUserGroupEventsView,
   [ViewName.BY_API_KEY]: createApiKeyView,
   [ViewName.USER_BY_WORKSPACE]: createUserAppView,
 }

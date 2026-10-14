@@ -25,7 +25,6 @@ import { validatePassword } from "../security"
 import * as sessions from "../security/sessions"
 import { compare, hash } from "../utils"
 import * as eventHelpers from "./events"
-import { archiveUserGroupEvents } from "./groupEvents"
 import {
   getFirstPlatformUser,
   getPlatformUsers,
@@ -186,13 +185,6 @@ export class UserDB {
       _id,
       password: hashedPassword,
       tenantId,
-      pendingGroupEvents: [
-        ...(dbUser?.pendingGroupEvents || []),
-        ...(opts.groupMembershipEvents || []),
-      ],
-    }
-    if (!fullUser.pendingGroupEvents.length) {
-      delete fullUser.pendingGroupEvents
     }
     // make sure the roles object is always present
     if (!fullUser.roles) {
@@ -250,7 +242,6 @@ export class UserDB {
     const user = await usersCore.getById(userId)
     if (user) {
       delete user.password
-      delete user.pendingGroupEvents
     }
     return user
   }
@@ -415,10 +406,7 @@ export class UserDB {
   static async bulkCreate(
     newUsersRequested: User[],
     groups?: string[],
-    opts: Pick<
-      SaveUserOpts,
-      "assignDefaultGroup" | "groupMembershipEvents"
-    > = {}
+    opts: Pick<SaveUserOpts, "assignDefaultGroup"> = {}
   ): Promise<BulkUserCreated> {
     const tenantId = getTenantId()
 
@@ -473,7 +461,6 @@ export class UserDB {
                 hashPassword: true,
                 requirePassword: !isSSOEnforced,
                 skipPasswordRegexValidation: user.forceResetPassword === true,
-                groupMembershipEvents: opts.groupMembershipEvents,
               },
               tenantId,
               undefined,
@@ -548,10 +535,6 @@ export class UserDB {
     const usersToDelete = allDocsResponse.rows.map(user => {
       return user.doc!
     })
-
-    await Promise.all(
-      usersToDelete.map(user => archiveUserGroupEvents({ user }))
-    )
 
     // Delete from DB
     const toDelete = usersToDelete.map(user => ({
@@ -634,7 +617,6 @@ export class UserDB {
       }
     }
 
-    await archiveUserGroupEvents({ user: dbUser })
     await platform.users.removeUser(dbUser)
 
     await db.remove(userId, dbUser._rev!)

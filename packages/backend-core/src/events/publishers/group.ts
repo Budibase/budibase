@@ -8,7 +8,6 @@ import {
   GroupUsersAddedEvent,
   GroupUsersDeletedEvent,
   UserGroup,
-  Identity,
 } from "@budibase/types"
 import { isScim } from "../../context"
 import { publishEvent } from "../events"
@@ -46,17 +45,7 @@ async function deleted(group: UserGroup) {
   await publishEvent(Event.USER_GROUP_DELETED, properties)
 }
 
-interface MembershipEventOptions {
-  identity: Identity
-  timestamp: number
-}
-
-async function usersAdded(
-  count: number,
-  group: UserGroup,
-  userIds: string[],
-  options?: MembershipEventOptions
-) {
+async function usersAdded(count: number, group: UserGroup, userIds: string[]) {
   const properties: GroupUsersAddedEvent = {
     count,
     groupId: group._id as string,
@@ -66,19 +55,13 @@ async function usersAdded(
       name: group.name,
     },
   }
-  await publishEvent(
-    Event.USER_GROUP_USERS_ADDED,
-    properties,
-    options?.timestamp,
-    options?.identity
-  )
+  await publishEvent(Event.USER_GROUP_USERS_ADDED, properties)
 }
 
 async function usersDeleted(
   count: number,
   group: UserGroup,
-  userIds: string[],
-  options?: MembershipEventOptions
+  userIds: string[]
 ) {
   const properties: GroupUsersDeletedEvent = {
     count,
@@ -89,12 +72,7 @@ async function usersDeleted(
       name: group.name,
     },
   }
-  await publishEvent(
-    Event.USER_GROUP_USERS_REMOVED,
-    properties,
-    options?.timestamp,
-    options?.identity
-  )
+  await publishEvent(Event.USER_GROUP_USERS_REMOVED, properties)
 }
 
 async function createdOnboarding(groupId: string) {

@@ -48,11 +48,7 @@ describe("user group assignments", () => {
     expect(events.group.usersAdded).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: group._id }),
-      [user._id],
-      expect.objectContaining({
-        timestamp: expect.any(Number),
-        identity: expect.any(Object),
-      })
+      [user._id]
     )
   })
 
@@ -67,11 +63,7 @@ describe("user group assignments", () => {
     expect(events.group.usersAdded).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: group._id }),
-      [user._id],
-      expect.objectContaining({
-        timestamp: expect.any(Number),
-        identity: expect.any(Object),
-      })
+      [user._id]
     )
   })
 
@@ -100,20 +92,12 @@ describe("user group assignments", () => {
     expect(events.group.usersDeleted).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: first._id }),
-      [user._id],
-      expect.objectContaining({
-        timestamp: expect.any(Number),
-        identity: expect.any(Object),
-      })
+      [user._id]
     )
     expect(events.group.usersDeleted).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: second._id }),
-      [user._id],
-      expect.objectContaining({
-        timestamp: expect.any(Number),
-        identity: expect.any(Object),
-      })
+      [user._id]
     )
   })
 
@@ -143,11 +127,7 @@ describe("user group assignments", () => {
         expect(events.group.usersAdded).toHaveBeenCalledWith(
           1,
           expect.objectContaining({ _id: group._id }),
-          [user._id],
-          expect.objectContaining({
-            timestamp: expect.any(Number),
-            identity: expect.any(Object),
-          })
+          [user._id]
         )
       } else {
         expect(events.group.usersAdded).not.toHaveBeenCalled()
@@ -358,11 +338,7 @@ describe("user group assignments", () => {
     expect(events.group.usersAdded).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: group._id }),
-      result.created!.successful.map(user => user._id),
-      expect.objectContaining({
-        timestamp: expect.any(Number),
-        identity: expect.any(Object),
-      })
+      result.created!.successful.map(user => user._id)
     )
   })
 
@@ -456,11 +432,7 @@ describe("user group assignments", () => {
           expect(events.group.usersAdded).toHaveBeenCalledWith(
             1,
             expect.objectContaining({ _id: defaultGroup._id }),
-            [saved!._id],
-            expect.objectContaining({
-              timestamp: expect.any(Number),
-              identity: expect.any(Object),
-            })
+            [saved!._id]
           )
         }
       }
@@ -485,11 +457,7 @@ describe("user group assignments", () => {
       expect(events.group.usersAdded).toHaveBeenCalledWith(
         1,
         expect.objectContaining({ _id: group._id }),
-        [saved!._id],
-        expect.objectContaining({
-          timestamp: expect.any(Number),
-          identity: expect.any(Object),
-        })
+        [saved!._id]
       )
       expect(
         await config.doInTenant(() => cache.invite.getExistingInvites([email]))

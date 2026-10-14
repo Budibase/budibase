@@ -131,7 +131,6 @@ export async function getUser({
       }
     })
   }
-  delete user.pendingGroupEvents
   return user
 }
 
@@ -165,9 +164,6 @@ export async function getUsers(
       await client.store(userToCache._id!, userToCache, EXPIRY_SECONDS)
     }
     users.push(...usersFromDb.users)
-  }
-  for (const user of users) {
-    delete user.pendingGroupEvents
   }
   return { users, notFoundIds: notFoundIds }
 }

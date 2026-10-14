@@ -32,7 +32,6 @@ import { userAgent } from "koa-useragent"
 
 import { initPro } from "./initPro"
 import { handleScimBody } from "./middleware/handleScimBody"
-import { initGroupEventRecovery } from "./sdk/users/groupEvents"
 
 if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
   console.warn(
@@ -163,7 +162,4 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
     proSdk.auditLogs.write,
     proSdk.licensing.client.getLicenseKey
   )
-  if (!env.isTest()) {
-    initGroupEventRecovery()
-  }
 })

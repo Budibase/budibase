@@ -208,11 +208,11 @@ const bulkCreate = async (users: User[], groupIds: string[]) => {
   })
   const created = await userSdk.db.bulkCreate(users, userGroups, {
     assignDefaultGroup: false,
-    groupMembershipEvents: await userSdk.prepareGroupEvents({ changes }),
   })
-  for (const user of created.successful) {
-    await userSdk.flushGroupEvents({ documentId: user._id! })
-  }
+  await userSdk.recordGroupChanges({
+    changes,
+    userIds: created.successful.map(user => user._id!),
+  })
   return created
 }
 
@@ -376,7 +376,6 @@ export const search = async (
     for (let user of paginated.data) {
       if (user) {
         delete user.password
-        delete user.pendingGroupEvents
       }
     }
     response = {
@@ -441,7 +440,6 @@ const filterAndPaginateUsers = ({
 
   for (let user of data) {
     delete user.password
-    delete user.pendingGroupEvents
   }
 
   return {
@@ -637,7 +635,6 @@ export const fetch = async (ctx: UserCtx<void, FetchUsersResponse>) => {
   for (let user of all) {
     if (user) {
       delete user.password
-      delete user.pendingGroupEvents
     }
   }
   ctx.body = all

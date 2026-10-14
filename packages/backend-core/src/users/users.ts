@@ -31,13 +31,11 @@ function removeUserPassword(users: User | User[]) {
     return users.map(user => {
       if (user) {
         delete user.password
-        delete user.pendingGroupEvents
         return user
       }
     })
   } else if (users) {
     delete users.password
-    delete users.pendingGroupEvents
     return users
   }
   return users
