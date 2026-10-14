@@ -1,4 +1,5 @@
 import { db, HTTPError } from "@budibase/backend-core"
+import { hasSinglePrimaryKey } from "@budibase/shared-core"
 import {
   FieldType,
   isArraySearchOperator,
@@ -118,7 +119,7 @@ export const getQueryableFields = async (
     extractOpts?: { noRelationships?: boolean }
   ): Promise<string[]> => {
     const result = []
-    if (isInternal({ table })) {
+    if (isInternal({ table }) || hasSinglePrimaryKey({ table })) {
       result.push("_id")
     }
 
