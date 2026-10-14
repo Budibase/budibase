@@ -740,25 +740,71 @@ describe("platformActions sessions", () => {
       }
     )
 
-    it("keeps paging through pages made only of expired sessions", async () => {
-      await createMixedSessions()
-
-      const collected: string[] = []
-      let bookmark: string | undefined
-      do {
-        const page = await withContext(() =>
-          fetchSessions({ limit: 1, bookmark })
+    it.each([undefined, "prod"] as const)(
+      "fills pages with eligible sessions for environment %s",
+      async environment => {
+        await createMixedSessions()
+        const first = await withContext(() =>
+          fetchSessions({ environment, limit: 2 })
         )
-        collected.push(...page.sessions.map(session => session.sourceId))
-        bookmark = page.pagination.nextBookmark
-      } while (bookmark)
+        const second = await withContext(() =>
+          fetchSessions({
+            environment,
+            limit: 2,
+            bookmark: first.pagination.nextBookmark,
+          })
+        )
+        const back = await withContext(() =>
+          fetchSessions({
+            environment,
+            limit: 2,
+            bookmark: second.pagination.previousBookmark,
+          })
+        )
+        expect(first.sessions.map(session => session.sourceId)).toEqual([
+          "recent-completed",
+          "recent-failed",
+        ])
+        expect(second.sessions.map(session => session.sourceId)).toEqual([
+          "old-waiting",
+          "old-active",
+        ])
+        expect(second.pagination.hasNextPage).toBe(false)
+        expect(back.sessions).toEqual(first.sessions)
+        expect(back.pagination.hasPreviousPage).toBe(false)
+      }
+    )
 
-      expect(collected).toEqual([
-        "recent-completed",
-        "recent-failed",
-        "old-waiting",
-        "old-active",
+    it("uses document IDs to paginate equal timestamps across statuses", async () => {
+      tk.freeze(new Date())
+      try {
+        await createSession({ sourceId: "a", status: "failed" })
+        await createSession({ sourceId: "b", status: "active" })
+        await createSession({ sourceId: "c", status: "completed" })
+        await createSession({ sourceId: "d", status: "waiting" })
+      } finally {
+        tk.reset()
+      }
+      const first = await withContext(() => fetchSessions({ limit: 2 }))
+      const second = await withContext(() =>
+        fetchSessions({ limit: 2, bookmark: first.pagination.nextBookmark })
+      )
+      const back = await withContext(() =>
+        fetchSessions({
+          limit: 2,
+          bookmark: second.pagination.previousBookmark,
+        })
+      )
+      expect(first.sessions.map(session => session.sourceId)).toEqual([
+        "d",
+        "c",
       ])
+      expect(second.sessions.map(session => session.sourceId)).toEqual([
+        "b",
+        "a",
+      ])
+      expect(second.pagination.hasNextPage).toBe(false)
+      expect(back.sessions).toEqual(first.sessions)
     })
 
     it("returns an empty page for a next bookmark older than the cutoff", async () => {

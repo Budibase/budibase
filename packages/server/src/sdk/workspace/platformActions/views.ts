@@ -332,8 +332,6 @@ export function getSessionKeysetKey({
   return prefix.length > 0 ? [...prefix, doc.updatedAt] : doc.updatedAt
 }
 
-// Only bounds the range for a terminal status filter. Unfiltered lists still
-// contain expired sessions, callers must hide them.
 export const querySessions = async ({
   workspaceDb,
   environment,
@@ -352,6 +350,55 @@ export const querySessions = async ({
   cutoff?: string
 }): Promise<KeysetPage<PlatformActionSessionIndexDoc>> => {
   const scope = resolveSessionsScope({ environment, status })
+  if (!status && cutoff !== undefined) {
+    const prefix = scopePrefix(scope)
+    if (
+      bookmark &&
+      (!isValidBookmarkKey(bookmark.key, prefix) || !bookmark.id)
+    ) {
+      throw new HTTPError("Invalid bookmark for this query", 400)
+    }
+    const timestamp = Array.isArray(bookmark?.key)
+      ? bookmark.key[prefix.length]
+      : bookmark?.key
+    // Read bounded streams of eligible sessions, not pages of expired rows.
+    // Each stream uses the same timestamp/id anchor and global ordering.
+    const pages = await Promise.all(
+      PLATFORM_ACTION_CONTAINER_STATUSES.map(status => {
+        const statusPrefix = scopePrefix(
+          resolveSessionsScope({ environment, status })
+        )
+        return querySessions({
+          workspaceDb,
+          environment,
+          status,
+          cutoff,
+          limit,
+          direction,
+          bookmark: bookmark
+            ? { id: bookmark.id, key: [...statusPrefix, timestamp!] }
+            : undefined,
+        })
+      })
+    )
+    const descending = direction === "next"
+    const items = pages
+      .flatMap(page => page.items)
+      .sort((a, b) => {
+        const aKey = a.updatedAt === b.updatedAt ? a._id! : a.updatedAt
+        const bKey = a.updatedAt === b.updatedAt ? b._id! : b.updatedAt
+        if (aKey === bKey) {
+          return 0
+        }
+        const comparison = aKey < bKey ? -1 : 1
+        return descending ? -comparison : comparison
+      })
+    const page = items.slice(0, limit)
+    return {
+      items: descending ? page : page.reverse(),
+      hasMore: items.length > limit || pages.some(page => page.hasMore),
+    }
+  }
   const { viewName, prefix, createFunc } = resolveSessionsView(
     scope,
     workspaceDb

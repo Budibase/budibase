@@ -14,7 +14,7 @@ import {
   resolveLimit,
 } from "./pagination"
 import { clearOldHistory } from "./cleanup"
-import { getRetentionCutoff, isExpiredSession } from "./retention"
+import { getRetentionCutoff } from "./retention"
 import {
   getSessionKeysetKey,
   querySessions,
@@ -66,12 +66,8 @@ export async function fetchSessions({
     getSessionsSummary({ workspaceDb, environment, cutoff }),
   ])
 
-  // Bookmarks come from the unfiltered page, so a page made only of expired
-  // sessions still advances
   return {
-    sessions: page.items
-      .filter(session => !isExpiredSession({ session, cutoff }))
-      .map(toActionSession),
+    sessions: page.items.map(toActionSession),
     summary,
     pagination: buildPagination({
       items: page.items,
