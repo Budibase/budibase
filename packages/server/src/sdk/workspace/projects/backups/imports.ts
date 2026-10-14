@@ -68,6 +68,7 @@ import { getQueryToolBindingsForResource } from "../../ai/agents/queryToolRefere
 import { getResourceType } from "../../resources/utils"
 import { getAppUrl } from "../../workspaces/utils"
 import { doWithProjectAssignmentsLock } from "../lock"
+import { refreshProjectImportSetup } from "../importSetup"
 import {
   PROJECT_ATTACHMENTS_DIRECTORY,
   PROJECT_DATA_FILE,
@@ -1595,6 +1596,22 @@ export async function importProject(
             idMap.get(requirement.resourceId) || requirement.resourceId,
         }))
 
+        const savedProject = await context.getWorkspaceDB().put(
+          {
+            ...importedProject,
+            importSetup: {
+              resources,
+              unsupportedContent: extracted.manifest.unsupportedContent,
+              requirements,
+            },
+          },
+          { returnDoc: true }
+        )
+        importedProject = savedProject.doc
+        const [refreshedProject] = await refreshProjectImportSetup({
+          projects: [importedProject],
+        })
+
         const createdAt = getProjectCreatedAt(importedProject)
         return {
           project: {
@@ -1605,10 +1622,11 @@ export async function importProject(
             color: importedProject.color,
             createdAt,
             updatedAt: toTimestamp(importedProject.updatedAt) ?? createdAt,
+            importSetup: refreshedProject.importSetup,
           },
           resources,
           unsupportedContent: extracted.manifest.unsupportedContent,
-          requirements,
+          requirements: refreshedProject.importSetup!.requirements,
           ...(preparedData && { dataImport: preparedData.summary }),
         }
       }
