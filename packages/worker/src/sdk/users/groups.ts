@@ -60,15 +60,16 @@ export const validateGroupChanges = async ({
     await features.checkFeature(Feature.USER_GROUPS)
   }
   const changedGroups = await groups.getBulk(changedIds, { enriched: false })
+  const added = changedGroups.filter(group => addedIds.includes(group._id!))
   if (
-    changedGroups.length !== changedIds.length ||
+    added.length !== addedIds.length ||
     changedGroups.some(group => group.scimInfo?.isSync)
   ) {
     throw new HTTPError("Group not found or managed by SCIM", 404)
   }
 
   return {
-    added: changedGroups.filter(group => addedIds.includes(group._id!)),
+    added,
     removed: changedGroups.filter(group => removedIds.includes(group._id!)),
   }
 }

@@ -82,6 +82,14 @@ export async function invite(
   for (let user of users) {
     try {
       await validateGroupChanges({ userGroups: user.userInfo?.userGroups })
+    } catch (e) {
+      response.unsuccessful.push({
+        email: user.email,
+        reason: e instanceof Error ? e.message : "Invalid user groups",
+      })
+      continue
+    }
+    try {
       let userInfo = user.userInfo
       if (!userInfo) {
         userInfo = {}

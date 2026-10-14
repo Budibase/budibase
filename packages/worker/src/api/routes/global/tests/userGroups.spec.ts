@@ -101,6 +101,40 @@ describe("user group assignments", () => {
     )
   })
 
+  it.each([false, true])(
+    "removes missing memberships while updating user fields (replace: %s)",
+    async replace => {
+      const group = await createGroup()
+      const user = await config.createUser()
+      const seeded = await config.doInTenant(() =>
+        users.UserDB.save({ ...user, userGroups: ["gr_missing"] })
+      )
+      jest.clearAllMocks()
+
+      await config.api.users.saveUser({
+        ...seeded,
+        firstName: "Updated",
+        userGroups: replace ? [group._id!] : [],
+      })
+
+      const saved = await config.api.users.getUser(user._id!)
+      expect(saved.body).toMatchObject({
+        firstName: "Updated",
+        userGroups: replace ? [group._id] : [],
+      })
+      expect(events.group.usersDeleted).not.toHaveBeenCalled()
+      if (replace) {
+        expect(events.group.usersAdded).toHaveBeenCalledWith(
+          1,
+          expect.objectContaining({ _id: group._id }),
+          [user._id]
+        )
+      } else {
+        expect(events.group.usersAdded).not.toHaveBeenCalled()
+      }
+    }
+  )
+
   it("preserves omitted memberships without adding membership events", async () => {
     const group = await createGroup({ roles: { app_example: "CREATOR" } })
     const user = await config.createUser({ userGroups: [group._id!] })
@@ -318,9 +352,35 @@ describe("user group assignments", () => {
     ])
 
     expect(response.body.unsuccessful).toEqual([
-      { email, reason: "Failed to send email" },
+      { email, reason: "Group not found or managed by SCIM" },
     ])
     expect(sendMailMock).not.toHaveBeenCalled()
+  })
+
+  it("reports missing invitation groups while sending valid invitations", async () => {
+    const group = await createGroup()
+    const invalidEmail = structures.users.newEmail()
+    const validEmail = structures.users.newEmail()
+
+    const response = await config.api.users.sendMultiUserInvite([
+      { email: invalidEmail, userInfo: { userGroups: ["gr_missing"] } },
+      { email: validEmail, userInfo: { userGroups: [group._id!] } },
+    ])
+
+    expect(response.body).toMatchObject({
+      unsuccessful: [
+        {
+          email: invalidEmail,
+          reason: "Group not found or managed by SCIM",
+        },
+      ],
+      successful: [{ email: validEmail }],
+    })
+    expect(sendMailMock).toHaveBeenCalledTimes(1)
+    expect(events.group.usersAdded).not.toHaveBeenCalled()
+    expect(
+      await config.doInTenant(() => users.getGlobalUserByEmail(validEmail))
+    ).toBeUndefined()
   })
 
   describe("default memberships", () => {
