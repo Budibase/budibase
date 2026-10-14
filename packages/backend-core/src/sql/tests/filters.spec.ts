@@ -142,6 +142,70 @@ describe("SQL filter parameterization", () => {
     expect(result.bindings).toEqual(expect.arrayContaining([`${malicious}%`]))
   })
 
+  it.each([" kind", "kind ", " kind "])(
+    "preserves whitespace in PostgreSQL enum column %j",
+    name => {
+      const table = buildTable({
+        [name]: {
+          name,
+          type: FieldType.OPTIONS,
+          externalType: "USER-DEFINED",
+          constraints: { ...baseConstraints, inclusion: ["active"] },
+        },
+      })
+      const query = buildQuery(table, { string: { [name]: "act" } })
+
+      const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+      expect(result.sql).toContain(`"${name}"::text ilike $1`)
+      expect(result.bindings).toEqual(["act%", 25])
+    }
+  )
+
+  it.each([true, false])(
+    "casts related PostgreSQL enums using their own schema with aliases=%s",
+    aliased => {
+      const table = buildTable({
+        kind: {
+          name: "kind",
+          type: FieldType.STRING,
+          externalType: "text",
+          constraints: baseConstraints,
+        },
+      })
+      const relatedTable: Table = {
+        ...table,
+        _id: "related",
+        name: "related",
+        schema: {
+          id: idField,
+          kind: {
+            name: "kind",
+            type: FieldType.OPTIONS,
+            externalType: "USER-DEFINED",
+            constraints: { ...baseConstraints, inclusion: ["active"] },
+          },
+        },
+      }
+      const query = buildQuery(table, {
+        $and: { conditions: [{ string: { "1:rel.kind": "act" } }] },
+      })
+      query.tables.related = relatedTable
+      if (aliased) {
+        query.tableAliases = { tbl: "a", related: "b" }
+      }
+      query.relationships = [
+        { tableName: "related", column: "rel", from: "id", to: "id" },
+      ]
+
+      const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+      const tableName = aliased ? "b" : "related"
+      expect(result.sql).toContain(`"${tableName}"."kind"::text ilike $1`)
+      expect(result.bindings).toEqual(["act%", 25])
+    }
+  )
+
   it.each(["string", "fuzzy"] as const)(
     "casts PostgreSQL UUID columns to text for %s filters",
     operator => {

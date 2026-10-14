@@ -19,6 +19,7 @@ if (descriptions.length) {
       const suffix = generator.guid().replaceAll("-", "")
       const personTableName = `persons_${suffix}`
       const profileTableName = `profiles_${suffix}`
+      const enumTypeName = `person_status_${suffix}`
       let client: Knex
       let persons: Table
       let profiles: Table
@@ -31,17 +32,30 @@ if (descriptions.length) {
         await client.schema.createTable(personTableName, table => {
           table.uuid("person_id").primary()
           table.timestamp("created_at", { useTz: true })
+          table.enu("status", ["active", "inactive"], {
+            useNative: true,
+            enumName: enumTypeName,
+          })
         })
         await client.schema.createTable(profileTableName, table => {
           table.uuid("candidate_profile_id").primary()
+          table.string("status")
           table
             .uuid("person_id")
             .references("person_id")
             .inTable(personTableName)
         })
         await client(personTableName).insert([
-          { person_id: personId, created_at: "2026-10-15T00:00:00Z" },
-          { person_id: otherPersonId, created_at: "2026-01-01T00:00:00Z" },
+          {
+            person_id: personId,
+            created_at: "2026-10-15T00:00:00Z",
+            status: "active",
+          },
+          {
+            person_id: otherPersonId,
+            created_at: "2026-01-01T00:00:00Z",
+            status: "inactive",
+          },
         ])
         await client(profileTableName).insert([
           { candidate_profile_id: profileId, person_id: personId },
@@ -75,6 +89,7 @@ if (descriptions.length) {
         try {
           await client.schema.dropTableIfExists(profileTableName)
           await client.schema.dropTableIfExists(personTableName)
+          await client.raw("DROP TYPE IF EXISTS ??", [enumTypeName])
         } finally {
           config.end()
         }
@@ -194,15 +209,15 @@ if (descriptions.length) {
       it.each([
         {
           operator: "equal",
-          value: "2026-10-15T00:00:00+00:00",
+          value: "2026-10-15T05:30:00+05:30",
         },
         {
           operator: "oneOf",
-          value: ["2026-10-15T00:00:00+00:00"],
+          value: ["2026-10-14T20:00:00-04:00"],
         },
         {
           operator: "range",
-          value: { low: "2026-10-14T00:00:00+00:00" },
+          value: { low: "2026-10-15T05:30:00+05:30" },
         },
       ])(
         "preserves related timestamp offsets in $operator filters",
@@ -242,6 +257,22 @@ if (descriptions.length) {
           expect(result.rows.map(row => row.candidate_profile_id)).toEqual([
             profileId,
           ])
+        }
+      )
+
+      it.each(["relationship", "table"])(
+        "filters related enums using the %s name",
+        async name => {
+          const prefix = name === "relationship" ? "person" : persons.name
+          const result = await config.api.row.search(profiles._id!, {
+            query: { string: { [`${prefix}.status`]: "act" } },
+            countRows: true,
+          })
+
+          expect(result.rows.map(row => row.candidate_profile_id)).toEqual([
+            profileId,
+          ])
+          expect(result.totalRows).toBe(1)
         }
       )
     }

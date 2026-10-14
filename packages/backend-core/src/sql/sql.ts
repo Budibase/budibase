@@ -244,16 +244,14 @@ class InternalBuilder {
     return this.table.schema[column]
   }
 
-  private isPostgresUuidField(key: string): boolean {
+  private getPostgresTextFilterSchema(key: string): FieldSchema | undefined {
     if (this.client !== SqlClient.POSTGRES) {
-      return false
+      return undefined
     }
 
     const { tableName, column } = this.splitter.run(key)
     if (tableName) {
-      return this.SPECIAL_SELECT_CASES.POSTGRES_UUID(
-        this.query.tables[tableName]?.schema[column]
-      )
+      return this.query.tables[tableName]?.schema[column]
     }
 
     const table = Object.values(this.query.tables).find(table =>
@@ -261,10 +259,10 @@ class InternalBuilder {
     )
     if (table) {
       const { column } = this.splitter.run(key.slice(table.name.length + 1))
-      return this.SPECIAL_SELECT_CASES.POSTGRES_UUID(table.schema[column])
+      return table.schema[column]
     }
 
-    return this.SPECIAL_SELECT_CASES.POSTGRES_UUID(this.getFieldSchema(key))
+    return this.getFieldSchema(key)
   }
 
   private requiresJsonAsStringClient(): boolean {
@@ -864,7 +862,11 @@ class InternalBuilder {
           `%${value.toLowerCase()}%`,
         ])
       }
-      if (this.isPostgresUuidField(key)) {
+      if (
+        this.SPECIAL_SELECT_CASES.POSTGRES_UUID(
+          this.getPostgresTextFilterSchema(key)
+        )
+      ) {
         return q.whereRaw(`??::text ilike ?`, [
           this.rawQuotedIdentifier(key),
           `%${value}%`,
@@ -1110,16 +1112,14 @@ class InternalBuilder {
             this.rawQuotedIdentifier(key),
             `${value.toLowerCase()}%`,
           ])
-        } else if (this.isPostgresUuidField(key)) {
-          return q.whereRaw(`??::text ilike ?`, [
-            this.rawQuotedIdentifier(key),
-            `${value}%`,
-          ])
         } else {
-          const schema = this.getFieldSchema(key)
-          if (this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema)) {
+          const schema = this.getPostgresTextFilterSchema(key)
+          if (
+            this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema) ||
+            this.SPECIAL_SELECT_CASES.POSTGRES_UUID(schema)
+          ) {
             return q.whereRaw(`??::text ilike ?`, [
-              this.knex.raw(this.quote(schema!.name)),
+              this.rawQuotedIdentifier(key),
               `${value}%`,
             ])
           } else {
