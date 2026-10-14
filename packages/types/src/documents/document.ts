@@ -5,6 +5,7 @@ export const prefixed = (type: DocumentType) => `${type}${SEPARATOR}`
 
 export enum DocumentType {
   USER = "us",
+  USER_GROUP_EVENT_OUTBOX = "usergroupevents",
   GROUP = "gr",
   CONFIG = "config",
   TEMPLATE = "template",

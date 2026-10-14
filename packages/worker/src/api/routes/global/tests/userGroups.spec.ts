@@ -48,7 +48,11 @@ describe("user group assignments", () => {
     expect(events.group.usersAdded).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: group._id }),
-      [user._id]
+      [user._id],
+      expect.objectContaining({
+        timestamp: expect.any(Number),
+        identity: expect.any(Object),
+      })
     )
   })
 
@@ -63,7 +67,11 @@ describe("user group assignments", () => {
     expect(events.group.usersAdded).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: group._id }),
-      [user._id]
+      [user._id],
+      expect.objectContaining({
+        timestamp: expect.any(Number),
+        identity: expect.any(Object),
+      })
     )
   })
 
@@ -92,12 +100,20 @@ describe("user group assignments", () => {
     expect(events.group.usersDeleted).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: first._id }),
-      [user._id]
+      [user._id],
+      expect.objectContaining({
+        timestamp: expect.any(Number),
+        identity: expect.any(Object),
+      })
     )
     expect(events.group.usersDeleted).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: second._id }),
-      [user._id]
+      [user._id],
+      expect.objectContaining({
+        timestamp: expect.any(Number),
+        identity: expect.any(Object),
+      })
     )
   })
 
@@ -127,7 +143,11 @@ describe("user group assignments", () => {
         expect(events.group.usersAdded).toHaveBeenCalledWith(
           1,
           expect.objectContaining({ _id: group._id }),
-          [user._id]
+          [user._id],
+          expect.objectContaining({
+            timestamp: expect.any(Number),
+            identity: expect.any(Object),
+          })
         )
       } else {
         expect(events.group.usersAdded).not.toHaveBeenCalled()
@@ -338,7 +358,11 @@ describe("user group assignments", () => {
     expect(events.group.usersAdded).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ _id: group._id }),
-      result.created!.successful.map(user => user._id)
+      result.created!.successful.map(user => user._id),
+      expect.objectContaining({
+        timestamp: expect.any(Number),
+        identity: expect.any(Object),
+      })
     )
   })
 
@@ -432,9 +456,84 @@ describe("user group assignments", () => {
           expect(events.group.usersAdded).toHaveBeenCalledWith(
             1,
             expect.objectContaining({ _id: defaultGroup._id }),
-            [saved!._id]
+            [saved!._id],
+            expect.objectContaining({
+              timestamp: expect.any(Number),
+              identity: expect.any(Object),
+            })
           )
         }
+      }
+    )
+  })
+
+  describe("password invitation acceptance", () => {
+    it("creates the membership and consumes the invitation", async () => {
+      const group = await createGroup()
+      const email = structures.users.newEmail()
+      const code = await config.doInTenant(() =>
+        cache.invite.createCode(email, { userGroups: [group._id!] })
+      )
+
+      await config.api.users.acceptInvite(code)
+
+      const saved = await config.doInTenant(() =>
+        users.getGlobalUserByEmail(email)
+      )
+      expect(saved).toMatchObject({ userGroups: [group._id] })
+      expect(events.group.usersAdded).toHaveBeenCalledTimes(1)
+      expect(events.group.usersAdded).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ _id: group._id }),
+        [saved!._id],
+        expect.objectContaining({
+          timestamp: expect.any(Number),
+          identity: expect.any(Object),
+        })
+      )
+      expect(
+        await config.doInTenant(() => cache.invite.getExistingInvites([email]))
+      ).toEqual([])
+    })
+
+    it.each(["deleted", "SCIM", "unlicensed"])(
+      "preserves the invitation if its group becomes %s before acceptance",
+      async restriction => {
+        const group = await createGroup()
+        const email = structures.users.newEmail()
+        const code = await config.doInTenant(() =>
+          cache.invite.createCode(email, { userGroups: [group._id!] })
+        )
+        await config.doInTenant(async () => {
+          const saved = await proDb.groups.get(group._id!)
+          if (restriction === "deleted") {
+            await proDb.groups.destroy(saved._id!, saved._rev!)
+          } else if (restriction === "SCIM") {
+            await proDb.groups.save({
+              ...saved,
+              scimInfo: { externalId: generator.guid(), isSync: true },
+            })
+          } else {
+            mocks.licenses.useUnlimited({ features: [] })
+          }
+        })
+
+        await config.request
+          .post("/api/global/users/invite/accept")
+          .send({
+            password: "newpassword1",
+            inviteCode: code,
+            tenantId: config.getTenantId(),
+          })
+          .expect(400)
+
+        expect(
+          await config.doInTenant(() => users.getGlobalUserByEmail(email))
+        ).toBeUndefined()
+        expect(
+          await config.doInTenant(() => cache.invite.getCode(code))
+        ).toMatchObject({ email })
+        expect(events.group.usersAdded).not.toHaveBeenCalled()
       }
     )
   })

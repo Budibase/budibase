@@ -8,6 +8,12 @@ import * as licensing from "../../../licensing"
 import * as quotas from "../../index"
 
 jest.mock("../../../licensing/licenses/client")
+jest.mock("../../../../db/quotas/quotas", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../../db/quotas/quotas")
+  >("../../../../db/quotas/quotas")
+  return { ...actual, setAllUsage: jest.fn(actual.setAllUsage) }
+})
 
 describe("User save quotas", () => {
   const config = new DBTestConfiguration()
@@ -114,6 +120,64 @@ describe("User save quotas", () => {
       })
       const usage = await db.quotas.getQuotaUsage()
       expect(usage.usageQuota).toMatchObject({ users: 1, creators: 1 })
+    })
+  })
+
+  const failQuotaWriteDuringDemotion = async () => {
+    jest
+      .mocked(db.quotas.setAllUsage)
+      .mockRejectedValueOnce(new Error("Quota write failed"))
+
+    await expect(
+      users.UserDB.save({ ...user, userGroups: [] })
+    ).rejects.toThrow("Quota write failed")
+  }
+
+  it("persists the demotion when the subsequent quota write fails", async () => {
+    await config.doInTenant(async () => {
+      await failQuotaWriteDuringDemotion()
+
+      const persistedUser = await users.UserDB.getUser(user._id!)
+      expect(persistedUser.userGroups).toEqual([])
+      const usage = await db.quotas.getQuotaUsage()
+      expect(usage.usageQuota).toMatchObject({ users: 1, creators: 1 })
+    })
+  })
+
+  it("leaves creator usage stale when retrying an already persisted demotion", async () => {
+    await config.doInTenant(async () => {
+      await failQuotaWriteDuringDemotion()
+
+      const persistedUser = await users.UserDB.getUser(user._id!)
+      await users.UserDB.save({ ...persistedUser, userGroups: [] })
+
+      const retriedUser = await users.UserDB.getUser(user._id!)
+      expect(retriedUser.userGroups).toEqual([])
+      const usage = await db.quotas.getQuotaUsage()
+      expect(usage.usageQuota).toMatchObject({ users: 1, creators: 1 })
+    })
+  })
+
+  it("reconciles stale creator usage on the next creator membership change", async () => {
+    await config.doInTenant(async () => {
+      const otherCreator = await users.UserDB.save(
+        structures.users.user({
+          tenantId: config.getTenantId(),
+          userGroups: user.userGroups,
+        })
+      )
+      await failQuotaWriteDuringDemotion()
+
+      await users.UserDB.save({ ...otherCreator, userGroups: [] })
+
+      const persistedUser = await users.UserDB.getUser(user._id!)
+      expect(persistedUser.userGroups).toEqual([])
+      const persistedOtherCreator = await users.UserDB.getUser(
+        otherCreator._id!
+      )
+      expect(persistedOtherCreator.userGroups).toEqual([])
+      const usage = await db.quotas.getQuotaUsage()
+      expect(usage.usageQuota).toMatchObject({ users: 2, creators: 0 })
     })
   })
 })

@@ -1,4 +1,4 @@
-import { events, tenancy, users as usersCore } from "@budibase/backend-core"
+import { db, events, tenancy, users as usersCore } from "@budibase/backend-core"
 import {
   EmailTemplatePurpose,
   InviteUserRequest,
@@ -11,9 +11,10 @@ import {
 import { sendEmail } from "../../utilities/email"
 import {
   getInitialUserGroups,
-  recordGroupChanges,
+  prepareGroupEvents,
   validateGroupChanges,
 } from "./groups"
+import { flushGroupEvents } from "./groupEvents"
 
 export const save = async ({
   user,
@@ -40,11 +41,21 @@ export const save = async ({
     previousGroups: previousUser?.userGroups,
     isDefaultAssignment,
   })
-  const saved = await usersCore.UserDB.save(user, {
-    ...options,
-    assignDefaultGroup: false,
-  })
-  await recordGroupChanges({ changes, userIds: [saved._id!] })
+  const userId = user._id || db.generateGlobalUserID()
+  try {
+    await usersCore.UserDB.save(
+      { ...user, _id: userId },
+      {
+        ...options,
+        assignDefaultGroup: false,
+        groupMembershipEvents: await prepareGroupEvents({ changes }),
+      }
+    )
+  } finally {
+    await flushGroupEvents({ documentId: userId })
+  }
+  const saved = await tenancy.getGlobalDB().get<User>(userId)
+  delete saved.pendingGroupEvents
   return saved
 }
 

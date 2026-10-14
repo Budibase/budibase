@@ -23,6 +23,7 @@ export enum LockName {
   WORKSPACE_MIGRATION = "app_migrations",
   PUBLISH_WORKSPACE = "publish_workspace",
   PROCESS_USER_INVITE = "process_user_invite",
+  USER_GROUP_EVENTS = "user_group_events",
   SQS_SYNC_DEFINITIONS = "sys_sync_definitions",
   LITELLM_KEY = "litellm_key",
   AGENT_RAG_KNOWLEDGE_BASE = "agent_rag_knowledge_base",

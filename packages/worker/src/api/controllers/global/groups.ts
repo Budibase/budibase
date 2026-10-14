@@ -64,7 +64,10 @@ export async function updateGroupUsers(ctx: UserCtx) {
   if (toRemove) {
     removed = await groups.removeUsers(groupId, toRemove)
   }
-  ctx.body = { added, removed }
+  ctx.body = {
+    added: added?.map(({ pendingGroupEvents: _pending, ...user }) => user),
+    removed: removed?.map(({ pendingGroupEvents: _pending, ...user }) => user),
+  }
 }
 
 export async function updateGroupApps(
