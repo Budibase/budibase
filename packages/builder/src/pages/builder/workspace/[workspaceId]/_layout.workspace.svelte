@@ -1,5 +1,6 @@
 <script lang="ts">
   import { sdk } from "@budibase/shared-core"
+  import { params } from "@roxi/routify"
   import {
     initialise,
     reset,
@@ -19,9 +20,17 @@
 
   export let workspaceId: string
 
+  let packageKey = `${workspaceId}:${$params.screenId || ""}`
   let promise = getPackage(workspaceId)
   let sideNav: SideNav
   let showInviteUsersModal = false
+  $: {
+    const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
+    if (nextPackageKey !== packageKey) {
+      packageKey = nextPackageKey
+      promise = getPackage(workspaceId)
+    }
+  }
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
   $: canManageConnections =
     $auth.user != null && sdk.users.canCreateApps($auth.user)
