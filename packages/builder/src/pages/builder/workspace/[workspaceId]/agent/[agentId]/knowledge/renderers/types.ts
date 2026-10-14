@@ -18,7 +18,11 @@ export interface FileKnowledgeTableRow extends KnowledgeTableRowBase {
   updatedAt: string | number
   mimetype?: string
   isUploading?: boolean
+  isRejected?: boolean
+  canRetry: boolean
   onDelete?: () => Promise<void>
+  onRetry?: () => Promise<void>
+  onDismiss?: () => void
   errorMessage?: string
 }
 

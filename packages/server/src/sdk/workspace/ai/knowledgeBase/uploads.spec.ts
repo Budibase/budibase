@@ -111,6 +111,27 @@ describe("knowledgeBase uploads", () => {
     })
   })
 
+  it("removes the previous failed ingestion job before requeueing", async () => {
+    const callOrder: string[] = []
+    mockRemoveRagFileIngestionJob.mockImplementation(async () => {
+      callOrder.push("remove")
+    })
+    mockEnqueueRagFileIngestion.mockImplementation(async () => {
+      callOrder.push("enqueue")
+    })
+    mockGetKnowledgeBaseFileOrThrow.mockResolvedValue({
+      _id: "kb_file_1",
+      knowledgeBaseId: "kb_1",
+      objectStoreKey: "workspace_1/path/file.txt",
+      status: KnowledgeBaseFileStatus.FAILED,
+    })
+
+    await retryKnowledgeBaseFileIngestion("kb_file_1")
+
+    expect(mockRemoveRagFileIngestionJob).toHaveBeenCalledWith("kb_file_1")
+    expect(callOrder).toEqual(["remove", "enqueue"])
+  })
+
   it("throws when trying to requeue a non-failed file", async () => {
     mockGetKnowledgeBaseFileOrThrow.mockResolvedValue({
       _id: "kb_file_1",

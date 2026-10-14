@@ -34,6 +34,7 @@ import {
   type KnowledgeBaseFile,
 } from "@budibase/types"
 import { derived, get } from "svelte/store"
+import { getErrorMessage } from "@/helpers/errors"
 import { createOperationKnowledgePollingController } from "./operationKnowledgePolling"
 
 const KNOWLEDGE_POLL_INTERVAL_MS = 1000
@@ -50,8 +51,26 @@ export interface OperationKnowledgePendingUpload {
   createdAt: string
 }
 
+interface QueuedUpload {
+  file: File
+  tempId: string
+  createdAt: string
+}
+
+export interface OperationKnowledgeRejectedUpload {
+  tempId: string
+  file: File
+  filename: string
+  size: number
+  mimetype?: string
+  reason: string
+  retryable: boolean
+  createdAt: string
+}
+
 export interface OperationKnowledgeUploadState {
   pendingUploads: OperationKnowledgePendingUpload[]
+  rejectedUploads: OperationKnowledgeRejectedUpload[]
   uploading: boolean
   progress: string
 }
@@ -88,6 +107,7 @@ const getOperationKnowledgeCacheKey = (agentId: string, operationId: string) =>
 
 const emptyUploadState = (): OperationKnowledgeUploadState => ({
   pendingUploads: [],
+  rejectedUploads: [],
   uploading: false,
   progress: "",
 })
@@ -567,7 +587,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     selectedFiles: File[]
   ): Promise<OperationKnowledgeUploadResult> => {
     const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
-    const uploads = selectedFiles.map((file, index) => ({
+    const uploads: QueuedUpload[] = selectedFiles.map((file, index) => ({
       file,
       tempId: `pending-upload-${Date.now()}-${index}`,
       createdAt: new Date().toISOString(),
@@ -593,6 +613,35 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     const failedUploads: string[] = []
     const oversizedUploads: string[] = []
 
+    const rejectUpload = ({
+      upload,
+      reason,
+      retryable,
+    }: {
+      upload: QueuedUpload
+      reason: string
+      retryable: boolean
+    }) =>
+      this.setOperationUploadState(cacheKey, current => ({
+        ...current,
+        pendingUploads: current.pendingUploads.filter(
+          pending => pending.tempId !== upload.tempId
+        ),
+        rejectedUploads: [
+          ...current.rejectedUploads,
+          {
+            tempId: upload.tempId,
+            file: upload.file,
+            filename: upload.file.name,
+            size: upload.file.size,
+            mimetype: upload.file.type || undefined,
+            reason,
+            retryable,
+            createdAt: upload.createdAt,
+          },
+        ],
+      }))
+
     try {
       for (const [index, upload] of uploads.entries()) {
         this.setOperationUploadState(cacheKey, current => ({
@@ -602,12 +651,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
         if (upload.file.size > MAX_OPERATION_KNOWLEDGE_FILE_SIZE_BYTES) {
           oversizedUploads.push(upload.file.name)
-          this.setOperationUploadState(cacheKey, current => ({
-            ...current,
-            pendingUploads: current.pendingUploads.filter(
-              pending => pending.tempId !== upload.tempId
-            ),
-          }))
+          rejectUpload({
+            upload,
+            reason: `File exceeds the ${MAX_OPERATION_KNOWLEDGE_FILE_SIZE_LABEL} limit`,
+            retryable: false,
+          })
           continue
         }
 
@@ -627,12 +675,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
         } catch (error) {
           console.error("Error uploading file:", error)
           failedUploads.push(upload.file.name)
-          this.setOperationUploadState(cacheKey, current => ({
-            ...current,
-            pendingUploads: current.pendingUploads.filter(
-              pending => pending.tempId !== upload.tempId
-            ),
-          }))
+          rejectUpload({
+            upload,
+            reason: getErrorMessage(error),
+            retryable: true,
+          })
         }
       }
 
@@ -654,6 +701,118 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
         progress: "",
       }))
     }
+  }
+
+  private takeRejectedUploads = ({
+    cacheKey,
+    tempIds,
+  }: {
+    cacheKey: string
+    tempIds: string[]
+  }): OperationKnowledgeRejectedUpload[] => {
+    const taken = (
+      get(this.store).knowledgeUploadByOperation[cacheKey]?.rejectedUploads ||
+      []
+    ).filter(rejected => tempIds.includes(rejected.tempId))
+    this.setOperationUploadState(cacheKey, current => ({
+      ...current,
+      rejectedUploads: current.rejectedUploads.filter(
+        rejected => !tempIds.includes(rejected.tempId)
+      ),
+    }))
+    return taken
+  }
+
+  retryRejectedUpload = async ({
+    agentId,
+    operationId,
+    tempId,
+  }: {
+    agentId: string
+    operationId: string
+    tempId: string
+  }): Promise<OperationKnowledgeUploadResult> =>
+    await this.reuploadRejectedUploads({
+      agentId,
+      operationId,
+      tempIds: [tempId],
+    })
+
+  private reuploadRejectedUploads = async ({
+    agentId,
+    operationId,
+    tempIds,
+  }: {
+    agentId: string
+    operationId: string
+    tempIds: string[]
+  }): Promise<OperationKnowledgeUploadResult> => {
+    const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
+    const taken = this.takeRejectedUploads({ cacheKey, tempIds })
+    return await this.uploadOperationFiles(
+      agentId,
+      operationId,
+      taken.map(rejected => rejected.file)
+    )
+  }
+
+  dismissRejectedUpload = ({
+    agentId,
+    operationId,
+    tempId,
+  }: {
+    agentId: string
+    operationId: string
+    tempId: string
+  }) => {
+    const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
+    this.takeRejectedUploads({ cacheKey, tempIds: [tempId] })
+  }
+
+  retryOperationKnowledgeFile = async ({
+    agentId,
+    operationId,
+    fileId,
+  }: {
+    agentId: string
+    operationId: string
+    fileId: string
+  }) => {
+    const { file } = await API.retryOperationFile({
+      agentId,
+      operationId,
+      fileId,
+    })
+    this.upsertOperationKnowledgeFile(agentId, operationId, file)
+  }
+
+  retryAllFailedOperationKnowledge = async ({
+    agentId,
+    operationId,
+  }: {
+    agentId: string
+    operationId: string
+  }): Promise<{ retried: number }> => {
+    const { files } = await API.retryFailedOperationFiles({
+      agentId,
+      operationId,
+    })
+    for (const file of files) {
+      this.upsertOperationKnowledgeFile(agentId, operationId, file)
+    }
+
+    const retryableTempIds = this.getOperationUploadState(agentId, operationId)
+      .rejectedUploads.filter(rejected => rejected.retryable)
+      .map(rejected => rejected.tempId)
+    if (retryableTempIds.length === 0) {
+      return { retried: files.length }
+    }
+    const { successfulUploads } = await this.reuploadRejectedUploads({
+      agentId,
+      operationId,
+      tempIds: retryableTempIds,
+    })
+    return { retried: files.length + successfulUploads }
   }
 
   removeOperationKnowledgeFile = async (

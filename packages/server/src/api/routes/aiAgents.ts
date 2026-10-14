@@ -121,6 +121,14 @@ builderAdminRoutes
 
 knowledgeSearchRoutes
   .post("/api/agent/:agentId/operations/:operationId/files", ai.uploadAgentFile)
+  .post(
+    "/api/agent/:agentId/operations/:operationId/files/retry",
+    ai.retryFailedAgentFiles
+  )
+  .post(
+    "/api/agent/:agentId/operations/:operationId/files/:fileId/retry",
+    ai.retryAgentFile
+  )
   .delete(
     "/api/agent/:agentId/operations/:operationId/files/:fileId",
     ai.deleteAgentFile
