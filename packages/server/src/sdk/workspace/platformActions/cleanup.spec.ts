@@ -149,6 +149,60 @@ describe("platformActions cleanup", () => {
   const clear = (batchSize?: number) =>
     withContext(() => clearOldHistory({ batchSize }))
 
+  it.each<PlatformActionContainerStatus>(["completed", "failed"])(
+    "only deletes %s sessions strictly before the retention cutoff",
+    async status => {
+      const now = new Date("2026-03-09T12:00:00.000Z")
+      const cutoff = now.getTime() - 30 * ONE_DAY_MILLIS
+      await withContext(async () => {
+        const database = events.platformActions.getActionsDB()
+        for (const { sourceId, offset } of [
+          { sourceId: "before-cutoff", offset: -1 },
+          { sourceId: "at-cutoff", offset: 0 },
+          { sourceId: "after-cutoff", offset: 1 },
+        ]) {
+          const timestamp = new Date(cutoff + offset).toISOString()
+          const session: PlatformActionSessionIndexDoc = {
+            _id: events.platformActions.getPlatformActionSessionId({
+              environment: "prod",
+              sourceType: "agent_session",
+              sourceId,
+            }),
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId,
+            status,
+            actionCount: 1,
+            startedAt: timestamp,
+            updatedAt: timestamp,
+          }
+          const event: PlatformActionEvent = {
+            _id: [DocumentType.PLATFORM_ACTION_EVENT, utils.newid()].join(
+              SEPARATOR
+            ),
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId,
+            eventName: "action:tool:executed",
+            timestamp,
+            payload: {},
+          }
+          // The database adapter stamps updatedAt when persisting documents.
+          tk.freeze(new Date(timestamp))
+          await database.bulkDocs([event, session])
+        }
+      })
+
+      tk.freeze(now)
+      await clear()
+
+      expect(await getStored()).toEqual({
+        sessions: ["after-cutoff", "at-cutoff"],
+        events: ["after-cutoff", "at-cutoff"],
+      })
+    }
+  )
+
   it("deletes expired terminal sessions and their events in both environments", async () => {
     await createSession({ sourceId: "completed-prod", daysAgo: 40 })
     await createSession({
