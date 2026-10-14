@@ -218,11 +218,12 @@ describe.each([
           allowKnowledgeSourceDownload: true,
         }
       )
+      const staleQuery = query
       await config.api.query.save(query)
 
       await config.api.query.save(
         {
-          ...query,
+          ...staleQuery,
           name: "New endpoint",
           datasourceId: destinationDatasource._id!,
         },

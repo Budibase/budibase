@@ -42,7 +42,6 @@
   let editModal: ModalRef
   let deleteConfirmationModal: ModalRef
   let assignProjectModal: ModalAPI
-  let assignProjectModalKey = 0
 
   $: favourite = tableId ? $favourites[tableId] : undefined
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
@@ -70,7 +69,6 @@
   }
 
   const openAssignProjectModal = () => {
-    assignProjectModalKey += 1
     assignProjectModal?.show()
   }
 
@@ -169,13 +167,11 @@
 <EditModal {table} bind:this={editModal} />
 <DeleteConfirmationModal source={table} bind:this={deleteConfirmationModal} />
 <Modal bind:this={assignProjectModal}>
-  {#key assignProjectModalKey}
-    <AssignProjectModal
-      resource={projectAssignmentResource}
-      onPreview={projectsStore.previewAssignment}
-      onConfirm={assignProject}
-    />
-  {/key}
+  <AssignProjectModal
+    resource={projectAssignmentResource}
+    onPreview={projectsStore.previewAssignment}
+    onConfirm={assignProject}
+  />
 </Modal>
 
 <style>

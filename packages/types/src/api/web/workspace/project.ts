@@ -61,11 +61,21 @@ export interface UpdateProjectAssignmentRequest {
   dependencyFingerprint: string
 }
 
+export interface ProjectAssignmentResult {
+  assignedDependencyIds: string[]
+  failedDependencyIds: string[]
+}
+
+export interface ProjectAssignmentResponse {
+  projectAssignment?: ProjectAssignmentResult
+}
+
 export interface UpdateProjectAssignmentResponse {
   resourceId: string
   resourceRev: string
   projectIds: string[]
   assignedDependencyIds: string[]
+  failedDependencyIds: string[]
 }
 
 export interface ExportProjectRequest {

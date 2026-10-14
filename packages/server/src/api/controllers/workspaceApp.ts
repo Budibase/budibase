@@ -13,7 +13,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
-import { withProjectPropagationWarning } from "../../utilities/projects"
+import { projectAssignmentResult } from "../../utilities/projects"
 
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
@@ -95,17 +95,17 @@ async function createUnlocked(
   }
 
   const workspaceApp = await sdk.workspaceApps.create(newWorkspaceApp)
-  await withProjectPropagationWarning({
-    ctx,
-    propagation: sdk.projects.propagateProjectDependencyChanges({
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectDependencyChanges({
       rootResourceId: workspaceApp._id!,
       currentProjectIds: workspaceApp.projectIds,
       previousProjectIds: [],
       savedResource: workspaceApp,
-    }),
-  })
+    })
+  )
   ctx.status = 201
   ctx.body = {
+    projectAssignment,
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }
 }
@@ -151,17 +151,17 @@ async function editUnlocked(
       ? { customTheme: body.customTheme }
       : {}),
   })
-  await withProjectPropagationWarning({
-    ctx,
-    propagation: sdk.projects.propagateProjectDependencyChanges({
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectDependencyChanges({
       rootResourceId: workspaceApp._id!,
       currentProjectIds: workspaceApp.projectIds,
       previousProjectIds: existingWorkspaceApp.projectIds,
       previousResource: existingWorkspaceApp,
       savedResource: workspaceApp,
-    }),
-  })
+    })
+  )
   ctx.body = {
+    projectAssignment,
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }
 }
