@@ -4,10 +4,12 @@ import {
   RelationshipType,
   SearchFilters,
   Table,
+  TableSourceType,
 } from "@budibase/types"
 import _ from "lodash"
 import { structures } from "../../../../api/routes/tests/utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import sdk from "../../.."
 import {
   findInvalidFilterFields,
   getQueryableFields,
@@ -284,6 +286,85 @@ describe("query utils", () => {
         "other",
       ])
     })
+
+    it.each([
+      {
+        name: "internal table",
+        sourceType: TableSourceType.INTERNAL,
+        primary: undefined,
+        relatedIds: ["person._id", "persons._id"],
+      },
+      {
+        name: "external table with a single primary key",
+        sourceType: TableSourceType.EXTERNAL,
+        primary: ["person_id"],
+        relatedIds: ["person._id", "persons._id"],
+      },
+      {
+        name: "external table with a composite primary key",
+        sourceType: TableSourceType.EXTERNAL,
+        primary: ["person_id", "tenant_id"],
+        relatedIds: [],
+      },
+      {
+        name: "external table with no primary key metadata",
+        sourceType: TableSourceType.EXTERNAL,
+        primary: undefined,
+        relatedIds: [],
+      },
+      {
+        name: "external table with an empty primary key",
+        sourceType: TableSourceType.EXTERNAL,
+        primary: [],
+        relatedIds: [],
+      },
+    ])(
+      "returns queryable relationship fields for an $name",
+      async ({ sourceType, primary, relatedIds }) => {
+        const relatedTable: Table = {
+          ...structures.basicTable(),
+          _id: "ta_persons",
+          name: "persons",
+          sourceType,
+          primary,
+          schema: {
+            person_id: { name: "person_id", type: FieldType.STRING },
+            tenant_id: { name: "tenant_id", type: FieldType.STRING },
+          },
+        }
+        const table: Table = {
+          ...structures.basicTable(),
+          schema: {
+            person: {
+              name: "person",
+              type: FieldType.LINK,
+              tableId: relatedTable._id!,
+              relationshipType: RelationshipType.MANY_TO_ONE,
+              fieldName: "profiles",
+            },
+          },
+        }
+        const getTable = jest
+          .spyOn(sdk.tables, "getTable")
+          .mockResolvedValue(relatedTable)
+
+        try {
+          const result = await getQueryableFields(table)
+
+          expect(result).toEqual([
+            "_id",
+            "person",
+            ...relatedIds,
+            "person.person_id",
+            "persons.person_id",
+            "person.tenant_id",
+            "persons.tenant_id",
+          ])
+        } finally {
+          getTable.mockRestore()
+        }
+      }
+    )
 
     it("excludes hidden relationship fields", async () => {
       const aux: Table = await config.api.table.save({
