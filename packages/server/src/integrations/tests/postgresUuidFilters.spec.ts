@@ -226,6 +226,7 @@ if (descriptions.length) {
             query: { [operator]: { "person.created_at": value } },
             countRows: true,
             paginate: true,
+            limit: 10,
           })
 
           expect(result.rows.map(row => row.candidate_profile_id)).toEqual([
