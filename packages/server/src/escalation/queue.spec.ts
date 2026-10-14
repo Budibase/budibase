@@ -791,6 +791,7 @@ describe("processNotify", () => {
   const config = new TestConfiguration()
   const sendSlackMock = slack.sendSlackNotification as jest.Mock
   const sendTeamsMock = teams.sendMSTeamsNotification as jest.Mock
+  let addJobSpy: jest.SpyInstance
 
   const seedPending = async (recipient: EscalationRecipient) => {
     const escalationId = `esc_${Date.now()}`
@@ -828,7 +829,14 @@ describe("processNotify", () => {
   beforeEach(async () => {
     sendSlackMock.mockReset()
     sendTeamsMock.mockReset()
+    // Resume scheduling is covered separately; outcome tests invoke notify directly.
+    addJobSpy = jest.spyOn(getQueue(), "add")
+    addJobSpy.mockResolvedValue({ id: "notification-test" })
     await config.newTenant()
+  })
+
+  afterEach(() => {
+    addJobSpy.mockRestore()
   })
 
   afterAll(() => {
