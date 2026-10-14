@@ -236,26 +236,31 @@ class InternalBuilder {
   }
 
   getFieldSchema(key: string): FieldSchema | undefined {
-    key = dbCore.removeKeyNumbering(key)
+    const { column } = this.splitter.run(key)
+    return this.table.schema[column]
+  }
+
+  private isPostgresUuidField(key: string): boolean {
+    if (this.client !== SqlClient.POSTGRES) {
+      return false
+    }
+
     const { tableName, column } = this.splitter.run(key)
     if (tableName) {
-      return this.query.tables[tableName]?.schema[column]
+      return this.SPECIAL_SELECT_CASES.POSTGRES_UUID(
+        this.query.tables[tableName]?.schema[column]
+      )
     }
-    for (const table of Object.values(this.query.tables)) {
-      const prefix = `${table.name}.`
-      if (key.startsWith(prefix)) {
-        const { column } = this.splitter.run(key.slice(prefix.length))
-        return table.schema[column]
-      }
+
+    const table = Object.values(this.query.tables).find(table =>
+      key.startsWith(`${table.name}.`)
+    )
+    if (table) {
+      const { column } = this.splitter.run(key.slice(table.name.length + 1))
+      return this.SPECIAL_SELECT_CASES.POSTGRES_UUID(table.schema[column])
     }
-    for (const relationship of this.query.relationships || []) {
-      const prefix = `${relationship.column}.`
-      if (key.startsWith(prefix)) {
-        const { column } = this.splitter.run(key.slice(prefix.length))
-        return this.query.tables[relationship.tableName]?.schema[column]
-      }
-    }
-    return this.table.schema[column]
+
+    return this.SPECIAL_SELECT_CASES.POSTGRES_UUID(this.getFieldSchema(key))
   }
 
   private requiresJsonAsStringClient(): boolean {
@@ -539,7 +544,8 @@ class InternalBuilder {
           filter[key] = JSON.stringify(filter[key])
           continue
         }
-        const schema = this.getFieldSchema(key)
+        const { column } = this.splitter.run(key)
+        const schema = this.table.schema[column]
         if (!schema) {
           continue
         }
@@ -553,7 +559,8 @@ class InternalBuilder {
         continue
       }
       for (const key of Object.keys(filter)) {
-        const schema = this.getFieldSchema(key)
+        const { column } = this.splitter.run(key)
+        const schema = this.table.schema[column]
         if (!schema) {
           continue
         }
@@ -567,7 +574,8 @@ class InternalBuilder {
         continue
       }
       for (const key of Object.keys(filter)) {
-        const schema = this.getFieldSchema(key)
+        const { column } = this.splitter.run(key)
+        const schema = this.table.schema[column]
         if (!schema) {
           continue
         }
@@ -852,7 +860,7 @@ class InternalBuilder {
           `%${value.toLowerCase()}%`,
         ])
       }
-      if (this.SPECIAL_SELECT_CASES.POSTGRES_UUID(this.getFieldSchema(key))) {
+      if (this.isPostgresUuidField(key)) {
         return q.whereRaw(`??::text ilike ?`, [
           this.rawQuotedIdentifier(key),
           `%${value}%`,
@@ -1098,14 +1106,16 @@ class InternalBuilder {
             this.rawQuotedIdentifier(key),
             `${value.toLowerCase()}%`,
           ])
+        } else if (this.isPostgresUuidField(key)) {
+          return q.whereRaw(`??::text ilike ?`, [
+            this.rawQuotedIdentifier(key),
+            `${value}%`,
+          ])
         } else {
           const schema = this.getFieldSchema(key)
-          if (
-            this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema) ||
-            this.SPECIAL_SELECT_CASES.POSTGRES_UUID(schema)
-          ) {
+          if (this.SPECIAL_SELECT_CASES.POSTGRES_ENUM(schema)) {
             return q.whereRaw(`??::text ilike ?`, [
-              this.rawQuotedIdentifier(key),
+              this.knex.raw(this.quote(schema!.name)),
               `${value}%`,
             ])
           } else {

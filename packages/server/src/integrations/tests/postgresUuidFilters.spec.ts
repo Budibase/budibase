@@ -30,6 +30,7 @@ if (descriptions.length) {
 
         await client.schema.createTable(personTableName, table => {
           table.uuid("person_id").primary()
+          table.timestamp("created_at", { useTz: true })
         })
         await client.schema.createTable(profileTableName, table => {
           table.uuid("candidate_profile_id").primary()
@@ -39,8 +40,8 @@ if (descriptions.length) {
             .inTable(personTableName)
         })
         await client(personTableName).insert([
-          { person_id: personId },
-          { person_id: otherPersonId },
+          { person_id: personId, created_at: "2026-10-15T00:00:00Z" },
+          { person_id: otherPersonId, created_at: "2026-01-01T00:00:00Z" },
         ])
         await client(profileTableName).insert([
           { candidate_profile_id: profileId, person_id: personId },
@@ -189,6 +190,34 @@ if (descriptions.length) {
           profileId,
         ])
       })
+
+      it.each([
+        {
+          operator: "equal",
+          value: "2026-10-15T00:00:00+00:00",
+        },
+        {
+          operator: "oneOf",
+          value: ["2026-10-15T00:00:00+00:00"],
+        },
+        {
+          operator: "range",
+          value: { low: "2026-10-14T00:00:00+00:00" },
+        },
+      ])(
+        "preserves related timestamp offsets in $operator filters",
+        async ({ operator, value }) => {
+          const result = await config.api.row.search(profiles._id!, {
+            query: { [operator]: { "person.created_at": value } },
+            countRows: true,
+          })
+
+          expect(result.rows.map(row => row.candidate_profile_id)).toEqual([
+            profileId,
+          ])
+          expect(result.totalRows).toBe(1)
+        }
+      )
 
       it.each(["string", "fuzzy"] as const)(
         "supports %s searches on native UUID columns",

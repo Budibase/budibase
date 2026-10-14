@@ -185,9 +185,14 @@ describe("SQL filter parameterization", () => {
     expect(result.bindings?.[0]).toBe(value)
   })
 
-  it.each(["string", "fuzzy"] as const)(
-    "uses the related table schema for UUID %s filters",
-    operator => {
+  it.each([
+    { operator: "string", aliased: true },
+    { operator: "fuzzy", aliased: true },
+    { operator: "string", aliased: false },
+    { operator: "fuzzy", aliased: false },
+  ])(
+    "uses the related table schema for UUID $operator filters with aliases=$aliased",
+    ({ operator, aliased }) => {
       const table = buildTable({
         person_id: {
           name: "person_id",
@@ -211,14 +216,17 @@ describe("SQL filter parameterization", () => {
         [operator]: { "person.person_id": "F69D" },
       })
       query.tables.persons = relatedTable
-      query.tableAliases = { tbl: "a", persons: "b" }
+      if (aliased) {
+        query.tableAliases = { tbl: "a", persons: "b" }
+      }
       query.relationships = [
         { tableName: "persons", column: "person", from: "id", to: "id" },
       ]
 
       const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
 
-      expect(result.sql).toContain('"b"."person_id"::text ilike $1')
+      const tableName = aliased ? "b" : "persons"
+      expect(result.sql).toContain(`"${tableName}"."person_id"::text ilike $1`)
       expect(result.bindings?.[0]).toEqual(
         operator === "string" ? "F69D%" : "%F69D%"
       )
@@ -262,22 +270,76 @@ describe("SQL filter parameterization", () => {
     }
   )
 
+  it.each([
+    {
+      operator: "equal",
+      value: "2026-10-15T00:00:00+00:00",
+      sql: '"b"."occurred" = $1',
+      bindings: ["2026-10-15T00:00:00+00:00"],
+    },
+    {
+      operator: "oneOf",
+      value: ["2026-10-15T00:00:00+00:00"],
+      sql: '"b"."occurred" in ($1)',
+      bindings: ["2026-10-15T00:00:00+00:00"],
+    },
+    {
+      operator: "range",
+      value: { low: "2026-10-14T00:00:00+00:00" },
+      sql: '"b"."occurred" >= $1',
+      bindings: ["2026-10-14T00:00:00+00:00"],
+    },
+  ])("preserves related timestamp offsets in $operator filters", testCase => {
+    const table = buildTable({})
+    const relatedTable: Table = {
+      ...table,
+      _id: "events",
+      name: "events",
+      schema: {
+        id: idField,
+        occurred: {
+          name: "occurred",
+          type: FieldType.DATETIME,
+          externalType: "timestamp with time zone",
+          constraints: baseConstraints,
+        },
+      },
+    }
+    const query = buildQuery(table, {
+      $and: {
+        conditions: [
+          { [testCase.operator]: { "1:event.occurred": testCase.value } },
+        ],
+      },
+    })
+    query.tables.events = relatedTable
+    query.tableAliases = { tbl: "a", events: "b" }
+    query.relationships = [
+      { tableName: "events", column: "event", from: "id", to: "id" },
+    ]
+
+    const result = new Sql(SqlClient.POSTGRES)._query(query) as SqlQuery
+
+    expect(result.sql).toContain(testCase.sql)
+    expect(result.bindings).toEqual([...testCase.bindings, 25])
+  })
+
   describe.each(["rel", "related", "b", "1:rel"])(
     "related date-only filters using %s",
     prefix => {
       const date = "2026-10-14T00:00:00.000Z"
 
       it.each([
-        { operator: "equal", value: date, bindings: ["2026-10-14%"] },
-        { operator: "notEqual", value: date, bindings: ["2026-10-14%"] },
-        { operator: "oneOf", value: [date], bindings: ["2026-10-14%"] },
-        { operator: "notOneOf", value: [date], bindings: ["2026-10-14%"] },
+        { operator: "equal", value: date, bindings: [date] },
+        { operator: "notEqual", value: date, bindings: [date] },
+        { operator: "oneOf", value: [date], bindings: [date] },
+        { operator: "notOneOf", value: [date], bindings: [date] },
         {
           operator: "range",
           value: { low: date, high: date },
-          bindings: ["2026-10-14", "2026-10-14T23:59:59.999Z"],
+          bindings: [date, date],
         },
-      ])("parses $operator values with the related schema", testCase => {
+      ])("preserves existing $operator value parsing", testCase => {
         const table = {
           ...buildTable({
             birthday: {
