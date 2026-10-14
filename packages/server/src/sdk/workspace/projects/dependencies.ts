@@ -32,9 +32,10 @@ import {
 
 const MAX_PROPAGATION_RETRIES = 3
 
-export type ProjectPropagationOutcome =
+export type ProjectPropagationOutcome = (
   | { status: "complete" }
   | { status: "incomplete"; resourceIds: string[] }
+) & { assignedResourceIds?: string[] }
 
 interface ProjectDependencyPreviewInput {
   resourceId: string
@@ -71,9 +72,11 @@ export interface CreatedResourceDependencyPropagationInput {
 const incompletePropagation = ({
   resourceIds,
   error,
+  assignedResourceIds = [],
 }: {
   resourceIds: Iterable<string>
   error: unknown
+  assignedResourceIds?: Iterable<string>
 }): ProjectPropagationOutcome => {
   const failedResourceIds = Array.from(new Set(resourceIds)).sort()
   console.log(
@@ -84,6 +87,7 @@ const incompletePropagation = ({
   return {
     status: "incomplete",
     resourceIds: failedResourceIds,
+    assignedResourceIds: Array.from(assignedResourceIds),
   }
 }
 
@@ -233,7 +237,7 @@ const collectAssignableDependencyIds = ({
   return Array.from(ids).sort(compareResourceIds)
 }
 
-const getNewDirectDependencyIds = ({
+const getNewDependencyIds = ({
   analysis,
   rootResourceId,
   previousResource,
@@ -244,21 +248,29 @@ const getNewDirectDependencyIds = ({
   previousResource?: AnyDocument
   savedResource: AnyDocument
 }) => {
-  const { findReferencedResources } = analysis
-  const previousDependencyIds = new Set(
-    previousResource
+  const { graph, findReferencedResources } = analysis
+  const blockedResourceIds = [rootResourceId]
+  if (savedResource._id) {
+    blockedResourceIds.push(savedResource._id)
+  }
+  const previousDependencyIds = collectAssignableDependencyIds({
+    graph,
+    blockedResourceIds,
+    includeRoots: true,
+    resourceIds: previousResource
       ? findReferencedResources(previousResource).map(resource => resource.id)
-      : []
-  )
+      : [],
+  })
 
-  return findReferencedResources(savedResource)
-    .filter(
-      dependency =>
-        dependency.id !== rootResourceId &&
-        dependency.id !== savedResource._id &&
-        !previousDependencyIds.has(dependency.id)
-    )
-    .map(dependency => dependency.id)
+  // A new path to an existing dependency must preserve its prior exclusion.
+  return collectAssignableDependencyIds({
+    graph,
+    blockedResourceIds: [...blockedResourceIds, ...previousDependencyIds],
+    includeRoots: true,
+    resourceIds: findReferencedResources(savedResource).map(
+      resource => resource.id
+    ),
+  })
 }
 
 const mergePropagationOutcomes = (
@@ -267,12 +279,16 @@ const mergePropagationOutcomes = (
   const failedResourceIds = outcomes.flatMap(outcome =>
     outcome.status === "incomplete" ? outcome.resourceIds : []
   )
+  const assignedResourceIds = Array.from(
+    new Set(outcomes.flatMap(outcome => outcome.assignedResourceIds || []))
+  ).filter(id => !failedResourceIds.includes(id))
   return failedResourceIds.length
     ? {
         status: "incomplete",
         resourceIds: Array.from(new Set(failedResourceIds)),
+        assignedResourceIds,
       }
-    : { status: "complete" }
+    : { status: "complete", assignedResourceIds }
 }
 
 export const propagateProjectIdsToDependencyIds = async ({
@@ -286,6 +302,7 @@ export const propagateProjectIdsToDependencyIds = async ({
 
   let idsToUpdate = uniqueDependencyIds
   const failedIds = new Set<string>()
+  const assignedIds = new Set<string>()
 
   try {
     const db = context.getWorkspaceDB()
@@ -306,9 +323,11 @@ export const propagateProjectIdsToDependencyIds = async ({
       const updates = docs.flatMap(doc => {
         const existing = getProjectIds(doc)
         const next = unionProjectIds(existing, projectIds)
-        return (next?.length || 0) !== existing.length
-          ? [withProjectIds(doc, next)]
-          : []
+        if ((next?.length || 0) !== existing.length) {
+          return [withProjectIds(doc, next)]
+        }
+        assignedIds.add(doc._id!)
+        return []
       })
 
       if (!updates.length) {
@@ -317,6 +336,9 @@ export const propagateProjectIdsToDependencyIds = async ({
       }
 
       const results = await db.bulkDocs(updates)
+      results.forEach((result, index) => {
+        if (!result.error) assignedIds.add(updates[index]._id!)
+      })
       const failures = results
         .map((result, index) => ({ result, doc: updates[index] }))
         .filter(({ result }) => result.error)
@@ -333,7 +355,10 @@ export const propagateProjectIdsToDependencyIds = async ({
     }
   } catch (error) {
     return incompletePropagation({
-      resourceIds: [...failedIds, ...idsToUpdate],
+      resourceIds: [...failedIds, ...idsToUpdate].filter(
+        id => !assignedIds.has(id)
+      ),
+      assignedResourceIds: assignedIds,
       error,
     })
   }
@@ -342,11 +367,12 @@ export const propagateProjectIdsToDependencyIds = async ({
   if (failedIds.size) {
     return incompletePropagation({
       resourceIds: failedIds,
+      assignedResourceIds: assignedIds,
       error: new Error("Project dependency assignment did not complete."),
     })
   }
 
-  return { status: "complete" }
+  return { status: "complete", assignedResourceIds: Array.from(assignedIds) }
 }
 
 export const propagateProjectIdsToDependencySubtrees = async ({
@@ -398,19 +424,14 @@ export const propagateCreatedResourceDependencies = async ({
       includeDatasourceQueries: true,
     })
     const dependencyIds = savedResources.flatMap(savedResource =>
-      getNewDirectDependencyIds({
+      getNewDependencyIds({
         analysis,
         rootResourceId,
         savedResource,
       })
     )
     return await propagateProjectIdsToDependencyIds({
-      dependencyIds: collectAssignableDependencyIds({
-        blockedResourceIds: [rootResourceId],
-        graph: analysis.graph,
-        includeRoots: true,
-        resourceIds: dependencyIds,
-      }),
+      dependencyIds,
       projectIds,
     })
   } catch (error) {
@@ -434,19 +455,14 @@ const propagateNewResourceDependencies = async ({
   if (!projectIds.length) {
     return { status: "complete" }
   }
-  const dependencyIds = getNewDirectDependencyIds({
+  const dependencyIds = getNewDependencyIds({
     analysis,
     rootResourceId,
     previousResource,
     savedResource,
   })
   return await propagateProjectIdsToDependencyIds({
-    dependencyIds: collectAssignableDependencyIds({
-      blockedResourceIds: [rootResourceId],
-      graph: analysis.graph,
-      includeRoots: true,
-      resourceIds: dependencyIds,
-    }),
+    dependencyIds,
     projectIds,
   })
 }

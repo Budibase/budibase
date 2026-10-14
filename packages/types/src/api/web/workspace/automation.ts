@@ -1,3 +1,4 @@
+import type { ProjectAssignmentResponse } from "./project"
 import { AutomationJob } from "../../../sdk/automations"
 import {
   Automation,
@@ -42,13 +43,13 @@ interface AutomationWriteRequest extends Automation {
 }
 
 export interface UpdateAutomationRequest extends AutomationWriteRequest {}
-export interface UpdateAutomationResponse {
+export interface UpdateAutomationResponse extends ProjectAssignmentResponse {
   message: string
   automation: Automation
 }
 
 export interface CreateAutomationRequest extends AutomationWriteRequest {}
-export interface CreateAutomationResponse {
+export interface CreateAutomationResponse extends ProjectAssignmentResponse {
   message: string
   automation: Automation
 }
