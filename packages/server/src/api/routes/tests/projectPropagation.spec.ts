@@ -14,6 +14,7 @@ import {
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import sdk from "../../../sdk"
+import { withPublishLock } from "../../controllers/deploy"
 import * as projectLock from "../../../sdk/workspace/projects/lock"
 import { getQueryToolBindingsForResource } from "../../../sdk/workspace/ai/agents/queryToolReferences"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -680,6 +681,110 @@ describe("project dependency propagation", () => {
         })
       }
     )
+
+    it("rejects an import before changing its table while publishing holds the lock", async () => {
+      await withProjectsEnabled(async () => {
+        const table = await config.api.table.save(basicTable())
+        await config.doInContext(config.getDevWorkspaceId(), () =>
+          withPublishLock(() =>
+            config.api.table.save(
+              {
+                ...table,
+                name: "Should not save",
+                rows: [{ name: "New row" }],
+              },
+              { status: 429 }
+            )
+          )
+        )
+        expect((await config.api.table.get(table._id!)).name).toBe(table.name)
+        expect(await config.api.row.fetch(table._id!)).toEqual([])
+      })
+    })
+
+    it("preserves an imported value when publishing would clear a concurrent rename", async () => {
+      await withProjectsEnabled(async () => {
+        const definition = basicTable()
+        definition.schema.description = {
+          name: "description",
+          type: FieldType.OPTIONS,
+          constraints: { inclusion: ["old"] },
+        }
+        const original = await config.api.table.save(definition)
+        const { description, ...schema } = original.schema
+        const table = await config.api.table.save({
+          ...original,
+          _rename: { old: "description", updated: "notes" },
+          schema: { ...schema, notes: { ...description, name: "notes" } },
+        })
+        expect(table.pendingColumnRenames).toHaveLength(1)
+
+        let importStarted!: () => void
+        let releaseImport!: () => void
+        const ready = new Promise<void>(resolve => (importStarted = resolve))
+        const pending = new Promise<void>(resolve => (releaseImport = resolve))
+        const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
+        let importedRowId: string | undefined
+        let paused = false
+        const bulkDocs = jest
+          .spyOn(DatabaseImpl.prototype, "bulkDocs")
+          .mockImplementation(async function (this: DatabaseImpl, docs) {
+            const row = docs.find(
+              doc => doc.type === "row" && doc.name === "Imported row"
+            )
+            if (row && !paused) {
+              paused = true
+              importedRowId = row._id
+              importStarted()
+              await pending
+            }
+            return originalBulkDocs.call(this, docs)
+          })
+        const saving = config.api.table.save({
+          ...table,
+          rows: [{ name: "Imported row", notes: "Keep on rename" }],
+        })
+        try {
+          await helpers.withTimeout(5000, () => ready)
+          const current = await config.api.table.get(table._id!)
+          const { notes, ...currentSchema } = current.schema
+          await config.api.table.save({
+            ...current,
+            _rename: { old: "notes", updated: "summary" },
+            schema: {
+              ...currentSchema,
+              summary: { ...notes, name: "summary" },
+            },
+          })
+          await config.api.workspace.publish(config.getDevWorkspaceId(), {
+            status: 429,
+          })
+          const unpublished = await config.api.table.get(table._id!)
+          expect(unpublished.pendingColumnRenames).toHaveLength(2)
+        } finally {
+          releaseImport()
+          await saving.finally(() => bulkDocs.mockRestore())
+        }
+
+        const saved = await saving
+        expect(saved.schema.summary.constraints?.inclusion).toEqual([
+          "Keep on rename",
+          "old",
+        ])
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const persisted = await context
+            .getWorkspaceDB()
+            .get<Row>(importedRowId!)
+          expect(persisted.summary).toBe("Keep on rename")
+          expect(persisted.notes).toBeUndefined()
+          expect(persisted.description).toBeUndefined()
+        })
+        await config.api.workspace.publish(config.getDevWorkspaceId())
+        expect(
+          (await config.api.table.get(table._id!)).pendingColumnRenames
+        ).toEqual([])
+      })
+    })
 
     it("rejects malformed datasource entities before schema discovery", async () => {
       const prepare = jest
