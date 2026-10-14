@@ -686,8 +686,8 @@ describe("project dependency propagation", () => {
       await withProjectsEnabled(async () => {
         const table = await config.api.table.save(basicTable())
         await config.doInContext(config.getDevWorkspaceId(), () =>
-          withPublishLock(() =>
-            config.api.table.save(
+          withPublishLock(async () => {
+            await config.api.table.save(
               {
                 ...table,
                 name: "Should not save",
@@ -695,7 +695,12 @@ describe("project dependency propagation", () => {
               },
               { status: 429 }
             )
-          )
+            const emptyTable = await config.api.table.save({
+              ...basicTable(),
+              rows: [],
+            })
+            expect(emptyTable._id).toBeDefined()
+          })
         )
         expect((await config.api.table.get(table._id!)).name).toBe(table.name)
         expect(await config.api.row.fetch(table._id!)).toEqual([])

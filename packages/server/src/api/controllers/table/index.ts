@@ -348,7 +348,7 @@ const importTableRows = async ({
 }
 
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
-  if (ctx.request.body.rows && !isExternalTable(ctx.request.body)) {
+  if (ctx.request.body.rows?.length && !isExternalTable(ctx.request.body)) {
     // Publishing clears the rename metadata needed by an in-flight row import.
     // Acquire its guard before either the table definition or rows are written.
     return await withPublishLock(() => saveTable(ctx))
