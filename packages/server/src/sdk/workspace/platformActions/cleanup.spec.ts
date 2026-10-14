@@ -362,6 +362,89 @@ describe("platformActions cleanup", () => {
     expect(await getStored()).toEqual({ sessions: [], events: [] })
   })
 
+  it("continues past protected candidates across bounded scans", async () => {
+    for (const sourceId of ["protected-a", "protected-b", "protected-c"]) {
+      await createSession({ sourceId, daysAgo: 50 })
+      await addEvent({ sourceId, daysAgo: 0 })
+    }
+    await createSession({ sourceId: "expired", daysAgo: 40 })
+
+    await withContext(() => clearOldHistory({ scanLimit: 2 }))
+    const first = await getStored()
+    await withContext(() => clearOldHistory({ scanLimit: 2 }))
+    const second = await getStored()
+
+    expect(first.sessions).toContain("expired")
+    expect(second).toEqual({
+      sessions: ["protected-a", "protected-b", "protected-c"],
+      events: [
+        "protected-a",
+        "protected-a",
+        "protected-b",
+        "protected-b",
+        "protected-c",
+        "protected-c",
+      ],
+    })
+  })
+
+  it("restarts the cursor when the retention quota changes", async () => {
+    await createSession({ sourceId: "protected", daysAgo: 50 })
+    await addEvent({ sourceId: "protected", daysAgo: 20 })
+    await withContext(() => clearOldHistory({ scanLimit: 1 }))
+
+    mocks.licenses.setPlatformActionsRetentionQuota(7)
+    await withContext(() => clearOldHistory({ scanLimit: 1 }))
+
+    expect(await getStored()).toEqual({ sessions: [], events: [] })
+  })
+
+  it("continues after a deleted cursor with equal timestamps across statuses", async () => {
+    const now = new Date()
+    for (const sourceId of ["a", "b", "c"]) {
+      tk.freeze(now)
+      await createSession({
+        sourceId,
+        daysAgo: 40,
+        status: sourceId === "b" ? "failed" : "completed",
+      })
+    }
+
+    await clear(2)
+    await clear(2)
+
+    expect(await getStored()).toEqual({ sessions: ["c"], events: ["c"] })
+  })
+
+  it("pages past a full protected candidate page within one run", async () => {
+    for (let index = 0; index < 100; index++) {
+      const sourceId = `protected-${index}`
+      await createSession({ sourceId, daysAgo: 50 })
+      await addEvent({ sourceId, daysAgo: 0 })
+    }
+    await createSession({ sourceId: "expired", daysAgo: 40 })
+
+    await clear()
+
+    const stored = await getStored()
+    expect(stored.sessions).toHaveLength(100)
+    expect(stored.events).toHaveLength(200)
+    expect(stored.sessions).not.toContain("expired")
+    expect(stored.events).not.toContain("expired")
+  })
+
+  it("restarts a completed scan to revisit protected sessions", async () => {
+    await createSession({ sourceId: "protected", daysAgo: 50 })
+    await addEvent({ sourceId: "protected", daysAgo: 0 })
+    await withContext(() => clearOldHistory({ scanLimit: 1 }))
+    await withContext(() => clearOldHistory({ scanLimit: 1 }))
+
+    tk.freeze(new Date(Date.now() + 31 * ONE_DAY_MILLIS))
+    await withContext(() => clearOldHistory({ scanLimit: 1 }))
+
+    expect(await getStored()).toEqual({ sessions: [], events: [] })
+  })
+
   it("keeps an old session that only just became terminal", async () => {
     await createSession({ sourceId: "long-run", daysAgo: 60, status: "active" })
     await setStatus({ sourceId: "long-run", status: "completed" })

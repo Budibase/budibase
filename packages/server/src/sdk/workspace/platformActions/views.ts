@@ -531,25 +531,33 @@ export const querySessionsStatusCounts = async ({
 
 // retention - expired terminal sessions, oldest first, across environments
 
+export interface ExpiredSessionCursor {
+  updatedAt: string
+  id: string
+}
+
 export const queryExpiredSessions = async ({
   workspaceDb,
   cutoff,
   limit,
+  after,
 }: {
   workspaceDb: Database
   cutoff: string
   limit: number
+  after?: ExpiredSessionCursor
 }): Promise<PlatformActionSessionIndexDoc[]> => {
   const pages = await Promise.all(
     EXPIRABLE_STATUSES.map(status =>
       db.queryViewRaw<PlatformActionSessionIndexDoc>(
         ViewName.PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT,
         {
-          startkey: [status],
+          startkey: after ? [status, after.updatedAt] : [status],
+          ...(after ? { startkey_docid: after.id } : {}),
           endkey: [status, cutoff],
           reduce: false,
           include_docs: true,
-          limit,
+          limit: limit + 1,
         },
         workspaceDb,
         () => createSessionsByStatusAndUpdatedAtView(workspaceDb)
@@ -559,7 +567,17 @@ export const queryExpiredSessions = async ({
   return pages
     .flatMap(page => page.rows.map(row => row.doc!))
     .filter(session => isExpiredSession({ session, cutoff }))
-    .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
+    .filter(
+      session =>
+        !after ||
+        session.updatedAt > after.updatedAt ||
+        (session.updatedAt === after.updatedAt && session._id! > after.id)
+    )
+    .sort((a, b) => {
+      const byDate = a.updatedAt.localeCompare(b.updatedAt)
+      if (byDate || a._id === b._id) return byDate
+      return a._id! < b._id! ? -1 : 1
+    })
     .slice(0, limit)
 }
 

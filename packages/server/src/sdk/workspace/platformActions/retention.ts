@@ -14,7 +14,7 @@ export const EXPIRABLE_STATUSES: readonly PlatformActionContainerStatus[] = [
 
 // Undefined means nothing expires. A missing quota is expected for licenses
 // issued before the quota existed.
-export async function getRetentionCutoff(): Promise<string | undefined> {
+export async function getRetentionDays(): Promise<number | undefined> {
   const license = await licensing.cache.getCachedLicense()
   const retentionDays =
     license.quotas?.constant?.[
@@ -33,7 +33,14 @@ export async function getRetentionCutoff(): Promise<string | undefined> {
     )
   }
 
-  return new Date(Date.now() - ONE_DAY_MILLIS * retentionDays).toISOString()
+  return retentionDays
+}
+
+export async function getRetentionCutoff(): Promise<string | undefined> {
+  const retentionDays = await getRetentionDays()
+  return retentionDays === undefined
+    ? undefined
+    : new Date(Date.now() - ONE_DAY_MILLIS * retentionDays).toISOString()
 }
 
 export function isExpiredSession({

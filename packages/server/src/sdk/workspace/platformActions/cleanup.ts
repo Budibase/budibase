@@ -1,10 +1,11 @@
-import { context, events } from "@budibase/backend-core"
+import { cache, context, events } from "@budibase/backend-core"
 import type {
   Database,
   Document,
   PlatformActionSessionChange,
 } from "@budibase/types"
-import { EXPIRABLE_STATUSES, getRetentionCutoff } from "./retention"
+import { EXPIRABLE_STATUSES, getRetentionDays } from "./retention"
+import type { ExpiredSessionCursor } from "./views"
 import {
   hasRecentEvents,
   queryEventsTotal,
@@ -13,6 +14,12 @@ import {
 } from "./views"
 
 export const CLEANUP_BATCH_SIZE = 100
+export const CLEANUP_SCAN_LIMIT = 500
+const ONE_DAY_MILLIS = 86400000
+
+interface CleanupCursor extends ExpiredSessionCursor {
+  retentionDays: number
+}
 
 async function deleteDocs({
   workspaceDb,
@@ -40,14 +47,24 @@ async function deleteDocs({
 // that stays hidden and is picked up again by the next run. Deletion runs
 // under the Actions workspace write lock, so no event or session index write
 // interleaves with it, and does nothing for a deleted workspace.
+// Candidate scans are bounded separately; the tenant-scoped cursor
+// lets later runs advance past protected sessions without an unbounded lock.
 export async function clearOldHistory({
   batchSize = CLEANUP_BATCH_SIZE,
-}: { batchSize?: number } = {}): Promise<void> {
+  scanLimit = CLEANUP_SCAN_LIMIT,
+}: { batchSize?: number; scanLimit?: number } = {}): Promise<void> {
   try {
-    const cutoff = await getRetentionCutoff()
-    if (cutoff === undefined) {
+    const retentionDays = await getRetentionDays()
+    const cacheKey = `platform-actions-cleanup:${events.platformActions.getActionsDbName(context.getWorkspaceId()!)}`
+    if (retentionDays === undefined) {
+      await events.platformActions.doWithExistingActionsWorkspace(() =>
+        cache.destroy(cacheKey)
+      )
       return
     }
+    const cutoff = new Date(
+      Date.now() - retentionDays * ONE_DAY_MILLIS
+    ).toISOString()
     const workspaceDb = events.platformActions.getActionsDB()
     // Querying a view would create the database
     if (!(await workspaceDb.exists())) {
@@ -73,53 +90,78 @@ export async function clearOldHistory({
 
     await events.platformActions.doWithExistingActionsWorkspace(async () => {
       let budget = batchSize
-      const sessions = await queryExpiredSessions({
-        workspaceDb,
-        cutoff,
-        limit: budget,
-      })
-      for (const session of sessions) {
-        if (budget <= 0) {
-          return
+      const saved: CleanupCursor | null = await cache.get(cacheKey)
+      let after: ExpiredSessionCursor | undefined =
+        saved?.retentionDays === retentionDays ? saved : undefined
+      let scanned = 0
+      let finished = false
+      while (scanned < scanLimit && budget > 0) {
+        const limit = Math.min(CLEANUP_BATCH_SIZE, scanLimit - scanned)
+        const sessions = await queryExpiredSessions({
+          workspaceDb,
+          cutoff,
+          limit,
+          after,
+        })
+        if (sessions.length === 0) {
+          finished = true
+          break
         }
-        const { environment, sourceType, sourceId } = session
-        // A new event can be persisted before its index job runs. Keep the
-        // entire history until that job updates the session and its count.
-        if (
-          await hasRecentEvents({
+        for (const session of sessions) {
+          scanned++
+          const { environment, sourceType, sourceId } = session
+          // A new event can be persisted before its index job runs. Keep the
+          // entire history until that job updates the session and its count.
+          if (
+            await hasRecentEvents({
+              workspaceDb,
+              environment,
+              sourceType,
+              sourceId,
+              cutoff,
+            })
+          ) {
+            after = { updatedAt: session.updatedAt, id: session._id! }
+            continue
+          }
+          const expiredEvents = await queryExpiredEvents({
             workspaceDb,
             environment,
             sourceType,
             sourceId,
             cutoff,
+            limit: budget,
           })
-        ) {
-          continue
+          await deleteDocs({ workspaceDb, docs: expiredEvents })
+          budget -= expiredEvents.length
+          if (budget <= 0) {
+            // Resume this session next time: its index still needs cleanup.
+            break
+          }
+          // Keep the index if some events failed to delete.
+          const remaining = await queryEventsTotal({
+            workspaceDb,
+            environment,
+            sourceType,
+            sourceId,
+          })
+          if (remaining === 0) {
+            await deleteDocs({ workspaceDb, docs: [session] })
+            budget--
+          }
+          after = { updatedAt: session.updatedAt, id: session._id! }
+          if (budget <= 0) break
         }
-        const expiredEvents = await queryExpiredEvents({
-          workspaceDb,
-          environment,
-          sourceType,
-          sourceId,
-          cutoff,
-          limit: budget,
-        })
-        await deleteDocs({ workspaceDb, docs: expiredEvents })
-        budget -= expiredEvents.length
-        if (budget <= 0) {
-          return
+        if (budget <= 0) break
+        if (sessions.length < limit) {
+          finished = true
+          break
         }
-        // Keep the index if some events failed to delete.
-        const remaining = await queryEventsTotal({
-          workspaceDb,
-          environment,
-          sourceType,
-          sourceId,
-        })
-        if (remaining === 0) {
-          await deleteDocs({ workspaceDb, docs: [session] })
-          budget--
-        }
+      }
+      if (finished || !after) {
+        await cache.destroy(cacheKey)
+      } else {
+        await cache.store(cacheKey, { ...after, retentionDays })
       }
     })
   } catch (err) {
