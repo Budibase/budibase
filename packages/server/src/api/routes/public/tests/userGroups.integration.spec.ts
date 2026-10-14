@@ -19,11 +19,10 @@ describe("public user memberships through the worker", () => {
     workerEnvironment.default.PORT = "0"
     const workerModule: {
       default: Server
+      ready: Promise<void>
     } = require("@budibase/worker/src/index")
     worker = workerModule.default
-    if (!worker.listening) {
-      await new Promise<void>(resolve => worker.once("listening", resolve))
-    }
+    await workerModule.ready
     const address = worker.address()
     if (!address || typeof address === "string") {
       throw new Error("Worker did not bind to a TCP port")
