@@ -14,10 +14,13 @@ import {
 
 export const CLEANUP_BATCH_SIZE = 100
 
-async function deleteDocs(
-  workspaceDb: Database,
+async function deleteDocs({
+  workspaceDb,
+  docs,
+}: {
+  workspaceDb: Database
   docs: Document[]
-): Promise<void> {
+}): Promise<void> {
   if (docs.length === 0) {
     return
   }
@@ -101,7 +104,7 @@ export async function clearOldHistory({
           cutoff,
           limit: budget,
         })
-        await deleteDocs(workspaceDb, expiredEvents)
+        await deleteDocs({ workspaceDb, docs: expiredEvents })
         budget -= expiredEvents.length
         if (budget <= 0) {
           return
@@ -114,7 +117,7 @@ export async function clearOldHistory({
           sourceId,
         })
         if (remaining === 0) {
-          await deleteDocs(workspaceDb, [session])
+          await deleteDocs({ workspaceDb, docs: [session] })
           budget--
         }
       }
@@ -124,8 +127,8 @@ export async function clearOldHistory({
   }
 }
 
-// Only a session ending triggers cleanup, so it runs once per run rather
-// than once per action. Never rejects, so callers can leave it unawaited.
+// Each terminal signal triggers cleanup, even without a status transition.
+// Never rejects, so callers can leave it unawaited.
 export async function clearOldHistoryOnSessionEnd({
   workspaceId,
   signal,
