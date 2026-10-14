@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionMenu, Icon, MenuItem } from "@budibase/bbui"
+  import { ActionMenu, Icon, MenuItem, MenuSeparator } from "@budibase/bbui"
   import type { ProjectResponse } from "@budibase/types"
 
   interface Props {
@@ -12,6 +12,7 @@
     onDeleteProject?: () => void
     onImportProject?: () => void
     onExportProject?: () => void
+    onSetupProject?: () => void
     exportProjectDisabled?: boolean
     onUseTemplate?: () => void
   }
@@ -26,6 +27,7 @@
     onDeleteProject = () => {},
     onImportProject = () => {},
     onExportProject = () => {},
+    onSetupProject = () => {},
     exportProjectDisabled = false,
     onUseTemplate = () => {},
   }: Props = $props()
@@ -48,6 +50,9 @@
 
     {#each projects as project (project._id)}
       {@const selected = selectedProjectId === project._id}
+      {@const remainingSetupItems = new Set(
+        project.importSetup?.requirements.map(({ resourceId }) => resourceId)
+      ).size}
       {#if selected}
         <div class="project-tab project-tab--selected project-tab--with-menu">
           <button
@@ -77,6 +82,20 @@
             >
               <Icon name="dots-three" size="S" hoverable color="inherit" />
             </button>
+
+            {#if project.importSetup}
+              <MenuItem icon="list-checks" on:click={onSetupProject}>
+                Project setup
+                <svelte:fragment slot="right">
+                  {#if remainingSetupItems}
+                    <span class="setup-remaining">
+                      {remainingSetupItems} remaining
+                    </span>
+                  {/if}
+                </svelte:fragment>
+              </MenuItem>
+              <MenuSeparator />
+            {/if}
 
             <MenuItem icon="pencil" on:click={onEditProject}>
               Edit project
@@ -252,6 +271,12 @@
     height: 7px;
     border-radius: 50%;
     box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-500);
+  }
+
+  .setup-remaining {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
   }
 
   .project-tab__menu-control {

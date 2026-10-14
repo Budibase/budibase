@@ -182,7 +182,12 @@ export async function importToRows(
 
 export async function handleDataImport(
   table: Table,
-  opts?: { identifierFields?: string[]; userId?: string; importRows?: Row[] }
+  opts?: {
+    identifierFields?: string[]
+    userId?: string
+    importRows?: Row[]
+    onRowsImported?: (rows: Row[]) => void
+  }
 ) {
   const schema = table.schema
   const identifierFields = opts?.identifierFields || []
@@ -233,8 +238,86 @@ export async function handleDataImport(
     tableId: table._id,
   })
 
+  opts?.onRowsImported?.(finalData)
   await events.rows.imported(table, finalData.length)
   return table
+}
+
+export async function reconcileImportedRows({
+  importedTable,
+  currentTable,
+  rows,
+}: {
+  importedTable: Table
+  currentTable: Table
+  rows: Row[]
+}) {
+  const renames = (currentTable.pendingColumnRenames || []).slice(
+    importedTable.pendingColumnRenames?.length || 0
+  )
+  const importedSchema = { ...importedTable.schema }
+  for (const rename of renames) {
+    if (importedSchema[rename.old]) {
+      importedSchema[rename.updated] ??= importedSchema[rename.old]
+      delete importedSchema[rename.old]
+    }
+  }
+  const obsoleteColumns = [
+    ...new Set([
+      ...Object.keys(importedTable.schema),
+      ...renames.flatMap(rename => [rename.old, rename.updated]),
+    ]),
+  ].filter(column => !currentTable.schema[column])
+  if (!obsoleteColumns.length && !renames.length) {
+    return importedSchema
+  }
+
+  const db = context.getWorkspaceDB()
+  let rowIds = rows.map(row => row._id!)
+  for (let attempt = 0; attempt < 3 && rowIds.length; attempt++) {
+    const persistedRows = await db.getMultiple<Row>(rowIds, {
+      allowMissing: true,
+    })
+    const updates = persistedRows.filter(row => {
+      let changed = false
+      for (const rename of renames) {
+        if (row[rename.old] !== undefined) {
+          if (row[rename.updated] === undefined) {
+            row[rename.updated] = row[rename.old]
+          }
+          delete row[rename.old]
+          changed = true
+        }
+      }
+      for (const column of obsoleteColumns) {
+        if (column in row) {
+          delete row[column]
+          changed = true
+        }
+      }
+      return changed
+    })
+    if (!updates.length) {
+      return importedSchema
+    }
+
+    const results = await db.bulkDocs(updates)
+    const failures = results.filter(result => result.error)
+    if (failures.some(result => result.error !== "conflict")) {
+      throw new HTTPError(
+        "Could not reconcile imported rows with the table schema.",
+        500
+      )
+    }
+    rowIds = failures.map(result => result.id)
+  }
+  if (rowIds.length) {
+    throw new HTTPError(
+      "Imported rows changed while reconciling the table schema.",
+      409
+    )
+  }
+  return importedSchema
 }
 
 export async function handleSearchIndexes(table: Table) {

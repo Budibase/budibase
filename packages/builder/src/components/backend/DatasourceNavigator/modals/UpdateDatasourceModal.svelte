@@ -28,7 +28,7 @@
   let error = $state("")
   let modal: ModalHandle | undefined = $state()
   let name = $state("")
-  let originalName = ""
+  let originalName = $state("")
 
   const hasChanges = $derived(name !== originalName)
 

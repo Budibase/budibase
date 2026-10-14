@@ -10,6 +10,7 @@ export interface ProjectResponse {
   color?: string
   createdAt: string
   updatedAt: string
+  importSetup?: ProjectImportSetup
 }
 
 export interface FetchProjectsResponse {
@@ -61,11 +62,21 @@ export interface UpdateProjectAssignmentRequest {
   dependencyFingerprint: string
 }
 
+export interface ProjectAssignmentResult {
+  assignedDependencyIds: string[]
+  failedDependencyIds: string[]
+}
+
+export interface ProjectAssignmentResponse {
+  projectAssignment?: ProjectAssignmentResult
+}
+
 export interface UpdateProjectAssignmentResponse {
   resourceId: string
   resourceRev: string
   projectIds: string[]
   assignedDependencyIds: string[]
+  failedDependencyIds: string[]
 }
 
 export interface ExportProjectRequest {
@@ -90,8 +101,7 @@ export interface ProjectImportRequirement {
   reason: string
 }
 
-export interface ImportProjectResponse {
-  project: ProjectResponse
+export interface ProjectImportSetup {
   resources: Partial<Record<ResourceType, string[]>>
   unsupportedContent: ProjectPackageUnsupportedContent[]
   requirements: ProjectImportRequirement[]
@@ -166,6 +176,10 @@ export interface ImportProjectTemplateResponse extends ImportProjectResponse {
     ProjectTemplateMetadata,
     "key" | "version" | "packageVersion" | "catalogueVersion"
   >
+}
+
+export interface ImportProjectResponse extends ProjectImportSetup {
+  project: ProjectResponse
 }
 
 export interface ProjectManifestSummary {

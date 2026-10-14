@@ -63,7 +63,6 @@ import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { buildWorkspaceHomeEndpoints } from "./workspaceHome"
 import { buildRecaptchaEndpoints } from "./recaptcha"
 import { buildAIConfigEndpoints } from "./aiConfig"
-import { APIWarningCode } from "@budibase/types"
 
 export type { APIClient } from "./types"
 
@@ -74,7 +73,6 @@ export type { APIClient } from "./types"
  * that we can ignore events caused by ourselves.
  */
 export const APISessionID = Helpers.uuid()
-const API_WARNING_CODES = Object.values(APIWarningCode)
 
 /**
  * Constructs an API client with the provided configuration.
@@ -209,7 +207,6 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     // Handle response
     if (response.status >= 200 && response.status < 400) {
       handleMigrations(response)
-      handleWarnings(response)
       try {
         if (response.status === 204) {
           return undefined as ResponseT
@@ -237,17 +234,6 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
 
     if (migration && !shouldSkipWait) {
       config.onMigrationDetected(migration)
-    }
-  }
-
-  const handleWarnings = (response: Response) => {
-    if (!config.onWarning) {
-      return
-    }
-    const warning = response.headers.get(Header.API_WARNING)
-    const warningCode = API_WARNING_CODES.find(code => code === warning)
-    if (warningCode) {
-      config.onWarning(warningCode)
     }
   }
 
