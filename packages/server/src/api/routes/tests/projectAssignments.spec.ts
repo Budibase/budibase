@@ -1,6 +1,6 @@
 import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { getQueryToolBindings, Header } from "@budibase/shared-core"
+import { getQueryToolBindings } from "@budibase/shared-core"
 import {
   FeatureFlag,
   INTERNAL_TABLE_SOURCE_ID,

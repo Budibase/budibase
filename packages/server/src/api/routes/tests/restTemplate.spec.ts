@@ -1,5 +1,6 @@
-import { objectStore } from "@budibase/backend-core"
+import { events, objectStore } from "@budibase/backend-core"
 import { SourceName, type RestTemplate } from "@budibase/types"
+import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
 import sdk from "../../../sdk"
 import { basicDatasource } from "../../../tests/utilities/structures"
 import { afterAll as cleanup, getConfig, getRequest } from "./utilities"
@@ -81,11 +82,13 @@ describe("/rest-templates", () => {
     }))
   })
 
-  const uploadExampleTemplate = async (): Promise<RestTemplate> => {
+  const uploadExampleTemplate = async (
+    name = "Example API"
+  ): Promise<RestTemplate> => {
     const response = await request
       .post("/api/rest-templates")
       .set(config.defaultHeaders())
-      .field("name", "Example API")
+      .field("name", name)
       .field("description", "An example API")
       .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
       .expect(200)
@@ -311,6 +314,49 @@ describe("/rest-templates", () => {
       )
     ).toEqual(originalDatasource)
   })
+
+  it.each(["datasource write", "datasource event", "query event"])(
+    "removes imported queries after a failed %s",
+    async failure => {
+      const template = await uploadExampleTemplate(`Failed ${failure}`)
+      const datasource = await config.api.datasource.create({
+        type: "datasource",
+        name: "Existing API",
+        source: SourceName.REST,
+        config: {},
+      })
+      const originalQueries = await config.api.query.fetch()
+      const originalPut = DatabaseImpl.prototype.put
+      const put = jest
+        .spyOn(DatabaseImpl.prototype, "put")
+        .mockImplementation(async function (this: DatabaseImpl, doc, opts) {
+          if (failure === "datasource write" && doc._id === datasource._id) {
+            throw new Error("Datasource write failed")
+          }
+          return originalPut.call(this, doc, opts)
+        })
+      const datasourceEvent = jest.spyOn(events.datasource, "updated")
+      const queryEvent = jest.spyOn(events.query, "imported")
+      if (failure === "datasource event")
+        datasourceEvent.mockRejectedValueOnce(
+          new Error("Datasource event failed")
+        )
+      if (failure === "query event")
+        queryEvent.mockRejectedValueOnce(new Error("Query event failed"))
+      try {
+        await request
+          .post("/api/queries/import")
+          .set(config.defaultHeaders())
+          .send({ restTemplateId: template.id, datasourceId: datasource._id })
+          .expect(500)
+      } finally {
+        put.mockRestore()
+        datasourceEvent.mockRestore()
+        queryEvent.mockRestore()
+      }
+      expect(await config.api.query.fetch()).toEqual(originalQueries)
+    }
+  )
 
   it("rejects missing templates before preparing a datasource", async () => {
     const prepareDatasource = jest
