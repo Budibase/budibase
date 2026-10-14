@@ -225,6 +225,7 @@ if (descriptions.length) {
           const result = await config.api.row.search(profiles._id!, {
             query: { [operator]: { "person.created_at": value } },
             countRows: true,
+            paginate: true,
           })
 
           expect(result.rows.map(row => row.candidate_profile_id)).toEqual([
@@ -267,6 +268,7 @@ if (descriptions.length) {
           const result = await config.api.row.search(profiles._id!, {
             query: { string: { [`${prefix}.status`]: "act" } },
             countRows: true,
+            paginate: true,
           })
 
           expect(result.rows.map(row => row.candidate_profile_id)).toEqual([
