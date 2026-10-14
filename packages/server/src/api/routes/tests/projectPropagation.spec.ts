@@ -8,6 +8,7 @@ import {
   RelationshipType,
   TableSourceType,
   ToolExecutionPrincipal,
+  type Row,
   type Screen,
 } from "@budibase/types"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
@@ -569,6 +570,113 @@ describe("project dependency propagation", () => {
           expect(await config.api.row.fetch(saved._id!)).toEqual([
             expect.objectContaining({ name: "Imported row", status: "new" }),
           ])
+        })
+      }
+    )
+
+    it.each([
+      { change: "delete", concurrentRowEdit: false },
+      { change: "rename", concurrentRowEdit: false },
+      { change: "rename", concurrentRowEdit: true },
+    ])(
+      "reconciles imported rows after a concurrent $change (row edit: $concurrentRowEdit)",
+      async ({ change, concurrentRowEdit }) => {
+        await withProjectsEnabled(async () => {
+          const definition = basicTable()
+          definition.schema.description = {
+            name: "description",
+            type: FieldType.OPTIONS,
+            constraints: { inclusion: ["old"] },
+          }
+          const table = await config.api.table.save(definition)
+          let importStarted!: () => void
+          let releaseImport!: () => void
+          const ready = new Promise<void>(resolve => (importStarted = resolve))
+          const pending = new Promise<void>(
+            resolve => (releaseImport = resolve)
+          )
+          const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
+          let paused = false
+          let conflicted = false
+          let importedRowId: string | undefined
+          const bulkDocs = jest
+            .spyOn(DatabaseImpl.prototype, "bulkDocs")
+            .mockImplementation(async function (this: DatabaseImpl, docs) {
+              const row = docs.find(
+                doc => doc.type === "row" && doc.name === "Imported row"
+              )
+              if (row && !paused) {
+                paused = true
+                importedRowId = row._id
+                importStarted()
+                await pending
+              }
+              if (
+                row &&
+                row.description === undefined &&
+                concurrentRowEdit &&
+                !conflicted
+              ) {
+                conflicted = true
+                const persisted = await this.get<Row>(row._id!)
+                await this.put({
+                  ...persisted,
+                  name: "Edited during reconciliation",
+                })
+              }
+              return originalBulkDocs.call(this, docs)
+            })
+          const saving = config.api.table.save({
+            ...table,
+            rows: [{ name: "Imported row", description: "Keep on rename" }],
+          })
+          try {
+            await helpers.withTimeout(5000, () => ready)
+            await helpers.withTimeout(5000, async () => {
+              const current = await config.api.table.get(table._id!)
+              const { description, ...schema } = current.schema
+              await config.api.table.save({
+                ...current,
+                ...(change === "rename"
+                  ? { _rename: { old: "description", updated: "notes" } }
+                  : {}),
+                schema: {
+                  ...schema,
+                  ...(change === "rename"
+                    ? { notes: { ...description, name: "notes" } }
+                    : {}),
+                },
+              })
+            })
+          } finally {
+            releaseImport()
+            await saving.finally(() => bulkDocs.mockRestore())
+          }
+
+          const saved = await saving
+          expect(conflicted).toBe(concurrentRowEdit)
+          expect(saved.schema.description).toBeUndefined()
+          if (change === "rename") {
+            expect(saved.schema.notes.constraints?.inclusion).toEqual([
+              "Keep on rename",
+              "old",
+            ])
+          }
+          await config.doInContext(config.getDevWorkspaceId(), async () => {
+            // Read the document directly: row responses can hide obsolete fields.
+            const persisted = await context
+              .getWorkspaceDB()
+              .get<Row>(importedRowId!)
+            expect(persisted.name).toBe(
+              concurrentRowEdit
+                ? "Edited during reconciliation"
+                : "Imported row"
+            )
+            expect(persisted.description).toBeUndefined()
+            expect(persisted.notes).toBe(
+              change === "rename" ? "Keep on rename" : undefined
+            )
+          })
         })
       }
     )

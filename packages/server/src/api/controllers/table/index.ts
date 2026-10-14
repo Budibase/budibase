@@ -53,7 +53,7 @@ import {
   isSchema,
   validate as validateSchema,
 } from "../../../utilities/schema"
-import { handleDataImport } from "./utils"
+import { handleDataImport, reconcileImportedRows } from "./utils"
 import { withProjectPropagationWarning } from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
@@ -280,15 +280,26 @@ const importTableRows = async ({
 }) => {
   const db = context.getWorkspaceDB()
   const table = await db.get<Table>(tableId)
+  let importedRows: Row[] = []
   const importedTable = await handleDataImport(table, {
     importRows: rows,
     userId,
+    onRowsImported: rows => {
+      importedRows = rows
+    },
   })
   return await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
     const currentTable = await db.get<Table>(tableId)
+    // Schema saves can finish their row cleanup while this import is writing.
+    // Repair only this import's rows before releasing the schema-save lock.
+    const importedSchema = await reconcileImportedRows({
+      importedTable,
+      currentTable,
+      rows: importedRows,
+    })
     let schemaChanged = false
     // Imports can add options while other saves change the table or its projects.
-    for (const [name, importedColumn] of Object.entries(importedTable.schema)) {
+    for (const [name, importedColumn] of Object.entries(importedSchema)) {
       const currentColumn = currentTable.schema[name]
       if (
         (importedColumn.type !== FieldType.OPTIONS &&
