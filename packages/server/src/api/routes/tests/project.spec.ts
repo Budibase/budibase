@@ -1824,60 +1824,92 @@ describe("/projects", () => {
       }
     }
 
+    const withImportDestination = async (
+      destination: string,
+      test: (
+        source: Awaited<ReturnType<typeof createViewAndRowActionPackage>>
+      ) => Promise<void>
+    ) => {
+      await withProjectsEnabled(async () => {
+        const source = await createViewAndRowActionPackage()
+        const destinationWorkspaceId =
+          destination === "source workspace"
+            ? config.getDevWorkspaceId()
+            : (
+                await config.api.workspace.create({
+                  name: "Imported workspace",
+                })
+              ).appId
+
+        await config.withHeaders(
+          { [Header.WORKSPACE_ID]: destinationWorkspaceId },
+          () => test(source)
+        )
+      })
+    }
+
+    const expectIndependentResourceIds = (
+      copies: { tableId: string; viewId: string; rowActionId: string }[]
+    ) => {
+      expect(new Set(copies.map(copy => copy.tableId)).size).toBe(copies.length)
+      expect(new Set(copies.map(copy => copy.viewId)).size).toBe(copies.length)
+      expect(new Set(copies.map(copy => copy.rowActionId)).size).toBe(
+        copies.length
+      )
+    }
+
+    const expectReconnectedReferences = (
+      copy: Awaited<ReturnType<typeof readImportedViewAndRowAction>>
+    ) => {
+      expect(copy.view.tableId).toBe(copy.tableId)
+      expect(copy.screenTable).toMatchObject({
+        id: copy.viewId,
+        tableId: copy.tableId,
+      })
+      expect(copy.rowAction).toMatchObject({
+        tableId: copy.tableId,
+        automationId: copy.automationId,
+        allowedSources: [copy.tableId, copy.viewId],
+      })
+      expect(copy.rowActionIds).toEqual([copy.rowActionId])
+      expect(copy.automationTriggerInputs).toMatchObject({
+        tableId: copy.tableId,
+        rowActionId: copy.rowActionId,
+      })
+    }
+
     it.each(["source workspace", "another workspace"])(
-      "creates new ids and reconnects the screen and the row action's automation on every import (%s)",
+      "creates new ids and reconnects references on the first import (%s)",
       async destination => {
-        await withProjectsEnabled(async () => {
-          const source = await createViewAndRowActionPackage()
-          const destinationWorkspaceId =
-            destination === "source workspace"
-              ? config.getDevWorkspaceId()
-              : (
-                  await config.api.workspace.create({
-                    name: "Imported workspace",
-                  })
-                ).appId
-
-          await config.withHeaders(
-            { [Header.WORKSPACE_ID]: destinationWorkspaceId },
-            async () => {
-              const firstImport = await config.api.project.import(
-                source.packageBuffer
-              )
-              const secondImport = await config.api.project.import(
-                source.packageBuffer
-              )
-              const importedCopies = await Promise.all([
-                readImportedViewAndRowAction(firstImport),
-                readImportedViewAndRowAction(secondImport),
-              ])
-
-              const allCopies = [source, ...importedCopies]
-              expect(new Set(allCopies.map(copy => copy.tableId)).size).toBe(3)
-              expect(new Set(allCopies.map(copy => copy.viewId)).size).toBe(3)
-              expect(
-                new Set(allCopies.map(copy => copy.rowActionId)).size
-              ).toBe(3)
-
-              for (const copy of importedCopies) {
-                expect(copy.view.tableId).toBe(copy.tableId)
-                expect(copy.screenTable).toMatchObject({
-                  id: copy.viewId,
-                  tableId: copy.tableId,
-                })
-                expect(copy.rowAction).toMatchObject({
-                  tableId: copy.tableId,
-                  automationId: copy.automationId,
-                  allowedSources: [copy.tableId, copy.viewId],
-                })
-                expect(copy.rowActionIds).toEqual([copy.rowActionId])
-                expect(copy.automationTriggerInputs).toMatchObject({
-                  tableId: copy.tableId,
-                  rowActionId: copy.rowActionId,
-                })
-              }
-            }
+        await withImportDestination(destination, async source => {
+          const firstImport = await config.api.project.import(
+            source.packageBuffer
           )
+          const importedCopy = await readImportedViewAndRowAction(firstImport)
+
+          expectIndependentResourceIds([source, importedCopy])
+          expectReconnectedReferences(importedCopy)
+        })
+      }
+    )
+
+    it.each(["source workspace", "another workspace"])(
+      "creates independent ids and reconnects references on re-import (%s)",
+      async destination => {
+        await withImportDestination(destination, async source => {
+          const firstImport = await config.api.project.import(
+            source.packageBuffer
+          )
+          const secondImport = await config.api.project.import(
+            source.packageBuffer
+          )
+          const importedCopies = await Promise.all([
+            readImportedViewAndRowAction(firstImport),
+            readImportedViewAndRowAction(secondImport),
+          ])
+
+          expectIndependentResourceIds([source, ...importedCopies])
+          importedCopies.forEach(expectReconnectedReferences)
         })
       }
     )
