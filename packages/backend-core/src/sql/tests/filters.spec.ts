@@ -225,6 +225,72 @@ describe("SQL filter parameterization", () => {
     }
   )
 
+  describe.each(["rel", "related", "b", "1:rel"])(
+    "related date-only filters using %s",
+    prefix => {
+      const date = "2026-10-14T00:00:00.000Z"
+
+      it.each([
+        { operator: "equal", value: date, bindings: ["2026-10-14%"] },
+        { operator: "notEqual", value: date, bindings: ["2026-10-14%"] },
+        { operator: "oneOf", value: [date], bindings: ["2026-10-14%"] },
+        { operator: "notOneOf", value: [date], bindings: ["2026-10-14%"] },
+        {
+          operator: "range",
+          value: { low: date, high: date },
+          bindings: ["2026-10-14", "2026-10-14T23:59:59.999Z"],
+        },
+      ])("parses $operator values with the related schema", testCase => {
+        const table = {
+          ...buildTable({
+            birthday: {
+              name: "birthday",
+              type: FieldType.STRING,
+              constraints: baseConstraints,
+            },
+          }),
+          sourceType: TableSourceType.INTERNAL,
+        }
+        const relatedTable: Table = {
+          ...table,
+          _id: "related",
+          name: "related",
+          schema: {
+            id: idField,
+            birthday: {
+              name: "birthday",
+              type: FieldType.DATETIME,
+              dateOnly: true,
+              constraints: baseConstraints,
+            },
+          },
+        }
+        const query = buildQuery(table, {
+          $and: {
+            conditions: [
+              {
+                [testCase.operator]: {
+                  [`${prefix}.user_birthday`]: testCase.value,
+                },
+              },
+            ],
+          },
+        })
+        query.tables.related = relatedTable
+        query.tableAliases = { tbl: "a", related: "b" }
+        query.relationships = [
+          { tableName: "related", column: "rel", from: "id", to: "id" },
+        ]
+        query.meta = { columnPrefix: "user_" }
+
+        const result = new Sql(SqlClient.SQL_LITE)._query(query) as SqlQuery
+
+        expect(result.sql).toContain("`b`.`user_birthday`")
+        expect(result.bindings).toEqual([...testCase.bindings, 25])
+      })
+    }
+  )
+
   describe("external related row ID values", () => {
     const buildRelatedIdQuery = (filters: SearchFilters) => {
       const table = buildTable({

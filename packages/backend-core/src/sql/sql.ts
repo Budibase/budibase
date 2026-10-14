@@ -236,11 +236,22 @@ class InternalBuilder {
   }
 
   getFieldSchema(key: string): FieldSchema | undefined {
+    key = dbCore.removeKeyNumbering(key)
     for (const table of Object.values(this.query.tables)) {
-      const prefix = `${this.query.tableAliases?.[table.name] || table.name}.`
+      const prefixes = [table.name, this.query.tableAliases?.[table.name]]
+      const prefix = prefixes.find(
+        prefix => prefix && key.startsWith(`${prefix}.`)
+      )
+      if (prefix) {
+        const { column } = this.splitter.run(key.slice(prefix.length + 1))
+        return table.schema[column]
+      }
+    }
+    for (const relationship of this.query.relationships || []) {
+      const prefix = `${relationship.column}.`
       if (key.startsWith(prefix)) {
         const { column } = this.splitter.run(key.slice(prefix.length))
-        return table.schema[column]
+        return this.query.tables[relationship.tableName]?.schema[column]
       }
     }
     const { column } = this.splitter.run(key)
@@ -528,8 +539,7 @@ class InternalBuilder {
           filter[key] = JSON.stringify(filter[key])
           continue
         }
-        const { column } = this.splitter.run(key)
-        const schema = this.table.schema[column]
+        const schema = this.getFieldSchema(key)
         if (!schema) {
           continue
         }
@@ -543,8 +553,7 @@ class InternalBuilder {
         continue
       }
       for (const key of Object.keys(filter)) {
-        const { column } = this.splitter.run(key)
-        const schema = this.table.schema[column]
+        const schema = this.getFieldSchema(key)
         if (!schema) {
           continue
         }
@@ -558,8 +567,7 @@ class InternalBuilder {
         continue
       }
       for (const key of Object.keys(filter)) {
-        const { column } = this.splitter.run(key)
-        const schema = this.table.schema[column]
+        const schema = this.getFieldSchema(key)
         if (!schema) {
           continue
         }
