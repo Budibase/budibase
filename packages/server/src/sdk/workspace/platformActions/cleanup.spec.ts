@@ -181,17 +181,38 @@ describe("platformActions cleanup", () => {
     }
   )
 
-  it("keeps an expired session with newer events, deleting only its old ones", async () => {
-    await createSession({ sourceId: "resumed", daysAgo: 40, eventCount: 2 })
-    await addEvent({ sourceId: "resumed", daysAgo: 0 })
+  it.each([0, 30])(
+    "keeps all history when an unindexed event is %s days old",
+    async daysAgo => {
+      tk.freeze(new Date("2026-10-14T12:00:00.000Z"))
+      const now = new Date()
+      await createSession({ sourceId: "resumed", daysAgo: 40, eventCount: 2 })
+      tk.freeze(now)
+      await addEvent({ sourceId: "resumed", daysAgo })
+      tk.freeze(now)
+      await createSession({ sourceId: "expired", daysAgo: 35 })
+      tk.freeze(now)
 
-    await clear()
+      await clear()
 
-    expect(await getStored()).toEqual({
-      sessions: ["resumed"],
-      events: ["resumed"],
-    })
-  })
+      expect(await getStored()).toEqual({
+        sessions: ["resumed"],
+        events: ["resumed", "resumed", "resumed"],
+      })
+      const session = await withContext(() =>
+        events.platformActions
+          .getActionsDB()
+          .get<PlatformActionSessionIndexDoc>(
+            events.platformActions.getPlatformActionSessionId({
+              environment: "prod",
+              sourceType: "agent_session",
+              sourceId: "resumed",
+            })
+          )
+      )
+      expect(session.actionCount).toBe(2)
+    }
+  )
 
   it("deletes a large session across bounded runs", async () => {
     await createSession({ sourceId: "large", daysAgo: 40, eventCount: 5 })

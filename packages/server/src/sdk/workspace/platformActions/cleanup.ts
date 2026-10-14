@@ -6,6 +6,7 @@ import type {
 } from "@budibase/types"
 import { EXPIRABLE_STATUSES, getRetentionCutoff } from "./retention"
 import {
+  hasRecentEvents,
   queryEventsTotal,
   queryExpiredEvents,
   queryExpiredSessions,
@@ -79,6 +80,19 @@ export async function clearOldHistory({
           return
         }
         const { environment, sourceType, sourceId } = session
+        // A new event can be persisted before its index job runs. Keep the
+        // entire history until that job updates the session and its count.
+        if (
+          await hasRecentEvents({
+            workspaceDb,
+            environment,
+            sourceType,
+            sourceId,
+            cutoff,
+          })
+        ) {
+          continue
+        }
         const expiredEvents = await queryExpiredEvents({
           workspaceDb,
           environment,
@@ -92,9 +106,7 @@ export async function clearOldHistory({
         if (budget <= 0) {
           return
         }
-        // Remaining events either failed to delete or are newer than the
-        // cutoff, i.e. the session is being resumed and its index update
-        // will make it visible again
+        // Keep the index if some events failed to delete.
         const remaining = await queryEventsTotal({
           workspaceDb,
           environment,

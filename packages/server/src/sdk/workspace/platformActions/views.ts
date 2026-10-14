@@ -504,8 +504,35 @@ export const queryExpiredSessions = async ({
     .slice(0, limit)
 }
 
-// Events newer than the cutoff belong to activity the session index hasn't
-// reflected yet (e.g. a resume), so they are never selected
+export const hasRecentEvents = async ({
+  workspaceDb,
+  environment,
+  sourceType,
+  sourceId,
+  cutoff,
+}: {
+  workspaceDb: Database
+  environment: PlatformActionEnvironment
+  sourceType: PlatformActionSourceType
+  sourceId: string
+  cutoff: string
+}): Promise<boolean> => {
+  const prefix: DatabaseKey[] = [environment, sourceType, sourceId]
+  const response = await db.queryViewRaw(
+    ViewName.PLATFORM_ACTION_EVENTS_BY_SESSION,
+    {
+      startkey: [...prefix, cutoff],
+      endkey: [...prefix, {}],
+      reduce: false,
+      include_docs: false,
+      limit: 1,
+    },
+    workspaceDb,
+    () => createEventsBySessionView(workspaceDb)
+  )
+  return response.rows.length > 0
+}
+
 export const queryExpiredEvents = async ({
   workspaceDb,
   environment,
