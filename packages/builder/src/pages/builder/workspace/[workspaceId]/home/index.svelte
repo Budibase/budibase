@@ -585,7 +585,8 @@
       importProjectModal?.hide()
       const showImportResult =
         response.requirements.length > 0 ||
-        response.unsupportedContent.length > 0
+        response.unsupportedContent.length > 0 ||
+        !!response.dataImport
       if (!showImportResult) {
         notifications.success(`Imported project '${response.project.name}'`)
       }
