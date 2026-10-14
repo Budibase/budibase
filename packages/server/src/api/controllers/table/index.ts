@@ -46,7 +46,7 @@ import {
 } from "../../../integrations/utils"
 import sdk from "../../../sdk"
 import { processTable } from "../../../sdk/workspace/tables/getters"
-import { publishWorkspaceInternal, withPublishLock } from "../deploy"
+import { runPublishWorkspaceJob, withPublishLock } from "../deploy"
 import {
   isRows,
   isSchema,
@@ -367,7 +367,16 @@ async function publishTableInternal(
 
   const seedProductionTables = !!ctx.request.body?.seedProductionTables
   if (!prodPublished) {
-    await publishWorkspaceInternal(ctx, seedProductionTables, [tableId])
+    await runPublishWorkspaceJob(
+      {
+        appId,
+        createdBy: ctx.user._id,
+        identity: context.getIdentity(),
+        seedProductionTables,
+        tablesToSeed: [tableId],
+      },
+      ctx
+    )
   }
 
   if (seedProductionTables) {
