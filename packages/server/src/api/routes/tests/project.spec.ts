@@ -1483,12 +1483,18 @@ describe("/projects", () => {
         const automation = await config.api.automation.get(
           imported.resources.automation![0]
         )
+        const trigger = automation.definition.trigger
+        if (!isEmailTrigger(trigger)) {
+          throw new Error(
+            "Expected imported automation to have an email trigger"
+          )
+        }
         await config.api.automation.update({
           ...automation,
           definition: {
             ...automation.definition,
             trigger: {
-              ...automation.definition.trigger,
+              ...trigger,
               inputs: {
                 ...emailSettings,
                 authType: EmailTriggerAuthType.OAUTH2,
