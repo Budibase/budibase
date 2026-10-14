@@ -12,6 +12,7 @@ import {
   Chat,
   Actions,
   Card,
+  CardText,
   LinkButton,
   type ActionEvent,
   type Thread,
@@ -47,7 +48,12 @@ const formatTeamsLinkLabel = (value: string) =>
     .replace(/\s+/g, " ")
     .trim()
 
-const getTeamsKnowledgeSourceLinks = async ({
+interface TeamsKnowledgeSource {
+  label: string
+  url?: string
+}
+
+const getTeamsKnowledgeSources = async ({
   agentId,
   result,
   isPersonalConversation,
@@ -56,16 +62,21 @@ const getTeamsKnowledgeSourceLinks = async ({
   result: WebhookChatCompleteResult
   isPersonalConversation?: boolean
 }) => {
-  if (
-    result.allowKnowledgeSourceDownload === false ||
-    !isPersonalConversation
-  ) {
+  if (!isPersonalConversation) {
     return []
   }
 
-  const links: { label: string; url: string }[] = []
+  const sources: TeamsKnowledgeSource[] = []
   for (const source of result.ragSources || []) {
     if (!source.fileId) {
+      continue
+    }
+
+    const entry: TeamsKnowledgeSource = {
+      label: formatTeamsLinkLabel(source.filename || "") || "Knowledge source",
+    }
+    sources.push(entry)
+    if (result.allowKnowledgeSourceDownload === false) {
       continue
     }
 
@@ -74,17 +85,12 @@ const getTeamsKnowledgeSourceLinks = async ({
         agentId,
         source.fileId
       )
-      const absoluteUrl = await toAbsoluteUrl(signedUrl)
-      links.push({
-        label:
-          formatTeamsLinkLabel(source.filename || "") || "Knowledge source",
-        url: absoluteUrl,
-      })
+      entry.url = await toAbsoluteUrl(signedUrl)
     } catch (error) {
       console.error("Failed to generate Teams RAG source link", error)
     }
   }
-  return links
+  return sources
 }
 
 export const formatTeamsAssistantReply = async ({
@@ -95,7 +101,7 @@ export const formatTeamsAssistantReply = async ({
   return result.assistantText || ""
 }
 
-const postTeamsKnowledgeSourceLinks = async ({
+const postTeamsKnowledgeSources = async ({
   thread,
   agentId,
   result,
@@ -106,12 +112,12 @@ const postTeamsKnowledgeSourceLinks = async ({
   result: WebhookChatCompleteResult
   isPersonalConversation?: boolean
 }) => {
-  const sourceLinks = await getTeamsKnowledgeSourceLinks({
+  const sources = await getTeamsKnowledgeSources({
     agentId,
     result,
     isPersonalConversation,
   })
-  if (!sourceLinks.length) {
+  if (!sources.length) {
     return
   }
 
@@ -119,20 +125,20 @@ const postTeamsKnowledgeSourceLinks = async ({
     await thread.post(
       Card({
         title: "Sources",
-        children: [
-          Actions(
-            sourceLinks.map(source =>
-              LinkButton({
-                label: source.label,
-                url: source.url,
-              })
-            )
-          ),
-        ],
+        children: sources.map(source =>
+          source.url
+            ? Actions([
+                LinkButton({
+                  label: source.label,
+                  url: source.url,
+                }),
+              ])
+            : CardText(source.label)
+        ),
       })
     )
   } catch (error) {
-    console.error("Failed to post Teams RAG source links", error)
+    console.error("Failed to post Teams RAG sources", error)
   }
 }
 
@@ -410,7 +416,7 @@ const createTeamsMessageHandler = ({
             result,
           }),
         afterAssistantReply: async result =>
-          await postTeamsKnowledgeSourceLinks({
+          await postTeamsKnowledgeSources({
             thread,
             agentId,
             result,
