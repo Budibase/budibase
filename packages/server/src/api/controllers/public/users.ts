@@ -31,13 +31,23 @@ const NO_ROLES_MSG =
 
 async function createUpdateResponse(ctx: UserCtx, user?: User) {
   if (ctx.request.body.userGroups !== undefined) {
-    if (!users.isAdmin(ctx.user)) {
-      ctx.throw(403, "Only global admins can update user group memberships.")
+    const unchanged =
+      user &&
+      isEqual(
+        [...ctx.request.body.userGroups].sort(),
+        [...(user.userGroups || [])].sort()
+      )
+    if (unchanged) {
+      delete ctx.request.body.userGroups
+    } else {
+      if (!users.isAdmin(ctx.user)) {
+        ctx.throw(403, "Only global admins can update user group memberships.")
+      }
+      await sdk.features.checkFeatures([
+        Feature.EXPANDED_PUBLIC_API,
+        Feature.USER_GROUPS,
+      ])
     }
-    await sdk.features.checkFeatures([
-      Feature.EXPANDED_PUBLIC_API,
-      Feature.USER_GROUPS,
-    ])
   }
   const base = cloneDeep(ctx.request.body)
   ctx = await sdk.publicApi.users.roleCheck(ctx, user)

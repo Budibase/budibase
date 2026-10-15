@@ -150,7 +150,7 @@ describe("public user memberships through the worker", () => {
       },
     },
   ])(
-    "blocks explicit memberships with a $name license",
+    "allows unchanged memberships but blocks membership changes with a $name license",
     async ({ license }) => {
       const group = await config.createGroup()
       const replacement = await config.createGroup()
@@ -159,6 +159,12 @@ describe("public user memberships through the worker", () => {
         password: "password123!",
         roles: {},
         userGroups: [group._id!],
+      })
+      const ungrouped = await config.api.public.user.create({
+        email: generator.email({ domain: "example.com" }),
+        password: "password123!",
+        roles: {},
+        userGroups: [],
       })
       const rejectedEmail = generator.email({ domain: "example.com" })
       mocks.licenses.useLicense(license)
@@ -172,22 +178,60 @@ describe("public user memberships through the worker", () => {
         },
         { status: 400 }
       )
-      for (const userGroups of [[replacement._id!], [], [group._id!]]) {
+      for (const userGroups of [[replacement._id!], []]) {
         await config.api.public.user.update(
           { ...existing, firstName: "Rejected", userGroups },
           { status: 400 }
         )
       }
 
+      for (const target of [existing, ungrouped]) {
+        const retrieved = await config.api.public.user.find(target._id!)
+        await config.api.public.user.update({
+          ...retrieved,
+          firstName: "Updated",
+        })
+      }
       const saved = await config.doInTenant(() => users.getById(existing._id!))
+      const savedUngrouped = await config.doInTenant(() =>
+        users.getById(ungrouped._id!)
+      )
       const rejected = await config.doInTenant(() =>
         users.getGlobalUserByEmail(rejectedEmail)
       )
       expect(saved.userGroups).toEqual([group._id])
-      expect(saved.firstName).toBe(existing.firstName)
+      expect(saved.firstName).toBe("Updated")
+      expect(savedUngrouped).toMatchObject({
+        firstName: "Updated",
+        userGroups: [],
+      })
       expect(rejected).toBeUndefined()
     }
   )
+
+  it("preserves memberships when an unlicensed update only changes their order", async () => {
+    const first = await config.createGroup()
+    const second = await config.createGroup()
+    const created = await config.api.public.user.create({
+      email: generator.email({ domain: "example.com" }),
+      password: "password123!",
+      roles: {},
+      userGroups: [first._id!, second._id!],
+    })
+    mocks.licenses.useLicense(constants.licenses.CLOUD_FREE_LICENSE)
+
+    await config.api.public.user.update({
+      ...created,
+      firstName: "Updated",
+      userGroups: [second._id!, first._id!],
+    })
+
+    const saved = await config.doInTenant(() => users.getById(created._id!))
+    expect(saved).toMatchObject({
+      firstName: "Updated",
+      userGroups: [first._id, second._id],
+    })
+  })
 
   it("rejects a non-admin API key without changing memberships", async () => {
     const group = await config.createGroup()
