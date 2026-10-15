@@ -14,7 +14,6 @@ import {
 } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
 import { bootstrap } from "global-agent"
-import { once } from "events"
 import http from "http"
 import gracefulShutdown from "http-graceful-shutdown"
 import Application, { Middleware } from "koa"
@@ -141,7 +140,7 @@ process.on("unhandledRejection", async reason => {
   }
 })
 
-export const ready = once(server, "listening").then(async () => {
+export default server.listen(parseInt(env.PORT || "4002"), async () => {
   let startupLog = `Worker running on ${JSON.stringify(server.address())}`
   if (env.BUDIBASE_ENVIRONMENT) {
     startupLog = `${startupLog} - environment: "${env.BUDIBASE_ENVIRONMENT}"`
@@ -164,5 +163,3 @@ export const ready = once(server, "listening").then(async () => {
     proSdk.licensing.client.getLicenseKey
   )
 })
-
-export default server.listen(parseInt(env.PORT || "4002"))

@@ -1,10 +1,18 @@
 import type { Server } from "http"
-import { cache, context, sessions, users } from "@budibase/backend-core"
+import { cache, context, events, sessions, users } from "@budibase/backend-core"
 import { generator, mocks, structures } from "@budibase/backend-core/tests"
 import { constants, db as proDb } from "@budibase/pro"
 import { Feature, type User } from "@budibase/types"
 import environment from "../../../../environment"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+
+jest.mock("@budibase/backend-core", () => {
+  const core = jest.requireActual("@budibase/backend-core")
+  return {
+    ...core,
+    events: { ...core.events, processors: { ...core.events.processors } },
+  }
+})
 
 describe("public user memberships through the worker", () => {
   const config = new TestConfiguration()
@@ -17,12 +25,25 @@ describe("public user memberships through the worker", () => {
       default: { PORT: string }
     } = require("@budibase/worker/src/environment")
     workerEnvironment.default.PORT = "0"
+    const initializeProcessors = events.processors.init
+    const initializeProcessorsSpy = jest.spyOn(events.processors, "init")
+    // Event processors are the final step of worker startup.
+    const processorsInitialized = new Promise<void>(resolve => {
+      initializeProcessorsSpy.mockImplementationOnce((...args) => {
+        const initialized = initializeProcessors(...args)
+        resolve(initialized)
+        return initialized
+      })
+    })
     const workerModule: {
       default: Server
-      ready: Promise<void>
     } = require("@budibase/worker/src/index")
     worker = workerModule.default
-    await workerModule.ready
+    try {
+      await processorsInitialized
+    } finally {
+      initializeProcessorsSpy.mockRestore()
+    }
     const address = worker.address()
     if (!address || typeof address === "string") {
       throw new Error("Worker did not bind to a TCP port")
