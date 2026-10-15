@@ -647,7 +647,6 @@ jobs:
           name: client-library
           path: packages/client/dist
           if-no-files-found: error
-          retention-days: 30
           overwrite: true
 
       - name: Check client build size
