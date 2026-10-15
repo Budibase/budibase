@@ -496,6 +496,10 @@ export async function downloadAttachment(
     ctx.throw(404, `'${columnName}' is not valid attachment column`)
   }
 
+  if (!row[columnName]) {
+    ctx.throw(404)
+  }
+
   const attachments: RowAttachment[] =
     columnType === FieldType.ATTACHMENTS ? row[columnName] : [row[columnName]]
 

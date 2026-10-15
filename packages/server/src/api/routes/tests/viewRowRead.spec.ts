@@ -36,6 +36,11 @@ if (descriptions.length) {
             schema: {
               files: { name: "files", type: FieldType.ATTACHMENTS },
               file: { name: "file", type: FieldType.ATTACHMENT_SINGLE },
+              hiddenFiles: { name: "hiddenFiles", type: FieldType.ATTACHMENTS },
+              hiddenFile: {
+                name: "hiddenFile",
+                type: FieldType.ATTACHMENT_SINGLE,
+              },
             },
           })
         )
@@ -44,7 +49,10 @@ if (descriptions.length) {
           tableId,
           name: "Visible rows",
           schema: Object.fromEntries(
-            Object.keys(table.schema).map(name => [name, { visible: true }])
+            Object.keys(table.schema).map(name => [
+              name,
+              { visible: !["hiddenFiles", "hiddenFile"].includes(name) },
+            ])
           ),
           queryUI: {
             groups: [
@@ -102,6 +110,8 @@ if (descriptions.length) {
               name,
               files: attachments,
               file: attachments[0],
+              hiddenFiles: attachments,
+              hiddenFile: attachments[0],
             })
           }
           visibleRow = await createRow({ name: "visible" })
@@ -232,6 +242,20 @@ if (descriptions.length) {
           })
         })
       })
+
+      it.each(["hiddenFiles", "hiddenFile"])(
+        "rejects downloading the hidden %s column from a visible row",
+        async columnName => {
+          await asViewUser(async () => {
+            await config.api.row.downloadAttachment({
+              sourceId: viewId,
+              rowId: visibleRow._id!,
+              columnName,
+              expectations: { status: 404 },
+            })
+          })
+        }
+      )
 
       if (dbName === DatabaseName.SQS) {
         it("returns the row version that matched the view", async () => {
