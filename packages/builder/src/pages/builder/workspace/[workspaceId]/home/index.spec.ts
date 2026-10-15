@@ -84,7 +84,7 @@ vi.mock("@budibase/bbui", () => ({
   Multiselect: MockSelect,
   ProgressCircle: MockSlot,
   AbsTooltip: MockSlot,
-  Helpers: { getDateDisplayValue: () => "" },
+  Helpers: { getDateDisplayValue: () => "", uuid: () => "test-api-session" },
   Notification: MockSlot,
   keepOpen: Symbol("keepOpen"),
   notifications: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
@@ -110,6 +110,7 @@ vi.mock("@/stores/builder", () => ({
 
 vi.mock("@/stores/portal", () => ({
   auth: mocks.createStore({ user: { _id: "user_builder" } }),
+  enrichedApps: mocks.createStore([]),
   featureFlags: mocks.createStore({ PROJECTS: true }),
   licensing: mocks.createStore({ isEnterprisePlan: true }),
   agentsStore: Object.assign(mocks.createStore({ agents: [] }), {
