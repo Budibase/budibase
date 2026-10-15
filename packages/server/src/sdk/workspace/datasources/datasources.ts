@@ -1,6 +1,10 @@
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
-import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
+import {
+  containsEnvVarBinding,
+  isEnvVarBinding,
+  processObjectSync,
+} from "@budibase/string-templates"
 import {
   BasicRestAuthConfig,
   BearerRestAuthConfig,
@@ -38,44 +42,6 @@ import { setupCreationAuth as googleSetupCreationAuth } from "../../../integrati
 import sdk from "../../index"
 import { getEnvironmentVariables } from "../../utils"
 import { ensureValidPrimaryDisplay } from "../tables/utils"
-
-const ENV_VAR_PREFIX = "env."
-const ENV_VAR_REFERENCE_PATTERN = new RegExp(
-  `(?:^|[^A-Za-z0-9_.-])${ENV_VAR_PREFIX.replace(".", "\\.")}`
-)
-const ENV_VAR_BINDING_PATTERN =
-  /^(?:{{\s*env\.[A-Za-z0-9_.-]+\s*}}|{{{\s*env\.[A-Za-z0-9_.-]+\s*}}})$/
-const QUOTE_CHARACTERS = new Set(['"', "'", "`"])
-
-const withoutQuotedContent = (value: string) => {
-  let quote: string | undefined
-  let escaped = false
-
-  return Array.from(value, character => {
-    if (!quote) {
-      if (QUOTE_CHARACTERS.has(character)) {
-        quote = character
-        return " "
-      }
-      return character
-    }
-
-    if (escaped) {
-      escaped = false
-    } else if (character === "\\") {
-      escaped = true
-    } else if (character === quote) {
-      quote = undefined
-    }
-    return " "
-  }).join("")
-}
-
-const isHbsComment = (value: string) =>
-  value
-    .slice(value.startsWith("{{{") ? 3 : 2)
-    .trimStart()
-    .startsWith("!")
 
 export function addDatasourceFlags(datasource: Datasource) {
   datasource.isSQL = helpers.isSQL(datasource)
@@ -239,35 +205,6 @@ export async function getWithEnvVars(datasourceId: string) {
 
 function hasAuthConfigs(datasource: Datasource) {
   return datasource.source === SourceName.REST && datasource.config?.authConfigs
-}
-
-function containsEnvVarBinding(str: unknown) {
-  if (typeof str !== "string") {
-    return false
-  }
-  return findHBSBlocks(str).some(
-    block =>
-      !isHbsComment(block) &&
-      ENV_VAR_REFERENCE_PATTERN.test(withoutQuotedContent(block))
-  )
-}
-
-function isEnvVarBinding(str: unknown) {
-  if (typeof str !== "string") {
-    return false
-  }
-  const blocks = findHBSBlocks(str)
-  if (
-    !blocks.length ||
-    blocks.some(block => !ENV_VAR_BINDING_PATTERN.test(block))
-  ) {
-    return false
-  }
-  const remaining = blocks.reduce(
-    (value, block) => value.replace(block, ""),
-    str
-  )
-  return !remaining.trim()
 }
 
 function datasourceUsesEnvironmentVariables(datasource: Datasource): boolean {
