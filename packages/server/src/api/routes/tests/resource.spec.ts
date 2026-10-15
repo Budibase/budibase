@@ -39,6 +39,7 @@ import {
   createQueryScreen,
 } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { getPool } from "../../../tests/jestEnv"
 import { ObjectStoreBuckets } from "../../../constants"
 import {
   collectProjectResourceDependencies,
@@ -192,6 +193,44 @@ describe("/api/resources/usage", () => {
   })
 
   describe("resource usage analysis", () => {
+    it("does not treat inferred REST response field names as resource references", async () => {
+      const table = await config.api.table.save(basicTable())
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        source: SourceName.REST,
+        config: {},
+      })
+      const query = await config.api.query.save({
+        ...basicQuery(datasource._id!),
+        fields: { path: "https://example.com/resource-map" },
+      })
+      getPool("https://example.com")
+        .intercept({ path: "/resource-map", method: "GET" })
+        .reply(
+          200,
+          { [table._id!]: "opaque field data" },
+          { headers: { "content-type": "application/json" } }
+        )
+      const preview = await config.api.query.preview({
+        ...query,
+        queryId: query._id!,
+      })
+      await config.api.query.save({
+        ...query,
+        schema: preview.schema,
+      })
+
+      const result = await config.api.resource.getResourceDependencies()
+
+      expect(
+        new Set(
+          result.body.resources[query._id!].dependencies.map(
+            dependency => dependency.id
+          )
+        )
+      ).toEqual(new Set([datasource._id]))
+    })
+
     it("finds queries referenced by datasource dynamic variables", async () => {
       const tokenSource = await config.createDatasource()
       const query = await config.api.query.save(basicQuery(tokenSource._id))
