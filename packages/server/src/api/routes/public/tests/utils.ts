@@ -108,8 +108,13 @@ export function mockWorkerUserAPI(...seedUsers: User[]) {
   }
 
   nock(environment.WORKER_URL!)
+    .get("/api/global/users")
+    .reply(200, () => Object.values(users))
+    .persist()
+
+  nock(environment.WORKER_URL!)
     .get(new RegExp(`/api/global/users/.*`))
-    .reply(200, (uri, body) => {
+    .reply(200, uri => {
       const id = uri.split("/").pop()
       return users[id!]
     })
@@ -122,8 +127,8 @@ export function mockWorkerUserAPI(...seedUsers: User[]) {
       if (!newUser._id) {
         newUser._id = `us_${generator.guid()}`
       }
-      users[newUser._id!] = newUser
-      return newUser
+      users[newUser._id!] = { ...users[newUser._id!], ...newUser }
+      return users[newUser._id!]
     })
     .persist()
 

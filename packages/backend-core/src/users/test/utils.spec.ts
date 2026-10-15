@@ -37,6 +37,17 @@ describe("Users", () => {
     expect(isCreatorSync(user, [])).toBe(false)
   })
 
+  it("does not count users without memberships as members of a creator group", () => {
+    const group: UserGroup = {
+      ...structures.userGroups.userGroup(),
+      _id: "gr_creator",
+      roles: { app_example: "CREATOR" },
+    }
+    const user = structures.users.user({ roles: {} })
+
+    expect(isCreatorSync(user, [group])).toBe(false)
+  })
+
   it("User is a not a creator if it remains to a group with ADMIN permissions", async () => {
     const usersInGroup = 10
     const groupId = "gr_17abffe89e0b40268e755b952f101a59"
