@@ -186,8 +186,12 @@ describe("Component store", () => {
       screens: [sourceScreen],
       selectedScreenId: sourceScreen._id,
     })
-    componentScreenStore.patch.mockImplementation(async patch => {
-      patch(sourceScreen)
+    componentScreenStore.patch.mockImplementation(async (patch, screenId) => {
+      const state = get(componentScreenStore)
+      const targetScreen = state.screens.find(
+        screen => screen._id === (screenId || state.selectedScreenId)
+      )
+      patch(targetScreen)
     })
 
     await ctx.test.componentStore.copy(component, true, false)
