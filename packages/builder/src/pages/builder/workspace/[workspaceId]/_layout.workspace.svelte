@@ -8,6 +8,7 @@
     previewStore,
     deploymentStore,
     workspaceStore,
+    componentStore,
   } from "@/stores/builder"
   import {
     workspacesStore,
@@ -92,7 +93,12 @@
         builderStore.appCreated(false)
         await workspacesStore.load()
       } else {
+        const componentToPaste =
+          $workspaceStore.appId === appId
+            ? $componentStore.componentToPaste
+            : undefined
         reset()
+        componentStore.update(state => ({ ...state, componentToPaste }))
         workspaceStore.update(state => ({ ...state, appId }))
         const pkg = await API.fetchAppPackage(appId)
         if (requestKey !== packageKey) {
