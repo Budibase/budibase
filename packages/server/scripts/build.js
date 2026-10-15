@@ -37,6 +37,10 @@ const files = [
     entry: join(entryPath, "index.ts"),
     out: join(outfilePath, "index.js"),
   },
+  {
+    entry: join(entryPath, "utilities", "pluginRunnerProcess.js"),
+    out: join(outfilePath, "pluginRunnerProcess.js"),
+  },
 ]
 for (let name of threadNames) {
   files.push({
