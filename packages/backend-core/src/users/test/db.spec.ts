@@ -219,7 +219,7 @@ describe("UserDB", () => {
       })
 
       it.each([true, false])(
-        "accounts for creator membership changes when adding is %s",
+        "uses the signed creator delta when adding membership is %s",
         async adding => {
           await config.doInTenant(async () => {
             const groupId = `gr_${generator.guid()}`
@@ -279,6 +279,52 @@ describe("UserDB", () => {
             expect.any(Function)
           )
           expect(quotas.removeUsers).not.toHaveBeenCalled()
+        })
+      })
+
+      it("preserves creator status and quota usage during partial updates", async () => {
+        await config.doInTenant(async () => {
+          user = await db.save({ ...user, builder: { creator: true } })
+          jest.clearAllMocks()
+
+          const saved = await db.save({
+            _id: user._id,
+            _rev: user._rev,
+            email: user.email,
+            tenantId: user.tenantId,
+            roles: user.roles,
+            firstName: "Updated",
+          })
+
+          expect(saved).toMatchObject({
+            firstName: "Updated",
+            builder: { creator: true },
+          })
+          expect(quotas.addUsers).toHaveBeenCalledWith(
+            0,
+            0,
+            expect.any(Function)
+          )
+          expect(quotas.removeUsers).not.toHaveBeenCalled()
+        })
+      })
+
+      it("preserves creator quota usage when self-permission changes are ignored", async () => {
+        await config.doInTenant(async () => {
+          user = await db.save({ ...user, builder: { creator: true } })
+          jest.clearAllMocks()
+
+          const saved = await db.save(
+            { ...user, builder: { creator: false } },
+            { currentUserId: user._id }
+          )
+
+          expect(saved.builder?.creator).toBe(true)
+          expect(quotas.addUsers).toHaveBeenCalledWith(
+            0,
+            0,
+            expect.any(Function)
+          )
         })
       })
 

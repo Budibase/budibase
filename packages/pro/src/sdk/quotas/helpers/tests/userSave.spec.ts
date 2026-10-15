@@ -180,4 +180,69 @@ describe("User save quotas", () => {
       expect(usage.usageQuota).toMatchObject({ users: 2, creators: 0 })
     })
   })
+
+  it("allows demoting a builder creator when creator usage is at the limit", async () => {
+    await config.doInTenant(async () => {
+      const builderCreator = await users.UserDB.save(
+        structures.users.user({
+          tenantId: config.getTenantId(),
+          roles: {},
+          builder: { creator: true },
+        })
+      )
+      await mocks.licenses.setCreatorsQuota(2)
+
+      const saved = await users.UserDB.save({
+        ...builderCreator,
+        builder: { creator: false },
+      })
+
+      expect(saved.builder?.creator).toBe(false)
+      const usage = await db.quotas.getQuotaUsage()
+      expect(usage.usageQuota).toMatchObject({ users: 2, creators: 1 })
+    })
+  })
+
+  it("allows demoting a builder creator when usage exceeds the limit", async () => {
+    await config.doInTenant(async () => {
+      const builderCreator = await users.UserDB.save(
+        structures.users.user({
+          tenantId: config.getTenantId(),
+          roles: {},
+          builder: { creator: true },
+        })
+      )
+      await mocks.licenses.setCreatorsQuota(1)
+
+      const saved = await users.UserDB.save({
+        ...builderCreator,
+        builder: { creator: false },
+      })
+
+      expect(saved.builder?.creator).toBe(false)
+      const usage = await db.quotas.getQuotaUsage()
+      expect(usage.usageQuota).toMatchObject({ users: 2, creators: 1 })
+    })
+  })
+
+  it("still rejects promotions when the creator quota is full", async () => {
+    await config.doInTenant(async () => {
+      const endUser = await users.UserDB.save(
+        structures.users.user({
+          tenantId: config.getTenantId(),
+          roles: {},
+        })
+      )
+      await mocks.licenses.setCreatorsQuota(1)
+
+      await expect(
+        users.UserDB.save({ ...endUser, builder: { creator: true } })
+      ).rejects.toThrow("Usage limit exceeded: 'creators'")
+
+      const saved = await users.UserDB.getUser(endUser._id!)
+      expect(saved.builder?.creator).toBeUndefined()
+      const usage = await db.quotas.getQuotaUsage()
+      expect(usage.usageQuota).toMatchObject({ users: 2, creators: 1 })
+    })
+  })
 })
