@@ -77,7 +77,7 @@ const executionContext = {
   },
 }
 
-describe("concurrent tool action accounting", () => {
+describe("tool action accounting with real quotas", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -96,6 +96,85 @@ describe("concurrent tool action accounting", () => {
   afterEach(() => {
     jest.restoreAllMocks()
     mocks.licenses.useUnlimited()
+  })
+
+  it("counts only the approved execution across approval boundaries", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await quotas.setAllUsage({
+        name: MonthlyQuotaName.ACTIONS,
+        type: QuotaUsageType.MONTHLY,
+        values: { total: 0, app: 0, breakdown: 0 },
+        opts: { id: ActionType.AI_AGENT },
+      })
+      const execute = jest.fn().mockResolvedValue({ success: true })
+      const toolDefinition = definition(execute)
+      const runtime = {
+        executionContext: {
+          ...executionContext,
+          tenantId: config.getTenantId(),
+          workspaceId: config.getProdWorkspaceId(),
+        },
+        principal: ToolExecutionPrincipal.ADMIN,
+        authorize: jest.fn().mockResolvedValue(undefined),
+      }
+      const runtimes = new Map([[toolDefinition.name, runtime]])
+      const call = async (gate?: EscalationGateRuntime) => {
+        const tools = toToolSet(
+          [toolDefinition],
+          runtimes,
+          gate ? new Map([[toolDefinition.name, gate]]) : undefined
+        )
+        return await tools[toolDefinition.name].execute?.(
+          { value: "approved value" },
+          { toolCallId: "call_approval", messages: [], context: undefined }
+        )
+      }
+
+      const pending = await call({
+        intercept: jest.fn().mockResolvedValue({
+          status: ApprovalToolResultStatus.PENDING_APPROVAL,
+        }),
+      })
+      const pendingUsage = await quotas.getCurrentUsageValues(
+        QuotaUsageType.MONTHLY,
+        MonthlyQuotaName.ACTIONS,
+        ActionType.AI_AGENT
+      )
+      // The resume worker rebuilds tools without a gate for the frozen approved call.
+      const approved = await call()
+      const repeated = await call({
+        intercept: jest.fn().mockResolvedValue({
+          status: ApprovalToolResultStatus.ALREADY_APPROVED,
+        }),
+      })
+      const usage = await quotas.getCurrentUsageValues(
+        QuotaUsageType.MONTHLY,
+        MonthlyQuotaName.ACTIONS,
+        ActionType.AI_AGENT
+      )
+
+      expect(pending).toEqual({
+        status: ApprovalToolResultStatus.PENDING_APPROVAL,
+      })
+      expect(pendingUsage.total).toBe(0)
+      expect(pendingUsage.breakdown).toBe(0)
+      expect(approved).toEqual({ success: true })
+      expect(repeated).toEqual({
+        status: ApprovalToolResultStatus.ALREADY_APPROVED,
+      })
+      expect(execute).toHaveBeenCalledTimes(1)
+      expect(usage.total).toBe(1)
+      expect(usage.breakdown).toBe(1)
+      expect(events.action.aiAgentToolExecuted).toHaveBeenCalledTimes(1)
+      expect(events.action.aiAgentToolExecuted).toHaveBeenCalledWith({
+        agentId: executionContext.agentId,
+        sessionId: executionContext.conversationId,
+        operationId: executionContext.operationId,
+        toolName: toolDefinition.name,
+        sourceType: toolDefinition.sourceType,
+      })
+      expect(events.action.aiAgentToolFailed).not.toHaveBeenCalled()
+    })
   })
 
   it.each([
