@@ -366,6 +366,7 @@ jobs:
     needs:
       - install-deps
       - compute-affected-jobs
+      - check-client-build-size
     strategy:
       fail-fast: false
       matrix:
@@ -492,9 +493,12 @@ jobs:
 
           ./scripts/pull-images.sh "${IMAGES[@]}"
 
-      - name: Build client library - necessary for component tests
+      - name: Download client library for server integration tests
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true' && matrix.datasource == 'none'
-        run: yarn build:client
+        uses: actions/download-artifact@v8
+        with:
+          name: client-library
+          path: packages/client/dist
 
       - name: Test server
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
@@ -636,6 +640,15 @@ jobs:
 
       - name: Build client library
         run: yarn build:client
+
+      - name: Upload client library for server integration tests
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-library
+          path: packages/client/dist
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
 
       - name: Check client build size
         run: |
