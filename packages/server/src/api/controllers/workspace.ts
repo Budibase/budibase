@@ -477,6 +477,7 @@ export async function fetchAppPackage(
         ? screen
         : {
             ...screen,
+            _rev: undefined,
             props: { ...screen.props, _children: [] },
           }
     )
