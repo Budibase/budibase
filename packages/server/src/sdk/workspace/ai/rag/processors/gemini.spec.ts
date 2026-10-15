@@ -106,6 +106,109 @@ describe("GeminiRagProcessor", () => {
     ])
   })
 
+  it("attributes generated passages to their grounding documents when file IDs are missing", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        file_id: null,
+        filename: "variance-reporting.pdf",
+        content: [{ type: "text", text: "Enter MTD and YTD notes." }],
+        attributes: { uri: "", title: "variance-reporting.pdf" },
+      },
+      {
+        file_id: null,
+        filename: "variance-reporting.pdf",
+        content: [{ type: "text", text: "Click Save Note twice." }],
+        attributes: { uri: "", title: "variance-reporting.pdf" },
+      },
+      {
+        content: [{ type: "text", text: "Enter both notes and save twice." }],
+        attributes: { grounding_chunk_indices: [1, 0] },
+      },
+    ])
+
+    const result = await createProcessor().search(
+      "How do I save variance notes?"
+    )
+
+    expect(result).toEqual([
+      {
+        source: "variance-reporting.pdf",
+        chunkText: "Enter MTD and YTD notes.",
+      },
+      {
+        source: "variance-reporting.pdf",
+        chunkText: "Click Save Note twice.",
+      },
+      {
+        source: "variance-reporting.pdf",
+        chunkText: "Enter both notes and save twice.",
+      },
+    ])
+  })
+
+  it("preserves every document supporting a generated passage", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        file_id: "file-policy",
+        filename: "policy.pdf",
+        content: [{ type: "text", text: "Submit notes monthly." }],
+      },
+      {
+        file_id: "file-guide",
+        filename: "guide.pdf",
+        content: [{ type: "text", text: "Click Save Note twice." }],
+      },
+      {
+        content: [
+          { type: "text", text: "Submit notes monthly and save twice." },
+        ],
+        attributes: { grounding_chunk_indices: [0, 1, 0] },
+      },
+    ])
+
+    const result = await createProcessor().search("How should I submit notes?")
+
+    expect(result).toEqual([
+      { source: "file-policy", chunkText: "Submit notes monthly." },
+      { source: "file-guide", chunkText: "Click Save Note twice." },
+      {
+        source: "file-policy",
+        chunkText: "Submit notes monthly and save twice.",
+      },
+      {
+        source: "file-guide",
+        chunkText: "Submit notes monthly and save twice.",
+      },
+    ])
+  })
+
+  it("excludes generated passages without resolvable grounding references", async () => {
+    mockSearchGeminiFileStore.mockResolvedValue([
+      {
+        file_id: "file-policy",
+        content: [{ type: "text", text: "Submit notes monthly." }],
+      },
+      {
+        content: [{ type: "text", text: "Unattributed context" }],
+      },
+      {
+        content: [{ type: "text", text: "Unsupported generated answer" }],
+        attributes: { grounding_chunk_indices: [-1, 1, 100, 0.5, "0"] },
+      },
+      {
+        content: [{ type: "text", text: "Answer with no grounding" }],
+        attributes: { grounding_chunk_indices: [] },
+      },
+    ])
+
+    const result = await createProcessor().search("How should I submit notes?")
+
+    expect(result).toEqual([
+      { source: "file-policy", chunkText: "Submit notes monthly." },
+      { chunkText: "Unattributed context" },
+    ])
+  })
+
   it("reads chunk text from retrievedContext fields", async () => {
     mockSearchGeminiFileStore.mockResolvedValue([
       {

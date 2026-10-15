@@ -1,13 +1,15 @@
-import * as setup from "../../tests/utilities"
-import { basicTable } from "../../../../tests/utilities/structures"
+import { roles } from "@budibase/backend-core"
+import { generator } from "@budibase/backend-core/tests"
 import {
   BasicOperator,
+  PermissionLevel,
   SortOrder,
   Table,
   UILogicalOperator,
 } from "@budibase/types"
+import { basicTable } from "../../../../tests/utilities/structures"
+import * as setup from "../../tests/utilities"
 import { PublicAPIRequest } from "./Request"
-import { generator } from "@budibase/backend-core/tests"
 
 describe("check public API security", () => {
   const config = setup.getConfig()
@@ -119,6 +121,39 @@ describe("check public API security", () => {
     )
     const results = await request.rows.viewSearch(response.data.id, {})
     expect(results.data.length).toEqual(1)
+  })
+
+  it("should enforce view permissions when searching rows", async () => {
+    const response = await request.views.create(baseView(), { status: 201 })
+    await config.api.permission.add({
+      roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+      resourceId: response.data.id,
+      level: PermissionLevel.READ,
+    })
+    const user = await config.globalUser({
+      builder: { global: false },
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+    })
+    const restrictedRequest = await PublicAPIRequest.init(config, user)
+
+    const adminUser = await config.globalUser({
+      builder: { global: false },
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.ADMIN,
+      },
+    })
+    const adminRequest = await PublicAPIRequest.init(config, adminUser)
+    await adminRequest.rows.viewSearch(response.data.id, {}, { status: 200 })
+
+    await restrictedRequest.rows.viewSearch(
+      response.data.id,
+      {},
+      {
+        status: 403,
+      }
+    )
   })
 
   it("uses the saved view sort when the request does not specify one", async () => {

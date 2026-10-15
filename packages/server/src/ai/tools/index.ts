@@ -1,3 +1,5 @@
+import { validateTypes } from "@ai-sdk/provider-utils"
+import { type ModelMessage, type Tool, type ToolSet } from "ai"
 import { getErrorMessage } from "@budibase/backend-core"
 import {
   PermissionLevel,
@@ -9,7 +11,6 @@ import {
   type AgentOperationToolConfig,
   type ToolExecutionPolicy,
 } from "@budibase/types"
-import { type ModelMessage, type Tool, type ToolSet } from "ai"
 
 export interface ToolAuthorization {
   permissionType: PermissionType
@@ -31,6 +32,7 @@ export interface AiToolDefinition {
   action?: ToolAction
   executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
+  authoritativeInputSchema?: Tool["inputSchema"]
   requesterRedactedTool?: Tool
   filterResult?: (
     result: unknown,
@@ -123,8 +125,28 @@ const wrapTool = (
         principal: runtime.principal,
       })
     }
+    const isMutating =
+      toolDef.authorization?.permissionLevel === PermissionLevel.WRITE ||
+      toolDef.authorization?.permissionLevel === PermissionLevel.EXECUTE
+    const isRequesterRedacted = toolDef.requesterRedactedTool === toolDef.tool
+    let validatedInput = input
+    if (isMutating) {
+      const schema =
+        toolDef.authoritativeInputSchema ?? toolDef.tool.inputSchema
+      try {
+        validatedInput = await validateTypes({
+          value: input,
+          schema,
+        })
+      } catch (error) {
+        if (isRequesterRedacted) {
+          throw new Error("Tool input is invalid")
+        }
+        throw error
+      }
+    }
     if (gate) {
-      const gateResult = await gate.intercept(input, {
+      const gateResult = await gate.intercept(validatedInput, {
         toolCallId: options?.toolCallId ?? "",
         messages: options?.messages,
       })
@@ -133,7 +155,7 @@ const wrapTool = (
       }
     }
     try {
-      const result = await execute(input, options)
+      const result = await execute(validatedInput, options)
       const failureMessage = getToolFailure(result)
       if (failureMessage) {
         throw new Error(failureMessage)
