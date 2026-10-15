@@ -53,7 +53,7 @@ import {
   isSchema,
   validate as validateSchema,
 } from "../../../utilities/schema"
-import { handleDataImport, reconcileImportedRows } from "./utils"
+import { handleDataImport, importInternalTableRows } from "./utils"
 import {
   projectAssignmentResult,
   mergeProjectAssignmentResults,
@@ -280,73 +280,6 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
 }
 
-const importTableRows = async ({
-  tableId,
-  rows,
-  userId,
-}: {
-  tableId: string
-  rows: Row[]
-  userId?: string
-}) => {
-  const db = context.getWorkspaceDB()
-  const table = await db.get<Table>(tableId)
-  let importedRows: Row[] = []
-  const importedTable = await handleDataImport(table, {
-    importRows: rows,
-    userId,
-    onRowsImported: rows => {
-      importedRows = rows
-    },
-  })
-  return await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
-    const currentTable = await db.get<Table>(tableId)
-    // Schema saves can finish their row cleanup while this import is writing.
-    // Repair only this import's rows before releasing the schema-save lock.
-    const importedSchema = await reconcileImportedRows({
-      importedTable,
-      currentTable,
-      rows: importedRows,
-    })
-    let schemaChanged = false
-    // Imports can add options while other saves change the table or its projects.
-    for (const [name, importedColumn] of Object.entries(importedSchema)) {
-      const currentColumn = currentTable.schema[name]
-      if (
-        (importedColumn.type !== FieldType.OPTIONS &&
-          importedColumn.type !== FieldType.ARRAY) ||
-        currentColumn?.type !== importedColumn.type
-      ) {
-        continue
-      }
-      const existingValues = currentColumn.constraints?.inclusion || []
-      const addedValues = (importedColumn.constraints?.inclusion || []).filter(
-        value => !existingValues.includes(value)
-      )
-      if (addedValues.length) {
-        currentColumn.constraints = {
-          ...currentColumn.constraints,
-          inclusion: [...new Set([...existingValues, ...addedValues])].sort(),
-        }
-        schemaChanged = true
-      }
-    }
-    if (schemaChanged) {
-      const { table: updatedTable } = await sdk.tables.internal.save(
-        currentTable,
-        {
-          tableId: currentTable._id,
-          userId,
-        }
-      )
-      return await processTable(
-        await sdk.tables.enrichViewSchemas(updatedTable)
-      )
-    }
-    return await processTable(await sdk.tables.enrichViewSchemas(currentTable))
-  })
-}
-
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   if (ctx.request.body.rows?.length && !isExternalTable(ctx.request.body)) {
     // Publishing clears the rename metadata needed by an in-flight row import.
@@ -364,11 +297,14 @@ async function saveTable(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   )
   let { savedTable } = result
   if (rows && !isExternalTable(savedTable)) {
-    savedTable = await importTableRows({
-      tableId: savedTable._id!,
+    const importedTable = await importInternalTableRows({
+      table: await context.getWorkspaceDB().get<Table>(savedTable._id!),
       rows,
       userId: ctx.user._id,
     })
+    savedTable = await processTable(
+      await sdk.tables.enrichViewSchemas(importedTable)
+    )
   }
   if (!table._id) {
     await events.table.created(savedTable)
