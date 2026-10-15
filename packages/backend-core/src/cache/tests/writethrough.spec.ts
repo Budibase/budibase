@@ -31,6 +31,19 @@ describe("writethrough", () => {
   describe("put", () => {
     let current: any
 
+    it("persists every write when throttling is disabled, even in the same millisecond", async () => {
+      await config.doInTenant(async () => {
+        const id = structures.uuid()
+        const first = await writethrough.put({ _id: id, value: 1 }, 0)
+        await writethrough.put({ _id: id, _rev: first.rev, value: 2 }, 0)
+
+        const persisted = await db.tryGet<ValueDoc>(id)
+        const cached = await writethrough.tryGet<ValueDoc>(id)
+        expect(persisted?.value).toBe(2)
+        expect(cached?.value).toBe(2)
+      })
+    })
+
     it("should be able to store, will go to DB", async () => {
       await config.doInTenant(async () => {
         const response = await writethrough.put({

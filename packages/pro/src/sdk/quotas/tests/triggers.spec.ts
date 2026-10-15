@@ -278,17 +278,19 @@ describe("triggers", () => {
 
     await config.doInWorkspace(async () => {
       const trigger = async () => {
-        let value = quota.value * 0.9
         await quotas.incrementMany({
-          change: value,
+          change: 1,
           name: StaticQuotaName.ROWS,
           type: QuotaUsageType.STATIC,
         })
       }
 
-      // wait a small amount of time to emulate concurrent trigger requests.
-      // this ensures the lock mechanism works as expected - however this
-      // doesn't completely protect triggering against stale reads.
+      await quotas.set(
+        StaticQuotaName.ROWS,
+        QuotaUsageType.STATIC,
+        quota.value * 0.9 - 1
+      )
+      // Both updates cross the same threshold, but their increments must survive.
       mocks.licenses.mockTriggerQuota.mockImplementationOnce(async () => {
         await new Promise(resolve => {
           setTimeout(resolve, 50)
@@ -302,6 +304,11 @@ describe("triggers", () => {
       await Promise.all(promises)
 
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
+      const usage = await db.quotas.getCurrentUsageValues(
+        QuotaUsageType.STATIC,
+        StaticQuotaName.ROWS
+      )
+      expect(usage.total).toBe(quota.value * 0.9 + 1)
     })
   })
 })
