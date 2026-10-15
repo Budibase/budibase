@@ -219,7 +219,7 @@ describe("initPlatformActionSessionIndexQueue", () => {
   })
 
   it.each([undefined, NaN, 0, -1, Infinity, -Infinity, 1.5])(
-    "uses the default concurrency when given %s",
+    "uses the default concurrency when given an invalid value (%s)",
     async concurrency => {
       jest.resetModules()
       const freshQueue = await import("../../../../queue")
