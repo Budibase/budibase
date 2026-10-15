@@ -20,6 +20,7 @@ import { ProjectAPI } from "./project"
 import { PluginAPI } from "./plugin"
 import { RowPublicAPI } from "./public/row"
 import { UserPublicAPI } from "./public/user"
+import { GroupPublicAPI } from "./public/group"
 import { QueryAPI } from "./query"
 import { RecaptchaAPI } from "./recaptcha"
 import { ResourceAPI } from "./resource"
@@ -79,6 +80,7 @@ export default class API {
   public: {
     user: UserPublicAPI
     row: RowPublicAPI
+    group: GroupPublicAPI
   }
 
   constructor(config: TestConfiguration) {
@@ -121,6 +123,7 @@ export default class API {
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),
+      group: new GroupPublicAPI(config),
     }
   }
 }
