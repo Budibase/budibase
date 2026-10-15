@@ -128,6 +128,17 @@ export async function search(
         }
       }
 
+      // Saved view conditions must not make an empty request filter non-empty.
+      if (
+        options.query.onEmptyFilter === EmptyFilterOption.RETURN_NONE &&
+        !dataFilters.hasFilters(dataFilters.cleanupQuery(options.query))
+      ) {
+        span.addTags({ emptyQuery: true })
+        return {
+          rows: [],
+        }
+      }
+
       const conditions = viewQuery ? [viewQuery] : []
       options.query = {
         $and: {
