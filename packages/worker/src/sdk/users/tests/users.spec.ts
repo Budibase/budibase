@@ -1,11 +1,73 @@
 import { structures, mocks } from "../../../tests"
 import { env, context } from "@budibase/backend-core"
-import { db as userDb } from "../"
+import { groups } from "@budibase/pro"
+import { db as userDb, save } from "../"
 import { CloudAccount } from "@budibase/types"
 
 describe("users", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+  })
+
+  describe("save", () => {
+    beforeEach(() => {
+      mocks.licenses.useGroups()
+    })
+
+    it.each([undefined, []])(
+      "skips the default group when assignment is disabled and userGroups is %j",
+      async userGroups => {
+        await context.doInTenant(structures.tenant.id(), async () => {
+          await groups.save({
+            ...structures.groups.UserGroup(),
+            isDefault: true,
+          })
+
+          const saved = await save({
+            user: structures.users.user({ userGroups }),
+            options: { assignDefaultGroup: false },
+          })
+
+          expect(saved.userGroups).toEqual(userGroups)
+        })
+      }
+    )
+
+    it.each([undefined, true])(
+      "assigns the default group when assignDefaultGroup is %j",
+      async assignDefaultGroup => {
+        await context.doInTenant(structures.tenant.id(), async () => {
+          const defaultGroup = await groups.save({
+            ...structures.groups.UserGroup(),
+            isDefault: true,
+          })
+
+          const saved = await save({
+            user: structures.users.user(),
+            options: { assignDefaultGroup },
+          })
+
+          expect(saved.userGroups).toEqual([defaultGroup.id])
+        })
+      }
+    )
+
+    it("preserves explicit groups when default group assignment is disabled", async () => {
+      await context.doInTenant(structures.tenant.id(), async () => {
+        await groups.save({
+          ...structures.groups.UserGroup(),
+          isDefault: true,
+        })
+        const explicitGroup = await groups.save(structures.groups.UserGroup())
+
+        const saved = await save({
+          user: structures.users.user({ userGroups: [explicitGroup.id] }),
+          options: { assignDefaultGroup: false },
+        })
+
+        expect(saved.userGroups).toEqual([explicitGroup.id])
+      })
+    })
   })
 
   describe("isPreventPasswordActions", () => {
