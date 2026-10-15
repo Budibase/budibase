@@ -10,6 +10,14 @@ import * as quotas from "../quotas"
 
 const mockTriggerQuota = mocks.licenses.mockTriggerQuota
 
+const deferred = () => {
+  let resolve!: () => void
+  const promise = new Promise<void>(done => {
+    resolve = done
+  })
+  return { promise, resolve }
+}
+
 describe("triggers", () => {
   const config = new DBTestConfiguration()
 
@@ -268,6 +276,118 @@ describe("triggers", () => {
       await quotas.increment(StaticQuotaName.ROWS, QuotaUsageType.STATIC)
 
       // re-triggered
+      expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it("allows quota reads and updates while a notification is pending", async () => {
+    const license = mocks.licenses.useCloudFree()
+    const quota = license.quotas.usage.static.rows
+
+    await config.doInWorkspace(async () => {
+      await quotas.set(
+        StaticQuotaName.ROWS,
+        QuotaUsageType.STATIC,
+        quota.value * 0.9 - 1
+      )
+      const notifying = deferred()
+      const releaseNotification = deferred()
+      mockTriggerQuota.mockImplementationOnce(async () => {
+        notifying.resolve()
+        await releaseNotification.promise
+      })
+      const first = quotas.increment(
+        StaticQuotaName.ROWS,
+        QuotaUsageType.STATIC
+      )
+      await notifying.promise
+      const second = quotas.increment(
+        StaticQuotaName.ROWS,
+        QuotaUsageType.STATIC
+      )
+      const read = db.quotas.getQuotaUsage()
+      let timer: ReturnType<typeof setTimeout> | undefined
+      let completedWhileNotifying = false
+      try {
+        completedWhileNotifying = await Promise.race([
+          Promise.all([second, read]).then(() => true),
+          new Promise<boolean>(resolve => {
+            timer = setTimeout(() => resolve(false), 1000)
+          }),
+        ])
+      } finally {
+        clearTimeout(timer)
+        releaseNotification.resolve()
+        await Promise.all([first, second, read])
+      }
+
+      const usage = await db.quotas.getCurrentUsageValues(
+        QuotaUsageType.STATIC,
+        StaticQuotaName.ROWS
+      )
+      expect(completedWhileNotifying).toBe(true)
+      expect(usage.total).toBe(quota.value * 0.9 + 1)
+      expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it("sends a higher threshold notification while an earlier one is pending", async () => {
+    const license = mocks.licenses.useCloudFree()
+    const quota = license.quotas.usage.static.rows
+
+    await config.doInWorkspace(async () => {
+      await quotas.set(
+        StaticQuotaName.ROWS,
+        QuotaUsageType.STATIC,
+        quota.value * 0.9 - 1
+      )
+      const notifying = deferred()
+      const releaseNotification = deferred()
+      mockTriggerQuota.mockImplementationOnce(async () => {
+        notifying.resolve()
+        await releaseNotification.promise
+      })
+      const first = quotas.increment(
+        StaticQuotaName.ROWS,
+        QuotaUsageType.STATIC
+      )
+      await notifying.promise
+      try {
+        await quotas.incrementMany({
+          change: quota.value * 0.1,
+          name: StaticQuotaName.ROWS,
+          type: QuotaUsageType.STATIC,
+        })
+      } finally {
+        releaseNotification.resolve()
+        await first
+      }
+      expect(mockTriggerQuota).toHaveBeenCalledTimes(2)
+      expect(mockTriggerQuota).toHaveBeenCalledWith({
+        name: "Rows",
+        percentage: 90,
+      })
+      expect(mockTriggerQuota).toHaveBeenCalledWith({
+        name: "Rows",
+        percentage: 100,
+      })
+    })
+  })
+
+  it("keeps committed usage when the notification fails", async () => {
+    const license = mocks.licenses.useCloudFree()
+    const quota = license.quotas.usage.static.rows
+
+    await config.doInWorkspace(async () => {
+      mockTriggerQuota.mockRejectedValueOnce(new Error("Licensing unavailable"))
+      await quotas.incrementMany({
+        change: quota.value * 0.9,
+        name: StaticQuotaName.ROWS,
+        type: QuotaUsageType.STATIC,
+      })
+      const usage = await db.quotas.getQuotaUsage()
+      expect(usage.usageQuota.rows).toBe(quota.value * 0.9)
+      expect(usage.usageQuota.triggers.rows![90]).toBeDefined()
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
     })
   })

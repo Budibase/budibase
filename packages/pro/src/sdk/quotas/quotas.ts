@@ -1,6 +1,5 @@
 import {
   context,
-  locks,
   logging,
   tenancy,
   UsageLimitWarning,
@@ -11,8 +10,6 @@ import {
   isConstantQuota,
   isMonthlyQuota,
   isStaticQuota,
-  LockName,
-  LockType,
   MeteredQuotaName,
   MonthlyQuotaName,
   Quota,
@@ -224,33 +221,26 @@ const getExistingTriggers = (
   }
 }
 
-const triggerQuota = async (
-  name: MeteredQuotaName,
-  quota: Quota,
-  percentage: number,
+interface QuotaNotification {
+  quota: Quota
+  percentage: number
   resetDate?: string
-) => {
+}
+
+const triggerQuota = async ({
+  quota,
+  percentage,
+  resetDate,
+}: QuotaNotification) => {
   try {
-    // use a lock so that we never send the email more than once
-    // under high throughput where there may be stale reads
-    await locks.doWithLock(
-      {
-        type: LockType.TRY_ONCE,
-        name: LockName.TRIGGER_QUOTA,
-        resource: name, // use the quota name for extra uniqueness on the lock
-        ttl: 10000, // auto expire after 10 seconds
-      },
-      async () => {
-        const request: QuotaTriggeredRequest = {
-          percentage,
-          name: quota.name,
-        }
-        if (resetDate) {
-          request.resetDate = resetDate
-        }
-        await licensing.client.triggerQuota(request)
-      }
-    )
+    const request: QuotaTriggeredRequest = {
+      percentage,
+      name: quota.name,
+    }
+    if (resetDate) {
+      request.resetDate = resetDate
+    }
+    await licensing.client.triggerQuota(request)
   } catch (e: any) {
     // swallow error so we don't interrupt quota update
     logging.logAlert("Error triggering quota", e)
@@ -263,12 +253,14 @@ const checkTriggers = async ({
   totalValue,
   quota,
   usage,
+  notifications,
 }: {
   type: QuotaUsageType
   name: MeteredQuotaName
   totalValue: number
   quota: Quota
   usage: QuotaUsage
+  notifications: QuotaNotification[]
 }): Promise<QuotaTriggers> => {
   const resetDate =
     type === QuotaUsageType.MONTHLY ? usage.quotaReset : undefined
@@ -297,7 +289,7 @@ const checkTriggers = async ({
         const sendNotification = !nextIsTriggered || isAtTrigger
 
         if (sendNotification) {
-          await triggerQuota(name, quota, percentage, resetDate)
+          notifications.push({ quota, percentage, resetDate })
         }
       }
     } else {
@@ -312,6 +304,7 @@ export const updateUsage = async (
   params: UpdateUsageParams | UpdateUsageParams[]
 ) => {
   const tenantId = tenancy.getTenantId()
+  const notifications: QuotaNotification[] = []
   // License refresh can reconcile usage itself, so resolve it before locking usage.
   const actions = await Promise.all(
     (Array.isArray(params) ? params : [params]).map(async action => ({
@@ -385,6 +378,7 @@ export const updateUsage = async (
                 totalValue,
                 quota: licensedQuota,
                 usage,
+                notifications,
               })
               triggersToApply = { ...triggersToApply, [action.name]: triggers }
             }
@@ -463,6 +457,10 @@ export const updateUsage = async (
     await calculateUpdates(await db.quotas.getQuotaUsage())
   } else {
     await db.quotas.setAllUsage(calculateUpdates)
+  }
+  // Persist usage and trigger markers before notifying, without holding the usage lock.
+  for (const notification of notifications) {
+    await triggerQuota(notification)
   }
 }
 
