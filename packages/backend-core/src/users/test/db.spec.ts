@@ -244,9 +244,43 @@ describe("UserDB", () => {
               adding ? 1 : -1,
               expect.any(Function)
             )
+            expect(quotas.removeUsers).not.toHaveBeenCalled()
           })
         }
       )
+
+      it("preserves creator memberships and quotas during partial updates", async () => {
+        await config.doInTenant(async () => {
+          const groupId = `gr_${generator.guid()}`
+          await getGlobalDB().put<UserGroup>({
+            ...structures.userGroups.userGroup(),
+            _id: groupId,
+            roles: { app_example: "CREATOR" },
+          })
+          user = await db.save({ ...user, userGroups: [groupId] })
+          jest.clearAllMocks()
+
+          const saved = await db.save({
+            _id: user._id,
+            _rev: user._rev,
+            email: user.email,
+            tenantId: user.tenantId,
+            roles: user.roles,
+            firstName: "Updated",
+          })
+
+          expect(saved).toMatchObject({
+            firstName: "Updated",
+            userGroups: [groupId],
+          })
+          expect(quotas.addUsers).toHaveBeenCalledWith(
+            0,
+            0,
+            expect.any(Function)
+          )
+          expect(quotas.removeUsers).not.toHaveBeenCalled()
+        })
+      })
 
       it("preserves creator status and quota usage during partial updates", async () => {
         await config.doInTenant(async () => {
@@ -271,6 +305,7 @@ describe("UserDB", () => {
             0,
             expect.any(Function)
           )
+          expect(quotas.removeUsers).not.toHaveBeenCalled()
         })
       })
 

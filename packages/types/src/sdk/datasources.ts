@@ -222,8 +222,8 @@ export type DatasourcePlusQueryResponse =
 export interface DatasourcePlus extends IntegrationBase {
   // if the datasource supports the use of bindings directly (to protect against SQL injection)
   // this returns the format of the identifier
-  getBindingIdentifier(): string
-  getStringConcat(parts: string[]): string
+  getBindingIdentifier(): string | Promise<string>
+  getStringConcat(parts: string[]): string | Promise<string>
   query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse>
   buildSchema(
     datasourceId: string,
