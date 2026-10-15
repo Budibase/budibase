@@ -1,46 +1,43 @@
 import { cache, context, db as dbCore } from "@budibase/backend-core"
+import { DocumentType, SEPARATOR, SortOrder } from "@budibase/types"
 import type {
   AgentRequest,
   EscalationRaisedAction,
   FetchRequestsResponse,
   FindRequestResponse,
-  RequestInboxDoc,
-  RequestRow,
-  SortOrder,
+  SearchFilters,
 } from "@budibase/types"
 import { getContextDoc } from "../../escalations"
 import { getFullUser } from "../../../../utilities/users"
 import {
-  AGENT_REQUEST_PREFIX,
   buildRequestInboxDoc,
   getEscalationState,
   getEscalationExpiry,
   hasResponded,
   isApproverOn,
-  isInvolved,
-  matchesFilters,
-  getRaisedEscalationIds,
-  toRequestRow,
   filterVisibleEscalations,
 } from "./inboxRows"
 import type { RaisedEscalation, RequestInboxFilters } from "./inboxRows"
+import { withRequestInboxLock, writeRows } from "./inboxStore"
 import {
-  searchRequestInbox,
-  withRequestInboxLock,
-  writeRows,
-} from "./inboxStore"
+  getUserFlags,
+  isInvolved,
+  loadRaisedEscalations,
+  searchRequests,
+  toRequestRow,
+} from "./requestsStore"
+import { queryRequestIdsByUser } from "./views"
 
-async function loadRaisedEscalations(
+const USER_VIEW_ID_LIMIT = 5000
+
+async function loadEscalationsWithIds(
   request: AgentRequest
 ): Promise<RaisedEscalation[]> {
-  const loaded = await Promise.all(
-    getRaisedEscalationIds(request).map(async escalationId => ({
-      escalationId,
-      doc: await getContextDoc(escalationId),
-    }))
-  )
-  return loaded.flatMap(({ escalationId, doc }) =>
-    doc ? [{ escalationId, doc }] : []
+  const docs = await loadRaisedEscalations(request)
+  return docs.flatMap(doc =>
+    doc._id
+      ? [{ escalationId: doc._id.split("_").slice(2).join("_"), doc }]
+      : []
   )
 }
 
@@ -51,12 +48,12 @@ async function syncRequestRows(requestId: string) {
   }
   await withRequestInboxLock(requestId, async () => {
     const request = await context
-      .getWorkspaceDB()
+      .getRequestsDB()
       .tryGet<AgentRequest>(requestId)
     if (!request) {
       return
     }
-    const escalations = await loadRaisedEscalations(request)
+    const escalations = await loadEscalationsWithIds(request)
     const doc = buildRequestInboxDoc({
       request,
       escalations,
@@ -103,37 +100,73 @@ async function getWorkspaceName(workspaceId: string) {
   return "name" in metadata ? metadata.name : undefined
 }
 
-async function verifyWorkspaceRows({
-  workspaceId,
-  rows,
-  filters,
-  globalUserId,
-}: {
-  workspaceId: string
-  rows: RequestInboxDoc[]
-  filters: RequestInboxFilters
-  globalUserId: string
-}): Promise<Map<string, RequestRow>> {
-  return await context.doInWorkspaceContext(workspaceId, async () => {
-    const db = context.getWorkspaceDB()
-    const verified = new Map<string, RequestRow>()
-    for (const row of rows) {
-      const request = await db.tryGet<AgentRequest>(row.requestId)
-      if (!request) {
-        continue
-      }
-      const escalations = await loadRaisedEscalations(request)
-      const fresh = buildRequestInboxDoc({ request, escalations, workspaceId })
-      if (
-        fresh &&
-        isInvolved(fresh, globalUserId) &&
-        matchesFilters(fresh, filters, globalUserId)
-      ) {
-        verified.set(row._id, toRequestRow(fresh, globalUserId))
-      }
+const USER_ARRAY_FOR_FILTER = {
+  isApprover: "approvers",
+  awaitingMe: "pendingApprovers",
+  responded: "respondedApprovers",
+} as const
+
+const EQUAL_FILTER_FIELDS = [
+  "status",
+  "workspaceId",
+  "agentId",
+  "operationId",
+] as const
+
+function buildUserFilters(
+  globalUserId: string,
+  filters: RequestInboxFilters,
+  requestIds?: string[]
+): SearchFilters {
+  const equal: Record<string, string> = {}
+  const notEqual: Record<string, string> = {}
+  const contains: Record<string, string[]> = {}
+  const notContains: Record<string, string[]> = {}
+  for (const field of EQUAL_FILTER_FIELDS) {
+    const value = filters[field]
+    if (value !== undefined) {
+      equal[field] = value
     }
-    return verified
-  })
+  }
+  if (filters.isRequester !== undefined) {
+    ;(filters.isRequester ? equal : notEqual).userId = globalUserId
+  }
+  for (const [field, column] of Object.entries(USER_ARRAY_FOR_FILTER)) {
+    const value = filters[field as keyof typeof USER_ARRAY_FOR_FILTER]
+    if (value !== undefined) {
+      ;(value ? contains : notContains)[column] = [globalUserId]
+    }
+  }
+  const involvement: SearchFilters = requestIds
+    ? { oneOf: { _id: requestIds } }
+    : {
+        $or: {
+          conditions: [
+            { equal: { userId: globalUserId } },
+            { contains: { approvers: [globalUserId] } },
+          ],
+        },
+      }
+  const conditions: SearchFilters[] = [
+    involvement,
+    { equal, notEqual, contains, notContains },
+  ]
+  if (filters.awaitingOthers === true) {
+    conditions.push({
+      equal: { status: "needs_input" },
+      notContains: { pendingApprovers: [globalUserId] },
+    })
+  } else if (filters.awaitingOthers === false) {
+    conditions.push({
+      $or: {
+        conditions: [
+          { notEqual: { status: "needs_input" } },
+          { contains: { pendingApprovers: [globalUserId] } },
+        ],
+      },
+    })
+  }
+  return { $and: { conditions } }
 }
 
 export async function fetchRequestsForUser({
@@ -149,29 +182,30 @@ export async function fetchRequestsForUser({
   page: number
   limit: number
 }): Promise<FetchRequestsResponse> {
-  const { rows, hasNextPage } = await searchRequestInbox({
-    globalUserId,
-    filters,
-    order,
+  const requestIds = await queryRequestIdsByUser(globalUserId)
+  if (!requestIds.length) {
+    return { requests: [], page, hasNextPage: false }
+  }
+  const { requests, hasNextPage } = await searchRequests({
+    filters: buildUserFilters(
+      globalUserId,
+      filters,
+      requestIds.length <= USER_VIEW_ID_LIMIT ? requestIds : undefined
+    ),
+    sort: [
+      {
+        field: "pendingApprovers",
+        containsValue: globalUserId,
+        direction: SortOrder.DESCENDING,
+      },
+      { field: "statusRank", direction: SortOrder.ASCENDING },
+      { field: "createdAt", direction: order },
+    ],
     page,
     limit,
   })
-  const workspaceIds = [...new Set(rows.map(row => row.workspaceId))]
-  const verifiedByWorkspace = await Promise.all(
-    workspaceIds.map(workspaceId =>
-      verifyWorkspaceRows({
-        workspaceId,
-        rows: rows.filter(row => row.workspaceId === workspaceId),
-        filters,
-        globalUserId,
-      })
-    )
-  )
-  const verified = new Map(
-    verifiedByWorkspace.flatMap(workspaceRows => [...workspaceRows])
-  )
   return {
-    requests: rows.flatMap(row => verified.get(row._id) ?? []),
+    requests: requests.map(request => toRequestRow(request, globalUserId)),
     page,
     hasNextPage,
   }
@@ -206,20 +240,23 @@ export async function findRequestForUser({
   globalUserId: string
 }): Promise<FindRequestResponse | undefined> {
   const currentWorkspaceId = context.getWorkspaceId()
-  if (!currentWorkspaceId || !requestId.startsWith(AGENT_REQUEST_PREFIX)) {
-    return undefined
-  }
-  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
-  if (!request) {
+  if (
+    !currentWorkspaceId ||
+    !requestId.startsWith(`${DocumentType.REQUEST}${SEPARATOR}`)
+  ) {
     return undefined
   }
   const workspaceId = dbCore.getProdWorkspaceID(currentWorkspaceId)
-  const escalations = await loadRaisedEscalations(request)
-  const doc = buildRequestInboxDoc({ request, escalations, workspaceId })
-  if (!doc || !isInvolved(doc, globalUserId)) {
+  const request = await context.getRequestsDB().tryGet<AgentRequest>(requestId)
+  if (
+    !request ||
+    request.workspaceId !== workspaceId ||
+    !isInvolved(request, globalUserId)
+  ) {
     return undefined
   }
-  const isRequester = doc.requester === globalUserId
+  const { isRequester } = getUserFlags(request, globalUserId)
+  const escalations = await loadEscalationsWithIds(request)
 
   const visibleEscalations = filterVisibleEscalations({
     escalations,

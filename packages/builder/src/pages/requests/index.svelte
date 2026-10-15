@@ -21,7 +21,7 @@
     id: string
     label: string
     empty: string
-    filters: { awaitingResponse?: boolean; isRequester?: boolean }
+    filters: { awaitingMe?: boolean; isRequester?: boolean }
   }
 
   const tabs: RequestTab[] = [
@@ -29,7 +29,7 @@
       id: "needsInput",
       label: "Needs input",
       empty: "Nothing needs your input",
-      filters: { awaitingResponse: true },
+      filters: { awaitingMe: true },
     },
     {
       id: "mine",
@@ -50,7 +50,7 @@
     request.status === "completed" || request.status === "failed"
 
   const dotClass = (request: RequestRow) => {
-    if (request.awaitingResponse) {
+    if (request.awaitingMe) {
       return "awaiting"
     }
     return isClosed(request) ? "closed" : "open"

@@ -128,6 +128,7 @@ export interface SortJson {
   [key: string]: {
     direction: SortOrder
     type?: SortType
+    containsValue?: string
   }
 }
 

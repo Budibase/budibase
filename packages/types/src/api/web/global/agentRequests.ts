@@ -13,7 +13,10 @@ export type AgentRequestsSummary = Record<AgentRequestStatus, number> & {
 export interface FetchAgentRequestsResponse {
   requests: AgentRequest[]
   summary: AgentRequestsSummary
+  bookmark?: string
 }
+
+export type FindAgentRequestResponse = AgentRequest
 
 export interface RequestRow {
   requestId: string
@@ -24,8 +27,9 @@ export interface RequestRow {
   status: AgentRequestStatus
   isRequester: boolean
   isApprover: boolean
-  awaitingResponse: boolean
-  respondedPending: boolean
+  awaitingMe: boolean
+  awaitingOthers: boolean
+  responded: boolean
   expiresAt?: string
   createdAt?: string | number
 }

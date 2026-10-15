@@ -5,6 +5,7 @@ import {
   type AgentRequestStatus,
   type FetchAgentRequestsResponse,
   type FetchRequestsResponse,
+  type FindAgentRequestResponse,
   type FindRequestResponse,
   type UserCtx,
 } from "@budibase/types"
@@ -68,22 +69,26 @@ const sanitizeStatusQuery = (
 export async function fetchAgentRequests(
   ctx: UserCtx<void, FetchAgentRequestsResponse>
 ) {
-  const { limit, page, status } = ctx.query as Record<string, string>
-  const resolvedLimit = sanitizeLimitQuery(limit)
-  const resolvedPage = sanitizePageQuery(page)
-  const resolvedStatus = sanitizeStatusQuery(status)
-  const [requests, summary] = await Promise.all([
+  const { limit, bookmark, status } = ctx.query as Record<string, string>
+  const [{ requests, bookmark: nextBookmark }, summary] = await Promise.all([
     sdk.ai.agentRequests.fetchRequests({
-      limit: resolvedLimit,
-      page: resolvedPage,
-      status: resolvedStatus,
+      limit: sanitizeLimitQuery(limit),
+      bookmark: trimmedQuery(bookmark),
+      status: sanitizeStatusQuery(status),
     }),
     sdk.ai.agentRequests.fetchRequestsSummary(),
   ])
-  ctx.body = {
-    requests,
-    summary,
+  ctx.body = { requests, summary, bookmark: nextBookmark }
+}
+
+export async function findAgentRequest(
+  ctx: UserCtx<void, FindAgentRequestResponse, { id: string }>
+) {
+  const request = await sdk.ai.agentRequests.fetchRequest(ctx.params.id)
+  if (!request) {
+    throw new HTTPError("Request not found", 404)
   }
+  ctx.body = request
 }
 
 const sanitizeOneOfQuery = <T extends string>(
@@ -121,14 +126,12 @@ export async function fetchUserRequests(
   const filters = {
     isRequester: sanitizeBooleanQuery(query.isRequester, "isRequester"),
     isApprover: sanitizeBooleanQuery(query.isApprover, "isApprover"),
-    awaitingResponse: sanitizeBooleanQuery(
-      query.awaitingResponse,
-      "awaitingResponse"
+    awaitingMe: sanitizeBooleanQuery(query.awaitingMe, "awaitingMe"),
+    awaitingOthers: sanitizeBooleanQuery(
+      query.awaitingOthers,
+      "awaitingOthers"
     ),
-    respondedPending: sanitizeBooleanQuery(
-      query.respondedPending,
-      "respondedPending"
-    ),
+    responded: sanitizeBooleanQuery(query.responded, "responded"),
     status: sanitizeStatusQuery(query.status),
     workspaceId: trimmedQuery(query.workspaceId),
     agentId: trimmedQuery(query.agentId),

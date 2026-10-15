@@ -12,8 +12,9 @@ export const AGENT_REQUEST_PREFIX = `${DocumentType.AGENT_REQUEST}${SEPARATOR}`
 export const USER_FILTER_FIELDS = [
   "isRequester",
   "isApprover",
-  "awaitingResponse",
-  "respondedPending",
+  "awaitingMe",
+  "awaitingOthers",
+  "responded",
 ] as const
 
 export const EQUAL_FILTER_FIELDS = [
@@ -101,12 +102,9 @@ export function buildRequestInboxDoc({
     }
     for (const approverId of doc.policy?.approvers ?? []) {
       approvers.add(approverId)
-      if (!pending) {
-        continue
-      }
       if (hasResponded(doc, approverId)) {
         respondedApprovers.add(approverId)
-      } else {
+      } else if (pending) {
         pendingApprovers.add(approverId)
       }
     }
@@ -134,8 +132,11 @@ export function buildRequestInboxDoc({
 export const getUserFlags = (doc: RequestInboxDoc, globalUserId: string) => ({
   isRequester: doc.requester === globalUserId,
   isApprover: doc.approvers.includes(globalUserId),
-  awaitingResponse: doc.pendingApprovers.includes(globalUserId),
-  respondedPending: doc.respondedApprovers.includes(globalUserId),
+  awaitingMe: doc.pendingApprovers.includes(globalUserId),
+  awaitingOthers:
+    doc.pendingApprovers.length > 0 &&
+    !doc.pendingApprovers.includes(globalUserId),
+  responded: doc.respondedApprovers.includes(globalUserId),
 })
 
 export const isInvolved = (doc: RequestInboxDoc, globalUserId: string) =>

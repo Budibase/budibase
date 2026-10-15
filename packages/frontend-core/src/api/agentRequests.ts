@@ -4,6 +4,7 @@ import type {
   EscalationRespondResult,
   FetchAgentRequestsResponse,
   FetchRequestsResponse,
+  FindAgentRequestResponse,
   FindRequestResponse,
   RespondToEscalationRequest,
 } from "@budibase/types"
@@ -12,11 +13,12 @@ import type { BaseAPIClient } from "./types"
 export interface AgentRequestEndpoints {
   fetchAgentRequests: (opts?: {
     limit?: number
-    page?: number
+    bookmark?: string
     status?: AgentRequestStatus
   }) => Promise<FetchAgentRequestsResponse>
+  findAgentRequest: (requestId: string) => Promise<FindAgentRequestResponse>
   fetchUserRequests: (opts?: {
-    awaitingResponse?: boolean
+    awaitingMe?: boolean
     isRequester?: boolean
     page?: number
     limit?: number
@@ -41,8 +43,8 @@ export const buildAgentRequestEndpoints = (
     if (opts.limit !== undefined) {
       params.set("limit", String(opts.limit))
     }
-    if (opts.page !== undefined) {
-      params.set("page", String(opts.page))
+    if (opts.bookmark !== undefined) {
+      params.set("bookmark", opts.bookmark)
     }
     if (opts.status !== undefined) {
       params.set("status", opts.status)
@@ -54,10 +56,14 @@ export const buildAgentRequestEndpoints = (
     })
   },
 
+  findAgentRequest: async requestId => {
+    return await API.get({ url: `/api/agent/requests/${requestId}` })
+  },
+
   fetchUserRequests: async (opts = {}) => {
     const params = new URLSearchParams()
-    if (opts.awaitingResponse !== undefined) {
-      params.set("awaitingResponse", String(opts.awaitingResponse))
+    if (opts.awaitingMe !== undefined) {
+      params.set("awaitingMe", String(opts.awaitingMe))
     }
     if (opts.isRequester !== undefined) {
       params.set("isRequester", String(opts.isRequester))

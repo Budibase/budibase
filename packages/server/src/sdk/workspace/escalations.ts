@@ -25,7 +25,7 @@ import {
 import { IsolatedVM } from "../../jsRunner/vm"
 import { RESOLUTION_STRATEGY_SNIPPETS } from "../../escalation/resolutionStrategies"
 import { getFullUser } from "../../utilities/users"
-import { syncRequestInboxForEscalation } from "./ai/agentRequests/requestInbox"
+import { refreshRequestForEscalation } from "./ai/agentRequests/crud"
 
 const getDocId = (escalationId: string): string =>
   `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
@@ -233,7 +233,7 @@ export async function respond(
     respondUnderLock(escalationId, notificationDocId, response, resolve)
   )
   if (result.status === "recorded") {
-    await syncRequestInboxForEscalation(escalationId)
+    await refreshRequestForEscalation(escalationId)
   }
   return result
 }

@@ -73,6 +73,7 @@ builderAdminRoutes
   .get("/api/agent/:agentId/slack/manifest", ai.downloadAgentSlackManifest)
   .get("/api/agent/tools", ai.fetchTools)
   .get("/api/agent/requests", ai.fetchAgentRequests)
+  .get("/api/agent/requests/:id", ai.findAgentRequest)
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
   .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)

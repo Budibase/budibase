@@ -5,7 +5,7 @@ import {
   Duration,
   utils,
 } from "@budibase/backend-core"
-import { ApprovalToolResultStatus } from "@budibase/types"
+import { AGENT_REQUEST_TYPE, ApprovalToolResultStatus } from "@budibase/types"
 import type {
   AgentRequestOperation,
   AgentRequest,
@@ -27,18 +27,19 @@ import {
   generateRequestOutcome,
   generateToolCallSummary,
 } from "./helpers"
+import { loadRaisedEscalations, withDerivedFields } from "./requestsStore"
 import {
-  queryRequestsByAgent,
-  queryRequestStatuses,
-  queryRequestsByUpdatedAt,
-  queryRequestsByStatusAndUpdatedAt,
+  queryRequestCountsByStatus,
+  queryRequestsByWorkspace,
+  queryRequestsByWorkspaceAgent,
+  queryRequestsByWorkspaceStatus,
 } from "./views"
+import type { RequestsPage } from "./views"
 import {
   getContextDoc,
   listContextDocs,
   resolveRecipientLabel,
 } from "../../escalations"
-import { syncRequestInbox } from "./requestInbox"
 
 const THREAD_CANDIDATE_LIMIT = 10
 const THREAD_LOOKBACK_DAYS = 30
@@ -78,7 +79,9 @@ const buildThread = ({
   actions?: AgentRequestAction[]
 }): AgentRequest => {
   return {
-    _id: docIds.generateAgentRequestID(),
+    _id: docIds.generateRequestID(),
+    type: AGENT_REQUEST_TYPE,
+    workspaceId: context.getProdWorkspaceId(),
     title: undefined,
     agentId,
     userId,
@@ -88,6 +91,10 @@ const buildThread = ({
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
     status: entry.status,
+    statusRank: 0,
+    approvers: [],
+    pendingApprovers: [],
+    respondedApprovers: [],
   }
 }
 
@@ -164,24 +171,21 @@ async function refineUserMessageActionSummary({
   }
 
   const latest = await context
-    .getWorkspaceDB()
+    .getRequestsDB()
     .tryGet<AgentRequest>(request._id!)
   if (!latest) {
     return request
   }
 
   try {
-    return await saveRequest(
-      {
-        ...latest,
-        actions: (latest.actions ?? []).map(action =>
-          action.id === actionId && action.type === "user_message"
-            ? { ...action, summary }
-            : action
-        ),
-      },
-      { syncInbox: false }
-    )
+    return await saveRequest({
+      ...latest,
+      actions: (latest.actions ?? []).map(action =>
+        action.id === actionId && action.type === "user_message"
+          ? { ...action, summary }
+          : action
+      ),
+    })
   } catch (err) {
     // Best-effort upgrade - a concurrent writer (e.g. updateRequestStatus)
     // winning the race is an expected outcome, not a failure of this flow.
@@ -195,20 +199,15 @@ async function refineUserMessageActionSummary({
 const isTerminalStatus = (status: AgentRequestStatus) =>
   status === "completed" || status === "failed"
 
-const sortRequests = (requests: AgentRequest[]) =>
-  requests.sort(
-    (a, b) =>
-      new Date(b.updatedAt || 0).getTime() -
-      new Date(a.updatedAt || 0).getTime()
+async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
+  const escalations = await loadRaisedEscalations(request)
+  const toSave = withDerivedFields(
+    { ...request, workspaceId: context.getProdWorkspaceId() },
+    escalations
   )
-
-async function saveRequest(
-  request: AgentRequest,
-  { syncInbox = true }: { syncInbox?: boolean } = {}
-): Promise<AgentRequest> {
-  const response = await context.getWorkspaceDB().put(request)
+  const response = await context.getRequestsDB().put(toSave)
   const saved = {
-    ...request,
+    ...toSave,
     _rev: response.rev,
   }
 
@@ -217,11 +216,36 @@ async function saveRequest(
     builderSocket?.emitAgentRequestChange(context.getDevWorkspaceId(), saved)
   }
 
-  if (syncInbox) {
-    await syncRequestInbox(saved)
-  }
-
   return saved
+}
+
+export async function refreshRequestForEscalation(
+  escalationId: string
+): Promise<void> {
+  const doc = await getContextDoc(escalationId)
+  if (!doc?.requestId) {
+    return
+  }
+  for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
+    const request = await context
+      .getRequestsDB()
+      .tryGet<AgentRequest>(doc.requestId)
+    if (!request) {
+      return
+    }
+    try {
+      await saveRequest(request)
+      return
+    } catch (err) {
+      if (
+        dbCore.isDocumentConflictError(err) &&
+        attempt < MAX_CONFLICT_RETRIES - 1
+      ) {
+        continue
+      }
+      throw err
+    }
+  }
 }
 
 // Plain Omit<T, K> isn't distributive over a union - it collapses to the
@@ -241,7 +265,7 @@ async function appendAction(
   action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">,
   timestamp: string = nowIso()
 ): Promise<AgentRequestAction | undefined> {
-  const db = context.getWorkspaceDB()
+  const db = context.getRequestsDB()
 
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
     const request = await db.tryGet<AgentRequest>(requestId)
@@ -256,18 +280,11 @@ async function appendAction(
     } as AgentRequestAction
 
     try {
-      await saveRequest(
-        {
-          ...request,
-          actions: [...(request.actions ?? []), fullAction],
-          updatedAt: nowIso(),
-        },
-        {
-          syncInbox:
-            fullAction.type !== "user_message" &&
-            fullAction.type !== "tool_call",
-        }
-      )
+      await saveRequest({
+        ...request,
+        actions: [...(request.actions ?? []), fullAction],
+        updatedAt: nowIso(),
+      })
       return fullAction
     } catch (err) {
       if (
@@ -293,7 +310,7 @@ async function refineToolCallActionSummary({
   actionId: string
   summary: string
 }): Promise<void> {
-  const db = context.getWorkspaceDB()
+  const db = context.getRequestsDB()
 
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
     const latest = await db.tryGet<AgentRequest>(requestId)
@@ -302,17 +319,14 @@ async function refineToolCallActionSummary({
     }
 
     try {
-      await saveRequest(
-        {
-          ...latest,
-          actions: (latest.actions ?? []).map(action =>
-            action.id === actionId && action.type === "tool_call"
-              ? { ...action, summary }
-              : action
-          ),
-        },
-        { syncInbox: false }
-      )
+      await saveRequest({
+        ...latest,
+        actions: (latest.actions ?? []).map(action =>
+          action.id === actionId && action.type === "tool_call"
+            ? { ...action, summary }
+            : action
+        ),
+      })
       return
     } catch (err) {
       if (dbCore.isDocumentConflictError(err)) {
@@ -562,38 +576,32 @@ async function createNewRequest({
 
 export async function fetchRequests({
   limit,
-  page,
+  bookmark,
   status,
 }: {
   limit: number
-  page: number
+  bookmark?: string
   status?: AgentRequestStatus
-}): Promise<AgentRequest[]> {
+}): Promise<RequestsPage> {
   if (status) {
-    return await queryRequestsByStatusAndUpdatedAt({ status, limit, page })
+    return await queryRequestsByWorkspaceStatus({ status, limit, bookmark })
   }
-
-  return await queryRequestsByUpdatedAt({
-    limit,
-    page,
-  })
+  return await queryRequestsByWorkspace({ limit, bookmark })
 }
 
 export async function fetchRequestsSummary(): Promise<AgentRequestsSummary> {
-  const statuses = await queryRequestStatuses()
+  const counts = await queryRequestCountsByStatus()
   return {
-    total: statuses.length,
-    active: statuses.filter(status => status === "active").length,
-    needs_input: statuses.filter(status => status === "needs_input").length,
-    completed: statuses.filter(status => status === "completed").length,
-    failed: statuses.filter(status => status === "failed").length,
+    ...counts,
+    total:
+      counts.active + counts.needs_input + counts.completed + counts.failed,
   }
 }
 
 export async function fetchRequestsByAgent(
   agentId: string
 ): Promise<AgentRequest[]> {
-  return sortRequests(await queryRequestsByAgent(agentId))
+  return await queryRequestsByWorkspaceAgent(agentId)
 }
 
 export function resolveFinalRequestStatus({
@@ -643,7 +651,7 @@ export async function resolveFinalRequestOutcome({
   // it waiting.
   isHumanResponse?: boolean
 }): Promise<{ status: "completed" | "failed"; error?: string } | undefined> {
-  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
+  const request = await context.getRequestsDB().tryGet<AgentRequest>(requestId)
   if (
     !request ||
     isTerminalStatus(request.status) ||
@@ -683,6 +691,15 @@ export async function resolveFinalRequestOutcome({
       unrecoveredToolFailures,
     })
   }
+}
+
+export async function fetchRequest(
+  requestId: string
+): Promise<AgentRequest | undefined> {
+  const request = await context.getRequestsDB().tryGet<AgentRequest>(requestId)
+  return request?.workspaceId === context.getProdWorkspaceId()
+    ? request
+    : undefined
 }
 
 export async function fetchRequestsByAgentAndUser({
@@ -788,7 +805,7 @@ export async function initActiveRequest({
   if (decision.decision === "existing_thread" && decision.requestId) {
     for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
       const existing = await context
-        .getWorkspaceDB()
+        .getRequestsDB()
         .tryGet<AgentRequest>(decision.requestId)
       if (!existing || isTerminalStatus(existing.status)) {
         break
@@ -860,7 +877,7 @@ export async function updateRequestStatus({
   // same conversation, an unrelated error) must leave it as-is.
   isHumanResponse?: boolean
 }): Promise<void> {
-  const db = context.getWorkspaceDB()
+  const db = context.getRequestsDB()
 
   // Retries on conflict since createOrUpdateRequestForPrompt writes to the same document concurrently.
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
@@ -972,7 +989,7 @@ export async function createOrUpdateRequestForPrompt({
 
   if (existingRequestId) {
     const existing = await context
-      .getWorkspaceDB()
+      .getRequestsDB()
       .tryGet<AgentRequest>(existingRequestId)
     if (existing) {
       if (isTerminalStatus(existing.status)) {
@@ -993,20 +1010,17 @@ export async function createOrUpdateRequestForPrompt({
 
       // Re-read before writing - the status may have changed while we awaited the LLM calls above.
       const latest = await context
-        .getWorkspaceDB()
+        .getRequestsDB()
         .tryGet<AgentRequest>(existingRequestId)
       if (!latest || isTerminalStatus(latest.status)) {
         return { request: latest ?? withTitle, created: false }
       }
 
-      const updated = await saveRequest(
-        {
-          ...latest,
-          title: latest.title ?? withTitle.title,
-          actions: [...(latest.actions ?? []), userMessageAction],
-        },
-        { syncInbox: !latest.title && !!withTitle.title }
-      )
+      const updated = await saveRequest({
+        ...latest,
+        title: latest.title ?? withTitle.title,
+        actions: [...(latest.actions ?? []), userMessageAction],
+      })
       return { request: updated, created: false }
     }
 
@@ -1081,7 +1095,7 @@ export async function createOrUpdateRequestForPrompt({
 
   // Re-read before writing - the status may have changed while we awaited the LLM calls above.
   const latestRequest = await context
-    .getWorkspaceDB()
+    .getRequestsDB()
     .tryGet<AgentRequest>(request._id!)
   if (!latestRequest || isTerminalStatus(latestRequest.status)) {
     return { request: latestRequest ?? request, created: false }

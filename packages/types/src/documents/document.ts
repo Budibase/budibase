@@ -48,6 +48,7 @@ export enum DocumentType {
   AGENT_LOG_SESSION = "agentlogsession",
   AGENT_LOG_REQUEST = "agentlogrequest",
   AGENT_REQUEST = "agentrequest",
+  REQUEST = "req",
   REQUEST_INBOX = "ri",
   AGENT_TEST_SUITE = "agenttestsuite",
   AGENT_TEST_RUN = "agenttestrun",
@@ -95,6 +96,7 @@ export const DocumentTypesToImport: DocumentType[] = [
 // them - never replicated between dev and prod, or included in exports
 export const RuntimeDocumentTypes: DocumentType[] = [
   DocumentType.AGENT_REQUEST,
+  DocumentType.REQUEST,
   DocumentType.ESCALATION_CONTEXT,
   DocumentType.ESCALATION_NOTIFICATION,
 ]

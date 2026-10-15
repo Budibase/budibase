@@ -60,8 +60,8 @@ const ARRAY_FIELDS = [
 
 const USER_ARRAY_FOR_FILTER = {
   isApprover: "approvers",
-  awaitingResponse: "pendingApprovers",
-  respondedPending: "respondedApprovers",
+  awaitingMe: "pendingApprovers",
+  responded: "respondedApprovers",
 } as const
 
 function inboxTable(): Table {
@@ -156,18 +156,33 @@ export async function searchRequestInbox(
       ;(value ? contains : notContains)[column] = [globalUserId]
     }
   }
-  const searchFilters: SearchFilters = {
-    $or: {
-      conditions: [
-        { equal: { requester: globalUserId } },
-        { contains: { approvers: [globalUserId] } },
-      ],
+  const conditions: SearchFilters[] = [
+    {
+      $or: {
+        conditions: [
+          { equal: { requester: globalUserId } },
+          { contains: { approvers: [globalUserId] } },
+        ],
+      },
     },
-    equal,
-    notEqual,
-    contains,
-    notContains,
+    { equal, notEqual, contains, notContains },
+  ]
+  if (filters.awaitingOthers === true) {
+    conditions.push({
+      equal: { needsInput: true },
+      notContains: { pendingApprovers: [globalUserId] },
+    })
+  } else if (filters.awaitingOthers === false) {
+    conditions.push({
+      $or: {
+        conditions: [
+          { equal: { needsInput: false } },
+          { contains: { pendingApprovers: [globalUserId] } },
+        ],
+      },
+    })
   }
+  const searchFilters: SearchFilters = { $and: { conditions } }
   const request: EnrichedQueryJson = {
     operation: Operation.READ,
     table: inboxTable(),

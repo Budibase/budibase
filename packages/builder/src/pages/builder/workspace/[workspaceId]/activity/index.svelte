@@ -85,9 +85,8 @@
     return statusFilter === "all" ? summary.total : summary[statusFilter]
   })
 
-  let hasNextPage = $derived.by(() => {
-    return filteredTotal > currentPage * PAGE_SIZE
-  })
+  let hasNextPage = $state(false)
+  let bookmarks = $state<string[]>([])
 
   // Ticks on an interval purely to force updatedLabel to re-derive
   let now = $state(Date.now())
@@ -163,11 +162,32 @@
     })
   })
 
-  let selectedRequest = $derived.by(() =>
-    allRequests.find(request => {
-      return getRequestDisplayId(request) === selectedRequestId
-    })
+  let selectedRequest = $state<AgentRequest>()
+  let selectedRequestVersion = $derived(
+    allRequests.find(
+      request => getRequestDisplayId(request) === selectedRequestId
+    )?.updatedAt
   )
+
+  $effect(() => {
+    const requestId = selectedRequestId
+    selectedRequestVersion
+    if (!requestId) {
+      selectedRequest = undefined
+      return
+    }
+    let stale = false
+    API.findAgentRequest(requestId)
+      .then(request => {
+        if (!stale) {
+          selectedRequest = request
+        }
+      })
+      .catch(() => notifications.error("Error loading request"))
+    return () => {
+      stale = true
+    }
+  })
 
   let selectedRequestAgentName = $derived.by(() => {
     if (!selectedRequest) {
@@ -216,7 +236,7 @@
       try {
         const response = await API.fetchAgentRequests({
           limit: PAGE_SIZE,
-          page,
+          bookmark: page > 1 ? bookmarks[page - 2] : undefined,
           status: statusFilter === "all" ? undefined : statusFilter,
         })
         if (sequence !== requestSequence) {
@@ -226,6 +246,11 @@
         }
         allRequests = response.requests
         summary = response.summary
+        hasNextPage = !!response.bookmark
+        bookmarks = [
+          ...bookmarks.slice(0, page - 1),
+          ...(response.bookmark ? [response.bookmark] : []),
+        ]
         try {
           await hydrateUserNames(response.requests)
         } catch (error) {
@@ -380,25 +405,22 @@
         return
       }
 
-      // A brand-new request always lands on page 1, pushing every other
-      // page's rows down by one. On page 1 we can patch locally; on any
-      // other page the shift can only be reproduced by re-fetching that
-      // page's offset from the server.
-      if (currentPage !== 1) {
-        await loadRequests(currentPage)
-        return
-      }
-
-      if (allRequests.length >= PAGE_SIZE) {
-        hasNextPage = true
-      }
-
       if (summary) {
         summary = {
           ...summary,
           total: summary.total + 1,
           [request.status]: summary[request.status] + 1,
         }
+      }
+
+      // A brand-new request lands at the top of page 1. Later pages are
+      // addressed by bookmark, so their rows don't shift.
+      if (currentPage !== 1) {
+        return
+      }
+
+      if (allRequests.length >= PAGE_SIZE) {
+        hasNextPage = true
       }
 
       allRequests = [request, ...allRequests].slice(0, PAGE_SIZE)
