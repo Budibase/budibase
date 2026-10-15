@@ -355,14 +355,19 @@
     if (!agentId || !operationId) {
       return
     }
-    const result = await agentsStore.retryRejectedUpload({
-      agentId,
-      operationId,
-      tempId,
-    })
-    if (result.successfulUploads > 0) {
-      syncOperationFromStore()
-      await refreshDeploymentStatus()
+    try {
+      const result = await agentsStore.retryRejectedUpload({
+        agentId,
+        operationId,
+        tempId,
+      })
+      if (result.successfulUploads > 0) {
+        syncOperationFromStore()
+        await refreshDeploymentStatus()
+      }
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to retry upload")
     }
   }
 

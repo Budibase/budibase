@@ -385,26 +385,45 @@ describe("AgentsStore file operations", () => {
     })
   })
 
-  it("uploadOperationFiles keeps rejected uploads with their reason", async () => {
-    uploadOperationFile.mockRejectedValue({
-      message: "Unsupported file type for knowledge ingestion",
-      status: 400,
-    })
+  it.each([400, 413, 415, 422])(
+    "uploadOperationFiles keeps HTTP %s validation failures as non-retryable rejections",
+    async status => {
+      uploadOperationFile.mockRejectedValue({
+        message: "Unsupported file type for knowledge ingestion",
+        status,
+      })
 
-    const file = new File(["hello"], "notes.bin")
-    await store.uploadOperationFiles("agent_1", "operation_1", [file])
+      const file = new File(["hello"], "notes.bin")
+      await store.uploadOperationFiles("agent_1", "operation_1", [file])
 
-    expect(
-      store.getOperationUploadState("agent_1", "operation_1").rejectedUploads
-    ).toEqual([
-      expect.objectContaining({
-        file,
-        filename: "notes.bin",
-        reason: "Unsupported file type for knowledge ingestion",
-        retryable: true,
-      }),
-    ])
-  })
+      expect(
+        store.getOperationUploadState("agent_1", "operation_1").rejectedUploads
+      ).toEqual([
+        expect.objectContaining({
+          file,
+          filename: "notes.bin",
+          reason: "Unsupported file type for knowledge ingestion",
+          retryable: false,
+        }),
+      ])
+    }
+  )
+
+  it.each([408, 429, 500, 503])(
+    "uploadOperationFiles allows retrying HTTP %s failures",
+    async status => {
+      uploadOperationFile.mockRejectedValue({ message: "Try again", status })
+      await store.uploadOperationFiles("agent_1", "operation_1", [
+        new File(["hello"], "notes.txt"),
+      ])
+
+      expect(
+        store.getOperationUploadState("agent_1", "operation_1").rejectedUploads
+      ).toEqual([
+        expect.objectContaining({ reason: "Try again", retryable: true }),
+      ])
+    }
+  )
 
   it("uploadOperationFiles marks oversized uploads as not retryable", async () => {
     const file = new File(["hello"], "huge.pdf")

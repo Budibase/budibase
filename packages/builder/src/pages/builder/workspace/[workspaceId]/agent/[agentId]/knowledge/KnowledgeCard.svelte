@@ -16,7 +16,9 @@
 
   let { row, showActions = true, onClick }: Props = $props()
 
-  let clickable = $derived(!!onClick && !!row.__clickable)
+  let clickable = $derived(
+    !!onClick && !!row.__clickable && row.knowledgeSearchConfigured
+  )
 
   let meta = $derived.by(() => {
     if (row.kind === "sharepoint_connection") {
@@ -45,7 +47,11 @@
   }
 
   const handleKeydown = (event: KeyboardEvent) => {
-    if (clickable && (event.key === "Enter" || event.key === " ")) {
+    if (
+      event.target === event.currentTarget &&
+      clickable &&
+      (event.key === "Enter" || event.key === " ")
+    ) {
       event.preventDefault()
       onClick?.(row)
     }

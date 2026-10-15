@@ -678,7 +678,13 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
           rejectUpload({
             upload,
             reason: getErrorMessage(error),
-            retryable: true,
+            retryable: !(
+              error &&
+              typeof error === "object" &&
+              "status" in error &&
+              typeof error.status === "number" &&
+              [400, 413, 415, 422].includes(error.status)
+            ),
           })
         }
       }
