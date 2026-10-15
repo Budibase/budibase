@@ -127,14 +127,35 @@ const serializeResult = ({ value, seen = new Map() }) => {
   return result
 }
 
-const invokeHost = (method, args) => {
+// Await observes subclasses through then, so caught failures can be distinguished
+// from emitter calls the action leaves for the runner to await.
+class HostCall extends Promise {
+  rejectionObserved = false
+
+  static get [Symbol.species]() {
+    return Promise
+  }
+
+  then(onFulfilled, onRejected) {
+    if (typeof onRejected === "function") {
+      this.rejectionObserved = true
+    }
+    return super.then(onFulfilled, onRejected)
+  }
+}
+
+const invokeHost = ({ method, args }) => {
   const callId = crypto.randomUUID()
-  const call = new Promise((resolve, reject) => {
+  const call = new HostCall((resolve, reject) => {
     pendingHostCalls.set(callId, { resolve, reject })
     sendMessage({ type: "hostCall", callId, method, args })
   })
-  call.catch(() => {})
-  return call
+  const settled = Promise.prototype.then.call(
+    call,
+    () => ({ status: "fulfilled" }),
+    error => ({ status: "rejected", error })
+  )
+  return { call, settled }
 }
 
 const invokeAutomation = async request => {
@@ -142,18 +163,26 @@ const invokeAutomation = async request => {
   const emitterCalls = []
   const emitter = {
     emitRow: (...args) => {
-      const call = invokeHost("emitRow", args)
-      emitterCalls.push(call)
-      return call
+      const invocation = invokeHost({ method: "emitRow", args })
+      emitterCalls.push(invocation)
+      return invocation.call
     },
     emitTable: (...args) => {
-      const call = invokeHost("emitTable", args)
-      emitterCalls.push(call)
-      return call
+      const invocation = invokeHost({ method: "emitTable", args })
+      emitterCalls.push(invocation)
+      return invocation.call
     },
   }
   const result = await action({ ...request.params, emitter })
-  await Promise.all(emitterCalls)
+  const outcomes = await Promise.all(emitterCalls.map(({ settled }) => settled))
+  for (const [index, outcome] of outcomes.entries()) {
+    if (
+      outcome.status === "rejected" &&
+      !emitterCalls[index].call.rejectionObserved
+    ) {
+      throw outcome.error
+    }
+  }
   return result
 }
 

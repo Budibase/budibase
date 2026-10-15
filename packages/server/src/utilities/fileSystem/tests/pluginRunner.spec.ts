@@ -580,6 +580,73 @@ describe("automation plugin runner", () => {
     ).rejects.toThrow("emitter failed")
   })
 
+  it.each([
+    `try {
+      await emitter.emitTable("table:save", "app_1")
+    } catch (error) {
+      return { recovered: error.message }
+    }`,
+    `return emitter.emitTable("table:save", "app_1")
+      .catch(error => ({ recovered: error.message }))`,
+  ])("allows an action to recover from emitter failures: %s", async action => {
+    const plugin = await load(`
+      module.exports = {
+        action: async ({ emitter }) => { ${action} },
+      }
+    `)
+    const emitter: ContextEmitter = {
+      emitRow: jest.fn(),
+      emitTable: jest.fn(async () => {
+        throw new Error("emitter failed")
+      }),
+    }
+
+    await expect(
+      plugin.action({ inputs: {}, appId: "app_1", context: {}, emitter })
+    ).resolves.toEqual({ recovered: "emitter failed" })
+  })
+
+  it("rejects an action that does not catch an awaited emitter failure", async () => {
+    const plugin = await load(`
+      module.exports = {
+        action: async ({ emitter }) => {
+          await emitter.emitTable("table:save", "app_1")
+          return { success: true }
+        },
+      }
+    `)
+    const emitter: ContextEmitter = {
+      emitRow: jest.fn(),
+      emitTable: jest.fn(async () => {
+        throw new Error("emitter failed")
+      }),
+    }
+
+    await expect(
+      plugin.action({ inputs: {}, appId: "app_1", context: {}, emitter })
+    ).rejects.toThrow("emitter failed")
+  })
+
+  it("preserves custom JSON values in action results", async () => {
+    const plugin = await load(`
+      class Decimal {
+        toJSON() { return "123.45" }
+      }
+      module.exports = {
+        action: async () => ({ value: new Decimal() }),
+      }
+    `)
+
+    await expect(
+      plugin.action({
+        inputs: {},
+        appId: "app_1",
+        context: {},
+        emitter: createEmitter(),
+      })
+    ).resolves.toEqual({ value: "123.45" })
+  })
+
   it("rejects plugins without an action export", async () => {
     await expect(load("module.exports = {}")).rejects.toThrow(
       "Automation plugin does not export an action function"
