@@ -549,6 +549,13 @@ components:
                         low: 18
                         high: 100
             primaryDisplay: name
+    userGroups:
+      value:
+        data:
+          - _id: gr_engineering
+            name: Engineering
+            isDefault: false
+            managedByScim: false
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -1649,6 +1656,20 @@ components:
             type: string
             description: A map of app ID (production app ID, minus the _dev component) to a
               role ID, e.g. ADMIN.
+        userGroups:
+          description: The IDs of the user's groups. Find group IDs using GET
+            /workspaces/{workspaceId}/groups or the Copy group ID button in
+            Settings > People > Groups. Requires a global admin and the user
+            groups and expanded public API features. On update, replaces
+            memberships; omit to preserve them or provide an empty array to
+            remove all memberships. SCIM-managed memberships cannot be added or
+            removed. New users without group assignments receive the default
+            group, if configured.
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            pattern: ^gr_
       required:
         - email
     userOutput:
@@ -1706,6 +1727,13 @@ components:
                 type: string
                 description: A map of app ID (production app ID, minus the _dev component) to a
                   role ID, e.g. ADMIN.
+            userGroups:
+              description: The IDs of the groups the user belongs to.
+              type: array
+              uniqueItems: true
+              items:
+                type: string
+                pattern: ^gr_
             _id:
               description: The ID of the user.
               type: string
@@ -1771,6 +1799,13 @@ components:
                   type: string
                   description: A map of app ID (production app ID, minus the _dev component) to a
                     role ID, e.g. ADMIN.
+              userGroups:
+                description: The IDs of the groups the user belongs to.
+                type: array
+                uniqueItems: true
+                items:
+                  type: string
+                  pattern: ^gr_
               _id:
                 description: The ID of the user.
                 type: string
@@ -2705,6 +2740,34 @@ components:
               id:
                 description: The ID of the view.
                 type: string
+      required:
+        - data
+    userGroupList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              _id:
+                description: The group ID to use in a user's userGroups array.
+                type: string
+              name:
+                description: The group's name.
+                type: string
+              isDefault:
+                description: Whether new users are automatically assigned to this group.
+                type: boolean
+              managedByScim:
+                description: Whether the group is managed by SCIM. Memberships in these groups
+                  cannot be changed through the public user API.
+                type: boolean
+            required:
+              - _id
+              - name
+              - isDefault
+              - managedByScim
       required:
         - data
 security:
@@ -3676,6 +3739,29 @@ paths:
                 type: string
                 format: binary
                 example: Tarball containing database and object store contents...
+  "/workspaces/{workspaceId}/groups":
+    get:
+      operationId: workspaceListGroups
+      summary: List user groups for a workspace
+      description: Returns groups that grant role or builder access to this workspace.
+        Requires a global admin API key and the user groups and expanded public
+        API features. Both development and production workspace IDs are
+        accepted. SCIM-managed groups are included but their memberships cannot
+        be changed through the public user API.
+      tags:
+        - workspaces
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      responses:
+        "200":
+          description: Returns the groups associated with the workspace.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/userGroupList"
+              examples:
+                userGroups:
+                  $ref: "#/components/examples/userGroups"
   /workspaces/search:
     post:
       operationId: workspaceSearch
