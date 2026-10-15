@@ -61,6 +61,7 @@
   let editModal!: ModalRef
   let deleteConfirmationModal!: ModalRef
   let assignProjectModal!: ModalAPI
+  let assignProjectModalKey = 0
 
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: assignableDatasource = isAssignableDatasource(datasource)
@@ -87,6 +88,7 @@
   }
 
   const openAssignProjectModal = () => {
+    assignProjectModalKey += 1
     assignProjectModal?.show()
   }
 
@@ -200,11 +202,13 @@
   bind:this={deleteConfirmationModal}
 />
 <Modal bind:this={assignProjectModal}>
-  <AssignProjectModal
-    resource={projectAssignmentResource}
-    onPreview={projectsStore.previewAssignment}
-    onConfirm={assignProject}
-  />
+  {#key assignProjectModalKey}
+    <AssignProjectModal
+      resource={projectAssignmentResource}
+      onPreview={projectsStore.previewAssignment}
+      onConfirm={assignProject}
+    />
+  {/key}
 </Modal>
 
 <style>
