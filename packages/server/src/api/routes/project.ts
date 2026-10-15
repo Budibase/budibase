@@ -1,6 +1,10 @@
 import { middleware } from "@budibase/backend-core"
 import Joi from "joi"
 import { projectsEnabled } from "../../middleware/projectsEnabled"
+import {
+  AppType,
+  middleware as appInfoMiddleware,
+} from "../../middleware/appInfo"
 import * as controller from "../controllers/project"
 import { builderRoutes } from "./endpointGroups"
 
@@ -14,7 +18,9 @@ builderRoutes
   .get("/api/projects", projectsEnabled, controller.fetch)
   .post(
     "/api/projects/import",
+    controller.cleanupImportFiles,
     projectsEnabled,
+    appInfoMiddleware({ appType: AppType.DEV }),
     middleware.joiValidator.body(
       Joi.object({
         encryptPassword: Joi.string().max(1024).optional().allow(""),
