@@ -36,7 +36,10 @@
   let projectsRequested = false
   let packageKey = `${workspaceId}:${$params.screenId || ""}`
   let packageInitialisation = Promise.resolve()
-  let promise = getPackage({ appId: workspaceId, requestKey: packageKey })
+  const workspaceInitialisation = getPackage({
+    appId: workspaceId,
+    requestKey: packageKey,
+  })
   let sideNav: SideNav
   let showInviteUsersModal = false
   $: projectSetupReturn = getProjectSetupRequest({
@@ -47,7 +50,7 @@
     const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
     if (nextPackageKey !== packageKey) {
       packageKey = nextPackageKey
-      promise = getPackage({ appId: workspaceId, requestKey: packageKey })
+      getPackage({ appId: workspaceId, requestKey: packageKey }).catch(() => {})
     }
   }
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
@@ -163,7 +166,7 @@
       }
     }}
   />
-  {#await promise}
+  {#await workspaceInitialisation}
     <div class="loading"></div>
   {:then _}
     <div class="body">
