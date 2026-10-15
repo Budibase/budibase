@@ -1,7 +1,10 @@
 import { validateTypes } from "@ai-sdk/provider-utils"
 import { type ModelMessage, type Tool, type ToolSet } from "ai"
-import { getErrorMessage } from "@budibase/backend-core"
+import { events, getErrorMessage } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
+  ActionFailureReason,
+  ActionType,
   PermissionLevel,
   PermissionType,
   ToolAction,
@@ -100,6 +103,18 @@ const logToolExecution = (
     ...(error !== undefined && { error: getErrorMessage(error) }),
   })
 
+const toolEventContext = (
+  toolDef: AiToolDefinition,
+  { executionContext }: ToolAuthorizationRuntime
+) => ({
+  agentId: executionContext.agentId,
+  sessionId: executionContext.conversationId,
+  operationId: executionContext.operationId,
+  toolName: toolDef.name,
+  sourceType: toolDef.sourceType,
+  ...(toolDef.action && { action: toolDef.action }),
+})
+
 const wrapTool = (
   toolDef: AiToolDefinition,
   runtime?: ToolAuthorizationRuntime,
@@ -154,26 +169,38 @@ const wrapTool = (
         return gateResult
       }
     }
-    try {
-      const result = await execute(validatedInput, options)
-      const failureMessage = getToolFailure(result)
-      if (failureMessage) {
-        throw new Error(failureMessage)
+    const executeTool = async () => {
+      try {
+        const result = await execute(validatedInput, options)
+        const failureMessage = getToolFailure(result)
+        if (failureMessage) {
+          throw new Error(failureMessage)
+        }
+        const authorizedResult =
+          runtime && toolDef.filterResult
+            ? await toolDef.filterResult(result, runtime)
+            : result
+        if (runtime) {
+          logToolExecution("success", toolDef, runtime)
+          events.action.aiAgentToolExecuted(toolEventContext(toolDef, runtime))
+        }
+        return authorizedResult
+      } catch (error) {
+        if (runtime) {
+          logToolExecution("error", toolDef, runtime, error)
+          events.action.aiAgentToolFailed({
+            ...toolEventContext(toolDef, runtime),
+            reason: ActionFailureReason.ERROR,
+            errorMessage: getErrorMessage(error),
+          })
+        }
+        throw error
       }
-      const authorizedResult =
-        runtime && toolDef.filterResult
-          ? await toolDef.filterResult(result, runtime)
-          : result
-      if (runtime) {
-        logToolExecution("success", toolDef, runtime)
-      }
-      return authorizedResult
-    } catch (error) {
-      if (runtime) {
-        logToolExecution("error", toolDef, runtime, error)
-      }
-      throw error
     }
+    // Automation triggers are already metered as automation steps.
+    return toolDef.action === ToolAction.TRIGGER
+      ? await executeTool()
+      : await quotas.addAction(ActionType.AI_AGENT, executeTool)
   }
 
   return {

@@ -1,6 +1,37 @@
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    events: {
+      ...actual.events,
+      action: {
+        ...actual.events.action,
+        aiAgentToolExecuted: jest.fn(),
+        aiAgentToolFailed: jest.fn(),
+      },
+    },
+  }
+})
+
+jest.mock("@budibase/pro", () => ({
+  quotas: {
+    addAction: jest
+      .fn()
+      .mockImplementation((_type: ActionType, fn: () => Promise<unknown>) =>
+        fn()
+      ),
+  },
+}))
+
+import { events } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
+  ActionFailureReason,
+  ActionType,
+  ApprovalToolResultStatus,
   PermissionLevel,
   PermissionType,
+  ToolAction,
   ToolExecutionPrincipal,
   ToolType,
 } from "@budibase/types"
@@ -10,6 +41,7 @@ import {
   resolveToolExecutionPrincipal,
   toToolSet,
   type AiToolDefinition,
+  type EscalationGateRuntime,
 } from "."
 import { filterAgentToolCollectionResult } from "./authorization"
 
@@ -484,6 +516,211 @@ describe("secured AI tool execution", () => {
       expect.objectContaining({
         authorization: expect.objectContaining({ resourceId: "ta_denied" }),
       })
+    )
+  })
+})
+
+describe("AI tool action accounting", () => {
+  const addAction = jest.mocked(quotas.addAction)
+
+  const runtimesFor = (toolName: string) =>
+    new Map([
+      [
+        toolName,
+        {
+          executionContext,
+          principal: ToolExecutionPrincipal.REQUESTER,
+          authorize: jest.fn().mockResolvedValue(undefined),
+        },
+      ],
+    ])
+
+  const callTool = async (
+    toolDefinition: AiToolDefinition,
+    gate?: EscalationGateRuntime
+  ) => {
+    const tools = toToolSet(
+      [toolDefinition],
+      runtimesFor(toolDefinition.name),
+      gate ? new Map([[toolDefinition.name, gate]]) : undefined
+    )
+    return await tools[toolDefinition.name].execute?.(
+      { value: "hello" },
+      { toolCallId: "call_1", messages: [], context: undefined }
+    )
+  }
+
+  const expectedEventContext = {
+    agentId: "agent_1",
+    sessionId: "conversation_1",
+    operationId: "operation_1",
+    toolName: "secured_tool",
+    sourceType: ToolType.INTERNAL_TABLE,
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.spyOn(console, "log").mockImplementation()
+    addAction.mockImplementation(async (_type, fn) => await fn())
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it("counts a successful execution as one AI agent action", async () => {
+    const execute = jest.fn().mockResolvedValue({ success: true })
+
+    await callTool(definition(execute))
+
+    expect(addAction).toHaveBeenCalledTimes(1)
+    expect(addAction).toHaveBeenCalledWith(
+      ActionType.AI_AGENT,
+      expect.any(Function)
+    )
+    expect(execute).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not execute the tool when the actions quota is exhausted", async () => {
+    const execute = jest.fn().mockResolvedValue({ success: true })
+    addAction.mockRejectedValue(new Error("Usage limit exceeded"))
+
+    await expect(callTool(definition(execute))).rejects.toThrow(
+      "Usage limit exceeded"
+    )
+    expect(execute).not.toHaveBeenCalled()
+    expect(events.action.aiAgentToolExecuted).not.toHaveBeenCalled()
+    expect(events.action.aiAgentToolFailed).not.toHaveBeenCalled()
+  })
+
+  it("emits an executed event linked to the agent session", async () => {
+    const toolDefinition = definition(
+      jest.fn().mockResolvedValue({ success: true })
+    )
+    toolDefinition.action = ToolAction.GET_ROW
+
+    await callTool(toolDefinition)
+
+    expect(events.action.aiAgentToolExecuted).toHaveBeenCalledWith({
+      ...expectedEventContext,
+      action: ToolAction.GET_ROW,
+    })
+    expect(events.action.aiAgentToolFailed).not.toHaveBeenCalled()
+  })
+
+  it("does not count a thrown tool error and emits a failed event", async () => {
+    const execute = jest.fn().mockRejectedValue(new Error("save failed"))
+
+    await expect(callTool(definition(execute))).rejects.toThrow("save failed")
+
+    await expect(addAction.mock.results[0].value).rejects.toThrow("save failed")
+    expect(events.action.aiAgentToolFailed).toHaveBeenCalledWith({
+      ...expectedEventContext,
+      reason: ActionFailureReason.ERROR,
+      errorMessage: "save failed",
+    })
+    expect(events.action.aiAgentToolExecuted).not.toHaveBeenCalled()
+  })
+
+  it("does not count an error result and emits a failed event", async () => {
+    const execute = jest.fn().mockResolvedValue({ error: "invalid row" })
+
+    await expect(callTool(definition(execute))).rejects.toThrow("invalid row")
+
+    await expect(addAction.mock.results[0].value).rejects.toThrow("invalid row")
+    expect(events.action.aiAgentToolFailed).toHaveBeenCalledWith({
+      ...expectedEventContext,
+      reason: ActionFailureReason.ERROR,
+      errorMessage: "invalid row",
+    })
+  })
+
+  it.each([
+    ApprovalToolResultStatus.PENDING_APPROVAL,
+    ApprovalToolResultStatus.ALREADY_APPROVED,
+    ApprovalToolResultStatus.UNAVAILABLE,
+  ])("does not count or emit when the gate returns %s", async status => {
+    const execute = jest.fn()
+    const intercept = jest.fn().mockResolvedValue({
+      status,
+      escalationId: "escalation_1",
+    })
+
+    await callTool(definition(execute), { intercept })
+
+    expect(execute).not.toHaveBeenCalled()
+    expect(addAction).not.toHaveBeenCalled()
+    expect(events.action.aiAgentToolExecuted).not.toHaveBeenCalled()
+    expect(events.action.aiAgentToolFailed).not.toHaveBeenCalled()
+  })
+
+  it("does not count or emit when authorization is denied", async () => {
+    const execute = jest.fn()
+    const toolDefinition = definition(execute)
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          toolDefinition.name,
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize: jest.fn().mockRejectedValue(new Error("denied")),
+          },
+        ],
+      ])
+    )
+
+    await expect(
+      tools[toolDefinition.name].execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).rejects.toThrow("denied")
+    expect(addAction).not.toHaveBeenCalled()
+    expect(events.action.aiAgentToolExecuted).not.toHaveBeenCalled()
+    expect(events.action.aiAgentToolFailed).not.toHaveBeenCalled()
+  })
+
+  it("does not count automation triggers, which are metered as automation steps", async () => {
+    const execute = jest.fn().mockResolvedValue({ success: true })
+    const toolDefinition: AiToolDefinition = {
+      ...definition(execute),
+      name: "au_1_trigger",
+      sourceType: ToolType.AUTOMATION,
+      action: ToolAction.TRIGGER,
+      authorization: {
+        permissionType: PermissionType.AUTOMATION,
+        permissionLevel: PermissionLevel.EXECUTE,
+        resourceId: "au_1",
+      },
+    }
+
+    await callTool(toolDefinition)
+
+    expect(execute).toHaveBeenCalledTimes(1)
+    expect(addAction).not.toHaveBeenCalled()
+    expect(events.action.aiAgentToolExecuted).toHaveBeenCalledWith({
+      ...expectedEventContext,
+      toolName: "au_1_trigger",
+      sourceType: ToolType.AUTOMATION,
+      action: ToolAction.TRIGGER,
+    })
+  })
+
+  it("counts knowledge lookups as actions", async () => {
+    const execute = jest.fn().mockResolvedValue({ sources: [] })
+    const toolDefinition: AiToolDefinition = {
+      ...definition(execute),
+      name: "search_knowledge",
+    }
+
+    await callTool(toolDefinition)
+
+    expect(addAction).toHaveBeenCalledTimes(1)
+    expect(addAction).toHaveBeenCalledWith(
+      ActionType.AI_AGENT,
+      expect.any(Function)
     )
   })
 })
