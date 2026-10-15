@@ -1,9 +1,8 @@
-import { auth } from "@/stores/portal/auth"
 import { notifications } from "@budibase/bbui"
+import { PROJECT_TEMPLATE_KEY_PATTERN } from "@budibase/shared-core"
 import type { ProjectTemplateIntent } from "@budibase/types"
+import { auth } from "@/stores/portal/auth"
 
-export const PROJECT_TEMPLATE_KEY_PATTERN =
-  /^project\/[a-z0-9]+(?:-[a-z0-9]+)*$/
 const MAX_PROJECT_TEMPLATE_KEY_LENGTH = 200
 
 export interface ProjectTemplateUrlIntent {

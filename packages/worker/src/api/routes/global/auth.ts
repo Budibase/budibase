@@ -1,5 +1,6 @@
 import * as authController from "../../controllers/global/auth"
 import { auth } from "@budibase/backend-core"
+import { PROJECT_TEMPLATE_KEY_PATTERN } from "@budibase/shared-core"
 import Joi from "joi"
 import { loggedInRoutes } from "../endpointGroups"
 import { emailLockout, ipLockout } from "../../../middleware"
@@ -32,7 +33,7 @@ function buildInitInfoValidation() {
     Joi.object({
       projectTemplate: Joi.object({
         templateKey: Joi.string()
-          .pattern(/^project\/[a-z0-9]+(?:-[a-z0-9]+)*$/)
+          .pattern(PROJECT_TEMPLATE_KEY_PATTERN)
           .max(200)
           .required(),
       })
