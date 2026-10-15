@@ -9,6 +9,7 @@ import { QueryStore } from "@/stores/builder/queries"
 import { API } from "@/api"
 import {
   workspaceStore,
+  screenStore as componentScreenStore,
   tables,
   setComponentStore,
   setDatasourcesStore,
@@ -60,6 +61,7 @@ vi.mock("@/stores/preferences", () => {
 vi.mock("@/stores/builder", async () => {
   const mockWorkspaceStore = writable()
   const mockScreenComponentsList = writable([])
+  const mockScreenStore = writable({ screens: [] })
   const workspaceStore = {
     subscribe: mockWorkspaceStore.subscribe,
     update: mockWorkspaceStore.update,
@@ -77,6 +79,11 @@ vi.mock("@/stores/builder", async () => {
     workspaceStore,
     tables: writable(),
     screenComponentsList: mockScreenComponentsList,
+    screenStore: {
+      subscribe: mockScreenStore.subscribe,
+      set: mockScreenStore.set,
+      patch: vi.fn(),
+    },
     get datasources() {
       return datasourcesStore
     },
@@ -120,6 +127,7 @@ describe("Component store", () => {
     vi.clearAllMocks()
     vi.resetAllMocks()
     screenStore.reset()
+    componentScreenStore.set({ screens: [] })
     mockGetDefaultLayoutPreference.mockReturnValue("grid")
 
     let componentStoreInstance = new ComponentStore()
@@ -168,6 +176,28 @@ describe("Component store", () => {
     ctx.test.componentStore.reset()
 
     expect(ctx.test.store).toStrictEqual(INITIAL_COMPONENTS_STATE)
+  })
+
+  it("removes a cut component from its source screen", async ctx => {
+    const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
+    const sourceScreen = getScreenFixture().addChild(component).json()
+    sourceScreen._id = "screen_source"
+    componentScreenStore.set({
+      screens: [sourceScreen],
+      selectedScreenId: sourceScreen._id,
+    })
+    componentScreenStore.patch.mockImplementation(async patch => {
+      patch(sourceScreen)
+    })
+
+    await ctx.test.componentStore.copy(component, true, false)
+
+    expect(sourceScreen.props._children).toEqual([])
+    expect(ctx.test.store.componentToPaste).toEqual({
+      ...component,
+      isCut: true,
+      screenId: sourceScreen._id,
+    })
   })
 
   it("Refresh the component definitions", async ctx => {
