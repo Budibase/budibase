@@ -58,7 +58,7 @@ describe("enqueuePlatformActionSessionIndex", () => {
 
   beforeEach(() => {
     mockUpsert.mockReset()
-    mockUpsert.mockResolvedValue(true)
+    mockUpsert.mockResolvedValue({ persisted: true })
     mockOnSessionIndexed.mockReset()
   })
 
@@ -150,7 +150,7 @@ describe("enqueuePlatformActionSessionIndex", () => {
     )
   })
 
-  it("notifies the session change once the session doc is written", async () => {
+  it("notifies the session change once the session doc is persisted", async () => {
     const job = buildJob({
       environment: "dev",
       sourceType: "automation_run",
@@ -170,7 +170,7 @@ describe("enqueuePlatformActionSessionIndex", () => {
   })
 
   it("does not notify when the write is discarded", async () => {
-    mockUpsert.mockResolvedValue(false)
+    mockUpsert.mockResolvedValue({ persisted: false })
 
     await enqueuePlatformActionSessionIndex(buildJob())
 

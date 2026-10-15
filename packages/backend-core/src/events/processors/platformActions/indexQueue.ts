@@ -96,10 +96,11 @@ export async function initPlatformActionSessionIndexQueue({
   try {
     processPromise = getIndexQueue().process(concurrency, async job => {
       const { workspaceId, ...indexInput } = job.data
-      const indexed = await context.doInWorkspaceContext(workspaceId, () =>
-        upsertPlatformActionSession(indexInput)
+      const { persisted } = await context.doInWorkspaceContext(
+        workspaceId,
+        () => upsertPlatformActionSession(indexInput)
       )
-      if (indexed) {
+      if (persisted) {
         notifySessionIndexed(onSessionIndexed, {
           workspaceId,
           environment: indexInput.environment,
