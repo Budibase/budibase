@@ -5,7 +5,10 @@ import type {
   ExportProjectRequest,
   ImportProjectRequest,
   ImportProjectResponse,
+  ImportProjectTemplateRequest,
+  ImportProjectTemplateResponse,
   PreviewProjectAssignmentRequest,
+  ProjectTemplateMetadata,
   ProjectResponse,
   UpdateProjectAssignmentRequest,
   UpdateProjectRequest,
@@ -43,8 +46,16 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     const promise = API.projects
       .fetch()
       .then(({ projects }) => {
-        const sortedProjects = sortProjectsByName(projects)
+        let sortedProjects = sortProjectsByName(projects)
         if (this.fetchPromise === promise && this.workspaceId === workspaceId) {
+          if (!this.loaded) {
+            const addedProjects = get(this.store)
+            const addedIds = new Set(addedProjects.map(project => project._id))
+            sortedProjects = sortProjectsByName([
+              ...projects.filter(project => !addedIds.has(project._id)),
+              ...addedProjects,
+            ])
+          }
           this.loaded = true
           this.set(sortedProjects)
         }
@@ -79,11 +90,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   create = async (project: CreateProjectRequest) => {
     const workspaceId = this.workspaceId
     const response = await API.projects.create(project)
-    if (this.workspaceId !== workspaceId) {
-      return response.project
-    }
-    this.invalidateFetch()
-    this.update(state => sortProjectsByName([...state, response.project]))
+    this.addProject({ project: response.project, workspaceId })
     return response.project
   }
 
@@ -95,21 +102,53 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     await downloadStream(response)
   }
 
+  private addProject = ({
+    project,
+    workspaceId,
+  }: {
+    project: ProjectResponse
+    workspaceId: string | undefined
+  }) => {
+    if (this.workspaceId !== workspaceId) {
+      return
+    }
+    if (this.loaded) {
+      this.invalidateFetch()
+    }
+    this.update(state =>
+      sortProjectsByName([
+        ...state.filter(existing => existing._id !== project._id),
+        project,
+      ])
+    )
+  }
+
   importProject = async (
     file: File,
     body?: ImportProjectRequest
   ): Promise<ImportProjectResponse> => {
     const workspaceId = this.workspaceId
     const response = await API.projects.importBundle(file, body)
-    if (this.workspaceId === workspaceId) {
-      this.invalidateFetch()
-      this.update(state =>
-        sortProjectsByName([
-          ...state.filter(project => project._id !== response.project._id),
-          response.project,
-        ])
-      )
-    }
+    this.addProject({ project: response.project, workspaceId })
+    return response
+  }
+
+  fetchTemplates = async (): Promise<ProjectTemplateMetadata[]> => {
+    const response = await API.projects.fetchTemplates()
+    return response.templates
+  }
+
+  importTemplate = async ({
+    templateKey,
+    workspaceId,
+  }: ImportProjectTemplateRequest & {
+    workspaceId: string
+  }): Promise<ImportProjectTemplateResponse> => {
+    const response = await API.projects.importTemplate({
+      templateKey,
+      workspaceId,
+    })
+    this.addProject({ project: response.project, workspaceId })
     return response
   }
 

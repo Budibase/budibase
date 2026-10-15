@@ -154,6 +154,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       parseResponse,
       suppressErrors,
       signal,
+      workspaceId,
     } = callConfig
 
     // Ensure we don't do JSON processing if sending a GET request
@@ -170,6 +171,9 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     }
     if (config?.attachHeaders) {
       config.attachHeaders(headers, { url, method })
+    }
+    if (workspaceId) {
+      headers[Header.WORKSPACE_ID] = workspaceId
     }
 
     // Build request body

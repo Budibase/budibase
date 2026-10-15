@@ -121,6 +121,29 @@ describe("HomeProjectTabs", () => {
     ).toBeDisabled()
   })
 
+  it("shows template discovery only when the Templates flag is enabled", async () => {
+    const onUseTemplate = vi.fn()
+    const { rerender } = render(HomeProjectTabs, {
+      props: {
+        projects,
+        templatesEnabled: false,
+        onUseTemplate,
+      },
+    })
+
+    expect(
+      screen.queryByRole("button", { name: "Use template" })
+    ).not.toBeInTheDocument()
+
+    await rerender({
+      projects,
+      templatesEnabled: true,
+      onUseTemplate,
+    })
+    await fireEvent.click(screen.getByRole("button", { name: "Use template" }))
+    expect(onUseTemplate).toHaveBeenCalledOnce()
+  })
+
   it.each(["", "project_operations"])(
     "keeps incomplete project tabs quiet when selection is %s",
     selectedProjectId => {

@@ -78,6 +78,7 @@ export type APICallConfig<RequestT, ResponseT> = {
   external: boolean
   suppressErrors: boolean
   cache: boolean
+  workspaceId?: string
   body?: RequestT
   signal?: AbortSignal
   parseResponse?: (response: Response) => Promise<ResponseT> | ResponseT
