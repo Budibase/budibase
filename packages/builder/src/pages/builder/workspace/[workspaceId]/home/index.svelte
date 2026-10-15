@@ -117,6 +117,7 @@
   let updateAgentModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
   let selectedRow: HomeRow | null = null
+  let projectAssignmentRow: HomeRow | null = null
 
   let createProjectModal: ModalAPI
   let editProjectModal: ModalAPI
@@ -132,6 +133,7 @@
     | undefined
   let createProjectModalKey = 0
   let editProjectModalKey = 0
+  let assignProjectModalKey = 0
   let exportProjectModalKey = 0
   let importProjectModalKey = 0
 
@@ -150,13 +152,13 @@
   $: currentUserId = $auth.user?._id || ""
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
-  $: selectedProjectResource = selectedRow
+  $: selectedProjectResource = projectAssignmentRow
     ? {
-        id: selectedRow.id,
-        revision: selectedRow.resource._rev || "",
-        name: selectedRow.name,
-        typeLabel: getTypeLabel(selectedRow.type),
-        projectIds: selectedRow.projectIds,
+        id: projectAssignmentRow.id,
+        revision: projectAssignmentRow.resource._rev || "",
+        name: projectAssignmentRow.name,
+        typeLabel: getTypeLabel(projectAssignmentRow.type),
+        projectIds: projectAssignmentRow.projectIds,
       }
     : null
   $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
@@ -292,6 +294,9 @@
   }
 
   const openAssignProjectModal = () => {
+    projectAssignmentRow = selectedRow
+    // Reset selections even when reopening during the modal's outro.
+    assignProjectModalKey += 1
     assignProjectModal?.show()
   }
 
@@ -414,12 +419,12 @@
   }
 
   const assignProject = async (selection: UpdateProjectAssignmentRequest) => {
-    if (!projectsEnabled || !selectedRow) {
+    if (!projectsEnabled || !projectAssignmentRow) {
       return keepOpen
     }
 
     await saveProjectAssignment({
-      resourceId: selectedRow.id,
+      resourceId: projectAssignmentRow.id,
       selection,
     })
     assignProjectModal?.hide()
@@ -1228,13 +1233,15 @@
   </Modal>
 
   <Modal bind:this={assignProjectModal}>
-    {#if selectedProjectResource}
-      <AssignProjectModal
-        resource={selectedProjectResource}
-        onPreview={projectsStore.previewAssignment}
-        onConfirm={assignProject}
-      />
-    {/if}
+    {#key assignProjectModalKey}
+      {#if selectedProjectResource}
+        <AssignProjectModal
+          resource={selectedProjectResource}
+          onPreview={projectsStore.previewAssignment}
+          onConfirm={assignProject}
+        />
+      {/if}
+    {/key}
   </Modal>
 
   <Modal bind:this={editProjectModal}>
