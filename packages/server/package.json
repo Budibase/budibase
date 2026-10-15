@@ -142,6 +142,7 @@
   "devDependencies": {
     "@babel/core": "^8.0.1",
     "@babel/preset-env": "8.0.2",
+    "@budibase/worker": "*",
     "@types/archiver": "6.0.2",
     "@types/global-agent": "2.1.1",
     "@types/html-to-text": "^9.0.4",
