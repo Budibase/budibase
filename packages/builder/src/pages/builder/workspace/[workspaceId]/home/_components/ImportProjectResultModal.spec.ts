@@ -32,12 +32,13 @@ const createResponse = (
 })
 
 describe("ImportProjectResultModal", () => {
-  it("groups setup tasks by resource and provides clear actions", async () => {
+  it("groups setup tasks by resource and shows omitted content and data counts", async () => {
     const response = createResponse({
       resources: {
         [ResourceType.AGENT]: ["agent_1"],
         [ResourceType.DATASOURCE]: ["datasource_2"],
       },
+      dataImport: { tables: 2, rows: 3, relationships: 1, attachments: 1 },
       requirements: [
         {
           type: "agent_secrets",
@@ -106,6 +107,11 @@ describe("ImportProjectResultModal", () => {
       screen.getByText("What wasn’t imported").closest("details")
     ).toBeInTheDocument()
     expect(screen.queryByText(/agent_linked_content/)).toBeNull()
+    expect(
+      screen.getByText(
+        "Tables: 2 · Rows: 3 · Relationships: 1 · Attachments: 1"
+      )
+    ).toBeTruthy()
     expect(
       screen.getByRole("button", { name: "View project" })
     ).toBeInTheDocument()

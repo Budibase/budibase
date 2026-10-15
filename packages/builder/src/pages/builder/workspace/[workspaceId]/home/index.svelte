@@ -61,6 +61,7 @@
     type ProjectResponse,
     type ImportProjectResponse,
     type ProjectImportRequirement,
+    type ExportProjectRequest,
     PublishResourceState,
     type Agent,
     type Table,
@@ -501,12 +502,10 @@
   const handleExportProject = async ({
     id,
     encryptPassword,
-  }: {
-    id: string
-    encryptPassword?: string
-  }) => {
+    includeRows,
+  }: ExportProjectRequest & { id: string }) => {
     try {
-      await projectsStore.exportProject(id, { encryptPassword })
+      await projectsStore.exportProject({ id, encryptPassword, includeRows })
       exportProjectModal?.hide()
     } catch (error) {
       console.error(error)
@@ -591,7 +590,8 @@
       importProjectModal?.hide()
       const showImportResult =
         response.requirements.length > 0 ||
-        response.unsupportedContent.length > 0
+        response.unsupportedContent.length > 0 ||
+        !!response.dataImport
       if (!showImportResult) {
         notifications.success(`Imported project '${response.project.name}'`)
       }
