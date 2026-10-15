@@ -76,13 +76,13 @@ async function buildSchemaHelper(
 export async function getConnector(
   datasource: Datasource
 ): Promise<IntegrationBase | DatasourcePlus> {
-  const Connector = await getIntegration(datasource.source)
   // can't enrich if it doesn't have an ID yet
   if (datasource._id) {
     datasource = await datasources.enrich(datasource)
   }
+  const createConnector = await getIntegration(datasource.source)
   // Connect to the DB and build the schema
-  return new Connector(datasource.config)
+  return await createConnector(datasource.config)
 }
 
 export async function getAndMergeDatasource(datasource: Datasource) {
