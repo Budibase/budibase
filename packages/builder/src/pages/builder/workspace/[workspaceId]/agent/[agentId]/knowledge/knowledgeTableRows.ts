@@ -6,6 +6,7 @@ import {
   type KnowledgeBaseFile,
   type SharePointKnowledgeSourceSnapshot,
 } from "@budibase/types"
+import type { OperationKnowledgeRejectedUpload } from "@/stores/portal/agents"
 import type {
   FileKnowledgeTableRow,
   SharePointConnectionTableRow,
@@ -18,6 +19,8 @@ export interface PendingUpload {
   mimetype?: string
   createdAt: string
 }
+
+export type RejectedUpload = Omit<OperationKnowledgeRejectedUpload, "file">
 
 export const formatTimestamp = (value?: string | number) => {
   if (value == null || value === "") {
@@ -39,14 +42,30 @@ const readableStatus: Record<KnowledgeBaseFileStatus, string> = {
 const formatFileStatus = (file: KnowledgeBaseFile) =>
   readableStatus[file.status] || file.status
 
-export const toFileTableRows = (
-  list: KnowledgeBaseFile[],
-  onDelete: (file: KnowledgeBaseFile) => Promise<void>,
-  activePendingUploads?: PendingUpload[],
-  knowledgeSearchConfigured = false
-): FileKnowledgeTableRow[] => {
-  return [
-    ...(activePendingUploads || []).map(upload => ({
+const isFailedRow = (row: FileKnowledgeTableRow) =>
+  row.status === KnowledgeBaseFileStatus.FAILED
+
+export const toFileKnowledgeRows = ({
+  files,
+  pendingUploads = [],
+  rejectedUploads = [],
+  knowledgeSearchConfigured = false,
+  onDelete,
+  onRetry,
+  onRetryRejected,
+  onDismissRejected,
+}: {
+  files: KnowledgeBaseFile[]
+  pendingUploads?: PendingUpload[]
+  rejectedUploads?: RejectedUpload[]
+  knowledgeSearchConfigured?: boolean
+  onDelete?: (file: KnowledgeBaseFile) => Promise<void>
+  onRetry?: (file: KnowledgeBaseFile) => Promise<void>
+  onRetryRejected?: (tempId: string) => Promise<void>
+  onDismissRejected?: (tempId: string) => void
+}): FileKnowledgeTableRow[] => {
+  const rows: FileKnowledgeTableRow[] = [
+    ...pendingUploads.map(upload => ({
       kind: "file" as const,
       knowledgeSearchConfigured,
       _id: upload.tempId,
@@ -54,38 +73,65 @@ export const toFileTableRows = (
       status: KnowledgeBaseFileStatus.PROCESSING,
       displayStatus: "Uploading",
       isUploading: true,
+      canRetry: false,
       size: helpers.formatBytes(upload.size, " "),
       updatedAt: formatTimestamp(upload.createdAt),
-      onDelete: undefined,
-      errorMessage: undefined,
       mimetype: upload.mimetype,
     })),
-    ...list.map(file => ({
+    ...rejectedUploads.map(upload => ({
+      kind: "file" as const,
+      knowledgeSearchConfigured,
+      _id: upload.tempId,
+      filename: upload.filename,
+      status: KnowledgeBaseFileStatus.FAILED,
+      displayStatus: readableStatus[KnowledgeBaseFileStatus.FAILED],
+      isRejected: true,
+      canRetry: upload.retryable,
+      size: helpers.formatBytes(upload.size, " "),
+      updatedAt: formatTimestamp(upload.createdAt),
+      mimetype: upload.mimetype,
+      errorMessage: upload.reason,
+      onRetry: onRetryRejected
+        ? () => onRetryRejected(upload.tempId)
+        : undefined,
+      onDismiss: onDismissRejected
+        ? () => onDismissRejected(upload.tempId)
+        : undefined,
+    })),
+    ...files.map(file => ({
       kind: "file" as const,
       knowledgeSearchConfigured,
       _id: file._id,
       filename: file.filename,
       status: file.status,
       displayStatus: formatFileStatus(file),
+      canRetry: file.status === KnowledgeBaseFileStatus.FAILED,
       size: helpers.formatBytes(file.size, " "),
       updatedAt: formatTimestamp(
         file.processedAt || file.updatedAt || file.createdAt
       ),
       mimetype: file.mimetype,
-      onDelete: () => onDelete(file),
+      onDelete: onDelete ? () => onDelete(file) : undefined,
+      onRetry: onRetry ? () => onRetry(file) : undefined,
       errorMessage: file.errorMessage,
     })),
-  ].sort((a, b) => a.filename.localeCompare(b.filename))
+  ]
+  return rows.sort(
+    (a, b) =>
+      Number(isFailedRow(b)) - Number(isFailedRow(a)) ||
+      a.filename.localeCompare(b.filename)
+  )
 }
 
-type ReadOnlyFileKnowledgeTableRow = Omit<FileKnowledgeTableRow, "onDelete">
-
-export const toReadOnlyFileTableRows = (
-  list: KnowledgeBaseFile[]
-): ReadOnlyFileKnowledgeTableRow[] =>
-  toFileTableRows(list, async () => {}, undefined).map(
-    ({ onDelete: _onDelete, ...row }) => row
-  )
+export const getFileKnowledgeCounts = (rows: FileKnowledgeTableRow[]) => ({
+  ready: rows.filter(row => row.status === KnowledgeBaseFileStatus.READY)
+    .length,
+  processing: rows.filter(
+    row => row.status === KnowledgeBaseFileStatus.PROCESSING
+  ).length,
+  failed: rows.filter(isFailedRow).length,
+  total: rows.length,
+})
 
 export const getSharePointFilesForSite = (
   files: KnowledgeBaseFile[],
@@ -143,7 +189,8 @@ type SharePointConnectionDisplayStatusInput = {
   hasCompletedSync: boolean
   hasFileData: boolean
   isEmpty: boolean
-  completed: number
+  synced: number
+  failed: number
   total: number
 }
 
@@ -153,7 +200,8 @@ const getSharePointConnectionDisplayStatus = ({
   hasCompletedSync,
   hasFileData,
   isEmpty,
-  completed,
+  synced,
+  failed,
   total,
 }: SharePointConnectionDisplayStatusInput) => {
   if (isQueued) {
@@ -172,7 +220,8 @@ const getSharePointConnectionDisplayStatus = ({
     return "No content found"
   }
 
-  return `${completed}/${total} items`
+  const ready = `${synced}/${total} ready`
+  return failed > 0 ? `${ready} · ${failed} failed` : ready
 }
 
 export const toSharePointConnectionRows = ({
@@ -215,7 +264,6 @@ export const toSharePointConnectionRows = ({
       const isRunning =
         snapshot?.runStatus === AgentKnowledgeSourceSyncRunStatus.RUNNING
       const isSyncing = isQueued || isRunning
-      const completed = Math.min(synced + syncFailures, total)
       const hasFileData = total > 0
       const isEmpty = total === 0
       const siteDisplayName = getSharePointSiteDisplayName({ site, snapshot })
@@ -225,7 +273,8 @@ export const toSharePointConnectionRows = ({
         hasCompletedSync,
         hasFileData,
         isEmpty,
-        completed,
+        synced,
+        failed: syncFailures,
         total,
       })
       const hasSynced = hasCompletedSync || hasFileData

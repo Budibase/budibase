@@ -220,23 +220,80 @@ export const uploadFileForOperation = async (
   })
 }
 
-export const deleteFileForOperation = async (
-  agentId: string,
-  operationId: string,
+const getOperationFileOrThrow = async ({
+  agentId,
+  operationId,
+  fileId,
+}: {
+  agentId: string
+  operationId: string
   fileId: string
-): Promise<void> => {
+}): Promise<KnowledgeBaseFile> => {
   const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
-  const fileKnowledgeBaseId = file.knowledgeBaseId
-  if (!fileKnowledgeBaseId) {
+  if (!file.knowledgeBaseId) {
     throw new HTTPError("Invalid knowledge base file id", 400)
   }
   const knowledgeBaseIds = await getKnowledgeBaseIdsForOperation(
     agentId,
     operationId
   )
-  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+  if (!knowledgeBaseIds.includes(file.knowledgeBaseId)) {
     throw new HTTPError("File does not belong to this operation", 404)
   }
+  return file
+}
+
+export const retryFileForOperation = async ({
+  agentId,
+  operationId,
+  fileId,
+}: {
+  agentId: string
+  operationId: string
+  fileId: string
+}): Promise<KnowledgeBaseFile> => {
+  await getOperationFileOrThrow({ agentId, operationId, fileId })
+  return await knowledgeBaseSdk.retryKnowledgeBaseFileIngestion(fileId)
+}
+
+export const retryFailedFilesForOperation = async ({
+  agentId,
+  operationId,
+}: {
+  agentId: string
+  operationId: string
+}): Promise<KnowledgeBaseFile[]> => {
+  const failedUploads = (
+    await listFilesForOperation(agentId, operationId)
+  ).filter(
+    file => file.status === KnowledgeBaseFileStatus.FAILED && !file.source
+  )
+
+  const retried: KnowledgeBaseFile[] = []
+  for (const file of failedUploads) {
+    try {
+      retried.push(
+        await knowledgeBaseSdk.retryKnowledgeBaseFileIngestion(file._id!)
+      )
+    } catch (error) {
+      console.error("Failed to retry knowledge base file ingestion", {
+        agentId,
+        operationId,
+        fileId: file._id,
+        error,
+      })
+    }
+  }
+  return retried
+}
+
+export const deleteFileForOperation = async (
+  agentId: string,
+  operationId: string,
+  fileId: string
+): Promise<void> => {
+  const file = await getOperationFileOrThrow({ agentId, operationId, fileId })
+  const fileKnowledgeBaseId = file.knowledgeBaseId
 
   const knowledgeBase = await knowledgeBaseSdk.find(fileKnowledgeBaseId)
   if (!knowledgeBase) {

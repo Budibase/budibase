@@ -240,6 +240,7 @@ export const retryKnowledgeBaseFileIngestion = async (fileId: string) => {
   })
 
   try {
+    await removeRagFileIngestionJob(fileId)
     await enqueueRagFileIngestion({
       workspaceId,
       knowledgeBaseId: file.knowledgeBaseId,

@@ -18,6 +18,8 @@ import {
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   isKnowledgeFileSupported,
+  RetryAgentFileResponse,
+  RetryAgentFilesResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   UserCtx,
@@ -259,6 +261,39 @@ export async function deleteAgentFile(
   const { agentId, operationId, fileId } = ctx.params
   await sdk.ai.rag.deleteFileForOperation(agentId, operationId, fileId)
   ctx.body = { deleted: true }
+  ctx.status = 200
+}
+
+export async function retryAgentFile(
+  ctx: UserCtx<
+    void,
+    RetryAgentFileResponse,
+    { agentId: string; operationId: string; fileId: string }
+  >
+) {
+  const { agentId, operationId, fileId } = ctx.params
+  const file = await sdk.ai.rag.retryFileForOperation({
+    agentId,
+    operationId,
+    fileId,
+  })
+  ctx.body = { file }
+  ctx.status = 200
+}
+
+export async function retryFailedAgentFiles(
+  ctx: UserCtx<
+    void,
+    RetryAgentFilesResponse,
+    { agentId: string; operationId: string }
+  >
+) {
+  const { agentId, operationId } = ctx.params
+  const files = await sdk.ai.rag.retryFailedFilesForOperation({
+    agentId,
+    operationId,
+  })
+  ctx.body = { files }
   ctx.status = 200
 }
 

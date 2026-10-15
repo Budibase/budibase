@@ -15,7 +15,7 @@
     knowledgeConnectionsStore,
     selectedAgent,
   } from "@/stores/portal"
-  import KnowledgeTable from "./KnowledgeTable.svelte"
+  import KnowledgeCardList from "./KnowledgeCardList.svelte"
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import OperationRailSectionHeader from "../OperationRailSectionHeader.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
@@ -25,9 +25,12 @@
     SharePointSelectionMode,
   } from "./renderers/types"
   import {
-    toFileTableRows,
+    getFileKnowledgeCounts,
+    toFileKnowledgeRows,
     toSharePointConnectionRows,
   } from "./knowledgeTableRows"
+  import KnowledgeProgressSummary from "./KnowledgeProgressSummary.svelte"
+  import FailedKnowledgeFilesModal from "./FailedKnowledgeFilesModal.svelte"
   import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
   import SelectSharePointFilesModal from "./sharepoint/SelectSharePointFilesModal.svelte"
   import { tick } from "svelte"
@@ -50,6 +53,7 @@
   let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
   let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
   let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
+  let failedKnowledgeFilesModal = $state<FailedKnowledgeFilesModal>()
 
   let agentId = $derived(currentAgent?._id)
   let operationId = $derived(operation.id)
@@ -88,7 +92,12 @@
 
   let uploadState = $derived.by(() => {
     if (!agentId || !operationId) {
-      return { pendingUploads: [], uploading: false, progress: "" }
+      return {
+        pendingUploads: [],
+        rejectedUploads: [],
+        uploading: false,
+        progress: "",
+      }
     }
     const _store = $agentsStore
     return agentsStore.getOperationUploadState(agentId, operationId)
@@ -145,12 +154,20 @@
   }
 
   let fileTableRows = $derived.by(() =>
-    toFileTableRows(
-      files.filter(file => !file.source),
-      removeFile,
-      uploadState.pendingUploads,
-      knowledgeSearchConfigured === true
-    )
+    toFileKnowledgeRows({
+      files: files.filter(file => !file.source),
+      pendingUploads: uploadState.pendingUploads,
+      rejectedUploads: uploadState.rejectedUploads,
+      knowledgeSearchConfigured: knowledgeSearchConfigured === true,
+      onDelete: removeFile,
+      onRetry: retryFile,
+      onRetryRejected: uploadState.uploading ? undefined : retryRejectedUpload,
+      onDismissRejected: dismissRejectedUpload,
+    })
+  )
+  let fileCounts = $derived(getFileKnowledgeCounts(fileTableRows))
+  let failedFileRows = $derived(
+    fileTableRows.filter(row => row.status === KnowledgeBaseFileStatus.FAILED)
   )
   let sharePointConnectionRows = $derived.by(() =>
     toSharePointConnectionRows({
@@ -317,6 +334,75 @@
     })
   }
 
+  async function retryFile(file: KnowledgeBaseFile) {
+    const fileId = file._id
+    if (!agentId || !operationId || !fileId) {
+      return
+    }
+    try {
+      await agentsStore.retryOperationKnowledgeFile({
+        agentId,
+        operationId,
+        fileId,
+      })
+    } catch (error) {
+      console.error(error)
+      notifications.error(`Failed to retry ${file.filename}`)
+    }
+  }
+
+  async function retryRejectedUpload(tempId: string) {
+    if (!agentId || !operationId) {
+      return
+    }
+    try {
+      const result = await agentsStore.retryRejectedUpload({
+        agentId,
+        operationId,
+        tempId,
+      })
+      if (result.successfulUploads > 0) {
+        syncOperationFromStore()
+        await refreshDeploymentStatus()
+      }
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to retry upload")
+    }
+  }
+
+  function dismissRejectedUpload(tempId: string) {
+    if (!agentId || !operationId) {
+      return
+    }
+    agentsStore.dismissRejectedUpload({ agentId, operationId, tempId })
+  }
+
+  async function retryAllFailedFiles() {
+    if (!agentId || !operationId) {
+      return
+    }
+    try {
+      const { retried } = await agentsStore.retryAllFailedOperationKnowledge({
+        agentId,
+        operationId,
+      })
+      if (retried === 0) {
+        notifications.error("No failed files could be retried")
+        return
+      }
+      syncOperationFromStore()
+      await refreshDeploymentStatus()
+      failedKnowledgeFilesModal?.hide()
+      notifications.info(
+        retried === 1 ? "Retrying 1 file" : `Retrying ${retried} files`
+      )
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to retry failed files")
+    }
+  }
+
   async function resetKnowledgeStore() {
     if (!agentId || !operationId) {
       return
@@ -419,7 +505,14 @@
       </div>
     {/if}
 
-    <KnowledgeTable
+    {#if !loading && fileCounts.total > 0}
+      <KnowledgeProgressSummary
+        counts={fileCounts}
+        onShowFailed={() => failedKnowledgeFilesModal?.show()}
+      />
+    {/if}
+
+    <KnowledgeCardList
       {loading}
       isUploading={uploadState.uploading}
       rows={knowledgeTableRows}
@@ -427,6 +520,13 @@
     />
   </div>
 </Layout>
+
+<FailedKnowledgeFilesModal
+  bind:this={failedKnowledgeFilesModal}
+  rows={failedFileRows}
+  retryDisabled={uploadState.uploading || knowledgeSearchUnavailable}
+  onRetryAll={retryAllFailedFiles}
+/>
 
 <SelectSharePointSiteModal
   bind:this={selectSharePointSiteModal}

@@ -9,7 +9,11 @@ import {
   type KnowledgeBaseFile,
 } from "@budibase/types"
 import * as rateLimit from "./geminiRateLimit"
-import { init, type RagIngestionJob } from "./ragQueue"
+import {
+  init,
+  removeRagFileIngestionJob,
+  type RagIngestionJob,
+} from "./ragQueue"
 
 type Processor = (job: Job<RagIngestionJob>) => Promise<void>
 const mockQueueProcess = jest.fn<Promise<void>, [number, Processor]>()
@@ -19,6 +23,7 @@ const mockUpdateFile = jest.fn()
 const mockIngest = jest.fn()
 const mockGetReadStream = jest.fn()
 const mockGetCacheClient = jest.fn()
+const mockGetBullQueue = jest.fn()
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -39,6 +44,7 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.queue,
       BudibaseQueue: jest.fn().mockImplementation(() => ({
         process: mockQueueProcess,
+        getBullQueue: mockGetBullQueue,
       })),
     },
   }
@@ -445,6 +451,38 @@ describe("RAG ingestion retries", () => {
       await Promise.all(queues.map(queue => queue.close(true)))
       await cache.clear()
       await cache.finish()
+    })
+
+    it("removes an ingestion job that is still active when a retry is requested", async () => {
+      const queue = createQueue()
+      mockGetBullQueue.mockReturnValue(queue)
+      let finishJob = () => {}
+      const finishing = new Promise<void>(resolve => {
+        finishJob = resolve
+      })
+      let markActive = () => {}
+      const active = new Promise<void>(resolve => {
+        markActive = resolve
+      })
+      queue.process(1, async () => {
+        markActive()
+        await finishing
+        throw new Error("Ingestion failed")
+      })
+      const job = await queue.add(makeJob().data, {
+        jobId: "file-1",
+        attempts: 1,
+        removeOnFail: false,
+      })
+      const completion = job.finished().catch(() => {})
+      await active
+      const removal = removeRagFileIngestionJob("file-1")
+      await new Promise(resolve => setTimeout(resolve, 100))
+      finishJob()
+      await removal
+      await completion
+
+      expect(await queue.getJob("file-1")).toBeNull()
     })
 
     it("completes after more than five rate limits with delays exceeding the active timeout", async () => {
