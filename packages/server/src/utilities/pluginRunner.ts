@@ -7,7 +7,13 @@ import type { IntegrationBase } from "@budibase/types"
 
 import environment from "../environment"
 
-type IntegrationBaseConstructor = new (...args: any[]) => IntegrationBase
+export type IntegrationFactory = (
+  config: Serializable | undefined
+) => Promise<IntegrationBase>
+
+type IntegrationBaseConstructor = new (
+  config: Serializable | undefined
+) => IntegrationBase
 
 interface PluginRunnerError {
   message: string
@@ -22,6 +28,7 @@ interface PluginRunnerResponse {
 
 interface DescribePluginRequest {
   operation: "describe"
+  config: Serializable | undefined
 }
 
 interface InvokePluginRequest {
@@ -32,16 +39,19 @@ interface InvokePluginRequest {
   typeCastingSchema?: Record<string, { name: string; type: string }>
 }
 
-type PluginRequest = DescribePluginRequest | InvokePluginRequest
+type PluginRequest =
+  | { operation: "validate" }
+  | DescribePluginRequest
+  | InvokePluginRequest
 
 interface DatasourcePluginProxy {
-  config: any
+  config: Serializable | undefined
   typeCastingSchema?: Record<string, { name: string; type: string }>
 }
 
 interface CachedDatasourcePlugin {
   hash: string
-  integration: Promise<IntegrationBaseConstructor>
+  integration: Promise<IntegrationFactory>
 }
 
 // loadDatasourcePlugin returns a host-side proxy with the plugin's methods.
@@ -93,7 +103,7 @@ class PluginSession {
   private timeout: ReturnType<typeof setTimeout>
   private disposal?: Promise<void>
 
-  constructor(private options: { filename: string; hasEnd?: boolean }) {
+  constructor(private options: { filename: string }) {
     const { filename } = options
     const dropPrivileges = process.getuid?.() === 0
     this.child = spawn(
@@ -185,14 +195,14 @@ class PluginSession {
     await this.exited
   }
 
-  dispose() {
-    this.disposal ||= this.end()
+  dispose({ hasEnd }: { hasEnd: boolean }) {
+    this.disposal ||= this.end({ hasEnd })
     return this.disposal
   }
 
-  private async end() {
+  private async end({ hasEnd }: { hasEnd: boolean }) {
     try {
-      if (this.options.hasEnd && !this.failure) {
+      if (hasEnd && !this.failure) {
         await this.invoke({
           operation: "invoke",
           method: "end",
@@ -204,23 +214,24 @@ class PluginSession {
   }
 }
 
-const discoverPluginMethods = async (filename: string) => {
-  const discovery = new PluginSession({ filename })
-  try {
-    const result = await discovery.invoke({ operation: "describe" })
-    if (
-      typeof result !== "object" ||
-      result === null ||
-      !("methods" in result) ||
-      !Array.isArray(result.methods) ||
-      !result.methods.every(method => typeof method === "string")
-    ) {
-      throw new Error("Datasource plugin returned invalid methods")
-    }
-    return result.methods
-  } finally {
-    await discovery.close()
+const discoverPluginMethods = async ({
+  session,
+  config,
+}: {
+  session: PluginSession
+  config: Serializable | undefined
+}) => {
+  const result = await session.invoke({ operation: "describe", config })
+  if (
+    typeof result !== "object" ||
+    result === null ||
+    !("methods" in result) ||
+    !Array.isArray(result.methods) ||
+    !result.methods.every(method => typeof method === "string")
+  ) {
+    throw new Error("Datasource plugin returned invalid methods")
   }
+  return result.methods
 }
 
 const createIntegrationProxy = ({
@@ -233,10 +244,10 @@ const createIntegrationProxy = ({
   const Integration: IntegrationBaseConstructor = class {
     declare read?: IntegrationBase["read"]
 
-    config: any
+    config: Serializable | undefined
     typeCastingSchema?: Record<string, { name: string; type: string }>
 
-    constructor(config: any) {
+    constructor(config: Serializable | undefined) {
       this.config = config
     }
   }
@@ -263,7 +274,6 @@ const createIntegrationProxy = ({
         if (!session) {
           session = new PluginSession({
             filename,
-            hasEnd: methods.includes("end"),
           })
           pluginSessions.set(this, session)
         }
@@ -282,7 +292,7 @@ const createIntegrationProxy = ({
         }
         if (!SESSION_CONTINUATION_METHODS.has(method)) {
           try {
-            await session.dispose()
+            await session.dispose({ hasEnd: methods.includes("end") })
           } finally {
             pluginSessions.delete(this)
           }
@@ -295,10 +305,30 @@ const createIntegrationProxy = ({
   return Integration
 }
 
-const createDatasourcePlugin = async (filename: string) => {
+const createDatasourcePlugin = async (
+  filename: string
+): Promise<IntegrationFactory> => {
   filename = fs.realpathSync(filename)
-  const methods = await discoverPluginMethods(filename)
-  return createIntegrationProxy({ filename, methods })
+  const validation = new PluginSession({ filename })
+  try {
+    await validation.invoke({ operation: "validate" })
+  } finally {
+    await validation.close()
+  }
+
+  return async config => {
+    const session = new PluginSession({ filename })
+    try {
+      const methods = await discoverPluginMethods({ session, config })
+      const Integration = createIntegrationProxy({ filename, methods })
+      const integration = new Integration(config)
+      pluginSessions.set(integration, session)
+      return integration
+    } catch (error) {
+      await session.close()
+      throw error
+    }
+  }
 }
 
 export const loadDatasourcePlugin = async ({

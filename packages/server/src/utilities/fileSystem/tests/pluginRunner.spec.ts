@@ -2,6 +2,7 @@ import fs from "fs"
 import os from "os"
 import path from "path"
 import childProcess from "child_process"
+import { buildSync } from "esbuild"
 import type { DatasourcePlus } from "@budibase/types"
 
 import { loadDatasourcePlugin } from "../../pluginRunner"
@@ -66,7 +67,7 @@ module.exports = { integration: Integration }
         filename: pluginPath,
         hash: "plugin-hash",
       })
-      const integration = new Integration({ url: "https://example.com" })
+      const integration = await Integration({ url: "https://example.com" })
       const schema = { id: { name: "id", type: "number" } }
       integration.defineTypeCastingFromSchema?.(schema)
       const result = await integration.read?.({ id: 1 })
@@ -108,7 +109,7 @@ module.exports = { integration: Integration }
       const filename = path.join(directory, "plugin.min.js")
       fs.writeFileSync(filename, source, { mode: 0o644 })
       const Integration = await loadDatasourcePlugin({ filename, hash: "test" })
-      return new Integration({ url: "https://example.com" })
+      return await Integration({ url: "https://example.com" })
     }
 
     const expectChildrenStopped = () => {
@@ -116,6 +117,173 @@ module.exports = { integration: Integration }
         ["SIGKILL", "SIGKILL"]
       )
     }
+
+    it("discovers class fields using the datasource configuration", async () => {
+      const integration = await load(`
+        module.exports = class {
+          constructor(config) { this.url = config.url }
+          read = async query => ({ url: this.url, value: query.value })
+          testConnection = async () => ({ connected: true })
+        }
+      `)
+
+      const result = await integration.read?.({ value: "input" })
+      const connection = await integration.testConnection?.()
+
+      expect({ result, connection }).toEqual({
+        result: { url: "https://example.com", value: "input" },
+        connection: { connected: true },
+      })
+    })
+
+    it("does not evaluate getters when discovering methods", async () => {
+      const integration = await load(`
+        module.exports = class {
+          constructor(config) { this.config = config }
+          get url() { return this.config.url }
+          async read() { return { url: this.url } }
+        }
+      `)
+
+      expect(await integration.read?.({})).toEqual({
+        url: "https://example.com",
+      })
+      expectChildrenStopped()
+    })
+
+    it("respects methods shadowed by non-callable instance fields", async () => {
+      const integration = await load(`
+        class Base {
+          async testConnection() { return { connected: true } }
+        }
+        module.exports = class extends Base {
+          testConnection = undefined
+          async read() { return "completed" }
+        }
+      `)
+
+      const result = await integration.read?.({})
+
+      expect({ result, testConnection: integration.testConnection }).toEqual({
+        result: "completed",
+        testConnection: undefined,
+      })
+      expectChildrenStopped()
+    })
+
+    it("discovers config-dependent fields for each instance of a cached plugin", async () => {
+      const filename = path.join(directory, "plugin.min.js")
+      fs.writeFileSync(
+        filename,
+        `
+        module.exports = class {
+          constructor(config) {
+            if (config.verify) {
+              this.testConnection = async () => ({ connected: true })
+            }
+          }
+          async read() { return "completed" }
+        }
+      `
+      )
+      const createIntegration = await loadDatasourcePlugin({
+        filename,
+        hash: "config",
+      })
+      const first = await createIntegration({ verify: true })
+      const second = await createIntegration({ verify: false })
+      const connection = await first.testConnection?.()
+      const result = await second.read?.({})
+
+      expect({
+        connection,
+        result,
+        testConnection: second.testConnection,
+      }).toEqual({
+        connection: { connected: true },
+        result: "completed",
+        testConnection: undefined,
+      })
+    })
+
+    it("preserves custom JSON representations in datasource results", async () => {
+      const filename = path.join(directory, "plugin.min.js")
+      buildSync({
+        stdin: {
+          contents: `
+            const { ObjectId, Decimal128 } = require("bson")
+            module.exports = class {
+              async read() {
+                return [{
+                  id: new ObjectId("507f1f77bcf86cd799439011"),
+                  amount: Decimal128.fromString("123.45"),
+                }]
+              }
+            }
+          `,
+          resolveDir: process.cwd(),
+        },
+        bundle: true,
+        platform: "node",
+        outfile: filename,
+      })
+      const createIntegration = await loadDatasourcePlugin({
+        filename,
+        hash: "json",
+      })
+      const integration = await createIntegration({})
+      const result = await integration.read?.({})
+
+      expect(result).toEqual([
+        {
+          id: "507f1f77bcf86cd799439011",
+          amount: { $numberDecimal: "123.45" },
+        },
+      ])
+      expectChildrenStopped()
+    })
+
+    it("preserves native IPC values and cycles when normalizing results", async () => {
+      const integration = await load(`
+        class Identifier { toJSON() { return "record-1" } }
+        module.exports = class {
+          async read() {
+            const result = {
+              date: new Date("2026-01-01T00:00:00.000Z"),
+              buffer: Buffer.from("data"),
+              missing: undefined,
+              bigint: 123n,
+              map: new Map([["id", new Identifier()]]),
+              set: new Set([new Identifier()]),
+              pattern: /value/i,
+            }
+            result.self = result
+            return result
+          }
+        }
+      `)
+      const result = await integration.read?.({})
+      expect({
+        date: result.date.toISOString(),
+        buffer: result.buffer.toString(),
+        missing: result.missing,
+        bigint: result.bigint,
+        map: [...result.map],
+        set: [...result.set],
+        pattern: result.pattern.toString(),
+        circular: result.self === result,
+      }).toEqual({
+        date: "2026-01-01T00:00:00.000Z",
+        buffer: "data",
+        missing: undefined,
+        bigint: 123n,
+        map: [["id", "record-1"]],
+        set: ["record-1"],
+        pattern: "/value/i",
+        circular: true,
+      })
+      expectChildrenStopped()
+    })
 
     it("preserves state across concurrent SQL helper calls and execution", async () => {
       const integration = (await load(`
