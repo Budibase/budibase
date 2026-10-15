@@ -34,6 +34,7 @@
   import { ACTIVITY_STATUS_LABELS } from "./activityStatus"
   import { getPaginationLabel, PAGE_SIZE } from "./pagination"
   import type { LoadOptions, PageRequest } from "./loadOptions"
+  import { createRefreshThrottle } from "./refreshThrottle"
 
   const RELATIVE_TIME_REFRESH_MS = 30000
 
@@ -165,6 +166,7 @@
       if (!background) {
         // This load already covers every change notified so far
         refreshQueued = false
+        refreshSessions.cancel()
         selectedSession = undefined
         loading = true
         loadFailed = false
@@ -214,7 +216,7 @@
           loadInFlight = false
           if (refreshQueued && !destroyed) {
             refreshQueued = false
-            loadSessions({ request: lastRequest, background: true })
+            refreshSessions()
           }
         }
       }
@@ -222,14 +224,14 @@
   })()
 
   // Changes notified while a load is in flight may not be in its response,
-  // so they are coalesced into a single refresh once it settles
-  function refreshSessions() {
+  // so schedule one throttled refresh after it settles
+  const refreshSessions = createRefreshThrottle(() => {
     if (loadInFlight) {
       refreshQueued = true
       return
     }
     loadSessions({ request: lastRequest, background: true })
-  }
+  })
 
   function handleActionSessionChange(event: ActionSessionChangeEvent) {
     if (
@@ -297,6 +299,7 @@
     loadSessions()
     return () => {
       destroyed = true
+      refreshSessions.cancel()
     }
   })
 

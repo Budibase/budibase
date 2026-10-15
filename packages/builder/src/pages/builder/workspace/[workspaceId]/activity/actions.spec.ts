@@ -908,6 +908,62 @@ describe("Activity actions page", () => {
       expect(queries().at(-1)).toEqual(expect.objectContaining({ env: "dev" }))
     })
 
+    it("throttles fast refreshes and fetches the final change", async () => {
+      mocks.fetchActionSessions.mockResolvedValue(response)
+      const view = renderPage()
+      await view.findInTable("Support agent")
+      vi.useFakeTimers()
+      try {
+        notify()
+        await vi.advanceTimersByTimeAsync(100)
+        notify()
+        await vi.advanceTimersByTimeAsync(200)
+        notify()
+        await vi.advanceTimersByTimeAsync(1700)
+        expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(3)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it("preserves the trailing refresh when a request exceeds the throttle window", async () => {
+      const refresh = deferred<FetchActionSessionsResponse>()
+      mocks.fetchActionSessions
+        .mockResolvedValueOnce(response)
+        .mockReturnValueOnce(refresh.promise)
+        .mockResolvedValue(response)
+      const view = renderPage()
+      await view.findInTable("Support agent")
+      vi.useFakeTimers()
+      try {
+        notify()
+        await vi.advanceTimersByTimeAsync(100)
+        notify()
+        await vi.advanceTimersByTimeAsync(1400)
+        refresh.resolve(response)
+        await vi.advanceTimersByTimeAsync(2500)
+        expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(3)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it("cancels a pending throttled refresh when unmounted", async () => {
+      mocks.fetchActionSessions.mockResolvedValue(response)
+      const view = renderPage()
+      await view.findInTable("Support agent")
+      vi.useFakeTimers()
+      try {
+        notify()
+        await vi.advanceTimersByTimeAsync(100)
+        notify()
+        view.unmount()
+        await vi.advanceTimersByTimeAsync(2000)
+        expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(2)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
     it("coalesces changes received during a refresh into one more refresh", async () => {
       const refresh = deferred<FetchActionSessionsResponse>()
       mocks.fetchActionSessions

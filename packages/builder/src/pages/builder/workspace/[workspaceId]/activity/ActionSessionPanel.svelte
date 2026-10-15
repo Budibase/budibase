@@ -24,6 +24,7 @@
   } from "./actionSessionRows"
   import { getPaginationLabel, PAGE_SIZE } from "./pagination"
   import type { LoadOptions, PageRequest } from "./loadOptions"
+  import { createRefreshThrottle } from "./refreshThrottle"
 
   let {
     session,
@@ -100,6 +101,7 @@
       if (!background) {
         // This load already covers every change notified so far
         refreshQueued = false
+        refreshEvents.cancel()
       }
       if (!session) {
         events = []
@@ -149,7 +151,7 @@
           loadInFlight = false
           if (refreshQueued && !destroyed) {
             refreshQueued = false
-            loadEvents({ request: lastRequest, background: true })
+            refreshEvents()
           }
         }
       }
@@ -158,7 +160,7 @@
 
   // Events are append-only, so re-fetching the current page keeps it stable
   // while new events show up on the last page
-  function refreshEvents() {
+  const refreshEvents = createRefreshThrottle(() => {
     if (!session) {
       return
     }
@@ -167,7 +169,7 @@
       return
     }
     loadEvents({ request: lastRequest, background: true })
-  }
+  })
 
   function handleActionSessionChange(event: ActionSessionChangeEvent) {
     if (!session || event.environment !== session.environment) {
@@ -212,6 +214,7 @@
   onMount(() => {
     return () => {
       destroyed = true
+      refreshEvents.cancel()
     }
   })
 

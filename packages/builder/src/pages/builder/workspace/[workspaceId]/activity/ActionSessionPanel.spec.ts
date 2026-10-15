@@ -428,6 +428,66 @@ describe("ActionSessionPanel", () => {
       )
     })
 
+    it("throttles fast refreshes and fetches the final change", async () => {
+      mocks.fetchActionSessionEvents.mockResolvedValue(
+        eventsResponse({ ids: ["event-1"] })
+      )
+      renderPanel(session)
+      await screen.findByText(/Step executed/)
+      vi.useFakeTimers()
+      try {
+        notify()
+        await vi.advanceTimersByTimeAsync(100)
+        notify()
+        await vi.advanceTimersByTimeAsync(200)
+        notify()
+        await vi.advanceTimersByTimeAsync(1700)
+        expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(3)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it("preserves the trailing refresh when a request exceeds the throttle window", async () => {
+      const refresh = deferred<FetchActionSessionEventsResponse>()
+      mocks.fetchActionSessionEvents
+        .mockResolvedValueOnce(eventsResponse({ ids: ["event-1"] }))
+        .mockReturnValueOnce(refresh.promise)
+        .mockResolvedValue(eventsResponse({ ids: ["event-1"] }))
+      renderPanel(session)
+      await screen.findByText(/Step executed/)
+      vi.useFakeTimers()
+      try {
+        notify()
+        await vi.advanceTimersByTimeAsync(100)
+        notify()
+        await vi.advanceTimersByTimeAsync(1400)
+        refresh.resolve(eventsResponse({ ids: ["event-1"] }))
+        await vi.advanceTimersByTimeAsync(2500)
+        expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(3)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it("cancels a pending throttled refresh when unmounted", async () => {
+      mocks.fetchActionSessionEvents.mockResolvedValue(
+        eventsResponse({ ids: ["event-1"] })
+      )
+      const view = renderPanel(session)
+      await screen.findByText(/Step executed/)
+      vi.useFakeTimers()
+      try {
+        notify()
+        await vi.advanceTimersByTimeAsync(100)
+        notify()
+        view.unmount()
+        await vi.advanceTimersByTimeAsync(2000)
+        expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
     it("coalesces changes received during a refresh into one more refresh", async () => {
       const refresh = deferred<FetchActionSessionEventsResponse>()
       mocks.fetchActionSessionEvents
