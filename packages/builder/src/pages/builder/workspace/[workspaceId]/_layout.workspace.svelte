@@ -58,11 +58,13 @@
         builderStore.appCreated(false)
         await workspacesStore.load()
       } else {
-        const componentToPaste =
-          $workspaceStore.appId === appId
-            ? $componentStore.componentToPaste
-            : undefined
-        reset()
+        const isSameWorkspace = $workspaceStore.appId === appId
+        const componentToPaste = isSameWorkspace
+          ? $componentStore.componentToPaste
+          : undefined
+        if (!isSameWorkspace) {
+          reset()
+        }
         componentStore.update(state => ({ ...state, componentToPaste }))
         workspaceStore.update(state => ({ ...state, appId }))
         const pkg = await API.fetchAppPackage(appId)
