@@ -73,17 +73,29 @@ export const resolveToolExecutionPrincipal = (
     ? ToolExecutionPrincipal.ADMIN
     : (config?.executionPrincipal ?? tool.executionPolicy.defaultPrincipal)
 
-const getToolFailure = (result: unknown): string | undefined => {
-  if (!result || typeof result !== "object" || !("error" in result)) {
+const getToolFailure = ({
+  result,
+  toolDef,
+}: {
+  result: unknown
+  toolDef: AiToolDefinition
+}): string | undefined => {
+  if (!result || typeof result !== "object") {
     return
   }
 
-  const { error } = result
-  if (error == null || error === false) {
-    return
+  if ("error" in result && result.error != null && result.error !== false) {
+    return getErrorMessage(result.error) || "Tool execution failed"
   }
 
-  return getErrorMessage(error) || "Tool execution failed"
+  if (
+    toolDef.sourceType === ToolType.AUTOMATION &&
+    toolDef.action === ToolAction.TRIGGER &&
+    "success" in result &&
+    result.success === false
+  ) {
+    return "Automation execution failed"
+  }
 }
 
 const logToolExecution = (
@@ -180,7 +192,7 @@ const wrapTool = ({
     const executeTool = async () => {
       try {
         const result = await execute(validatedInput, options)
-        const failureMessage = getToolFailure(result)
+        const failureMessage = getToolFailure({ result, toolDef })
         if (failureMessage) {
           throw new Error(failureMessage)
         }

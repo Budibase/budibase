@@ -25,6 +25,7 @@ import {
   ActionFailureReason,
   ActionType,
   ApprovalToolResultStatus,
+  AutomationStatus,
   MonthlyQuotaName,
   PermissionLevel,
   PermissionType,
@@ -840,6 +841,46 @@ describe("AI tool action accounting", () => {
       sourceType: ToolType.AUTOMATION,
       action: ToolAction.TRIGGER,
     })
+  })
+
+  it("emits a failed event when an automation returns an unsuccessful result", async () => {
+    const execute = jest.fn().mockResolvedValue({
+      success: false,
+      status: AutomationStatus.ERROR,
+      steps: [],
+    })
+    const toolDefinition: AiToolDefinition = {
+      ...definition(execute),
+      name: "au_1_trigger",
+      sourceType: ToolType.AUTOMATION,
+      action: ToolAction.TRIGGER,
+    }
+
+    await expect(callTool(toolDefinition)).rejects.toThrow(
+      "Automation execution failed"
+    )
+
+    expect(addAction).not.toHaveBeenCalled()
+    expect(events.action.aiAgentToolExecuted).not.toHaveBeenCalled()
+    expect(events.action.aiAgentToolFailed).toHaveBeenCalledWith({
+      ...expectedEventContext,
+      toolName: "au_1_trigger",
+      sourceType: ToolType.AUTOMATION,
+      action: ToolAction.TRIGGER,
+      reason: ActionFailureReason.ERROR,
+      errorMessage: "Automation execution failed",
+    })
+  })
+
+  it("does not interpret a CRUD result's success field as a tool failure", async () => {
+    const result = { success: false }
+    const toolDefinition = definition(jest.fn().mockResolvedValue(result))
+    toolDefinition.action = ToolAction.GET_ROW
+
+    await expect(callTool(toolDefinition)).resolves.toEqual(result)
+
+    expect(events.action.aiAgentToolExecuted).toHaveBeenCalledTimes(1)
+    expect(events.action.aiAgentToolFailed).not.toHaveBeenCalled()
   })
 
   it("counts knowledge lookups as actions", async () => {
