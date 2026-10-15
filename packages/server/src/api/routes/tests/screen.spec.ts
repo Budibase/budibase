@@ -208,6 +208,16 @@ describe("/screens", () => {
       expect(events.screen.deleted).toHaveBeenCalledTimes(1)
     })
 
+    it("should delete a screen when the client has no revision", async () => {
+      const screen = await config.api.screen.save(basicScreen())
+
+      await config.api.screen.destroy(screen._id!, "undefined")
+
+      expect(await config.api.screen.list()).not.toContainEqual(
+        expect.objectContaining({ _id: screen._id })
+      )
+    })
+
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,
