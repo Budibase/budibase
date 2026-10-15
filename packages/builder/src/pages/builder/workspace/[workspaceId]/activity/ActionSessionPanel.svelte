@@ -23,17 +23,7 @@
     getActionSessionTitle,
   } from "./actionSessionRows"
   import { getPaginationLabel, PAGE_SIZE } from "./pagination"
-
-  interface PageRequest {
-    page: number
-    bookmark?: string
-  }
-  interface LoadEventsOptions {
-    request?: PageRequest
-    // Refreshes the current events page without a loading state, keeping
-    // the current events if it fails
-    background?: boolean
-  }
+  import type { LoadOptions, PageRequest } from "./loadOptions"
 
   let {
     session,
@@ -104,7 +94,7 @@
     return async function loadEvents({
       request = { page: 1 },
       background = false,
-    }: LoadEventsOptions = {}) {
+    }: LoadOptions = {}) {
       const sequence = ++requestSequence
       lastRequest = request
       if (!background) {

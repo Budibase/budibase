@@ -33,6 +33,7 @@
   } from "./actionSessionRows"
   import { ACTIVITY_STATUS_LABELS } from "./activityStatus"
   import { getPaginationLabel, PAGE_SIZE } from "./pagination"
+  import type { LoadOptions, PageRequest } from "./loadOptions"
 
   const RELATIVE_TIME_REFRESH_MS = 30000
 
@@ -59,16 +60,6 @@
   ]
 
   type StatusFilter = PlatformActionContainerStatus | "all"
-  interface PageRequest {
-    page: number
-    bookmark?: string
-  }
-  interface LoadSessionsOptions {
-    request?: PageRequest
-    // Refreshes the current view without a loading state or clearing the
-    // selection, keeping the current data if it fails
-    background?: boolean
-  }
   type EnvironmentFilter = PlatformActionEnvironment | "all"
 
   const statusFilterOptions: { label: string; value: StatusFilter }[] = [
@@ -167,7 +158,7 @@
     return async function loadSessions({
       request = { page: 1 },
       background = false,
-    }: LoadSessionsOptions = {}) {
+    }: LoadOptions = {}) {
       const sequence = ++requestSequence
       lastRequest = request
       loadInFlight = true
