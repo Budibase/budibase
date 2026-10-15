@@ -13,30 +13,30 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-jest.mock("@budibase/pro", () => ({
-  quotas: {
-    addAction: jest
-      .fn()
-      .mockImplementation((_type: ActionType, fn: () => Promise<unknown>) =>
-        fn()
-      ),
-  },
-}))
+jest.mock("@budibase/pro", () => {
+  const actual = jest.requireActual("@budibase/pro")
+  return { ...actual, quotas: { ...actual.quotas } }
+})
 
 import { events } from "@budibase/backend-core"
-import { quotas } from "@budibase/pro"
+import { mocks } from "@budibase/backend-core/tests"
+import { licensing, quotas } from "@budibase/pro"
 import {
   ActionFailureReason,
   ActionType,
   ApprovalToolResultStatus,
+  MonthlyQuotaName,
   PermissionLevel,
   PermissionType,
+  QuotaUsageType,
   ToolAction,
   ToolExecutionPrincipal,
   ToolType,
 } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
+import cloneDeep from "lodash/cloneDeep"
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import {
   resolveToolExecutionPrincipal,
   toToolSet,
@@ -76,6 +76,132 @@ const executionContext = {
   },
 }
 
+describe("concurrent tool action accounting", () => {
+  const config = new TestConfiguration()
+
+  beforeAll(async () => {
+    await config.init()
+  })
+
+  afterAll(() => config.end())
+
+  beforeEach(() => {
+    mocks.licenses.useUnlimited()
+    jest.clearAllMocks()
+    jest.spyOn(events.action, "aiAgentToolExecuted").mockImplementation()
+    jest.spyOn(events.action, "aiAgentToolFailed").mockImplementation()
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    mocks.licenses.useUnlimited()
+  })
+
+  it.each([
+    { scenario: "counts every tool", limit: -1, failFirst: false, expected: 8 },
+    {
+      scenario: "continues after a tool fails",
+      limit: -1,
+      failFirst: true,
+      expected: 7,
+    },
+    {
+      scenario: "does not execute beyond the remaining quota",
+      limit: 1,
+      failFirst: false,
+      expected: 1,
+    },
+  ])(
+    "$scenario in a concurrent batch",
+    async ({ limit, failFirst, expected }) => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await quotas.setAllUsage({
+          name: MonthlyQuotaName.ACTIONS,
+          type: QuotaUsageType.MONTHLY,
+          values: { total: 0, app: 0, breakdown: 0 },
+          opts: { id: ActionType.AI_AGENT },
+        })
+        const license = cloneDeep(await licensing.cache.getCachedLicense())
+        license.quotas.usage.monthly.actions.value = limit
+        mocks.licenses.useLicense(license)
+        const execute = jest.fn().mockResolvedValue({ success: true })
+        if (failFirst) {
+          execute.mockRejectedValueOnce(new Error("Tool failed"))
+        }
+        const definition: AiToolDefinition = {
+          name: "accounted_tool",
+          description: "Test action accounting",
+          sourceType: ToolType.INTERNAL_TABLE,
+          executionPolicy: { mode: "admin" },
+          authorization: {
+            permissionType: PermissionType.TABLE,
+            permissionLevel: PermissionLevel.READ,
+          },
+          tool: tool({
+            inputSchema: z.object({}),
+            execute,
+          }),
+        }
+        const definitions = [
+          definition,
+          { ...definition, name: "another_tool" },
+        ]
+        const tools = toToolSet(
+          definitions,
+          new Map(
+            definitions.map(definition => [
+              definition.name,
+              {
+                executionContext: {
+                  tenantId: config.getTenantId(),
+                  workspaceId: config.getProdWorkspaceId(),
+                  agentId: "agent_test",
+                  operationId: "operation_test",
+                  conversationId: "conversation_test",
+                  requester: { executorRole: "ADMIN" },
+                },
+                principal: ToolExecutionPrincipal.ADMIN,
+                authorize: jest.fn().mockResolvedValue(undefined),
+              },
+            ])
+          )
+        )
+        const batchSize = 8
+        const results = await Promise.allSettled(
+          Array.from({ length: batchSize }, (_, index) =>
+            tools[definitions[index % definitions.length].name].execute?.(
+              {},
+              {
+                toolCallId: `call_${index}`,
+                messages: [],
+                context: undefined,
+              }
+            )
+          )
+        )
+        const usage = await quotas.getCurrentUsageValues(
+          QuotaUsageType.MONTHLY,
+          MonthlyQuotaName.ACTIONS,
+          ActionType.AI_AGENT
+        )
+
+        expect(
+          results.filter(result => result.status === "fulfilled")
+        ).toHaveLength(expected)
+        expect(execute).toHaveBeenCalledTimes(expected + (failFirst ? 1 : 0))
+        expect(usage.total).toBe(expected)
+        expect(usage.breakdown).toBe(expected)
+        expect(events.action.aiAgentToolExecuted).toHaveBeenCalledTimes(
+          expected
+        )
+        expect(events.action.aiAgentToolFailed).toHaveBeenCalledTimes(
+          failFirst ? 1 : 0
+        )
+      })
+    }
+  )
+})
+
 describe("resolveToolExecutionPrincipal", () => {
   it("uses the configured principal for configurable tools", () => {
     const toolDefinition = definition(jest.fn())
@@ -104,6 +230,12 @@ describe("resolveToolExecutionPrincipal", () => {
 })
 
 describe("secured AI tool execution", () => {
+  beforeEach(() => {
+    jest
+      .spyOn(quotas, "addAction")
+      .mockImplementation(async (_type, fn) => await fn())
+  })
+
   afterEach(() => {
     jest.restoreAllMocks()
   })
@@ -521,7 +653,7 @@ describe("secured AI tool execution", () => {
 })
 
 describe("AI tool action accounting", () => {
-  const addAction = jest.mocked(quotas.addAction)
+  let addAction: jest.SpiedFunction<typeof quotas.addAction>
 
   const runtimesFor = (toolName: string) =>
     new Map([
@@ -561,7 +693,9 @@ describe("AI tool action accounting", () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.spyOn(console, "log").mockImplementation()
-    addAction.mockImplementation(async (_type, fn) => await fn())
+    addAction = jest
+      .spyOn(quotas, "addAction")
+      .mockImplementation(async (_type, fn) => await fn())
   })
 
   afterEach(() => {

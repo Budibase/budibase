@@ -115,11 +115,19 @@ const toolEventContext = (
   ...(toolDef.action && { action: toolDef.action }),
 })
 
-const wrapTool = (
-  toolDef: AiToolDefinition,
-  runtime?: ToolAuthorizationRuntime,
+type RunTool = <T>(execute: () => Promise<T>) => Promise<T>
+
+const wrapTool = ({
+  toolDef,
+  runtime,
+  gate,
+  runTool,
+}: {
+  toolDef: AiToolDefinition
+  runtime?: ToolAuthorizationRuntime
   gate?: EscalationGateRuntime
-): Tool => {
+  runTool: RunTool
+}): Tool => {
   const execute = toolDef.tool.execute
   if (!execute) {
     return toolDef.tool
@@ -198,9 +206,11 @@ const wrapTool = (
       }
     }
     // Automation triggers are already metered as automation steps.
-    return toolDef.action === ToolAction.TRIGGER
-      ? await executeTool()
-      : await quotas.addAction(ActionType.AI_AGENT, executeTool)
+    return await runTool(async () =>
+      toolDef.action === ToolAction.TRIGGER
+        ? await executeTool()
+        : await quotas.addAction(ActionType.AI_AGENT, executeTool)
+    )
   }
 
   return {
@@ -214,10 +224,26 @@ export const toToolSet = (
   runtimes: Map<string, ToolAuthorizationRuntime> = new Map(),
   gates: Map<string, EscalationGateRuntime> = new Map()
 ): ToolSet => {
+  // Quota checks and increments are not atomic. Keep each execution and its
+  // accounting together, including triggers that update the same quota.
+  let pending: Promise<void> = Promise.resolve()
+  const runTool: RunTool = execute => {
+    const result = pending.then(execute)
+    pending = result.then(
+      () => undefined,
+      () => undefined
+    )
+    return result
+  }
   return Object.fromEntries(
     tools.map(toolDef => [
       toolDef.name,
-      wrapTool(toolDef, runtimes.get(toolDef.name), gates.get(toolDef.name)),
+      wrapTool({
+        toolDef,
+        runtime: runtimes.get(toolDef.name),
+        gate: gates.get(toolDef.name),
+        runTool,
+      }),
     ])
   )
 }
