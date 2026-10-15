@@ -7,6 +7,7 @@ import metrics from "./metrics"
 import misc from "./misc"
 import roles from "./roles"
 import view from "./view"
+import group from "./group"
 
 export const examples = {
   ...workspace.getExamples(),
@@ -18,6 +19,7 @@ export const examples = {
   ...metrics.getExamples(),
   ...roles.getExamples(),
   ...view.getExamples(),
+  ...group.getExamples(),
 }
 
 export const schemas = {
@@ -29,4 +31,5 @@ export const schemas = {
   ...misc.getSchemas(),
   ...roles.getSchemas(),
   ...view.getSchemas(),
+  ...group.getSchemas(),
 }
