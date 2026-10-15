@@ -50,7 +50,13 @@
     const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
     if (nextPackageKey !== packageKey) {
       packageKey = nextPackageKey
-      getPackage({ appId: workspaceId, requestKey: packageKey }).catch(() => {})
+      getPackage({ appId: workspaceId, requestKey: packageKey }).catch(
+        error => {
+          notifications.error(
+            error?.message || "There was a problem loading the screen"
+          )
+        }
+      )
     }
   }
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
