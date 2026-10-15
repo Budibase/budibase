@@ -306,7 +306,11 @@ export class UserDB {
     // For new users, resolve effective group assignment before creator quota
     // calculation so creator-by-group users are counted correctly.
     let groupIdsToAssign = [...userGroups]
-    if (isNewUser && groupIdsToAssign.length === 0) {
+    if (
+      isNewUser &&
+      groupIdsToAssign.length === 0 &&
+      opts.assignDefaultGroup !== false
+    ) {
       const defaultGroup = await UserDB.groups.getDefaultGroup?.()
       if (defaultGroup?._id) {
         groupIdsToAssign = [defaultGroup._id]
@@ -338,7 +342,7 @@ export class UserDB {
       creatorsChange = (await creatorsInList([userForCreatorCheck]))[0] ? 1 : 0
     }
 
-    return UserDB.quotas.addUsers(change, creatorsChange, async () => {
+    const saveUser = async () => {
       if (shouldValidateUniqueUser) {
         await validateUniqueUser(email, tenantId)
       }
@@ -395,12 +399,14 @@ export class UserDB {
           throw err
         }
       }
-    })
+    }
+    return UserDB.quotas.addUsers(change, creatorsChange, saveUser)
   }
 
   static async bulkCreate(
     newUsersRequested: User[],
-    groups?: string[]
+    groups?: string[],
+    opts: Pick<SaveUserOpts, "assignDefaultGroup"> = {}
   ): Promise<BulkUserCreated> {
     const tenantId = getTenantId()
 
@@ -413,7 +419,7 @@ export class UserDB {
     const unsuccessful: { email: string; reason: string }[] = []
     const hasExplicitGroups = !!groups?.length
     let groupIdsToAssign = hasExplicitGroups ? [...groups] : []
-    if (!hasExplicitGroups) {
+    if (!hasExplicitGroups && opts.assignDefaultGroup !== false) {
       const defaultGroup = await UserDB.groups.getDefaultGroup?.()
       if (defaultGroup?._id) {
         groupIdsToAssign = [defaultGroup._id]
