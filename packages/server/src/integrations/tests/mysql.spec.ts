@@ -19,8 +19,8 @@ import { interpolateSQL } from "../queries/sql"
 
 describe("interpolateSQL SQL injection hardening", () => {
   const mysqlIntegration = {
-    getBindingIdentifier: () => "?",
-    getStringConcat: (parts: string[]) => `concat(${parts.join(", ")})`,
+    getBindingIdentifier: async () => "?",
+    getStringConcat: async (parts: string[]) => `concat(${parts.join(", ")})`,
   }
 
   it("prevents a MySQL binding from injecting an extra statement into the final SQL", async () => {
