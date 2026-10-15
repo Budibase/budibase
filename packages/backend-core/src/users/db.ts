@@ -321,11 +321,15 @@ export class UserDB {
     }
 
     if (dbUser) {
+      let updatedUser = { ...dbUser, ...user }
+      if (opts.currentUserId === dbUser._id) {
+        updatedUser = usersCore.cleanseUserObject(updatedUser, dbUser) as User
+      }
       const [isDbUserCreator, isUserCreator] = await creatorsInList([
         dbUser,
-        user,
+        updatedUser,
       ])
-      creatorsChange = isDbUserCreator !== isUserCreator ? 1 : 0
+      creatorsChange = Number(isUserCreator) - Number(isDbUserCreator)
     } else if (!opts.isAccountHolder) {
       const userForCreatorCheck =
         groupIdsToAssign.length > 0
