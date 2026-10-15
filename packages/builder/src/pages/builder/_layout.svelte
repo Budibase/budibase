@@ -19,6 +19,7 @@
     popNumSessionsInvalidated,
     invalidationMessage,
   } from "@budibase/frontend-core"
+  import { initialiseBuilderWithTemplateIntent } from "@/helpers/projectTemplateIntent"
   import { PingSource } from "@budibase/types"
   import { API } from "@/api"
   import Branding from "./Branding.svelte"
@@ -328,9 +329,12 @@
     bb.settings("/connections/apis")
   }
 
+  const initialiseBuilder = () =>
+    initialiseBuilderWithTemplateIntent({ initialise: initBuilder })
+
   onMount(() => {
     handleSharePointConnectionRedirect()
-    initPromise = initBuilder()
+    initPromise = initialiseBuilder()
     hasAuthenticated = !!$auth.user
   })
 </script>
@@ -378,10 +382,10 @@
       <Button
         secondary
         on:click={() => {
-          $goto("/")
+          initPromise = initialiseBuilder()
         }}
       >
-        Reload
+        Try again
       </Button>
     </Layout>
   </div>

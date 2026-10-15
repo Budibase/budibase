@@ -5,6 +5,7 @@
   import type { FullAutoFill } from "svelte/elements"
 
   export let value: V | null | undefined = undefined
+  export let id: string | undefined = undefined
   export let label: string | undefined = undefined
   export let labelPosition: "above" | "left" = "above"
   export let placeholder: string | undefined = undefined
@@ -44,8 +45,9 @@
   }
 </script>
 
-<Field {helpText} {label} {labelPosition} {error} {required} {description}>
+<Field {id} {helpText} {label} {labelPosition} {error} {required} {description}>
   <TextField
+    {id}
     {updateOnChange}
     {disabled}
     {readonly}
