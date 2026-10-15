@@ -42,7 +42,7 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
-import { withProjectPropagationWarning } from "../../utilities/projects"
+import { projectAssignmentResult } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
@@ -313,19 +313,19 @@ async function updateUnlocked(
     : await persistDatasource()
   datasource._rev = response.rev
 
-  await withProjectPropagationWarning({
-    ctx,
-    propagation: sdk.projects.propagateProjectDependencyChanges({
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectDependencyChanges({
       rootResourceId: datasource._id!,
       currentProjectIds: datasource.projectIds,
       previousProjectIds: baseDatasource.projectIds,
       previousResource: baseDatasource,
       savedResource: datasource,
-    }),
-  })
+    })
+  )
 
   ctx.message = "Datasource saved successfully."
   ctx.body = {
+    projectAssignment,
     datasource: await sdk.datasources.removeSecretSingle(
       sdk.datasources.addDatasourceFlags(datasource)
     ),
@@ -360,38 +360,39 @@ export async function save(
     ctx.request.body
   )
 
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
-    datasource.projectIds = await sdk.projects.resolveProjectIds(
-      datasource.projectIds
-    )
-    validateDatasourceEntities(datasource)
-    const persistDatasource = async () => {
-      await validateCustomRestTemplate(datasource.restTemplateId)
-      return await sdk.datasources.save({ datasource })
-    }
+  const projectAssignment =
+    await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
+      datasource.projectIds = await sdk.projects.resolveProjectIds(
+        datasource.projectIds
+      )
+      validateDatasourceEntities(datasource)
+      const persistDatasource = async () => {
+        await validateCustomRestTemplate(datasource.restTemplateId)
+        return await sdk.datasources.save({ datasource })
+      }
 
-    const restTemplateId = datasource.restTemplateId
-    if (isCustomRestTemplateId(restTemplateId)) {
-      await sdk.restTemplates.withCustomRestTemplateLock({
-        resource: restTemplateId,
-        task: persistDatasource,
-      })
-    } else {
-      await persistDatasource()
-    }
+      const restTemplateId = datasource.restTemplateId
+      if (isCustomRestTemplateId(restTemplateId)) {
+        await sdk.restTemplates.withCustomRestTemplateLock({
+          resource: restTemplateId,
+          task: persistDatasource,
+        })
+      } else {
+        await persistDatasource()
+      }
 
-    await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateProjectDependencyChanges({
-        rootResourceId: datasource._id!,
-        currentProjectIds: datasource.projectIds,
-        previousProjectIds: [],
-        savedResource: datasource,
-      }),
+      return await projectAssignmentResult(
+        sdk.projects.propagateProjectDependencyChanges({
+          rootResourceId: datasource._id!,
+          currentProjectIds: datasource.projectIds,
+          previousProjectIds: [],
+          savedResource: datasource,
+        })
+      )
     })
-  })
 
   ctx.body = {
+    projectAssignment,
     datasource: await sdk.datasources.removeSecretSingle(
       sdk.datasources.addDatasourceFlags(datasource)
     ),

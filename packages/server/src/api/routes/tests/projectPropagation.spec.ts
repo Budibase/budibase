@@ -1,10 +1,10 @@
 import { context, features } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
-import { Header, helpers } from "@budibase/shared-core"
+import { helpers } from "@budibase/shared-core"
 import {
-  APIWarningCode,
   FeatureFlag,
   FieldType,
+  SaveScreenResponse,
   RelationshipType,
   TableSourceType,
   ToolExecutionPrincipal,
@@ -1489,7 +1489,7 @@ describe("project dependency propagation", () => {
       })
     })
 
-    it("returns an explicit warning when automatic propagation fails", async () => {
+    it("returns explicit assignment results when automatic propagation fails", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -1515,7 +1515,7 @@ describe("project dependency propagation", () => {
             }))
           )
 
-        let savedScreen: Screen
+        let savedScreen: SaveScreenResponse
         try {
           savedScreen = await config.api.screen.save(
             {
@@ -1524,20 +1524,29 @@ describe("project dependency propagation", () => {
             },
             {
               status: 200,
-              headers: {
-                [Header.API_WARNING]:
-                  APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE,
-              },
             }
           )
         } finally {
           bulkDocs.mockRestore()
         }
 
+        expect(savedScreen!.projectAssignment).toEqual({
+          assignedDependencyIds: [],
+          failedDependencyIds: expect.arrayContaining([datasource._id!]),
+        })
+
         const persistedScreen = (await config.api.screen.list()).find(
           screen => screen._id === savedScreen!._id
         )
         expect(persistedScreen).toBeDefined()
+        expect(persistedScreen).not.toHaveProperty("projectAssignment")
+        const resavedScreen = await config.api.screen.save(savedScreen!)
+        expect(resavedScreen).not.toHaveProperty("projectAssignment")
+        expect(
+          (await config.api.screen.list()).find(
+            screen => screen._id === savedScreen!._id
+          )
+        ).not.toHaveProperty("projectAssignment")
 
         const updatedDatasource = await config.api.datasource.get(
           datasource._id!
@@ -1598,15 +1607,17 @@ describe("project dependency propagation", () => {
           )
 
         try {
-          await config.api.screen.save(
+          const response = await config.api.screen.save(
             { ...screen, workspaceAppId: workspaceApp._id },
             {
               status: 200,
-              headers: {
-                [Header.API_WARNING]:
-                  APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE,
-              },
             }
+          )
+          expect(response.projectAssignment?.assignedDependencyIds).toContain(
+            firstDatasource._id
+          )
+          expect(response.projectAssignment?.failedDependencyIds).toContain(
+            secondDatasource._id
           )
         } finally {
           bulkDocs.mockRestore()

@@ -9,7 +9,7 @@ import {
   RowActionsResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import { withProjectPropagationWarning } from "../../../utilities/projects"
+import { projectAssignmentResult } from "../../../utilities/projects"
 
 async function getTable(ctx: Ctx) {
   const { tableId } = ctx.params
@@ -62,20 +62,21 @@ async function createUnlocked(
     name: ctx.request.body.name,
   })
 
+  let projectAssignment
   if (await features.isEnabled(FeatureFlag.PROJECTS)) {
-    await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateProjectIdsToDependencyIds({
+    projectAssignment = await projectAssignmentResult(
+      sdk.projects.propagateProjectIdsToDependencyIds({
         dependencyIds: [createdAction.automationId],
         projectIds: table.projectIds || [],
-      }),
-    })
+      })
+    )
   }
 
   await events.rowAction.created(createdAction)
 
   ctx.body = {
     tableId,
+    projectAssignment,
     id: createdAction.id,
     name: createdAction.name,
     automationId: createdAction.automationId,

@@ -54,7 +54,11 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { handleDataImport, reconcileImportedRows } from "./utils"
-import { withProjectPropagationWarning } from "../../../utilities/projects"
+import {
+  projectAssignmentResult,
+  mergeProjectAssignmentResults,
+  withoutProjectAssignmentResult,
+} from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
@@ -223,6 +227,7 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   if (renaming) {
     await sdk.views.renameLinkedViews(savedTable, renaming)
   }
+  const projectAssignments = []
   const newLinkedTableIds = !isExternalTable(savedTable)
     ? getNewLinkedTableIds({ previousTable, savedTable })
     : []
@@ -237,27 +242,29 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     const reciprocalProjectIds = (assignmentOwner.projectIds || []).filter(
       projectId => !existingProjectIds.has(projectId)
     )
-    await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateProjectIdsToDependencySubtrees({
-        blockedResourceIds: [assignmentOwner._id!],
-        dependencyIds: [savedTable._id!],
-        projectIds: reciprocalProjectIds,
-      }),
-    })
+    projectAssignments.push(
+      await projectAssignmentResult(
+        sdk.projects.propagateProjectIdsToDependencySubtrees({
+          blockedResourceIds: [assignmentOwner._id!],
+          dependencyIds: [savedTable._id!],
+          projectIds: reciprocalProjectIds,
+        })
+      )
+    )
   }
 
   if (!isExternalTable(savedTable)) {
-    await withProjectPropagationWarning({
-      ctx,
-      propagation: sdk.projects.propagateProjectDependencyChanges({
-        rootResourceId: savedTable._id!,
-        currentProjectIds: savedTable.projectIds,
-        previousProjectIds: previousTable?.projectIds || [],
-        previousResource: previousTable,
-        savedResource: savedTable,
-      }),
-    })
+    projectAssignments.push(
+      await projectAssignmentResult(
+        sdk.projects.propagateProjectDependencyChanges({
+          rootResourceId: savedTable._id!,
+          currentProjectIds: savedTable.projectIds,
+          previousProjectIds: previousTable?.projectIds || [],
+          previousResource: previousTable,
+          savedResource: savedTable,
+        })
+      )
+    )
   }
 
   if (newLinkedTableIds.length) {
@@ -266,7 +273,11 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     savedTable.projectIds = persistedTable.projectIds
   }
 
-  return { savedTable, eventPreviousTable }
+  return {
+    savedTable,
+    eventPreviousTable,
+    projectAssignment: mergeProjectAssignmentResults(projectAssignments),
+  }
 }
 
 const importTableRows = async ({
@@ -346,7 +357,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 }
 
 async function saveTable(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
-  const { rows, ...table } = ctx.request.body
+  const { rows, ...table } = withoutProjectAssignmentResult(ctx.request.body)
   ctx.request.body = table
   const result = await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
     saveUnlocked(ctx)
@@ -371,7 +382,7 @@ async function saveTable(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, ctx.appId, {
     ...savedTable,
   })
-  ctx.body = savedTable
+  ctx.body = { ...savedTable, projectAssignment: result.projectAssignment }
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 

@@ -32,9 +32,10 @@ import {
 
 const MAX_PROPAGATION_RETRIES = 3
 
-export type ProjectPropagationOutcome =
+export type ProjectPropagationOutcome = (
   | { status: "complete" }
   | { status: "incomplete"; resourceIds: string[] }
+) & { assignedResourceIds?: string[] }
 
 interface ProjectDependencyPreviewInput {
   resourceId: string
@@ -71,9 +72,11 @@ export interface CreatedResourceDependencyPropagationInput {
 const incompletePropagation = ({
   resourceIds,
   error,
+  assignedResourceIds = [],
 }: {
   resourceIds: Iterable<string>
   error: unknown
+  assignedResourceIds?: Iterable<string>
 }): ProjectPropagationOutcome => {
   const failedResourceIds = Array.from(new Set(resourceIds)).sort()
   console.log(
@@ -84,6 +87,7 @@ const incompletePropagation = ({
   return {
     status: "incomplete",
     resourceIds: failedResourceIds,
+    assignedResourceIds: Array.from(assignedResourceIds),
   }
 }
 
@@ -275,12 +279,16 @@ const mergePropagationOutcomes = (
   const failedResourceIds = outcomes.flatMap(outcome =>
     outcome.status === "incomplete" ? outcome.resourceIds : []
   )
+  const assignedResourceIds = Array.from(
+    new Set(outcomes.flatMap(outcome => outcome.assignedResourceIds || []))
+  ).filter(id => !failedResourceIds.includes(id))
   return failedResourceIds.length
     ? {
         status: "incomplete",
         resourceIds: Array.from(new Set(failedResourceIds)),
+        assignedResourceIds,
       }
-    : { status: "complete" }
+    : { status: "complete", assignedResourceIds }
 }
 
 export const propagateProjectIdsToDependencyIds = async ({
@@ -294,6 +302,7 @@ export const propagateProjectIdsToDependencyIds = async ({
 
   let idsToUpdate = uniqueDependencyIds
   const failedIds = new Set<string>()
+  const assignedIds = new Set<string>()
 
   try {
     const db = context.getWorkspaceDB()
@@ -314,9 +323,11 @@ export const propagateProjectIdsToDependencyIds = async ({
       const updates = docs.flatMap(doc => {
         const existing = getProjectIds(doc)
         const next = unionProjectIds(existing, projectIds)
-        return (next?.length || 0) !== existing.length
-          ? [withProjectIds(doc, next)]
-          : []
+        if ((next?.length || 0) !== existing.length) {
+          return [withProjectIds(doc, next)]
+        }
+        assignedIds.add(doc._id!)
+        return []
       })
 
       if (!updates.length) {
@@ -325,6 +336,9 @@ export const propagateProjectIdsToDependencyIds = async ({
       }
 
       const results = await db.bulkDocs(updates)
+      results.forEach((result, index) => {
+        if (!result.error) assignedIds.add(updates[index]._id!)
+      })
       const failures = results
         .map((result, index) => ({ result, doc: updates[index] }))
         .filter(({ result }) => result.error)
@@ -341,7 +355,10 @@ export const propagateProjectIdsToDependencyIds = async ({
     }
   } catch (error) {
     return incompletePropagation({
-      resourceIds: [...failedIds, ...idsToUpdate],
+      resourceIds: [...failedIds, ...idsToUpdate].filter(
+        id => !assignedIds.has(id)
+      ),
+      assignedResourceIds: assignedIds,
       error,
     })
   }
@@ -350,11 +367,12 @@ export const propagateProjectIdsToDependencyIds = async ({
   if (failedIds.size) {
     return incompletePropagation({
       resourceIds: failedIds,
+      assignedResourceIds: assignedIds,
       error: new Error("Project dependency assignment did not complete."),
     })
   }
 
-  return { status: "complete" }
+  return { status: "complete", assignedResourceIds: Array.from(assignedIds) }
 }
 
 export const propagateProjectIdsToDependencySubtrees = async ({
