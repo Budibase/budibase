@@ -1136,6 +1136,7 @@ describe("/api/global/users", () => {
       const workspaceId = "app_workspace_filter_group"
       const email = structures.users.newEmail()
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const group = await config.doInTenant(() =>
         proSdk.groups.save({
           ...structures.groups.UserGroup(),
@@ -1159,6 +1160,7 @@ describe("/api/global/users", () => {
 
     it("should filter users by any selected group", async () => {
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const [firstGroup, secondGroup, otherGroup] = await Promise.all(
         Array.from({ length: 3 }).map(() =>
           config.doInTenant(() =>
@@ -1188,6 +1190,7 @@ describe("/api/global/users", () => {
     it("should apply the selected group filter to workspace users", async () => {
       const workspaceId = "app_workspace_group_filter"
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const [selectedGroup, otherGroup] = await Promise.all([
         config.doInTenant(() =>
           proSdk.groups.save(structures.groups.UserGroup())
@@ -1240,6 +1243,7 @@ describe("/api/global/users", () => {
       const workspaceId = "app_workspace_group_role_filter"
       const email = structures.users.newEmail()
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const group = await config.doInTenant(() =>
         proSdk.groups.save({
           ...structures.groups.UserGroup(),
@@ -1262,6 +1266,7 @@ describe("/api/global/users", () => {
     it("should combine group and workspace role filters", async () => {
       const workspaceId = "app_workspace_combined_user_filter"
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const [selectedGroup, otherGroup] = await Promise.all([
         config.doInTenant(() =>
           proSdk.groups.save(structures.groups.UserGroup())
