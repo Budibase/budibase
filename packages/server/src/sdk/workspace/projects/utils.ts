@@ -58,6 +58,13 @@ export const addProjectId = <T extends ProjectAssignable>(
 ): T =>
   withProjectIds(doc, Array.from(new Set([...getProjectIds(doc), projectId])))
 
+export const unionProjectIds = (
+  ...projectIdLists: (string[] | undefined)[]
+): string[] | undefined => {
+  const all = projectIdLists.flatMap(ids => ids || [])
+  return all.length ? Array.from(new Set(all)) : undefined
+}
+
 export const getValidProjectIdsForDuplication = async (
   projectIds?: string[]
 ) => {

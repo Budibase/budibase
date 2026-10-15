@@ -37,6 +37,36 @@ export interface UpdateProjectResponse {
   project: ProjectResponse
 }
 
+export interface PreviewProjectAssignmentRequest {
+  resourceId: string
+  projectIds: string[]
+}
+
+export interface ProjectAssignmentDependency extends UsedResource {
+  projectIdsToAdd: string[]
+}
+
+export interface PreviewProjectAssignmentResponse {
+  resourceRev: string
+  resourceProjectIds: string[]
+  dependencies: ProjectAssignmentDependency[]
+  dependencyFingerprint: string
+}
+
+export interface UpdateProjectAssignmentRequest {
+  resourceRev: string
+  projectIds: string[]
+  dependencyIds: string[]
+  dependencyFingerprint: string
+}
+
+export interface UpdateProjectAssignmentResponse {
+  resourceId: string
+  resourceRev: string
+  projectIds: string[]
+  assignedDependencyIds: string[]
+}
+
 export interface ExportProjectRequest {
   encryptPassword?: string
 }

@@ -53,10 +53,6 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { handleDataImport } from "./utils"
-import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
@@ -177,13 +173,13 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 
   if (!isExternalTable(table)) {
     if (isCreate) {
-      table.projectIds = await resolveProjectIds(table.projectIds)
+      table.projectIds = await sdk.projects.resolveProjectIds(table.projectIds)
     } else {
       const existingTable = await sdk.tables.getTable(table._id!)
-      table.projectIds = await resolveUpdatedProjectIds(
-        table.projectIds,
-        existingTable.projectIds
-      )
+      table.projectIds = await sdk.projects.resolveUpdatedProjectIds({
+        projectIds: table.projectIds,
+        currentProjectIds: existingTable.projectIds,
+      })
       ctx.request.body.projectIds = table.projectIds
     }
   }
