@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { tick } from "svelte"
 import { BuilderSocketEvent } from "@budibase/shared-core"
+import { notifyWorkspaceReady } from "@/stores/builder/workspaceReady"
 import {
   Event,
   type ActionSession,
@@ -482,6 +483,7 @@ describe("ActionSessionPanel", () => {
         await vi.advanceTimersByTimeAsync(100)
         notify()
         view.unmount()
+        notifyWorkspaceReady(mocks.socket)
         await vi.advanceTimersByTimeAsync(2000)
         expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
       } finally {
@@ -534,7 +536,18 @@ describe("ActionSessionPanel", () => {
       }
     })
 
-    it("refreshes when the socket reconnects", async () => {
+    it("does not refresh before workspace acknowledgement", async () => {
+      mocks.fetchActionSessionEvents.mockResolvedValue(
+        eventsResponse({ ids: ["event-1"] })
+      )
+      renderPanel(session)
+      await screen.findByText(/Step executed/)
+      mocks.socket.trigger("connect")
+      await tick()
+      expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(1)
+    })
+
+    it("refreshes after workspace acknowledgement on reconnect", async () => {
       mocks.fetchActionSessionEvents.mockResolvedValue(
         eventsResponse({ ids: ["event-1"] })
       )
@@ -543,6 +556,8 @@ describe("ActionSessionPanel", () => {
       await screen.findByText(/Step executed/)
 
       mocks.socket.trigger("connect")
+      await tick()
+      notifyWorkspaceReady(mocks.socket)
 
       await waitFor(() =>
         expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(2)
@@ -555,6 +570,7 @@ describe("ActionSessionPanel", () => {
 
       notify()
       mocks.socket.trigger("connect")
+      notifyWorkspaceReady(mocks.socket)
 
       expect(mocks.fetchActionSessionEvents).not.toHaveBeenCalled()
     })

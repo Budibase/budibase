@@ -8,6 +8,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { tick } from "svelte"
 import { BuilderSocketEvent } from "@budibase/shared-core"
+import { notifyWorkspaceReady } from "@/stores/builder/workspaceReady"
 import type {
   ActionSessionChangeEvent,
   FetchActionSessionsResponse,
@@ -1184,13 +1185,24 @@ describe("Activity actions page", () => {
       ])
     })
 
-    it("refreshes when the socket reconnects", async () => {
+    it("does not refresh before workspace acknowledgement", async () => {
+      mocks.fetchActionSessions.mockResolvedValue(response)
+      const { findInTable } = renderPage()
+      await findInTable("Support agent")
+      socket.trigger("connect")
+      await tick()
+      expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(1)
+    })
+
+    it("refreshes after workspace acknowledgement on reconnect", async () => {
       mocks.fetchActionSessions.mockResolvedValue(response)
 
       const { findInTable } = renderPage()
       await findInTable("Support agent")
 
       socket.trigger("connect")
+      await tick()
+      notifyWorkspaceReady(socket)
 
       await waitFor(() => expect(queries()).toHaveLength(2))
     })
@@ -1204,6 +1216,7 @@ describe("Activity actions page", () => {
       const { unmount } = renderPage()
       notify()
       unmount()
+      notifyWorkspaceReady(socket)
       initial.resolve(response)
 
       await initial.promise

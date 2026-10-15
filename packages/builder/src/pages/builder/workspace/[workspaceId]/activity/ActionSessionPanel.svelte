@@ -1,5 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
+  import { onWorkspaceReady } from "@/stores/builder/workspaceReady"
   import { automationStore, builderStore } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import { Body, InlineAlert } from "@budibase/bbui"
@@ -225,15 +226,18 @@
     }
 
     socket.on(BuilderSocketEvent.ActionSessionChange, handleActionSessionChange)
-    // Notifications aren't replayed, so catch up on anything missed while
-    // disconnected
-    socket.on("connect", refreshEvents)
+    // Catch up only after joining the room, so changes during the refresh
+    // can no longer fall into the gap between connection and subscription.
+    const unsubscribeReady = onWorkspaceReady({
+      socket,
+      callback: refreshEvents,
+    })
     return () => {
       socket.off(
         BuilderSocketEvent.ActionSessionChange,
         handleActionSessionChange
       )
-      socket.off("connect", refreshEvents)
+      unsubscribeReady()
     }
   })
 
