@@ -12,7 +12,7 @@
   } from "@/stores/builder"
   import { workspacesStore, admin, aiConfigsStore, auth } from "@/stores/portal"
   import { bb } from "@/stores/bb"
-  import { Heading, Layout, Body } from "@budibase/bbui"
+  import { Heading, Layout, Body, notifications } from "@budibase/bbui"
   import { API } from "@/api"
   import InviteUsersModal from "./_components/InviteUsersModal.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
@@ -33,7 +33,13 @@
     const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
     if (nextPackageKey !== packageKey) {
       packageKey = nextPackageKey
-      getPackage({ appId: workspaceId, requestKey: packageKey }).catch(() => {})
+      getPackage({ appId: workspaceId, requestKey: packageKey }).catch(
+        error => {
+          notifications.error(
+            error?.message || "There was a problem loading the screen"
+          )
+        }
+      )
     }
   }
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
