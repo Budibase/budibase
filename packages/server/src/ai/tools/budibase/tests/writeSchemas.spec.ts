@@ -20,7 +20,6 @@ describe("write tool schemas", () => {
       expect(schema.safeParse({ unknown: "value" }).success).toBe(false)
       expect(schema.safeParse({ accountId: 42 }).success).toBe(false)
     })
-
     it("supports legacy queries without parameter metadata", () => {
       const legacySchema = buildParametersSchema({})
 
@@ -82,7 +81,6 @@ describe("write tool schemas", () => {
       expect(schema.safeParse({}).success).toBe(true)
       expect(schema.safeParse({ unknown: "value" }).success).toBe(false)
     })
-
     it("supports automations without trigger field metadata", () => {
       const legacySchema = buildAutomationFieldsSchema({})
 

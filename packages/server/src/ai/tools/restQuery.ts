@@ -46,7 +46,9 @@ export const buildParametersSchema = (query: {
     schemaFields[param.name] = z
       .string()
       .optional()
-      .describe(`Parameter: ${param.name}`)
+      .describe(
+        `Parameter: ${param.name}. Default: ${param.default || "empty"}`
+      )
   }
 
   return z.object(schemaFields).strict()

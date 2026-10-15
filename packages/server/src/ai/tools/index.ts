@@ -1,5 +1,10 @@
-import { validateTypes } from "@ai-sdk/provider-utils"
-import { type ModelMessage, type Tool, type ToolSet } from "ai"
+import { asSchema, jsonSchema, validateTypes } from "@ai-sdk/provider-utils"
+import {
+  type JSONSchema7,
+  type ModelMessage,
+  type Tool,
+  type ToolSet,
+} from "ai"
 import { getErrorMessage } from "@budibase/backend-core"
 import {
   PermissionLevel,
@@ -53,12 +58,26 @@ export interface ToolAuthorizationRequest {
   principal: ToolExecutionPrincipal
 }
 
+export interface ToolInterceptionOptions {
+  toolCallId: string
+  messages?: ModelMessage[]
+}
+
 export interface EscalationGateRuntime {
   // Resolves to the refusal result to return in place of executing, or
   // undefined when no rule matches and the call should proceed.
   intercept: (
     input: unknown,
-    options: { toolCallId: string; messages?: ModelMessage[] }
+    options: ToolInterceptionOptions
+  ) => Promise<Record<string, unknown> | undefined>
+}
+
+export interface RequesterValidationRuntime {
+  // Resolves to the validation preview to return instead of executing, or
+  // undefined when this exact call was confirmed and may proceed.
+  intercept: (
+    input: unknown,
+    options: ToolInterceptionOptions
   ) => Promise<Record<string, unknown> | undefined>
 }
 
@@ -103,7 +122,8 @@ const logToolExecution = (
 const wrapTool = (
   toolDef: AiToolDefinition,
   runtime?: ToolAuthorizationRuntime,
-  gate?: EscalationGateRuntime
+  gate?: EscalationGateRuntime,
+  validation?: RequesterValidationRuntime
 ): Tool => {
   const execute = toolDef.tool.execute
   if (!execute) {
@@ -124,6 +144,15 @@ const wrapTool = (
         executionContext: runtime.executionContext,
         principal: runtime.principal,
       })
+    }
+    if (validation) {
+      const validationResult = await validation.intercept(input, {
+        toolCallId: options?.toolCallId ?? "",
+        messages: options?.messages,
+      })
+      if (validationResult) {
+        return validationResult
+      }
     }
     const isMutating =
       toolDef.authorization?.permissionLevel === PermissionLevel.WRITE ||
@@ -176,8 +205,32 @@ const wrapTool = (
     }
   }
 
+  const relaxRequiredFields = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      return value.map(relaxRequiredFields)
+    }
+    if (!value || typeof value !== "object") {
+      return value
+    }
+    return Object.fromEntries(
+      Object.entries(value).flatMap(([key, child]) =>
+        key === "required" ? [] : [[key, relaxRequiredFields(child)]]
+      )
+    )
+  }
+  const inputSchema = validation
+    ? jsonSchema(
+        async () => {
+          const resolved = await asSchema(toolDef.tool.inputSchema).jsonSchema
+          return relaxRequiredFields(resolved) as JSONSchema7
+        },
+        { validate: value => ({ success: true, value }) }
+      )
+    : toolDef.tool.inputSchema
+
   return {
     ...toolDef.tool,
+    inputSchema,
     execute: wrappedExecute,
   }
 }
@@ -185,12 +238,18 @@ const wrapTool = (
 export const toToolSet = (
   tools: AiToolDefinition[],
   runtimes: Map<string, ToolAuthorizationRuntime> = new Map(),
-  gates: Map<string, EscalationGateRuntime> = new Map()
+  gates: Map<string, EscalationGateRuntime> = new Map(),
+  validations: Map<string, RequesterValidationRuntime> = new Map()
 ): ToolSet => {
   return Object.fromEntries(
     tools.map(toolDef => [
       toolDef.name,
-      wrapTool(toolDef, runtimes.get(toolDef.name), gates.get(toolDef.name)),
+      wrapTool(
+        toolDef,
+        runtimes.get(toolDef.name),
+        gates.get(toolDef.name),
+        validations.get(toolDef.name)
+      ),
     ])
   )
 }
