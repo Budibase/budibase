@@ -352,7 +352,7 @@ export const googlePreAuth = async (ctx: Ctx<void, void>, next: Next) => {
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
-    userSdk.db.save
+    userSdk.saveSSO
   )
 
   return passport.authenticate(strategy, {
@@ -371,7 +371,7 @@ export const googleCallback = async (ctx: Ctx<void, void>, next: Next) => {
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
-    userSdk.db.save
+    userSdk.saveSSO
   )
 
   return passport.authenticate(
@@ -406,7 +406,7 @@ export const oidcStrategyFactory = async (ctx: any) => {
 
   //Remote Config
   const enrichedConfig = await oidc.fetchStrategyConfig(config, callbackUrl)
-  return oidc.strategyFactory(enrichedConfig, userSdk.db.save)
+  return oidc.strategyFactory(enrichedConfig, userSdk.saveSSO)
 }
 
 /**

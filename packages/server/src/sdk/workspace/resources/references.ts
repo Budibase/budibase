@@ -120,11 +120,9 @@ export const findResourceSearchTargets = ({
   const addStringMatches = ({
     value,
     property,
-    isObjectKey = false,
   }: {
     value: string
     property?: string
-    isObjectKey?: boolean
   }) => {
     const blocks = findResourceBindingBlocks(value).map(getSearchableBinding)
     const bindingMatches = getBindingMatches({ blocks, targets })
@@ -132,7 +130,7 @@ export const findResourceSearchTargets = ({
       const exactMatch =
         target.matchExactly !== false &&
         value === target.idToSearch &&
-        (isObjectKey || isStructuredReferenceProperty(property))
+        isStructuredReferenceProperty(property)
       const enabledToolMatch =
         property === "enabledTools" &&
         target.matchInEnabledTools &&
@@ -162,7 +160,7 @@ export const findResourceSearchTargets = ({
       return
     }
     for (const [key, nestedValue] of Object.entries(value)) {
-      addStringMatches({ value: key, isObjectKey: true })
+      addStringMatches({ value: key })
       const nestedProperty =
         property === "enabledTools" && key === "toolName" ? property : key
       visit({ value: nestedValue, property: nestedProperty })

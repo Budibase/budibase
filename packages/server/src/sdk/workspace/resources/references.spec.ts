@@ -211,18 +211,13 @@ describe("resource references", () => {
     ).toEqual([bindingTarget])
   })
 
-  it("matches resource ids used as object keys", () => {
-    const target = {
-      ...queryResource,
-      idToSearch: queryResource.id,
-    }
-
+  it("ignores literal resource ids used as object keys", () => {
     expect(
       findResourceSearchTargets({
         resource: { [queryResource.id]: "id key" },
-        targets: [target],
+        targets: [createSearchTarget(queryResource)],
       })
-    ).toEqual([target])
+    ).toEqual([])
   })
 
   it("does not match resource ids used as free-form text", () => {
