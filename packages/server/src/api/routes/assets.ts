@@ -8,5 +8,6 @@ addFileManagement(router)
 
 router.get("/builder", serveBuilderAssets)
 router.get("/builder/*file", serveBuilderAssets)
+router.get("/apps", serveBuilderAssets)
 
 export default router

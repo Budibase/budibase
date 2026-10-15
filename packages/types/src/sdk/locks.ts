@@ -26,8 +26,10 @@ export enum LockName {
   SQS_SYNC_DEFINITIONS = "sys_sync_definitions",
   LITELLM_KEY = "litellm_key",
   AGENT_RAG_KNOWLEDGE_BASE = "agent_rag_knowledge_base",
+  GEMINI_INGESTION_COOLDOWN = "gemini_ingestion_cooldown",
   CUSTOM_REST_TEMPLATES = "custom_rest_templates",
   CONVERSATION_ATTACHMENT = "conversation_attachment",
+  ESCALATION = "escalation",
 }
 
 export type LockOptions = {
@@ -62,6 +64,10 @@ export type LockOptions = {
     }
   | {
       type: LockType.AUTO_EXTEND
+      /**
+       * The ttl to auto-expire the lock if it cannot be extended
+       */
+      ttl?: number
       onExtend?: () => void
     }
 )

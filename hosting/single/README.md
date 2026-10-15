@@ -89,6 +89,21 @@ The following yarn command does some prep and then runs the docker build command
 yarn build:docker:single
 ```
 
+The structure-test command builds this local `budibase:latest` image before
+testing it, so it cannot accidentally test an older or pulled image with the
+same tag:
+
+```
+yarn test:docker:single
+```
+
+To test an existing image without building `budibase:latest`, set `IMAGE`
+explicitly:
+
+```
+IMAGE=budibase/custom:tag yarn test:docker:single
+```
+
 If the docker build step fails try running that step again manually with:
 
 ```

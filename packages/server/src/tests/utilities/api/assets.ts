@@ -5,4 +5,8 @@ export class AssetsAPI extends TestAPI {
     // has to be raw, body isn't JSON
     return await this._requestRaw("get", `/builder/${path}`)
   }
+
+  getAppPortal = async () => {
+    return await this._requestRaw("get", "/apps")
+  }
 }

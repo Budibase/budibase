@@ -16,6 +16,8 @@
   import { type Routing } from "@/types/routing"
   import { type Readable } from "svelte/store"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+  import { licensing } from "@/stores/portal"
+  import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
 
   const routing: Readable<Routing> = getContext("routing")
 
@@ -140,67 +142,74 @@
   }
 </script>
 
-<Layout gap="S" noPadding>
-  <Layout gap="XS" noPadding>
-    <Heading size="XS">{name}</Heading>
-    <Body size="S">
-      {description}
-      <br />
-      Change the email template here. Add dynamic content by using the bindings menu
-      on the right.
-    </Body>
+<LockedFeature
+  planType="Pro plan"
+  description="Customise the email templates sent by Budibase."
+  enabled={$licensing.customiseEmailsEnabled}
+  upgradeButtonClick={licensing.goToUpgradePage}
+>
+  <Layout gap="S" noPadding>
+    <Layout gap="XS" noPadding>
+      <Heading size="XS">{name}</Heading>
+      <Body size="S">
+        {description}
+        <br />
+        Change the email template here. Add dynamic content by using the bindings
+        menu on the right.
+      </Body>
+    </Layout>
+
+    <div>
+      <Tabs noHorizPadding selected="Edit" on:select={fixMountBug}>
+        <Tab title="Edit">
+          <div class="template-editor">
+            <div class="template-text-editor">
+              <Editor
+                editorHeight={640}
+                bind:this={htmlEditor}
+                mode="handlebars"
+                on:change={handleEditorChange}
+                value={selectedTemplate?.contents}
+              />
+            </div>
+            <div class="bindings-editor">
+              <Heading size="XS">Bindings</Heading>
+              {#if mounted}
+                <Tabs
+                  noHorizPadding
+                  selected={selectedBindingTab}
+                  on:select={handleBindingTabSelect}
+                >
+                  <Tab title="Template">
+                    <TemplateBindings
+                      bindings={templateBindings}
+                      onBindingClick={setTemplateBinding}
+                    />
+                  </Tab>
+                  <Tab title="Common">
+                    <TemplateBindings
+                      bindings={$email?.definitions?.bindings?.common || []}
+                      onBindingClick={setTemplateBinding}
+                    />
+                  </Tab>
+                </Tabs>
+              {/if}
+            </div>
+          </div>
+        </Tab>
+        <Tab title="Preview">
+          <div class="preview">
+            <iframe title="preview" srcdoc={previewContent}></iframe>
+          </div>
+        </Tab>
+      </Tabs>
+    </div>
+
+    <RouteActions>
+      <Button cta on:click={saveTemplate}>Save</Button>
+    </RouteActions>
   </Layout>
-
-  <div>
-    <Tabs noHorizPadding selected="Edit" on:select={fixMountBug}>
-      <Tab title="Edit">
-        <div class="template-editor">
-          <div class="template-text-editor">
-            <Editor
-              editorHeight={640}
-              bind:this={htmlEditor}
-              mode="handlebars"
-              on:change={handleEditorChange}
-              value={selectedTemplate?.contents}
-            />
-          </div>
-          <div class="bindings-editor">
-            <Heading size="XS">Bindings</Heading>
-            {#if mounted}
-              <Tabs
-                noHorizPadding
-                selected={selectedBindingTab}
-                on:select={handleBindingTabSelect}
-              >
-                <Tab title="Template">
-                  <TemplateBindings
-                    bindings={templateBindings}
-                    onBindingClick={setTemplateBinding}
-                  />
-                </Tab>
-                <Tab title="Common">
-                  <TemplateBindings
-                    bindings={$email?.definitions?.bindings?.common || []}
-                    onBindingClick={setTemplateBinding}
-                  />
-                </Tab>
-              </Tabs>
-            {/if}
-          </div>
-        </div>
-      </Tab>
-      <Tab title="Preview">
-        <div class="preview">
-          <iframe title="preview" srcdoc={previewContent}></iframe>
-        </div>
-      </Tab>
-    </Tabs>
-  </div>
-
-  <RouteActions>
-    <Button cta on:click={saveTemplate}>Save</Button>
-  </RouteActions>
-</Layout>
+</LockedFeature>
 
 <style>
   .template-editor {

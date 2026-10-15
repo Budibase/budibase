@@ -12,6 +12,7 @@
     DraftChatConversation,
     AgentMessageMetadata,
     EscalationContextDoc,
+    EscalationReviewContext,
     EscalationRespondResult,
   } from "@budibase/types"
   import { ApprovalToolResultStatus } from "@budibase/types"
@@ -93,7 +94,12 @@
   // casts live here rather than cluttering the template.
   const escalationCardProps = (part: { input?: unknown; output?: unknown }) => {
     const output = part.output as
-      | { escalationId?: string; title?: string; summary?: string }
+      | {
+          escalationId?: string
+          title?: string
+          summary?: string
+          reviewContext?: EscalationReviewContext
+        }
       | undefined
     const input = part.input as { title?: string; summary?: string } | undefined
     const escalationId = output?.escalationId
@@ -101,6 +107,7 @@
       escalationId,
       title: output?.title ?? input?.title,
       summary: output?.summary ?? input?.summary,
+      reviewContext: output?.reviewContext,
       resolution:
         (escalationId && escalationState?.[escalationId]?.resolution) ||
         "pending",
@@ -266,7 +273,25 @@
 
   let resolvedConversationId = $state<string | undefined>()
 
+  // The consumer must get plain objects, otherwise reading them keeps
+  // subscribing to the live chat state and every streamed token counts as a
+  // change. $state.snapshot cannot type UIMessage, hence the manual clone.
+  const snapshotMessages = (
+    nextMessages: UIMessage<AgentMessageMetadata>[]
+  ): UIMessage<AgentMessageMetadata>[] =>
+    nextMessages.map(message => JSON.parse(JSON.stringify(message)))
+
+  const publishChatMessages = (
+    nextMessages: UIMessage<AgentMessageMetadata>[] = chatInstance.messages
+  ) => {
+    chat = {
+      ...chat,
+      messages: snapshotMessages(nextMessages),
+    }
+  }
+
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
+    messages: chat?.messages || [],
     transport: new DefaultChatTransport({
       headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
@@ -286,13 +311,13 @@
         }
       },
     }),
-    messages: chat?.messages || [],
     onFinish: async () => {
       isPreparingResponse = false
-      chat = { ...chat, messages: chatInstance.messages }
+      publishChatMessages()
     },
     onError: error => {
       resetPendingResponse()
+      publishChatMessages()
 
       console.error(error)
       let message = error.message || "Failed to send message"
@@ -350,6 +375,7 @@
     message: UIMessage<AgentMessageMetadata>
   ) {
     chatInstance.messages = [...chatInstance.messages, message]
+    publishChatMessages()
   }
 
   let lastAssistantUsage = $derived(
@@ -490,7 +516,18 @@
     inputValue = ""
     promptHistoryIndex = undefined
     onpromptsubmitted?.(text)
-    chatInstance.sendMessage({ text })
+
+    const userMessage: UIMessage<AgentMessageMetadata> = {
+      id: Helpers.uuid(),
+      role: "user",
+      parts: [{ type: "text", text }],
+    }
+    publishChatMessages([...(chat.messages ?? []), userMessage])
+    chatInstance.sendMessage({
+      id: userMessage.id,
+      role: "user",
+      parts: userMessage.parts,
+    })
     isPreparingResponse = false
   }
 
@@ -758,6 +795,7 @@
                 <EscalationCard
                   title={card.title}
                   summary={card.summary}
+                  reviewContext={card.reviewContext}
                   resolution={card.resolution}
                   statusMessage={card.escalationId
                     ? resolveMessages[card.escalationId]

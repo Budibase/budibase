@@ -3,6 +3,7 @@ import type { UIMessage } from "ai"
 import type { ArrayOperator, BasicOperator } from "../../sdk"
 import type { FieldType } from "../workspace/row"
 import {
+  EscalationAction,
   EscalationRecipient,
   ResolutionStrategy,
 } from "../workspace/escalation"
@@ -142,8 +143,12 @@ export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
 
 export interface AgentEscalationConfig {
   recipients?: EscalationRecipient[]
-  // How long the escalation is kept before being marked as expired.
-  delay?: number
+}
+
+export interface ApprovalPolicyExpiry {
+  // Absent means the request never expires.
+  durationSeconds?: number
+  outcome?: EscalationAction
 }
 
 export interface AgentOperationApprovalPolicy {
@@ -151,8 +156,14 @@ export interface AgentOperationApprovalPolicy {
   name: string
   approvalType?: ResolutionStrategy
   approvers?: string[]
+  expiry?: ApprovalPolicyExpiry
   notifications: AgentEscalationConfig
 }
+
+export type EscalationPolicySnapshot = Omit<
+  AgentOperationApprovalPolicy,
+  "notifications"
+>
 
 // TODO: This can go further. These exist all over the place
 // as magic strings. They can stay here until they are
@@ -177,6 +188,7 @@ export interface ToolExecutionCondition {
 export interface ToolExecutionRule {
   conditions?: ToolExecutionCondition[]
   policyId: string
+  reviewParameters?: string[]
 }
 
 export interface AgentOperationToolConfig {

@@ -16,11 +16,11 @@ export {
   accountPortalAccountUrl,
   accountPortalBillingUrl,
   accountPortalUpgradeUrl,
-  builderWorkspacesUrl,
+  builderUrl,
   builderSettingsEmailUrl,
   builderSettingsAuthUrl,
   builderSettingsPeopleUsersUrl,
-  builderAppsUrl,
+  portalUrl,
   urlHelpers,
   applyBaseUrl,
 } from "./url"

@@ -53,6 +53,7 @@
   export let onOptionMouseleave = () => {}
   export let loading: boolean | undefined = false
   export let searchPlaceholder: string | undefined = undefined
+  export let searchTerm: string | undefined = undefined
   export let required: boolean | undefined = false
   export let wrapText: boolean = false
   export let description: string | undefined = undefined
@@ -114,6 +115,7 @@
     {tooltipMessage}
     {searchPlaceholder}
     {wrapText}
+    bind:searchTerm
     on:change={onChange}
     on:click
     on:loadMore

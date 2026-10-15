@@ -8,12 +8,10 @@
     type TableSchema,
     type UISearchFilter,
     type Component,
-    type TableDatasource,
     ArrayOperator,
     EmptyFilterOption,
     FieldType,
     FilterType,
-    InternalTable,
     RangeOperator,
     UILogicalOperator,
   } from "@budibase/types"
@@ -23,9 +21,10 @@
   import { ActionTypes } from "@/constants"
   import {
     QueryUtils,
-    fetchData,
+    fetchUsersById,
     loadTranslationsByGroup,
     memo,
+    type PickerUser,
   } from "@budibase/frontend-core"
   import FilterButton from "./FilterButton.svelte"
   import { onDestroy } from "svelte"
@@ -47,7 +46,7 @@
   const { API, fetchDatasourceSchema, getRelationshipSchemaAdditions } =
     getContext("sdk")
 
-  const rowCache = writable({})
+  const rowCache = writable<Record<string, PickerUser>>({})
   setContext("rows", rowCache)
   const filterLabels = loadTranslationsByGroup("filter")
 
@@ -63,7 +62,6 @@
     ],
   }
 
-  let userFetch: any
   let hydrated = false
 
   // All current filters.
@@ -126,7 +124,11 @@
     componentId && loaded ? getAction(componentId, removeAction) : null
 
   // If the filters are updated, notify the target of the change
-  $: hydrated && dataComponent && loaded && fire(filterExtension)
+  $: hydrated &&
+    dataComponent &&
+    loaded &&
+    addExtension &&
+    fire(filterExtension)
 
   const initTarget = (target: Component | null) => {
     if (!dataComponent && target) {
@@ -301,44 +303,6 @@
     })
   }
 
-  // InitFetch for RelationShipField Display on load.
-  // Hardcoded for the user for now
-  const createFetch = (initValue: any) => {
-    // field and primary - based on datasource
-    let searchFilter: SearchFilterGroup = {
-      logicalOperator: UILogicalOperator.ALL,
-      filters: [
-        {
-          field: "_id",
-          operator: ArrayOperator.ONE_OF,
-          value: Array.isArray(initValue) ? initValue : [initValue],
-        },
-      ],
-    }
-
-    // Default filter
-    let initFilter = initValue
-      ? {
-          logicalOperator: UILogicalOperator.ALL,
-          groups: [searchFilter],
-          onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-        }
-      : undefined
-
-    const ds: { type: string; tableId: string } = {
-      type: "user",
-      tableId: InternalTable.USER_METADATA,
-    }
-    return fetchData({
-      API,
-      datasource: ds as TableDatasource,
-      options: {
-        filter: initFilter,
-        limit: 100,
-      },
-    })
-  }
-
   // Only dealing with user fields.
   const initRelationShips = (filters: Record<string, SearchFilter>) => {
     const filtered = Object.entries(filters || {}).filter(
@@ -377,23 +341,20 @@
 
   $: rels = initRelationShips($memoFilters)
   $: relIds = getRelIds(rels)
+  $: cacheUsers(relIds.filter(id => !$rowCache[id]))
 
-  $: if (!userFetch && relIds.length) {
-    userFetch = createFetch(relIds)
-  }
-
-  $: fetchedRows = userFetch ? $userFetch?.rows : []
-
-  $: if (fetchedRows.length) {
-    const fetched = fetchedRows.reduce((acc: any, ele: any) => {
-      acc[ele._id] = ele
-      return acc
-    }, {})
-
-    // User cache
+  // Resolve configured user ids the picker's first page won't include
+  const cacheUsers = async (ids: string[]) => {
+    if (!ids.length) {
+      return
+    }
+    const users = await fetchUsersById(API, ids)
+    if (!Object.keys(users).length) {
+      return
+    }
     rowCache.update(state => ({
       ...state,
-      ...fetched,
+      ...users,
     }))
   }
 

@@ -7,6 +7,7 @@ import {
   type ChatConversation,
   type ChatConversationChannel,
   type Ctx,
+  type EscalationRespondResult,
   type SlackConversationScope,
   type WebhookChatCompleteResult,
 } from "@budibase/types"
@@ -20,7 +21,13 @@ import {
 import sdk from "../../../sdk"
 import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
 import { escalationProcessor } from "../../../escalation/processor"
-import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
+import {
+  buildLinkPrompt,
+  escalationReplyText,
+  handleChatMessage,
+  NO_ASSISTANT_RESPONSE_MESSAGE,
+  unlinkedResponsePrompt,
+} from "./chatHandler"
 import { createChatLogger } from "./chatLogger"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
@@ -345,6 +352,20 @@ const createSlackMessageHandler = (
   }
 }
 
+const postEscalationReply = async (event: ActionEvent, text: string) => {
+  if (!event.thread) {
+    return
+  }
+  try {
+    await event.thread.post(text)
+  } catch (error) {
+    console.warn("Escalation action: failed to post reply", {
+      actionId: event.actionId,
+      message: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
 export async function slackWebhook(
   ctx: Ctx<unknown, unknown, { instance: string; agentId: string }>
 ) {
@@ -486,6 +507,7 @@ export async function slackWebhook(
           channel: (event.raw as any)?.channel,
         }
 
+        let result: EscalationRespondResult
         try {
           const appId = await resolveEscalationWorkspaceId(
             workspaceId,
@@ -499,24 +521,49 @@ export async function slackWebhook(
             return
           }
 
-          const result = await context.doInContext(appId, async () => {
-            // We can respond with closed or
-            return sdk.escalations.respond(
+          result = await context.doInContext(appId, async () => {
+            const raw = event.raw as
+              | { team?: { id?: string }; user?: { team_id?: string } }
+              | undefined
+            const teamId = raw?.team?.id ?? raw?.user?.team_id
+            const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+              provider: AgentChannelProvider.SLACK,
+              externalUserId: event.user.userId,
+              teamId,
+            })
+            const respondResult = await sdk.escalations.respond(
               escalationId,
               notificationDocId,
-              slackResponse,
+              { ...slackResponse, userId: link?.globalUserId },
               (id, response) => escalationProcessor.resolve(id, response)
             )
+            if (respondResult.status === "unlinked" && event.thread) {
+              const prompt = await buildLinkPrompt({
+                workspaceId,
+                provider: AgentChannelProvider.SLACK,
+                user: {
+                  externalUserId: event.user.userId,
+                  displayName: event.user.userName,
+                },
+                channel: { teamId },
+                linkedAlready: false,
+                prefix: unlinkedResponsePrompt(AgentChannelProvider.SLACK),
+              })
+              const delivery = await postLinkPromptPrivately({
+                target: event.thread.channel as PrivatePostTarget,
+                user: event.user,
+                text: prompt.text,
+                linkUrl: prompt.linkUrl,
+              })
+              if (!delivery.delivered) {
+                await postEscalationReply(
+                  event,
+                  "I couldn't send you a private Budibase link. Please message me directly to link your account."
+                )
+              }
+            }
+            return respondResult
           })
-
-          // TODO: Can these responses be more dynamic/informative
-          if (event.thread) {
-            const msg =
-              result.status === "closed"
-                ? "Escalation already closed."
-                : "Response recorded."
-            await event.thread.post(msg)
-          }
         } catch (error) {
           console.error("Escalation action: failed to record response", {
             escalationId,
@@ -524,10 +571,14 @@ export async function slackWebhook(
             workspaceId,
             message: error instanceof Error ? error.message : String(error),
           })
-          if (event.thread) {
-            await event.thread.post("Failed to record response.")
-          }
+          await postEscalationReply(event, "Failed to record response.")
+          return
         }
+
+        if (result.status === "unlinked") {
+          return
+        }
+        await postEscalationReply(event, escalationReplyText(result.status))
       })
 
       chat.onNewMention(handler)

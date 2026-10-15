@@ -17,6 +17,7 @@ import type {
   ChatConversationRequest,
   ContextUser,
   ConversationAttachmentTurn,
+  EscalationRespondResult,
   WebhookChatCompleteResult,
 } from "@budibase/types"
 import {
@@ -369,6 +370,60 @@ export interface HandleChatMessageParams {
   requireUserLink?: boolean
 }
 
+export const buildLinkPrompt = async ({
+  workspaceId,
+  provider,
+  user,
+  channel,
+  linkedAlready,
+  prefix,
+}: {
+  workspaceId: string
+  provider: AgentChannelProvider
+  user: HandleChatMessageParams["user"]
+  channel: Pick<ChatConversationChannel, "teamId" | "tenantId" | "serviceUrl">
+  linkedAlready: boolean
+  prefix: string
+}): Promise<LinkPromptMessage> => {
+  const session = await sdk.ai.chatIdentityLinks.createChatIdentityLinkSession({
+    workspaceId,
+    provider,
+    externalUserId: user.externalUserId,
+    externalUserName: user.displayName,
+    teamId: channel.teamId,
+    providerTenantId: channel.tenantId,
+    serviceUrl: channel.serviceUrl,
+  })
+
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+  const linkUrl = `${platformUrl.replace(/\/$/, "")}/api/chat-links/${workspaceId}/${session.token}/handoff`
+
+  const suffix = linkedAlready
+    ? "Completing this link will replace the previous Budibase user mapping."
+    : `Run ${getLinkCommand(provider)} any time to generate a fresh link.`
+
+  return {
+    text: `${prefix} ${suffix}`,
+    linkUrl,
+  }
+}
+
+export const escalationReplyText = (
+  status: EscalationRespondResult["status"]
+) => {
+  switch (status) {
+    case "closed":
+      return "Escalation already closed."
+    case "already_responded":
+      return "You've already responded to this request."
+    default:
+      return "Response recorded."
+  }
+}
+
+export const unlinkedResponsePrompt = (provider: AgentChannelProvider) =>
+  `Your ${providerDisplayName(provider)} account isn't linked to Budibase, so this response can't be counted. Link it, then respond to the request again.`
+
 const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "Teams"
@@ -466,36 +521,21 @@ export const handleChatMessage = async ({
       providerTenantId: channel.tenantId,
     })
 
-    const createLinkPromptMessage = async ({
+    const createLinkPromptMessage = ({
       linkedAlready,
       prefix,
     }: {
       linkedAlready: boolean
       prefix: string
-    }): Promise<LinkPromptMessage> => {
-      const session =
-        await sdk.ai.chatIdentityLinks.createChatIdentityLinkSession({
-          workspaceId,
-          provider,
-          externalUserId: user.externalUserId,
-          externalUserName: user.displayName,
-          teamId: channel.teamId,
-          providerTenantId: channel.tenantId,
-          serviceUrl: channel.serviceUrl,
-        })
-
-      const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
-      const linkUrl = `${platformUrl.replace(/\/$/, "")}/api/chat-links/${workspaceId}/${session.token}/handoff`
-
-      const suffix = linkedAlready
-        ? "Completing this link will replace the previous Budibase user mapping."
-        : `Run ${getLinkCommand(provider)} any time to generate a fresh link.`
-
-      return {
-        text: `${prefix} ${suffix}`,
-        linkUrl,
-      }
-    }
+    }) =>
+      buildLinkPrompt({
+        workspaceId,
+        provider,
+        user,
+        channel,
+        linkedAlready,
+        prefix,
+      })
 
     if (command === ChatCommands.LINK) {
       const prompt = await createLinkPromptMessage({

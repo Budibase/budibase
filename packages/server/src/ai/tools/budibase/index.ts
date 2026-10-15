@@ -28,6 +28,7 @@ export const getBudibaseTools = (
         tableName: table.name || table._id!,
         tableSourceType: table.sourceType,
         tableSchema: table.schema,
+        primaryDisplay: table.primaryDisplay,
         sourceLabel: isExternal
           ? datasourceNamesById[table.sourceId] || "External"
           : "Budibase",

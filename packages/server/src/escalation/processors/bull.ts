@@ -69,6 +69,8 @@ export class BullEscalationProcessor implements IEscalationProcessor {
             ...((input.requestId ?? existing?.requestId) && {
               requestId: input.requestId ?? existing?.requestId,
             }),
+            ...(input.rule && { rule: input.rule }),
+            ...(input.policy && { policy: input.policy }),
           }
 
     const doc: EscalationContextDoc = {
@@ -78,13 +80,14 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       appId: input.appId,
       tenantId: input.tenantId,
       contextCompressed,
-      delay: input.delay,
+      ...(input.durationMs !== undefined && { durationMs: input.durationMs }),
       resolution: "pending",
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
       isTest,
       ...(input.title && { title: input.title }),
       ...(input.summary && { summary: input.summary }),
+      ...(input.reviewContext && { reviewContext: input.reviewContext }),
       ...(input.recipients?.length && { recipients: input.recipients }),
       ...(input.resolutionStrategy && {
         resolutionStrategy: input.resolutionStrategy,
@@ -105,10 +108,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
 
     await addEscalationJob(job, 0, getNotifyJobId(escalationId))
 
-    const expiresAt = new Date(
-      new Date(now).getTime() + input.delay
-    ).toISOString()
-    return { escalationId, expiresAt }
+    return { escalationId }
   }
 
   async resolve(
