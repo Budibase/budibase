@@ -182,7 +182,6 @@ export async function startup(
   queuePromises.push(agentTests.init())
   queuePromises.push(
     events.platformActions.init({
-      concurrency: env.PLATFORM_ACTION_INDEX_QUEUE_CONCURRENCY,
       onSessionIndexed: queueActionSessionChange,
     })
   )
