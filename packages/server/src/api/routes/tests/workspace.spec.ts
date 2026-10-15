@@ -1030,6 +1030,29 @@ describe("/applications", () => {
       expect(res.screens).toHaveLength(3) // 3 created screens
     })
 
+    it("should omit revisions from truncated builder screens", async () => {
+      const currentScreen = await config.api.screen.save(basicScreen("/one"))
+      const otherScreen = await config.api.screen.save(basicScreen("/two"))
+
+      const res = await config.api.workspace.getAppPackage(workspace.appId, {
+        headers: {
+          referer: `https://example.com/builder/workspace/${workspace.appId}/design/${currentScreen.workspaceAppId}/${currentScreen._id}`,
+        },
+      })
+
+      const fetchedCurrentScreen = res.screens.find(
+        screen => screen._id === currentScreen._id
+      )
+      const fetchedOtherScreen = res.screens.find(
+        screen => screen._id === otherScreen._id
+      )
+
+      expect(fetchedCurrentScreen?._rev).toEqual(currentScreen._rev)
+      expect(fetchedCurrentScreen?.props).toEqual(currentScreen.props)
+      expect(fetchedOtherScreen?._rev).toBeUndefined()
+      expect(fetchedOtherScreen?.props._children).toEqual([])
+    })
+
     it("should retrieve all the screens for public calls", async () => {
       const [_screen1, screen2, _screen3] = await Promise.all([
         config.api.screen.save(basicScreen()),
