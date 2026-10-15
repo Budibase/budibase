@@ -100,12 +100,16 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     file: File,
     body?: ImportProjectRequest
   ): Promise<ImportProjectResponse> => {
+    const workspaceId = this.workspaceId
     const response = await API.projects.importBundle(file, body)
-    try {
-      await this.fetch(this.workspaceId)
-    } catch (err) {
-      this.loaded = false
-      console.warn("Failed to refresh projects after import", err)
+    if (this.workspaceId === workspaceId) {
+      this.invalidateFetch()
+      this.update(state =>
+        sortProjectsByName([
+          ...state.filter(project => project._id !== response.project._id),
+          response.project,
+        ])
+      )
     }
     return response
   }

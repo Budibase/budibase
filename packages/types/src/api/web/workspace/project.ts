@@ -9,6 +9,7 @@ export interface ProjectResponse {
   color?: string
   createdAt: string
   updatedAt: string
+  importSetup?: ProjectImportSetup
 }
 
 export interface FetchProjectsResponse {
@@ -88,17 +89,24 @@ export interface ImportProjectRequest {
 }
 
 export interface ProjectImportRequirement {
-  type: "datasource_secrets" | "agent_secrets" | "automation_credentials"
+  type:
+    | "datasource_secrets"
+    | "agent_secrets"
+    | "agent_ai_config"
+    | "automation_credentials"
   resourceId: string
   name: string
   reason: string
 }
 
-export interface ImportProjectResponse {
-  project: ProjectResponse
+export interface ProjectImportSetup {
   resources: Partial<Record<ResourceType, string[]>>
   unsupportedContent: ProjectPackageUnsupportedContent[]
   requirements: ProjectImportRequirement[]
+}
+
+export interface ImportProjectResponse extends ProjectImportSetup {
+  project: ProjectResponse
 }
 
 export interface ProjectManifestSummary {

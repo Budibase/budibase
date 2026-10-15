@@ -63,6 +63,7 @@ import { getQueryToolBindingsForResource } from "../../ai/agents/queryToolRefere
 import { getResourceType } from "../../resources/utils"
 import { getAppUrl } from "../../workspaces/utils"
 import { doWithProjectAssignmentsLock } from "../lock"
+import { refreshProjectImportSetup } from "../importSetup"
 import {
   PROJECT_ATTACHMENTS_DIRECTORY,
   MAX_PROJECT_ARCHIVE_SIZE_BYTES,
@@ -659,7 +660,8 @@ const sanitiseImportedDoc = async ({
   if (resourceType === ResourceType.AGENT) {
     Object.assign(
       remapped,
-      sdk.ai.agents.sanitiseAgentForExport(remapped as Agent)
+      sdk.ai.agents.sanitiseAgentForExport(remapped as Agent),
+      { aiconfig: "" }
     )
     delete (remapped as Agent).publishedAt
   }
@@ -1352,17 +1354,25 @@ const buildRequirements = ({
 
     if (importedDoc.resourceType === ResourceType.AGENT) {
       const doc = importedDoc.doc as Agent
+      const requirements: ProjectImportRequirement[] = [
+        {
+          type: "agent_ai_config",
+          resourceId: doc._id!,
+          name: doc.name || "Unknown",
+          reason:
+            "AI configuration references are workspace-specific and must be selected after Project import.",
+        },
+      ]
       if (doc.slackIntegration || doc.MSTeamsIntegration) {
-        return [
-          {
-            type: "agent_secrets" as const,
-            resourceId: doc._id!,
-            name: doc.name || "Unknown",
-            reason:
-              "Agent integration secrets are excluded from Project exports and must be reconfigured after import.",
-          },
-        ]
+        requirements.push({
+          type: "agent_secrets",
+          resourceId: doc._id!,
+          name: doc.name || "Unknown",
+          reason:
+            "Agent integration secrets are excluded from Project exports and must be reconfigured after import.",
+        })
       }
+      return requirements
     }
 
     return []
@@ -1459,6 +1469,22 @@ export async function importProject(
             idMap.get(requirement.resourceId) || requirement.resourceId,
         }))
 
+        const savedProject = await context.getWorkspaceDB().put(
+          {
+            ...importedProject,
+            importSetup: {
+              resources,
+              unsupportedContent: extracted.manifest.unsupportedContent,
+              requirements,
+            },
+          },
+          { returnDoc: true }
+        )
+        importedProject = savedProject.doc
+        const [refreshedProject] = await refreshProjectImportSetup({
+          projects: [importedProject],
+        })
+
         const createdAt = getProjectCreatedAt(importedProject)
         return {
           project: {
@@ -1469,10 +1495,11 @@ export async function importProject(
             color: importedProject.color,
             createdAt,
             updatedAt: toTimestamp(importedProject.updatedAt) ?? createdAt,
+            importSetup: refreshedProject.importSetup,
           },
           resources,
           unsupportedContent: extracted.manifest.unsupportedContent,
-          requirements,
+          requirements: refreshedProject.importSetup!.requirements,
         }
       } catch (err) {
         if (insertedDocs.length) {

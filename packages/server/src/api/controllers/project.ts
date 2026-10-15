@@ -21,6 +21,7 @@ import { HTTPError } from "@budibase/backend-core"
 import fsp from "fs/promises"
 import type { Next } from "koa"
 import sdk from "../../sdk"
+import { refreshProjectImportSetup } from "../../sdk/workspace/projects/importSetup"
 
 export const toProjectResponse = (project: Project): ProjectResponse => {
   return {
@@ -31,11 +32,14 @@ export const toProjectResponse = (project: Project): ProjectResponse => {
     color: project.color,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
+    importSetup: project.importSetup,
   }
 }
 
 export async function fetch(ctx: Ctx<void, FetchProjectsResponse>) {
-  const projects = await sdk.projects.fetch()
+  const projects = await refreshProjectImportSetup({
+    projects: await sdk.projects.fetch(),
+  })
   ctx.body = {
     projects: projects.map(toProjectResponse),
   }
@@ -75,8 +79,9 @@ export async function update(
     color: body.color,
   }
   const updated = await sdk.projects.update(project)
+  const [refreshed] = await refreshProjectImportSetup({ projects: [updated] })
   ctx.body = {
-    project: toProjectResponse(updated),
+    project: toProjectResponse(refreshed),
   }
 }
 

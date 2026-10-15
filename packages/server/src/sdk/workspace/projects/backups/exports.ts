@@ -237,7 +237,10 @@ async function sanitiseDocumentForExport(
   }
 
   if (type === ResourceType.AGENT) {
-    return sdk.ai.agents.sanitiseAgentForExport(sanitised as Agent)
+    return {
+      ...sdk.ai.agents.sanitiseAgentForExport(sanitised as Agent),
+      aiconfig: "",
+    }
   }
 
   if (type === ResourceType.AUTOMATION) {
@@ -264,6 +267,7 @@ function sanitiseProjectForExport(project: Project) {
   const sanitised = structuredClone(project)
   const createdAt = getProjectCreatedAt(project)
   delete sanitised._rev
+  delete sanitised.importSetup
   sanitised.createdAt = createdAt
   sanitised.updatedAt = toTimestamp(project.updatedAt) ?? createdAt
   return sanitised
