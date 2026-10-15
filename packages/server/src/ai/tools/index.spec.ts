@@ -98,7 +98,7 @@ describe("tool action accounting with real quotas", () => {
     mocks.licenses.useUnlimited()
   })
 
-  it("counts only the approved execution across approval boundaries", async () => {
+  it("counts the approved tool execution once, excluding pending and repeated calls", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       await quotas.setAllUsage({
         name: MonthlyQuotaName.ACTIONS,
