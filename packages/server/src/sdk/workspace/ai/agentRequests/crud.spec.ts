@@ -317,7 +317,11 @@ describe("agentRequests crud", () => {
       })
     })
 
-    it.each(["option number", "Para el portátil, envíalo a Madrid"])(
+    it.each([
+      "option number",
+      "Para el portátil, envíalo a Madrid",
+      "option number after analysis failure",
+    ])(
       "continues an action after clarification with %s",
       async latestPrompt => {
         await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -345,9 +349,25 @@ describe("agentRequests crud", () => {
             ...inputs,
             latestPrompt: "Envíalo a Madrid",
           })
-          const clarification = ambiguous?.clarification
+          let clarification = ambiguous?.clarification
           if (!clarification) {
             throw new Error("Expected request clarification")
+          }
+          if (latestPrompt === "option number after analysis failure") {
+            analyzeAgentRequestLinkMock.mockRejectedValueOnce(
+              new Error("Analyzer unavailable")
+            )
+            const retry = await initActiveRequest({
+              ...inputs,
+              latestPrompt: "that request",
+              clarification,
+            })
+            clarification = retry?.clarification
+            if (!clarification) {
+              throw new Error(
+                "Expected request clarification after analysis failure"
+              )
+            }
           }
           analyzeAgentRequestLinkMock.mockResolvedValueOnce({
             decision: "existing_thread",
@@ -357,14 +377,13 @@ describe("agentRequests crud", () => {
           const result = await initActiveRequest({
             ...inputs,
             sessionId: "session_2",
-            latestPrompt:
-              latestPrompt === "option number"
-                ? String(
-                    clarification.options.findIndex(
-                      option => option.requestId === laptop.requestId
-                    ) + 1
-                  )
-                : latestPrompt,
+            latestPrompt: latestPrompt.startsWith("option number")
+              ? String(
+                  clarification.options.findIndex(
+                    option => option.requestId === laptop.requestId
+                  ) + 1
+                )
+              : latestPrompt,
             clarification,
           })
           expect(result).toEqual({ requestId: laptop.requestId })
@@ -378,6 +397,49 @@ describe("agentRequests crud", () => {
         })
       }
     )
+
+    it("does not infer execution from a selected operation when status analysis fails", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+        }
+        await initLinkedRequest({ ...inputs, latestPrompt: "Buy a laptop" })
+        await initLinkedRequest({ ...inputs, latestPrompt: "Buy a melon" })
+        const before = await fetchRequestsByAgent(inputs.agentId)
+        const question = "¿Cuál es el estado de mi request?"
+        analyzeAgentRequestLinkMock.mockRejectedValueOnce(
+          new Error("Analyzer unavailable")
+        )
+        const ambiguous = await initActiveRequest({
+          ...inputs,
+          latestPrompt: question,
+        })
+        const clarification = ambiguous?.clarification
+        if (!clarification) {
+          throw new Error("Expected request clarification")
+        }
+        const result = await initActiveRequest({
+          ...inputs,
+          sessionId: "session_2",
+          latestPrompt: "1",
+          clarification,
+        })
+        expect(result).toEqual({
+          inquiry: {
+            requestId: clarification.options[0].requestId,
+            answer: "Waiting for a human response",
+          },
+        })
+        expect(answerRequestInquiry).toHaveBeenCalledWith(
+          expect.objectContaining({ question, pendingEscalations: 0 })
+        )
+        expect(await fetchRequestsByAgent(inputs.agentId)).toEqual(before)
+      })
+    })
 
     it("answers an explicit inquiry about an active request without linking a new entry", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -1028,7 +1090,7 @@ describe("agentRequests crud", () => {
           clarification: {
             operationId: "op_expenses",
             reason: "ambiguous",
-            intent: "execute",
+            intent: "inquiry",
             question: "Change that expense to 25 pounds",
             options: [],
           },

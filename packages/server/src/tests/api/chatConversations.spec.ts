@@ -1096,6 +1096,11 @@ describe("Agent chat tool call tracking", () => {
       { reason: "ambiguous", intent: "query", failInitialization: false },
       { reason: "analysis_failed", intent: "query", failInitialization: false },
       { reason: "analysis_failed", intent: "query", failInitialization: true },
+      {
+        reason: "analysis_failed",
+        intent: "execute",
+        failInitialization: true,
+      },
     ] satisfies Array<{
       reason: AgentRequestClarification["reason"]
       intent: "execute" | "query"
@@ -1105,7 +1110,8 @@ describe("Agent chat tool call tracking", () => {
       async ({ reason, intent, failInitialization }) => {
         mockOperationIntent = intent
         const clarification: AgentRequestClarification = {
-          operationId: failInitialization ? undefined : "op-1",
+          operationId:
+            failInitialization && intent === "query" ? undefined : "op-1",
           reason,
           intent: "inquiry",
           options: failInitialization ? [] : options,

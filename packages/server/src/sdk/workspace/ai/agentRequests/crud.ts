@@ -857,13 +857,13 @@ export async function initActiveRequest({
       operationId: operation?.id,
       question: clarification?.question || latestPrompt,
       reason: "analysis_failed",
-      intent: clarification?.intent || (operation ? "execute" : "inquiry"),
+      intent: clarification?.intent ?? "inquiry",
     })
   }
   const clarify = ({
     reason,
     requests = enrichedCandidates,
-    intent = clarification?.intent || (operation ? "execute" : "inquiry"),
+    intent = clarification?.intent ?? "inquiry",
   }: {
     reason: AgentRequestClarification["reason"]
     requests?: AgentRequestLinkCandidate[]
