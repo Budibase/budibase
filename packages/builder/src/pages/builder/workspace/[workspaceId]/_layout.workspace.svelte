@@ -1,5 +1,6 @@
 <script lang="ts">
   import { sdk } from "@budibase/shared-core"
+  import { params } from "@roxi/routify"
   import {
     initialise,
     reset,
@@ -7,10 +8,11 @@
     previewStore,
     deploymentStore,
     workspaceStore,
+    componentStore,
   } from "@/stores/builder"
   import { workspacesStore, admin, aiConfigsStore, auth } from "@/stores/portal"
   import { bb } from "@/stores/bb"
-  import { Heading, Layout, Body } from "@budibase/bbui"
+  import { Heading, Layout, Body, notifications } from "@budibase/bbui"
   import { API } from "@/api"
   import InviteUsersModal from "./_components/InviteUsersModal.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
@@ -19,9 +21,27 @@
 
   export let workspaceId: string
 
-  let promise = getPackage(workspaceId)
+  let packageKey = `${workspaceId}:${$params.screenId || ""}`
+  let packageInitialisation = Promise.resolve()
+  const workspaceInitialisation = getPackage({
+    appId: workspaceId,
+    requestKey: packageKey,
+  })
   let sideNav: SideNav
   let showInviteUsersModal = false
+  $: {
+    const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
+    if (nextPackageKey !== packageKey) {
+      packageKey = nextPackageKey
+      getPackage({ appId: workspaceId, requestKey: packageKey }).catch(
+        error => {
+          notifications.error(
+            error?.message || "There was a problem loading the screen"
+          )
+        }
+      )
+    }
+  }
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
   $: canManageConnections =
     $auth.user != null && sdk.users.canCreateApps($auth.user)
@@ -32,7 +52,13 @@
     showInviteUsersModal = false
   }
 
-  async function getPackage(appId: string) {
+  async function getPackage({
+    appId,
+    requestKey,
+  }: {
+    appId: string
+    requestKey: string
+  }) {
     try {
       if ($admin.maintenance.length) {
         return
@@ -41,14 +67,38 @@
         builderStore.appCreated(false)
         await workspacesStore.load()
       } else {
-        reset()
+        const isSameWorkspace = $workspaceStore.appId === appId
+        const componentToPaste = isSameWorkspace
+          ? $componentStore.componentToPaste
+          : undefined
+        if (!isSameWorkspace) {
+          reset()
+        }
+        componentStore.update(state => ({ ...state, componentToPaste }))
         workspaceStore.update(state => ({ ...state, appId }))
         const pkg = await API.fetchAppPackage(appId)
+        if (requestKey !== packageKey) {
+          return
+        }
 
-        await initialise(pkg)
+        const currentInitialisation = packageInitialisation.then(async () => {
+          if (requestKey !== packageKey) {
+            return
+          }
+          await initialise(pkg)
+          if (requestKey === packageKey) {
+            await deploymentStore.load()
+          }
+        })
+        packageInitialisation = currentInitialisation.catch(() => {})
+        await currentInitialisation
+        return
       }
       await deploymentStore.load()
     } catch (error: any) {
+      if (requestKey !== packageKey) {
+        return
+      }
       console.error(`Error initialising app: ${error?.message}`)
       sideNav.show()
 
@@ -76,7 +126,7 @@
       }
     }}
   />
-  {#await promise}
+  {#await workspaceInitialisation}
     <div class="loading"></div>
   {:then _}
     <div class="body">

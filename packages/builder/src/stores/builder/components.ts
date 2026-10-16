@@ -677,25 +677,30 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }, null)
   }
 
-  copy(component: Component, cut = false, selectParent = true) {
+  async copy(component: Component, cut = false, selectParent = true) {
+    const sourceScreenId = get(screenStore).selectedScreenId
+    const parent =
+      cut && selectParent
+        ? findComponentParent(get(selectedScreen)?.props, component._id)
+        : undefined
+    if (cut) {
+      await this.delete(component)
+    }
+
     // Update store with copied component
     this.update(state => {
       state.componentToPaste = cloneDeep(component)
       state.componentToPaste.isCut = cut
-      state.componentToPaste.screenId = get(screenStore).selectedScreenId
+      state.componentToPaste.screenId = sourceScreenId
       return state
     })
 
     // Select the parent if cutting
-    if (cut && selectParent) {
-      const screen = get(selectedScreen)
-      const parent = findComponentParent(screen?.props, component._id)
-      if (parent) {
-        this.update(state => {
-          state.selectedComponentId = parent._id
-          return state
-        })
-      }
+    if (parent) {
+      this.update(state => {
+        state.selectedComponentId = parent._id
+        return state
+      })
     }
   }
 
@@ -742,7 +747,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
       }
       const cut = componentToPaste.isCut
       const sourceScreenId = componentToPaste.screenId
-      const originalId = componentToPaste._id
       delete componentToPaste.isCut
       delete componentToPaste.screenId
 
@@ -762,16 +766,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
           ) {
             delete componentToPaste._styles.normal[style]
           }
-        }
-      }
-
-      // Delete old component if cutting
-      if (cut) {
-        const parent = findComponentParent(screen.props, originalId)
-        if (parent?._children) {
-          parent._children = parent._children.filter(
-            (component: Component) => component._id !== originalId
-          )
         }
       }
 
