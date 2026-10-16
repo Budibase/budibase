@@ -8,6 +8,7 @@ import {
 import type {
   Agent,
   AgentOperation,
+  AgentRequest,
   ChatConversation,
   ChatConversationRequest,
   User,
@@ -24,6 +25,12 @@ import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV4 } from "ai/test"
 
 const mockAiConfigsFind = jest.fn()
+const mockOperationRoute = jest.fn().mockReturnValue({
+  action: "select_operation",
+  operationId: "op-1",
+  intent: "execute",
+  reason: "Test operation",
+})
 
 jest.mock("../../sdk/workspace/ai/configs", () => {
   const actual = jest.requireActual("../../sdk/workspace/ai/configs")
@@ -69,12 +76,7 @@ jest.mock("ai", () => {
         this.settings.headers?.["x-litellm-tags"] === "bb-operation-routing"
       ) {
         return {
-          output: Promise.resolve({
-            action: "select_operation",
-            operationId: "op-1",
-            intent: "execute",
-            reason: "Test operation",
-          }),
+          output: Promise.resolve(mockOperationRoute()),
         }
       }
 
@@ -1365,6 +1367,93 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("webhookChat", () => {
+    it("answers a Slack status query from saved requests without creating or changing requests", async () => {
+      mockOperationRoute.mockReturnValueOnce({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "User asks about the status of their requests",
+      })
+      jest.mocked(streamText).mockImplementation(makeWebhookStreamTextMock({}))
+      const user = { ...config.getUser(), globalId: "request_owner" }
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              const db = context.getWorkspaceDB()
+              const requests: AgentRequest[] = [
+                {
+                  _id: "agentrequest_status_laptop",
+                  agentId,
+                  userId: "request_owner",
+                  title: "Buy a laptop",
+                  status: "needs_input",
+                  entries: [],
+                },
+                {
+                  _id: "agentrequest_status_melon",
+                  agentId,
+                  userId: "request_owner",
+                  title: "Buy a melon",
+                  status: "completed",
+                  entries: [],
+                },
+              ]
+              for (const request of requests) {
+                await db.put(request)
+              }
+              const savedRequests =
+                await sdk.ai.agentRequests.fetchRequestsByAgent(agentId)
+
+              await webhookChat({
+                chat: {
+                  agentId,
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C123",
+                    externalUserId: "slack-user-1",
+                  },
+                  messages: [
+                    {
+                      id: "status-question",
+                      role: "user",
+                      parts: [
+                        { type: "text", text: "How is my request going?" },
+                      ],
+                    },
+                  ],
+                },
+                user,
+              })
+
+              expect(
+                await sdk.ai.agentRequests.fetchRequestsByAgent(agentId)
+              ).toEqual(savedRequests)
+              expect(streamText).toHaveBeenCalledWith(
+                expect.objectContaining({
+                  tools: undefined,
+                  system: expect.stringContaining(
+                    '"title":"Buy a laptop","status":"needs_input"'
+                  ),
+                })
+              )
+              expect(streamText).toHaveBeenCalledWith(
+                expect.objectContaining({
+                  system: expect.stringContaining(
+                    '"title":"Buy a melon","status":"completed"'
+                  ),
+                })
+              )
+            }
+          )
+        }
+      )
+    })
+
     it("allows configured channel deployments", async () => {
       jest.mocked(streamText).mockImplementation(makeWebhookStreamTextMock({}))
 

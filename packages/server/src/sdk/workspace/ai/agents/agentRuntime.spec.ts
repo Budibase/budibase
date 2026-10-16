@@ -1,4 +1,4 @@
-import type { Agent, LLMResponse } from "@budibase/types"
+import type { Agent, AgentRequest, LLMResponse } from "@budibase/types"
 
 const mockRouterStream = jest.fn()
 
@@ -34,6 +34,9 @@ jest.mock("../../..", () => ({
   __esModule: true,
   default: {
     ai: {
+      agentRequests: {
+        fetchRequestsByAgent: jest.fn(),
+      },
       llm: {
         createLLM: jest.fn(),
       },
@@ -44,6 +47,8 @@ jest.mock("../../..", () => ({
 jest.mock("../chatConversations", () => ({
   findLatestUserQuestion: jest.fn(),
   prepareModelMessages: jest.fn(),
+  getRecentChatContext: jest.requireActual("../chatConversations/helpers")
+    .getRecentChatContext,
 }))
 
 jest.mock("../agentLogs", () => ({
@@ -144,21 +149,29 @@ describe("chooseOperationForQuestion", () => {
     })
   })
 
-  it("returns no_operation when the agent has no live operations", async () => {
+  it("routes historical status queries even when the agent has no live operations", async () => {
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "Asking about a historical request",
+      }),
+    })
     const result = await chooseOperationForQuestion({
       agent: {
         ...agent,
         operations: [draftOperation],
       },
-      latestQuestion: "Reset my password",
+      latestQuestion: "Was my password reset request completed?",
       llm,
     })
 
     expect(result).toEqual({
-      action: "no_operation",
+      action: "request_status",
     })
     expect(mockIsEnabled).not.toHaveBeenCalled()
-    expect(ToolLoopAgent).not.toHaveBeenCalled()
+    expect(ToolLoopAgent).toHaveBeenCalledTimes(1)
   })
 
   it("returns no_operation for blank questions", async () => {
@@ -195,7 +208,7 @@ describe("chooseOperationForQuestion", () => {
       })
     )
     expect(mockRouterStream).toHaveBeenCalledWith({
-      prompt: "Book time off",
+      prompt: JSON.stringify({ latestQuestion: "Book time off" }),
     })
   })
 
@@ -217,6 +230,46 @@ describe("chooseOperationForQuestion", () => {
 
     expect(result).toEqual({
       action: "summarize_operations",
+    })
+  })
+
+  it("passes a plain-text clarification answer and its question to routing", async () => {
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "Answer to a status clarification",
+      }),
+    })
+
+    const result = await chooseOperationForQuestion({
+      agent,
+      latestQuestion: "The laptop",
+      recentChatContext: [
+        { role: "user", content: "How is my request going?" },
+        {
+          role: "assistant",
+          content: "Do you mean the laptop or the melon?",
+        },
+        { role: "user", content: "The laptop" },
+      ],
+      llm,
+    })
+
+    expect(result).toEqual({ action: "request_status" })
+    expect(mockRouterStream).toHaveBeenCalledWith({
+      prompt: JSON.stringify({
+        latestQuestion: "The laptop",
+        recentChatContext: [
+          { role: "user", content: "How is my request going?" },
+          {
+            role: "assistant",
+            content: "Do you mean the laptop or the melon?",
+          },
+          { role: "user", content: "The laptop" },
+        ],
+      }),
     })
   })
 
@@ -375,6 +428,8 @@ describe("prepareAgentRunContext", () => {
   } satisfies LLMResponse
 
   beforeEach(() => {
+    jest.clearAllMocks()
+    jest.mocked(cache.get).mockResolvedValue(undefined)
     jest.mocked(sdk.ai.llm.createLLM).mockResolvedValue(llm)
     jest.mocked(buildPromptAndTools).mockResolvedValue({
       systemPrompt: "system prompt",
@@ -383,6 +438,74 @@ describe("prepareAgentRunContext", () => {
       toolSources: {},
     })
   })
+
+  it.each([false, true])(
+    "reads current request statuses without exposing execution tools or selecting a sticky operation (preview: %s)",
+    async isPreview => {
+      mockRouterStream.mockResolvedValue({
+        output: Promise.resolve({
+          action: "request_status",
+          operationId: null,
+          intent: null,
+          reason: "Following up on a pending request",
+        }),
+      })
+      jest.mocked(cache.get).mockResolvedValue("operation_1")
+      jest.mocked(sdk.ai.agentRequests.fetchRequestsByAgent).mockResolvedValue([
+        {
+          _id: "request_laptop",
+          agentId: "agent_1",
+          userId: "user_1",
+          title: "Buy a laptop",
+          status: "completed",
+          entries: [],
+        },
+        {
+          _id: "request_melon",
+          agentId: "agent_1",
+          userId: "user_1",
+          title: "Buy a melon",
+          status: "needs_input",
+          entries: [],
+        },
+        {
+          _id: "private_request",
+          agentId: "agent_1",
+          userId: "another_user",
+          title: "Private request",
+          status: "active",
+          entries: [],
+        },
+      ] satisfies AgentRequest[])
+
+      const result = await prepareAgentRunContext({
+        agent,
+        agentId: "agent_1",
+        sessionId: "session_1",
+        userId: "user_1",
+        isPreview,
+        latestQuestion: "How is my request going?",
+      })
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          routingAction: "request_status",
+          operationIntent: "query",
+          tools: {},
+          toolDisplayNames: {},
+        })
+      )
+      expect(result.selectedOperation).toBeUndefined()
+      expect(result.systemPrompt).toContain(
+        '"title":"Buy a laptop","status":"completed"'
+      )
+      expect(result.systemPrompt).toContain(
+        '"title":"Buy a melon","status":"needs_input"'
+      )
+      expect(result.systemPrompt).not.toContain("Private request")
+      expect(buildPromptAndTools).not.toHaveBeenCalled()
+    }
+  )
 
   it("passes a capabilities-summary prompt when the router chooses summarize_operations", async () => {
     mockIsEnabled.mockResolvedValue(true)
@@ -419,6 +542,59 @@ describe("prepareAgentRunContext", () => {
         fallbackPromptInstructions: expect.stringContaining("- IT support"),
       })
     )
+  })
+
+  it("keeps lookup failures on the status path without falling back to execution", async () => {
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "Asking for a status update",
+      }),
+    })
+    jest.mocked(cache.get).mockResolvedValue("operation_1")
+    jest
+      .mocked(sdk.ai.agentRequests.fetchRequestsByAgent)
+      .mockRejectedValueOnce(new Error("Database unavailable"))
+
+    const result = await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      userId: "user_1",
+      latestQuestion: "How is the laptop request going?",
+    })
+
+    expect(result.routingAction).toBe("request_status")
+    expect(result.selectedOperation).toBeUndefined()
+    expect(result.tools).toEqual({})
+    expect(result.systemPrompt).toContain("The saved request lookup failed.")
+    expect(buildPromptAndTools).not.toHaveBeenCalled()
+  })
+
+  it("does not read request data without an authenticated user ID", async () => {
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "Asking for a status update",
+      }),
+    })
+
+    const result = await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      latestQuestion: "How is my request going?",
+    })
+
+    expect(result.tools).toEqual({})
+    expect(result.systemPrompt).toContain(
+      "The user's saved request status is unavailable."
+    )
+    expect(sdk.ai.agentRequests.fetchRequestsByAgent).not.toHaveBeenCalled()
   })
 
   it("exposes the router's intent as operationIntent when an operation is selected", async () => {
@@ -608,6 +784,124 @@ describe("prepareAgentChatRun - approval gating", () => {
     )
     expect(ToolLoopAgent).toHaveBeenCalledWith(
       expect.objectContaining({ tools: undefined })
+    )
+  })
+
+  it("streams a status clarification answer without historical tool calls or execution tools", async () => {
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "Answer to a status clarification",
+      }),
+    })
+    jest.mocked(sdk.ai.agentRequests.fetchRequestsByAgent).mockResolvedValue([])
+    const run = await runFor(procurementOperation, {
+      operationId: undefined,
+      latestQuestion: "The laptop",
+      user: { ...user, _id: "user_1" },
+      modelMessages: [
+        {
+          role: "assistant",
+          content: [
+            {
+              type: "tool-call",
+              toolCallId: "purchase_1",
+              toolName: "purchase",
+              input: {},
+            },
+          ],
+        },
+        {
+          role: "tool",
+          content: [
+            {
+              type: "tool-result",
+              toolCallId: "purchase_1",
+              toolName: "purchase",
+              output: { type: "json", value: { status: "pending" } },
+            },
+          ],
+        },
+        {
+          role: "assistant",
+          content: "Do you mean the laptop or the melon?",
+        },
+        { role: "user", content: "The laptop" },
+      ],
+    })
+
+    await run.stream()
+
+    expect(run.selectedOperation).toBeUndefined()
+    expect(run.operationIntent).toBe("query")
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({ tools: undefined })
+    )
+    expect(mockRouterStream).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        messages: [
+          {
+            role: "assistant",
+            content: "Do you mean the laptop or the melon?",
+          },
+          { role: "user", content: "The laptop" },
+        ],
+      })
+    )
+  })
+
+  it("explains that builder preview does not create tracked requests instead of reporting a lookup failure", async () => {
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "User asks how their book request is going",
+      }),
+    })
+    jest.mocked(sdk.ai.agentRequests.fetchRequestsByAgent).mockResolvedValue([])
+
+    await runFor(procurementOperation, {
+      operationId: undefined,
+      latestQuestion: "How is my request going?",
+      user: { ...user, _id: "user_1" },
+      chat: {
+        agentId: "agent_1",
+        isPreview: true,
+        messages: [
+          {
+            id: "book",
+            role: "user",
+            parts: [{ type: "text", text: "I want to buy a book for 5 euros" }],
+          },
+          {
+            id: "expense",
+            role: "assistant",
+            parts: [
+              { type: "text", text: "Expense created in Expenses: Pending" },
+            ],
+          },
+          {
+            id: "status",
+            role: "user",
+            parts: [{ type: "text", text: "How is my request going?" }],
+          },
+        ],
+      },
+    })
+
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        instructions: expect.stringContaining(
+          "Preview conversations do not create tracked agent requests."
+        ),
+        tools: undefined,
+      })
+    )
+    expect(sdk.ai.agentRequests.fetchRequestsByAgent).toHaveBeenCalledWith(
+      "agent_1"
     )
   })
 

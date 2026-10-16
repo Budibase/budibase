@@ -4,10 +4,57 @@ import { AgentChannelProvider, type ChatConversation } from "@budibase/types"
 import {
   extractUserText,
   findLatestUserQuestion,
+  getRecentChatContext,
   prepareChatConversationForSave,
   prepareModelMessages,
   truncateTitle,
 } from "./helpers"
+
+describe("getRecentChatContext", () => {
+  it("preserves a plain-text clarification exchange and excludes historical tool calls", () => {
+    expect(
+      getRecentChatContext({
+        messages: [
+          { role: "system", content: "System instructions" },
+          {
+            role: "assistant",
+            content: [
+              {
+                type: "tool-call",
+                toolCallId: "call_1",
+                toolName: "purchase",
+                input: {},
+              },
+            ],
+          },
+          {
+            role: "tool",
+            content: [
+              {
+                type: "tool-result",
+                toolCallId: "call_1",
+                toolName: "purchase",
+                output: { type: "json", value: { status: "pending" } },
+              },
+            ],
+          },
+          { role: "user", content: "How is my request going?" },
+          {
+            role: "assistant",
+            content: [
+              { type: "text", text: "Do you mean the laptop or the melon?" },
+            ],
+          },
+          { role: "user", content: " The laptop " },
+        ],
+      })
+    ).toEqual([
+      { role: "user", content: "How is my request going?" },
+      { role: "assistant", content: "Do you mean the laptop or the melon?" },
+      { role: "user", content: "The laptop" },
+    ])
+  })
+})
 
 const stringOutputFromFirstToolPart = (
   messages: ChatConversation["messages"]
