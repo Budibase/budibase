@@ -39,6 +39,7 @@ import { AgentEndpoints } from "./agents"
 import { AgentTestEndpoints } from "./agentTests"
 import { AgentLogEndpoints } from "./agentLogs"
 import { AgentRequestEndpoints } from "./agentRequests"
+import { PlatformActionEndpoints } from "./platformActions"
 import { ChatLinksEndpoints } from "./chatLinks"
 import { EscalationEndpoints } from "./escalations"
 import { NavigationEndpoints } from "./navigation"
@@ -128,6 +129,7 @@ export type APIClient = BaseAPIClient &
   AgentTestEndpoints &
   AgentLogEndpoints &
   AgentRequestEndpoints &
+  PlatformActionEndpoints &
   ChatLinksEndpoints &
   EscalationEndpoints &
   AnalyticsEndpoints &
