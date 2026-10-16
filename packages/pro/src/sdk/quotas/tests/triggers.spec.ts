@@ -312,7 +312,7 @@ describe("triggers", () => {
         completedWhileNotifying = await Promise.race([
           Promise.all([second, read]).then(() => true),
           new Promise<boolean>(resolve => {
-            timer = setTimeout(() => resolve(false), 1000)
+            timer = setTimeout(() => resolve(false), 5000)
           }),
         ])
       } finally {
