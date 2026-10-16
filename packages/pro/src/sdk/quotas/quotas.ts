@@ -304,10 +304,17 @@ export const updateUsage = async (
   params: UpdateUsageParams | UpdateUsageParams[]
 ) => {
   const tenantId = tenancy.getTenantId()
+  const requestedActions = Array.isArray(params) ? params : [params]
+  if (
+    requestedActions.some(action => APP_QUOTA_NAMES.includes(action.name)) &&
+    !context.getWorkspaceId()
+  ) {
+    throw new Error("App context required for quota update")
+  }
   const notifications: QuotaNotification[] = []
   // License refresh can reconcile usage itself, so resolve it before locking usage.
   const actions = await Promise.all(
-    (Array.isArray(params) ? params : [params]).map(async action => ({
+    requestedActions.map(async action => ({
       ...action,
       licensedQuota: await getLicensedQuota(
         QuotaType.USAGE,
@@ -323,7 +330,6 @@ export const updateUsage = async (
         tenantId,
       })
 
-      let appId: string | undefined = undefined
       let totalValuesToApply: any = {}
       let appValuesToApply: any = {}
       let breakdownValuesToApply: any = {}
@@ -335,18 +341,6 @@ export const updateUsage = async (
             actionType: action.type,
             actionUsageChange: action.usageChange,
           })
-          try {
-            appId = context.getWorkspaceId()
-          } catch (err) {
-            // ignore error for now
-          }
-
-          // need an app ID for these
-          const isAppQuota = APP_QUOTA_NAMES.includes(action.name)
-          if (isAppQuota && !appId) {
-            throw new Error("App context required for quota update")
-          }
-
           try {
             const { licensedQuota } = action
 

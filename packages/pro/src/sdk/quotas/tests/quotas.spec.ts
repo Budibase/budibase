@@ -49,6 +49,58 @@ describe("quotas", () => {
     config.newTenant()
   })
 
+  describe("workspace validation", () => {
+    it.each([false, true])(
+      "rejects missing workspace before resolving licenses (mixed batch: %s)",
+      async mixed => {
+        mocks.licenses.useUnlimited()
+        await config.doInTenant(async () => {
+          const appAction = {
+            usageChange: 1,
+            name: StaticQuotaName.ROWS,
+            type: QuotaUsageType.STATIC,
+          }
+          const params = mixed
+            ? [
+                {
+                  usageChange: 1,
+                  name: MonthlyQuotaName.ACTIONS,
+                  type: QuotaUsageType.MONTHLY,
+                },
+                appAction,
+              ]
+            : appAction
+          jest.mocked(licensing.cache.getCachedLicense).mockClear()
+
+          await expect(quotas.updateUsage(params)).rejects.toThrow(
+            "App context required for quota update"
+          )
+
+          expect(licensing.cache.getCachedLicense).not.toHaveBeenCalled()
+          expect(
+            await tenancy.getGlobalDB().tryGet(db.quotas.utils.getQuotaDocId())
+          ).toBeUndefined()
+        })
+      }
+    )
+
+    it("allows tenant quotas without a workspace", async () => {
+      mocks.licenses.useUnlimited()
+      await config.doInTenant(async () => {
+        await quotas.updateUsage({
+          usageChange: 1,
+          name: MonthlyQuotaName.ACTIONS,
+          type: QuotaUsageType.MONTHLY,
+        })
+        const usage = await db.quotas.getCurrentUsageValues(
+          QuotaUsageType.MONTHLY,
+          MonthlyQuotaName.ACTIONS
+        )
+        expect(usage.total).toBe(1)
+      })
+    })
+  })
+
   describe("increment", () => {
     it("increments by one", async () => {
       await config.doInWorkspace(async () => {
