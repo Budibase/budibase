@@ -10,12 +10,9 @@ export const publishEvent = async (
   timestamp?: string | number,
   identityOverride?: Identity
 ) => {
-  // Capture action time before telemetry can delay persistence and reorder
-  // the action relative to its session's lifecycle signals.
+  // Capture publication time before asynchronous processing can delay delivery.
   const eventTimestamp =
-    event.startsWith("action:") && timestamp === undefined
-      ? new Date().toISOString()
-      : timestamp
+    timestamp === undefined ? new Date().toISOString() : timestamp
 
   // in future this should use async events via a distributed queue.
   const identity =
