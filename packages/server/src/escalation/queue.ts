@@ -493,17 +493,22 @@ export async function resumeOperation({
       })
   }
 
+  let lastSessionTimestamp = 0
+  // Preserve causal order even when publication is delayed or signals share a millisecond.
+  const nextSessionTimestamp = () => {
+    lastSessionTimestamp = Math.max(Date.now(), lastSessionTimestamp + 1)
+    return lastSessionTimestamp
+  }
+
   const updatePlatformActionSessionStatus = async (
     signal: PlatformActionContainerStatus
   ) => {
-    if (!doc.requestId) {
-      return
-    }
     await events.platformActions
       .enqueuePlatformActionSessionLifecycle({
         sourceType: "agent_session",
         sourceId: ctx.sessionId,
         signal,
+        timestamp: new Date(nextSessionTimestamp()).toISOString(),
       })
       .catch(error => {
         console.error("Failed to update agent session status on escalation", {
@@ -515,12 +520,12 @@ export async function resumeOperation({
       })
   }
 
+  // Untracked sessions have no request to scope by, fall back to the session
   const hasPendingEscalations = async () => {
-    if (!doc.requestId) {
-      return false
-    }
     const pending = await sdk.escalations.listContextDocs({
-      requestId: doc.requestId,
+      ...(doc.requestId
+        ? { requestId: doc.requestId }
+        : { sessionId: ctx.sessionId }),
       resolution: "pending",
     })
     return pending.length > 0
@@ -532,38 +537,41 @@ export async function resumeOperation({
         ? "This request timed out without a response."
         : "This request was rejected."
     const hasPending =
-      outcome === "expired" ? await hasPendingEscalations() : false
+      outcome === "expired" || !doc.requestId
+        ? await hasPendingEscalations()
+        : false
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
-    if (doc.requestId) {
-      if (outcome === "expired") {
-        // Expiring without any response means this ask never got resolved,
-        // not a judgment call. Still not final, though, while other
-        // escalations on the same request await a human.
-        if (!hasPending) {
-          await markEscalationRequestResolved({
-            status: "failed",
-            error: "Escalation expired without a response",
-          })
-          await updatePlatformActionSessionStatus("failed")
-        }
-      } else {
-        // A rejection is a human decision, not automatically a failure, let
-        // the outcome judge weigh it against the request's full timeline.
-        const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
-          requestId: doc.requestId,
-          agentId: ctx.agentId,
-          sessionId: ctx.sessionId,
-          toolCallsIncomplete: false,
-          unrecoveredToolFailures: new Set(),
-          finalResponse: text,
-          isHumanResponse: true,
-        })
-        if (judged) {
-          await markEscalationRequestResolved(judged)
-          await updatePlatformActionSessionStatus(judged.status)
-        }
+    if (hasPending) {
+      await updatePlatformActionSessionStatus("waiting")
+    } else if (outcome === "expired") {
+      // With no approvals pending, expiry without a response is a failure,
+      // not a judgment call.
+      await markEscalationRequestResolved({
+        status: "failed",
+        error: "Escalation expired without a response",
+      })
+      await updatePlatformActionSessionStatus("failed")
+    } else if (doc.requestId) {
+      // A rejection is a human decision, not automatically a failure, let
+      // the outcome judge weigh it against the request's full timeline.
+      const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
+        requestId: doc.requestId,
+        agentId: ctx.agentId,
+        sessionId: ctx.sessionId,
+        toolCallsIncomplete: false,
+        unrecoveredToolFailures: new Set(),
+        finalResponse: text,
+        isHumanResponse: true,
+      })
+      if (judged) {
+        await markEscalationRequestResolved(judged)
+        await updatePlatformActionSessionStatus(judged.status)
       }
+    } else {
+      // Without a request timeline there's nothing to judge the rejection
+      // against, it settles the same way an untracked chat turn does
+      await updatePlatformActionSessionStatus("completed")
     }
     return
   }
@@ -574,18 +582,21 @@ export async function resumeOperation({
   let hasEmittedTerminalAction = false
 
   const emitAgentResumeFailure = (error: unknown) => {
-    if (!doc.requestId || hasEmittedTerminalAction) {
+    if (hasEmittedTerminalAction) {
       return
     }
-    events.action.aiAgentFailed({
-      agentId: ctx.agentId,
-      sourceType: "agent_session",
-      sourceId: ctx.sessionId,
-      sessionId: ctx.sessionId,
-      requestId: doc.requestId,
-      reason: ActionFailureReason.ERROR,
-      errorMessage: error instanceof Error ? error.message : String(error),
-    })
+    events.action.aiAgentFailed(
+      {
+        agentId: ctx.agentId,
+        sourceType: "agent_session",
+        sourceId: ctx.sessionId,
+        sessionId: ctx.sessionId,
+        requestId: doc.requestId,
+        reason: ActionFailureReason.ERROR,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      },
+      nextSessionTimestamp()
+    )
     hasEmittedTerminalAction = true
   }
 
@@ -735,19 +746,21 @@ export async function resumeOperation({
       pendingToolCalls,
       unrecoveredToolFailures,
       onToolCallCompleted: ({ toolName, status, input, output }) => {
+        const approvalOutput = output as
+          | { status?: string; escalationId?: string }
+          | undefined
+        const pendingApproval =
+          approvalOutput?.status ===
+            ApprovalToolResultStatus.PENDING_APPROVAL &&
+          !!approvalOutput.escalationId
+        if (pendingApproval) {
+          awaitingEscalation = true
+        }
         const requestId = doc.requestId
         if (!requestId) {
           return
         }
-        const approvalOutput = output as
-          | { status?: string; escalationId?: string }
-          | undefined
-        if (
-          approvalOutput?.status ===
-            ApprovalToolResultStatus.PENDING_APPROVAL &&
-          approvalOutput.escalationId
-        ) {
-          awaitingEscalation = true
+        if (pendingApproval) {
           needsInputUpdate = needsInputUpdate.then(() =>
             sdk.ai.agentRequests
               .updateRequestStatus({ requestId, status: "needs_input" })
@@ -790,6 +803,7 @@ export async function resumeOperation({
         : {}
     let assistantMessage: UIMessage | undefined
     for await (const uiMessage of readUIMessageStream({
+      terminateOnError: true,
       stream: result.toUIMessageStream({
         sendReasoning: true,
         messageMetadata: ({ part }) =>
@@ -815,17 +829,18 @@ export async function resumeOperation({
       })
     })
 
-    if (doc.requestId) {
-      events.action.aiAgentExecuted({
+    events.action.aiAgentExecuted(
+      {
         agentId: ctx.agentId,
         sourceType: "agent_session",
         sourceId: ctx.sessionId,
         sessionId: ctx.sessionId,
         requestId: doc.requestId,
         ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
-      })
-      hasEmittedTerminalAction = true
-    }
+      },
+      nextSessionTimestamp()
+    )
+    hasEmittedTerminalAction = true
 
     const text = assistantMessage ? messageText(assistantMessage) : ""
     await persistResumeResult(
@@ -851,57 +866,70 @@ export async function resumeOperation({
       pendingToolCalls.size > 0 || finishReason === "tool-calls"
     await toolCallChain
 
-    if (doc.requestId) {
-      const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
-        requestId: doc.requestId,
-        agentId: ctx.agentId,
-        sessionId: ctx.sessionId,
-        toolCallsIncomplete,
-        unrecoveredToolFailures,
-        finalResponse: text,
-        isHumanResponse: true,
-      })
-      if (judged) {
-        await markEscalationRequestResolved(judged)
-        await updatePlatformActionSessionStatus(judged.status)
-      } else {
-        try {
-          const pendingEscalations = await sdk.escalations.listContextDocs({
-            requestId: doc.requestId,
-            resolution: "pending",
-          })
-          if (pendingEscalations.length > 0) {
-            await updatePlatformActionSessionStatus("waiting")
-          }
-        } catch (error) {
-          console.error(
-            "Failed to check pending escalations for session status",
-            {
-              escalationId,
-              agentId: ctx.agentId,
-              requestId: doc.requestId,
-              error,
-            }
-          )
+    const judged = doc.requestId
+      ? await sdk.ai.agentRequests.resolveFinalRequestOutcome({
+          requestId: doc.requestId,
+          agentId: ctx.agentId,
+          sessionId: ctx.sessionId,
+          toolCallsIncomplete,
+          unrecoveredToolFailures,
+          finalResponse: text,
+          isHumanResponse: true,
+        })
+      : undefined
+    if (judged) {
+      await markEscalationRequestResolved(judged)
+      await updatePlatformActionSessionStatus(judged.status)
+    } else {
+      try {
+        if (await hasPendingEscalations()) {
+          await updatePlatformActionSessionStatus("waiting")
         }
+      } catch (error) {
+        console.error(
+          "Failed to check pending escalations for session status",
+          {
+            escalationId,
+            agentId: ctx.agentId,
+            requestId: doc.requestId,
+            error,
+          }
+        )
       }
     }
   } catch (error) {
     await toolCallChain
     await needsInputUpdate
-    // A failure after the terminal action already fired (e.g. persisting the
-    // resume result, or judging the final outcome) can't emit a second action
-    // without double-counting actionCount - correct the already-materialized
-    // session status instead.
+    let hasPending: boolean | undefined
+    try {
+      hasPending = await hasPendingEscalations()
+    } catch (lookupError) {
+      console.error(
+        "Failed to check pending escalations after resume failure",
+        {
+          escalationId,
+          agentId: ctx.agentId,
+          requestId: doc.requestId,
+          error: lookupError,
+        }
+      )
+    }
+    // Correct an existing terminal action without double-counting or publishing
+    // an intermediate failed status while another approval is pending.
     if (hasEmittedTerminalAction) {
-      await updatePlatformActionSessionStatus("failed")
+      await updatePlatformActionSessionStatus(hasPending ? "waiting" : "failed")
     } else {
       emitAgentResumeFailure(error)
+      if (hasPending) {
+        await updatePlatformActionSessionStatus("waiting")
+      }
     }
-    await markEscalationRequestResolved({
-      status: "failed",
-      error: error instanceof Error ? error.message : String(error),
-    })
+    if (hasPending === false) {
+      await markEscalationRequestResolved({
+        status: "failed",
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
     throw error
   }
 }

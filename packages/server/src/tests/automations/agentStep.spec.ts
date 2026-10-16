@@ -1,3 +1,4 @@
+import { events } from "@budibase/backend-core"
 import { automations } from "@budibase/shared-core"
 import { ToolExecutionPrincipal } from "@budibase/types"
 import { run } from "../../automations/steps/ai/agent"
@@ -258,6 +259,54 @@ describe("automation agent step", () => {
       })
     )
     expect(index).toHaveBeenCalledTimes(1)
+  })
+
+  it("marks the agent session as awaiting escalation when the run is suspended", async () => {
+    const aiAgentExecutedSpy = jest
+      .spyOn(events.action, "aiAgentExecuted")
+      .mockImplementation(() => {})
+    mockAgentRun({ suspended: true })
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Create the row" },
+      appId: "test",
+      automationId: "automation-id",
+      stepId: "agent-step",
+      context: { _stepResults: [], state: {} },
+      emitter,
+    })
+
+    expect(aiAgentExecutedSpy).toHaveBeenCalledWith({
+      agentId: "agent-id",
+      sourceType: "agent_session",
+      sourceId: result.sessionId,
+      sessionId: result.sessionId,
+      requestId: "response-id",
+      awaitingEscalation: true,
+    })
+  })
+
+  it("does not mark a completed agent run as awaiting escalation", async () => {
+    const aiAgentExecutedSpy = jest
+      .spyOn(events.action, "aiAgentExecuted")
+      .mockImplementation(() => {})
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Create the row" },
+      appId: "test",
+      automationId: "automation-id",
+      stepId: "agent-step",
+      context: { _stepResults: [], state: {} },
+      emitter,
+    })
+
+    expect(aiAgentExecutedSpy).toHaveBeenCalledWith({
+      agentId: "agent-id",
+      sourceType: "agent_session",
+      sourceId: result.sessionId,
+      sessionId: result.sessionId,
+      requestId: "response-id",
+    })
   })
 
   it("passes structured output configuration through the shared runner", async () => {

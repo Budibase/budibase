@@ -1,4 +1,9 @@
-import { Event, PlatformActionEvent, type Identity } from "@budibase/types"
+import {
+  Event,
+  PlatformActionEvent,
+  type Identity,
+  type PlatformActionSessionIndexDoc,
+} from "@budibase/types"
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
@@ -17,6 +22,8 @@ jest.mock("../../../../utils", () => ({
   timeout: jest.fn().mockResolvedValue(undefined),
 }))
 import PlatformActionPersistProcessor from "../platformActionsPersistProcessor"
+import { upsertPlatformActionSession } from "../sessionIndex"
+import { getPlatformActionSessionId } from "../utils"
 import {
   createWorkspace,
   destroyWorkspace,
@@ -33,6 +40,46 @@ describe("PlatformActionPersistProcessor", () => {
 
   beforeEach(() => {
     mockEnqueue.mockReset()
+  })
+
+  it("keeps waiting when an older failed action is persisted after its lifecycle correction", async () => {
+    await run(async () => {
+      mockEnqueue.mockImplementation(upsertPlatformActionSession)
+      const source = {
+        sourceType: "agent_session" as const,
+        sourceId: "delayed-resume-failure",
+      }
+      const environment = context.getPlatformActionEnvironment()
+      const failureTimestamp = Date.now()
+      const waitingTimestamp = new Date(failureTimestamp + 1).toISOString()
+      await processor.processEvent(
+        Event.ACTION_AI_AGENT_EXECUTED,
+        identity,
+        { ...source, awaitingEscalation: true },
+        failureTimestamp - 1
+      )
+      await upsertPlatformActionSession({
+        ...source,
+        environment,
+        incrementsActionCount: false,
+        signal: "waiting",
+        timestamp: waitingTimestamp,
+      })
+      await processor.processEvent(
+        Event.ACTION_AI_AGENT_FAILED,
+        identity,
+        source,
+        failureTimestamp
+      )
+
+      const session = await getActionsDB().get<PlatformActionSessionIndexDoc>(
+        getPlatformActionSessionId({ ...source, environment })
+      )
+      expect(session.status).toBe("waiting")
+      expect(session.statusUpdatedAt).toBe(waitingTimestamp)
+      expect(session.actionCount).toBe(2)
+      expect(session.completedAt).toBeUndefined()
+    })
   })
 
   it("skips self-host cloud events without persisting, enqueueing or logging an error", async () => {
