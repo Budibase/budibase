@@ -78,23 +78,35 @@ async function removeTenantApps(tenantId: string) {
     const workspaces = await dbCore.getAllWorkspaces({
       all: true,
     })
-    const actionsDbNames = new Set(
-      workspaces.map(workspace =>
-        events.platformActions.getActionsDbName(workspace.appId)
+    const workspaceIdsByProdId = new Map<string, string[]>()
+    for (const { appId } of workspaces) {
+      const prodWorkspaceId = dbCore.getProdWorkspaceID(appId)
+      workspaceIdsByProdId.set(prodWorkspaceId, [
+        ...(workspaceIdsByProdId.get(prodWorkspaceId) ?? []),
+        appId,
+      ])
+    }
+    // Actions writers only write while the dev workspace exists and hold this
+    // lock while they check, so a late write can't recreate the Actions DB
+    await Promise.all(
+      [...workspaceIdsByProdId].map(([prodWorkspaceId, workspaceIds]) =>
+        events.platformActions.doWithActionsWorkspaceDeletionLock({
+          workspaceId: prodWorkspaceId,
+          task: async () => {
+            const actionsDbName =
+              events.platformActions.getActionsDbName(prodWorkspaceId)
+            if (await dbCore.dbExists(actionsDbName)) {
+              await dbCore.getDB(actionsDbName, { skip_setup: true }).destroy()
+            }
+            await Promise.allSettled(
+              workspaceIds.map(workspaceId =>
+                dbCore.getDB(workspaceId).destroy()
+              )
+            )
+          },
+        })
       )
     )
-    await Promise.all(
-      [...actionsDbNames].map(async name => {
-        if (await dbCore.dbExists(name)) {
-          await dbCore.getDB(name, { skip_setup: true }).destroy()
-        }
-      })
-    )
-    const destroyPromises = workspaces.map(workspace => {
-      const db = dbCore.getDB(workspace.appId)
-      return db.destroy()
-    })
-    await Promise.allSettled(destroyPromises)
   } catch (err) {
     console.error(`Error removing tenant ${tenantId} apps`, err)
     throw err

@@ -39,6 +39,13 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.platform,
       getPlatformDB: jest.fn(),
     },
+    events: {
+      ...actual.events,
+      platformActions: {
+        ...actual.events.platformActions,
+        doWithActionsWorkspaceDeletionLock: jest.fn(),
+      },
+    },
   }
 })
 
@@ -103,6 +110,9 @@ describe("tenants", () => {
       platformDb.bulkDocs.mockResolvedValue([])
       jest.mocked(platform.getPlatformDB).mockReturnValue(platformDb)
       jest.mocked(db.getDB).mockImplementation(getDatabaseMock)
+      jest
+        .mocked(events.platformActions.doWithActionsWorkspaceDeletionLock)
+        .mockImplementation(({ task }) => task())
     })
 
     it.each([true, false])(
@@ -147,6 +157,35 @@ describe("tenants", () => {
         expect(tenantDb.destroy).toHaveBeenCalledTimes(1)
       }
     )
+
+    it("destroys each workspace's databases only while holding its Actions lock", async () => {
+      const tenantId = structures.tenant.id()
+      const workspaceId = db.generateWorkspaceID(tenantId)
+      const secondWorkspaceId = db.generateWorkspaceID(tenantId)
+      const workspaceIds = [
+        workspaceId,
+        db.getDevWorkspaceID(workspaceId),
+        db.getDevWorkspaceID(secondWorkspaceId),
+      ]
+      jest
+        .mocked(db.getAllWorkspaces)
+        .mockResolvedValue(
+          workspaceIds.map(appId => ({ appId })) as Workspace[]
+        )
+      jest.mocked(db.dbExists).mockResolvedValue(true)
+      const lock = jest.mocked(
+        events.platformActions.doWithActionsWorkspaceDeletionLock
+      )
+      lock.mockResolvedValue(undefined)
+
+      await deleteTenant(tenantId)
+
+      expect(lock.mock.calls.map(([{ workspaceId }]) => workspaceId)).toEqual([
+        workspaceId,
+        secondWorkspaceId,
+      ])
+      expect(db.getDB).not.toHaveBeenCalled()
+    })
 
     it("does not delete workspace or tenant databases when Actions cleanup fails", async () => {
       const tenantId = structures.tenant.id()

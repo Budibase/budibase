@@ -7,7 +7,7 @@ import {
   type PlatformActionSessionIndexDoc,
 } from "@budibase/types"
 import * as locks from "../../../redis/redlockImpl"
-import { getActionsDB } from "./db"
+import { doWithExistingActionsWorkspace, getActionsDB } from "./db"
 import { buildPlatformActionSession, getPlatformActionSessionId } from "./utils"
 
 const LOCK_TTL_MS = 10000
@@ -94,6 +94,27 @@ export async function upsertPlatformActionSession(
   const sessionId = getPlatformActionSessionId(input)
   const isTerminal = isTerminalSignal(input.signal)
 
+  const workspaceExists = await doWithExistingActionsWorkspace(async () => {
+    await indexSessionWithLock({ input, sessionId, isTerminal })
+  })
+  if (!workspaceExists) {
+    // The workspace was deleted after this job was queued - completing
+    // without a write keeps Bull from retrying and recreating the Actions DB
+    console.log("Discarding platform action session update", { sessionId })
+  }
+}
+
+interface IndexSessionInput {
+  input: UpsertPlatformActionSessionInput
+  sessionId: string
+  isTerminal: boolean
+}
+
+async function indexSessionWithLock({
+  input,
+  sessionId,
+  isTerminal,
+}: IndexSessionInput): Promise<void> {
   const lockResponse = await locks.doWithLock(
     {
       type: LockType.TRY_ONCE,

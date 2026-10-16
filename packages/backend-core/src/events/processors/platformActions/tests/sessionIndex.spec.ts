@@ -1,20 +1,22 @@
 import { LockName, LockType } from "@budibase/types"
+import nock from "nock"
 import type {
   PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
-import { generator, mocks, structures } from "../../../../../tests"
+import { generator, mocks } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
+import { getCouchInfo } from "../../../../db/couch/connections"
 import * as locks from "../../../../redis/redlockImpl"
-import { getActionsDB } from "../db"
+import { getActionsDB, getActionsDbName } from "../db"
 import { upsertPlatformActionSession } from "../sessionIndex"
 import { getPlatformActionSessionId } from "../utils"
-
-async function run<T>(task: () => Promise<T>): Promise<T> {
-  const workspaceId = db.generateWorkspaceID(structures.tenant.id())
-  return await context.doInWorkspaceContext(workspaceId, task)
-}
+import {
+  createWorkspace,
+  destroyWorkspace,
+  runInWorkspace as run,
+} from "./workspace"
 
 async function getSessionDoc(
   sourceId: string,
@@ -30,6 +32,26 @@ async function getSessionDoc(
 }
 
 describe("upsertPlatformActionSession", () => {
+  it("rejects a failed workspace existence check so the job can be retried", async () => {
+    await run(async () => {
+      const workspaceId = context.getWorkspaceId()!
+      nock(getCouchInfo().url, { allowUnmocked: true })
+        .head(`/${db.getDevWorkspaceID(workspaceId)}`)
+        .reply(503)
+
+      await expect(
+        upsertPlatformActionSession({
+          sourceType: "agent_session",
+          sourceId: generator.guid(),
+          environment: "prod",
+          incrementsActionCount: true,
+          signal: "completed",
+          timestamp: "2026-08-31T00:00:00.000Z",
+        })
+      ).rejects.toMatchObject({ status: 503, statusCode: 503 })
+    })
+  })
+
   it("creates a new session doc on the first event", async () => {
     await run(async () => {
       const sourceId = generator.guid()
@@ -492,5 +514,35 @@ describe("upsertPlatformActionSession", () => {
       expect(devDoc.status).toBe("failed")
       expect(devDoc.actionCount).toBe(1)
     })
+  })
+
+  describe("workspace deletion", () => {
+    it.each([
+      ["an action", true],
+      ["a lifecycle-only signal", false],
+    ])(
+      "discards %s queued before the workspace was deleted",
+      async (_, incrementsActionCount) => {
+        const workspaceId = await createWorkspace()
+        try {
+          await destroyWorkspace(workspaceId)
+
+          await context.doInWorkspaceContext(workspaceId, () =>
+            upsertPlatformActionSession({
+              sourceType: "agent_session",
+              sourceId: generator.guid(),
+              environment: "prod",
+              incrementsActionCount,
+              signal: "completed",
+              timestamp: "2026-08-31T00:00:00.000Z",
+            })
+          )
+
+          expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+        } finally {
+          await destroyWorkspace(workspaceId)
+        }
+      }
+    )
   })
 })

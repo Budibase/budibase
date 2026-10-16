@@ -11,7 +11,7 @@ import {
 import * as context from "../../../context"
 import { timeout } from "../../../utils"
 import { EventProcessor } from "../types"
-import { getActionsDB } from "./db"
+import { doWithExistingActionsWorkspace, getActionsDB } from "./db"
 import { enqueuePlatformActionSessionIndex } from "./indexQueue"
 
 const ENQUEUE_MAX_ATTEMPTS = 3
@@ -99,7 +99,13 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
     }
 
     try {
-      await getActionsDB().put(doc)
+      const persisted = await doWithExistingActionsWorkspace(async () => {
+        await getActionsDB().put(doc)
+      })
+      if (!persisted) {
+        // The workspace was deleted while this event was in flight
+        return
+      }
     } catch (err) {
       console.error("Failed to persist platform action event", {
         event,
