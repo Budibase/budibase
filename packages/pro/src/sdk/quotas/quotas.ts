@@ -303,8 +303,11 @@ const checkTriggers = async ({
 export const updateUsage = async (
   params: UpdateUsageParams | UpdateUsageParams[]
 ) => {
-  const tenantId = tenancy.getTenantId()
   const requestedActions = Array.isArray(params) ? params : [params]
+  if (requestedActions.length === 0) {
+    return
+  }
+  const tenantId = tenancy.getTenantId()
   if (
     requestedActions.some(action => APP_QUOTA_NAMES.includes(action.name)) &&
     !context.getWorkspaceId()

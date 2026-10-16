@@ -51,6 +51,21 @@ describe("quotas", () => {
     config.newTenant()
   })
 
+  describe("empty updates", () => {
+    it("does not resolve licenses or initialize usage for an empty action list", async () => {
+      await config.doInTenant(async () => {
+        jest.mocked(licensing.cache.getCachedLicense).mockClear()
+
+        await quotas.updateUsage([])
+
+        expect(licensing.cache.getCachedLicense).not.toHaveBeenCalled()
+        expect(
+          await tenancy.getGlobalDB().tryGet(db.quotas.utils.getQuotaDocId())
+        ).toBeUndefined()
+      })
+    })
+  })
+
   describe("workspace validation", () => {
     it.each([false, true])(
       "rejects missing workspace before resolving licenses (mixed batch: %s)",
