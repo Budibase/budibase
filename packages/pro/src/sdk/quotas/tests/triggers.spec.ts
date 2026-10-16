@@ -410,7 +410,7 @@ describe("triggers", () => {
         QuotaUsageType.STATIC,
         quota.value * 0.9 - 1
       )
-      // Both updates cross the same threshold, but their increments must survive.
+      // The first update reaches 90%; the second must still apply its increment.
       mocks.licenses.mockTriggerQuota.mockImplementationOnce(async () => {
         await new Promise(resolve => {
           setTimeout(resolve, 50)
