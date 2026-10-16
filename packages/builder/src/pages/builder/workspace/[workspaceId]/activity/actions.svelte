@@ -1,5 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
+  import { onWorkspaceReady } from "@/stores/builder/workspaceReady"
   import { builderStore } from "@/stores/builder"
   import { Select, Table } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
@@ -33,6 +34,8 @@
   } from "./actionSessionRows"
   import { ACTIVITY_STATUS_LABELS } from "./activityStatus"
   import { getPaginationLabel, PAGE_SIZE } from "./pagination"
+  import type { LoadOptions, PageRequest } from "./loadOptions"
+  import { createRefreshThrottle } from "./refreshThrottle"
 
   const RELATIVE_TIME_REFRESH_MS = 30000
 
@@ -59,16 +62,6 @@
   ]
 
   type StatusFilter = PlatformActionContainerStatus | "all"
-  interface PageRequest {
-    page: number
-    bookmark?: string
-  }
-  interface LoadSessionsOptions {
-    request?: PageRequest
-    // Refreshes the current view without a loading state or clearing the
-    // selection, keeping the current data if it fails
-    background?: boolean
-  }
   type EnvironmentFilter = PlatformActionEnvironment | "all"
 
   const statusFilterOptions: { label: string; value: StatusFilter }[] = [
@@ -167,13 +160,14 @@
     return async function loadSessions({
       request = { page: 1 },
       background = false,
-    }: LoadSessionsOptions = {}) {
+    }: LoadOptions = {}) {
       const sequence = ++requestSequence
       lastRequest = request
       loadInFlight = true
       if (!background) {
         // This load already covers every change notified so far
         refreshQueued = false
+        refreshSessions.cancel()
         selectedSession = undefined
         loading = true
         loadFailed = false
@@ -222,7 +216,7 @@
           loadInFlight = false
           if (refreshQueued && !destroyed) {
             refreshQueued = false
-            loadSessions({ request: lastRequest, background: true })
+            refreshSessions()
           }
         }
       }
@@ -230,14 +224,14 @@
   })()
 
   // Changes notified while a load is in flight may not be in its response,
-  // so they are coalesced into a single refresh once it settles
-  function refreshSessions() {
+  // so schedule one throttled refresh after it settles
+  const refreshSessions = createRefreshThrottle(() => {
     if (loadInFlight) {
       refreshQueued = true
       return
     }
     loadSessions({ request: lastRequest, background: true })
-  }
+  })
 
   function handleActionSessionChange(event: ActionSessionChangeEvent) {
     if (
@@ -305,6 +299,7 @@
     loadSessions()
     return () => {
       destroyed = true
+      refreshSessions.cancel()
     }
   })
 
@@ -315,15 +310,18 @@
     }
 
     socket.on(BuilderSocketEvent.ActionSessionChange, handleActionSessionChange)
-    // Notifications aren't replayed, so catch up on anything missed while
-    // disconnected
-    socket.on("connect", refreshSessions)
+    // Catch up only after joining the room, so changes during the refresh
+    // can no longer fall into the gap between connection and subscription.
+    const unsubscribeReady = onWorkspaceReady({
+      socket,
+      callback: refreshSessions,
+    })
     return () => {
       socket.off(
         BuilderSocketEvent.ActionSessionChange,
         handleActionSessionChange
       )
-      socket.off("connect", refreshSessions)
+      unsubscribeReady()
     }
   })
 
