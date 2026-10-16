@@ -56,6 +56,7 @@ describe("prepareChatConversationForSave", () => {
           requestClarification: {
             operationId: "op_buy",
             reason: "ambiguous",
+            intent: "inquiry",
             options: [
               { requestId: "request_200", label: "Laptop 200" },
               { requestId: "request_500", label: "Laptop 500" },
@@ -75,6 +76,7 @@ describe("prepareChatConversationForSave", () => {
     expect(saved.messages[0].metadata?.requestClarification).toEqual({
       operationId: "op_buy",
       reason: "ambiguous",
+      intent: "inquiry",
       options: [
         { requestId: "request_200", label: "Laptop 200" },
         { requestId: "request_500", label: "Laptop 500" },

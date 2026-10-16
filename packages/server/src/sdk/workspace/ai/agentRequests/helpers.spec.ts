@@ -3,6 +3,7 @@ import type {
   Agent,
   AgentRequest,
   AgentRequestAction,
+  AgentRequestFollowUpIntent,
   LLMResponse,
 } from "@budibase/types"
 import sdk from "../../.."
@@ -178,6 +179,7 @@ describe("analyzeAgentRequestLink", () => {
       buildGenerateTextResult(
         JSON.stringify({
           decision: "ambiguous",
+          intent: "inquiry",
           requestIds: ["agentrequest_200", "agentrequest_500"],
         })
       )
@@ -201,6 +203,7 @@ describe("analyzeAgentRequestLink", () => {
       })
     ).resolves.toEqual({
       decision: "ambiguous",
+      intent: "inquiry",
       requestIds: ["agentrequest_200", "agentrequest_500"],
     })
   })
@@ -215,6 +218,7 @@ describe("analyzeAgentRequestLink", () => {
         buildGenerateTextResult(
           JSON.stringify({
             decision: "ambiguous",
+            intent: "inquiry",
             requestIds: [firstId, secondId],
           })
         )
@@ -234,6 +238,7 @@ describe("analyzeAgentRequestLink", () => {
   it.each([
     {
       decision: "ambiguous",
+      intent: "inquiry",
       requestIds: ["agentrequest_thread_1", "agentrequest_saved"],
     },
     {
@@ -257,6 +262,46 @@ describe("analyzeAgentRequestLink", () => {
       })
     ).resolves.toEqual(decision)
   })
+
+  it.each(["inquiry", "execute"] satisfies AgentRequestFollowUpIntent[])(
+    "passes the saved %s intent and original prompt when selecting by description",
+    async intent => {
+      const decision =
+        intent === "inquiry"
+          ? { decision: "inquiry", requestId: "agentrequest_thread_1" }
+          : {
+              decision: "existing_thread",
+              requestId: "agentrequest_thread_1",
+              entryAction: "append_latest_entry",
+            }
+      generateTextMock.mockResolvedValue(
+        buildGenerateTextResult(JSON.stringify(decision))
+      )
+      const originalPrompt =
+        intent === "inquiry" ? "What is the status?" : "Send it to Madrid"
+      const result = await analyzeAgentRequestLink({
+        latestPrompt: "the laptop",
+        candidateRequests: [buildThread()],
+        clarificationOptions: [
+          { requestId: "agentrequest_thread_1", label: "Laptop" },
+        ],
+        clarificationIntent: intent,
+        clarificationQuestion: originalPrompt,
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+      expect(result).toEqual(decision)
+      expect(
+        JSON.parse(String(generateTextMock.mock.calls[0][0].prompt))
+      ).toEqual(
+        expect.objectContaining({
+          clarificationIntent: intent,
+          clarificationQuestion: originalPrompt,
+          latestPrompt: "the laptop",
+        })
+      )
+    }
+  )
 
   it("identifies an explicit status inquiry", async () => {
     generateTextMock.mockResolvedValue(

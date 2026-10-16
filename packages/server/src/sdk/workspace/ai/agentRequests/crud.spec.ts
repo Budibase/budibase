@@ -127,6 +127,7 @@ describe("agentRequests crud", () => {
           const before = await fetchRequestsByAgent("agent_1")
           analyzeAgentRequestLinkMock.mockResolvedValueOnce({
             decision: "ambiguous",
+            intent: "inquiry",
             requestIds: [first?.requestId, second?.requestId],
           })
 
@@ -139,6 +140,7 @@ describe("agentRequests crud", () => {
             clarification: {
               operationId: "op_buy",
               reason: "ambiguous",
+              intent: "inquiry",
               question: followUp,
               options: expect.arrayContaining([
                 { requestId: first?.requestId, label: firstPrompt },
@@ -201,6 +203,7 @@ describe("agentRequests crud", () => {
               ? {
                   operationId: "op_buy",
                   reason: "ambiguous",
+                  intent: "inquiry",
                   options: [
                     { requestId: second.requestId, label: "Laptop 500" },
                     { requestId: first.requestId, label: "Laptop 200" },
@@ -264,6 +267,7 @@ describe("agentRequests crud", () => {
         const question = "¿Cuál es el estado de mi request?"
         analyzeAgentRequestLinkMock.mockResolvedValueOnce({
           decision: "ambiguous",
+          intent: "inquiry",
           requestIds: [laptop.requestId, melon.requestId],
         })
         const ambiguous = await initActiveRequest({
@@ -279,6 +283,14 @@ describe("agentRequests crud", () => {
           ...inputs,
           latestPrompt: "2",
           clarification,
+          operation: {
+            id:
+              selected.requestId === laptop.requestId
+                ? "op_melon"
+                : "op_laptop",
+            name: "Previous operation",
+            prompt: "Previous operation",
+          },
         })
         expect(result).toEqual({
           inquiry: {
@@ -304,6 +316,68 @@ describe("agentRequests crud", () => {
         ).toEqual(expect.objectContaining({ resolution: "pending" }))
       })
     })
+
+    it.each(["option number", "Para el portátil, envíalo a Madrid"])(
+      "continues an action after clarification with %s",
+      async latestPrompt => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const inputs = {
+            agentId: "agent_1",
+            userId: "user_1",
+            sessionId: "session_1",
+            source: "Slack",
+            operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+          }
+          const laptop = await initLinkedRequest({
+            ...inputs,
+            latestPrompt: "Buy a laptop",
+          })
+          const melon = await initLinkedRequest({
+            ...inputs,
+            latestPrompt: "Buy a melon",
+          })
+          analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+            decision: "ambiguous",
+            intent: "execute",
+            requestIds: [laptop.requestId, melon.requestId],
+          })
+          const ambiguous = await initActiveRequest({
+            ...inputs,
+            latestPrompt: "Envíalo a Madrid",
+          })
+          const clarification = ambiguous?.clarification
+          if (!clarification) {
+            throw new Error("Expected request clarification")
+          }
+          analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+            decision: "existing_thread",
+            requestId: laptop.requestId,
+            entryAction: "append_latest_entry",
+          })
+          const result = await initActiveRequest({
+            ...inputs,
+            sessionId: "session_2",
+            latestPrompt:
+              latestPrompt === "option number"
+                ? String(
+                    clarification.options.findIndex(
+                      option => option.requestId === laptop.requestId
+                    ) + 1
+                  )
+                : latestPrompt,
+            clarification,
+          })
+          expect(result).toEqual({ requestId: laptop.requestId })
+          const requests = await fetchRequestsByAgent(inputs.agentId)
+          expect(
+            requests
+              .find(request => request._id === laptop.requestId)
+              ?.entries.at(-1)?.sessionId
+          ).toEqual("session_2")
+          expect(answerRequestInquiry).not.toHaveBeenCalled()
+        })
+      }
+    )
 
     it("answers an explicit inquiry about an active request without linking a new entry", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -383,6 +457,7 @@ describe("agentRequests crud", () => {
         }
         analyzeAgentRequestLinkMock.mockResolvedValueOnce({
           decision: "ambiguous",
+          intent: "inquiry",
           requestIds: [first.requestId, second.requestId],
         })
         const result = await initActiveRequest({
@@ -447,6 +522,7 @@ describe("agentRequests crud", () => {
         const before = await fetchRequestsByAgent("agent_1")
         analyzeAgentRequestLinkMock.mockResolvedValueOnce({
           decision: "ambiguous",
+          intent: "inquiry",
           requestIds: [first.requestId, second.requestId],
         })
 
@@ -498,6 +574,7 @@ describe("agentRequests crud", () => {
           clarification: {
             operationId: "op_buy",
             reason: "ambiguous",
+            intent: "inquiry",
             options: [
               { requestId: second!.requestId!, label: "Laptop 500" },
               { requestId: first!.requestId!, label: "Laptop 200" },
@@ -544,9 +621,8 @@ describe("agentRequests crud", () => {
           }
 
           analyzeAgentRequestLinkMock.mockResolvedValueOnce({
-            decision: "existing_thread",
+            decision: "inquiry",
             requestId: first.requestId,
-            entryAction: "append_latest_entry",
           })
           const result = await initActiveRequest({
             ...inputs,
@@ -554,6 +630,7 @@ describe("agentRequests crud", () => {
             clarification: {
               operationId: "op_buy",
               reason: "ambiguous",
+              intent: "inquiry",
               options: [{ requestId: first.requestId, label: "Laptop 200" }],
             },
           })
@@ -594,6 +671,7 @@ describe("agentRequests crud", () => {
             clarification: {
               operationId: "op_buy",
               reason: "ambiguous",
+              intent: "inquiry",
               options: [{ requestId: first.requestId, label: "Laptop" }],
             },
           })
@@ -651,6 +729,7 @@ describe("agentRequests crud", () => {
           clarification: {
             operationId: "op_buy",
             reason: "ambiguous",
+            intent: "inquiry",
             options: [{ requestId: other!.requestId!, label: "Laptop" }],
           },
         })
@@ -949,6 +1028,7 @@ describe("agentRequests crud", () => {
           clarification: {
             operationId: "op_expenses",
             reason: "ambiguous",
+            intent: "execute",
             question: "Change that expense to 25 pounds",
             options: [],
           },

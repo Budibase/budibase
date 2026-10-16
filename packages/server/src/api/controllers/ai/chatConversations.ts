@@ -194,6 +194,9 @@ const startAgentRequestTracking = async ({
         clarification: {
           operationId: operation?.id,
           reason: "analysis_failed",
+          intent:
+            getPendingRequestClarification(chatMessages)?.intent ||
+            (operation ? "execute" : "inquiry"),
           question: run.latestQuestion,
           options: [],
         },

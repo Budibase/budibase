@@ -9,6 +9,7 @@ import { ApprovalToolResultStatus } from "@budibase/types"
 import type {
   AgentRequestOperation,
   AgentRequestClarification,
+  AgentRequestFollowUpIntent,
   AgentRequestInitialization,
   AgentRequest,
   AgentRequestAction,
@@ -733,10 +734,12 @@ const buildRequestClarification = ({
   operationId,
   reason,
   question,
+  intent,
 }: {
   candidates: AgentRequestLinkCandidate[]
   operationId?: string
   question?: string
+  intent: AgentRequestFollowUpIntent
   reason: AgentRequestClarification["reason"]
 }): AgentRequestInitialization => {
   const options = candidates.flatMap(request => {
@@ -758,6 +761,7 @@ const buildRequestClarification = ({
   })
   return {
     clarification: {
+      intent,
       operationId,
       reason,
       ...(question ? { question } : {}),
@@ -814,7 +818,6 @@ export async function initActiveRequest({
         isTerminalStatus(request.status) ||
         request.userId !== userId ||
         request.agentId !== agentId ||
-        (operation && request.operationId !== operation.id) ||
         candidates.some(candidate => candidate._id === request._id)
       ) {
         continue
@@ -854,19 +857,23 @@ export async function initActiveRequest({
       operationId: operation?.id,
       question: clarification?.question || latestPrompt,
       reason: "analysis_failed",
+      intent: clarification?.intent || (operation ? "execute" : "inquiry"),
     })
   }
   const clarify = ({
     reason,
     requests = enrichedCandidates,
+    intent = clarification?.intent || (operation ? "execute" : "inquiry"),
   }: {
     reason: AgentRequestClarification["reason"]
     requests?: AgentRequestLinkCandidate[]
+    intent?: AgentRequestFollowUpIntent
   }) =>
     buildRequestClarification({
       candidates: requests,
       operationId: operation?.id,
       reason,
+      intent,
       question: clarification?.question || latestPrompt,
     })
 
@@ -887,10 +894,14 @@ export async function initActiveRequest({
         ),
       })
     }
-    decision = {
-      decision: "inquiry",
-      requestId: option.requestId,
-    }
+    decision =
+      clarification.intent === "execute"
+        ? {
+            decision: "existing_thread",
+            requestId: option.requestId,
+            entryAction: "append_latest_entry",
+          }
+        : { decision: "inquiry", requestId: option.requestId }
   } else if (candidates.length > 0 || clarification?.options.length) {
     try {
       decision = await analyzeAgentRequestLink({
@@ -898,6 +909,8 @@ export async function initActiveRequest({
         candidateRequests: enrichedCandidates,
         recentChatContext,
         clarificationOptions: clarification?.options,
+        clarificationIntent: clarification?.intent,
+        clarificationQuestion: clarification?.question,
         agentId,
         sessionId,
       })
@@ -915,6 +928,7 @@ export async function initActiveRequest({
   if (decision.decision === "ambiguous") {
     return clarify({
       reason: "ambiguous",
+      intent: decision.intent,
       requests: enrichedCandidates.filter(request =>
         decision.requestIds.includes(request._id!)
       ),
@@ -951,8 +965,7 @@ export async function initActiveRequest({
       if (
         decision.decision === "inquiry" ||
         !operation ||
-        pendingApprovals.length > 0 ||
-        clarification !== undefined
+        pendingApprovals.length > 0
       ) {
         let answer: string
         try {

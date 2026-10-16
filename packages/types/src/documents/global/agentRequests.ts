@@ -93,7 +93,10 @@ export interface AgentRequestClarificationOption {
   label: string
 }
 
+export type AgentRequestFollowUpIntent = "inquiry" | "execute"
+
 export interface AgentRequestClarification {
+  intent: AgentRequestFollowUpIntent
   operationId?: string
   reason: "ambiguous" | "analysis_failed"
   question?: string

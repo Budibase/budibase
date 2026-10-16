@@ -1107,6 +1107,7 @@ describe("Agent chat tool call tracking", () => {
         const clarification: AgentRequestClarification = {
           operationId: failInitialization ? undefined : "op-1",
           reason,
+          intent: "inquiry",
           options: failInitialization ? [] : options,
           ...(failInitialization
             ? { question: "What is the status of my request?" }
@@ -1226,6 +1227,7 @@ describe("Agent chat tool call tracking", () => {
                         requestClarification: {
                           operationId: "op-1",
                           reason: "ambiguous",
+                          intent: "inquiry",
                           options,
                         },
                       },
@@ -1260,6 +1262,7 @@ describe("Agent chat tool call tracking", () => {
         const clarification: AgentRequestClarification = {
           operationId: "op-1",
           reason: "ambiguous",
+          intent: "inquiry",
           options,
         }
         jest.mocked(sdk.ai.agentRequests.initActiveRequest).mockResolvedValue(
