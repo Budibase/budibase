@@ -238,13 +238,10 @@ export const toToolSet = (
 ): ToolSet => {
   // Quota checks and increments are not atomic. Keep each execution and its
   // accounting together, including triggers that update the same quota.
-  let pending: Promise<void> = Promise.resolve()
+  let pending: Promise<unknown> = Promise.resolve()
   const runTool: RunTool = execute => {
     const result = pending.then(execute)
-    pending = result.then(
-      () => undefined,
-      () => undefined
-    )
+    pending = result.catch(() => undefined)
     return result
   }
   return Object.fromEntries(
