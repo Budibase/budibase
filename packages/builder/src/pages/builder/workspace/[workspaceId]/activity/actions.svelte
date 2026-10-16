@@ -111,7 +111,7 @@
 
   let summaryMetrics = $derived.by<SummaryMetric[]>(() => {
     return [
-      { label: "All actions", value: summary?.total ?? null },
+      { label: "All sessions", value: summary?.total ?? null },
       {
         label: ACTIVITY_STATUS_LABELS.completed,
         value: summary?.completed ?? null,

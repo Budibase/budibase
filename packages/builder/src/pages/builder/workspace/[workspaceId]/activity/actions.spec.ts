@@ -140,7 +140,7 @@ describe("Activity actions page", () => {
       status: undefined,
       limit: 20,
     })
-    expect(screen.getByText("All actions")).toBeInTheDocument()
+    expect(screen.getByText("All sessions")).toBeInTheDocument()
     expect(table().getByText("Agent request")).toBeInTheDocument()
     expect(table().getByText("Unknown")).toBeInTheDocument()
     expect(table().getByText("Completed")).toBeInTheDocument()
@@ -184,7 +184,7 @@ describe("Activity actions page", () => {
     })
 
     expect(
-      screen.getByRole("status", { name: "Loading All actions" })
+      screen.getByRole("status", { name: "Loading All sessions" })
     ).toBeInTheDocument()
     expect(screen.queryByText("15")).not.toBeInTheDocument()
 
@@ -195,7 +195,7 @@ describe("Activity actions page", () => {
 
     await waitFor(() => {
       expect(
-        screen.queryByRole("status", { name: "Loading All actions" })
+        screen.queryByRole("status", { name: "Loading All sessions" })
       ).not.toBeInTheDocument()
     })
     expect(screen.getAllByText("8")).toHaveLength(2)
