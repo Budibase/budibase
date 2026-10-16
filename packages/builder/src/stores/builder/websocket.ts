@@ -1,4 +1,5 @@
 import { createWebsocket } from "@budibase/frontend-core"
+import { notifyWorkspaceReady } from "./workspaceReady"
 import {
   automationStore,
   userStore,
@@ -39,6 +40,7 @@ export const createBuilderWebsocket = (appId: string) => {
       { appId },
       ({ users }: { users: UIUser[] }) => {
         userStore.init(users)
+        notifyWorkspaceReady(socket)
       }
     )
   })

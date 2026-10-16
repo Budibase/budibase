@@ -45,7 +45,9 @@ describe("PlatformActionPersistProcessor", () => {
 
   it("keeps waiting when an older failed action is persisted after its lifecycle correction", async () => {
     await run(async () => {
-      mockEnqueue.mockImplementation(upsertPlatformActionSession)
+      mockEnqueue.mockImplementation(async job => {
+        await upsertPlatformActionSession(job)
+      })
       const source = {
         sourceType: "agent_session" as const,
         sourceId: "delayed-resume-failure",
