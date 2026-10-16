@@ -89,7 +89,10 @@ const mockAgentRun = ({
   const index = jest.fn().mockResolvedValue(undefined)
   prepareAgentChatRunMock.mockResolvedValue({
     isSuspended: () => suspended,
-    sessionLogIndexer: { index },
+    sessionLogIndexer: {
+      index,
+      getRequestIds: jest.fn().mockReturnValue(["response-id"]),
+    },
     stream: jest.fn().mockResolvedValue({
       toUIMessageStream: jest.fn().mockReturnValue({}),
       response: responseError
