@@ -88,9 +88,14 @@
     }))
   )
   const loadedRows = $derived($fetchGroupUsers.rows || [])
-  const hasPagination = $derived(
-    $fetchGroupUsers.hasPrevPage || $fetchGroupUsers.hasNextPage
-  )
+  let hasPagination = $state(false)
+  $effect.pre(() => {
+    const page = $fetchGroupUsers
+    // Keep the footer and filler rows until the refreshed page arrives.
+    if (!page.loading || !page.loaded) {
+      hasPagination = page.hasPrevPage || page.hasNextPage
+    }
+  })
   const showPagination = $derived(hasPagination)
   const fillerRows = $derived(
     hasPagination && loadedRows.length < PAGE_SIZE
@@ -102,7 +107,9 @@
       : []
   )
   const tableRows = $derived(
-    $fetchGroupUsers.loading ? loadingRows : [...loadedRows, ...fillerRows]
+    $fetchGroupUsers.loading && !$fetchGroupUsers.loaded
+      ? loadingRows
+      : [...loadedRows, ...fillerRows]
   )
 
   const removeUser = async (id: string) => {
