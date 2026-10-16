@@ -1,8 +1,7 @@
 import { cache, context, roles } from "@budibase/backend-core"
-import { ai, quotas } from "@budibase/pro"
+import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
-  ActionType,
   Agent,
   AgentOperation,
   AgentMessageMetadata,
@@ -621,6 +620,8 @@ const prepareAgentChatRunInternal = async ({
     onAcceptedSources: accepted => setUsedKnowledgeSources(accepted),
   })
   if (tools.search_knowledge) {
+    // Added unwrapped on purpose: citing sources is part of answering, so it
+    // doesn't count as an action (the search itself does).
     tools.report_used_sources = reportUsedSourcesTool
   }
 
@@ -785,7 +786,6 @@ const prepareAgentChatRunInternal = async ({
                   | undefined
                 setUsedKnowledgeSources(output?.accepted)
               }
-              await quotas.addAction(ActionType.AI_AGENT, async () => {})
             }
 
             for (const part of content) {

@@ -94,10 +94,13 @@ function latest(a: string, b: string): string {
   return new Date(a) > new Date(b) ? a : b
 }
 
-// Resolves true only when the session doc was written
+interface UpsertPlatformActionSessionResult {
+  persisted: boolean
+}
+
 export async function upsertPlatformActionSession(
   input: UpsertPlatformActionSessionInput
-): Promise<boolean> {
+): Promise<UpsertPlatformActionSessionResult> {
   const sessionId = getPlatformActionSessionId(input)
   const isTerminal = isTerminalSignal(input.signal)
 
@@ -109,7 +112,7 @@ export async function upsertPlatformActionSession(
     // without a write keeps Bull from retrying and recreating the Actions DB
     console.log("Discarding platform action session update", { sessionId })
   }
-  return workspaceExists
+  return { persisted: workspaceExists }
 }
 
 interface IndexSessionInput {

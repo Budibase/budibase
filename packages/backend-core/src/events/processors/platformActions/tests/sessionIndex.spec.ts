@@ -68,7 +68,7 @@ describe("upsertPlatformActionSession", () => {
 
       const doc = await getSessionDoc(sourceId)
 
-      expect(indexed).toBe(true)
+      expect(indexed).toEqual({ persisted: true })
       expect(doc.actionCount).toBe(1)
       expect(doc.status).toBe("completed")
       expect(doc.startedAt).toBe("2026-08-31T00:00:00.000Z")
@@ -735,7 +735,7 @@ describe("upsertPlatformActionSession", () => {
             })
           )
 
-          expect(indexed).toBe(false)
+          expect(indexed).toEqual({ persisted: false })
           expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
         } finally {
           await destroyWorkspace(workspaceId)

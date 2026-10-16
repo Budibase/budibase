@@ -1,5 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
+  import { onWorkspaceReady } from "@/stores/builder/workspaceReady"
   import { automationStore, builderStore } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import { Body, InlineAlert } from "@budibase/bbui"
@@ -23,17 +24,8 @@
     getActionSessionTitle,
   } from "./actionSessionRows"
   import { getPaginationLabel, PAGE_SIZE } from "./pagination"
-
-  interface PageRequest {
-    page: number
-    bookmark?: string
-  }
-  interface LoadEventsOptions {
-    request?: PageRequest
-    // Refreshes the current events page without a loading state, keeping
-    // the current events if it fails
-    background?: boolean
-  }
+  import type { LoadOptions, PageRequest } from "./loadOptions"
+  import { createRefreshThrottle } from "./refreshThrottle"
 
   let {
     session,
@@ -104,12 +96,13 @@
     return async function loadEvents({
       request = { page: 1 },
       background = false,
-    }: LoadEventsOptions = {}) {
+    }: LoadOptions = {}) {
       const sequence = ++requestSequence
       lastRequest = request
       if (!background) {
         // This load already covers every change notified so far
         refreshQueued = false
+        refreshEvents.cancel()
       }
       if (!session) {
         events = []
@@ -159,7 +152,7 @@
           loadInFlight = false
           if (refreshQueued && !destroyed) {
             refreshQueued = false
-            loadEvents({ request: lastRequest, background: true })
+            refreshEvents()
           }
         }
       }
@@ -168,7 +161,7 @@
 
   // Events are append-only, so re-fetching the current page keeps it stable
   // while new events show up on the last page
-  function refreshEvents() {
+  const refreshEvents = createRefreshThrottle(() => {
     if (!session) {
       return
     }
@@ -177,7 +170,7 @@
       return
     }
     loadEvents({ request: lastRequest, background: true })
-  }
+  })
 
   function handleActionSessionChange(event: ActionSessionChangeEvent) {
     if (!session || event.environment !== session.environment) {
@@ -222,6 +215,7 @@
   onMount(() => {
     return () => {
       destroyed = true
+      refreshEvents.cancel()
     }
   })
 
@@ -232,15 +226,18 @@
     }
 
     socket.on(BuilderSocketEvent.ActionSessionChange, handleActionSessionChange)
-    // Notifications aren't replayed, so catch up on anything missed while
-    // disconnected
-    socket.on("connect", refreshEvents)
+    // Catch up only after joining the room, so changes during the refresh
+    // can no longer fall into the gap between connection and subscription.
+    const unsubscribeReady = onWorkspaceReady({
+      socket,
+      callback: refreshEvents,
+    })
     return () => {
       socket.off(
         BuilderSocketEvent.ActionSessionChange,
         handleActionSessionChange
       )
-      socket.off("connect", refreshEvents)
+      unsubscribeReady()
     }
   })
 
