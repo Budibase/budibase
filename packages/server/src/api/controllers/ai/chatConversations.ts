@@ -35,7 +35,10 @@ import {
   type AgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
-import { truncateTitle } from "../../../sdk/workspace/ai/chatConversations"
+import {
+  getRecentChatContext,
+  truncateTitle,
+} from "../../../sdk/workspace/ai/chatConversations"
 import {
   determineTrigger,
   resolvePreviewSessionId,
@@ -47,38 +50,6 @@ const getGlobalUserId = (ctx: UserCtx) => {
     throw new HTTPError("userId is required", 400)
   }
   return userId as string
-}
-
-const getRecentChatContext = (
-  messages: ChatConversation["messages"],
-  limit = 6
-) => {
-  return messages
-    .flatMap(message => {
-      if (message.role !== "user" && message.role !== "assistant") {
-        return []
-      }
-
-      const content = (message.parts || [])
-        .filter(
-          (
-            part
-          ): part is Extract<
-            (typeof message.parts)[number],
-            { type: "text" }
-          > => part.type === "text"
-        )
-        .map(part => part.text)
-        .join("\n")
-        .trim()
-
-      if (!content) {
-        return []
-      }
-
-      return [{ role: message.role, content }]
-    })
-    .slice(-limit)
 }
 
 type AgentRequestTrackingHandle = { requestId: string } | undefined
@@ -123,7 +94,7 @@ const startAgentRequestTracking = async ({
         operation,
         userId,
         source: determineTrigger(sessionId),
-        recentChatContext: getRecentChatContext(chatMessages),
+        recentChatContext: getRecentChatContext({ messages: chatMessages }),
       })
       .catch(error => {
         console.error("Failed to init active agent request", {
@@ -139,7 +110,7 @@ const startAgentRequestTracking = async ({
         agentId,
         sessionId,
         latestUserPrompt: run.latestQuestion,
-        recentChatContext: getRecentChatContext(chatMessages),
+        recentChatContext: getRecentChatContext({ messages: chatMessages }),
         operation,
         userId,
         existingRequestId: trackingHandle?.requestId,
