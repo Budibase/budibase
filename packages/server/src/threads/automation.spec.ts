@@ -325,6 +325,103 @@ describe("automation thread", () => {
     expect(updatedAutomation.definition.steps).toHaveLength(1)
   })
 
+  describe("session metadata", () => {
+    const captureLifecycleMetadata = () => {
+      const captured: unknown[] = []
+      jest
+        .mocked(events.platformActions.enqueuePlatformActionSessionLifecycle)
+        .mockImplementation(async source => {
+          captured.push(context.getPlatformActionSessionMetadata(source))
+        })
+      return captured
+    }
+
+    it("snapshots the reloaded automation name and the queued origin", async () => {
+      const prodAppId = config.getProdWorkspaceId()
+      const automation = await context.doInWorkspaceContext(
+        prodAppId,
+        async () =>
+          sdk.automations.create(
+            basicAutomation({
+              appId: prodAppId,
+              name: "Ticket triage",
+              definition: {
+                trigger: {
+                  id: "cron-trigger",
+                  type: AutomationStepType.TRIGGER,
+                  name: TRIGGER_DEFINITIONS.CRON.name,
+                  tagline: TRIGGER_DEFINITIONS.CRON.tagline,
+                  description: TRIGGER_DEFINITIONS.CRON.description,
+                  icon: TRIGGER_DEFINITIONS.CRON.icon,
+                  schema: TRIGGER_DEFINITIONS.CRON.schema,
+                  stepId: AutomationTriggerStepId.CRON,
+                  event: AutomationEventType.CRON_TRIGGER,
+                  inputs: { cron: "* * * * *" },
+                },
+                steps: [],
+              },
+            })
+          )
+      )
+      await context.doInWorkspaceContext(prodAppId, async () =>
+        sdk.automations.update({ ...automation, name: "Renamed triage" })
+      )
+      const captured = captureLifecycleMetadata()
+
+      const result = await executeInThread({
+        id: "cron-run",
+        data: {
+          automation,
+          event: {
+            appId: prodAppId,
+            timestamp: Date.now(),
+            triggeredBy: { type: "schedule" },
+          },
+        },
+      } as Job<AutomationData>)
+
+      const expected = {
+        asset: {
+          type: "automation",
+          id: automation._id,
+          label: "Renamed triage",
+        },
+        triggeredBy: { type: "schedule" },
+      }
+      expect(captured).toEqual([expected, expected])
+      expect(result.trigger.outputs.triggeredBy).toBeUndefined()
+    })
+
+    it("keeps the queued snapshot for non-reloaded runs and records no unknown origin", async () => {
+      const appId = config.getDevWorkspaceId()
+      const captured = captureLifecycleMetadata()
+
+      await executeInThread({
+        id: "app-run",
+        data: {
+          automation: basicAutomation({
+            _id: "automation_snapshot",
+            appId,
+            name: "Holiday booking",
+          }),
+          event: { appId },
+        },
+      } as Job<AutomationData>)
+
+      expect(captured).toEqual([
+        expect.objectContaining({
+          asset: {
+            type: "automation",
+            id: "automation_snapshot",
+            label: "Holiday booking",
+          },
+          triggeredBy: undefined,
+        }),
+        expect.anything(),
+      ])
+    })
+  })
+
   it("uses the queued automation definition for non-cron jobs", async () => {
     const prodAppId = config.getProdWorkspaceId()
 

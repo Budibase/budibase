@@ -19,6 +19,7 @@ import {
   AutomationTriggerInputs,
   AutomationTriggerStepId,
   DidNotTriggerResponse,
+  PlatformActionOrigin,
   Row,
   SearchFilters,
   Table,
@@ -118,7 +119,12 @@ async function queueRelevantRowAutomations(
             automationQueue.add(
               {
                 automation,
-                event,
+                // The row change is the direct origin, even when a workflow or
+                // agent wrote the row
+                event: {
+                  ...event,
+                  triggeredBy: { type: "system", id: "row_change" },
+                },
                 featureFlagOverrides: await featureFlagOverrides,
                 ...(isTestRun ? { isTestRun } : {}),
               },
@@ -190,6 +196,9 @@ interface AutomationTriggerParams {
   appId?: string
   user?: UserBindings
   table?: Table
+  // Explicit invocation origin; the user above only carries permissions and
+  // bindings, and may be inherited from a parent run
+  triggeredBy?: PlatformActionOrigin
 }
 
 export interface ExternalTriggerOptions {
@@ -251,6 +260,8 @@ export async function externalTrigger(
       user: _user,
       metadata: _metadata,
       automation: _automation,
+      // Client-supplied fields must never spoof the invocation origin
+      triggeredBy: _triggeredBy,
       ...fields
     } = params.fields || {}
 
@@ -325,6 +336,7 @@ export async function rebootTrigger() {
             event: {
               appId: prodId,
               timestamp: Date.now(),
+              triggeredBy: { type: "system", id: "reboot" } as const,
             },
           }
           rebootEvents.push(automationQueue.add(job, JOB_OPTS))

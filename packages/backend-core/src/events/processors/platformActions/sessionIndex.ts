@@ -5,10 +5,15 @@ import {
   type PlatformActionContainerStatus,
   type PlatformActionEnvironment,
   type PlatformActionSessionIndexDoc,
+  type PlatformActionSessionMetadata,
 } from "@budibase/types"
 import * as locks from "../../../redis/redlockImpl"
 import { doWithExistingActionsWorkspace, getActionsDB } from "./db"
-import { buildPlatformActionSession, getPlatformActionSessionId } from "./utils"
+import {
+  buildPlatformActionSession,
+  getSessionMetadataFields,
+  getPlatformActionSessionId,
+} from "./utils"
 
 const LOCK_TTL_MS = 10000
 const MAX_PUT_CONFLICT_ATTEMPTS = 3
@@ -29,6 +34,7 @@ export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
   incrementsActionCount: boolean
   signal?: PlatformActionContainerStatus
   timestamp: string
+  metadata?: PlatformActionSessionMetadata
 }
 
 function nextStatus(
@@ -151,10 +157,16 @@ async function indexSessionWithLock({
         const startedAt = existing
           ? earliest(existing.startedAt, input.timestamp)
           : input.timestamp
+        const metadataFields = getSessionMetadataFields({
+          metadata: input.metadata,
+          timestamp: input.timestamp,
+          existing,
+        })
 
         const doc: Omit<PlatformActionSessionIndexDoc, "updatedAt"> = existing
           ? {
               ...existing,
+              ...metadataFields,
               status,
               statusUpdatedAt,
               startedAt,
@@ -170,6 +182,7 @@ async function indexSessionWithLock({
               startedAt,
               statusUpdatedAt,
               actionCount: input.incrementsActionCount ? 1 : 0,
+              ...metadataFields,
             })
 
         if (isTerminal && updatesStatus) {

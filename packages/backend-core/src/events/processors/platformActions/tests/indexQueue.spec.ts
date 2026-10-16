@@ -1,4 +1,7 @@
-import type { PlatformActionSessionIndexJob } from "@budibase/types"
+import type {
+  PlatformActionSessionIndexJob,
+  PlatformActionSessionMetadata,
+} from "@budibase/types"
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
@@ -81,6 +84,33 @@ describe("enqueuePlatformActionSessionIndex", () => {
         sourceId: "session-1",
         environment: "prod",
       })
+    )
+  })
+
+  it("carries the scope's session metadata on lifecycle signals", async () => {
+    const workspaceId = db.generateWorkspaceID(structures.tenant.id())
+    const metadata: PlatformActionSessionMetadata = {
+      asset: { type: "automation", id: "au_1", label: "Ticket triage" },
+      triggeredBy: { type: "schedule" },
+    }
+
+    await context.doInWorkspaceContext(workspaceId, () =>
+      context.doInPlatformActionSessionContext(
+        { sourceType: "automation_run", sourceId: "run-1", ...metadata },
+        () =>
+          enqueuePlatformActionSessionLifecycle({
+            sourceType: "automation_run",
+            sourceId: "run-1",
+            signal: "active",
+            lifecycleId: "platform_action_lifecycle_test_metadata",
+          })
+      )
+    )
+
+    await waitFor(() => mockUpsert.mock.calls.length > 0)
+
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceId: "run-1", metadata })
     )
   })
 

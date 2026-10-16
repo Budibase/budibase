@@ -21,6 +21,7 @@
   import ActivityTableFooter from "./ActivityTableFooter.svelte"
   import ActivityTablePanel from "./ActivityTablePanel.svelte"
   import ActivityTypeRenderer from "./ActivityTypeRenderer.svelte"
+  import ActivityOriginRenderer from "./ActivityOriginRenderer.svelte"
   import {
     ENVIRONMENT_LABELS,
     getActionSessionRowId,
@@ -51,6 +52,7 @@
   const customRenderers = [
     { column: "typeLabel", component: ActivityTypeRenderer },
     { column: "statusLabel", component: ActivityStatusRenderer },
+    { column: "triggeredByLabel", component: ActivityOriginRenderer },
   ]
 
   type StatusFilter = PlatformActionContainerStatus | "all"

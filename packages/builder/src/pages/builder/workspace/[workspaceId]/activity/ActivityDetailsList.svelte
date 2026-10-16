@@ -12,6 +12,7 @@
     type: "text"
     label: string
     value: string | undefined
+    prefix?: string
     icon?: string
     iconColor?: string
     highlight?: boolean
@@ -24,6 +25,7 @@
 <script lang="ts">
   import { Icon } from "@budibase/bbui"
   import ActivityStatusBadge from "./ActivityStatusBadge.svelte"
+  import ActivityOriginLabel from "./ActivityOriginLabel.svelte"
 
   let { details }: { details: ActivityDetail[] } = $props()
 
@@ -59,7 +61,14 @@
           {/if}
 
           <span class="detail-text" class:underlined={detail.underline}>
-            {detail.value}
+            {#if detail.prefix}
+              <ActivityOriginLabel
+                value={detail.value}
+                prefix={detail.prefix}
+              />
+            {:else}
+              {detail.value}
+            {/if}
           </span>
         {/if}
       </div>

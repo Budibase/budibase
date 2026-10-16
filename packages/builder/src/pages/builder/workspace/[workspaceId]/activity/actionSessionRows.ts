@@ -21,6 +21,8 @@ export interface ActionSessionRow {
   typeIconColor: string
   assetLabel: string
   triggeredByLabel: string
+  triggeredByValue: string
+  triggeredByPrefix?: string
   status: PlatformActionContainerStatus
   statusLabel: string
   actionCount: number
@@ -53,8 +55,46 @@ const getSourceType = (session: ActionSession) => {
 const getAssetLabel = (session: ActionSession) =>
   session.assetLabel || "Unknown asset"
 
-const getTriggeredByLabel = (session: ActionSession) =>
-  session.triggeredByLabel || "Unknown"
+const formatOrigin = ({
+  prefix,
+  value,
+}: {
+  prefix: string
+  value?: string
+}) => ({
+  label: value ? `${prefix}: ${value}` : prefix,
+  prefix: value ? prefix : undefined,
+  value: value || prefix,
+})
+
+const getTriggeredBy = (session: ActionSession) => {
+  const { triggeredByType, triggeredByLabel, triggeredById } = session
+  switch (triggeredByType) {
+    case "user":
+      return formatOrigin({ prefix: "User", value: triggeredByLabel })
+    case "agent":
+      return formatOrigin({ prefix: "Agent", value: triggeredByLabel })
+    case "automation":
+      return formatOrigin({ prefix: "Automation", value: triggeredByLabel })
+    case "schedule":
+      return formatOrigin({ prefix: "System", value: "Schedule" })
+    case "webhook":
+      return formatOrigin({ prefix: "System", value: "Webhook" })
+    case "system":
+      switch (triggeredById) {
+        case "row_change":
+          return formatOrigin({ prefix: "System", value: "Row change" })
+        case "email":
+          return formatOrigin({ prefix: "System", value: "Email" })
+        case "reboot":
+          return formatOrigin({ prefix: "System", value: "Reboot" })
+        default:
+          return formatOrigin({ prefix: "System" })
+      }
+    default:
+      return formatOrigin({ prefix: triggeredByLabel || "Unknown" })
+  }
+}
 
 export const getActionSessionRowId = ({
   environment,
@@ -71,6 +111,7 @@ export const toActionSessionRow = ({
 }): ActionSessionRow => {
   const updatedAt = dayjs(session.updatedAt)
   const sourceType = getSourceType(session)
+  const triggeredBy = getTriggeredBy(session)
 
   return {
     _id: getActionSessionRowId(session),
@@ -78,7 +119,9 @@ export const toActionSessionRow = ({
     typeIcon: sourceType.icon,
     typeIconColor: sourceType.iconColor,
     assetLabel: getAssetLabel(session),
-    triggeredByLabel: getTriggeredByLabel(session),
+    triggeredByLabel: triggeredBy.label,
+    triggeredByValue: triggeredBy.value,
+    triggeredByPrefix: triggeredBy.prefix,
     status: session.status,
     statusLabel: ACTIVITY_STATUS_LABELS[session.status],
     actionCount: session.actionCount,
@@ -93,6 +136,7 @@ export const getActionSessionDetails = (
   session: ActionSession
 ): ActivityDetail[] => {
   const sourceType = getSourceType(session)
+  const triggeredBy = getTriggeredBy(session)
 
   return [
     { type: "status-badge", label: "Status", status: session.status },
@@ -113,7 +157,8 @@ export const getActionSessionDetails = (
     {
       type: "text",
       label: "Triggered by",
-      value: getTriggeredByLabel(session),
+      value: triggeredBy.value,
+      prefix: triggeredBy.prefix,
       icon: "user",
     },
     {

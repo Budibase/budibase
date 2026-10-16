@@ -112,5 +112,9 @@ export async function enqueuePlatformActionSessionLifecycle({
     incrementsActionCount: false,
     signal,
     timestamp,
+    metadata: context.getPlatformActionSessionMetadata({
+      sourceType,
+      sourceId,
+    }),
   })
 }

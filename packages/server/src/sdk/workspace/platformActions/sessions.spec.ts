@@ -46,11 +46,13 @@ describe("platformActions sessions", () => {
     sourceId,
     environment = "prod",
     status = "active",
+    extra = {},
   }: {
     sourceType?: PlatformActionSourceType
     sourceId: string
     environment?: PlatformActionEnvironment
     status?: PlatformActionContainerStatus
+    extra?: Partial<PlatformActionSessionIndexDoc>
   }) {
     const timestamp = new Date().toISOString()
     await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -63,6 +65,7 @@ describe("platformActions sessions", () => {
         actionCount: 1,
         startedAt: timestamp,
         updatedAt: timestamp,
+        ...extra,
       }
       await events.platformActions.getActionsDB().put(doc)
     })
@@ -158,6 +161,34 @@ describe("platformActions sessions", () => {
           environment: "prod",
         }),
       ])
+    })
+
+    it("exposes the session metadata without its internal capture timestamps", async () => {
+      const capturedAt = "2026-08-31T00:00:00.000Z"
+      await createSession({
+        sourceId: "with-metadata",
+        extra: {
+          assetType: "agent",
+          assetId: "agent-1",
+          assetLabel: "HR assistant",
+          assetCapturedAt: capturedAt,
+          triggeredByType: "schedule",
+          triggeredByCapturedAt: capturedAt,
+        },
+      })
+
+      const { sessions } = await withContext(() => fetchSessions({}))
+
+      expect(sessions).toEqual([
+        expect.objectContaining({
+          assetType: "agent",
+          assetId: "agent-1",
+          assetLabel: "HR assistant",
+          triggeredByType: "schedule",
+        }),
+      ])
+      expect(sessions[0]).not.toHaveProperty("assetCapturedAt")
+      expect(sessions[0]).not.toHaveProperty("triggeredByCapturedAt")
     })
 
     it("rejects an explicitly supplied empty bookmark", async () => {
