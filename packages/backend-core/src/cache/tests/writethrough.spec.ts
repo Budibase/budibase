@@ -5,6 +5,7 @@ import { getDB } from "../../db"
 import { Document, LockName, LockType } from "@budibase/types"
 import * as locks from "../../redis/redlockImpl"
 import tk from "timekeeper"
+import Redlock from "redlock"
 
 jest.mock("../../redis/redlockImpl", () => {
   const actual = jest.requireActual<typeof import("../../redis/redlockImpl")>(
@@ -64,14 +65,56 @@ describe("writethrough", () => {
           }
         )
         await locked
-        const timer = setTimeout(release, 200)
+        let attempted!: () => void
+        const attempting = new Promise<void>(resolve => {
+          attempted = resolve
+        })
+        const originalLock = Redlock.prototype.lock
+        const lock = jest
+          .spyOn(Redlock.prototype, "lock")
+          .mockImplementation(function (this: Redlock, ...args) {
+            const pending = originalLock.apply(this, args)
+            attempted()
+            return pending
+          })
+        const order: string[] = []
+        const originalPut = db.put.bind(db)
+        const put = jest.spyOn(db, "put").mockImplementation((...args) => {
+          order.push("write")
+          return originalPut(...args)
+        })
+        const write = writethrough.put(
+          { _id: id, _rev: first.rev, value: 2 },
+          0
+        )
+        let timer: ReturnType<typeof setTimeout> | undefined
         try {
-          await writethrough.put({ _id: id, _rev: first.rev, value: 2 }, 0)
+          await Promise.race([
+            attempting,
+            write.then(() => {
+              throw new Error("Write completed without attempting the lock")
+            }),
+            new Promise<never>((_resolve, reject) => {
+              timer = setTimeout(
+                () => reject(new Error("Persistence lock attempt timed out")),
+                5000
+              )
+            }),
+          ])
+          order.push("release")
+          release()
+          await write
         } finally {
           clearTimeout(timer)
           release()
-          await holder
+          try {
+            await Promise.allSettled([holder, write])
+          } finally {
+            put.mockRestore()
+            lock.mockRestore()
+          }
         }
+        expect(order).toEqual(["release", "write"])
         expect((await db.tryGet<ValueDoc>(id))?.value).toBe(2)
         expect((await writethrough.tryGet<ValueDoc>(id))?.value).toBe(2)
       })
