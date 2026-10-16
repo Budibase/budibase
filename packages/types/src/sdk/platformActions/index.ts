@@ -157,6 +157,7 @@ export interface PlatformActionSessionIndexJob extends ActionSourceContext {
 export interface PlatformActionSessionChange extends ActionSourceContext {
   workspaceId: string
   environment: PlatformActionEnvironment
+  signal?: PlatformActionContainerStatus
 }
 
 export type PlatformActionSessionIndexedFn = (

@@ -13,6 +13,7 @@ import {
   decodeKeysetBookmark,
   resolveLimit,
 } from "./pagination"
+import { getRetentionCutoff, isExpiredSession } from "./retention"
 import { getEventKeysetKey, queryEvents, queryEventsTotal } from "./views"
 
 function toActionEvent(doc: PlatformActionEvent): ActionEvent {
@@ -57,19 +58,6 @@ export async function fetchSessionEvents({
     fetchSessionEventsSummary({ environment, sourceType, sourceId }),
   ])
 
-  if (summary.total === 0) {
-    const session = await workspaceDb.tryGet<PlatformActionSessionIndexDoc>(
-      events.platformActions.getPlatformActionSessionId({
-        environment,
-        sourceType,
-        sourceId,
-      })
-    )
-    if (!session) {
-      throw new HTTPError("Session not found", 404)
-    }
-  }
-
   return {
     events: page.items.map(toActionEvent),
     summary,
@@ -94,11 +82,20 @@ export async function fetchSessionEventsSummary({
   sourceId: string
 }): Promise<ActionEventsSummary> {
   const workspaceDb = events.platformActions.getActionsDB()
-  const total = await queryEventsTotal({
-    workspaceDb,
-    environment,
-    sourceType,
-    sourceId,
-  })
+  const [total, session, cutoff] = await Promise.all([
+    queryEventsTotal({ workspaceDb, environment, sourceType, sourceId }),
+    workspaceDb.tryGet<PlatformActionSessionIndexDoc>(
+      events.platformActions.getPlatformActionSessionId({
+        environment,
+        sourceType,
+        sourceId,
+      })
+    ),
+    getRetentionCutoff(),
+  ])
+  // Events can be persisted before their session is indexed
+  if (session ? isExpiredSession({ session, cutoff }) : total === 0) {
+    throw new HTTPError("Session not found", 404)
+  }
   return { total }
 }

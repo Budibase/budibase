@@ -106,6 +106,7 @@ export async function initPlatformActionSessionIndexQueue({
           environment: indexInput.environment,
           sourceType: indexInput.sourceType,
           sourceId: indexInput.sourceId,
+          signal: indexInput.signal,
         })
       }
     })

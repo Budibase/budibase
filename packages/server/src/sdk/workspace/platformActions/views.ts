@@ -16,6 +16,7 @@ import {
   SEPARATOR,
 } from "@budibase/types"
 import type { KeysetBookmarkDirection, KeysetPosition } from "./pagination"
+import { EXPIRABLE_STATUSES, isExpiredSession } from "./retention"
 
 const SESSION_ID_PREFIX = `${DocumentType.PLATFORM_ACTION_SESSION}${SEPARATOR}`
 
@@ -187,27 +188,47 @@ function isValidBookmarkKey(key: DatabaseKey, prefix: DatabaseKey[]): boolean {
   )
 }
 
+// Returns undefined when the bookmark is already past the lower bound, so
+// there is nothing left to read in that direction
 function buildKeysetParams({
   prefix,
   bookmark,
   descending,
+  lowerBound,
 }: {
   prefix: DatabaseKey[]
   bookmark?: KeysetPosition
   descending: boolean
-}): DatabaseQueryOpts {
+  // Inclusive lower bound for the trailing key, requires a prefix
+  lowerBound?: string
+}): DatabaseQueryOpts | undefined {
   const params: DatabaseQueryOpts = { descending }
+  const lowest = lowerBound === undefined ? prefix : [...prefix, lowerBound]
   if (prefix.length > 0) {
-    params.endkey = descending ? prefix : [...prefix, {}]
+    params.endkey = descending ? lowest : [...prefix, {}]
   }
   if (bookmark) {
     if (!isValidBookmarkKey(bookmark.key, prefix) || !bookmark.id) {
       throw new HTTPError("Invalid bookmark for this query", 400)
     }
+    const trailing = Array.isArray(bookmark.key)
+      ? bookmark.key[prefix.length]
+      : bookmark.key
+    if (
+      lowerBound !== undefined &&
+      typeof trailing === "string" &&
+      trailing < lowerBound
+    ) {
+      if (descending) {
+        return undefined
+      }
+      params.startkey = lowest
+      return params
+    }
     params.startkey = bookmark.key
     params.startkey_docid = bookmark.id
   } else if (prefix.length > 0) {
-    params.startkey = descending ? [...prefix, {}] : prefix
+    params.startkey = descending ? [...prefix, {}] : lowest
   }
   return params
 }
@@ -318,6 +339,7 @@ export const querySessions = async ({
   limit,
   bookmark,
   direction,
+  cutoff,
 }: {
   workspaceDb: Database
   environment?: PlatformActionEnvironment
@@ -325,14 +347,85 @@ export const querySessions = async ({
   limit: number
   bookmark?: KeysetPosition
   direction: KeysetBookmarkDirection
+  cutoff?: string
 }): Promise<KeysetPage<PlatformActionSessionIndexDoc>> => {
   const scope = resolveSessionsScope({ environment, status })
+  if (!status && cutoff !== undefined) {
+    const prefix = scopePrefix(scope)
+    if (
+      bookmark &&
+      (!isValidBookmarkKey(bookmark.key, prefix) || !bookmark.id)
+    ) {
+      throw new HTTPError("Invalid bookmark for this query", 400)
+    }
+    const timestamp = Array.isArray(bookmark?.key)
+      ? bookmark.key[prefix.length]
+      : bookmark?.key
+    // Read bounded streams of eligible sessions, not pages of expired rows.
+    // Each stream uses the same timestamp/id anchor and global ordering.
+    const pages = await Promise.all(
+      PLATFORM_ACTION_CONTAINER_STATUSES.map(status => {
+        const statusPrefix = scopePrefix(
+          resolveSessionsScope({ environment, status })
+        )
+        return querySessions({
+          workspaceDb,
+          environment,
+          status,
+          cutoff,
+          limit,
+          direction,
+          bookmark: bookmark
+            ? { id: bookmark.id, key: [...statusPrefix, timestamp!] }
+            : undefined,
+        })
+      })
+    )
+    const descending = direction === "next"
+    const sessionsById = new Map<string, PlatformActionSessionIndexDoc>()
+    // Independent status reads can observe different revisions of one session.
+    for (const session of pages.flatMap(page => page.items)) {
+      const existing = sessionsById.get(session._id!)
+      if (
+        !existing ||
+        session.updatedAt > existing.updatedAt ||
+        (session.updatedAt === existing.updatedAt &&
+          Number.parseInt(session._rev ?? "0", 10) >
+            Number.parseInt(existing._rev ?? "0", 10))
+      ) {
+        sessionsById.set(session._id!, session)
+      }
+    }
+    const items = [...sessionsById.values()].sort((a, b) => {
+      const aKey = a.updatedAt === b.updatedAt ? a._id! : a.updatedAt
+      const bKey = a.updatedAt === b.updatedAt ? b._id! : b.updatedAt
+      if (aKey === bKey) {
+        return 0
+      }
+      const comparison = aKey < bKey ? -1 : 1
+      return descending ? -comparison : comparison
+    })
+    const page = items.slice(0, limit)
+    return {
+      items: descending ? page : page.reverse(),
+      hasMore: items.length > limit || pages.some(page => page.hasMore),
+    }
+  }
   const { viewName, prefix, createFunc } = resolveSessionsView(
     scope,
     workspaceDb
   )
   const descending = direction === "next"
-  const params = buildKeysetParams({ prefix, bookmark, descending })
+  const params = buildKeysetParams({
+    prefix,
+    bookmark,
+    descending,
+    lowerBound:
+      status && EXPIRABLE_STATUSES.includes(status) ? cutoff : undefined,
+  })
+  if (!params) {
+    return { items: [], hasMore: false }
+  }
   return fetchKeysetPage<PlatformActionSessionIndexDoc>({
     viewName,
     params,
@@ -348,18 +441,20 @@ export const querySessions = async ({
 async function queryCount({
   viewName,
   prefix,
+  lowerBound,
   workspaceDb,
   createFunc,
 }: {
   viewName: ViewName
   prefix: DatabaseKey[]
+  lowerBound?: string
   workspaceDb: Database
   createFunc: () => Promise<void>
 }): Promise<number> {
   const value = (await db.queryView(
     viewName,
     {
-      startkey: prefix,
+      startkey: lowerBound === undefined ? prefix : [...prefix, lowerBound],
       endkey: [...prefix, {}],
       reduce: true,
       include_docs: false,
@@ -375,9 +470,11 @@ export type SessionsStatusCounts = Record<PlatformActionContainerStatus, number>
 export const querySessionsStatusCounts = async ({
   workspaceDb,
   environment,
+  cutoff,
 }: {
   workspaceDb: Database
   environment?: PlatformActionEnvironment
+  cutoff?: string
 }): Promise<SessionsStatusCounts> => {
   const counts: SessionsStatusCounts = {
     active: 0,
@@ -388,6 +485,10 @@ export const querySessionsStatusCounts = async ({
   const viewName = environment
     ? ViewName.PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_STATUS_AND_UPDATED_AT
     : ViewName.PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT
+  const createFunc = () =>
+    environment
+      ? createSessionsByEnvironmentStatusAndUpdatedAtView(workspaceDb)
+      : createSessionsByStatusAndUpdatedAtView(workspaceDb)
   const response = await db.queryViewRaw(
     viewName,
     {
@@ -399,10 +500,7 @@ export const querySessionsStatusCounts = async ({
         : {}),
     },
     workspaceDb,
-    () =>
-      environment
-        ? createSessionsByEnvironmentStatusAndUpdatedAtView(workspaceDb)
-        : createSessionsByStatusAndUpdatedAtView(workspaceDb)
+    createFunc
   )
   for (const { key, value } of response.rows) {
     if (Array.isArray(key) && typeof value === "number") {
@@ -414,7 +512,135 @@ export const querySessionsStatusCounts = async ({
       }
     }
   }
+  if (cutoff !== undefined) {
+    const prefix: DatabaseKey[] = environment ? [environment] : []
+    await Promise.all(
+      EXPIRABLE_STATUSES.map(async status => {
+        counts[status] = await queryCount({
+          viewName,
+          prefix: [...prefix, status],
+          lowerBound: cutoff,
+          workspaceDb,
+          createFunc,
+        })
+      })
+    )
+  }
   return counts
+}
+
+// retention - expired terminal sessions, oldest first, across environments
+
+export interface ExpiredSessionCursor {
+  updatedAt: string
+  id: string
+}
+
+export const queryExpiredSessions = async ({
+  workspaceDb,
+  cutoff,
+  limit,
+  after,
+}: {
+  workspaceDb: Database
+  cutoff: string
+  limit: number
+  after?: ExpiredSessionCursor
+}): Promise<PlatformActionSessionIndexDoc[]> => {
+  const pages = await Promise.all(
+    EXPIRABLE_STATUSES.map(status =>
+      db.queryViewRaw<PlatformActionSessionIndexDoc>(
+        ViewName.PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT,
+        {
+          startkey: after ? [status, after.updatedAt] : [status],
+          ...(after ? { startkey_docid: after.id } : {}),
+          endkey: [status, cutoff],
+          reduce: false,
+          include_docs: true,
+          limit: limit + 1,
+        },
+        workspaceDb,
+        () => createSessionsByStatusAndUpdatedAtView(workspaceDb)
+      )
+    )
+  )
+  return pages
+    .flatMap(page => page.rows.map(row => row.doc!))
+    .filter(session => isExpiredSession({ session, cutoff }))
+    .filter(
+      session =>
+        !after ||
+        session.updatedAt > after.updatedAt ||
+        (session.updatedAt === after.updatedAt && session._id! > after.id)
+    )
+    .sort((a, b) => {
+      const byDate = a.updatedAt.localeCompare(b.updatedAt)
+      if (byDate || a._id === b._id) return byDate
+      return a._id! < b._id! ? -1 : 1
+    })
+    .slice(0, limit)
+}
+
+export const hasRecentEvents = async ({
+  workspaceDb,
+  environment,
+  sourceType,
+  sourceId,
+  cutoff,
+}: {
+  workspaceDb: Database
+  environment: PlatformActionEnvironment
+  sourceType: PlatformActionSourceType
+  sourceId: string
+  cutoff: string
+}): Promise<boolean> => {
+  const prefix: DatabaseKey[] = [environment, sourceType, sourceId]
+  const response = await db.queryViewRaw(
+    ViewName.PLATFORM_ACTION_EVENTS_BY_SESSION,
+    {
+      startkey: [...prefix, cutoff],
+      endkey: [...prefix, {}],
+      reduce: false,
+      include_docs: false,
+      limit: 1,
+    },
+    workspaceDb,
+    () => createEventsBySessionView(workspaceDb)
+  )
+  return response.rows.length > 0
+}
+
+export const queryExpiredEvents = async ({
+  workspaceDb,
+  environment,
+  sourceType,
+  sourceId,
+  cutoff,
+  limit,
+}: {
+  workspaceDb: Database
+  environment: PlatformActionEnvironment
+  sourceType: PlatformActionSourceType
+  sourceId: string
+  cutoff: string
+  limit: number
+}): Promise<PlatformActionEvent[]> => {
+  const prefix: DatabaseKey[] = [environment, sourceType, sourceId]
+  const response = await db.queryViewRaw<PlatformActionEvent>(
+    ViewName.PLATFORM_ACTION_EVENTS_BY_SESSION,
+    {
+      startkey: prefix,
+      endkey: [...prefix, cutoff],
+      reduce: false,
+      include_docs: true,
+      limit,
+    },
+    workspaceDb,
+    () => createEventsBySessionView(workspaceDb)
+  )
+  return response.rows
+    .map(row => row.doc!)
+    .filter(event => event.timestamp < cutoff)
 }
 
 // keyset pagination - events within a single session
@@ -445,6 +671,9 @@ export const queryEvents = async ({
   // "next"/descending mapping used for sessions is flipped here.
   const descending = direction === "prev"
   const params = buildKeysetParams({ prefix, bookmark, descending })
+  if (!params) {
+    return { items: [], hasMore: false }
+  }
   return fetchKeysetPage<PlatformActionEvent>({
     viewName: ViewName.PLATFORM_ACTION_EVENTS_BY_SESSION,
     params,

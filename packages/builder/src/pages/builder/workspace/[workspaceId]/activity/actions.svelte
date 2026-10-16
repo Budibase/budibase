@@ -182,9 +182,8 @@
         if (sequence !== requestSequence) {
           return
         }
-        // Sessions only move towards the first page as they change, so a
-        // later page can empty out. An empty page has no bookmarks to step
-        // back with, so start over from the first page instead.
+        // Updates or cleanup can empty a previously reachable page. The SDK
+        // returns no bookmarks for an empty result, so restart at the first page.
         if (response.sessions.length === 0 && request.page > 1) {
           return loadSessions({ background })
         }
