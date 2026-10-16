@@ -352,16 +352,26 @@ describe("triggers", () => {
         QuotaUsageType.STATIC
       )
       await notifying.promise
+      const second = quotas.incrementMany({
+        change: quota.value * 0.1,
+        name: StaticQuotaName.ROWS,
+        type: QuotaUsageType.STATIC,
+      })
+      let timer: ReturnType<typeof setTimeout> | undefined
+      let completedWhileNotifying = false
       try {
-        await quotas.incrementMany({
-          change: quota.value * 0.1,
-          name: StaticQuotaName.ROWS,
-          type: QuotaUsageType.STATIC,
-        })
+        completedWhileNotifying = await Promise.race([
+          second.then(() => true),
+          new Promise<boolean>(resolve => {
+            timer = setTimeout(() => resolve(false), 5000)
+          }),
+        ])
       } finally {
+        clearTimeout(timer)
         releaseNotification.resolve()
-        await first
+        await Promise.all([first, second])
       }
+      expect(completedWhileNotifying).toBe(true)
       expect(mockTriggerQuota).toHaveBeenCalledTimes(2)
       expect(mockTriggerQuota).toHaveBeenCalledWith({
         name: "Rows",
