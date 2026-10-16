@@ -94,29 +94,30 @@ export interface AgentRequestClarificationOption {
 }
 
 export interface AgentRequestClarification {
-  operationId: string
+  operationId?: string
   reason: "ambiguous" | "analysis_failed"
+  question?: string
   options: AgentRequestClarificationOption[]
 }
 
-export interface AgentRequestPendingApproval {
+export interface AgentRequestInquiry {
   requestId: string
-  label: string
+  answer: string
 }
 
 export type AgentRequestInitialization =
   | {
       requestId: string
       clarification?: never
-      pendingApproval?: never
+      inquiry?: never
     }
   | {
       clarification: AgentRequestClarification
       requestId?: never
-      pendingApproval?: never
+      inquiry?: never
     }
   | {
-      pendingApproval: AgentRequestPendingApproval
+      inquiry: AgentRequestInquiry
       requestId?: never
       clarification?: never
     }

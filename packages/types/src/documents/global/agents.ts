@@ -263,13 +263,7 @@ export interface AgentMessageUsage {
   segments: AgentMessageUsageSegment[]
 }
 
-export interface AgentApprovalClarification {
-  action: "approve" | "reject"
-  options: Array<{ escalationId: string; label: string }>
-}
-
 export interface AgentMessageMetadata {
-  approvalClarification?: AgentApprovalClarification
   requestClarification?: AgentRequestClarification
   ragSources?: AgentMessageRagSource[]
   toolDisplayNames?: Record<string, string>

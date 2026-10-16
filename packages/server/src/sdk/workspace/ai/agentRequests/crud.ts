@@ -27,6 +27,7 @@ import type {
 } from "./helpers"
 import {
   analyzeAgentRequestLink,
+  answerRequestInquiry,
   getRequestClarificationChoice,
   generateAgentRequestTitle,
   generateInteractionSummary,
@@ -731,9 +732,11 @@ const buildRequestClarification = ({
   candidates,
   operationId,
   reason,
+  question,
 }: {
   candidates: AgentRequestLinkCandidate[]
-  operationId: string
+  operationId?: string
+  question?: string
   reason: AgentRequestClarification["reason"]
 }): AgentRequestInitialization => {
   const options = candidates.flatMap(request => {
@@ -757,6 +760,7 @@ const buildRequestClarification = ({
     clarification: {
       operationId,
       reason,
+      ...(question ? { question } : {}),
       options: options.map(option => ({
         requestId: option.requestId,
         label: options.some(
@@ -792,14 +796,10 @@ export async function initActiveRequest({
     content: string
   }>
 }): Promise<AgentRequestInitialization | undefined> {
-  if (!operation?.name) {
-    return undefined
-  }
-
   const candidates = await fetchRequestsByAgentAndUser({
     agentId,
     userId,
-    operationId: operation.id,
+    operationId: operation?.id,
   })
   let enrichedCandidates: AgentRequestLinkCandidate[]
   try {
@@ -814,7 +814,7 @@ export async function initActiveRequest({
         isTerminalStatus(request.status) ||
         request.userId !== userId ||
         request.agentId !== agentId ||
-        request.operationId !== operation.id ||
+        (operation && request.operationId !== operation.id) ||
         candidates.some(candidate => candidate._id === request._id)
       ) {
         continue
@@ -851,7 +851,8 @@ export async function initActiveRequest({
     })
     return buildRequestClarification({
       candidates,
-      operationId: operation.id,
+      operationId: operation?.id,
+      question: clarification?.question || latestPrompt,
       reason: "analysis_failed",
     })
   }
@@ -864,8 +865,9 @@ export async function initActiveRequest({
   }) =>
     buildRequestClarification({
       candidates: requests,
-      operationId: operation.id,
+      operationId: operation?.id,
       reason,
+      question: clarification?.question || latestPrompt,
     })
 
   let decision: AgentRequestLinkAnalysis = { decision: "new_thread" }
@@ -876,7 +878,6 @@ export async function initActiveRequest({
     const option = clarification.options[choice - 1]
     if (
       !option ||
-      clarification.operationId !== operation.id ||
       !enrichedCandidates.some(request => request._id === option.requestId)
     ) {
       return clarify({
@@ -887,9 +888,8 @@ export async function initActiveRequest({
       })
     }
     decision = {
-      decision: "existing_thread",
+      decision: "inquiry",
       requestId: option.requestId,
-      entryAction: "append_latest_entry",
     }
   } else if (candidates.length > 0 || clarification?.options.length) {
     try {
@@ -920,7 +920,10 @@ export async function initActiveRequest({
       ),
     })
   }
-  if (decision.decision === "existing_thread" && decision.requestId) {
+  if (
+    decision.decision === "existing_thread" ||
+    decision.decision === "inquiry"
+  ) {
     for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
       const existing = await context
         .getWorkspaceDB()
@@ -930,7 +933,9 @@ export async function initActiveRequest({
         isTerminalStatus(existing.status) ||
         existing.userId !== userId ||
         existing.agentId !== agentId ||
-        existing.operationId !== operation.id
+        (decision.decision === "existing_thread" &&
+          operation &&
+          existing.operationId !== operation.id)
       ) {
         return clarify({
           reason: "ambiguous",
@@ -943,14 +948,39 @@ export async function initActiveRequest({
         requestId: existing._id,
         resolution: "pending",
       })
-      if (pendingApprovals.length > 0) {
-        return {
-          pendingApproval: {
-            requestId: decision.requestId,
-            label:
-              existing.initialPrompt || existing.title || "Pending request",
-          },
+      if (
+        decision.decision === "inquiry" ||
+        !operation ||
+        pendingApprovals.length > 0 ||
+        clarification !== undefined
+      ) {
+        let answer: string
+        try {
+          answer = await answerRequestInquiry({
+            request: {
+              ...existing,
+              approvalDescriptions: enrichedCandidates.find(
+                item => item._id === existing._id
+              )?.approvalDescriptions,
+            },
+            question: clarification?.question || latestPrompt,
+            agentId,
+            sessionId,
+            pendingEscalations: pendingApprovals.length,
+          })
+        } catch (error) {
+          console.log("Failed to answer request inquiry", {
+            agentId,
+            sessionId,
+            error,
+          })
+          answer = `${existing.initialPrompt || existing.title || "Request"}: ${existing.status}.`
+          if (pendingApprovals.length) {
+            answer +=
+              " This request is waiting for a human response. Use the buttons on the original escalation message to respond."
+          }
         }
+        return { inquiry: { requestId: decision.requestId, answer } }
       }
       try {
         const updated = await saveRequest({
@@ -974,6 +1004,10 @@ export async function initActiveRequest({
         throw error
       }
     }
+  }
+
+  if (!operation?.name) {
+    return undefined
   }
 
   const entry = buildEntry({ sessionId, source })
@@ -1187,7 +1221,10 @@ export async function createOrUpdateRequestForPrompt({
     sessionId,
   })
 
-  if (linkDecision.decision === "ambiguous") {
+  if (
+    linkDecision.decision === "ambiguous" ||
+    linkDecision.decision === "inquiry"
+  ) {
     return undefined
   }
 

@@ -8,6 +8,7 @@ import type {
 import sdk from "../../.."
 import {
   analyzeAgentRequestLink,
+  answerRequestInquiry,
   generateAgentRequestTitle,
   generateInteractionSummary,
   generateRequestOutcome,
@@ -184,7 +185,7 @@ describe("analyzeAgentRequestLink", () => {
 
     await expect(
       analyzeAgentRequestLink({
-        latestPrompt: "buy the laptop",
+        latestPrompt: "What is the status of the laptop?",
         candidateRequests: [
           buildThread({
             _id: "agentrequest_200",
@@ -255,6 +256,71 @@ describe("analyzeAgentRequestLink", () => {
         sessionId: "session_1",
       })
     ).resolves.toEqual(decision)
+  })
+
+  it("identifies an explicit status inquiry", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult(
+        JSON.stringify({
+          decision: "inquiry",
+          requestId: "agentrequest_thread_1",
+        })
+      )
+    )
+    await expect(
+      analyzeAgentRequestLink({
+        latestPrompt: "What is the status of my laptop request?",
+        candidateRequests: [buildThread()],
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).resolves.toEqual({
+      decision: "inquiry",
+      requestId: "agentrequest_thread_1",
+    })
+  })
+
+  it("rejects an inquiry referring to an unknown request", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult(
+        JSON.stringify({ decision: "inquiry", requestId: "other_request" })
+      )
+    )
+    await expect(
+      analyzeAgentRequestLink({
+        latestPrompt: "What is the status?",
+        candidateRequests: [buildThread()],
+        agentId: "agent_1",
+        sessionId: "session_1",
+      })
+    ).rejects.toThrow('unknown requestId "other_request"')
+  })
+
+  it("answers a request question from the supplied facts without tools", async () => {
+    generateTextMock.mockResolvedValue(
+      buildGenerateTextResult(
+        "Your laptop request is waiting for a human response."
+      )
+    )
+    const answer = await answerRequestInquiry({
+      request: buildThread({ status: "needs_input" }),
+      question: "What is the status of my laptop request?",
+      pendingEscalations: 1,
+      agentId: "agent_1",
+      sessionId: "session_1",
+    })
+    expect(answer).toEqual(
+      "Your laptop request is waiting for a human response."
+    )
+    const call = generateTextMock.mock.calls[0][0]
+    expect(call).not.toHaveProperty("tools")
+    expect(JSON.parse(String(call.prompt))).toEqual(
+      expect.objectContaining({
+        question: "What is the status of my laptop request?",
+        request: expect.objectContaining({ status: "needs_input" }),
+        pendingEscalations: 1,
+      })
+    )
   })
 
   it("throws when the model returns an unknown request id", async () => {

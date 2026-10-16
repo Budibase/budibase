@@ -19,15 +19,10 @@ import { quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
-import { respondToApprovalMessage } from "../../sdk/workspace/ai/approvalMessages"
 import { requesterTools } from "../../sdk/workspace/ai/tests/utils"
 import type { LanguageModelV4 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV4 } from "ai/test"
-
-jest.mock("../../sdk/workspace/ai/approvalMessages", () => ({
-  respondToApprovalMessage: jest.fn(),
-}))
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -45,6 +40,7 @@ const actualContext = jest.requireActual<
 >("@budibase/backend-core").context
 
 const mockAiConfigsFind = jest.fn()
+let mockOperationIntent: "execute" | "query" = "execute"
 
 jest.mock("../../sdk/workspace/ai/configs", () => {
   const actual = jest.requireActual("../../sdk/workspace/ai/configs")
@@ -93,7 +89,7 @@ jest.mock("ai", () => {
           output: Promise.resolve({
             action: "select_operation",
             operationId: "op-1",
-            intent: "execute",
+            intent: mockOperationIntent,
             reason: "Test operation",
           }),
         }
@@ -1028,7 +1024,6 @@ describe("Agent chat tool call tracking", () => {
   })
 
   beforeEach(() => {
-    jest.mocked(respondToApprovalMessage).mockReset()
     jest
       .mocked(context.isProdWorkspace)
       .mockReset()
@@ -1040,6 +1035,7 @@ describe("Agent chat tool call tracking", () => {
       .mockImplementation(actualAgentRequests.initActiveRequest)
     jest.mocked(sdk.ai.agentRequests.enqueueRequestTracking).mockClear()
 
+    mockOperationIntent = "execute"
     addActionMock.mockClear()
     jest.mocked(streamText).mockClear()
     sessionLogIndexer = createMockSessionLogIndexer()
@@ -1084,64 +1080,6 @@ describe("Agent chat tool call tracking", () => {
     jest.restoreAllMocks()
   })
 
-  describe("approval messages", () => {
-    it("handles webhook approval without rerunning or tracking the operation", async () => {
-      jest.mocked(respondToApprovalMessage).mockResolvedValue({
-        id: "approval-response",
-        role: "assistant",
-        parts: [
-          {
-            type: "text",
-            text: "Your approval was recorded for: Laptop costing 200",
-          },
-        ],
-        metadata: { createdAt: Date.now() },
-      })
-      jest
-        .mocked(sdk.ai.agents.getOrThrow)
-        .mockResolvedValue(buildWebhookTestAgent())
-      const messages = [
-        {
-          id: "user-1",
-          role: "user" as const,
-          parts: [{ type: "text" as const, text: "Go ahead, buy it" }],
-        },
-      ]
-      await features.testutils.withFeatureFlags(
-        config.getTenantId(),
-        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
-        async () => {
-          await context.doInWorkspaceContext(
-            config.getProdWorkspaceId(),
-            async () => {
-              const result = await webhookChat({
-                chat: {
-                  agentId,
-                  channel: {
-                    provider: AgentChannelProvider.SLACK,
-                    channelId: "C123",
-                    externalUserId: "slack-user-1",
-                  },
-                  messages,
-                },
-                user: config.getUser(),
-              })
-              expect(result.assistantText).toContain(
-                "Your approval was recorded"
-              )
-            }
-          )
-          expect(streamText).not.toHaveBeenCalled()
-          expect(sdk.ai.agentRequests.initActiveRequest).not.toHaveBeenCalled()
-          expect(
-            sdk.ai.agentRequests.enqueueRequestTracking
-          ).not.toHaveBeenCalled()
-          expect(addActionMock).not.toHaveBeenCalled()
-        }
-      )
-    })
-  })
-
   describe("request clarification", () => {
     const options = [
       { requestId: "agentrequest_200", label: "Laptop costing 200" },
@@ -1149,19 +1087,39 @@ describe("Agent chat tool call tracking", () => {
     ]
 
     it.each([
-      "ambiguous",
-      "analysis_failed",
-    ] satisfies AgentRequestClarification["reason"][])(
-      "returns a Slack clarification for %s without executing or enqueueing activity",
-      async reason => {
+      { reason: "ambiguous", intent: "execute", failInitialization: false },
+      {
+        reason: "analysis_failed",
+        intent: "execute",
+        failInitialization: false,
+      },
+      { reason: "ambiguous", intent: "query", failInitialization: false },
+      { reason: "analysis_failed", intent: "query", failInitialization: false },
+      { reason: "analysis_failed", intent: "query", failInitialization: true },
+    ] satisfies Array<{
+      reason: AgentRequestClarification["reason"]
+      intent: "execute" | "query"
+      failInitialization: boolean
+    }>)(
+      "returns a Slack clarification for $reason with $intent routing without executing or enqueueing activity",
+      async ({ reason, intent, failInitialization }) => {
+        mockOperationIntent = intent
         const clarification: AgentRequestClarification = {
-          operationId: "op-1",
+          operationId: failInitialization ? undefined : "op-1",
           reason,
-          options,
+          options: failInitialization ? [] : options,
+          ...(failInitialization
+            ? { question: "What is the status of my request?" }
+            : {}),
         }
         jest.mocked(sdk.ai.agentRequests.initActiveRequest).mockResolvedValue({
           clarification,
         })
+        if (failInitialization) {
+          jest
+            .mocked(sdk.ai.agentRequests.initActiveRequest)
+            .mockRejectedValueOnce(new Error("Request lookup unavailable"))
+        }
         const enqueue = jest.spyOn(
           sdk.ai.agentRequests,
           "enqueueRequestTracking"
@@ -1189,15 +1147,30 @@ describe("Agent chat tool call tracking", () => {
                       {
                         id: "msg-1",
                         role: "user",
-                        parts: [{ type: "text", text: "buy the laptop" }],
+                        parts: [
+                          {
+                            type: "text",
+                            text: "What is the status of my request?",
+                          },
+                        ],
                       },
                     ],
                   },
                   user: config.getUser(),
                 })
 
-                expect(result.assistantText).toContain("1. Laptop costing 200")
-                expect(result.assistantText).toContain("2. Laptop costing 500")
+                if (failInitialization) {
+                  expect(result.assistantText).toContain(
+                    "I couldn't determine which request"
+                  )
+                } else {
+                  expect(result.assistantText).toContain(
+                    "1. Laptop costing 200"
+                  )
+                  expect(result.assistantText).toContain(
+                    "2. Laptop costing 500"
+                  )
+                }
                 expect(
                   result.messages.at(-1)?.metadata?.requestClarification
                 ).toEqual(clarification)
@@ -1211,16 +1184,17 @@ describe("Agent chat tool call tracking", () => {
       }
     )
 
-    it("returns the original approval reminder after selecting a request without running tools", async () => {
+    it("answers the request inquiry after selecting a request without running tools", async () => {
       jest
         .mocked(streamText)
         .mockImplementation(
           makeWebhookStreamTextMock({ text: "Created another purchase" })
         )
       jest.mocked(sdk.ai.agentRequests.initActiveRequest).mockResolvedValue({
-        pendingApproval: {
+        inquiry: {
           requestId: "agentrequest_200",
-          label: "Laptop costing 200",
+          answer:
+            "Laptop costing 200 is waiting for approval. Use the buttons on the original approval message.",
         },
       })
       const enqueue = jest.mocked(sdk.ai.agentRequests.enqueueRequestTracking)
@@ -1267,9 +1241,7 @@ describe("Agent chat tool call tracking", () => {
               })
 
               expect(result.assistantText).toContain("Laptop costing 200")
-              expect(result.assistantText).toContain(
-                "already waiting for approval"
-              )
+              expect(result.assistantText).toContain("waiting for approval")
               expect(result.assistantText).toContain(
                 "original approval message"
               )
@@ -1282,7 +1254,7 @@ describe("Agent chat tool call tracking", () => {
       )
     })
 
-    it.each(["clarification", "pending approval"])(
+    it.each(["clarification", "inquiry"])(
       "streams %s without executing the operation",
       async responseType => {
         const clarification: AgentRequestClarification = {
@@ -1294,9 +1266,10 @@ describe("Agent chat tool call tracking", () => {
           responseType === "clarification"
             ? { clarification }
             : {
-                pendingApproval: {
+                inquiry: {
                   requestId: "agentrequest_200",
-                  label: "Laptop costing 200",
+                  answer:
+                    "Laptop costing 200 is waiting for approval. Use the buttons on the original approval message.",
                 },
               }
         )
@@ -1321,7 +1294,12 @@ describe("Agent chat tool call tracking", () => {
                   {
                     id: "msg-1",
                     role: "user",
-                    parts: [{ type: "text", text: "buy the laptop" }],
+                    parts: [
+                      {
+                        type: "text",
+                        text: "What is the status of the laptop?",
+                      },
+                    ],
                   },
                 ],
               })
@@ -1334,7 +1312,7 @@ describe("Agent chat tool call tracking", () => {
               expect(response.text).toContain('"requestId":"agentrequest_200"')
             } else {
               expect(response.text).toContain("Laptop costing 200")
-              expect(response.text).toContain("already waiting for approval")
+              expect(response.text).toContain("waiting for approval")
               expect(response.text).toContain("original approval message")
             }
             expect(streamText).not.toHaveBeenCalled()
@@ -1370,7 +1348,6 @@ describe("Agent chat tool call tracking", () => {
           ],
         })
 
-      expect(respondToApprovalMessage).not.toHaveBeenCalled()
       expect(res.status).toBe(200)
       expect(addActionMock).toHaveBeenCalledTimes(2)
     })

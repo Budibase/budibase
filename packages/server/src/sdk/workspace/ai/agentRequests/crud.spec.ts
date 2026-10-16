@@ -24,6 +24,7 @@ import {
 } from "./crud"
 import {
   analyzeAgentRequestLink,
+  answerRequestInquiry,
   generateAgentRequestTitle,
   generateInteractionSummary,
   generateRequestOutcome,
@@ -33,6 +34,7 @@ import {
 jest.mock("./helpers", () => ({
   ...jest.requireActual("./helpers"),
   analyzeAgentRequestLink: jest.fn(),
+  answerRequestInquiry: jest.fn(),
   generateAgentRequestTitle: jest.fn(),
   generateInteractionSummary: jest.fn(),
   generateRequestOutcome: jest.fn(),
@@ -74,6 +76,10 @@ describe("agentRequests crud", () => {
     builderSocket?.emitAgentRequestChange as jest.Mock
 
   beforeEach(async () => {
+    jest
+      .mocked(answerRequestInquiry)
+      .mockReset()
+      .mockResolvedValue("Waiting for a human response")
     analyzeAgentRequestLinkMock.mockReset()
     analyzeAgentRequestLinkMock.mockResolvedValue({ decision: "new_thread" })
     generateAgentRequestTitleMock.mockReset()
@@ -93,11 +99,11 @@ describe("agentRequests crud", () => {
 
   describe("initActiveRequest", () => {
     it.each([
-      ["Buy a laptop", "Buy a melon", "go ahead, buy it"],
+      ["Buy a laptop", "Buy a melon", "What is the status of my request?"],
       [
         "Buy a laptop costing 200",
         "Buy a laptop costing 500",
-        "buy the laptop",
+        "What is the status of the laptop?",
       ],
     ])(
       "clarifies %s and %s without changing requests",
@@ -133,6 +139,7 @@ describe("agentRequests crud", () => {
             clarification: {
               operationId: "op_buy",
               reason: "ambiguous",
+              question: followUp,
               options: expect.arrayContaining([
                 { requestId: first?.requestId, label: firstPrompt },
                 { requestId: second?.requestId, label: secondPrompt },
@@ -203,9 +210,9 @@ describe("agentRequests crud", () => {
           })
 
           expect(result).toEqual({
-            pendingApproval: {
+            inquiry: {
               requestId: first.requestId,
-              label: "Buy a laptop costing 200",
+              answer: "Waiting for a human response",
             },
           })
           expect(await fetchRequestsByAgent("agent_1")).toEqual(before)
@@ -217,6 +224,145 @@ describe("agentRequests crud", () => {
         })
       }
     )
+
+    it("clarifies a status query across operations and answers the saved question without changing requests", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+        }
+        const laptop = await initLinkedRequest({
+          ...inputs,
+          latestPrompt: "Buy a laptop",
+          operation: {
+            id: "op_laptop",
+            name: "Laptop",
+            prompt: "Buy a laptop",
+          },
+        })
+        const melon = await initLinkedRequest({
+          ...inputs,
+          latestPrompt: "Buy a melon",
+          operation: { id: "op_melon", name: "Melon", prompt: "Buy a melon" },
+        })
+        const db = context.getWorkspaceDB()
+        for (const requestId of [laptop.requestId, melon.requestId]) {
+          await db.put({
+            _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${requestId}`,
+            source: EscalationSource.OPERATION,
+            appId: config.getProdWorkspaceId(),
+            tenantId: config.getTenantId(),
+            agentId: inputs.agentId,
+            requestId,
+            resolution: "pending",
+          })
+          await updateRequestStatus({ requestId, status: "needs_input" })
+        }
+        const before = await fetchRequestsByAgent(inputs.agentId)
+        const question = "¿Cuál es el estado de mi request?"
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "ambiguous",
+          requestIds: [laptop.requestId, melon.requestId],
+        })
+        const ambiguous = await initActiveRequest({
+          ...inputs,
+          latestPrompt: question,
+        })
+        const clarification = ambiguous?.clarification
+        if (!clarification) {
+          throw new Error("Expected request clarification")
+        }
+        const selected = clarification.options[1]
+        const result = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "2",
+          clarification,
+        })
+        expect(result).toEqual({
+          inquiry: {
+            requestId: selected.requestId,
+            answer: "Waiting for a human response",
+          },
+        })
+        expect(answerRequestInquiry).toHaveBeenCalledWith(
+          expect.objectContaining({
+            question,
+            pendingEscalations: 1,
+            request: expect.objectContaining({
+              _id: selected.requestId,
+              status: "needs_input",
+            }),
+          })
+        )
+        expect(await fetchRequestsByAgent(inputs.agentId)).toEqual(before)
+        expect(
+          await db.get(
+            `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${selected.requestId}`
+          )
+        ).toEqual(expect.objectContaining({ resolution: "pending" }))
+      })
+    })
+
+    it("answers an explicit inquiry about an active request without linking a new entry", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+        }
+        const first = await initLinkedRequest({
+          ...inputs,
+          latestPrompt: "Buy a laptop",
+        })
+        const before = await fetchRequestsByAgent(inputs.agentId)
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "inquiry",
+          requestId: first.requestId,
+        })
+        const result = await initActiveRequest({
+          ...inputs,
+          latestPrompt: "What is the status of the laptop?",
+        })
+        expect(result).toEqual({
+          inquiry: {
+            requestId: first.requestId,
+            answer: "Waiting for a human response",
+          },
+        })
+        expect(await fetchRequestsByAgent(inputs.agentId)).toEqual(before)
+      })
+    })
+
+    it("does not write inquiry messages during background tracking", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const inputs = {
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          source: "Slack",
+          operation: { id: "op_buy", name: "Buy", prompt: "Buy an item" },
+        }
+        const first = await initLinkedRequest({
+          ...inputs,
+          latestPrompt: "Buy a laptop",
+        })
+        const before = await fetchRequestsByAgent(inputs.agentId)
+        analyzeAgentRequestLinkMock.mockResolvedValueOnce({
+          decision: "inquiry",
+          requestId: first.requestId,
+        })
+        const result = await createOrUpdateRequestForPrompt({
+          ...inputs,
+          latestUserPrompt: "What is the status of the laptop?",
+        })
+        expect(result).toBeUndefined()
+        expect(await fetchRequestsByAgent(inputs.agentId)).toEqual(before)
+      })
+    })
 
     it("distinguishes identical requests created at the same time", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
@@ -359,7 +505,12 @@ describe("agentRequests crud", () => {
           },
         })
 
-        expect(result).toEqual({ requestId: first?.requestId })
+        expect(result).toEqual({
+          inquiry: {
+            requestId: first?.requestId,
+            answer: "Waiting for a human response",
+          },
+        })
         const after = await fetchRequestsByAgent("agent_1")
         expect(
           after.find(request => request._id === second?.requestId)
@@ -407,7 +558,12 @@ describe("agentRequests crud", () => {
             },
           })
 
-          expect(result).toEqual({ requestId: first.requestId })
+          expect(result).toEqual({
+            inquiry: {
+              requestId: first.requestId,
+              answer: "Waiting for a human response",
+            },
+          })
           expect(await fetchRequestsByAgent("agent_1")).toHaveLength(11)
         })
       }
@@ -793,6 +949,7 @@ describe("agentRequests crud", () => {
           clarification: {
             operationId: "op_expenses",
             reason: "ambiguous",
+            question: "Change that expense to 25 pounds",
             options: [],
           },
         })
