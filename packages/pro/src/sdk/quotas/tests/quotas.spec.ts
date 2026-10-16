@@ -2,6 +2,7 @@ import {
   APIWarningCode,
   ActionType,
   License,
+  LockName,
   MonthlyQuotaName,
   QuotaUsageType,
   QuotaUsage,
@@ -11,6 +12,7 @@ import { DBTestConfiguration, mocks } from "../../../../tests"
 
 import { tenancy } from "@budibase/backend-core"
 import _ from "lodash"
+import Redlock from "redlock"
 import { CLOUD_FREE_LICENSE } from "../../../constants/licenses"
 import * as db from "../../../db"
 import * as licensing from "../../licensing"
@@ -256,15 +258,25 @@ describe("quotas", () => {
         const writing = deferred()
         const releaseWrite = deferred()
         const contendersStarted = deferred()
-        let queuedReads = 0
+        let lockAttempts = 0
         let observeContenders = false
         const getDatabase = jest
           .spyOn(tenancy, "getGlobalDB")
-          .mockImplementation(() => {
-            if (observeContenders && ++queuedReads === 2) {
+          .mockReturnValue(database)
+        const usageLockName = `lock:${tenancy.getTenantId()}_${LockName.UPDATE_QUOTA_USAGE}_${database.name}:${db.quotas.utils.getQuotaDocId()}`
+        const originalLock = Redlock.prototype.lock
+        const lock = jest
+          .spyOn(Redlock.prototype, "lock")
+          .mockImplementation(function (this: Redlock, ...args) {
+            const pendingLock = originalLock.apply(this, args)
+            if (
+              observeContenders &&
+              args[0] === usageLockName &&
+              ++lockAttempts === 2
+            ) {
               contendersStarted.resolve()
             }
-            return database
+            return pendingLock
           })
         const put = jest
           .spyOn(database, "put")
@@ -317,6 +329,7 @@ describe("quotas", () => {
             await withTestDeadline(Promise.allSettled(writes))
           } finally {
             put.mockRestore()
+            lock.mockRestore()
             getDatabase.mockRestore()
           }
         }
