@@ -1,3 +1,4 @@
+import tk from "timekeeper"
 import {
   Event,
   PlatformActionEvent,
@@ -8,6 +9,8 @@ import {
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
+import { publishEvent } from "../../../events"
+import EventBrokerProcessor from "../../EventBrokerProcessor"
 import {
   doWithActionsWorkspaceDeletionLock,
   doWithActionsWorkspaceWriteLock,
@@ -41,6 +44,76 @@ describe("PlatformActionPersistProcessor", () => {
 
   beforeEach(() => {
     mockEnqueue.mockReset()
+  })
+
+  it("completes an automation when telemetry delays its first action past the completed signal", async () => {
+    await run(async () => {
+      const originalTime = new Date()
+      const emittedAt = new Date("2026-10-14T10:00:00.000Z")
+      const completedAt = "2026-10-14T10:00:01.000Z"
+      const persistedAt = new Date("2026-10-14T10:00:02.000Z")
+      const source = {
+        sourceType: "automation_run" as const,
+        sourceId: "delayed-first-automation-action",
+      }
+      const environment = context.getPlatformActionEnvironment()
+      let releaseTelemetry!: () => void
+      const telemetryReleased = new Promise<void>(resolve => {
+        releaseTelemetry = resolve
+      })
+      let telemetryStarted!: () => void
+      const telemetryEntered = new Promise<void>(resolve => {
+        telemetryStarted = resolve
+      })
+      const telemetrySpy = jest
+        .spyOn(EventBrokerProcessor.prototype, "processEvent")
+        .mockImplementationOnce(async () => {
+          telemetryStarted()
+          await telemetryReleased
+        })
+      mockEnqueue.mockImplementation(async job => {
+        await upsertPlatformActionSession(job)
+      })
+      let publishing: Promise<void> | undefined
+
+      try {
+        tk.freeze(emittedAt)
+        publishing = publishEvent(
+          Event.ACTION_AUTOMATION_STEP_EXECUTED,
+          { ...source, automationId: "automation-1", stepId: "step-1" },
+          undefined,
+          identity
+        )
+        await telemetryEntered
+        tk.freeze(new Date(completedAt))
+        const completedSignal = {
+          ...source,
+          environment,
+          incrementsActionCount: false,
+          signal: "completed" as const,
+          timestamp: new Date().toISOString(),
+        }
+
+        tk.freeze(persistedAt)
+        releaseTelemetry()
+        await publishing
+        // Lifecycle-only jobs wait for an action to create the session before
+        // retrying, retaining the timestamp captured when the run completed.
+        await upsertPlatformActionSession(completedSignal)
+
+        const session = await getActionsDB().get<PlatformActionSessionIndexDoc>(
+          getPlatformActionSessionId({ ...source, environment })
+        )
+        expect(session.status).toBe("completed")
+        expect(session.completedAt).toBe(completedAt)
+        expect(session.actionCount).toBe(1)
+      } finally {
+        releaseTelemetry()
+        await Promise.allSettled([publishing])
+        telemetrySpy.mockRestore()
+        tk.freeze(originalTime)
+      }
+    })
   })
 
   it("keeps waiting when an older failed action is persisted after its lifecycle correction", async () => {
