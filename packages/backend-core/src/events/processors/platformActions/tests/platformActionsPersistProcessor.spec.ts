@@ -1,7 +1,12 @@
 import tk from "timekeeper"
 import {
+  ActionFailureReason,
+  DocumentType,
   Event,
   PlatformActionEvent,
+  SEPARATOR,
+  ToolAction,
+  ToolType,
   type Identity,
   type PlatformActionSessionIndexDoc,
   type PlatformActionSessionMetadata,
@@ -308,6 +313,175 @@ describe("PlatformActionPersistProcessor", () => {
       })
     }
   )
+
+  it.each([
+    [Event.ACTION_AI_AGENT_TOOL_EXECUTED, {}],
+    [
+      Event.ACTION_AI_AGENT_TOOL_FAILED,
+      { reason: ActionFailureReason.ERROR, errorMessage: "missing" },
+    ],
+  ])(
+    "records %s in its agent session without asserting a session status",
+    async (event, failure) => {
+      await run(async () => {
+        const properties = {
+          agentId: "agent-1",
+          sessionId: "session-1",
+          operationId: "operation-1",
+          toolName: "update_row",
+          sourceType: ToolType.INTERNAL_TABLE,
+          action: ToolAction.UPDATE_ROW,
+          ...failure,
+        }
+        const metadata: PlatformActionSessionMetadata = {
+          asset: { type: "agent", id: "agent-1", label: "HR assistant" },
+          triggeredBy: { type: "user", id: "us_1", label: "John Doe" },
+        }
+
+        await context.doInPlatformActionSessionContext(
+          { sourceType: "agent_session", sourceId: "session-1", ...metadata },
+          () => processor.processEvent(event, identity, properties)
+        )
+
+        const { rows } = await getActionsDB().allDocs<PlatformActionEvent>({
+          include_docs: true,
+        })
+        expect(rows).toHaveLength(1)
+        expect(rows[0].doc).toMatchObject({
+          sourceType: "agent_session",
+          sourceId: "session-1",
+          eventName: event,
+          payload: properties,
+        })
+        expect(mockEnqueue).toHaveBeenCalledTimes(1)
+        expect(mockEnqueue).toHaveBeenCalledWith(
+          expect.objectContaining({
+            sourceType: "agent_session",
+            sourceId: "session-1",
+            incrementsActionCount: true,
+            signal: undefined,
+            metadata,
+          })
+        )
+      })
+    }
+  )
+
+  describe("agent tool events in the session index", () => {
+    const source = {
+      sourceType: "agent_session" as const,
+      sourceId: "tool-session",
+    }
+    const toolEvent = {
+      agentId: "agent-1",
+      sessionId: source.sourceId,
+      operationId: "operation-1",
+      toolName: "list_rows",
+      sourceType: ToolType.INTERNAL_TABLE,
+      action: ToolAction.LIST_ROWS,
+    }
+    const failedToolEvent = {
+      ...toolEvent,
+      reason: ActionFailureReason.ERROR,
+      errorMessage: "missing",
+    }
+
+    const getSession = () =>
+      getActionsDB().get<PlatformActionSessionIndexDoc>(
+        getPlatformActionSessionId({
+          ...source,
+          environment: context.getPlatformActionEnvironment(),
+        })
+      )
+
+    beforeEach(() => {
+      mockEnqueue.mockImplementation(async job => {
+        await upsertPlatformActionSession(job)
+      })
+    })
+
+    it("counts every tool call in a single session that the agent lifecycle completes", async () => {
+      await run(async () => {
+        await processor.processEvent(
+          Event.ACTION_AI_AGENT_TOOL_EXECUTED,
+          identity,
+          toolEvent,
+          "2026-10-16T10:00:01.000Z"
+        )
+        await processor.processEvent(
+          Event.ACTION_AI_AGENT_TOOL_FAILED,
+          identity,
+          failedToolEvent,
+          "2026-10-16T10:00:02.000Z"
+        )
+        await processor.processEvent(
+          Event.ACTION_AI_AGENT_EXECUTED,
+          identity,
+          { ...source, agentId: "agent-1", sessionId: source.sourceId },
+          "2026-10-16T10:00:03.000Z"
+        )
+
+        const { rows } = await getActionsDB().allDocs({ include_docs: false })
+        const sessionIds = rows
+          .map(row => row.id)
+          .filter(id =>
+            id.startsWith(`${DocumentType.PLATFORM_ACTION_SESSION}${SEPARATOR}`)
+          )
+        expect(sessionIds).toHaveLength(1)
+        const session = await getSession()
+        expect(session).toMatchObject({
+          status: "completed",
+          actionCount: 3,
+          startedAt: "2026-10-16T10:00:01.000Z",
+          completedAt: "2026-10-16T10:00:03.000Z",
+        })
+      })
+    })
+
+    it.each([
+      ["completed", {}],
+      ["failed", { finalStatus: "failed" }],
+      ["waiting", { awaitingEscalation: true }],
+    ])(
+      "keeps a %s session unchanged when tool calls arrive after it",
+      async (status, lifecycle) => {
+        await run(async () => {
+          const lifecycleTimestamp = "2026-10-16T10:00:01.000Z"
+          await processor.processEvent(
+            Event.ACTION_AI_AGENT_EXECUTED,
+            identity,
+            {
+              ...source,
+              agentId: "agent-1",
+              sessionId: source.sourceId,
+              ...lifecycle,
+            },
+            lifecycleTimestamp
+          )
+          const before = await getSession()
+
+          await processor.processEvent(
+            Event.ACTION_AI_AGENT_TOOL_EXECUTED,
+            identity,
+            toolEvent,
+            "2026-10-16T10:00:02.000Z"
+          )
+          await processor.processEvent(
+            Event.ACTION_AI_AGENT_TOOL_FAILED,
+            identity,
+            failedToolEvent,
+            "2026-10-16T10:00:03.000Z"
+          )
+
+          const session = await getSession()
+          expect(session.status).toBe(status)
+          expect(session.statusUpdatedAt).toBe(lifecycleTimestamp)
+          expect(session.completedAt).toBe(before.completedAt)
+          expect(session.actionCount).toBe(3)
+        })
+      }
+    )
+  })
 
   describe("session metadata", () => {
     const metadata: PlatformActionSessionMetadata = {
