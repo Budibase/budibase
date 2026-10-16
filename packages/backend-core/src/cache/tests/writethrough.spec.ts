@@ -2,8 +2,16 @@ import { DBTestConfiguration } from "../../../tests/extra"
 import { structures } from "../../../tests"
 import { Writethrough } from "../writethrough"
 import { getDB } from "../../db"
-import { Document } from "@budibase/types"
+import { Document, LockName, LockType } from "@budibase/types"
+import * as locks from "../../redis/redlockImpl"
 import tk from "timekeeper"
+
+jest.mock("../../redis/redlockImpl", () => {
+  const actual = jest.requireActual<typeof import("../../redis/redlockImpl")>(
+    "../../redis/redlockImpl"
+  )
+  return { ...actual, doWithLock: jest.fn(actual.doWithLock) }
+})
 
 tk.freeze(Date.now())
 
@@ -30,6 +38,91 @@ describe("writethrough", () => {
 
   describe("put", () => {
     let current: any
+
+    it("waits for the persistence lock when throttling is disabled", async () => {
+      await config.doInTenant(async () => {
+        const id = structures.uuid()
+        const first = await writethrough.put({ _id: id, value: 1 }, 0)
+        let started!: () => void
+        const locked = new Promise<void>(resolve => {
+          started = resolve
+        })
+        let release!: () => void
+        const released = new Promise<void>(resolve => {
+          release = resolve
+        })
+        const holder = locks.doWithLock(
+          {
+            type: LockType.DEFAULT,
+            name: LockName.PERSIST_WRITETHROUGH,
+            resource: id,
+            ttl: 15000,
+          },
+          async () => {
+            started()
+            await released
+          }
+        )
+        await locked
+        const timer = setTimeout(release, 200)
+        try {
+          await writethrough.put({ _id: id, _rev: first.rev, value: 2 }, 0)
+        } finally {
+          clearTimeout(timer)
+          release()
+          await holder
+        }
+        expect((await db.tryGet<ValueDoc>(id))?.value).toBe(2)
+        expect((await writethrough.tryGet<ValueDoc>(id))?.value).toBe(2)
+      })
+    })
+
+    it.each([409, 500])(
+      "propagates write errors (%s) without updating the cache when throttling is disabled",
+      async status => {
+        await config.doInTenant(async () => {
+          const id = structures.uuid()
+          const first = await writethrough.put({ _id: id, value: 1 }, 0)
+          const error = Object.assign(new Error("Write failed"), { status })
+          const write = jest.spyOn(db, "put").mockRejectedValueOnce(error)
+          try {
+            await expect(
+              writethrough.put({ _id: id, _rev: first.rev, value: 2 }, 0)
+            ).rejects.toBe(error)
+            expect((await db.tryGet<ValueDoc>(id))?.value).toBe(1)
+            expect((await writethrough.tryGet<ValueDoc>(id))?.value).toBe(1)
+          } finally {
+            write.mockRestore()
+          }
+        })
+      }
+    )
+
+    it("does not update the cache when the waiting lock cannot be acquired", async () => {
+      await config.doInTenant(async () => {
+        const id = structures.uuid()
+        const first = await writethrough.put({ _id: id, value: 1 }, 0)
+        const error = Object.assign(new Error("Lock unavailable"), {
+          name: "LockError",
+        })
+        const lock = jest
+          .spyOn(locks, "doWithLock")
+          .mockRejectedValueOnce(error)
+        try {
+          await expect(
+            writethrough.put({ _id: id, _rev: first.rev, value: 2 }, 0)
+          ).rejects.toBe(error)
+          expect((await db.tryGet<ValueDoc>(id))?.value).toBe(1)
+          expect((await writethrough.tryGet<ValueDoc>(id))?.value).toBe(1)
+        } finally {
+          lock.mockImplementation(
+            jest.requireActual<typeof import("../../redis/redlockImpl")>(
+              "../../redis/redlockImpl"
+            ).doWithLock
+          )
+        }
+      })
+    })
 
     it("persists every write when throttling is disabled, even in the same millisecond", async () => {
       await config.doInTenant(async () => {
