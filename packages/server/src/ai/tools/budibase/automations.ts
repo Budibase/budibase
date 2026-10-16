@@ -242,6 +242,7 @@ const createAutomationTools = ({
       return {
         name: toolName,
         readableName: `${automationName}.trigger`,
+        resourceName: automationName,
         sourceId: automation._id,
         sourceType: ToolType.AUTOMATION,
         action: ToolAction.TRIGGER,
