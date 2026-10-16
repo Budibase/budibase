@@ -1046,7 +1046,7 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("agentChatStream", () => {
-    it("counts each completed tool call as one action", async () => {
+    it("does not count reported tool results, which are counted when the tool executes", async () => {
       jest.mocked(streamText).mockImplementation(
         mockPipeStreamText({
           toolResults: [{ toolCallId: "c1" }, { toolCallId: "c2" }],
@@ -1071,7 +1071,7 @@ describe("Agent chat tool call tracking", () => {
         })
 
       expect(res.status).toBe(200)
-      expect(addActionMock).toHaveBeenCalledTimes(2)
+      expect(addActionMock).not.toHaveBeenCalled()
     })
 
     it("records the agent and the developer as the session's asset and origin", async () => {
@@ -1443,7 +1443,7 @@ describe("Agent chat tool call tracking", () => {
       )
     })
 
-    it("counts each completed tool call as one action", async () => {
+    it("does not count reported tool results, which are counted when the tool executes", async () => {
       jest.mocked(streamText).mockImplementation(
         makeWebhookStreamTextMock({
           toolResults: [
@@ -1479,7 +1479,7 @@ describe("Agent chat tool call tracking", () => {
         }
       )
 
-      expect(addActionMock).toHaveBeenCalledTimes(3)
+      expect(addActionMock).not.toHaveBeenCalled()
     })
 
     it("creates and finalizes an agent request for webhook channels (e.g. Slack)", async () => {
