@@ -4,6 +4,24 @@ import type {
   PlatformActionSourceType,
 } from "../../../sdk"
 
+export interface FetchActionSessionsQuery {
+  env?: PlatformActionEnvironment
+  status?: PlatformActionContainerStatus
+  bookmark?: string
+  limit?: number
+}
+
+export interface FetchActionSessionEventsParams {
+  sourceType: PlatformActionSourceType
+  sourceId: string
+}
+
+export interface FetchActionSessionEventsQuery {
+  env: PlatformActionEnvironment
+  bookmark?: string
+  limit?: number
+}
+
 export interface ActionsPagination {
   hasNextPage: boolean
   hasPreviousPage: boolean
