@@ -1,7 +1,10 @@
 import { validateTypes } from "@ai-sdk/provider-utils"
 import { type ModelMessage, type Tool, type ToolSet } from "ai"
-import { getErrorMessage } from "@budibase/backend-core"
+import { events, getErrorMessage } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
+  ActionFailureReason,
+  ActionType,
   PermissionLevel,
   PermissionType,
   ToolAction,
@@ -70,17 +73,29 @@ export const resolveToolExecutionPrincipal = (
     ? ToolExecutionPrincipal.ADMIN
     : (config?.executionPrincipal ?? tool.executionPolicy.defaultPrincipal)
 
-const getToolFailure = (result: unknown): string | undefined => {
-  if (!result || typeof result !== "object" || !("error" in result)) {
+const getToolFailure = ({
+  result,
+  toolDef,
+}: {
+  result: unknown
+  toolDef: AiToolDefinition
+}): string | undefined => {
+  if (!result || typeof result !== "object") {
     return
   }
 
-  const { error } = result
-  if (error == null || error === false) {
-    return
+  if ("error" in result && result.error != null && result.error !== false) {
+    return getErrorMessage(result.error) || "Tool execution failed"
   }
 
-  return getErrorMessage(error) || "Tool execution failed"
+  if (
+    toolDef.sourceType === ToolType.AUTOMATION &&
+    toolDef.action === ToolAction.TRIGGER &&
+    "success" in result &&
+    result.success === false
+  ) {
+    return "Automation execution failed"
+  }
 }
 
 const logToolExecution = (
@@ -100,11 +115,31 @@ const logToolExecution = (
     ...(error !== undefined && { error: getErrorMessage(error) }),
   })
 
-const wrapTool = (
+const toolEventContext = (
   toolDef: AiToolDefinition,
-  runtime?: ToolAuthorizationRuntime,
+  { executionContext }: ToolAuthorizationRuntime
+) => ({
+  agentId: executionContext.agentId,
+  sessionId: executionContext.conversationId,
+  operationId: executionContext.operationId,
+  toolName: toolDef.name,
+  sourceType: toolDef.sourceType,
+  ...(toolDef.action && { action: toolDef.action }),
+})
+
+type RunTool = <T>(execute: () => Promise<T>) => Promise<T>
+
+const wrapTool = ({
+  toolDef,
+  runtime,
+  gate,
+  runTool,
+}: {
+  toolDef: AiToolDefinition
+  runtime?: ToolAuthorizationRuntime
   gate?: EscalationGateRuntime
-): Tool => {
+  runTool: RunTool
+}): Tool => {
   const execute = toolDef.tool.execute
   if (!execute) {
     return toolDef.tool
@@ -154,26 +189,40 @@ const wrapTool = (
         return gateResult
       }
     }
-    try {
-      const result = await execute(validatedInput, options)
-      const failureMessage = getToolFailure(result)
-      if (failureMessage) {
-        throw new Error(failureMessage)
+    const executeTool = async () => {
+      try {
+        const result = await execute(validatedInput, options)
+        const failureMessage = getToolFailure({ result, toolDef })
+        if (failureMessage) {
+          throw new Error(failureMessage)
+        }
+        const authorizedResult =
+          runtime && toolDef.filterResult
+            ? await toolDef.filterResult(result, runtime)
+            : result
+        if (runtime) {
+          logToolExecution("success", toolDef, runtime)
+          events.action.aiAgentToolExecuted(toolEventContext(toolDef, runtime))
+        }
+        return authorizedResult
+      } catch (error) {
+        if (runtime) {
+          logToolExecution("error", toolDef, runtime, error)
+          events.action.aiAgentToolFailed({
+            ...toolEventContext(toolDef, runtime),
+            reason: ActionFailureReason.ERROR,
+            errorMessage: getErrorMessage(error),
+          })
+        }
+        throw error
       }
-      const authorizedResult =
-        runtime && toolDef.filterResult
-          ? await toolDef.filterResult(result, runtime)
-          : result
-      if (runtime) {
-        logToolExecution("success", toolDef, runtime)
-      }
-      return authorizedResult
-    } catch (error) {
-      if (runtime) {
-        logToolExecution("error", toolDef, runtime, error)
-      }
-      throw error
     }
+    // Automation triggers are already metered as automation steps.
+    return await runTool(async () =>
+      toolDef.action === ToolAction.TRIGGER
+        ? await executeTool()
+        : await quotas.addAction(ActionType.AI_AGENT, executeTool)
+    )
   }
 
   return {
@@ -187,10 +236,23 @@ export const toToolSet = (
   runtimes: Map<string, ToolAuthorizationRuntime> = new Map(),
   gates: Map<string, EscalationGateRuntime> = new Map()
 ): ToolSet => {
+  // Quota checks and increments are not atomic. Keep each execution and its
+  // accounting together, including triggers that update the same quota.
+  let pending: Promise<unknown> = Promise.resolve()
+  const runTool: RunTool = execute => {
+    const result = pending.then(execute)
+    pending = result.catch(() => undefined)
+    return result
+  }
   return Object.fromEntries(
     tools.map(toolDef => [
       toolDef.name,
-      wrapTool(toolDef, runtimes.get(toolDef.name), gates.get(toolDef.name)),
+      wrapTool({
+        toolDef,
+        runtime: runtimes.get(toolDef.name),
+        gate: gates.get(toolDef.name),
+        runTool,
+      }),
     ])
   )
 }
