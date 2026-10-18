@@ -34,9 +34,6 @@ jest.mock("../../..", () => ({
   __esModule: true,
   default: {
     ai: {
-      agentRequests: {
-        fetchRequestsByAgent: jest.fn(),
-      },
       llm: {
         createLLM: jest.fn(),
       },
@@ -101,6 +98,11 @@ import {
   prepareAgentRunContext,
 } from "./agentRuntime"
 import sdk from "../../.."
+import { queryRequestsByAgentAndUser } from "../agentRequests/views"
+
+jest.mock("../agentRequests/views", () => ({
+  queryRequestsByAgentAndUser: jest.fn(),
+}))
 import { buildPromptAndTools } from "./utils"
 import { createSessionLogIndexer } from "../agentLogs"
 
@@ -451,7 +453,7 @@ describe("prepareAgentRunContext", () => {
         }),
       })
       jest.mocked(cache.get).mockResolvedValue("operation_1")
-      jest.mocked(sdk.ai.agentRequests.fetchRequestsByAgent).mockResolvedValue([
+      jest.mocked(queryRequestsByAgentAndUser).mockResolvedValue([
         {
           _id: "request_laptop",
           agentId: "agent_1",
@@ -555,7 +557,7 @@ describe("prepareAgentRunContext", () => {
     })
     jest.mocked(cache.get).mockResolvedValue("operation_1")
     jest
-      .mocked(sdk.ai.agentRequests.fetchRequestsByAgent)
+      .mocked(queryRequestsByAgentAndUser)
       .mockRejectedValueOnce(new Error("Database unavailable"))
 
     const result = await prepareAgentRunContext({
@@ -594,7 +596,7 @@ describe("prepareAgentRunContext", () => {
     expect(result.systemPrompt).toContain(
       "The user's saved request status is unavailable."
     )
-    expect(sdk.ai.agentRequests.fetchRequestsByAgent).not.toHaveBeenCalled()
+    expect(queryRequestsByAgentAndUser).not.toHaveBeenCalled()
   })
 
   it("exposes the router's intent as operationIntent when an operation is selected", async () => {
@@ -796,7 +798,7 @@ describe("prepareAgentChatRun - approval gating", () => {
         reason: "Answer to a status clarification",
       }),
     })
-    jest.mocked(sdk.ai.agentRequests.fetchRequestsByAgent).mockResolvedValue([])
+    jest.mocked(queryRequestsByAgentAndUser).mockResolvedValue([])
     const run = await runFor(procurementOperation, {
       operationId: undefined,
       latestQuestion: "The laptop",
@@ -861,7 +863,7 @@ describe("prepareAgentChatRun - approval gating", () => {
         reason: "User asks how their book request is going",
       }),
     })
-    jest.mocked(sdk.ai.agentRequests.fetchRequestsByAgent).mockResolvedValue([])
+    jest.mocked(queryRequestsByAgentAndUser).mockResolvedValue([])
 
     await runFor(procurementOperation, {
       operationId: undefined,
@@ -900,8 +902,8 @@ describe("prepareAgentChatRun - approval gating", () => {
         tools: undefined,
       })
     )
-    expect(sdk.ai.agentRequests.fetchRequestsByAgent).toHaveBeenCalledWith(
-      "agent_1"
+    expect(queryRequestsByAgentAndUser).toHaveBeenCalledWith(
+      expect.objectContaining({ agentId: "agent_1", userId: "user_1" })
     )
   })
 

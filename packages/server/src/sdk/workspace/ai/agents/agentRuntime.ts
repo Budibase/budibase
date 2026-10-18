@@ -36,7 +36,10 @@ import {
   getRecentChatContext,
   prepareModelMessages,
 } from "../chatConversations"
-import { buildRequestStatusPrompt } from "../agentRequests/status"
+import {
+  buildRequestStatusPrompt,
+  MAX_REQUEST_STATUS_PROMPT_TOKENS,
+} from "../agentRequests/status"
 import {
   updatePendingToolCalls,
   updateUnrecoveredToolFailures,
@@ -416,7 +419,15 @@ export const prepareAgentRunContext = async ({
       operationIntent: "query",
       systemPrompt: [
         buildPromptOptions?.baseSystemPrompt,
-        await buildRequestStatusPrompt({ agentId, userId, isPreview }),
+        await buildRequestStatusPrompt({
+          agentId,
+          userId,
+          isPreview,
+          maxTokens: Math.min(
+            MAX_REQUEST_STATUS_PROMPT_TOKENS,
+            Math.floor((llm.contextWindowTokens ?? 32768) / 4)
+          ),
+        }),
       ]
         .filter(Boolean)
         .join("\n\n"),

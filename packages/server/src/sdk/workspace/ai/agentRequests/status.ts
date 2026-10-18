@@ -1,4 +1,9 @@
-import sdk from "../../.."
+import { estimateTokens } from "../agents/usage"
+import { queryRequestsByAgentAndUser } from "./views"
+
+const STATUS_REQUEST_PAGE_SIZE = 25
+export const MAX_REQUEST_STATUS_PROMPT_TOKENS = 8192
+const STATUS_HISTORY_TOO_LARGE_INSTRUCTIONS = `The saved request history exceeds the available context budget. Explain that you cannot safely check the complete request history for this answer. Do not choose a request from partial data, claim that a request does not exist, or infer its current status from chat history. Do not execute, approve, reject, reopen, or create any request or escalation.`
 
 const STATUS_QUERY_INSTRUCTIONS = `Answer a question about the user's tracked Budibase requests. This is a read-only status query, not an instruction to carry out an operation.
 Use conversation history only to understand which request the user means, including a plain-text answer to your previous clarification question. Use only the saved request facts below to report progress or outcomes; earlier chat messages may be out of date.
@@ -15,60 +20,84 @@ export const buildRequestStatusPrompt = async ({
   agentId,
   userId,
   isPreview,
+  maxTokens = MAX_REQUEST_STATUS_PROMPT_TOKENS,
 }: {
   agentId: string
   userId?: string
   isPreview?: boolean
+  maxTokens?: number
 }): Promise<string> => {
   if (!userId) {
     return `${STATUS_QUERY_INSTRUCTIONS}\n\nThe user's saved request status is unavailable. Say you could not check it. Do not infer a status from conversation history.`
   }
 
   try {
-    const requests = await sdk.ai.agentRequests.fetchRequestsByAgent(agentId)
-    const facts = requests
-      .filter(request => request.userId === userId)
-      .map(request => ({
-        title: request.title,
-        status: request.status,
-        createdAt: request.createdAt,
-        updatedAt: request.updatedAt,
-        completedAt: request.completedAt,
-        error: request.error,
-        recentActivity: (request.actions ?? []).slice(-5).map(action => {
-          const activity = { type: action.type, timestamp: action.timestamp }
-          switch (action.type) {
-            case "user_message":
-              return { ...activity, summary: action.summary }
-            case "tool_call":
-              return {
-                ...activity,
-                tool: action.readableName || action.toolName,
-                status: action.status,
-                summary: action.summary,
-              }
-            case "status_changed":
-              return {
-                ...activity,
-                from: action.from,
-                to: action.to,
-                error: action.error,
-              }
-            case "escalation_raised":
-              return activity
-            case "escalation_resolved":
-              return { ...activity, outcome: action.outcome }
-            default: {
-              const _exhaustive: never = action
-              return _exhaustive
-            }
-          }
-        }),
-      }))
     const previewInstructions = isPreview
       ? "\n\nPreview conversations do not create tracked agent requests. The saved facts below describe this user's existing requests from published agent conversations. If no saved request matches an action performed in this preview, explain that preview actions are not recorded as internal agent requests. A tool may create an external record such as an expense, but that record is distinct from an internal tracked request. An empty result is not a lookup failure. Do not claim you checked the external record's current status."
       : ""
-    return `${STATUS_QUERY_INSTRUCTIONS}${previewInstructions}\n\nSaved request facts (JSON):\n${JSON.stringify(facts)}`
+    const promptPrefix = `${STATUS_QUERY_INSTRUCTIONS}${previewInstructions}\n\nSaved request facts (JSON):\n`
+    const facts: string[] = []
+    let promptTokens = estimateTokens(`${promptPrefix}[]`)
+    if (promptTokens > maxTokens) {
+      return STATUS_HISTORY_TOO_LARGE_INSTRUCTIONS
+    }
+    for (let page = 1; ; page++) {
+      const requests = await queryRequestsByAgentAndUser({
+        agentId,
+        userId,
+        limit: STATUS_REQUEST_PAGE_SIZE,
+        page,
+      })
+      for (const request of requests.filter(
+        request => request.userId === userId
+      )) {
+        const fact = JSON.stringify({
+          title: request.title,
+          status: request.status,
+          createdAt: request.createdAt,
+          updatedAt: request.updatedAt,
+          completedAt: request.completedAt,
+          error: request.error,
+          recentActivity: (request.actions ?? []).slice(-5).map(action => {
+            const activity = { type: action.type, timestamp: action.timestamp }
+            switch (action.type) {
+              case "user_message":
+                return { ...activity, summary: action.summary }
+              case "tool_call":
+                return {
+                  ...activity,
+                  tool: action.readableName || action.toolName,
+                  status: action.status,
+                  summary: action.summary,
+                }
+              case "status_changed":
+                return {
+                  ...activity,
+                  from: action.from,
+                  to: action.to,
+                  error: action.error,
+                }
+              case "escalation_raised":
+                return activity
+              case "escalation_resolved":
+                return { ...activity, outcome: action.outcome }
+              default: {
+                const _exhaustive: never = action
+                return _exhaustive
+              }
+            }
+          }),
+        })
+        promptTokens += estimateTokens(`${facts.length > 0 ? "," : ""}${fact}`)
+        if (promptTokens > maxTokens) {
+          return STATUS_HISTORY_TOO_LARGE_INSTRUCTIONS
+        }
+        facts.push(fact)
+      }
+      if (requests.length < STATUS_REQUEST_PAGE_SIZE) {
+        return `${promptPrefix}[${facts.join(",")}]`
+      }
+    }
   } catch (error) {
     console.log("Failed to read agent request statuses", {
       agentId,

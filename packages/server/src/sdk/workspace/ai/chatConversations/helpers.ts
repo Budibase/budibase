@@ -14,8 +14,11 @@ export const getRecentChatContext = ({
 }: {
   messages: ChatConversation["messages"] | ModelMessage[]
   limit?: number
-}) =>
-  messages
+}) => {
+  if (limit <= 0) {
+    return []
+  }
+  return messages
     .flatMap(message => {
       if (message.role !== "user" && message.role !== "assistant") {
         return []
@@ -24,13 +27,14 @@ export const getRecentChatContext = ({
       const content =
         typeof parts === "string"
           ? parts.trim()
-          : parts
+          : (parts ?? [])
               .flatMap(part => (part.type === "text" ? [part.text] : []))
               .join("\n")
               .trim()
       return content ? [{ role: message.role, content }] : []
     })
     .slice(-limit)
+}
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
