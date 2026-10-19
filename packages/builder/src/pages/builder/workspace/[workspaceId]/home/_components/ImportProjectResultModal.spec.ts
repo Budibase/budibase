@@ -65,7 +65,7 @@ describe("ImportProjectResultModal", () => {
       unsupportedContent: [
         {
           type: "agent_linked_content",
-          count: 1,
+          count: 3,
           reason: "Agent chats are excluded from Project exports.",
         },
       ],
@@ -105,10 +105,12 @@ describe("ImportProjectResultModal", () => {
     expect(
       screen.getByText("Choose an AI model for this agent.")
     ).toBeInTheDocument()
-    expect(screen.getByText(response.unsupportedContent[0].reason)).toBeTruthy()
+    expect(
+      screen.getByText(`${response.unsupportedContent[0].reason} (3)`)
+    ).toBeInTheDocument()
     expect(
       screen.getByText("What wasn’t imported").closest("details")
-    ).toBeInTheDocument()
+    ).not.toHaveAttribute("open")
     expect(screen.queryByText(/agent_linked_content/)).toBeNull()
     expect(
       screen.getByRole("button", { name: "View project" })
