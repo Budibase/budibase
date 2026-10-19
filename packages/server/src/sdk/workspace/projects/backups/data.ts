@@ -33,6 +33,7 @@ import { ObjectStoreBuckets } from "../../../../constants"
 import LinkDocumentImpl from "../../../../db/linkedRows/LinkDocument"
 import { getLinkDocuments } from "../../../../db/linkedRows/linkUtils"
 import { generateRowID, getRowParams } from "../../../../db/utils"
+import { fixAutoColumnSubType } from "../../../../utilities/rowProcessor"
 import {
   MAX_PROJECT_EXTRACTED_SIZE_BYTES,
   MAX_PROJECT_PACKAGE_ENTRIES,
@@ -460,14 +461,17 @@ export const prepareProjectData = ({
       }),
     })
     for (const [name, field] of Object.entries(table.schema)) {
+      const subtype = field.autocolumn
+        ? fixAutoColumnSubType({ ...field }).subtype
+        : field.subtype
       const userReference =
         ((field.type === FieldType.BB_REFERENCE ||
           field.type === FieldType.BB_REFERENCE_SINGLE) &&
-          (field.subtype === BBReferenceFieldSubType.USER ||
-            field.subtype === BBReferenceFieldSubType.USERS)) ||
+          (subtype === BBReferenceFieldSubType.USER ||
+            subtype === BBReferenceFieldSubType.USERS)) ||
         (field.autocolumn &&
-          (field.subtype === AutoFieldSubType.CREATED_BY ||
-            field.subtype === AutoFieldSubType.UPDATED_BY))
+          (subtype === AutoFieldSubType.CREATED_BY ||
+            subtype === AutoFieldSubType.UPDATED_BY))
       const value: unknown = row[name]
       if (
         !userReference ||

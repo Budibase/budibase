@@ -6,6 +6,7 @@ import type {
 } from "@budibase/types"
 import { ResourceType } from "@budibase/types"
 import { tick } from "svelte"
+import { get } from "svelte/store"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockButton from "@/test/mocks/MockButton.svelte"
@@ -53,6 +54,7 @@ const mocks = vi.hoisted(() => {
     projects: createStore<ProjectResponse[]>([]),
     workspaceApps: createStore({ workspaceApps: apps }),
     ensureFetched: vi.fn().mockResolvedValue(undefined),
+    fetchProjects: vi.fn(),
     fetchAgents: vi.fn().mockResolvedValue(undefined),
     refreshWorkspace: vi.fn().mockResolvedValue(undefined),
     previewAssignment:
@@ -118,6 +120,7 @@ vi.mock("@/stores/portal", () => ({
   }),
   workspacesStore: mocks.createStore({ apps: [] }),
   projectsStore: Object.assign(mocks.projects, {
+    fetch: mocks.fetchProjects,
     ensureFetched: mocks.ensureFetched,
     hasFetched: () => true,
     previewAssignment: mocks.previewAssignment,
@@ -251,6 +254,8 @@ describe("workspace home project assignments", () => {
         updatedAt: "2026-01-01T00:00:00.000Z",
       }))
     )
+    mocks.fetchProjects.mockImplementation(async () => get(mocks.projects))
+    mocks.ensureFetched.mockImplementation(async () => get(mocks.projects))
     mocks.saveAssignment.mockResolvedValue(undefined)
     mocks.previewAssignment.mockImplementation(async request => {
       const app = mocks.apps.find(app => app._id === request.resourceId)!
@@ -268,6 +273,45 @@ describe("workspace home project assignments", () => {
     vi.clearAllTimers()
     vi.useRealTimers()
     history.replaceState({}, "", "/")
+  })
+
+  it("opens a setup deep link using the initial project request", async () => {
+    mocks.projects.set([
+      {
+        _id: "project_operations",
+        _rev: "1-project",
+        name: "Operations",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+        importSetup: {
+          resources: {},
+          requirements: [
+            {
+              type: "agent_ai_config",
+              resourceId: "agent_1",
+              name: "Support agent",
+              reason: "Choose an AI model.",
+            },
+          ],
+          unsupportedContent: [],
+        },
+      },
+    ])
+    history.replaceState(
+      {},
+      "",
+      "/builder/workspace/app_dev_test/home?project=project_operations&setup=project_operations"
+    )
+
+    render(WorkspaceHome)
+
+    await vi.waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Configure Support agent" })
+      ).toBeInTheDocument()
+    })
+    expect(mocks.fetchProjects).toHaveBeenCalledExactlyOnceWith("app_dev_test")
+    expect(window.location.search).toBe("?project=project_operations")
   })
 
   it("keeps the open assignment and its save target when another row's context menu opens", async () => {

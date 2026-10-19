@@ -1,6 +1,7 @@
 import { context, events, features } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import {
+  type BulkImportResponse,
   FeatureFlag,
   FieldType,
   JsonFieldSubType,
@@ -8,9 +9,24 @@ import {
   Table,
 } from "@budibase/types"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
+import { getRowParams } from "../../../db/utils"
+import * as projectLocks from "../../../sdk/workspace/projects/lock"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../../tests/utilities/structures"
 import { withPublishLock } from "../../controllers/deploy"
+
+jest.mock("../../../sdk/workspace/projects/lock", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../sdk/workspace/projects/lock")
+  >("../../../sdk/workspace/projects/lock")
+  return {
+    ...actual,
+    doWithProjectAssignmentsLock: jest.fn(actual.doWithProjectAssignmentsLock),
+    doWithProjectAssignmentsLockIfEnabled: jest.fn(
+      actual.doWithProjectAssignmentsLockIfEnabled
+    ),
+  }
+})
 
 describe("internal table row imports", () => {
   const config = new TestConfiguration()
@@ -258,6 +274,137 @@ describe("internal table row imports", () => {
       }
     )
   })
+
+  describe.each([false, true])(
+    "imports during schema saves with Projects enabled: %s",
+    projectsEnabled => {
+      it.each(["rename", "delete"] as const)(
+        "reconciles rows inserted after the column %s snapshots existing rows",
+        async change => {
+          await features.testutils.withFeatureFlags(
+            config.getTenantId(),
+            { [FeatureFlag.PROJECTS]: projectsEnabled },
+            async () => {
+              const table = await createTable()
+              const { status, ...schema } = table.schema
+              let snapshotTaken!: () => void
+              let releaseSave!: () => void
+              let reconciliationWaiting!: () => void
+              const ready = new Promise<void>(
+                resolve => (snapshotTaken = resolve)
+              )
+              const pending = new Promise<void>(
+                resolve => (releaseSave = resolve)
+              )
+              const waiting = new Promise<void>(
+                resolve => (reconciliationWaiting = resolve)
+              )
+              let paused = false
+              let rowsInserted = false
+              const originalAllDocs = DatabaseImpl.prototype.allDocs
+              const allDocs = jest
+                .spyOn(DatabaseImpl.prototype, "allDocs")
+                .mockImplementation(async function (
+                  this: DatabaseImpl,
+                  params
+                ) {
+                  const result = await originalAllDocs.call(this, params)
+                  if (
+                    !paused &&
+                    params.startkey === getRowParams(table._id).startkey
+                  ) {
+                    paused = true
+                    snapshotTaken()
+                    await pending
+                  }
+                  return result
+                })
+              const actual = jest.requireActual<typeof projectLocks>(
+                "../../../sdk/workspace/projects/lock"
+              )
+              jest
+                .mocked(projectLocks.doWithProjectAssignmentsLock)
+                .mockImplementation(async task => {
+                  if (rowsInserted) {
+                    reconciliationWaiting()
+                  }
+                  return await actual.doWithProjectAssignmentsLock(task)
+                })
+              jest
+                .mocked(projectLocks.doWithProjectAssignmentsLockIfEnabled)
+                .mockImplementation(async task => {
+                  if (rowsInserted && projectsEnabled) {
+                    reconciliationWaiting()
+                  }
+                  return await actual.doWithProjectAssignmentsLockIfEnabled(
+                    task
+                  )
+                })
+              jest
+                .mocked(events.rows.imported)
+                .mockImplementationOnce(async () => {
+                  rowsInserted = true
+                })
+
+              const saving = config.api.table.save({
+                ...table,
+                ...(change === "rename"
+                  ? { _rename: { old: "status", updated: "state" } }
+                  : {}),
+                schema: {
+                  ...schema,
+                  ...(change === "rename"
+                    ? { state: { ...status, name: "State" } }
+                    : {}),
+                },
+              })
+              let importing: Promise<BulkImportResponse> | undefined
+              try {
+                await helpers.withTimeout(5000, () => ready)
+                importing = config.api.table.import(table._id!, {
+                  rows: [{ name: "Imported", status: "Done" }],
+                })
+                // Let an unprotected import finish against the old schema, or
+                // release the save once reconciliation is waiting for its lock.
+                await helpers.withTimeout(5000, () =>
+                  Promise.race([importing!, waiting])
+                )
+              } finally {
+                releaseSave()
+                try {
+                  await Promise.all([saving, importing])
+                } finally {
+                  allDocs.mockRestore()
+                  jest
+                    .mocked(projectLocks.doWithProjectAssignmentsLock)
+                    .mockImplementation(actual.doWithProjectAssignmentsLock)
+                  jest
+                    .mocked(projectLocks.doWithProjectAssignmentsLockIfEnabled)
+                    .mockImplementation(
+                      actual.doWithProjectAssignmentsLockIfEnabled
+                    )
+                }
+              }
+
+              const savedTable = await config.api.table.get(table._id!)
+              expect(savedTable.schema.status).toBeUndefined()
+              await config.doInContext(config.getDevWorkspaceId(), async () => {
+                const result = await context
+                  .getWorkspaceDB()
+                  .allDocs<Row>(
+                    getRowParams(table._id, null, { include_docs: true })
+                  )
+                expect(result.rows).toHaveLength(1)
+                const row = result.rows[0].doc!
+                expect(row.status).toBeUndefined()
+                expect(row.state).toBe(change === "rename" ? "Done" : undefined)
+              })
+            }
+          )
+        }
+      )
+    }
+  )
 
   it.each(["name", "_id"])(
     "updates matching rows when bulk import identifies them by %s",
