@@ -57,6 +57,7 @@ export interface ActionAiAgentToolExecuted extends BaseEvent {
   sessionId: string
   operationId: string
   toolName: string
+  toolLabel?: string
   sourceType: ToolType
   action?: ToolAction
 }
