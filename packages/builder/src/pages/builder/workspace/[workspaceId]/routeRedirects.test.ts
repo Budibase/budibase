@@ -6,8 +6,19 @@ import AutomationIndex from "./automation/index.svelte"
 import DesignIndex from "./design/index.svelte"
 import WorkspaceIndex from "./index.svelte"
 
-const mocks = vi.hoisted(() => ({
-  redirect: vi.fn(),
+const mocks = vi.hoisted(() => {
+  const { writable } = require("svelte/store")
+  return {
+    redirect: vi.fn(),
+    featureFlags: writable({
+      AI_AGENT_ACTIVITY: true,
+      PLATFORM_ACTIONS: false,
+    }),
+  }
+})
+
+vi.mock("@/stores/portal", () => ({
+  featureFlags: mocks.featureFlags,
 }))
 
 vi.mock("@roxi/routify", async () => {
@@ -21,6 +32,7 @@ vi.mock("@roxi/routify", async () => {
 describe("workspace route redirects", () => {
   beforeEach(() => {
     mocks.redirect.mockReset()
+    mocks.featureFlags.set({ AI_AGENT_ACTIVITY: true, PLATFORM_ACTIONS: false })
     window.history.replaceState({}, "", "/")
   })
 
