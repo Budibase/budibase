@@ -69,6 +69,8 @@ export async function run({
   inputs,
   appId,
   context,
+  automationId,
+  automationName,
 }: {
   inputs: AgentStepInputs
 } & AutomationStepInputBase): Promise<AgentStepOutputs> {
@@ -117,12 +119,27 @@ export async function run({
       ? outputSchema
       : undefined
 
+  const triggeredBy = sdk.platformActions.getAutomationOrigin({
+    automationId,
+    automationName,
+  })
+
   return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
     async agentSpan => {
       let agentRun: AgentChatRun | undefined
+      let agentName: string | undefined
+      const inSessionScope = <T>(task: () => T) =>
+        sdk.platformActions.doInAgentSessionScope({
+          sessionId,
+          agentId,
+          agentName,
+          triggeredBy,
+          task,
+        })
       try {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
+        agentName = agent.name
 
         tracer.llmobs.annotate(agentSpan, {
           inputData: prompt,
@@ -245,7 +262,19 @@ export async function run({
           outputData: responseText,
           metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
-        events.action.aiAgentExecuted({ agentId })
+
+        const requestId = agentRun.sessionLogIndexer.getRequestIds().at(-1)
+        const awaitingEscalation = agentRun.isSuspended()
+        inSessionScope(() =>
+          events.action.aiAgentExecuted({
+            agentId,
+            sourceType: "agent_session",
+            sourceId: sessionId,
+            sessionId,
+            requestId,
+            ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
+          })
+        )
 
         return {
           success: true,
@@ -271,11 +300,18 @@ export async function run({
           errorName: err?.name,
           errorMessage,
         })
-        events.action.aiAgentFailed({
-          agentId,
-          reason: ActionFailureReason.ERROR,
-          errorMessage,
-        })
+        const lastRequestId = agentRun?.sessionLogIndexer.getRequestIds().at(-1)
+        inSessionScope(() =>
+          events.action.aiAgentFailed({
+            agentId,
+            sourceType: "agent_session",
+            sourceId: sessionId,
+            sessionId,
+            requestId: lastRequestId,
+            reason: ActionFailureReason.ERROR,
+            errorMessage,
+          })
+        )
         return {
           success: false,
           response: errorMessage,
