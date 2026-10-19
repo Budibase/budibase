@@ -142,7 +142,7 @@
           {#each response.unsupportedContent as content}
             <li>
               <Body size="S" color="var(--spectrum-global-color-gray-700)">
-                {content.reason}
+                {content.reason} ({content.count})
               </Body>
             </li>
           {/each}
