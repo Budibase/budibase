@@ -7,6 +7,7 @@ import {
   type ProjectPackageData,
   RelationshipType,
 } from "@budibase/types"
+import { AutoFieldDefaultNames } from "../../../../constants"
 import LinkDocumentImpl from "../../../../db/linkedRows/LinkDocument"
 import { basicTable } from "../../../../tests/utilities/structures"
 import { prepareProjectData, validateProjectData } from "./data"
@@ -150,12 +151,57 @@ describe("Project package data", () => {
         result.rows[1]._id!
       ),
     ])
+    expect(result.attachments).toEqual([
+      {
+        key: expect.stringMatching(
+          /^app_destination\/attachments\/[A-Za-z0-9_-]+\.png$/
+        ),
+        path: "attachments/example",
+        contentType: "image/png",
+      },
+    ])
     expect(result.summary).toEqual({
       tables: 2,
       rows: 2,
       relationships: 1,
       attachments: 1,
     })
+  })
+
+  it("remaps legacy auto-user columns without changing the source data or schema", () => {
+    const { data, tables } = fixture()
+    for (const name of [
+      AutoFieldDefaultNames.CREATED_BY,
+      AutoFieldDefaultNames.UPDATED_BY,
+    ]) {
+      tables[0].schema[name] = {
+        name,
+        type: FieldType.LINK,
+        autocolumn: true,
+        tableId: InternalTable.USER_METADATA,
+        fieldName: `${tables[0].name}-${name}`,
+        relationshipType: RelationshipType.MANY_TO_MANY,
+      }
+      data.rows[0][name] = ["us_author", "us_other"]
+    }
+    const source = structuredClone({ data, tables })
+
+    const result = prepareProjectData({
+      data: validate({ data, tables }),
+      tables,
+      idMap: new Map([
+        ["ta_source", "ta_destination"],
+        ["ta_related", "ta_other"],
+      ]),
+      workspaceId: "app_dev_destination",
+      userId: db.generateUserMetadataID("us_importer"),
+    })
+
+    expect(result.rows[0]).toMatchObject({
+      [AutoFieldDefaultNames.CREATED_BY]: ["us_importer"],
+      [AutoFieldDefaultNames.UPDATED_BY]: ["us_importer"],
+    })
+    expect({ data, tables }).toEqual(source)
   })
 
   it("rejects user references without an importing user", () => {

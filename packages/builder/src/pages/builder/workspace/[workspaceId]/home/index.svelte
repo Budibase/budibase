@@ -568,7 +568,7 @@
     goto(withWorkspaceHomeReturn(url(route), homeUrl))
   }
 
-  const openProjectSetup = async () => {
+  const openProjectSetup = async ({ refresh = true } = {}) => {
     const projectId = selectedProjectId
     const workspaceId = $workspaceStore.appId
     if (!projectId || !workspaceId) {
@@ -576,7 +576,9 @@
     }
 
     try {
-      const projects = await projectsStore.fetch(workspaceId)
+      const projects = refresh
+        ? await projectsStore.fetch(workspaceId)
+        : await projectsStore.ensureFetched(workspaceId)
       if (
         selectedProjectId !== projectId ||
         $workspaceStore.appId !== workspaceId
@@ -1090,7 +1092,7 @@
 
     await agentsStore.fetchAgents()
     if (!pendingImport && setupRequest && projectsEnabled) {
-      await openProjectSetup()
+      await openProjectSetup({ refresh: false })
     }
   })
 </script>
