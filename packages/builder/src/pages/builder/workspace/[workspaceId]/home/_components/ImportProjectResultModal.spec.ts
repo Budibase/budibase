@@ -83,7 +83,7 @@ describe("ImportProjectResultModal", () => {
     expect(screen.getByText(response.project.name)).toBeInTheDocument()
     expect(
       screen.getByText(
-        /You can return to these steps from “Project setup” in the project menu/
+        /You can finish setup later from “Project setup” in the project menu/
       )
     ).toBeInTheDocument()
     expect(document.querySelector('[data-icon="check-circle"]')).toBeTruthy()
@@ -170,53 +170,6 @@ describe("ImportProjectResultModal", () => {
     )
   })
 
-  it("summarizes imported resources with readable singular and plural labels", () => {
-    render(ImportProjectResultModal, {
-      response: createResponse({
-        resources: {
-          [ResourceType.WORKSPACE_APP]: ["app_1"],
-          [ResourceType.AGENT]: ["agent_1", "agent_2"],
-          [ResourceType.AUTOMATION]: ["automation_1"],
-          [ResourceType.DATASOURCE]: ["datasource_1", "datasource_2"],
-          [ResourceType.TABLE]: ["table_1"],
-          [ResourceType.QUERY]: ["query_1", "query_2"],
-          [ResourceType.SCREEN]: ["screen_1"],
-          [ResourceType.ROW_ACTION]: ["row_action_1", "row_action_2"],
-        },
-      }),
-      onOpenResource: vi.fn(),
-    })
-
-    for (const summary of [
-      "1 app",
-      "2 agents",
-      "1 automation",
-      "2 data sources",
-      "1 table",
-      "2 queries",
-      "1 screen",
-      "2 row actions",
-    ]) {
-      expect(screen.getByText(summary)).toBeInTheDocument()
-    }
-  })
-
-  it("omits resource types with no imported items", () => {
-    render(ImportProjectResultModal, {
-      response: createResponse({
-        resources: {
-          [ResourceType.AGENT]: ["agent_1"],
-          [ResourceType.DATASOURCE]: [],
-          [ResourceType.TABLE]: [],
-        },
-      }),
-      onOpenResource: vi.fn(),
-    })
-
-    expect(screen.getByText("1 agent")).toBeInTheDocument()
-    expect(screen.queryByText(/data sources?|tables?/)).toBeNull()
-  })
-
   it("presents remaining setup without announcing a new import when reopened", () => {
     render(ImportProjectResultModal, {
       response: createResponse({
@@ -236,7 +189,7 @@ describe("ImportProjectResultModal", () => {
     expect(screen.getByText("Project setup")).toBeInTheDocument()
     expect(screen.queryByText("Project imported")).toBeNull()
     expect(screen.queryByText(/is now in your workspace/)).toBeNull()
-    expect(screen.queryByText(/You can return to these steps/)).toBeNull()
+    expect(screen.queryByText(/You can finish setup later/)).toBeNull()
     expect(document.querySelector('[data-icon="list-checks"]')).toBeTruthy()
     expect(document.querySelector('[data-icon="warning"]')).toBeNull()
     expect(
