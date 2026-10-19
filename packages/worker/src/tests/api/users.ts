@@ -62,6 +62,14 @@ export class UserAPI extends TestAPI {
       .expect(status)
   }
 
+  getUserInvites = (opts?: TestAPIOpts) => {
+    return this.request
+      .get("/api/global/users/invites")
+      .set(opts?.headers ?? this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(opts?.status ?? 200)
+  }
+
   // BULK
 
   bulkCreateUsers = async (users: User[], groups: any[] = []) => {

@@ -56,7 +56,7 @@ export const useLicense = (license: License, opts?: UseLicenseOpts) => {
 }
 
 export const useUnlimited = (opts?: UseLicenseOpts) => {
-  return useLicense(UNLIMITED_LICENSE, opts)
+  return useLicense(cloneDeep(UNLIMITED_LICENSE), opts)
 }
 
 export const useCloudFree = () => {
@@ -150,6 +150,12 @@ export const setAutomationLogsQuota = (value: number) => {
 export const setAgentLogsQuota = (value: number) => {
   const license = cloneDeep(UNLIMITED_LICENSE)
   license.quotas.constant.agentLogRetentionDays.value = value
+  return useLicense(license)
+}
+
+export const setEscalationDurationQuota = (value: number) => {
+  const license = cloneDeep(UNLIMITED_LICENSE)
+  license.quotas.constant.escalationDurationDays.value = value
   return useLicense(license)
 }
 

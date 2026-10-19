@@ -17,6 +17,7 @@ export enum Feature {
   CUSTOM_APP_SCRIPTS = "customAppScripts",
   PDF = "pdf",
   TRANSLATIONS = "translations",
+  CUSTOMISE_EMAILS = "customiseEmails",
   // deprecated - no longer licensed
   VIEW_PERMISSIONS = "viewPermissions",
   VIEW_READONLY_COLUMNS = "viewReadonlyColumns",

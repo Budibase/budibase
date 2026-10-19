@@ -60,6 +60,8 @@ describe("validate", () => {
     it.each([
       ["ISO datetimes", generator.date().toISOString()],
       ["random values", generator.word()],
+      ["out-of-range minutes", "10:99"],
+      ["out-of-range seconds", "10:14:99"],
     ])("should reject %s", async (_, time) => {
       const row = {
         time,
@@ -69,6 +71,16 @@ describe("validate", () => {
         presence: true,
       }
       const output = await validate({ source: table, row })
+      expect(output.valid).toBe(false)
+      expect(output.errors).toEqual({ time: ['"time" is not a valid time'] })
+    })
+
+    it("should reject out-of-range times without other constraints", async () => {
+      const table = getTable()
+      const output = await validate({
+        source: table,
+        row: { time: "10:99" },
+      })
       expect(output.valid).toBe(false)
       expect(output.errors).toEqual({ time: ['"time" is not a valid time'] })
     })
@@ -132,6 +144,7 @@ describe("validate", () => {
 
         it.each([
           "15:16:18",
+          "15:16:17.001",
           `${generator.integer({ min: 16, max: 23 })}:${minute()}`,
         ])("should reject values after config value (%s)", async time => {
           const row = { time }
@@ -328,6 +341,27 @@ describe("validate", () => {
           expect(output.valid).toBe(false)
           expect(output.errors).toEqual({
             time: ["must be no later than 15:00"],
+          })
+        })
+      })
+
+      describe("bounds with seconds", () => {
+        it("should reject values before an earliest bound that includes seconds", async () => {
+          const table = getTable()
+          table.schema.time.constraints = {
+            presence: true,
+            datetime: {
+              earliest: dayjs().hour(10).minute(0).second(30).toISOString(),
+              latest: "",
+            },
+          }
+          const output = await validate({
+            source: table,
+            row: { time: "10:00:00" },
+          })
+          expect(output.valid).toBe(false)
+          expect(output.errors).toEqual({
+            time: ["must be no earlier than 10:00:30"],
           })
         })
       })
