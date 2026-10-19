@@ -310,8 +310,8 @@
     }
 
     socket.on(BuilderSocketEvent.ActionSessionChange, handleActionSessionChange)
-    // Catch up only after joining the room, so changes during the refresh
-    // can no longer fall into the gap between connection and subscription.
+    // Notifications aren't replayed, so catch up once the workspace room is
+    // joined. Changes made during the refresh then reach this socket.
     const unsubscribeReady = onWorkspaceReady({
       socket,
       callback: refreshSessions,
