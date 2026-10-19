@@ -1,5 +1,9 @@
+import { context as backendContext, events } from "@budibase/backend-core"
 import { automations } from "@budibase/shared-core"
-import { ToolExecutionPrincipal } from "@budibase/types"
+import {
+  type ActionSourceContext,
+  ToolExecutionPrincipal,
+} from "@budibase/types"
 import { run } from "../../automations/steps/ai/agent"
 import sdk from "../../sdk"
 
@@ -27,6 +31,9 @@ jest.mock("../../sdk", () => ({
         prepareAgentChatRun: jest.fn(),
       },
     },
+    platformActions: jest.requireActual(
+      "../../sdk/workspace/platformActions/metadata"
+    ),
   },
 }))
 
@@ -89,7 +96,10 @@ const mockAgentRun = ({
   const index = jest.fn().mockResolvedValue(undefined)
   prepareAgentChatRunMock.mockResolvedValue({
     isSuspended: () => suspended,
-    sessionLogIndexer: { index },
+    sessionLogIndexer: {
+      index,
+      getRequestIds: jest.fn().mockReturnValue(["response-id"]),
+    },
     stream: jest.fn().mockResolvedValue({
       toUIMessageStream: jest.fn().mockReturnValue({}),
       response: responseError
@@ -255,6 +265,145 @@ describe("automation agent step", () => {
       })
     )
     expect(index).toHaveBeenCalledTimes(1)
+  })
+
+  it("marks the agent session as awaiting escalation when the run is suspended", async () => {
+    const aiAgentExecutedSpy = jest
+      .spyOn(events.action, "aiAgentExecuted")
+      .mockImplementation(() => {})
+    mockAgentRun({ suspended: true })
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Create the row" },
+      appId: "test",
+      automationId: "automation-id",
+      stepId: "agent-step",
+      context: { _stepResults: [], state: {} },
+      emitter,
+    })
+
+    expect(aiAgentExecutedSpy).toHaveBeenCalledWith({
+      agentId: "agent-id",
+      sourceType: "agent_session",
+      sourceId: result.sessionId,
+      sessionId: result.sessionId,
+      requestId: "response-id",
+      awaitingEscalation: true,
+    })
+  })
+
+  describe("session metadata", () => {
+    const captureSessionMetadata = () => {
+      const captured: unknown[] = []
+      const capture = (source: ActionSourceContext) => {
+        captured.push(backendContext.getPlatformActionSessionMetadata(source))
+      }
+      jest.spyOn(events.action, "aiAgentExecuted").mockImplementation(capture)
+      jest.spyOn(events.action, "aiAgentFailed").mockImplementation(capture)
+      return captured
+    }
+
+    it("records the agent and the parent automation as the session's origin", async () => {
+      const captured = captureSessionMetadata()
+
+      await run({
+        inputs: { agentId: "agent-id", prompt: "Create the row" },
+        appId: "test",
+        automationId: "automation-id",
+        automationName: "Ticket triage",
+        stepId: "agent-step",
+        // The inherited requester is not the direct origin
+        context: {
+          _stepResults: [],
+          state: {},
+          user: { _id: "us_1", firstName: "John", lastName: "Doe" },
+        },
+        emitter,
+      })
+
+      expect(captured).toEqual([
+        {
+          asset: { type: "agent", id: "agent-id", label: "Test Agent" },
+          triggeredBy: {
+            type: "automation",
+            id: "automation-id",
+            label: "Ticket triage",
+          },
+        },
+      ])
+    })
+
+    it("keeps the agent snapshot when the run fails after loading the agent", async () => {
+      const captured = captureSessionMetadata()
+      prepareAgentChatRunMock.mockRejectedValueOnce(new Error("boom"))
+
+      await run({
+        inputs: { agentId: "agent-id", prompt: "Create the row" },
+        appId: "test",
+        automationId: "automation-id",
+        automationName: "Ticket triage",
+        stepId: "agent-step",
+        context: { _stepResults: [], state: {} },
+        emitter,
+      })
+
+      expect(captured).toEqual([
+        expect.objectContaining({
+          asset: { type: "agent", id: "agent-id", label: "Test Agent" },
+        }),
+      ])
+    })
+
+    it("records no agent snapshot when the agent cannot be loaded", async () => {
+      const captured = captureSessionMetadata()
+      jest
+        .mocked(sdk.ai.agents.getOrThrow)
+        .mockRejectedValueOnce(new Error("Agent not found"))
+
+      await run({
+        inputs: { agentId: "agent-id", prompt: "Create the row" },
+        appId: "test",
+        automationId: "automation-id",
+        automationName: "Ticket triage",
+        stepId: "agent-step",
+        context: { _stepResults: [], state: {} },
+        emitter,
+      })
+
+      expect(captured).toEqual([
+        {
+          asset: undefined,
+          triggeredBy: {
+            type: "automation",
+            id: "automation-id",
+            label: "Ticket triage",
+          },
+        },
+      ])
+    })
+  })
+
+  it("does not mark a completed agent run as awaiting escalation", async () => {
+    const aiAgentExecutedSpy = jest
+      .spyOn(events.action, "aiAgentExecuted")
+      .mockImplementation(() => {})
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Create the row" },
+      appId: "test",
+      automationId: "automation-id",
+      stepId: "agent-step",
+      context: { _stepResults: [], state: {} },
+      emitter,
+    })
+
+    expect(aiAgentExecutedSpy).toHaveBeenCalledWith({
+      agentId: "agent-id",
+      sourceType: "agent_session",
+      sourceId: result.sessionId,
+      sessionId: result.sessionId,
+      requestId: "response-id",
+    })
   })
 
   it("passes structured output configuration through the shared runner", async () => {

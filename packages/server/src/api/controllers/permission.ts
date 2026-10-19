@@ -38,7 +38,9 @@ export async function fetch(
 ) {
   const db = context.getWorkspaceDB()
   const dbRoles = await sdk.permissions.getAllDBRoles(db)
-  let permissions: Record<string, Record<string, string>> = {}
+  const permissions: Record<string, Record<string, string>> = Object.create(
+    null
+  )
   // create an object with structure role ID -> resource ID -> level
   for (let role of dbRoles) {
     if (!role.permissions) {
@@ -50,16 +52,22 @@ export async function fetch(
     }
     for (let [resource, levelArr] of Object.entries(role.permissions)) {
       const levels: string[] = Array.isArray(levelArr) ? levelArr : [levelArr]
-      const perms: Record<string, string> = permissions[resource] || {}
+      const perms: Record<string, string> =
+        permissions[resource] || Object.create(null)
       levels.forEach(level => (perms[level] = roleId!))
       permissions[resource] = perms
     }
   }
   // apply the base permissions
-  const finalPermissions: FetchResourcePermissionInfoResponse = {}
+  const finalPermissions: FetchResourcePermissionInfoResponse =
+    Object.create(null)
   for (let [resource, permission] of Object.entries(permissions)) {
     const basePerms = getBasePermissions(resource)
-    finalPermissions[resource] = Object.assign(basePerms, permission)
+    finalPermissions[resource] = Object.assign(
+      Object.create(null),
+      basePerms,
+      permission
+    )
   }
   ctx.body = finalPermissions
 }
