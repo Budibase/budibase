@@ -6,12 +6,14 @@ import {
   EscalationSource,
   SEPARATOR,
 } from "@budibase/types"
+import type { AgentRequest } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { builderSocket } from "../../../../websockets"
 import backfillOperationIds from "../../../../workspaceMigrations/migrations/20261006164506_backfill_agent_request_operation_ids"
 import moveRequestsToTenantDb from "../../../../workspaceMigrations/migrations/20261015162044_move_agent_requests_to_tenant_db"
 import {
   createOrUpdateRequestForPrompt,
+  deleteWorkspaceRequests,
   fetchRequests,
   fetchRequestsByAgent,
   fetchRequestsSummary,
@@ -2623,6 +2625,39 @@ describe("agentRequests crud", () => {
             sessionId: "session_2",
           }),
         ])
+      })
+    })
+  })
+
+  describe("deleteWorkspaceRequests", () => {
+    it("removes only the deleted workspace's requests from the tenant DB", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
+          source: "Chat",
+        }))!
+        const mine = await context.getRequestsDB().get<AgentRequest>(requestId)
+        const otherWorkspaceId = "app_other_workspace"
+        await context.getRequestsDB().put({
+          ...mine,
+          _id: "req_other",
+          _rev: undefined,
+          workspaceId: otherWorkspaceId,
+        })
+
+        await deleteWorkspaceRequests(config.getDevWorkspaceId())
+
+        expect(await context.getRequestsDB().exists(requestId)).toBe(false)
+        expect(await context.getRequestsDB().exists("req_other")).toBe(true)
+        expect(await fetchRequestsByAgent("agent_1")).toEqual([])
       })
     })
   })

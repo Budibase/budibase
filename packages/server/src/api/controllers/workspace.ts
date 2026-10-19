@@ -1160,11 +1160,11 @@ async function destroyWorkspace(ctx: UserCtx) {
   const db = dbCore.getDB(devWorkspaceId)
   // standard app deletion flow
   const result = await db.destroy()
+  await sdk.ai.agentRequests.deleteWorkspaceRequests(prodWorkspaceId)
   await quotas.removeApp()
   await events.app.deleted(app)
 
   await deleteAppFiles(prodWorkspaceId)
-  await sdk.ai.agentRequests.deleteWorkspaceRows(prodWorkspaceId)
 
   await removeWorkspaceFromUserRoles(ctx, ctx.params.appId)
   await invalidateWorkspaceCache(prodWorkspaceId)

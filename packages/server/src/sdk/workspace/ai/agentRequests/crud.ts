@@ -33,6 +33,7 @@ import {
   withDerivedFields,
 } from "./requestsStore"
 import {
+  queryAllRequestsByWorkspace,
   queryRequestCountsByStatus,
   queryRequestsByWorkspace,
   queryRequestsByWorkspaceAgent,
@@ -600,6 +601,25 @@ export async function fetchRequestsByAgent(
   agentId: string
 ): Promise<AgentRequest[]> {
   return await queryRequestsByWorkspaceAgent(agentId)
+}
+
+export async function deleteWorkspaceRequests(
+  workspaceId: string
+): Promise<void> {
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  const requests = await queryAllRequestsByWorkspace(prodWorkspaceId)
+  if (!requests.length) {
+    return
+  }
+  const results = await context
+    .getRequestsDB()
+    .bulkDocs(requests.map(request => ({ ...request, _deleted: true })))
+  const failed = results.filter(result => result.error)
+  if (failed.length) {
+    throw new Error(
+      `Failed to delete ${failed.length} of ${requests.length} requests for workspace ${prodWorkspaceId}: ${failed[0].error}`
+    )
+  }
 }
 
 export function resolveFinalRequestStatus({

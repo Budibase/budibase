@@ -157,6 +157,21 @@ export const queryRequestsByWorkspaceStatus = async ({
   return toPage(rows, limit)
 }
 
+export const queryAllRequestsByWorkspace = async (
+  workspaceId: string
+): Promise<AgentRequest[]> =>
+  (await db.queryView<AgentRequest>(
+    ViewName.REQUESTS_BY_WORKSPACE,
+    {
+      include_docs: true,
+      startkey: [workspaceId],
+      endkey: [workspaceId, {}],
+    },
+    context.getRequestsDB(),
+    createByWorkspaceView,
+    { arrayResponse: true }
+  )) as AgentRequest[]
+
 export const queryRequestsByWorkspaceAgent = async (
   agentId: string
 ): Promise<AgentRequest[]> => {
