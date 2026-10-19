@@ -110,7 +110,11 @@ describe("request inbox", () => {
       actions: [escalationRaised("esc_theirs", "2026-10-03T10:00:01.000Z")],
     })
     await seedEscalation("esc_theirs", "agentrequest_theirs", {
-      policy: { id: "policy_2", name: "One approver", approvers: [PENDING_APPROVER] },
+      policy: {
+        id: "policy_2",
+        name: "One approver",
+        approvers: [PENDING_APPROVER],
+      },
     })
     await migration()
   }
@@ -189,10 +193,8 @@ describe("request inbox", () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         await seedInbox()
 
-        const ids = async (
-          user: string,
-          filters: Parameters<typeof list>[1]
-        ) => (await list(user, filters)).requests.map(r => r.requestId)
+        const ids = async (user: string, filters: Parameters<typeof list>[1]) =>
+          (await list(user, filters)).requests.map(r => r.requestId)
 
         expect(await ids(PENDING_APPROVER, { awaitingMe: true })).toEqual([
           "req_theirs",

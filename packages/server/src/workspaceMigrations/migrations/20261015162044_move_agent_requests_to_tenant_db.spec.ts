@@ -140,9 +140,7 @@ describe("move agent requests to tenant db migration", () => {
 
       await migration()
 
-      const second = await context
-        .getRequestsDB()
-        .get<AgentRequest>("req_once")
+      const second = await context.getRequestsDB().get<AgentRequest>("req_once")
       expect(second._rev).toEqual(first._rev)
     })
   })
