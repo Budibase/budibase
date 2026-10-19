@@ -8,7 +8,7 @@ import {
 } from "../../../documents"
 
 /**
- * Settings that aren't stored in the database - enriched at runtime.
+ * Settings returned to unauthenticated clients.
  */
 export interface PublicSettingsInnerConfig extends SettingsInnerConfig {
   google: boolean
