@@ -1,14 +1,17 @@
 import {
   context,
+  db as dbCore,
   sql,
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
 } from "@budibase/backend-core"
 import {
   AGENT_REQUEST_TYPE,
+  DocumentType,
   FieldType,
   JsonFieldSubType,
   Operation,
+  SEPARATOR,
   SortOrder,
   SortType,
   SqlClient,
@@ -47,6 +50,53 @@ export interface RequestSort {
   field: "statusRank" | "createdAt" | "updatedAt" | "pendingApprovers"
   direction: SortOrder
   containsValue?: string
+}
+
+const LEGACY_PREFIX = `${DocumentType.AGENT_REQUEST}${SEPARATOR}`
+
+export const toRequestId = (legacyId: string) =>
+  `${DocumentType.REQUEST}${SEPARATOR}${legacyId.slice(LEGACY_PREFIX.length)}`
+
+// This might be overkill but, there in a window when the queue parser starts
+// and the user actually touches their workspace, which could be hours or days.
+// In the event a request is touched beforehand it needs to be live migrated to
+// avoid a collision with the migration when it does run.
+export async function migrateLegacyRequest(
+  legacy: AgentRequest
+): Promise<AgentRequest | undefined> {
+  const requestsDb = context.getRequestsDB()
+  const _id = toRequestId(legacy._id!)
+  const existing = await requestsDb.tryGet<AgentRequest>(_id)
+  if (existing) {
+    return existing
+  }
+  const { _rev, ...rest } = legacy
+  const request = withDerivedFields(
+    { ...rest, _id, workspaceId: context.getProdWorkspaceId() },
+    await loadRaisedEscalations(legacy)
+  )
+  try {
+    const response = await requestsDb.put(request)
+    return { ...request, _rev: response.rev }
+  } catch (err) {
+    if (dbCore.isDocumentConflictError(err)) {
+      return await requestsDb.tryGet<AgentRequest>(_id)
+    }
+    throw err
+  }
+}
+
+// Ids read from escalation docs or chat conversations can still be the old
+// workspace-scoped shape until the workspace migration has run
+export async function getRequest(
+  requestId: string
+): Promise<AgentRequest | undefined> {
+  const request = await context.getRequestsDB().tryGet<AgentRequest>(requestId)
+  if (request || !requestId.startsWith(LEGACY_PREFIX)) {
+    return request
+  }
+  const legacy = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
+  return legacy ? await migrateLegacyRequest(legacy) : undefined
 }
 
 export async function loadRaisedEscalations(

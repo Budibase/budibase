@@ -27,7 +27,11 @@ import {
   generateRequestOutcome,
   generateToolCallSummary,
 } from "./helpers"
-import { loadRaisedEscalations, withDerivedFields } from "./requestsStore"
+import {
+  getRequest,
+  loadRaisedEscalations,
+  withDerivedFields,
+} from "./requestsStore"
 import {
   queryRequestCountsByStatus,
   queryRequestsByWorkspace,
@@ -227,9 +231,7 @@ export async function refreshRequestForEscalation(
     return
   }
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
-    const request = await context
-      .getRequestsDB()
-      .tryGet<AgentRequest>(doc.requestId)
+    const request = await getRequest(doc.requestId)
     if (!request) {
       return
     }
@@ -265,10 +267,8 @@ async function appendAction(
   action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">,
   timestamp: string = nowIso()
 ): Promise<AgentRequestAction | undefined> {
-  const db = context.getRequestsDB()
-
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
-    const request = await db.tryGet<AgentRequest>(requestId)
+    const request = await getRequest(requestId)
     if (!request) {
       return
     }
@@ -310,10 +310,8 @@ async function refineToolCallActionSummary({
   actionId: string
   summary: string
 }): Promise<void> {
-  const db = context.getRequestsDB()
-
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
-    const latest = await db.tryGet<AgentRequest>(requestId)
+    const latest = await getRequest(requestId)
     if (!latest) {
       return
     }
@@ -651,7 +649,7 @@ export async function resolveFinalRequestOutcome({
   // it waiting.
   isHumanResponse?: boolean
 }): Promise<{ status: "completed" | "failed"; error?: string } | undefined> {
-  const request = await context.getRequestsDB().tryGet<AgentRequest>(requestId)
+  const request = await getRequest(requestId)
   if (
     !request ||
     isTerminalStatus(request.status) ||
@@ -877,11 +875,9 @@ export async function updateRequestStatus({
   // same conversation, an unrelated error) must leave it as-is.
   isHumanResponse?: boolean
 }): Promise<void> {
-  const db = context.getRequestsDB()
-
   // Retries on conflict since createOrUpdateRequestForPrompt writes to the same document concurrently.
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
-    const request = await db.tryGet<AgentRequest>(requestId)
+    const request = await getRequest(requestId)
     if (!request) {
       return
     }
@@ -988,9 +984,7 @@ export async function createOrUpdateRequestForPrompt({
   }
 
   if (existingRequestId) {
-    const existing = await context
-      .getRequestsDB()
-      .tryGet<AgentRequest>(existingRequestId)
+    const existing = await getRequest(existingRequestId)
     if (existing) {
       if (isTerminalStatus(existing.status)) {
         return { request: existing, created: false }
@@ -1009,9 +1003,7 @@ export async function createOrUpdateRequestForPrompt({
       })
 
       // Re-read before writing - the status may have changed while we awaited the LLM calls above.
-      const latest = await context
-        .getRequestsDB()
-        .tryGet<AgentRequest>(existingRequestId)
+      const latest = await getRequest(existingRequestId)
       if (!latest || isTerminalStatus(latest.status)) {
         return { request: latest ?? withTitle, created: false }
       }
