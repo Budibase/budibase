@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
 import { DocumentType, EscalationSource, SEPARATOR } from "@budibase/types"
 import type { AgentRequest, EscalationContextDoc } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
@@ -142,6 +142,36 @@ describe("move agent requests to tenant db migration", () => {
 
       const second = await context.getRequestsDB().get<AgentRequest>("req_once")
       expect(second._rev).toEqual(first._rev)
+    })
+  })
+
+  it("fails when an escalation cannot be relinked so the migration reruns", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await seedLegacyRequest("conflicted")
+      await seedEscalation("esc_conflicted", "agentrequest_conflicted")
+      const bulkDocs = jest
+        .spyOn(dbCore.DatabaseImpl.prototype, "bulkDocs")
+        .mockResolvedValueOnce([
+          {
+            id: escalationDocId("esc_conflicted"),
+            error: "conflict",
+            reason: "Document update conflict.",
+          },
+        ])
+
+      try {
+        await expect(migration()).rejects.toThrow(
+          "Failed to relink 1 of 1 escalations: conflict"
+        )
+      } finally {
+        bulkDocs.mockRestore()
+      }
+
+      const escalation = await context
+        .getWorkspaceDB()
+        .get<EscalationContextDoc>(escalationDocId("esc_conflicted"))
+      expect(escalation.requestId).toEqual("agentrequest_conflicted")
+      expect(await context.getRequestsDB().exists("req_conflicted")).toBe(true)
     })
   })
 

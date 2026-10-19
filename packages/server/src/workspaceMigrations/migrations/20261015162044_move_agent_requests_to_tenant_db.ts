@@ -24,8 +24,15 @@ const relinkEscalations = async () => {
       ...doc,
       requestId: sdk.ai.agentRequests.toRequestId(doc.requestId!),
     }))
-  if (relinked.length) {
-    await context.getWorkspaceDB().bulkDocs(relinked)
+  if (!relinked.length) {
+    return
+  }
+  const results = await context.getWorkspaceDB().bulkDocs(relinked)
+  const failed = results.filter(result => result.error)
+  if (failed.length) {
+    throw new Error(
+      `Failed to relink ${failed.length} of ${relinked.length} escalations: ${failed[0].error}`
+    )
   }
 }
 
