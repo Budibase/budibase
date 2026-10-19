@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    ActionButton,
     Body,
     Divider,
     Heading,
@@ -16,6 +17,8 @@
 
   let request = $state<FindRequestResponse>()
   let loading = $state(true)
+  let notFound = $state(false)
+  let loadFailed = $state(false)
 
   let workspaceId = $derived<string>($params.workspaceId)
   let requestId = $derived<string>($params.requestId)
@@ -25,11 +28,26 @@
       : request?.requestId
   )
 
+  const isNotFound = (error: unknown) =>
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 404
+
   const load = async () => {
     try {
       request = await API.findUserRequest({ workspaceId, requestId })
+      notFound = false
+      loadFailed = false
     } catch (error) {
-      notifications.error("Error loading request")
+      if (isNotFound(error)) {
+        request = undefined
+        notFound = true
+        loadFailed = false
+      } else {
+        loadFailed = true
+        notifications.error("Error loading request")
+      }
     } finally {
       loading = false
     }
@@ -54,6 +72,13 @@
   <Icon name="caret-left" size="S" />
   Requests
 </a>
+
+{#if loadFailed}
+  <div class="load-failed">
+    <Body size="S">Couldn't load this request.</Body>
+    <ActionButton size="S" on:click={load}>Retry</ActionButton>
+  </div>
+{/if}
 
 {#if request}
   <div class="panel">
@@ -101,11 +126,16 @@
       </div>
     {/if}
   </div>
-{:else if !loading}
+{:else if notFound}
   <Body size="S">Request not found</Body>
 {/if}
 
 <style>
+  .load-failed {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
   .back {
     display: inline-flex;
     align-items: center;
