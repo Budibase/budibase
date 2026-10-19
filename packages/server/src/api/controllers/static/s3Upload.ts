@@ -36,6 +36,37 @@ const findComponent = ({
   }
 }
 
+const matchesKeyParts = ({ parts, key }: { parts: string[]; key: string }) => {
+  const [prefix, ...filenameParts] = parts
+  if (!key.startsWith(prefix)) {
+    return false
+  }
+  if (!filenameParts.length) {
+    return key === prefix
+  }
+
+  let filename = key.slice(prefix.length)
+  if (filename.includes("/")) {
+    return false
+  }
+
+  const suffix = filenameParts[filenameParts.length - 1]
+  for (const part of filenameParts.slice(0, -1)) {
+    const [character] = filename
+    if (!character) {
+      return false
+    }
+    // Each binding consumes at least one character. The earliest literal
+    // leaves the most room for the remaining bindings.
+    const index = filename.indexOf(part, character.length)
+    if (index === -1) {
+      return false
+    }
+    filename = filename.slice(index + part.length)
+  }
+  return filename.endsWith(suffix) && filename.length > suffix.length
+}
+
 export const matchesConfiguredKey = ({
   template,
   key,
@@ -56,12 +87,13 @@ export const matchesConfiguredKey = ({
   }
 
   const blocks = findHBSBlocks(template)
-  const tokens: (string | null)[] = []
+  const parts: string[] = []
   const userValues = new Map(Object.entries(user))
+  let literal = ""
   let cursor = 0
   for (const block of blocks) {
     const blockIndex = template.indexOf(block, cursor)
-    tokens.push(...template.slice(cursor, blockIndex))
+    literal += template.slice(cursor, blockIndex)
     cursor = blockIndex + block.length
     const expression = block.replace(/^\{\{\{?|\}\}\}?$/g, "").trim()
     if (!bindingPath.test(expression)) {
@@ -83,43 +115,21 @@ export const matchesConfiguredKey = ({
       ) {
         return false
       }
-      tokens.push(...value)
+      literal += value
     } else {
       // Browser bindings may choose a filename, never a directory or identity.
       if (template.slice(cursor).includes("/")) {
         return false
       }
-      tokens.push(null)
+      parts.push(literal)
+      literal = ""
     }
-    if (tokens.length > key.length) {
+    if (literal.length > key.length) {
       return false
     }
   }
-  tokens.push(...template.slice(cursor))
-
-  // Track reachable positions instead of backtracking over adjacent bindings.
-  const characters = [...key]
-  if (tokens.length > characters.length) {
-    return false
-  }
-  let positions = new Uint8Array(characters.length + 1)
-  positions[0] = 1
-  for (const token of tokens) {
-    const next = new Uint8Array(characters.length + 1)
-    for (let index = 1; index <= characters.length; index++) {
-      if (token === null) {
-        next[index] =
-          characters[index - 1] !== "/" &&
-          (positions[index - 1] || next[index - 1])
-            ? 1
-            : 0
-      } else if (characters[index - 1] === token) {
-        next[index] = positions[index - 1]
-      }
-    }
-    positions = next
-  }
-  return positions[characters.length] === 1
+  parts.push(literal + template.slice(cursor))
+  return matchesKeyParts({ parts, key })
 }
 
 interface S3UploadAuthorization extends GetSignedUploadUrlRequest {

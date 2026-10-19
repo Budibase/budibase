@@ -10,6 +10,23 @@ describe("S3 upload key authorization", () => {
     { template: "uploads/{{ fileName }}", key: "uploads/file.pdf" },
     { template: "uploads/{{ name }}.pdf", key: "uploads/file.pdf" },
     { template: "uploads/{{ first }}-{{ last }}.pdf", key: "uploads/a-b.pdf" },
+    {
+      template: "uploads/{{ first }}-{{ last }}.pdf",
+      key: "uploads/a-b-c.pdf",
+    },
+    { template: "uploads/{{ first }}{{ last }}.pdf", key: "uploads/ab.pdf" },
+    {
+      template: "uploads/{{ first }}{{ last }}.pdf",
+      key: "uploads/é📄.pdf",
+    },
+    {
+      template: "uploads/{{ first }}-{{ last }}.pdf",
+      key: "uploads/-a-b.pdf",
+    },
+    {
+      template: "uploads/{{ name }}-{{ user._id }}.pdf",
+      key: "uploads/file-user-one.pdf",
+    },
     { template: "{{ [user].[_id] }}/{{ fileName }}", key: "user-one/file.pdf" },
     {
       template: "users/{{ user._id }}/{{ fileName }}",
@@ -59,6 +76,18 @@ describe("S3 upload key authorization", () => {
     { template: "{{ lookup user '_id' }}.pdf", key: "user-two.pdf" },
     { template: "uploads/{{ name }}.pdf", key: "uploads/.pdf" },
     { template: "uploads/{{ name }}.pdf", key: "uploads/a.txt" },
+    { template: "uploads/{{ name }}.pdf", key: "uploads/a.pdf\n" },
+    { template: "uploads/{{ first }}{{ last }}.pdf", key: "uploads/a.pdf" },
+    {
+      template: "uploads/{{ first }}{{ last }}.pdf",
+      key: "uploads/📄.pdf",
+    },
+    { template: "uploads/{{ first }}-{{ last }}.pdf", key: "uploads/a-.pdf" },
+    {
+      template: "uploads/{{ first }}-{{ last }}.pdf",
+      key: "uploads/-a.pdf",
+    },
+    { template: "prefix{{ name }}prefix", key: "prefix" },
     { template: "{{ fileName }}", key: "é".repeat(513) },
     { template: "{{ fileName }}", key: "a".repeat(100000) },
   ])("rejects unauthorized key (case %#)", ({ template, key }) => {
