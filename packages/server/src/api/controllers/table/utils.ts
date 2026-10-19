@@ -281,7 +281,7 @@ export async function importInternalTableRows({
     }
   }
 
-  return await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
+  return await sdk.projects.doWithProjectAssignmentsLock(async () => {
     const currentTable = await db.get<Table>(tableId)
     // Schema saves can finish their row cleanup while this import is writing.
     // Repair only this import's rows under the schema-save lock.
