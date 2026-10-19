@@ -822,6 +822,63 @@ describe("AI tool action accounting", () => {
     expect(events.action.aiAgentToolFailed).not.toHaveBeenCalled()
   })
 
+  it.each([
+    [ToolAction.LIST_ROWS, "Customers", "List rows - Customers"],
+    [ToolAction.CREATE_ROW, "Orders", "Create row - Orders"],
+    [
+      ToolAction.TRIGGER,
+      "Send notification",
+      "Run workflow - Send notification",
+    ],
+  ])(
+    "captures a readable label for %s",
+    async (action, resourceName, toolLabel) => {
+      const toolDefinition = {
+        ...definition(jest.fn().mockResolvedValue({ success: true })),
+        action,
+        resourceName,
+      }
+
+      await callTool(toolDefinition)
+
+      expect(events.action.aiAgentToolExecuted).toHaveBeenCalledWith({
+        ...expectedEventContext,
+        action,
+        toolLabel,
+      })
+    }
+  )
+
+  it("includes the resource label in failed tool events", async () => {
+    const toolDefinition = {
+      ...definition(jest.fn().mockRejectedValue(new Error("missing"))),
+      action: ToolAction.UPDATE_ROW,
+      resourceName: "Customers",
+    }
+
+    await expect(callTool(toolDefinition)).rejects.toThrow("missing")
+
+    expect(events.action.aiAgentToolFailed).toHaveBeenCalledWith({
+      ...expectedEventContext,
+      action: ToolAction.UPDATE_ROW,
+      toolLabel: "Update row - Customers",
+      reason: ActionFailureReason.ERROR,
+      errorMessage: "missing",
+    })
+  })
+
+  it("uses the readable name of tools without a resource action", async () => {
+    await callTool({
+      ...definition(jest.fn().mockResolvedValue({ success: true })),
+      readableName: "Find invoices",
+    })
+
+    expect(events.action.aiAgentToolExecuted).toHaveBeenCalledWith({
+      ...expectedEventContext,
+      toolLabel: "Find invoices",
+    })
+  })
+
   it("does not count a thrown tool error and emits a failed event", async () => {
     const execute = jest.fn().mockRejectedValue(new Error("save failed"))
 
