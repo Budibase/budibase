@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid"
 import type {
   ActionSourceContext,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionSessionChange,
   PlatformActionSessionIndexJob,
   PlatformActionSessionIndexedFn,
@@ -16,7 +16,7 @@ const DEFAULT_INDEX_QUEUE_ATTEMPTS = 6
 
 export interface PlatformActionSessionLifecycleInput
   extends ActionSourceContext {
-  signal: PlatformActionContainerStatus
+  signal: PlatformActionSessionStatus
   timestamp?: string
   lifecycleId?: string
 }

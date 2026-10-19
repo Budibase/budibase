@@ -1,13 +1,13 @@
 import { constants as proConstants, licensing } from "@budibase/pro"
 import type {
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
 import { ConstantQuotaName } from "@budibase/types"
 
 const ONE_DAY_MILLIS = 1000 * 60 * 60 * 24
 
-export const EXPIRABLE_STATUSES: readonly PlatformActionContainerStatus[] = [
+export const EXPIRABLE_STATUSES: readonly PlatformActionSessionStatus[] = [
   "completed",
   "failed",
 ]

@@ -3,7 +3,7 @@ import { db, events } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { DocumentType, SEPARATOR } from "@budibase/types"
 import type {
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
   PlatformActionSourceType,
@@ -61,7 +61,7 @@ describe("platformActions sessions", () => {
     sourceType?: PlatformActionSourceType
     sourceId: string
     environment?: PlatformActionEnvironment
-    status?: PlatformActionContainerStatus
+    status?: PlatformActionSessionStatus
     extra?: Partial<PlatformActionSessionIndexDoc>
   }) {
     const timestamp = new Date().toISOString()
@@ -732,7 +732,7 @@ describe("platformActions sessions", () => {
       daysAgo: number
       sourceId: string
       environment?: PlatformActionEnvironment
-      status?: PlatformActionContainerStatus
+      status?: PlatformActionSessionStatus
     }) {
       tk.freeze(new Date(Date.now() - daysAgo * ONE_DAY_MILLIS))
       try {

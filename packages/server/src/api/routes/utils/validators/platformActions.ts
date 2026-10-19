@@ -1,7 +1,7 @@
 import type { ParsedUrlQuery } from "querystring"
 import { auth, HTTPError } from "@budibase/backend-core"
 import {
-  PLATFORM_ACTION_CONTAINER_STATUSES,
+  PLATFORM_ACTION_SESSION_STATUSES,
   PLATFORM_ACTION_ENVIRONMENTS,
   PLATFORM_ACTION_SOURCE_TYPES,
 } from "@budibase/types"
@@ -19,7 +19,7 @@ const LIMIT = Joi.number().integer().min(1).max(100).optional()
 const SESSIONS_QUERY = Joi.object<FetchActionSessionsQuery>({
   env: ENVIRONMENT.optional(),
   status: Joi.string()
-    .valid(...PLATFORM_ACTION_CONTAINER_STATUSES)
+    .valid(...PLATFORM_ACTION_SESSION_STATUSES)
     .optional(),
   bookmark: BOOKMARK,
   limit: LIMIT,
