@@ -1199,6 +1199,38 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(user.email)
     })
 
+    it("should page an empty email search in email order", async () => {
+      // emails sort in the reverse of creation order, so they are unlikely to
+      // match the (random) user ID order
+      const prefix = structures.uuid().slice(0, 8)
+      for (const letter of ["e", "d", "c", "b", "a"]) {
+        await config.createUser({
+          email: `${prefix}-${letter}@example.com`,
+        })
+      }
+
+      const emails: string[] = []
+      let bookmark: string | undefined
+      do {
+        const response = await config.api.users.searchUsers({
+          query: { string: { email: "" } },
+          bookmark,
+          limit: 2,
+        })
+        emails.push(...response.body.data.map((user: User) => user.email))
+        bookmark = response.body.hasNextPage
+          ? response.body.nextPage
+          : undefined
+      } while (bookmark)
+
+      const lowerEmails = emails.map(email => email.toLowerCase())
+      expect(lowerEmails).toEqual([...lowerEmails].sort())
+      expect(new Set(lowerEmails).size).toBe(lowerEmails.length)
+      expect(emails.filter(email => email.startsWith(prefix))).toEqual(
+        ["a", "b", "c", "d", "e"].map(l => `${prefix}-${l}@example.com`)
+      )
+    })
+
     it("should support fuzzy email fragments", async () => {
       const email = structures.users.newEmail()
       await config.createUser({ email })
@@ -1247,6 +1279,7 @@ describe("/api/global/users", () => {
       const workspaceId = "app_workspace_filter_group"
       const email = structures.users.newEmail()
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const group = await config.doInTenant(() =>
         proSdk.groups.save({
           ...structures.groups.UserGroup(),
@@ -1270,6 +1303,7 @@ describe("/api/global/users", () => {
 
     it("should filter users by any selected group", async () => {
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const [firstGroup, secondGroup, otherGroup] = await Promise.all(
         Array.from({ length: 3 }).map(() =>
           config.doInTenant(() =>
@@ -1299,6 +1333,7 @@ describe("/api/global/users", () => {
     it("should apply the selected group filter to workspace users", async () => {
       const workspaceId = "app_workspace_group_filter"
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const [selectedGroup, otherGroup] = await Promise.all([
         config.doInTenant(() =>
           proSdk.groups.save(structures.groups.UserGroup())
@@ -1351,6 +1386,7 @@ describe("/api/global/users", () => {
       const workspaceId = "app_workspace_group_role_filter"
       const email = structures.users.newEmail()
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const group = await config.doInTenant(() =>
         proSdk.groups.save({
           ...structures.groups.UserGroup(),
@@ -1373,6 +1409,7 @@ describe("/api/global/users", () => {
     it("should combine group and workspace role filters", async () => {
       const workspaceId = "app_workspace_combined_user_filter"
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const [selectedGroup, otherGroup] = await Promise.all([
         config.doInTenant(() =>
           proSdk.groups.save(structures.groups.UserGroup())
