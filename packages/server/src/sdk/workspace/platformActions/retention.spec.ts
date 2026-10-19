@@ -2,7 +2,7 @@ import cloneDeep from "lodash/cloneDeep"
 import tk from "timekeeper"
 import { mocks } from "@budibase/backend-core/tests"
 import { licensing } from "@budibase/pro"
-import type { PlatformActionContainerStatus } from "@budibase/types"
+import type { PlatformActionSessionStatus } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { getRetentionCutoff, isExpiredSession } from "./retention"
 
@@ -82,7 +82,7 @@ describe("platformActions retention", () => {
     const cutoff = "2026-02-07T12:00:00.000Z"
     const before = "2026-02-07T11:59:59.999Z"
 
-    it.each<PlatformActionContainerStatus>(["completed", "failed"])(
+    it.each<PlatformActionSessionStatus>(["completed", "failed"])(
       "expires a %s session last updated before the cutoff",
       status => {
         expect(
@@ -91,7 +91,7 @@ describe("platformActions retention", () => {
       }
     )
 
-    it.each<PlatformActionContainerStatus>(["active", "waiting"])(
+    it.each<PlatformActionSessionStatus>(["active", "waiting"])(
       "never expires a %s session",
       status => {
         expect(

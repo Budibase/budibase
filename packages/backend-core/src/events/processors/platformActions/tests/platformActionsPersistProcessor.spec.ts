@@ -422,7 +422,7 @@ describe("PlatformActionPersistProcessor", () => {
         undefined
       )
 
-      // automation_run step events never assert a container status
+      // automation_run step events never assert a session status
       // themselves. The orchestrator signals active/completed/failed
       // explicitly from the run's own outcome, so an AI_AGENT-specific
       // property like awaitingEscalation has no effect here.

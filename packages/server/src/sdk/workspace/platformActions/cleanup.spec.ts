@@ -2,7 +2,7 @@ import tk from "timekeeper"
 import { db, events, utils } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import type {
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionEvent,
   PlatformActionSessionIndexDoc,
@@ -56,7 +56,7 @@ describe("platformActions cleanup", () => {
   }: {
     sourceId: string
     daysAgo: number
-    status?: PlatformActionContainerStatus
+    status?: PlatformActionSessionStatus
     environment?: PlatformActionEnvironment
     eventCount?: number
   }) {
@@ -149,7 +149,7 @@ describe("platformActions cleanup", () => {
   const clear = (batchSize?: number) =>
     withContext(() => clearOldHistory({ batchSize }))
 
-  it.each<PlatformActionContainerStatus>(["completed", "failed"])(
+  it.each<PlatformActionSessionStatus>(["completed", "failed"])(
     "only deletes %s sessions strictly before the retention cutoff",
     async status => {
       const now = new Date("2026-03-09T12:00:00.000Z")
@@ -221,7 +221,7 @@ describe("platformActions cleanup", () => {
     })
   })
 
-  it.each<PlatformActionContainerStatus>(["active", "waiting"])(
+  it.each<PlatformActionSessionStatus>(["active", "waiting"])(
     "keeps an old %s session and its events",
     async status => {
       await createSession({ sourceId: "old", daysAgo: 60, status })
@@ -335,7 +335,7 @@ describe("platformActions cleanup", () => {
     status,
   }: {
     sourceId: string
-    status: PlatformActionContainerStatus
+    status: PlatformActionSessionStatus
   }) {
     await withContext(async () => {
       const database = events.platformActions.getActionsDB()
@@ -536,7 +536,7 @@ describe("platformActions cleanup", () => {
   })
 
   describe("clearOldHistoryOnSessionEnd", () => {
-    const sessionEnd = (signal: PlatformActionContainerStatus | undefined) =>
+    const sessionEnd = (signal: PlatformActionSessionStatus | undefined) =>
       clearOldHistoryOnSessionEnd({
         workspaceId: config.getProdWorkspaceId(),
         environment: "prod",
@@ -545,7 +545,7 @@ describe("platformActions cleanup", () => {
         signal,
       })
 
-    it.each<PlatformActionContainerStatus>(["completed", "failed"])(
+    it.each<PlatformActionSessionStatus>(["completed", "failed"])(
       "cleans up when a session becomes %s",
       async signal => {
         await createSession({ sourceId: "expired", daysAgo: 40 })
@@ -556,7 +556,7 @@ describe("platformActions cleanup", () => {
       }
     )
 
-    it.each<PlatformActionContainerStatus | undefined>([
+    it.each<PlatformActionSessionStatus | undefined>([
       "active",
       "waiting",
       undefined,

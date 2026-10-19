@@ -8,7 +8,10 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { tick } from "svelte"
 import { BuilderSocketEvent } from "@budibase/shared-core"
-import { notifyWorkspaceReady } from "@/stores/builder/workspaceReady"
+import {
+  notifyWorkspaceReady,
+  onWorkspaceReady,
+} from "@/stores/builder/workspaceReady"
 import type {
   ActionSessionChangeEvent,
   FetchActionSessionsResponse,
@@ -39,6 +42,18 @@ const socket = vi.hoisted(() => {
     },
     listenerCount: (event: string) => handlers.get(event)?.size ?? 0,
     reset: () => handlers.clear(),
+  }
+})
+
+vi.mock("@/stores/builder/workspaceReady", async importOriginal => {
+  const actual =
+    await importOriginal<typeof import("@/stores/builder/workspaceReady")>()
+  return {
+    ...actual,
+    onWorkspaceReady: vi.fn(
+      (...args: Parameters<typeof actual.onWorkspaceReady>) =>
+        vi.fn(actual.onWorkspaceReady(...args))
+    ),
   }
 })
 
@@ -1185,23 +1200,20 @@ describe("Activity actions page", () => {
       ])
     })
 
-    it("does not refresh before workspace acknowledgement", async () => {
+    it("does not refresh before workspace readiness is notified", async () => {
       mocks.fetchActionSessions.mockResolvedValue(response)
       const { findInTable } = renderPage()
       await findInTable("Support agent")
-      socket.trigger("connect")
       await tick()
       expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(1)
     })
 
-    it("refreshes after workspace acknowledgement on reconnect", async () => {
+    it("refreshes when workspace readiness is notified", async () => {
       mocks.fetchActionSessions.mockResolvedValue(response)
 
       const { findInTable } = renderPage()
       await findInTable("Support agent")
 
-      socket.trigger("connect")
-      await tick()
       notifyWorkspaceReady(socket)
 
       await waitFor(() => expect(queries()).toHaveLength(2))
@@ -1214,6 +1226,9 @@ describe("Activity actions page", () => {
         .mockResolvedValue(response)
 
       const { unmount } = renderPage()
+      const unsubscribeReady = vi
+        .mocked(onWorkspaceReady)
+        .mock.results.at(-1)!.value
       notify()
       unmount()
       notifyWorkspaceReady(socket)
@@ -1225,7 +1240,7 @@ describe("Activity actions page", () => {
       expect(socket.listenerCount(BuilderSocketEvent.ActionSessionChange)).toBe(
         0
       )
-      expect(socket.listenerCount("connect")).toBe(0)
+      expect(unsubscribeReady).toHaveBeenCalledTimes(1)
     })
   })
 })

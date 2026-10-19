@@ -3,7 +3,7 @@ import relativeTime from "dayjs/plugin/relativeTime"
 import type {
   ActionSession,
   HomeRowType,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionSourceType,
 } from "@budibase/types"
@@ -23,7 +23,7 @@ export interface ActionSessionRow {
   triggeredByLabel: string
   triggeredByValue: string
   triggeredByPrefix?: string
-  status: PlatformActionContainerStatus
+  status: PlatformActionSessionStatus
   statusLabel: string
   actionCount: number
   updatedLabel: string

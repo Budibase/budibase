@@ -4,7 +4,7 @@ import type {
   DatabaseKey,
   DatabaseQueryOpts,
   Document,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionEvent,
   PlatformActionSessionIndexDoc,
@@ -12,7 +12,7 @@ import type {
 } from "@budibase/types"
 import {
   DocumentType,
-  PLATFORM_ACTION_CONTAINER_STATUSES,
+  PLATFORM_ACTION_SESSION_STATUSES,
   SEPARATOR,
 } from "@budibase/types"
 import type { KeysetBookmarkDirection, KeysetPosition } from "./pagination"
@@ -235,12 +235,12 @@ function buildKeysetParams({
 
 type SessionsViewScope =
   | { kind: "all" }
-  | { kind: "status"; status: PlatformActionContainerStatus }
+  | { kind: "status"; status: PlatformActionSessionStatus }
   | { kind: "environment"; environment: PlatformActionEnvironment }
   | {
       kind: "environmentStatus"
       environment: PlatformActionEnvironment
-      status: PlatformActionContainerStatus
+      status: PlatformActionSessionStatus
     }
 
 function resolveSessionsScope({
@@ -248,7 +248,7 @@ function resolveSessionsScope({
   status,
 }: {
   environment?: PlatformActionEnvironment
-  status?: PlatformActionContainerStatus
+  status?: PlatformActionSessionStatus
 }): SessionsViewScope {
   if (environment && status) {
     return { kind: "environmentStatus", environment, status }
@@ -325,7 +325,7 @@ export function getSessionKeysetKey({
   doc,
 }: {
   environment?: PlatformActionEnvironment
-  status?: PlatformActionContainerStatus
+  status?: PlatformActionSessionStatus
   doc: PlatformActionSessionIndexDoc
 }): DatabaseKey {
   const prefix = scopePrefix(resolveSessionsScope({ environment, status }))
@@ -343,7 +343,7 @@ export const querySessions = async ({
 }: {
   workspaceDb: Database
   environment?: PlatformActionEnvironment
-  status?: PlatformActionContainerStatus
+  status?: PlatformActionSessionStatus
   limit: number
   bookmark?: KeysetPosition
   direction: KeysetBookmarkDirection
@@ -364,7 +364,7 @@ export const querySessions = async ({
     // Read bounded streams of eligible sessions, not pages of expired rows.
     // Each stream uses the same timestamp/id anchor and global ordering.
     const pages = await Promise.all(
-      PLATFORM_ACTION_CONTAINER_STATUSES.map(status => {
+      PLATFORM_ACTION_SESSION_STATUSES.map(status => {
         const statusPrefix = scopePrefix(
           resolveSessionsScope({ environment, status })
         )
@@ -465,7 +465,7 @@ async function queryCount({
   return value ?? 0
 }
 
-export type SessionsStatusCounts = Record<PlatformActionContainerStatus, number>
+export type SessionsStatusCounts = Record<PlatformActionSessionStatus, number>
 
 export const querySessionsStatusCounts = async ({
   workspaceDb,
@@ -504,7 +504,7 @@ export const querySessionsStatusCounts = async ({
   )
   for (const { key, value } of response.rows) {
     if (Array.isArray(key) && typeof value === "number") {
-      const status = PLATFORM_ACTION_CONTAINER_STATUSES.find(
+      const status = PLATFORM_ACTION_SESSION_STATUSES.find(
         status => status === key[environment ? 1 : 0]
       )
       if (status) {

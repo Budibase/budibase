@@ -2,7 +2,7 @@ import tk from "timekeeper"
 import { events, utils } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import type {
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionEvent,
   PlatformActionSessionIndexDoc,
@@ -35,7 +35,7 @@ describe("platformActions events", () => {
     environment?: PlatformActionEnvironment
     sourceType?: PlatformActionSourceType
     sourceId: string
-    status?: PlatformActionContainerStatus
+    status?: PlatformActionSessionStatus
   }) {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const database = events.platformActions.getActionsDB()
@@ -456,7 +456,7 @@ describe("platformActions events", () => {
     })
 
     async function createOldSessionWithEvent(
-      status: PlatformActionContainerStatus
+      status: PlatformActionSessionStatus
     ) {
       tk.freeze(new Date(Date.now() - 40 * ONE_DAY_MILLIS))
       try {
@@ -467,7 +467,7 @@ describe("platformActions events", () => {
       }
     }
 
-    it.each<PlatformActionContainerStatus>(["completed", "failed"])(
+    it.each<PlatformActionSessionStatus>(["completed", "failed"])(
       "returns 404 for the events of an expired %s session",
       async status => {
         await createOldSessionWithEvent(status)
@@ -481,7 +481,7 @@ describe("platformActions events", () => {
       }
     )
 
-    it.each<PlatformActionContainerStatus>(["active", "waiting"])(
+    it.each<PlatformActionSessionStatus>(["active", "waiting"])(
       "keeps the events of an old %s session",
       async status => {
         await createOldSessionWithEvent(status)

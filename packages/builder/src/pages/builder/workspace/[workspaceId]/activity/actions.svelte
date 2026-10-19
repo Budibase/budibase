@@ -5,12 +5,12 @@
   import { Select, Table } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
   import {
-    PLATFORM_ACTION_CONTAINER_STATUSES,
+    PLATFORM_ACTION_SESSION_STATUSES,
     type ActionSession,
     type ActionSessionChangeEvent,
     type ActionSessionsSummary,
     type ActionsPagination,
-    type PlatformActionContainerStatus,
+    type PlatformActionSessionStatus,
     type PlatformActionEnvironment,
   } from "@budibase/types"
   import { onMount } from "svelte"
@@ -61,12 +61,12 @@
     { column: "triggeredByLabel", component: ActivityOriginRenderer },
   ]
 
-  type StatusFilter = PlatformActionContainerStatus | "all"
+  type StatusFilter = PlatformActionSessionStatus | "all"
   type EnvironmentFilter = PlatformActionEnvironment | "all"
 
   const statusFilterOptions: { label: string; value: StatusFilter }[] = [
     { label: "All statuses", value: "all" },
-    ...PLATFORM_ACTION_CONTAINER_STATUSES.map(status => ({
+    ...PLATFORM_ACTION_SESSION_STATUSES.map(status => ({
       label: ACTIVITY_STATUS_LABELS[status],
       value: status,
     })),
@@ -310,8 +310,8 @@
     }
 
     socket.on(BuilderSocketEvent.ActionSessionChange, handleActionSessionChange)
-    // Catch up only after joining the room, so changes during the refresh
-    // can no longer fall into the gap between connection and subscription.
+    // Notifications aren't replayed, so catch up once the workspace room is
+    // joined. Changes made during the refresh then reach this socket.
     const unsubscribeReady = onWorkspaceReady({
       socket,
       callback: refreshSessions,

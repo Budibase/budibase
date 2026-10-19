@@ -31,7 +31,7 @@ import {
   EscalationSource,
   ApprovalToolResultStatus,
   PendingToolCall,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   SEPARATOR,
   SuspendedOperationContext,
   type AgentExecutionContext,
@@ -501,7 +501,7 @@ export async function resumeOperation({
   }
 
   const updatePlatformActionSessionStatus = async (
-    signal: PlatformActionContainerStatus
+    signal: PlatformActionSessionStatus
   ) => {
     await events.platformActions
       .enqueuePlatformActionSessionLifecycle({

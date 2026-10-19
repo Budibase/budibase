@@ -4,7 +4,7 @@ import type {
   ActionSessionsSummary,
   Database,
   FetchActionSessionsResponse,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
@@ -42,7 +42,7 @@ export async function fetchSessions({
   limit,
 }: {
   environment?: PlatformActionEnvironment
-  status?: PlatformActionContainerStatus
+  status?: PlatformActionSessionStatus
   bookmark?: string
   limit?: number
 }): Promise<FetchActionSessionsResponse> {

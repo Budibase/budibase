@@ -1,7 +1,7 @@
 import { db as dbCore, events, utils } from "@budibase/backend-core"
 import { DocumentType, SEPARATOR } from "@budibase/types"
 import type {
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionEvent,
   PlatformActionSessionIndexDoc,
@@ -37,7 +37,7 @@ describe("/api/actions", () => {
     sourceType?: PlatformActionSourceType
     sourceId: string
     environment?: PlatformActionEnvironment
-    status?: PlatformActionContainerStatus
+    status?: PlatformActionSessionStatus
     updatedAt?: string
   }) {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
