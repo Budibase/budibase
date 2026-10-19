@@ -188,10 +188,7 @@ async function processSettingsConfig(
   existingConfig?: SettingsInnerConfig & SettingsBrandingConfig
 ) {
   // The builder saves settings from the reduced public response.
-  if (
-    existingConfig?.liteLLM &&
-    !Object.prototype.hasOwnProperty.call(config, "liteLLM")
-  ) {
+  if (existingConfig?.liteLLM && !Object.hasOwn(config, "liteLLM")) {
     config.liteLLM = existingConfig.liteLLM
   }
 
