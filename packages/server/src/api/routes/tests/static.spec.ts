@@ -1,5 +1,6 @@
 import { constants, objectStore, roles } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
+import { encodeJSBinding } from "@budibase/string-templates"
 import {
   BasicOperator,
   BuiltinPermissionID,
@@ -621,37 +622,47 @@ describe("/static", () => {
           .expect(401)
       })
 
-      it("should deny app users without write permissions", async () => {
-        const readOnlyRole = await config.api.roles.save({
-          name: "s3_signed_url_read_only",
-          permissionId: BuiltinPermissionID.READ_ONLY,
-          inherits: roles.BUILTIN_ROLE_IDS.PUBLIC,
-        })
-        await config.api.permission.add({
-          roleId: readOnlyRole._id!,
-          resourceId: datasource._id!,
-          level: PermissionLevel.READ,
-        })
-        const accessibleScreen = await configureUpload({
-          definition: structures.customScreen({
-            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
-            route: "/read-only-upload",
-          }),
-        })
-        await config.loginAsRole(readOnlyRole._id!, async () => {
-          await request
-            .post(`/api/attachments/${datasource._id}/url`)
-            .send({
-              bucket: "foo",
-              key: "uploads/bar",
-              componentId,
-              screenId: accessibleScreen._id,
-            })
-            .set(config.defaultHeaders())
-            .expect("Content-Type", /json/)
-            .expect(403)
-        })
-      })
+      it.each([
+        { bucket: "foo", roleName: "s3_signed_url_read_only_literal" },
+        {
+          bucket: "{{ [settings].[bucketName] }}",
+          roleName: "s3_signed_url_read_only_binding",
+        },
+      ])(
+        "should deny app users without write permissions for bucket $bucket",
+        async ({ bucket, roleName }) => {
+          const readOnlyRole = await config.api.roles.save({
+            name: roleName,
+            permissionId: BuiltinPermissionID.READ_ONLY,
+            inherits: roles.BUILTIN_ROLE_IDS.PUBLIC,
+          })
+          await config.api.permission.add({
+            roleId: readOnlyRole._id!,
+            resourceId: datasource._id!,
+            level: PermissionLevel.READ,
+          })
+          const accessibleScreen = await configureUpload({
+            definition: structures.customScreen({
+              roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+              route: "/read-only-upload",
+            }),
+            extra: { bucket },
+          })
+          await config.loginAsRole(readOnlyRole._id!, async () => {
+            await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "foo",
+                key: "uploads/bar",
+                componentId,
+                screenId: accessibleScreen._id,
+              })
+              .set(config.defaultHeaders())
+              .expect("Content-Type", /json/)
+              .expect(403)
+          })
+        }
+      )
 
       it("should require a bucket parameter", async () => {
         const res = await request
@@ -694,6 +705,68 @@ describe("/static", () => {
           .set(config.defaultHeaders())
           .expect(403)
       })
+
+      it.each([
+        "{{ [settings].[bucketName] }}",
+        "{{ [form].[Bucket] }}",
+        "{{ [query].[rows].[0].[bucket] }}",
+        "{{ user.department }}",
+        "{{ lowercase [settings].[bucketName] }}",
+        "{{#if [settings].[archive]}}archive{{else}}uploads{{/if}}",
+        encodeJSBinding("return $('State.bucketName')"),
+        "uploads-{{ [settings].[region] }}",
+      ])(
+        "should allow BASIC users to select buckets through saved binding %s",
+        async bucket => {
+          const configuredScreen = await configureUpload({ extra: { bucket } })
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            const res = await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "selected-bucket",
+                key: "uploads/report.pdf",
+                componentId,
+                screenId: configuredScreen._id,
+              })
+              .set(config.defaultHeaders())
+              .expect(200)
+
+            expect(res.body.signedUrl).toStartWith(
+              "https://selected-bucket.s3.eu-west-1.amazonaws.com/uploads/report.pdf?"
+            )
+            expect(res.body.publicUrl).toEqual(
+              "https://selected-bucket.s3.eu-west-1.amazonaws.com/uploads/report.pdf"
+            )
+          })
+        }
+      )
+
+      it.each([
+        { key: "other/report.pdf" },
+        { key: "uploads/nested/report.pdf" },
+        { componentId: "other-component" },
+        { screenId: "screen_missing" },
+      ])(
+        "should retain upload restrictions for bucket bindings (case %#)",
+        async overrides => {
+          const configuredScreen = await configureUpload({
+            extra: { bucket: "{{ [settings].[bucketName] }}" },
+          })
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "selected-bucket",
+                key: "uploads/report.pdf",
+                componentId,
+                screenId: configuredScreen._id,
+                ...overrides,
+              })
+              .set(config.defaultHeaders())
+              .expect(403)
+          })
+        }
+      )
 
       it("should reject datasources that do not match the S3 upload component", async () => {
         const otherDatasource = await config.createDatasource({

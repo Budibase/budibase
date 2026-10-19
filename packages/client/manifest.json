@@ -6028,11 +6028,11 @@
         "info": "This component can't be used with S3 datasources that use custom endpoints"
       },
       {
-        "type": "plainText",
+        "type": "text",
         "label": "Bucket",
         "key": "bucket",
         "supportsConditions": false,
-        "info": "Enter a literal bucket name. Bucket bindings are not supported; replace any existing binding with the bucket name."
+        "info": "Bindings allow users of this component to select any bucket permitted by the datasource's S3 credentials. Use a literal bucket name to restrict uploads to one bucket."
       },
       {
         "type": "text",

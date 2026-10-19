@@ -183,10 +183,16 @@ export const authorizeS3Upload = async ({
     ctx.throw(403, "S3 upload destinations cannot depend on UI conditions")
   }
 
+  // A saved bucket binding delegates bucket selection to the client, within
+  // the datasource's S3 credentials. Literal buckets remain exact matches.
+  const isConfiguredBucket =
+    typeof component?.bucket === "string" &&
+    (component.bucket === bucket || findHBSBlocks(component.bucket).length > 0)
+
   const isConfiguredUpload =
     component?._component === "@budibase/standard-components/s3upload" &&
     component.datasourceId === datasourceId &&
-    component.bucket === bucket &&
+    isConfiguredBucket &&
     typeof component.key === "string" &&
     matchesConfiguredKey({
       template: component.key,
