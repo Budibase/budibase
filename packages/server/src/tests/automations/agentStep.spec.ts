@@ -1,9 +1,11 @@
+import { readUIMessageStream, type UIMessage } from "ai"
 import { context as backendContext, events } from "@budibase/backend-core"
 import { automations } from "@budibase/shared-core"
 import {
   ActionFailureReason,
   type ActionSourceContext,
   ToolExecutionPrincipal,
+  ToolType,
 } from "@budibase/types"
 import { run } from "../../automations/steps/ai/agent"
 import sdk from "../../sdk"
@@ -338,25 +340,38 @@ describe("automation agent step", () => {
     })
 
     it("runs the agent inside the session scope so its tool calls share the session's origin", async () => {
-      const runMetadata: unknown[] = []
+      const toolMetadata: unknown[] = []
+      const toolExecuted = jest
+        .spyOn(events.action, "aiAgentToolExecuted")
+        .mockImplementation(event => {
+          toolMetadata.push(
+            backendContext.getPlatformActionSessionMetadata({
+              sourceType: "agent_session",
+              sourceId: event.sessionId,
+            })
+          )
+        })
       const prepare = prepareAgentChatRunMock.getMockImplementation()!
       prepareAgentChatRunMock.mockImplementationOnce(async params => {
-        const agentRun = await prepare(params)
-        return {
-          ...agentRun,
-          stream: (...args: unknown[]) => {
-            runMetadata.push(
-              backendContext.getPlatformActionSessionMetadata({
-                sourceType: "agent_session",
-                sourceId: params.sessionId,
+        jest.mocked(readUIMessageStream).mockImplementationOnce(() =>
+          Object.assign(new ReadableStream<UIMessage>(), {
+            async *[Symbol.asyncIterator](): AsyncGenerator<UIMessage> {
+              await Promise.resolve()
+              events.action.aiAgentToolExecuted({
+                agentId: "agent-id",
+                sessionId: params.sessionId,
+                operationId: "operation-id",
+                toolName: "create_row",
+                sourceType: ToolType.INTERNAL_TABLE,
               })
-            )
-            return agentRun.stream(...args)
-          },
-        }
+              yield { id: "message-id", role: "assistant", parts: [] }
+            },
+          })
+        )
+        return prepare(params)
       })
 
-      await run({
+      const result = await run({
         inputs: { agentId: "agent-id", prompt: "Create the row" },
         appId: "test",
         automationId: "automation-id",
@@ -366,7 +381,15 @@ describe("automation agent step", () => {
         emitter,
       })
 
-      expect(runMetadata).toEqual([
+      expect(toolExecuted).toHaveBeenCalledTimes(1)
+      expect(toolExecuted).toHaveBeenCalledWith({
+        agentId: "agent-id",
+        sessionId: result.sessionId,
+        operationId: "operation-id",
+        toolName: "create_row",
+        sourceType: ToolType.INTERNAL_TABLE,
+      })
+      expect(toolMetadata).toEqual([
         {
           asset: { type: "agent", id: "agent-id", label: "Test Agent" },
           triggeredBy: {
