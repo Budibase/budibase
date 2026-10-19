@@ -44,6 +44,26 @@ describe("toActionTimelineItem", () => {
     }
   )
 
+  it.each([
+    "Name required",
+    "Expected text without Error message: in the name",
+  ])(
+    "ignores error markers in submitted values when showing %s",
+    validationMessage => {
+      const input = JSON.stringify({ name: "private Error message: input" })
+      const issues = JSON.stringify([{ message: validationMessage }])
+
+      expect(
+        toItem({
+          eventName: Event.ACTION_AI_AGENT_TOOL_FAILED,
+          payload: {
+            errorMessage: `Invalid input for tool example: Type validation failed: Value: ${input}. Error message: ${issues}`,
+          },
+        }).detail
+      ).toBe(`Invalid input for tool example: ${validationMessage}`)
+    }
+  )
+
   it("retains all validation messages without their JSON metadata", () => {
     expect(
       toItem({

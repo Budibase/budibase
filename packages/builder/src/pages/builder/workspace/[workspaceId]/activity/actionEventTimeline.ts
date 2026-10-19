@@ -33,32 +33,32 @@ const formatFailureMessage = (message: string) => {
 
   const summary = `Invalid input for tool ${toolError[1]}`
   const marker = "Error message: "
-  const detailsStart = message.indexOf(marker)
-  if (detailsStart === -1) {
-    return summary
-  }
-
-  try {
-    // The SDK includes input values and a serialized validation error. Only
-    // display the validation messages, not the submitted payload.
-    const issues: unknown = JSON.parse(
-      message.slice(detailsStart + marker.length)
-    )
-    if (Array.isArray(issues)) {
-      const messages = issues.flatMap((issue: unknown) =>
-        issue &&
-        typeof issue === "object" &&
-        "message" in issue &&
-        typeof issue.message === "string"
-          ? [issue.message]
-          : []
+  let detailsStart = message.indexOf(marker)
+  while (detailsStart !== -1) {
+    try {
+      // The SDK includes input values and a serialized validation error. Only
+      // display the validation messages, not the submitted payload.
+      const issues: unknown = JSON.parse(
+        message.slice(detailsStart + marker.length)
       )
-      if (messages.length) {
-        return `${summary}: ${messages.join("; ")}`
+      if (Array.isArray(issues)) {
+        const messages = issues.flatMap((issue: unknown) =>
+          issue &&
+          typeof issue === "object" &&
+          "message" in issue &&
+          typeof issue.message === "string"
+            ? [issue.message]
+            : []
+        )
+        if (messages.length) {
+          return `${summary}: ${messages.join("; ")}`
+        }
       }
+      return summary
+    } catch {
+      // Submitted values can contain the marker before the actual JSON suffix.
+      detailsStart = message.indexOf(marker, detailsStart + marker.length)
     }
-  } catch {
-    return summary
   }
   return summary
 }
