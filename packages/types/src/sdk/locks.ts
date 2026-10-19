@@ -30,6 +30,8 @@ export enum LockName {
   PROJECT_ASSIGNMENTS = "project_assignments",
   RESOURCE_DUPLICATION = "resource_duplication",
   CUSTOM_REST_TEMPLATES = "custom_rest_templates",
+  PLATFORM_ACTION_SESSION_INDEX = "platform_action_session_index",
+  PLATFORM_ACTIONS_WORKSPACE = "platform_actions_workspace",
   CONVERSATION_ATTACHMENT = "conversation_attachment",
   ESCALATION = "escalation",
 }
