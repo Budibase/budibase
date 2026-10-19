@@ -51,17 +51,6 @@ export function getRequestsDBName(tenantId?: string) {
   }
 }
 
-export function getRequestInboxDBName(tenantId?: string) {
-  if (!tenantId) {
-    tenantId = getTenantId()
-  }
-  if (tenantId === DEFAULT_TENANT_ID) {
-    return StaticDatabases.REQUEST_INBOX.name
-  } else {
-    return `${tenantId}${SEPARATOR}${StaticDatabases.REQUEST_INBOX.name}`
-  }
-}
-
 export function getScimDBName(tenantId?: string) {
   if (!tenantId) {
     tenantId = getTenantId()
@@ -433,13 +422,6 @@ export function getRequestsDB(): Database {
     throw new Error("No tenant ID found - cannot open requests DB")
   }
   return getDB(getRequestsDBName())
-}
-
-export function getRequestInboxDB(): Database {
-  if (!getTenantId()) {
-    throw new Error("No tenant ID found - cannot open request inbox DB")
-  }
-  return getDB(getRequestInboxDBName())
 }
 
 /**

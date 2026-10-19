@@ -24,12 +24,87 @@ import type {
   EnrichedQueryJson,
   EscalationContextDoc,
   PreSaveSQLiteDefinition,
+  RequestEscalationState,
   RequestRow,
   SearchFilters,
   Table,
 } from "@budibase/types"
 import { getContextDoc } from "../../escalations"
-import { getEscalationExpiry, getRaisedEscalationIds } from "./inboxRows"
+
+export const USER_FILTER_FIELDS = [
+  "isRequester",
+  "isApprover",
+  "awaitingMe",
+  "awaitingOthers",
+  "responded",
+] as const
+
+export const EQUAL_FILTER_FIELDS = [
+  "status",
+  "workspaceId",
+  "agentId",
+  "operationId",
+] as const
+
+export type RequestInboxFilters = Partial<
+  Pick<
+    RequestRow,
+    (typeof USER_FILTER_FIELDS)[number] | (typeof EQUAL_FILTER_FIELDS)[number]
+  >
+>
+
+export interface RaisedEscalation {
+  escalationId: string
+  doc: EscalationContextDoc
+}
+
+export const getEscalationState = (
+  doc: EscalationContextDoc
+): RequestEscalationState => {
+  if (doc.resolution === "pending" || doc.resolution === "cancelled") {
+    return doc.resolution
+  }
+  if (doc.resolution === "expired" && !doc.response?.actionId) {
+    return "expired"
+  }
+  return doc.response?.accepted === true ? "approved" : "rejected"
+}
+
+export const getEscalationExpiry = (doc: EscalationContextDoc) => {
+  if (doc.durationMs === undefined || doc.createdAt === undefined) {
+    return undefined
+  }
+  return new Date(
+    new Date(doc.createdAt).getTime() + doc.durationMs
+  ).toISOString()
+}
+
+export const getRaisedEscalationIds = (request: AgentRequest) => [
+  ...new Set(
+    (request.actions ?? []).flatMap(action =>
+      action.type === "escalation_raised" ? [action.escalationId] : []
+    )
+  ),
+]
+
+export const isApproverOn = (doc: EscalationContextDoc, globalUserId: string) =>
+  !!doc.policy?.approvers?.includes(globalUserId)
+
+export const hasResponded = (doc: EscalationContextDoc, globalUserId: string) =>
+  (doc.approvals ?? []).some(approval => approval.userId === globalUserId)
+
+export const filterVisibleEscalations = ({
+  escalations,
+  globalUserId,
+  isRequester,
+}: {
+  escalations: RaisedEscalation[]
+  globalUserId: string
+  isRequester: boolean
+}) =>
+  isRequester
+    ? escalations
+    : escalations.filter(({ doc }) => isApproverOn(doc, globalUserId))
 
 export const STATUS_RANK: Record<AgentRequestStatus, number> = {
   needs_input: 0,

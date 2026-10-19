@@ -11,6 +11,16 @@ export const AGENT_REQUEST_STATUSES = [
 
 export type AgentRequestStatus = (typeof AGENT_REQUEST_STATUSES)[number]
 
+export const REQUEST_ESCALATION_STATES = [
+  "pending",
+  "approved",
+  "rejected",
+  "expired",
+  "cancelled",
+] as const
+
+export type RequestEscalationState = (typeof REQUEST_ESCALATION_STATES)[number]
+
 export interface AgentRequestOperation
   extends Pick<AgentOperation, "id" | "name"> {
   prompt: string

@@ -49,7 +49,6 @@ export enum DocumentType {
   AGENT_LOG_REQUEST = "agentlogrequest",
   AGENT_REQUEST = "agentrequest",
   REQUEST = "req",
-  REQUEST_INBOX = "ri",
   AGENT_TEST_SUITE = "agenttestsuite",
   AGENT_TEST_RUN = "agenttestrun",
   AGENT_KNOWLEDGE_SOURCE_SYNC_STATE = "agentknowledgesync",

@@ -7,25 +7,21 @@ import type {
   FindRequestResponse,
   SearchFilters,
 } from "@budibase/types"
-import { getContextDoc } from "../../escalations"
 import { getFullUser } from "../../../../utilities/users"
 import {
-  buildRequestInboxDoc,
-  getEscalationState,
+  EQUAL_FILTER_FIELDS,
+  filterVisibleEscalations,
   getEscalationExpiry,
+  getEscalationState,
+  getUserFlags,
   hasResponded,
   isApproverOn,
-  filterVisibleEscalations,
-} from "./inboxRows"
-import type { RaisedEscalation, RequestInboxFilters } from "./inboxRows"
-import { withRequestInboxLock, writeRows } from "./inboxStore"
-import {
-  getUserFlags,
   isInvolved,
   loadRaisedEscalations,
   searchRequests,
   toRequestRow,
 } from "./requestsStore"
+import type { RaisedEscalation, RequestInboxFilters } from "./requestsStore"
 import { queryRequestIdsByUser } from "./views"
 
 const USER_VIEW_ID_LIMIT = 5000
@@ -41,60 +37,6 @@ async function loadEscalationsWithIds(
   )
 }
 
-async function syncRequestRows(requestId: string) {
-  const workspaceId = context.getWorkspaceId()
-  if (!workspaceId) {
-    return
-  }
-  await withRequestInboxLock(requestId, async () => {
-    const request = await context
-      .getRequestsDB()
-      .tryGet<AgentRequest>(requestId)
-    if (!request) {
-      return
-    }
-    const escalations = await loadEscalationsWithIds(request)
-    const doc = buildRequestInboxDoc({
-      request,
-      escalations,
-      workspaceId: dbCore.getProdWorkspaceID(workspaceId),
-    })
-    if (doc) {
-      await writeRows([doc])
-    }
-  })
-}
-
-export async function syncRequestInbox(request: AgentRequest): Promise<void> {
-  if (!request._id) {
-    return
-  }
-  try {
-    await syncRequestRows(request._id)
-  } catch (error) {
-    console.error("Request inbox: failed to sync request", {
-      requestId: request._id,
-      error,
-    })
-  }
-}
-
-export async function syncRequestInboxForEscalation(
-  escalationId: string
-): Promise<void> {
-  try {
-    const doc = await getContextDoc(escalationId)
-    if (doc?.requestId) {
-      await syncRequestRows(doc.requestId)
-    }
-  } catch (error) {
-    console.error("Request inbox: failed to sync escalation", {
-      escalationId,
-      error,
-    })
-  }
-}
-
 async function getWorkspaceName(workspaceId: string) {
   const metadata = await cache.workspace.getWorkspaceMetadata(workspaceId)
   return "name" in metadata ? metadata.name : undefined
@@ -105,13 +47,6 @@ const USER_ARRAY_FOR_FILTER = {
   awaitingMe: "pendingApprovers",
   responded: "respondedApprovers",
 } as const
-
-const EQUAL_FILTER_FIELDS = [
-  "status",
-  "workspaceId",
-  "agentId",
-  "operationId",
-] as const
 
 function buildUserFilters(
   globalUserId: string,

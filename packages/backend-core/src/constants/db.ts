@@ -81,9 +81,6 @@ export const StaticDatabases = {
   SCIM_LOGS: {
     name: "scim-logs",
   },
-  REQUEST_INBOX: {
-    name: "request-inbox",
-  },
   REQUESTS: {
     name: "requests",
   },
