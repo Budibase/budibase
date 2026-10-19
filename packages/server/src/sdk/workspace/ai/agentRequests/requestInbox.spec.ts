@@ -217,6 +217,30 @@ describe("request inbox", () => {
       })
     })
 
+    it("marks a channel-only escalation as awaiting others for its requester only", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await seedLegacyRequest("channel", {
+          status: "needs_input",
+          createdAt: "2026-10-04T10:00:00.000Z",
+          actions: [escalationRaised("esc_channel", "2026-10-04T10:00:01.000Z")],
+        })
+        await seedEscalation("esc_channel", "agentrequest_channel", {
+          policy: { id: "policy_3", name: "Slack channel", approvers: [] },
+        })
+        await migration()
+
+        const awaitingOthers = await list(REQUESTER, { awaitingOthers: true })
+        expect(awaitingOthers.requests).toEqual([
+          expect.objectContaining({
+            requestId: "req_channel",
+            awaitingOthers: true,
+            awaitingMe: false,
+          }),
+        ])
+        expect((await list(OUTSIDER)).requests).toEqual([])
+      })
+    })
+
     it("returns nothing for a user who is neither requester nor approver", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         await seedInbox()

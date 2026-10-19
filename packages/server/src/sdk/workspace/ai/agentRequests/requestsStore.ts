@@ -271,7 +271,7 @@ export const getUserFlags = (request: AgentRequest, globalUserId: string) => ({
   isApprover: request.approvers.includes(globalUserId),
   awaitingMe: request.pendingApprovers.includes(globalUserId),
   awaitingOthers:
-    request.pendingApprovers.length > 0 &&
+    request.status === "needs_input" &&
     !request.pendingApprovers.includes(globalUserId),
   responded: request.respondedApprovers.includes(globalUserId),
 })
