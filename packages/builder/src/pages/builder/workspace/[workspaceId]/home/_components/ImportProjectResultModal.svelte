@@ -1,9 +1,8 @@
 <script lang="ts">
   import { Body, Button, Icon, ModalContent } from "@budibase/bbui"
-  import {
-    ResourceType,
-    type ImportProjectResponse,
-    type ProjectImportRequirement,
+  import type {
+    ImportProjectResponse,
+    ProjectImportRequirement,
   } from "@budibase/types"
 
   interface Props {
@@ -41,38 +40,6 @@
     },
   }
 
-  const resourceLabels = [
-    { type: ResourceType.WORKSPACE_APP, singular: "app", plural: "apps" },
-    { type: ResourceType.AGENT, singular: "agent", plural: "agents" },
-    {
-      type: ResourceType.AUTOMATION,
-      singular: "automation",
-      plural: "automations",
-    },
-    {
-      type: ResourceType.DATASOURCE,
-      singular: "data source",
-      plural: "data sources",
-    },
-    { type: ResourceType.TABLE, singular: "table", plural: "tables" },
-    { type: ResourceType.QUERY, singular: "query", plural: "queries" },
-    { type: ResourceType.SCREEN, singular: "screen", plural: "screens" },
-    {
-      type: ResourceType.ROW_ACTION,
-      singular: "row action",
-      plural: "row actions",
-    },
-  ]
-
-  const importedResources = $derived(
-    resourceLabels
-      .map(({ type, singular, plural }) => {
-        const count = response.resources[type]?.length || 0
-        return { type, count, label: count === 1 ? singular : plural }
-      })
-      .filter(({ count }) => count > 0)
-  )
-
   const resourceRequirements = $derived.by(() => {
     const groups = new Map<string, ProjectImportRequirement[]>()
     for (const requirement of response.requirements) {
@@ -109,13 +76,6 @@
           is now in your workspace.
         {/if}
       </Body>
-      {#if !isSetupReview && importedResources.length}
-        <ul class="resource-summary" aria-label="Imported resources">
-          {#each importedResources as resource (resource.type)}
-            <li>{resource.count} {resource.label}</li>
-          {/each}
-        </ul>
-      {/if}
     </div>
 
     {#if resourceRequirements.length}
@@ -126,9 +86,10 @@
             {resourceRequirements.length === 1 ? "item needs" : "items need"} setup
           </h2>
           <Body size="S" color="var(--spectrum-global-color-gray-700)">
-            Complete these steps to use all your project’s features.
-            {#if !isSetupReview}
-              You can return to these steps from “Project setup” in the project
+            {#if isSetupReview}
+              Complete these steps to use all your project’s features.
+            {:else}
+              You can finish setup later from “Project setup” in the project
               menu.
             {/if}
           </Body>
@@ -221,22 +182,6 @@
     list-style: none;
     margin: 0;
     padding: 0;
-  }
-
-  .resource-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-s);
-    margin-top: var(--spacing-m);
-  }
-
-  .resource-summary li {
-    padding: var(--spacing-xs) var(--spacing-s);
-    border-radius: var(--border-radius-s);
-    background: var(--spectrum-global-color-gray-100);
-    color: var(--spectrum-global-color-gray-700);
-    font-size: var(--font-size-xs);
-    line-height: 20px;
   }
 
   .setup-intro {
