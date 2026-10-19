@@ -190,7 +190,13 @@ export async function createDesignDoc() {
   const db = context.getRequestsDB()
   const existing =
     await db.tryGet<PreSaveSQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-  await db.put({ ...existing, ...base })
+  try {
+    await db.put({ ...existing, ...base })
+  } catch (err) {
+    if (!dbCore.isDocumentConflictError(err)) {
+      throw err
+    }
+  }
 }
 
 const isNotFoundError = (err: unknown) =>

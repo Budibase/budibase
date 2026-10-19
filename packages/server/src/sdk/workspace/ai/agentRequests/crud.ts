@@ -714,7 +714,7 @@ export async function resolveFinalRequestOutcome({
 export async function fetchRequest(
   requestId: string
 ): Promise<AgentRequest | undefined> {
-  const request = await context.getRequestsDB().tryGet<AgentRequest>(requestId)
+  const request = await getRequest(requestId)
   return request?.workspaceId === context.getProdWorkspaceId()
     ? request
     : undefined

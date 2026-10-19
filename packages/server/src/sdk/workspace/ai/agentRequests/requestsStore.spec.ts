@@ -1,9 +1,14 @@
-import { context } from "@budibase/backend-core"
-import { DocumentType, SEPARATOR } from "@budibase/types"
+import { context, db as dbCore } from "@budibase/backend-core"
+import { DocumentType, SEPARATOR, SortOrder } from "@budibase/types"
 import type { AgentRequest } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import migration from "../../../../workspaceMigrations/migrations/20261015162044_move_agent_requests_to_tenant_db"
-import { getRequest, toRequestId } from "./requestsStore"
+import {
+  createDesignDoc,
+  getRequest,
+  searchRequests,
+  toRequestId,
+} from "./requestsStore"
 
 describe("requestsStore", () => {
   const config = new TestConfiguration()
@@ -38,6 +43,31 @@ describe("requestsStore", () => {
   describe("toRequestId", () => {
     it("keeps the hex and swaps the prefix", () => {
       expect(toRequestId("agentrequest_abc123")).toEqual("req_abc123")
+    })
+  })
+
+  describe("createDesignDoc", () => {
+    it("treats a conflict from a concurrent first write as success", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await seedLegacyRequest("first")
+        await migration()
+        const put = jest
+          .spyOn(dbCore.DatabaseImpl.prototype, "put")
+          .mockRejectedValueOnce({ status: 409, error: "conflict" })
+
+        try {
+          await expect(createDesignDoc()).resolves.toBeUndefined()
+        } finally {
+          put.mockRestore()
+        }
+
+        const { requests } = await searchRequests({
+          filters: { equal: { workspaceId: config.getProdWorkspaceId() } },
+          sort: [{ field: "createdAt", direction: SortOrder.DESCENDING }],
+          limit: 10,
+        })
+        expect(requests.map(r => r._id)).toEqual(["req_first"])
+      })
     })
   })
 
