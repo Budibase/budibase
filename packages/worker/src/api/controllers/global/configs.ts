@@ -187,11 +187,6 @@ async function processSettingsConfig(
   config: SettingsInnerConfig & SettingsBrandingConfig,
   existingConfig?: SettingsInnerConfig & SettingsBrandingConfig
 ) {
-  // The builder saves settings from the reduced public response.
-  if (existingConfig?.liteLLM && !Object.hasOwn(config, "liteLLM")) {
-    config.liteLLM = existingConfig.liteLLM
-  }
-
   if (config.isSSOEnforced) {
     const valid = await hasActivatedConfig()
     if (!valid) {

@@ -56,8 +56,6 @@ export interface SettingsInnerConfig {
   lockedBy?: LockReason
   deactivationScheduledAt?: string // ISO 8601; when the tenant will be deactivated (set by account-portal on lock)
   active?: boolean
-  /** @deprecated Retained for backwards compatibility with existing stored settings. */
-  liteLLM?: { keyId: string; secretKey: string }
 }
 
 export interface SettingsConfig extends Config<SettingsInnerConfig> {}

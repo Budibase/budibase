@@ -1,8 +1,7 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "target": "es2020",
-    "lib": ["es2022"]
+    "target": "es2020"
   },
   "include": ["src/**/*"],
   "exclude": [

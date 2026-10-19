@@ -10,22 +10,7 @@ import {
 /**
  * Settings returned to unauthenticated clients.
  */
-export interface PublicSettingsInnerConfig
-  extends Pick<
-    SettingsInnerConfig,
-    | "platformUrl"
-    | "company"
-    | "logoUrl"
-    | "docsUrl"
-    | "logoUrlEtag"
-    | "uniqueTenantId"
-    | "analyticsEnabled"
-    | "isSSOEnforced"
-    | "createdVersion"
-    | "lockedBy"
-    | "deactivationScheduledAt"
-    | "active"
-  > {
+export interface PublicSettingsInnerConfig extends SettingsInnerConfig {
   google: boolean
   googleDatasourceConfigured: boolean
   oidc: boolean
