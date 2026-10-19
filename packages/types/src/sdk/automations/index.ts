@@ -6,6 +6,7 @@ import {
   UserBindings,
 } from "../../documents"
 import { Job } from "bull"
+import { PlatformActionOrigin } from "../platformActions"
 
 export interface AutomationResumeContext {
   // Ordered step results from the suspended run - restored into the orchestrator
@@ -27,6 +28,13 @@ export interface AutomationDataEvent {
   // Carries suspended state for resumed automations - restored into context
   // before executeSteps runs so prior bindings remain available.
   resumeContext?: AutomationResumeContext
+  // Logical run identity used to group this run's platform actions, kept
+  // distinct from the job id (transport identity). Only a resumed run needs
+  // to carry it explicitly
+  runId?: string
+  // Who actually invoked this run, carried explicitly because context doesn't
+  // survive the queue. Absent when unknown - never inferred from the trigger
+  triggeredBy?: PlatformActionOrigin
 }
 
 export interface AutomationData {

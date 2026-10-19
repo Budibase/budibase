@@ -311,15 +311,17 @@ const processAttachment = async ({
   }
 }
 
-const getRequester = async (
+const getRequester = async ({
+  turn,
+}: {
   turn: NonNullable<ChatConversation["pendingAttachmentTurns"]>[number]
-) =>
-  turn.requester.linked
-    ? await getGlobalUser(turn.requester.userId)
-    : createTransientPublicUser({
-        userId: turn.requester.userId,
-        displayName: turn.requester.displayName,
-      })
+}): Promise<ContextUser> => {
+  const { userId, linked, displayName } = turn.requester
+  if (linked) {
+    return getGlobalUser(userId)
+  }
+  return createTransientPublicUser({ userId, displayName })
+}
 
 const getAttachmentFailureText = (
   attachments: ChatConversationAttachment[]
@@ -439,13 +441,24 @@ const processTurn = async ({
     messages = [...messages, turn.message]
     responseText = getAttachmentFailureText(failed)
   } else {
-    const requester = await getRequester(turn)
+    const user = await getRequester({ turn })
+    let triggeredBy = turn.triggeredBy
+    // Turns queued before origin snapshots were introduced have no metadata.
+    if (!triggeredBy) {
+      triggeredBy = turn.requester.linked
+        ? sdk.platformActions.getUserOrigin(user)
+        : sdk.platformActions.getTransientChatUserOrigin({
+            provider: current.channel!.provider,
+            displayName: turn.requester.displayName,
+          })
+    }
     const result = await webhookChat({
       chat: {
         ...current,
         messages: [...current.messages, turn.message],
       },
-      user: requester,
+      user,
+      triggeredBy,
     })
     messages = result.messages
     responseText = await formatSlackAssistantReply({

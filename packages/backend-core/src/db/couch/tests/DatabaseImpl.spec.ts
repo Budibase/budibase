@@ -1,4 +1,5 @@
 import tk from "timekeeper"
+import nock from "nock"
 
 import { DatabaseImpl } from ".."
 
@@ -12,6 +13,37 @@ describe("DatabaseImpl", () => {
 
   beforeEach(() => {
     tk.freeze(initialTime)
+  })
+
+  describe("database exists", () => {
+    const connection = "http://user:password@example.com:5984"
+
+    it.each([
+      [200, true],
+      [404, false],
+    ])("returns %s as %s", async (status, expected) => {
+      const database = new DatabaseImpl(generator.guid(), undefined, connection)
+      nock("http://example.com:5984").head(`/${database.name}`).reply(status)
+
+      expect(await database.exists()).toBe(expected)
+    })
+
+    it.each([401, 403, 500, 503])(
+      "rejects unexpected HTTP status %s",
+      async status => {
+        const database = new DatabaseImpl(
+          generator.guid(),
+          undefined,
+          connection
+        )
+        nock("http://example.com:5984").head(`/${database.name}`).reply(status)
+
+        await expect(database.exists()).rejects.toMatchObject({
+          status,
+          statusCode: status,
+        })
+      }
+    )
   })
 
   describe("put", () => {
