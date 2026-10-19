@@ -122,7 +122,7 @@ const getToolLabel = (toolDef: AiToolDefinition) => {
       toolDef.action === ToolAction.TRIGGER
         ? "Run workflow"
         : toolDef.action.replace(/_/g, " ")
-    return `${action.charAt(0).toUpperCase()}${action.slice(1)} \u00b7 ${toolDef.resourceName}`
+    return `${action.charAt(0).toUpperCase()}${action.slice(1)} - ${toolDef.resourceName}`
   }
   return toolDef.readableName
 }

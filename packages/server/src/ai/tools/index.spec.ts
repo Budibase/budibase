@@ -823,12 +823,12 @@ describe("AI tool action accounting", () => {
   })
 
   it.each([
-    [ToolAction.LIST_ROWS, "Customers", "List rows \u00b7 Customers"],
-    [ToolAction.CREATE_ROW, "Orders", "Create row \u00b7 Orders"],
+    [ToolAction.LIST_ROWS, "Customers", "List rows - Customers"],
+    [ToolAction.CREATE_ROW, "Orders", "Create row - Orders"],
     [
       ToolAction.TRIGGER,
       "Send notification",
-      "Run workflow \u00b7 Send notification",
+      "Run workflow - Send notification",
     ],
   ])(
     "captures a readable label for %s",
@@ -861,7 +861,7 @@ describe("AI tool action accounting", () => {
     expect(events.action.aiAgentToolFailed).toHaveBeenCalledWith({
       ...expectedEventContext,
       action: ToolAction.UPDATE_ROW,
-      toolLabel: "Update row \u00b7 Customers",
+      toolLabel: "Update row - Customers",
       reason: ActionFailureReason.ERROR,
       errorMessage: "missing",
     })
