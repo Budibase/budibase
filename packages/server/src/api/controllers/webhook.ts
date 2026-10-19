@@ -173,6 +173,7 @@ export async function trigger(
               body: ctx.request.body,
             },
             appId: prodAppId,
+            triggeredBy: { type: "webhook" },
           },
           { getResponses: true }
         )
@@ -193,6 +194,7 @@ export async function trigger(
             body: ctx.request.body,
           },
           appId: prodAppId,
+          triggeredBy: { type: "webhook" },
         })
         ctx.body = {
           message: "Webhook trigger fired successfully",
