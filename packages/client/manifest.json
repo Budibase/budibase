@@ -6024,17 +6024,21 @@
         "type": "dataSource/s3",
         "label": "S3 datasource",
         "key": "datasourceId",
+        "supportsConditions": false,
         "info": "This component can't be used with S3 datasources that use custom endpoints"
       },
       {
         "type": "text",
         "label": "Bucket",
-        "key": "bucket"
+        "key": "bucket",
+        "supportsConditions": false
       },
       {
         "type": "text",
         "label": "File name",
+        "info": "Use fixed folders or Current User ID bindings for folders, and simple bindings for the file name. Helper expressions and JavaScript bindings are not supported.",
         "key": "key",
+        "supportsConditions": false,
         "nested": true
       },
       {

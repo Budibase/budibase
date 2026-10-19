@@ -1,7 +1,11 @@
 import { constants, objectStore, roles } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import {
+  BasicOperator,
   BuiltinPermissionID,
+  type Component,
+  FieldType,
+  PermissionLevel,
   Datasource,
   Feature,
   Screen,
@@ -10,6 +14,7 @@ import {
 import fsp from "fs/promises"
 import path from "path"
 import { tmpdir } from "os"
+import { generateUserMetadataID } from "../../../db/utils"
 import env, { setEnv } from "../../../environment"
 import * as fileSystem from "../../../utilities/fileSystem"
 import {
@@ -209,6 +214,7 @@ describe("/static", () => {
     describe("generateSignedUrls", () => {
       let datasource: Datasource
       let screen: Screen
+      let uploadComponent: Component
       const componentId = "s3-upload-component"
 
       beforeEach(async () => {
@@ -224,7 +230,7 @@ describe("/static", () => {
           },
         })
         const screenDefinition = structures.basicScreen()
-        screenDefinition.props._children?.push({
+        uploadComponent = {
           _id: componentId,
           _instanceName: "S3 upload",
           _styles: {},
@@ -232,10 +238,300 @@ describe("/static", () => {
           datasourceId: datasource._id,
           bucket: "foo",
           key: "uploads/{{ fileName }}",
-        })
+        }
+        screenDefinition.props._children?.push(uploadComponent)
         screen = await config.createScreen(screenDefinition)
         await config.publish()
       })
+
+      const configureUpload = async ({
+        extra = {},
+        definition = structures.basicScreen(),
+      }: {
+        extra?: Partial<Component>
+        definition?: Screen
+      }) => {
+        definition.props._children = [{ ...uploadComponent, ...extra }]
+        const saved = await config.createScreen(definition)
+        await config.publish()
+        return saved
+      }
+
+      it("should reject a user-created row used as a screen", async () => {
+        const table = await config.createTable(
+          structures.basicTable(undefined, {
+            schema: { props: { name: "props", type: FieldType.JSON } },
+          })
+        )
+        await config.api.permission.add({
+          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+          resourceId: table._id!,
+          level: PermissionLevel.WRITE,
+        })
+        await config.publish()
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          const row = await config.api.row.save(table._id!, {
+            tableId: table._id!,
+            props: {
+              ...uploadComponent,
+              bucket: "attacker-chosen-bucket",
+              key: "arbitrary/existing-object.pdf",
+            },
+          })
+          await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "attacker-chosen-bucket",
+              key: "arbitrary/existing-object.pdf",
+              componentId,
+              screenId: row._id,
+            })
+            .set(config.defaultHeaders())
+            .expect(403)
+        })
+      })
+
+      it("should reject a layout ID used as a screen", async () => {
+        const definition = structures.basicLayout()
+        definition.props._children = [uploadComponent]
+        const layout = await config.createLayout(definition)
+        const restrictedScreen = structures.powerScreen("/restricted-layout")
+        restrictedScreen.layoutId = layout._id
+        await config.createScreen(restrictedScreen)
+        await config.publish()
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "uploads/file.pdf",
+              componentId,
+              screenId: layout._id,
+            })
+            .set(config.defaultHeaders())
+            .expect(403)
+        })
+      })
+
+      it("should allow a layout component through an accessible screen", async () => {
+        const definition = structures.basicLayout()
+        definition.props._children = [uploadComponent]
+        const layout = await config.createLayout(definition)
+        const screenDefinition = structures.basicScreen("/layout-upload")
+        screenDefinition.layoutId = layout._id
+        const layoutScreen = await config.createScreen(screenDefinition)
+        await config.publish()
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          const res = await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "uploads/file.pdf",
+              componentId,
+              screenId: layoutScreen._id,
+            })
+            .set(config.defaultHeaders())
+            .expect(200)
+          expect(res.body.signedUrl).toBeDefined()
+        })
+      })
+
+      it.each([
+        { setting: "bucket", settingValue: "restricted-bucket" },
+        { setting: "datasourceId", settingValue: "another-datasource" },
+        { setting: "key", settingValue: "restricted/{{ fileName }}" },
+      ])(
+        "should reject destinations controlled by a $setting condition",
+        async ({ setting, settingValue }) => {
+          const conditionalScreen = await configureUpload({
+            extra: {
+              _conditions: [
+                {
+                  id: "destination-condition",
+                  action: "update",
+                  setting,
+                  settingValue,
+                  operator: BasicOperator.EQUAL,
+                  type: FieldType.STRING,
+                  valueType: "string",
+                  newValue: "BASIC",
+                  referenceValue: "ADMIN",
+                },
+              ],
+            },
+          })
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "foo",
+                key: "uploads/file.pdf",
+                componentId,
+                screenId: conditionalScreen._id,
+              })
+              .set(config.defaultHeaders())
+              .expect(403)
+          })
+        }
+      )
+
+      it("should reject mixing an inactive conditional bucket with the default key", async () => {
+        const conditionalScreen = await configureUpload({
+          extra: {
+            _conditions: [
+              {
+                id: "bucket-condition",
+                action: "update",
+                setting: "bucket",
+                settingValue: "restricted-bucket",
+                operator: BasicOperator.EQUAL,
+                type: FieldType.STRING,
+                valueType: "string",
+                newValue: "BASIC",
+                referenceValue: "ADMIN",
+              },
+              {
+                id: "key-condition",
+                action: "update",
+                setting: "key",
+                settingValue: "admin/{{ fileName }}",
+                operator: BasicOperator.EQUAL,
+                type: FieldType.STRING,
+                valueType: "string",
+                newValue: "BASIC",
+                referenceValue: "ADMIN",
+              },
+            ],
+          },
+        })
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "restricted-bucket",
+              key: "uploads/file.pdf",
+              componentId,
+              screenId: conditionalScreen._id,
+            })
+            .set(config.defaultHeaders())
+            .expect(403)
+        })
+      })
+
+      it("should allow disabled destination conditions and unrelated UI conditions", async () => {
+        const conditionalScreen = await configureUpload({
+          extra: {
+            _conditions: [
+              {
+                id: "disabled",
+                disabled: true,
+                action: "update",
+                setting: "bucket",
+                settingValue: "other-bucket",
+                operator: BasicOperator.EQUAL,
+                type: FieldType.STRING,
+                valueType: "string",
+                newValue: "BASIC",
+                referenceValue: "ADMIN",
+              },
+              {
+                id: "label",
+                action: "update",
+                setting: "label",
+                settingValue: "Upload",
+                operator: BasicOperator.EQUAL,
+                type: FieldType.STRING,
+                valueType: "string",
+                newValue: "BASIC",
+                referenceValue: "BASIC",
+              },
+            ],
+          },
+        })
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "uploads/file.pdf",
+              componentId,
+              screenId: conditionalScreen._id,
+            })
+            .set(config.defaultHeaders())
+            .expect(200)
+        })
+      })
+
+      it.each([true, false])(
+        "should enforce the current user's directory (own user: %s)",
+        async ownUser => {
+          const userScreen = await configureUpload({
+            extra: {
+              key: "users/{{ [user].[_id] }}/{{ fileName }}",
+            },
+          })
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            const userId = ownUser
+              ? generateUserMetadataID(config.getUser()._id)
+              : "another-user"
+            await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "foo",
+                key: `users/${userId}/file.pdf`,
+                componentId,
+                screenId: userScreen._id,
+              })
+              .set(config.defaultHeaders())
+              .expect(ownUser ? 200 : 403)
+          })
+        }
+      )
+
+      it("should allow a filename binding at the bucket root", async () => {
+        const filenameScreen = await configureUpload({
+          extra: { key: "{{ fileName }}" },
+        })
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          const res = await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "file.pdf",
+              componentId,
+              screenId: filenameScreen._id,
+            })
+            .set(config.defaultHeaders())
+            .expect(200)
+          expect(res.body.publicUrl).toBe(
+            "https://foo.s3.eu-west-1.amazonaws.com/file.pdf"
+          )
+        })
+      })
+
+      it.each([
+        { key: "a".repeat(1025) },
+        { key: "é".repeat(513) },
+        { key: ["uploads/file.pdf"] },
+        { bucket: ["foo"] },
+        { screenId: { id: "screen" } },
+        { componentId: 42 },
+      ])(
+        "should reject invalid upload parameters (case %#)",
+        async overrides => {
+          await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "uploads/file.pdf",
+              componentId,
+              screenId: screen._id,
+              ...overrides,
+            })
+            .set(config.defaultHeaders())
+            .expect(400)
+        }
+      )
 
       it("should be able to generate a signed upload URL", async () => {
         const bucket = "foo"
@@ -309,7 +605,7 @@ describe("/static", () => {
             .post(`/api/attachments/${datasource._id}/url`)
             .send({
               bucket: "foo",
-              key: "bar",
+              key: "uploads/bar",
               componentId,
               screenId: screen._id,
             })

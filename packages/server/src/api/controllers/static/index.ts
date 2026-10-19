@@ -11,23 +11,20 @@ import {
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
 import { InvalidFileExtensions } from "@budibase/shared-core"
-import { findHBSBlocks, processString } from "@budibase/string-templates"
+import { processString } from "@budibase/string-templates"
 import {
   BudibaseAppProps,
-  Component,
   Ctx,
   DocumentType,
   Feature,
   GetSignedUploadUrlRequest,
   GetSignedUploadUrlResponse,
-  Layout,
   ProcessAttachmentResponse,
   PWAManifest,
   PWAManifestImage,
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
-  Screen,
   UserCtx,
   Workspace,
 } from "@budibase/types"
@@ -49,6 +46,7 @@ import {
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
 import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
+import { authorizeS3Upload, MAX_S3_KEY_BYTES } from "./s3Upload"
 
 const ACTIVE_CONTENT_EXTENSIONS = new Set([
   "html",
@@ -764,114 +762,6 @@ export const serveServiceWorker = async function (ctx: Ctx) {
   ctx.body = serviceWorkerContent
 }
 
-const findComponent = (
-  component: Component,
-  componentId: string
-): Component | undefined => {
-  if (component._id === componentId) {
-    return component
-  }
-  for (const child of component._children || []) {
-    const match = findComponent(child, componentId)
-    if (match) {
-      return match
-    }
-  }
-}
-
-const getConfiguredValues = (
-  component: Component,
-  setting: string
-): string[] => {
-  const values = [component[setting]]
-  for (const condition of component._conditions || []) {
-    if (
-      !condition.disabled &&
-      condition.action === "update" &&
-      condition.setting === setting
-    ) {
-      values.push(condition.settingValue)
-    }
-  }
-  return values.filter(value => typeof value === "string")
-}
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-
-const matchesConfiguredKey = (template: string, key: string): boolean => {
-  const blocks = findHBSBlocks(template)
-  if (!blocks.length) {
-    return template === key
-  }
-
-  const firstBlockIndex = template.indexOf(blocks[0])
-  if (firstBlockIndex === 0) {
-    return false
-  }
-
-  let cursor = 0
-  let pattern = "^"
-  for (const block of blocks) {
-    const blockIndex = template.indexOf(block, cursor)
-    pattern += escapeRegex(template.slice(cursor, blockIndex))
-    pattern += "[^/]+"
-    cursor = blockIndex + block.length
-  }
-  pattern += `${escapeRegex(template.slice(cursor))}$`
-  return new RegExp(pattern).test(key)
-}
-
-interface S3UploadAuthorization {
-  ctx: UserCtx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
-  datasourceId: string
-  bucket: string
-  componentId: string
-  key: string
-  screenId: string
-}
-
-const authorizeS3Upload = async ({
-  ctx,
-  datasourceId,
-  bucket,
-  componentId,
-  key,
-  screenId,
-}: S3UploadAuthorization): Promise<void> => {
-  const db = context.getWorkspaceDB()
-  const screen = await db.tryGet<Screen>(screenId)
-  const accessibleScreen = screen
-    ? await new roles.AccessController().checkScreenAccess(
-        screen,
-        ctx.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
-      )
-    : undefined
-  if (!accessibleScreen) {
-    ctx.throw(403, "The S3 upload component is not accessible")
-    return
-  }
-
-  let component = findComponent(accessibleScreen.props, componentId)
-  if (!component && accessibleScreen.layoutId) {
-    const layout = await db.tryGet<Layout>(accessibleScreen.layoutId)
-    if (layout?.props) {
-      component = findComponent(layout.props, componentId)
-    }
-  }
-
-  const isConfiguredUpload =
-    component?._component.endsWith("s3upload") &&
-    getConfiguredValues(component, "datasourceId").includes(datasourceId) &&
-    getConfiguredValues(component, "bucket").includes(bucket) &&
-    getConfiguredValues(component, "key").some(template =>
-      matchesConfiguredKey(template, key)
-    )
-  if (!isConfiguredUpload) {
-    ctx.throw(403, "The S3 upload destination is not configured")
-  }
-}
-
 export const getSignedUploadURL = async function (
   ctx: UserCtx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
 ) {
@@ -888,11 +778,22 @@ export const getSignedUploadURL = async function (
   }
 
   const { bucket, componentId, key, screenId } = ctx.request.body || {}
-  if (!bucket || !key) {
+  if (
+    typeof bucket !== "string" ||
+    !bucket ||
+    typeof key !== "string" ||
+    !key
+  ) {
     ctx.throw(400, "bucket and key values are required")
   }
-  if (!componentId || !screenId) {
+  if (
+    [componentId, screenId].some(value => typeof value !== "string" || !value)
+  ) {
     ctx.throw(400, "componentId and screenId values are required")
+  }
+
+  if (Buffer.byteLength(key, "utf8") > MAX_S3_KEY_BYTES) {
+    ctx.throw(400, "S3 object keys cannot exceed 1024 bytes")
   }
 
   await authorizeS3Upload({
