@@ -321,7 +321,7 @@ describe("PlatformActionPersistProcessor", () => {
       { reason: ActionFailureReason.ERROR, errorMessage: "missing" },
     ],
   ])(
-    "records %s in its agent session without asserting a session status",
+    "records %s in its agent session without signalling a session status",
     async (event, failure) => {
       await run(async () => {
         const properties = {
@@ -444,7 +444,7 @@ describe("PlatformActionPersistProcessor", () => {
       ["waiting", { awaitingEscalation: true }],
     ])(
       "keeps a %s session unchanged when tool calls arrive after it",
-      async (status, lifecycle) => {
+      async (expectedStatus, lifecycle) => {
         await run(async () => {
           const lifecycleTimestamp = "2026-10-16T10:00:01.000Z"
           await processor.processEvent(
@@ -474,7 +474,7 @@ describe("PlatformActionPersistProcessor", () => {
           )
 
           const session = await getSession()
-          expect(session.status).toBe(status)
+          expect(session.status).toBe(expectedStatus)
           expect(session.statusUpdatedAt).toBe(lifecycleTimestamp)
           expect(session.completedAt).toBe(before.completedAt)
           expect(session.actionCount).toBe(3)
