@@ -358,6 +358,7 @@ export async function trigger(
         {
           fields: ctx.request.body.fields,
           user: sdk.users.getUserContextBindings(ctx.user),
+          triggeredBy: sdk.platformActions.getUserOrigin(ctx.user),
           timeout:
             ctx.request.body.timeout * 1000 || env.AUTOMATION_THREAD_TIMEOUT,
         },
@@ -384,6 +385,7 @@ export async function trigger(
       ...ctx.request.body,
       appId: ctx.appId,
       user: sdk.users.getUserContextBindings(ctx.user),
+      triggeredBy: sdk.platformActions.getUserOrigin(ctx.user),
     })
     ctx.body = {
       message: `Automation ${automation._id} has been triggered.`,
@@ -495,9 +497,17 @@ export async function test(
       await updateTestHistory(automation, { ...testBody, occurredAt })
       const input = prepareTestInput(testBody)
       const user = sdk.users.getUserContextBindings(testUser)
+      // The developer who ran Test, regardless of the preview role or the
+      // configured trigger
+      const triggeredBy = sdk.platformActions.getUserOrigin(ctx.user)
       return await triggers.externalTrigger(
         { ...automation, disabled: false },
-        { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
+        {
+          ...{ ...input, ...(table ? { table } : {}) },
+          appId,
+          user,
+          triggeredBy,
+        },
         { getResponses: true, onProgress: emitProgress, isTestRun: true }
       )
     })

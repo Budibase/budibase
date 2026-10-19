@@ -38,6 +38,11 @@ export enum ViewName {
   USER_BY_GROUP = "user_by_group",
   WORKSPACE_BACKUP_BY_TRIGGER = "by_trigger",
   WORKSPACE_BACKUP_BY_EXPIRY = "workspace_backup_by_expiry",
+  PLATFORM_ACTION_SESSIONS_BY_UPDATED_AT = "platform_action_sessions_by_updated_at",
+  PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT = "platform_action_sessions_by_status_and_updated_at",
+  PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_AND_UPDATED_AT = "platform_action_sessions_by_environment_and_updated_at",
+  PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_STATUS_AND_UPDATED_AT = "platform_action_sessions_by_environment_status_and_updated_at",
+  PLATFORM_ACTION_EVENTS_BY_SESSION = "platform_action_events_by_session",
 }
 
 export const DeprecatedViews: Record<string, string[]> = {
