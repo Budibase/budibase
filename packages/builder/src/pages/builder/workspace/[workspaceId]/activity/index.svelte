@@ -405,30 +405,10 @@
         return
       }
 
-      if (summary) {
-        summary = {
-          ...summary,
-          total: summary.total + 1,
-          [request.status]: summary[request.status] + 1,
-        }
-      }
-
-      // A brand-new request lands at the top of page 1. Later pages are
-      // addressed by bookmark, so their rows don't shift.
-      if (currentPage !== 1) {
-        return
-      }
-
-      if (allRequests.length >= PAGE_SIZE) {
-        hasNextPage = true
-      }
-
-      allRequests = [request, ...allRequests].slice(0, PAGE_SIZE)
-      try {
-        await hydrateUserNames([request])
-      } catch (error) {
-        console.error("Failed to hydrate agent request user name", error)
-      }
+      // Either a new request or a change to a row on another page. Both move
+      // rows and counts the client can't reproduce locally, so re-fetch the
+      // current page and summary.
+      await loadRequests(currentPage)
     }
 
     socket.on(BuilderSocketEvent.AgentRequestChange, handleAgentRequestChange)
