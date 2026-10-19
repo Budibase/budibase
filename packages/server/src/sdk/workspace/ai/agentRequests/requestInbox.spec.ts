@@ -222,7 +222,9 @@ describe("request inbox", () => {
         await seedLegacyRequest("channel", {
           status: "needs_input",
           createdAt: "2026-10-04T10:00:00.000Z",
-          actions: [escalationRaised("esc_channel", "2026-10-04T10:00:01.000Z")],
+          actions: [
+            escalationRaised("esc_channel", "2026-10-04T10:00:01.000Z"),
+          ],
         })
         await seedEscalation("esc_channel", "agentrequest_channel", {
           policy: { id: "policy_3", name: "Slack channel", approvers: [] },
