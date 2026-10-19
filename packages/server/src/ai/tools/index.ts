@@ -25,6 +25,7 @@ export interface ToolAuthorization {
 export interface AiToolDefinition {
   name: string
   readableName?: string
+  resourceName?: string
   tableId?: string
   sourceId?: string
   description: string
@@ -115,17 +116,35 @@ const logToolExecution = (
     ...(error !== undefined && { error: getErrorMessage(error) }),
   })
 
-const toolEventContext = (
-  toolDef: AiToolDefinition,
-  { executionContext }: ToolAuthorizationRuntime
-) => ({
-  agentId: executionContext.agentId,
-  sessionId: executionContext.conversationId,
-  operationId: executionContext.operationId,
-  toolName: toolDef.name,
-  sourceType: toolDef.sourceType,
-  ...(toolDef.action && { action: toolDef.action }),
-})
+const getToolLabel = (toolDef: AiToolDefinition) => {
+  if (toolDef.resourceName && toolDef.action) {
+    const action =
+      toolDef.action === ToolAction.TRIGGER
+        ? "Run workflow"
+        : toolDef.action.replace(/_/g, " ")
+    return `${action.charAt(0).toUpperCase()}${action.slice(1)} - ${toolDef.resourceName}`
+  }
+  return toolDef.readableName
+}
+
+const toolEventContext = ({
+  toolDef,
+  runtime: { executionContext },
+}: {
+  toolDef: AiToolDefinition
+  runtime: ToolAuthorizationRuntime
+}) => {
+  const toolLabel = getToolLabel(toolDef)
+  return {
+    agentId: executionContext.agentId,
+    sessionId: executionContext.conversationId,
+    operationId: executionContext.operationId,
+    toolName: toolDef.name,
+    ...(toolLabel && { toolLabel }),
+    sourceType: toolDef.sourceType,
+    ...(toolDef.action && { action: toolDef.action }),
+  }
+}
 
 type RunTool = <T>(execute: () => Promise<T>) => Promise<T>
 
@@ -202,14 +221,16 @@ const wrapTool = ({
             : result
         if (runtime) {
           logToolExecution("success", toolDef, runtime)
-          events.action.aiAgentToolExecuted(toolEventContext(toolDef, runtime))
+          events.action.aiAgentToolExecuted(
+            toolEventContext({ toolDef, runtime })
+          )
         }
         return authorizedResult
       } catch (error) {
         if (runtime) {
           logToolExecution("error", toolDef, runtime, error)
           events.action.aiAgentToolFailed({
-            ...toolEventContext(toolDef, runtime),
+            ...toolEventContext({ toolDef, runtime }),
             reason: ActionFailureReason.ERROR,
             errorMessage: getErrorMessage(error),
           })
