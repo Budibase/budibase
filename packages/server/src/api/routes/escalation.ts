@@ -13,4 +13,10 @@ escalationRoutes
   .post("/api/escalations/:id/resolve", controller.resolve)
   .post("/api/escalations/:id/cancel", controller.cancel)
 
-publicRoutes.post("/api/escalations/:id/respond", controller.respond)
+// Approvers need not be builders, so this sits outside the authorized groups
+// and has to apply CSRF protection itself
+publicRoutes.post(
+  "/api/escalations/:id/respond",
+  auth.buildCsrfMiddleware(),
+  controller.respond
+)
