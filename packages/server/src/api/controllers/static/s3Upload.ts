@@ -52,19 +52,13 @@ const matchesKeyParts = ({ parts, key }: { parts: string[]; key: string }) => {
 
   const suffix = filenameParts[filenameParts.length - 1]
   for (const part of filenameParts.slice(0, -1)) {
-    const [character] = filename
-    if (!character) {
-      return false
-    }
-    // Each binding consumes at least one character. The earliest literal
-    // leaves the most room for the remaining bindings.
-    const index = filename.indexOf(part, character.length)
+    const index = filename.indexOf(part)
     if (index === -1) {
       return false
     }
     filename = filename.slice(index + part.length)
   }
-  return filename.endsWith(suffix) && filename.length > suffix.length
+  return filename.endsWith(suffix)
 }
 
 export const matchesConfiguredKey = ({
@@ -77,6 +71,8 @@ export const matchesConfiguredKey = ({
   user: UserBindings
 }): boolean => {
   if (
+    !key ||
+    key.endsWith("/") ||
     template.length > 8192 ||
     Buffer.byteLength(key, "utf8") > MAX_S3_KEY_BYTES
   ) {

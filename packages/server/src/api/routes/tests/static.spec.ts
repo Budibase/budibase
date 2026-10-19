@@ -564,6 +564,26 @@ describe("/static", () => {
         )
       })
 
+      it("should sign uploads with an empty optional filename suffix", async () => {
+        const configuredScreen = await configureUpload({
+          extra: { key: "uploads/{{ name }}-{{ suffix }}.pdf" },
+        })
+        const res = await request
+          .post(`/api/attachments/${datasource._id}/url`)
+          .send({
+            bucket: "foo",
+            key: "uploads/report-.pdf",
+            componentId,
+            screenId: configuredScreen._id,
+          })
+          .set(config.defaultHeaders())
+          .expect(200)
+
+        expect(res.body.signedUrl).toStartWith(
+          "https://foo.s3.eu-west-1.amazonaws.com/uploads/report-.pdf?"
+        )
+      })
+
       it("should handle an invalid datasource ID", async () => {
         const res = await request
           .post(`/api/attachments/foo/url`)
