@@ -1,10 +1,7 @@
 import { context, db as dbCore } from "@budibase/backend-core"
 import { DocumentType, SEPARATOR } from "@budibase/types"
 import type { AgentRequest, EscalationContextDoc } from "@budibase/types"
-import {
-  migrateLegacyRequest,
-  toRequestId,
-} from "../../sdk/workspace/ai/agentRequests/requestsStore"
+import sdk from "../../sdk"
 
 const OLD_PREFIX = `${DocumentType.AGENT_REQUEST}${SEPARATOR}`
 
@@ -23,7 +20,10 @@ const relinkEscalations = async () => {
   )
   const relinked = escalations
     .filter(doc => doc.requestId?.startsWith(OLD_PREFIX))
-    .map(doc => ({ ...doc, requestId: toRequestId(doc.requestId!) }))
+    .map(doc => ({
+      ...doc,
+      requestId: sdk.ai.agentRequests.toRequestId(doc.requestId!),
+    }))
   if (relinked.length) {
     await context.getWorkspaceDB().bulkDocs(relinked)
   }
@@ -37,7 +37,7 @@ const migration = async () => {
   }
   const requests = await allOfType<AgentRequest>(DocumentType.AGENT_REQUEST)
   for (const request of requests) {
-    await migrateLegacyRequest(request)
+    await sdk.ai.agentRequests.migrateLegacyRequest(request)
   }
   await relinkEscalations()
 }
