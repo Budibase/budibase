@@ -7,6 +7,7 @@ import m20250618162639_workspace_apps from "./migrations/20250618162639_workspac
 import m20250729134531_workspace_cleanups from "./migrations/20250729134531_workspace_cleanups"
 import m20260227144312_unify_ai_configs from "./migrations/20260227144312_unify_ai_configs"
 import m20260708090000_sanitize_relationship_field_names from "./migrations/20260708090000_sanitize_relationship_field_names"
+import m20261006164506_backfill_agent_request_operation_ids from "./migrations/20261006164506_backfill_agent_request_operation_ids"
 
 export const MIGRATIONS: WorkspaceMigration[] = [
   // Migrations will be executed sorted by id
@@ -29,5 +30,9 @@ export const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20260708090000_sanitize_relationship_field_names",
     func: m20260708090000_sanitize_relationship_field_names,
+  },
+  {
+    id: "20261006164506_backfill_agent_request_operation_ids",
+    func: m20261006164506_backfill_agent_request_operation_ids,
   },
 ]

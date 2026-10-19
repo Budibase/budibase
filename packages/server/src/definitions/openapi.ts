@@ -320,23 +320,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/views/{viewId}/rows/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Search for rows in a view */
-        post: operations["rowViewSearch"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/tables": {
         parameters: {
             query?: never;
@@ -529,6 +512,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/views/{viewId}/rows/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Search for rows in a view */
+        post: operations["rowViewSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/workspaces": {
         parameters: {
             query?: never;
@@ -633,6 +633,26 @@ export interface paths {
          * @description This endpoint is only available on an enterprise license.
          */
         post: operations["workspaceExport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspaceId}/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List user groups for a workspace
+         * @description Returns groups that grant role or builder access to this workspace. Requires a global admin API key and the user groups and expanded public API features. Both development and production workspace IDs are accepted. SCIM-managed groups are included but their memberships cannot be changed through the public user API.
+         */
+        get: operations["workspaceListGroups"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1235,6 +1255,8 @@ export interface components {
             roles?: {
                 [key: string]: string;
             };
+            /** @description The IDs of the user's groups. Find group IDs using GET /workspaces/{workspaceId}/groups or the Copy group ID button in Settings > People > Groups. Requires a global admin and the user groups and expanded public API features. On update, replaces memberships; omit to preserve them or provide an empty array to remove all memberships. SCIM-managed memberships cannot be added or removed. New users without group assignments receive the default group, if configured. */
+            userGroups?: string[];
         };
         userOutput: {
             data: {
@@ -1267,6 +1289,8 @@ export interface components {
                 roles?: {
                     [key: string]: string;
                 };
+                /** @description The IDs of the groups the user belongs to. */
+                userGroups?: string[];
                 /** @description The ID of the user. */
                 _id: string;
             };
@@ -1302,6 +1326,8 @@ export interface components {
                 roles?: {
                     [key: string]: string;
                 };
+                /** @description The IDs of the groups the user belongs to. */
+                userGroups?: string[];
                 /** @description The ID of the user. */
                 _id: string;
             }[];
@@ -1815,6 +1841,18 @@ export interface components {
                 };
                 /** @description The ID of the view. */
                 id: string;
+            }[];
+        };
+        userGroupList: {
+            data: {
+                /** @description The group ID to use in a user's userGroups array. */
+                _id: string;
+                /** @description The group's name. */
+                name: string;
+                /** @description Whether new users are automatically assigned to this group. */
+                isDefault: boolean;
+                /** @description Whether the group is managed by SCIM. Memberships in these groups cannot be changed through the public user API. */
+                managedByScim: boolean;
             }[];
         };
     };
@@ -2344,36 +2382,6 @@ export interface operations {
             };
         };
     };
-    rowViewSearch: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description The ID of the app which this request is targeting. */
-                "x-budibase-app-id": components["parameters"]["appId"];
-            };
-            path: {
-                /** @description The ID of the view which this request is targeting. */
-                viewId: components["parameters"]["viewId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["rowSearch"];
-            };
-        };
-        responses: {
-            /** @description The response will contain an array of rows that match the search parameters. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["searchOutput"];
-                };
-            };
-        };
-    };
     tableCreate: {
         parameters: {
             query?: never;
@@ -2767,6 +2775,36 @@ export interface operations {
             };
         };
     };
+    rowViewSearch: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the view which this request is targeting. */
+                viewId: components["parameters"]["viewId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["rowSearch"];
+            };
+        };
+        responses: {
+            /** @description The response will contain an array of rows that match the search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["searchOutput"];
+                };
+            };
+        };
+    };
     workspaceCreate: {
         parameters: {
             query?: never;
@@ -2964,6 +3002,29 @@ export interface operations {
                 };
                 content: {
                     "application/gzip": string;
+                };
+            };
+        };
+    };
+    workspaceListGroups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The ID of the workspace which this request is targeting. */
+                workspaceId: components["parameters"]["workspaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the groups associated with the workspace. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["userGroupList"];
                 };
             };
         };
