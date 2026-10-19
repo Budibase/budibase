@@ -505,15 +505,18 @@ describe("Project data export and import", () => {
           context.getWorkspaceId() === workspaceId &&
           docs.some(doc => doc._id?.startsWith("ro_") && !doc._deleted)
         ) {
-          const saved = await this.put(docs[0])
-          return [
-            { id: saved.id, rev: saved.rev },
-            ...docs.slice(1).map(doc => ({
+          const row = docs.find(doc => doc.attachment)!
+          const saved = await this.put(row)
+          return docs.map(doc => {
+            if (doc._id === row._id) {
+              return { id: saved.id, rev: saved.rev }
+            }
+            return {
               id: doc._id!,
               error: "conflict",
               reason: "import failed",
-            })),
-          ]
+            }
+          })
         }
         return await originalBulkDocs.call(this, docs)
       })
@@ -579,7 +582,62 @@ describe("Project data export and import", () => {
     })
   })
 
-  it("preserves completed rows and attachment content if releasing the assignment lock fails", async () => {
+  it("preserves uploaded attachment content when database rollback reports conflicts", async () => {
+    await withProjectsEnabled(async () => {
+      const { archive } = await createProjectDataArchive()
+      const destination = await createDestination()
+      const bulkDocs = failRowImportAfterFirstWrite({
+        workspaceId: destination.appId,
+      })
+      const actualBulkRemove = DatabaseImpl.prototype.bulkRemove
+      const bulkRemove = jest
+        .spyOn(DatabaseImpl.prototype, "bulkRemove")
+        .mockImplementationOnce(async function (
+          this: DatabaseImpl,
+          docs,
+          opts
+        ) {
+          return await actualBulkRemove.call(
+            this,
+            docs.map(doc => ({
+              ...doc,
+              _rev: "1-00000000000000000000000000000000",
+            })),
+            opts
+          )
+        })
+
+      try {
+        await config.withHeaders(
+          { [Header.WORKSPACE_ID]: destination.appId },
+          async () => {
+            await config.api.project.import(archive, undefined, {
+              status: 400,
+              body: {
+                message: expect.stringContaining(
+                  "Project import failed while saving"
+                ),
+              },
+            })
+
+            const tables = await config.api.table.fetch()
+            const tasks = tables.find(table => table.name === "Tasks")!
+            const rows = await config.api.row.fetch(tasks._id!)
+
+            expect(rows).toHaveLength(1)
+            expect(await readAttachmentContent(rows[0].attachment)).toEqual(
+              attachmentContent
+            )
+          }
+        )
+      } finally {
+        bulkDocs.mockRestore()
+        bulkRemove.mockRestore()
+      }
+    })
+  })
+
+  it("returns the completed import if releasing the assignment lock fails", async () => {
     await withProjectsEnabled(async () => {
       const { archive } = await createProjectDataArchive()
       const destination = await config.api.workspace.create({
@@ -600,12 +658,20 @@ describe("Project data export and import", () => {
         await config.withHeaders(
           { [Header.WORKSPACE_ID]: destination.appId },
           async () => {
-            await config.api.project.import(archive, undefined, { status: 500 })
-            const tables = await config.api.table.fetch()
-            const tasks = tables.find(table => table.name === "Tasks")!
-            const rows = await config.api.row.fetch(tasks._id!)
+            const imported = await config.api.project.import(archive)
+            const { rows } = await readImportedData(imported)
+            const { projects } = await config.api.project.fetch()
             const usageAfter = await getRowUsage(destination.appId)
 
+            expect(projects.map(project => project._id)).toEqual([
+              imported.project._id,
+            ])
+            expect(imported.dataImport).toEqual({
+              tables: 2,
+              rows: 3,
+              relationships: 1,
+              attachments: 1,
+            })
             expect(rows).toHaveLength(1)
             expect(await readAttachmentContent(rows[0].attachment)).toEqual(
               attachmentContent

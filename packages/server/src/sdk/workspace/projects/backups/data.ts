@@ -5,6 +5,7 @@ import {
   objectStore,
   utils,
 } from "@budibase/backend-core"
+import { helpers } from "@budibase/shared-core"
 import {
   AutoFieldSubType,
   BBReferenceFieldSubType,
@@ -485,7 +486,8 @@ export const prepareProjectData = ({
         throw invalidData("requires an importing user for its user references")
       }
       row[name] =
-        field.type === FieldType.BB_REFERENCE_SINGLE
+        field.type === FieldType.BB_REFERENCE_SINGLE ||
+        helpers.schema.isDeprecatedSingleUserColumn(field)
           ? importingUserId
           : [importingUserId]
     }
@@ -507,7 +509,7 @@ export const prepareProjectData = ({
     relationships,
     attachments,
     summary: {
-      tables: new Set(rows.map(row => row.tableId)).size,
+      tables: selectedTables.size,
       rows: rows.length,
       relationships: relationships.length,
       attachments: attachments.length,
