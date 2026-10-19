@@ -582,14 +582,21 @@ describe("/static", () => {
       })
 
       it("should require authorization to generate a signed upload URL", async () => {
+        const publicScreen = await configureUpload({
+          definition: structures.customScreen({
+            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+            route: "/public-upload",
+          }),
+        })
         await request
           .post(`/api/attachments/${datasource._id}/url`)
           .send({
             bucket: "foo",
-            key: "bar",
+            key: "uploads/bar",
             componentId,
-            screenId: screen._id,
+            screenId: publicScreen._id,
           })
+          .set(config.publicHeaders())
           .expect("Content-Type", /json/)
           .expect(401)
       })
@@ -600,6 +607,17 @@ describe("/static", () => {
           permissionId: BuiltinPermissionID.READ_ONLY,
           inherits: roles.BUILTIN_ROLE_IDS.PUBLIC,
         })
+        await config.api.permission.add({
+          roleId: readOnlyRole._id!,
+          resourceId: datasource._id!,
+          level: PermissionLevel.READ,
+        })
+        const accessibleScreen = await configureUpload({
+          definition: structures.customScreen({
+            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+            route: "/read-only-upload",
+          }),
+        })
         await config.loginAsRole(readOnlyRole._id!, async () => {
           await request
             .post(`/api/attachments/${datasource._id}/url`)
@@ -607,7 +625,7 @@ describe("/static", () => {
               bucket: "foo",
               key: "uploads/bar",
               componentId,
-              screenId: screen._id,
+              screenId: accessibleScreen._id,
             })
             .set(config.defaultHeaders())
             .expect("Content-Type", /json/)
@@ -751,26 +769,115 @@ describe("/static", () => {
         })
       })
 
-      it("should allow non-creator app users to generate a configured signed upload URL", async () => {
+      it.each([
+        { template: "bar", key: "bar" },
+        { template: "uploads/{{ fileName }}", key: "uploads/bar" },
+      ])(
+        "should allow non-creator app users to upload to $template",
+        async ({ template, key }) => {
+          const uploadScreen = await configureUpload({
+            extra: { key: template },
+          })
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            const res = await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "foo",
+                key,
+                componentId,
+                screenId: uploadScreen._id,
+              })
+              .set(config.defaultHeaders())
+              .expect("Content-Type", /json/)
+              .expect(200)
+
+            expect(res.body.signedUrl).toContain("X-Amz-Signature=")
+            expect(res.body.signedUrl).toContain("x-id=PutObject")
+            expect(res.body.signedUrl).not.toContain("x-amz-checksum")
+            expect(res.body.publicUrl).toEqual(
+              `https://foo.s3.eu-west-1.amazonaws.com/${key}`
+            )
+          })
+        }
+      )
+
+      it("should apply datasource-specific write permissions to BASIC users", async () => {
+        await config.api.permission.add({
+          roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+          resourceId: datasource._id!,
+          level: PermissionLevel.WRITE,
+        })
+        await config.publish()
         await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
-          const res = await request
+          await request
             .post(`/api/attachments/${datasource._id}/url`)
             .send({
               bucket: "foo",
-              key: "uploads/bar",
+              key: "uploads/file.pdf",
               componentId,
               screenId: screen._id,
             })
             .set(config.defaultHeaders())
-            .expect("Content-Type", /json/)
-            .expect(200)
-
-          expect(res.body.signedUrl).toBeDefined()
-          expect(res.body.publicUrl).toEqual(
-            "https://foo.s3.eu-west-1.amazonaws.com/uploads/bar"
-          )
+            .expect(403)
         })
       })
+
+      it("should allow a custom app role explicitly granted datasource write permission", async () => {
+        const role = await config.api.roles.save({
+          name: "s3_upload_writer",
+          permissionId: BuiltinPermissionID.READ_ONLY,
+          inherits: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        })
+        await config.api.permission.add({
+          roleId: role._id!,
+          resourceId: datasource._id!,
+          level: PermissionLevel.WRITE,
+        })
+        const uploadScreen = await configureUpload({
+          definition: structures.customScreen({
+            roleId: role._id!,
+            route: "/custom-role-upload",
+          }),
+        })
+        await config.loginAsRole(role._id!, async () => {
+          const res = await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "uploads/file.pdf",
+              componentId,
+              screenId: uploadScreen._id,
+            })
+            .set(config.defaultHeaders())
+            .expect(200)
+          expect(res.body.signedUrl).toContain("X-Amz-Signature=")
+        })
+      })
+
+      it.each([
+        { bucket: "other-bucket" },
+        { key: "other/file.pdf" },
+        { key: "uploads/nested/file.pdf" },
+        { componentId: "other-component" },
+        { componentId: undefined, screenId: undefined },
+      ])(
+        "should reject BASIC-user destination tampering (case %#)",
+        async overrides => {
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "foo",
+                key: "uploads/file.pdf",
+                componentId,
+                screenId: screen._id,
+                ...overrides,
+              })
+              .set(config.defaultHeaders())
+              .expect("screenId" in overrides ? 400 : 403)
+          })
+        }
+      )
     })
   })
 
