@@ -1426,20 +1426,26 @@ const cleanupFailedProjectImport = async ({
   insertedDocs: InsertedDocRef[]
   importedProject?: Project
 }) => {
+  let cleanedUp = true
   try {
     if (insertedDocs.length) {
       await context.getWorkspaceDB().bulkRemove(insertedDocs)
     }
+  } catch (err) {
+    console.log("Failed to clean up Project import resources", err)
+    cleanedUp = false
+  }
+  try {
     if (importedProject?._id && importedProject._rev) {
       await context
         .getWorkspaceDB()
         .remove(importedProject._id, importedProject._rev)
     }
-    return true
   } catch (err) {
-    console.log("Failed to clean up Project import", err)
-    return false
+    console.log("Failed to clean up imported Project", err)
+    cleanedUp = false
   }
+  return cleanedUp
 }
 
 const cleanupProjectAttachments = async (uploadedKeys: string[]) => {
