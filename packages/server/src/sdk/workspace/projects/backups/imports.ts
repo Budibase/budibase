@@ -1428,17 +1428,17 @@ const cleanupFailedProjectImport = async ({
 }) => {
   try {
     if (insertedDocs.length) {
-      await context.getWorkspaceDB().bulkRemove(insertedDocs, {
-        silenceErrors: true,
-      })
+      await context.getWorkspaceDB().bulkRemove(insertedDocs)
     }
     if (importedProject?._id && importedProject._rev) {
       await context
         .getWorkspaceDB()
         .remove(importedProject._id, importedProject._rev)
     }
+    return true
   } catch (err) {
     console.log("Failed to clean up Project import", err)
+    return false
   }
 }
 
@@ -1478,7 +1478,8 @@ export async function importProject(
 
   const extracted = await extractProjectPackage(file, opts?.encryptPassword)
   const uploadedKeys: string[] = []
-  let persisted = false
+  let completedImport: ImportProjectResponse | undefined
+  let canCleanupAttachments = true
   try {
     const idMap = new Map<string, string>([
       [extracted.manifest.sourceWorkspace.id, workspaceId],
@@ -1635,16 +1636,22 @@ export async function importProject(
         const result = preparedData?.rows.length
           ? await quotas.addRows(preparedData.rows.length, persistImport)
           : await persistImport()
-        persisted = true
+        completedImport = result
         return result
       } catch (err) {
-        await cleanupFailedProjectImport({ insertedDocs, importedProject })
+        canCleanupAttachments = await cleanupFailedProjectImport({
+          insertedDocs,
+          importedProject,
+        })
         throw err
       }
     })
   } catch (err) {
-    // Releasing the lock can fail after the import has succeeded.
-    if (!persisted) {
+    if (completedImport) {
+      console.log("Failed to release Project import lock", err)
+      return completedImport
+    }
+    if (canCleanupAttachments) {
       await cleanupProjectAttachments(uploadedKeys)
     }
     if (err instanceof UsageLimitWarning) {

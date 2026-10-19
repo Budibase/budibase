@@ -204,6 +204,105 @@ describe("Project package data", () => {
     expect({ data, tables }).toEqual(source)
   })
 
+  it("preserves single and multi-user shapes when remapping deprecated user columns", () => {
+    const { data, tables } = fixture()
+    tables[0].schema = {
+      ...tables[0].schema,
+      legacyAssignee: {
+        name: "legacyAssignee",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+      },
+      legacyStringAssignee: {
+        name: "legacyStringAssignee",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: { type: "string" },
+      },
+      members: {
+        name: "members",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USER,
+        constraints: { type: "array" },
+      },
+      legacyMembers: {
+        name: "legacyMembers",
+        type: FieldType.BB_REFERENCE,
+        subtype: BBReferenceFieldSubType.USERS,
+      },
+    }
+    Object.assign(data.rows[0], {
+      legacyAssignee: "us_author",
+      legacyStringAssignee: "us_author",
+      members: ["us_author", "us_other"],
+      legacyMembers: ["us_author", "us_other"],
+    })
+
+    const result = prepareProjectData({
+      data: validate({ data, tables }),
+      tables,
+      idMap: new Map([
+        ["ta_source", "ta_destination"],
+        ["ta_related", "ta_other"],
+      ]),
+      workspaceId: "app_dev_destination",
+      userId: db.generateUserMetadataID("us_importer"),
+    })
+
+    expect(result.rows[0]).toMatchObject({
+      assignee: "us_importer",
+      legacyAssignee: "us_importer",
+      legacyStringAssignee: "us_importer",
+      members: ["us_importer"],
+      legacyMembers: ["us_importer"],
+      createdBy: ["us_importer"],
+    })
+  })
+
+  it("counts imported empty internal tables alongside populated tables", () => {
+    const { data, tables } = fixture()
+    tables.push(
+      basicTable(undefined, { _id: "ta_empty" }),
+      basicTable(undefined, { _id: "ta_external", sourceId: "ds_external" }),
+      basicTable(undefined, { _id: InternalTable.USER_METADATA })
+    )
+
+    const result = prepareProjectData({
+      data: validate({ data, tables }),
+      tables,
+      idMap: new Map([
+        ["ta_source", "ta_destination"],
+        ["ta_related", "ta_other"],
+        ["ta_empty", "ta_destination_empty"],
+      ]),
+      workspaceId: "app_dev_destination",
+      userId: db.generateUserMetadataID("us_importer"),
+    })
+
+    expect(result.summary).toEqual({
+      tables: 3,
+      rows: 2,
+      relationships: 1,
+      attachments: 1,
+    })
+  })
+
+  it("counts imported tables when all of them are empty", () => {
+    const result = prepareProjectData({
+      data: { rows: [], relationships: [], attachments: [] },
+      tables: [basicTable(undefined, { _id: "ta_empty" })],
+      idMap: new Map([["ta_empty", "ta_destination_empty"]]),
+      workspaceId: "app_dev_destination",
+    })
+
+    expect(result.summary).toEqual({
+      tables: 1,
+      rows: 0,
+      relationships: 0,
+      attachments: 0,
+    })
+  })
+
   it("rejects user references without an importing user", () => {
     const { data, tables } = fixture()
 
