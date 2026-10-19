@@ -21,22 +21,55 @@ function toCompactTimestamp(isoTimestamp: string): string {
   return isoTimestamp.replace(/[-:.]/g, "")
 }
 
-function isActionSourceContext(
-  properties: Record<string, unknown>
-): properties is Record<string, unknown> & {
-  sourceType: string
+const isAgentToolEvent = (event: Event) =>
+  event === Event.ACTION_AI_AGENT_TOOL_EXECUTED ||
+  event === Event.ACTION_AI_AGENT_TOOL_FAILED
+
+interface PersistableAction {
+  sourceType: PlatformActionSourceType
   sourceId: string
-} {
-  return (
-    typeof properties.sourceType === "string" &&
-    typeof properties.sourceId === "string"
-  )
+  payload: Record<string, unknown>
+}
+
+// The tool event's own sourceType is the tool type (INTERNAL_TABLE,
+// AUTOMATION...), not an Activity container. The call belongs to the agent
+// session that ran it, and the payload keeps the event unchanged.
+function fromAgentToolEvent(
+  properties: Record<string, unknown>
+): PersistableAction | undefined {
+  if (typeof properties.sessionId !== "string") {
+    return undefined
+  }
+  return {
+    sourceType: "agent_session",
+    sourceId: properties.sessionId,
+    payload: properties,
+  }
+}
+
+function fromActionSourceContext(
+  properties: Record<string, unknown>
+): PersistableAction | undefined {
+  const { sourceType, sourceId, ...payload } = properties
+  if (typeof sourceType !== "string" || typeof sourceId !== "string") {
+    return undefined
+  }
+  return {
+    sourceType: sourceType as PlatformActionSourceType,
+    sourceId,
+    payload,
+  }
 }
 
 function getSessionSignal(
   event: Event,
   properties: Record<string, unknown>
 ): PlatformActionSessionIndexJob["signal"] {
+  if (isAgentToolEvent(event)) {
+    // A failed tool doesn't fail the session: the agent can recover, and only
+    // its lifecycle events decide the session status
+    return undefined
+  }
   if (properties.sourceType === "automation_run") {
     // A step succeeding or failing mid-run isn't the run's terminal state
     // (continueOnError can keep the run going past a failure). The
@@ -70,7 +103,13 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
     properties: Record<string, unknown>,
     timestamp?: string | number
   ): Promise<void> {
-    if (!event.startsWith("action:") || !isActionSourceContext(properties)) {
+    if (!event.startsWith("action:")) {
+      return
+    }
+    const action = isAgentToolEvent(event)
+      ? fromAgentToolEvent(properties)
+      : fromActionSourceContext(properties)
+    if (!action) {
       return
     }
 
@@ -80,7 +119,7 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
     }
     const environment = context.getPlatformActionEnvironment()
 
-    const { sourceType, sourceId, ...payload } = properties
+    const { sourceType, sourceId, payload } = action
     const isoTimestamp =
       timestamp === undefined
         ? new Date().toISOString()
@@ -90,7 +129,7 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
     )}${SEPARATOR}${uuidv4()}`
     const doc: PlatformActionEvent = {
       _id: platformActionEventId,
-      sourceType: sourceType as PlatformActionSourceType,
+      sourceType,
       sourceId,
       environment,
       eventName: event,
