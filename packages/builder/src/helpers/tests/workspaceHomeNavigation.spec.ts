@@ -120,6 +120,11 @@ describe("workspace home navigation", () => {
         "/builder/workspace/app_1/home?project=project_1&setup=project_1",
     })
 
+    expect(request).toEqual({
+      projectId: "project_1",
+      url: "/builder/workspace/app_1/home?project=project_1&setup=project_1",
+      cleanUrl: "/builder/workspace/app_1/home?project=project_1",
+    })
     expect(
       getProjectSetupRequest({
         workspaceId: "app_1",
