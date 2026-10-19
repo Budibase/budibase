@@ -56,12 +56,29 @@ export async function uploadFile(file: {
   extension: string
   content: string
 }): Promise<Upload> {
-  const destination = path.resolve(
-    getTmpPath(),
-    `${file.fileName}${file.extension}`
-  )
+  const tmpPath = path.resolve(getTmpPath())
+  const destination = path.resolve(tmpPath, `${file.fileName}${file.extension}`)
+  const relativePath = path.relative(tmpPath, destination)
+  if (
+    relativePath === ".." ||
+    relativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativePath)
+  ) {
+    throw new Error("Path must be within the Budibase temp directory.")
+  }
 
-  fs.writeFileSync(destination, file.content)
+  try {
+    fs.writeFileSync(destination, file.content, { flag: "wx" })
+  } catch (error) {
+    if (
+      typeof error !== "object" ||
+      error === null ||
+      !("code" in error) ||
+      error.code !== "EEXIST"
+    ) {
+      throw error
+    }
+  }
 
   const processedFileName = path.basename(destination)
   const s3Key = `${context.getProdWorkspaceId()}/attachments/${processedFileName}`
