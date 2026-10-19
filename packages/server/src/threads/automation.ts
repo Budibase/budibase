@@ -40,7 +40,7 @@ import {
   LoopV2Step,
   LoopV2StepInputs,
   ActionSourceContext,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
 } from "@budibase/types"
 import { Job } from "bull"
 import tracer from "dd-trace"
@@ -403,10 +403,10 @@ class Orchestrator {
     }
   }
 
-  // Signals the run's Actions container status directly. Not a persisted
+  // Signals the run's Actions session status directly. Not a persisted
   // action, and must not increment actionCount.
   private async signalRunStatus(
-    signal: PlatformActionContainerStatus
+    signal: PlatformActionSessionStatus
   ): Promise<void> {
     const { sourceType, sourceId } = this.actionSourceContext
     await events.platformActions

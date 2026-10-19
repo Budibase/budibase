@@ -182,7 +182,10 @@ export async function startup(
   queuePromises.push(agentTests.init())
   queuePromises.push(
     events.platformActions.init({
-      onSessionIndexed: queueActionSessionChange,
+      onSessionIndexed: change => {
+        queueActionSessionChange(change)
+        sdk.platformActions.clearOldHistoryOnSessionEnd(change)
+      },
     })
   )
   queuePromises.push(sdk.ai.chatConversations.attachmentCleanupQueue.init())

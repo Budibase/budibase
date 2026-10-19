@@ -1,5 +1,8 @@
+import tk from "timekeeper"
 import { events, utils } from "@budibase/backend-core"
+import { mocks } from "@budibase/backend-core/tests"
 import type {
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionEvent,
   PlatformActionSessionIndexDoc,
@@ -27,10 +30,12 @@ describe("platformActions events", () => {
     environment = "prod",
     sourceType = "agent_session",
     sourceId,
+    status = "active",
   }: {
     environment?: PlatformActionEnvironment
     sourceType?: PlatformActionSourceType
     sourceId: string
+    status?: PlatformActionSessionStatus
   }) {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const database = events.platformActions.getActionsDB()
@@ -48,7 +53,7 @@ describe("platformActions events", () => {
         sourceType,
         sourceId,
         environment,
-        status: "active",
+        status,
         actionCount: 1,
         startedAt: timestamp,
         updatedAt: timestamp,
@@ -432,5 +437,60 @@ describe("platformActions events", () => {
 
       expect(summary).toEqual({ total: 3 })
     })
+  })
+
+  describe("retention", () => {
+    const ONE_DAY_MILLIS = 1000 * 60 * 60 * 24
+    const session = {
+      environment: "prod",
+      sourceType: "agent_session",
+      sourceId: "run-1",
+    } as const
+
+    beforeEach(() => {
+      mocks.licenses.setPlatformActionsRetentionQuota(30)
+    })
+
+    afterEach(() => {
+      mocks.licenses.useUnlimited()
+    })
+
+    async function createOldSessionWithEvent(
+      status: PlatformActionSessionStatus
+    ) {
+      tk.freeze(new Date(Date.now() - 40 * ONE_DAY_MILLIS))
+      try {
+        await createSession({ ...session, status })
+        await createEvent(session)
+      } finally {
+        tk.reset()
+      }
+    }
+
+    it.each<PlatformActionSessionStatus>(["completed", "failed"])(
+      "returns 404 for the events of an expired %s session",
+      async status => {
+        await createOldSessionWithEvent(status)
+
+        await expect(
+          withContext(() => fetchSessionEvents(session))
+        ).rejects.toMatchObject({ status: 404 })
+        await expect(
+          withContext(() => fetchSessionEventsSummary(session))
+        ).rejects.toMatchObject({ status: 404 })
+      }
+    )
+
+    it.each<PlatformActionSessionStatus>(["active", "waiting"])(
+      "keeps the events of an old %s session",
+      async status => {
+        await createOldSessionWithEvent(status)
+
+        const result = await withContext(() => fetchSessionEvents(session))
+
+        expect(result.summary).toEqual({ total: 1 })
+        expect(result.events).toHaveLength(1)
+      }
+    )
   })
 })

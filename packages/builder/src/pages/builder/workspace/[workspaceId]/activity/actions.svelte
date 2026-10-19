@@ -5,12 +5,12 @@
   import { Select, Table } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
   import {
-    PLATFORM_ACTION_CONTAINER_STATUSES,
+    PLATFORM_ACTION_SESSION_STATUSES,
     type ActionSession,
     type ActionSessionChangeEvent,
     type ActionSessionsSummary,
     type ActionsPagination,
-    type PlatformActionContainerStatus,
+    type PlatformActionSessionStatus,
     type PlatformActionEnvironment,
   } from "@budibase/types"
   import { onMount } from "svelte"
@@ -61,12 +61,12 @@
     { column: "triggeredByLabel", component: ActivityOriginRenderer },
   ]
 
-  type StatusFilter = PlatformActionContainerStatus | "all"
+  type StatusFilter = PlatformActionSessionStatus | "all"
   type EnvironmentFilter = PlatformActionEnvironment | "all"
 
   const statusFilterOptions: { label: string; value: StatusFilter }[] = [
     { label: "All statuses", value: "all" },
-    ...PLATFORM_ACTION_CONTAINER_STATUSES.map(status => ({
+    ...PLATFORM_ACTION_SESSION_STATUSES.map(status => ({
       label: ACTIVITY_STATUS_LABELS[status],
       value: status,
     })),
@@ -182,9 +182,8 @@
         if (sequence !== requestSequence) {
           return
         }
-        // Sessions only move towards the first page as they change, so a
-        // later page can empty out. An empty page has no bookmarks to step
-        // back with, so start over from the first page instead.
+        // Updates or cleanup can empty a previously reachable page. The SDK
+        // returns no bookmarks for an empty result, so restart at the first page.
         if (response.sessions.length === 0 && request.page > 1) {
           return loadSessions({ background })
         }

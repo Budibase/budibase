@@ -19,7 +19,7 @@ import {
   FieldType,
   LoopStorage,
   LoopV2Step,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   Row,
 } from "@budibase/types"
 import { cloneDeep, isPlainObject } from "lodash"
@@ -125,7 +125,7 @@ export function getError(err: any) {
 
 export function inferAutomationRunActionStatus(
   status: AutomationStatus
-): PlatformActionContainerStatus {
+): PlatformActionSessionStatus {
   switch (status) {
     case AutomationStatus.SUCCESS:
     case AutomationStatus.STOPPED:

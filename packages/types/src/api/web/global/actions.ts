@@ -1,12 +1,12 @@
 import type {
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionSourceType,
 } from "../../../sdk"
 
 export interface FetchActionSessionsQuery {
   env?: PlatformActionEnvironment
-  status?: PlatformActionContainerStatus
+  status?: PlatformActionSessionStatus
   bookmark?: string
   limit?: number
 }
@@ -33,7 +33,7 @@ export interface ActionSession {
   sourceType: PlatformActionSourceType
   sourceId: string
   environment: PlatformActionEnvironment
-  status: PlatformActionContainerStatus
+  status: PlatformActionSessionStatus
   actionCount: number
   assetType?: string
   assetId?: string

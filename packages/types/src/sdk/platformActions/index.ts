@@ -19,15 +19,15 @@ export const PLATFORM_ACTION_ENVIRONMENTS = ["prod", "dev"] as const
 export type PlatformActionEnvironment =
   (typeof PLATFORM_ACTION_ENVIRONMENTS)[number]
 
-export const PLATFORM_ACTION_CONTAINER_STATUSES = [
+export const PLATFORM_ACTION_SESSION_STATUSES = [
   "active",
   "waiting",
   "completed",
   "failed",
 ] as const
 
-export type PlatformActionContainerStatus =
-  (typeof PLATFORM_ACTION_CONTAINER_STATUSES)[number]
+export type PlatformActionSessionStatus =
+  (typeof PLATFORM_ACTION_SESSION_STATUSES)[number]
 
 export const PLATFORM_ACTION_ASSET_TYPES = ["agent", "automation"] as const
 
@@ -122,7 +122,7 @@ export interface PlatformActionSessionIndexDoc
   extends Document,
     ActionSourceContext {
   environment: PlatformActionEnvironment
-  status: PlatformActionContainerStatus
+  status: PlatformActionSessionStatus
   actionCount: number
   assetType?: PlatformActionAssetType
   assetId?: string
@@ -146,8 +146,8 @@ export interface PlatformActionSessionIndexJob extends ActionSourceContext {
   indexId: string
   incrementsActionCount: boolean
   // Absent for a step-level action that isn't the run's terminal state. It
-  // should record the action without asserting a container status.
-  signal?: PlatformActionContainerStatus
+  // should record the action without asserting a session status.
+  signal?: PlatformActionSessionStatus
   timestamp: string
   // Local history only - never part of the event properties, which are also
   // forwarded to external analytics
@@ -157,6 +157,7 @@ export interface PlatformActionSessionIndexJob extends ActionSourceContext {
 export interface PlatformActionSessionChange extends ActionSourceContext {
   workspaceId: string
   environment: PlatformActionEnvironment
+  signal?: PlatformActionSessionStatus
 }
 
 export type PlatformActionSessionIndexedFn = (

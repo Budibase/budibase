@@ -2,7 +2,7 @@ import { DocumentType, SEPARATOR } from "@budibase/types"
 import type {
   ActionSourceContext,
   PlatformActionAssetType,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionOriginType,
   PlatformActionSessionIndexDoc,
@@ -27,7 +27,7 @@ export function getPlatformActionSessionId({
 
 export interface PlatformActionSessionInput extends ActionSourceContext {
   environment: PlatformActionEnvironment
-  status: PlatformActionContainerStatus
+  status: PlatformActionSessionStatus
   startedAt: string
   statusUpdatedAt: string
   actionCount: number

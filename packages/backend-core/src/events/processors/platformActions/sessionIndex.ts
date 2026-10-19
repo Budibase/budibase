@@ -2,7 +2,7 @@ import {
   LockName,
   LockType,
   type ActionSourceContext,
-  type PlatformActionContainerStatus,
+  type PlatformActionSessionStatus,
   type PlatformActionEnvironment,
   type PlatformActionSessionIndexDoc,
   type PlatformActionSessionMetadata,
@@ -18,13 +18,13 @@ import {
 const LOCK_TTL_MS = 10000
 const MAX_PUT_CONFLICT_ATTEMPTS = 3
 
-const TERMINAL_STATUSES: ReadonlySet<PlatformActionContainerStatus> = new Set([
+const TERMINAL_STATUSES: ReadonlySet<PlatformActionSessionStatus> = new Set([
   "completed",
   "failed",
 ])
 
 function isTerminalSignal(
-  signal: PlatformActionContainerStatus | undefined
+  signal: PlatformActionSessionStatus | undefined
 ): boolean {
   return signal != null && TERMINAL_STATUSES.has(signal)
 }
@@ -32,18 +32,18 @@ function isTerminalSignal(
 export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
   environment: PlatformActionEnvironment
   incrementsActionCount: boolean
-  signal?: PlatformActionContainerStatus
+  signal?: PlatformActionSessionStatus
   timestamp: string
   metadata?: PlatformActionSessionMetadata
 }
 
 function nextStatus(
-  existingStatus: PlatformActionContainerStatus | undefined,
+  existingStatus: PlatformActionSessionStatus | undefined,
   existingStatusUpdatedAt: string | undefined,
-  signal: PlatformActionContainerStatus | undefined,
+  signal: PlatformActionSessionStatus | undefined,
   timestamp: string
 ): {
-  status: PlatformActionContainerStatus
+  status: PlatformActionSessionStatus
   statusUpdatedAt: string
   updated: boolean
 } {

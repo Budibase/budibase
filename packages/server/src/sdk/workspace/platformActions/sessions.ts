@@ -2,8 +2,9 @@ import { events } from "@budibase/backend-core"
 import type {
   ActionSession,
   ActionSessionsSummary,
+  Database,
   FetchActionSessionsResponse,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
   PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
@@ -12,6 +13,8 @@ import {
   decodeKeysetBookmark,
   resolveLimit,
 } from "./pagination"
+import { clearOldHistory } from "./cleanup"
+import { getRetentionCutoff } from "./retention"
 import {
   getSessionKeysetKey,
   querySessions,
@@ -39,7 +42,7 @@ export async function fetchSessions({
   limit,
 }: {
   environment?: PlatformActionEnvironment
-  status?: PlatformActionContainerStatus
+  status?: PlatformActionSessionStatus
   bookmark?: string
   limit?: number
 }): Promise<FetchActionSessionsResponse> {
@@ -47,6 +50,8 @@ export async function fetchSessions({
   const token =
     bookmark === undefined ? undefined : decodeKeysetBookmark(bookmark)
   const direction = token?.direction ?? "next"
+  await clearOldHistory()
+  const cutoff = await getRetentionCutoff()
 
   const [page, summary] = await Promise.all([
     querySessions({
@@ -56,8 +61,9 @@ export async function fetchSessions({
       limit: resolveLimit(limit),
       bookmark: token,
       direction,
+      cutoff,
     }),
-    fetchSessionsSummary({ environment }),
+    getSessionsSummary({ workspaceDb, environment, cutoff }),
   ])
 
   return {
@@ -79,8 +85,27 @@ export async function fetchSessionsSummary({
 }: {
   environment?: PlatformActionEnvironment
 }): Promise<ActionSessionsSummary> {
-  const workspaceDb = events.platformActions.getActionsDB()
-  const counts = await querySessionsStatusCounts({ workspaceDb, environment })
+  return getSessionsSummary({
+    workspaceDb: events.platformActions.getActionsDB(),
+    environment,
+    cutoff: await getRetentionCutoff(),
+  })
+}
+
+async function getSessionsSummary({
+  workspaceDb,
+  environment,
+  cutoff,
+}: {
+  workspaceDb: Database
+  environment?: PlatformActionEnvironment
+  cutoff?: string
+}): Promise<ActionSessionsSummary> {
+  const counts = await querySessionsStatusCounts({
+    workspaceDb,
+    environment,
+    cutoff,
+  })
   return {
     total: counts.active + counts.waiting + counts.completed + counts.failed,
     active: counts.active,

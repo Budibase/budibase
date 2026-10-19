@@ -1,9 +1,9 @@
 import type {
   AgentRequestStatus,
-  PlatformActionContainerStatus,
+  PlatformActionSessionStatus,
 } from "@budibase/types"
 
-export type ActivityStatus = AgentRequestStatus | PlatformActionContainerStatus
+export type ActivityStatus = AgentRequestStatus | PlatformActionSessionStatus
 
 export const ACTIVITY_STATUS_LABELS: Record<ActivityStatus, string> = {
   active: "Active",
