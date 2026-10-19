@@ -582,7 +582,7 @@ describe("Project data export and import", () => {
     })
   })
 
-  it("preserves uploaded attachment content when database rollback reports conflicts", async () => {
+  it("removes the failed project and preserves attachment content when resource rollback reports conflicts", async () => {
     await withProjectsEnabled(async () => {
       const { archive } = await createProjectDataArchive()
       const destination = await createDestination()
@@ -623,7 +623,11 @@ describe("Project data export and import", () => {
             const tables = await config.api.table.fetch()
             const tasks = tables.find(table => table.name === "Tasks")!
             const rows = await config.api.row.fetch(tasks._id!)
+            const { projects } = await config.api.project.fetch()
 
+            expect(projects.map(project => project.name)).toEqual([
+              "Existing project",
+            ])
             expect(rows).toHaveLength(1)
             expect(await readAttachmentContent(rows[0].attachment)).toEqual(
               attachmentContent
