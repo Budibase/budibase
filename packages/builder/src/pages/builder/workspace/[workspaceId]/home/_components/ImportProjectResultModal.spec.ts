@@ -1,5 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/svelte"
-import { ResourceType, type ImportProjectResponse } from "@budibase/types"
+import {
+  ResourceType,
+  type ImportProjectResponse,
+  type ProjectImportRequirement,
+} from "@budibase/types"
 import { describe, expect, it, vi } from "vitest"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockButton from "@/test/mocks/MockButton.svelte"
@@ -132,6 +136,46 @@ describe("ImportProjectResultModal", () => {
     expect(
       screen.getByRole("button", { name: "View project" })
     ).toBeInTheDocument()
+  })
+
+  it("advances an agent's action to its remaining requirement after model setup", async () => {
+    const requirements: ProjectImportRequirement[] = [
+      {
+        type: "agent_ai_config",
+        resourceId: "agent_1",
+        name: "Support agent",
+        reason: "Choose an AI model.",
+      },
+      {
+        type: "agent_secrets",
+        resourceId: "agent_1",
+        name: "Support agent",
+        reason: "Reconnect the Slack integration.",
+      },
+    ]
+    const onOpenResource = vi.fn()
+    const { rerender } = render(ImportProjectResultModal, {
+      response: createResponse({ requirements }),
+      onOpenResource,
+    })
+
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Configure Support agent" })
+    )
+    await rerender({
+      response: createResponse({ requirements: [requirements[1]] }),
+      onOpenResource,
+      isSetupReview: true,
+    })
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Configure Support agent" })
+    )
+
+    expect(onOpenResource.mock.calls).toEqual([
+      [requirements[0]],
+      [requirements[1]],
+    ])
+    expect(screen.queryByText("Choose an AI model for this agent.")).toBeNull()
   })
 
   it("explains how to reconnect an automation and opens it", async () => {
