@@ -36,29 +36,58 @@ const findComponent = ({
   }
 }
 
-const matchesKeyParts = ({ parts, key }: { parts: string[]; key: string }) => {
-  const [prefix, ...filenameParts] = parts
-  if (!key.startsWith(prefix)) {
+const matchesDestinationParts = ({
+  parts,
+  value,
+}: {
+  parts: string[]
+  value: string
+}) => {
+  const [prefix, ...remainingParts] = parts
+  if (!value.startsWith(prefix)) {
     return false
   }
-  if (!filenameParts.length) {
-    return key === prefix
+  if (!remainingParts.length) {
+    return value === prefix
   }
 
-  let filename = key.slice(prefix.length)
-  if (filename.includes("/")) {
+  let remainder = value.slice(prefix.length)
+  if (remainder.includes("/")) {
     return false
   }
 
-  const suffix = filenameParts[filenameParts.length - 1]
-  for (const part of filenameParts.slice(0, -1)) {
-    const index = filename.indexOf(part)
+  const suffix = remainingParts[remainingParts.length - 1]
+  for (const part of remainingParts.slice(0, -1)) {
+    const index = remainder.indexOf(part)
     if (index === -1) {
       return false
     }
-    filename = filename.slice(index + part.length)
+    remainder = remainder.slice(index + part.length)
   }
-  return filename.endsWith(suffix)
+  return remainder.endsWith(suffix)
+}
+
+export const matchesConfiguredBucket = ({
+  template,
+  bucket,
+}: {
+  template: string
+  bucket: string
+}): boolean => {
+  const parts: string[] = []
+  let cursor = 0
+  for (const block of findHBSBlocks(template)) {
+    const expression = block.replace(/^\{\{\{?|\}\}\}?$/g, "").trim()
+    // Complex expressions retain client-selected buckets for compatibility.
+    if (!bindingPath.test(expression)) {
+      return true
+    }
+    const index = template.indexOf(block, cursor)
+    parts.push(template.slice(cursor, index))
+    cursor = index + block.length
+  }
+  parts.push(template.slice(cursor))
+  return matchesDestinationParts({ parts, value: bucket })
 }
 
 export const matchesConfiguredKey = ({
@@ -125,7 +154,7 @@ export const matchesConfiguredKey = ({
     }
   }
   parts.push(literal + template.slice(cursor))
-  return matchesKeyParts({ parts, key })
+  return matchesDestinationParts({ parts, value: key })
 }
 
 interface S3UploadAuthorization extends GetSignedUploadUrlRequest {
@@ -183,11 +212,9 @@ export const authorizeS3Upload = async ({
     ctx.throw(403, "S3 upload destinations cannot depend on UI conditions")
   }
 
-  // A saved bucket binding delegates bucket selection to the client, within
-  // the datasource's S3 credentials. Literal buckets remain exact matches.
   const isConfiguredBucket =
     typeof component?.bucket === "string" &&
-    (component.bucket === bucket || findHBSBlocks(component.bucket).length > 0)
+    matchesConfiguredBucket({ template: component.bucket, bucket })
 
   const isConfiguredUpload =
     component?._component === "@budibase/standard-components/s3upload" &&

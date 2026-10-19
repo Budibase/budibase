@@ -6032,7 +6032,7 @@
         "label": "Bucket",
         "key": "bucket",
         "supportsConditions": false,
-        "info": "Bindings allow users of this component to select any bucket permitted by the datasource's S3 credentials. Use a literal bucket name to restrict uploads to one bucket."
+        "info": "Literal names and fixed text in simple bindings (for example, uploads-{{ region }}) restrict the bucket name. Helpers, conditionals and JavaScript allow users to select any bucket permitted by the datasource's S3 credentials. Prefer simple bindings to keep those restrictions."
       },
       {
         "type": "text",

@@ -714,7 +714,6 @@ describe("/static", () => {
         "{{ lowercase [settings].[bucketName] }}",
         "{{#if [settings].[archive]}}archive{{else}}uploads{{/if}}",
         encodeJSBinding("return $('State.bucketName')"),
-        "uploads-{{ [settings].[region] }}",
       ])(
         "should allow BASIC users to select buckets through saved binding %s",
         async bucket => {
@@ -737,6 +736,54 @@ describe("/static", () => {
             expect(res.body.publicUrl).toEqual(
               "https://selected-bucket.s3.eu-west-1.amazonaws.com/uploads/report.pdf"
             )
+          })
+        }
+      )
+
+      it.each([
+        { template: "uploads-{{ region }}", bucket: "uploads-eu", status: 200 },
+        {
+          template: "uploads-{{ region }}",
+          bucket: "sensitive-eu",
+          status: 403,
+        },
+        {
+          template: "uploads-{{ region }}-private",
+          bucket: "uploads-eu-public",
+          status: 403,
+        },
+        {
+          template: "{{ region }}-uploads-{{ tenant }}",
+          bucket: "eu-sensitive-team",
+          status: 403,
+        },
+        {
+          template: "uploads-{{ lowercase region }}",
+          bucket: "selected-bucket",
+          status: 200,
+        },
+        {
+          template: "uploads-{{ region }}-{{ lowercase tenant }}",
+          bucket: "selected-bucket",
+          status: 200,
+        },
+      ])(
+        "should enforce simple bucket patterns and retain complex bindings (case %#)",
+        async ({ template, bucket, status }) => {
+          const configuredScreen = await configureUpload({
+            extra: { bucket: template },
+          })
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket,
+                key: "uploads/report.pdf",
+                componentId,
+                screenId: configuredScreen._id,
+              })
+              .set(config.defaultHeaders())
+              .expect(status)
           })
         }
       )

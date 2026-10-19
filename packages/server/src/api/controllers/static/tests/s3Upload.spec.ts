@@ -1,4 +1,4 @@
-import { matchesConfiguredKey } from "../s3Upload"
+import { matchesConfiguredBucket, matchesConfiguredKey } from "../s3Upload"
 
 describe("S3 upload key authorization", () => {
   const user = { _id: "user-one", globalId: "global-one" }
@@ -159,5 +159,60 @@ describe("S3 upload key authorization", () => {
         user,
       })
     ).toBe(false)
+  })
+})
+
+describe("S3 upload bucket authorization", () => {
+  it.each([
+    { template: "uploads", bucket: "uploads" },
+    { template: "uploads-{{ region }}", bucket: "uploads-eu" },
+    { template: "uploads-{{ [settings].[region] }}", bucket: "uploads-us" },
+    { template: "uploads-{{{ region }}}", bucket: "uploads-eu" },
+    { template: "{{ region }}-uploads", bucket: "eu-uploads" },
+    { template: "uploads-{{ region }}-private", bucket: "uploads-eu-private" },
+    {
+      template: "{{ region }}-uploads-{{ tenant }}",
+      bucket: "eu-uploads-team",
+    },
+    { template: "{{ first }}{{ second }}-uploads", bucket: "eu-uploads" },
+    { template: "uploads{{ suffix }}", bucket: "uploads" },
+    { template: "{{ bucket }}", bucket: "selected-bucket" },
+    { template: "uploads-{{ user.department }}", bucket: "uploads-sales" },
+  ])(
+    "matches fixed parts of simple bindings (case %#)",
+    ({ template, bucket }) => {
+      expect(matchesConfiguredBucket({ template, bucket })).toBe(true)
+    }
+  )
+
+  it.each([
+    { template: "uploads", bucket: "other" },
+    { template: "uploads-{{ region }}", bucket: "sensitive-eu" },
+    { template: "uploads-{{ [settings].[region] }}", bucket: "sensitive-eu" },
+    { template: "{{ region }}-uploads", bucket: "eu-sensitive" },
+    { template: "uploads-{{ region }}-private", bucket: "uploads-eu-public" },
+    {
+      template: "{{ region }}-uploads-{{ tenant }}",
+      bucket: "eu-sensitive-team",
+    },
+    { template: "uploads{{ name }}uploads", bucket: "uploads" },
+    { template: "uploads-{{ region }}", bucket: "uploads-eu/path" },
+    {
+      template: "uploads-{{ region }}-private",
+      bucket: "uploads-eu-private\n",
+    },
+  ])("rejects changes to fixed parts (case %#)", ({ template, bucket }) => {
+    expect(matchesConfiguredBucket({ template, bucket })).toBe(false)
+  })
+
+  it.each([
+    "uploads-{{ lowercase region }}",
+    "{{#if archive}}archive{{else}}uploads{{/if}}",
+    "uploads-{{ region }}-{{ lowercase tenant }}",
+    "{{ lowercase tenant }}-{{ region }}-uploads",
+  ])("keeps complex expression %s flexible", template => {
+    expect(
+      matchesConfiguredBucket({ template, bucket: "selected-bucket" })
+    ).toBe(true)
   })
 })
