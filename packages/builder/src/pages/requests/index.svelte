@@ -7,11 +7,11 @@
   import {
     ActionButton,
     Body,
-    Button,
     Divider,
     Heading,
     Icon,
     notifications,
+    Pagination,
   } from "@budibase/bbui"
   import type { RequestRow } from "@budibase/types"
   import dayjs from "dayjs"
@@ -56,6 +56,8 @@
     return isClosed(request) ? "closed" : "open"
   }
 
+  let requestSequence = 0
+
   const load = async ({
     tab,
     nextPage,
@@ -63,23 +65,25 @@
     tab: RequestTab
     nextPage: number
   }) => {
+    const sequence = ++requestSequence
     loading = true
     try {
       const result = await API.fetchUserRequests({
         ...tab.filters,
         page: nextPage,
       })
-      if (tab !== activeTab) {
+      if (sequence !== requestSequence) {
         return
       }
-      requests =
-        nextPage === 1 ? result.requests : [...requests, ...result.requests]
+      requests = result.requests
       page = result.page
       hasNextPage = result.hasNextPage
     } catch (error) {
-      notifications.error("Error loading requests")
+      if (sequence === requestSequence) {
+        notifications.error("Error loading requests")
+      }
     } finally {
-      if (tab === activeTab) {
+      if (sequence === requestSequence) {
         loading = false
       }
     }
@@ -134,15 +138,15 @@
       </a>
     {/each}
   </div>
-  {#if hasNextPage}
-    <div class="more">
-      <Button
-        secondary
-        disabled={loading}
-        on:click={() => load({ tab: activeTab, nextPage: page + 1 })}
-      >
-        Load more
-      </Button>
+  {#if page > 1 || hasNextPage}
+    <div class="pagination">
+      <Pagination
+        {page}
+        hasPrevPage={page > 1 && !loading}
+        hasNextPage={hasNextPage && !loading}
+        goToPrevPage={() => load({ tab: activeTab, nextPage: page - 1 })}
+        goToNextPage={() => load({ tab: activeTab, nextPage: page + 1 })}
+      />
     </div>
   {/if}
 {:else if !loading}
@@ -217,8 +221,8 @@
   .dot.closed {
     background: var(--spectrum-global-color-gray-500);
   }
-  .more {
+  .pagination {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
   }
 </style>
