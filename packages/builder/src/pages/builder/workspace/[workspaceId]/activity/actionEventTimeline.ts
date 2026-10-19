@@ -1,3 +1,4 @@
+import { z } from "zod"
 import {
   ActionFailureReason,
   Event,
@@ -23,6 +24,8 @@ const getString = (payload: Record<string, unknown>, key: string) => {
   return typeof value === "string" && value ? value : undefined
 }
 
+const validationIssueSchema = z.object({ message: z.string() })
+
 const formatFailureMessage = (message: string) => {
   const toolError = message.match(
     /^(?:AI_InvalidToolInputError: )?Invalid input for tool ([^:]+):/
@@ -42,14 +45,10 @@ const formatFailureMessage = (message: string) => {
         message.slice(detailsStart + marker.length)
       )
       if (Array.isArray(issues)) {
-        const messages = issues.flatMap((issue: unknown) =>
-          issue &&
-          typeof issue === "object" &&
-          "message" in issue &&
-          typeof issue.message === "string"
-            ? [issue.message]
-            : []
-        )
+        const messages = issues.flatMap((issue: unknown) => {
+          const result = validationIssueSchema.safeParse(issue)
+          return result.success ? [result.data.message] : []
+        })
         if (messages.length) {
           return `${summary}: ${messages.join("; ")}`
         }

@@ -64,6 +64,18 @@ describe("toActionTimelineItem", () => {
     }
   )
 
+  it("retains valid messages when other validation entries are malformed", () => {
+    expect(
+      toItem({
+        eventName: Event.ACTION_AI_AGENT_TOOL_FAILED,
+        payload: {
+          errorMessage:
+            'Invalid input for tool example: Error message: [null,{},42,{"message":false},{"message":"Name required","path":["name"]},{"message":"Invalid date"}]',
+        },
+      }).detail
+    ).toBe("Invalid input for tool example: Name required; Invalid date")
+  })
+
   it("retains all validation messages without their JSON metadata", () => {
     expect(
       toItem({
