@@ -1,3 +1,4 @@
+import { z } from "zod"
 import {
   ActionFailureReason,
   Event,
@@ -23,10 +24,48 @@ const getString = (payload: Record<string, unknown>, key: string) => {
   return typeof value === "string" && value ? value : undefined
 }
 
+const validationIssueSchema = z.object({ message: z.string() })
+
+const formatFailureMessage = (message: string) => {
+  const toolError = message.match(
+    /^(?:AI_InvalidToolInputError: )?Invalid input for tool ([^:]+):/
+  )
+  if (!toolError) {
+    return message
+  }
+
+  const summary = `Invalid input for tool ${toolError[1]}`
+  const marker = "Error message: "
+  let detailsStart = message.indexOf(marker)
+  while (detailsStart !== -1) {
+    try {
+      // The SDK includes input values and a serialized validation error. Only
+      // display the validation messages, not the submitted payload.
+      const issues: unknown = JSON.parse(
+        message.slice(detailsStart + marker.length)
+      )
+      if (Array.isArray(issues)) {
+        const messages = issues.flatMap((issue: unknown) => {
+          const result = validationIssueSchema.safeParse(issue)
+          return result.success ? [result.data.message] : []
+        })
+        if (messages.length) {
+          return `${summary}: ${messages.join("; ")}`
+        }
+      }
+      return summary
+    } catch {
+      // Submitted values can contain the marker before the actual JSON suffix.
+      detailsStart = message.indexOf(marker, detailsStart + marker.length)
+    }
+  }
+  return summary
+}
+
 const getFailureDetail = (payload: Record<string, unknown>) => {
   const errorMessage = getString(payload, "errorMessage")
   if (errorMessage) {
-    return errorMessage
+    return formatFailureMessage(errorMessage)
   }
   const reason = payload.reason
   return isFailureReason(reason) ? FAILURE_REASON_LABELS[reason] : undefined
@@ -53,6 +92,10 @@ export const toActionTimelineItem = ({
       : undefined
   const agentName =
     historicalAgentName || (agentId && agentNames[agentId]) || "Unknown agent"
+  const toolName =
+    getString(payload, "toolLabel") ||
+    getString(payload, "toolName") ||
+    "Unknown tool"
 
   const item = {
     id: event.id,
@@ -88,6 +131,14 @@ export const toActionTimelineItem = ({
       return {
         ...item,
         label: `Agent failed: ${agentName}`,
+        detail: getFailureDetail(payload),
+      }
+    case Event.ACTION_AI_AGENT_TOOL_EXECUTED:
+      return { ...item, label: `Tool executed: ${toolName}` }
+    case Event.ACTION_AI_AGENT_TOOL_FAILED:
+      return {
+        ...item,
+        label: `Tool failed: ${toolName}`,
         detail: getFailureDetail(payload),
       }
     default:
