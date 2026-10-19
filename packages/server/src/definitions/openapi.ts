@@ -320,23 +320,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/views/{viewId}/rows/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Search for rows in a view */
-        post: operations["rowViewSearch"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/tables": {
         parameters: {
             query?: never;
@@ -523,6 +506,23 @@ export interface paths {
          * @description Based on view properties (currently only name) search for views.
          */
         post: operations["viewSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/views/{viewId}/rows/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Search for rows in a view */
+        post: operations["rowViewSearch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2344,36 +2344,6 @@ export interface operations {
             };
         };
     };
-    rowViewSearch: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description The ID of the app which this request is targeting. */
-                "x-budibase-app-id": components["parameters"]["appId"];
-            };
-            path: {
-                /** @description The ID of the view which this request is targeting. */
-                viewId: components["parameters"]["viewId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["rowSearch"];
-            };
-        };
-        responses: {
-            /** @description The response will contain an array of rows that match the search parameters. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["searchOutput"];
-                };
-            };
-        };
-    };
     tableCreate: {
         parameters: {
             query?: never;
@@ -2763,6 +2733,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["viewSearch"];
+                };
+            };
+        };
+    };
+    rowViewSearch: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description The ID of the app which this request is targeting. */
+                "x-budibase-app-id": components["parameters"]["appId"];
+            };
+            path: {
+                /** @description The ID of the view which this request is targeting. */
+                viewId: components["parameters"]["viewId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["rowSearch"];
+            };
+        };
+        responses: {
+            /** @description The response will contain an array of rows that match the search parameters. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["searchOutput"];
                 };
             };
         };
