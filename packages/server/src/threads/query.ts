@@ -97,8 +97,8 @@ class QueryRunner {
       ? cloneDeep(fieldsClone)
       : undefined
 
-    const Integration = await getIntegration(datasourceClone.source)
-    if (!Integration) {
+    const createIntegration = await getIntegration(datasourceClone.source)
+    if (!createIntegration) {
       throw "Integration type does not exist."
     }
 
@@ -109,11 +109,6 @@ class QueryRunner {
       }
       datasourceClone.config.authConfigs = updatedConfigs
     }
-
-    const integration = new Integration(datasourceClone.config)
-
-    // define the type casting from the schema
-    integration.defineTypeCastingFromSchema?.(schema)
 
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
@@ -151,6 +146,9 @@ class QueryRunner {
         fieldsClone.path = applyBaseUrl(fieldsClone.path, resolvedConfigUrl)
       }
     }
+    const integration = await createIntegration(datasourceClone.config)
+    integration.defineTypeCastingFromSchema?.(schema)
+
     let query: Record<string, any>
     let preview:
       | { fields: RestQueryFields; config?: RestPreviewConfig }

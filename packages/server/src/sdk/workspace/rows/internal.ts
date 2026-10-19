@@ -10,7 +10,7 @@ import {
   outputProcessing,
 } from "../../../utilities/rowProcessor"
 import { getFullUser } from "../../../utilities/users"
-import { getSource, tryExtractingTableAndViewId } from "./utils"
+import { findRowInView, getSource, tryExtractingTableAndViewId } from "./utils"
 
 export async function save(
   tableOrViewId: string,
@@ -65,6 +65,10 @@ export async function save(
 }
 
 export async function find(sourceId: string, rowId: string): Promise<Row> {
+  const { viewId } = tryExtractingTableAndViewId(sourceId)
+  if (viewId) {
+    return findRowInView(viewId, rowId)
+  }
   const source = await getSource(sourceId)
   return await outputProcessing(source, await findRow(sourceId, rowId), {
     squash: true,
