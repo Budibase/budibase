@@ -25,6 +25,83 @@ const toItem = (event: Partial<ActionEvent>) =>
   })
 
 describe("toActionTimelineItem", () => {
+  it.each(["", "AI_InvalidToolInputError: "])(
+    "summarizes tool validation errors with prefix %s without input values",
+    prefix => {
+      const errorMessage =
+        `${prefix}Invalid input for tool au_123_trigger: AI_TypeValidationError: ` +
+        'Type validation failed: Value: {"fields":{"name":"private input"}}. ' +
+        'Error message: [{"expected":"never","code":"invalid_type","path":["fields","name"],"message":"Invalid input: expected never, received string"}]'
+
+      expect(
+        toItem({
+          eventName: Event.ACTION_AI_AGENT_FAILED,
+          payload: { errorMessage },
+        }).detail
+      ).toBe(
+        "Invalid input for tool au_123_trigger: Invalid input: expected never, received string"
+      )
+    }
+  )
+
+  it.each([
+    "Name required",
+    "Expected text without Error message: in the name",
+  ])(
+    "ignores error markers in submitted values when showing %s",
+    validationMessage => {
+      const input = JSON.stringify({ name: "private Error message: input" })
+      const issues = JSON.stringify([{ message: validationMessage }])
+
+      expect(
+        toItem({
+          eventName: Event.ACTION_AI_AGENT_TOOL_FAILED,
+          payload: {
+            errorMessage: `Invalid input for tool example: Type validation failed: Value: ${input}. Error message: ${issues}`,
+          },
+        }).detail
+      ).toBe(`Invalid input for tool example: ${validationMessage}`)
+    }
+  )
+
+  it("retains valid messages when other validation entries are malformed", () => {
+    expect(
+      toItem({
+        eventName: Event.ACTION_AI_AGENT_TOOL_FAILED,
+        payload: {
+          errorMessage:
+            'Invalid input for tool example: Error message: [null,{},42,{"message":false},{"message":"Name required","path":["name"]},{"message":"Invalid date"}]',
+        },
+      }).detail
+    ).toBe("Invalid input for tool example: Name required; Invalid date")
+  })
+
+  it("retains all validation messages without their JSON metadata", () => {
+    expect(
+      toItem({
+        eventName: Event.ACTION_AI_AGENT_TOOL_FAILED,
+        payload: {
+          errorMessage:
+            'Invalid input for tool example: Error message: [{"message":"Name required"},{"message":"Invalid date"}]',
+        },
+      }).detail
+    ).toBe("Invalid input for tool example: Name required; Invalid date")
+  })
+
+  it.each(["", "Error message: invalid JSON", "Error message: [{}]"])(
+    "does not expose input values when validation details cannot be read: %s",
+    details => {
+      expect(
+        toItem({
+          eventName: Event.ACTION_AI_AGENT_FAILED,
+          payload: {
+            errorMessage: `Invalid input for tool example: Value: private input. ${details}`,
+          },
+        }).detail
+      ).toBe("Invalid input for tool example")
+    }
+  )
+
   const session: ActionSession = {
     sourceType: "agent_session",
     sourceId: "session-1",
@@ -200,6 +277,50 @@ describe("toActionTimelineItem", () => {
     })
   })
 
+  it("labels an executed tool with its name", () => {
+    expect(
+      toItem({
+        eventName: Event.ACTION_AI_AGENT_TOOL_EXECUTED,
+        payload: { agentId: "agent-1", toolName: "list_rows" },
+      })
+    ).toEqual({
+      id: "event-1",
+      timestamp: formattedTimestamp,
+      label: "Tool executed: list_rows",
+    })
+  })
+
+  it.each([
+    {
+      payload: { reason: ActionFailureReason.ERROR, errorMessage: "missing" },
+      detail: "missing",
+    },
+    { payload: { reason: ActionFailureReason.ERROR }, detail: "Error" },
+  ])("labels a failed tool with detail $detail", ({ payload, detail }) => {
+    expect(
+      toItem({
+        eventName: Event.ACTION_AI_AGENT_TOOL_FAILED,
+        payload: { agentId: "agent-1", toolName: "update_row", ...payload },
+      })
+    ).toMatchObject({ label: "Tool failed: update_row", detail })
+  })
+
+  it.each([
+    [Event.ACTION_AI_AGENT_TOOL_EXECUTED, "Tool executed"],
+    [Event.ACTION_AI_AGENT_TOOL_FAILED, "Tool failed"],
+  ])("uses the recorded tool label for %s", (eventName, prefix) => {
+    expect(
+      toItem({
+        eventName,
+        payload: {
+          toolName: "ta_123_list_rows",
+          toolLabel: "List rows \u00b7 Original table name",
+          errorMessage: "missing",
+        },
+      }).label
+    ).toBe(`${prefix}: List rows \u00b7 Original table name`)
+  })
+
   it("falls back when the payload is incomplete or malformed", () => {
     expect(toItem({ payload: { stepId: 42 } })).toMatchObject({
       label: "Step executed: Unknown step",
@@ -215,6 +336,12 @@ describe("toActionTimelineItem", () => {
       label: "Agent failed: Unknown agent",
       detail: undefined,
     })
+    expect(
+      toItem({
+        eventName: Event.ACTION_AI_AGENT_TOOL_EXECUTED,
+        payload: { toolName: 42 },
+      }).label
+    ).toBe("Tool executed: Unknown tool")
     expect(toItem({ timestamp: "not a date" }).timestamp).toBe("Unknown time")
   })
 
