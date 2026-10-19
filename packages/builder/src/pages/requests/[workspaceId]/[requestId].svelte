@@ -16,7 +16,6 @@
   import EscalationCard from "../_components/EscalationCard.svelte"
 
   let request = $state<FindRequestResponse>()
-  let loading = $state(true)
   let notFound = $state(false)
   let loadFailed = $state(false)
 
@@ -48,8 +47,6 @@
         loadFailed = true
         notifications.error("Error loading request")
       }
-    } finally {
-      loading = false
     }
   }
 
