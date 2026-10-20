@@ -37,6 +37,8 @@ export enum ConstantQuotaName {
   AGENT_LOG_RETENTION_DAYS = "agentLogRetentionDays",
   AUTOMATION_LOG_RETENTION_DAYS = "automationLogRetentionDays",
   WORKSPACE_BACKUPS_RETENTION_DAYS = "appBackupRetentionDays",
+  ESCALATION_DURATION_DAYS = "escalationDurationDays",
+  PLATFORM_ACTIONS_RETENTION_DAYS = "platformActionsRetentionDays",
 }
 
 export type MeteredQuotaName = StaticQuotaName | MonthlyQuotaName
@@ -91,6 +93,8 @@ export type ConstantQuotas = {
   [ConstantQuotaName.AGENT_LOG_RETENTION_DAYS]: Quota
   [ConstantQuotaName.AUTOMATION_LOG_RETENTION_DAYS]: Quota
   [ConstantQuotaName.WORKSPACE_BACKUPS_RETENTION_DAYS]: Quota
+  [ConstantQuotaName.ESCALATION_DURATION_DAYS]: Quota
+  [ConstantQuotaName.PLATFORM_ACTIONS_RETENTION_DAYS]: Quota
 }
 
 export type Quotas = {

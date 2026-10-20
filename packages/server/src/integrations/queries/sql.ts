@@ -58,9 +58,9 @@ export async function interpolateSQL(
       part2 = `'${part2.substring(0, part2.length - 1)}'`
       sql = sql.replace(
         charConstBindingMatch,
-        integration.getStringConcat([
+        await integration.getStringConcat([
           part1,
-          integration.getBindingIdentifier(),
+          await integration.getBindingIdentifier(),
           part2,
         ])
       )
@@ -77,16 +77,20 @@ export async function interpolateSQL(
         .split(",")
         .map((val: string) => val.trim())
       // build a string like ($1, $2, $3)
-      let replacement = `${Array.apply(null, Array(value.length))
-        .map(() => integration.getBindingIdentifier())
-        .join(",")}`
+      let replacement = (
+        await Promise.all(
+          Array.apply(null, Array(value.length)).map(() =>
+            integration.getBindingIdentifier()
+          )
+        )
+      ).join(",")
       // check if parentheses are needed
       if (!listRegexMatch[0].includes(`(${binding})`)) {
         replacement = `(${replacement})`
       }
       sql = sql.replace(binding, replacement)
     } else {
-      sql = sql.replace(binding, integration.getBindingIdentifier())
+      sql = sql.replace(binding, await integration.getBindingIdentifier())
     }
     variables.push(binding)
   }
