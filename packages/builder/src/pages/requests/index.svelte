@@ -45,6 +45,7 @@
   let page = $state(1)
   let hasNextPage = $state(false)
   let loading = $state(true)
+  let failedLoad = $state.raw<{ tab: RequestTab; nextPage: number }>()
 
   const isClosed = (request: RequestRow) =>
     request.status === "completed" || request.status === "failed"
@@ -67,6 +68,7 @@
   }) => {
     const sequence = ++requestSequence
     loading = true
+    failedLoad = undefined
     try {
       const result = await API.fetchUserRequests({
         ...tab.filters,
@@ -80,6 +82,7 @@
       hasNextPage = result.hasNextPage
     } catch (error) {
       if (sequence === requestSequence) {
+        failedLoad = { tab, nextPage }
         notifications.error("Error loading requests")
       }
     } finally {
@@ -96,6 +99,7 @@
     activeTab = tab
     lastTabId = tab.id
     requests = []
+    page = 1
     hasNextPage = false
     load({ tab, nextPage: 1 })
   }
@@ -121,6 +125,15 @@
 </div>
 <Divider noMargin />
 
+{#if failedLoad}
+  <div class="load-failed">
+    <Body size="S">Couldn't load requests.</Body>
+    <ActionButton size="S" on:click={() => failedLoad && load(failedLoad)}>
+      Retry
+    </ActionButton>
+  </div>
+{/if}
+
 {#if requests.length}
   <div class="requests">
     {#each requests as request (`${request.workspaceId}_${request.requestId}`)}
@@ -138,7 +151,7 @@
       </a>
     {/each}
   </div>
-{:else if !loading}
+{:else if !loading && !failedLoad}
   <Body size="S">{activeTab.empty}</Body>
 {/if}
 
@@ -155,6 +168,11 @@
 {/if}
 
 <style>
+  .load-failed {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
   .title {
     display: flex;
     justify-content: space-between;
