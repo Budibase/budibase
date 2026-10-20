@@ -219,11 +219,14 @@ export type DatasourcePlusQueryResponse =
   | { total: number }[]
   | void
 
-export interface DatasourcePlus extends IntegrationBase {
+export interface SqlDatasource extends IntegrationBase {
   // if the datasource supports the use of bindings directly (to protect against SQL injection)
   // this returns the format of the identifier
   getBindingIdentifier(): string | Promise<string>
   getStringConcat(parts: string[]): string | Promise<string>
+}
+
+export interface DatasourcePlus extends IntegrationBase {
   query(json: EnrichedQueryJson): Promise<DatasourcePlusQueryResponse>
   buildSchema(
     datasourceId: string,

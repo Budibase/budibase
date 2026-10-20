@@ -20,6 +20,7 @@ import {
   PluginType,
   IntegrationBase,
   DatasourcePlus,
+  type SqlDatasource,
 } from "@budibase/types"
 import type { IntegrationFactory } from "../utilities/pluginRunner"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
@@ -55,6 +56,12 @@ export function isDatasourcePlus(
 ): integration is DatasourcePlus {
   return "query" in integration && typeof integration.query === "function"
 }
+
+export const isSQL = (
+  integration: IntegrationBase & Partial<SqlDatasource>
+): integration is SqlDatasource =>
+  typeof integration.getBindingIdentifier === "function" &&
+  typeof integration.getStringConcat === "function"
 
 const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
   {

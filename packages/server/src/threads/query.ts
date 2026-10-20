@@ -8,7 +8,6 @@ import {
 } from "@budibase/string-templates"
 import {
   Datasource,
-  DatasourcePlus,
   Query,
   QueryVerb,
   RestPreviewConfig,
@@ -19,7 +18,7 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
-import { getIntegration } from "../integrations"
+import { getIntegration, isSQL } from "../integrations"
 import { IsolatedVM } from "../jsRunner/vm"
 import sdk from "../sdk"
 import {
@@ -34,7 +33,6 @@ import { default as threadUtils } from "./utils"
 threadUtils.threadSetup()
 
 import { interpolateSQL } from "../integrations/queries/sql"
-import { isSQL } from "../integrations/utils"
 
 class QueryRunner {
   datasource: Datasource
@@ -157,7 +155,7 @@ class QueryRunner {
     // Handle SQL pagination bindings
     let paginationEnrichedContext = enrichedContext
     if (
-      isSQL(datasourceClone) &&
+      isSQL(integration) &&
       this.pagination &&
       fieldsClone.pagination?.enabled
     ) {
@@ -189,14 +187,12 @@ class QueryRunner {
     }
 
     // handle SQL injections by interpolating the variables
-    if (isSQL(datasourceClone)) {
+    if (isSQL(integration)) {
       query = await interpolateSQL(
         datasource.source,
         fieldsClone,
         paginationEnrichedContext,
-        // Bit hacky because currently all of our SQL datasources are
-        // DatasourcePluses.
-        integration as DatasourcePlus,
+        integration,
         {
           nullDefaultSupport,
         }
