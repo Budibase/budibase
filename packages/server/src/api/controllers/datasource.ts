@@ -3,6 +3,7 @@ import {
   db as dbCore,
   events,
   HTTPError,
+  roles,
 } from "@budibase/backend-core"
 import {
   BuildSchemaFromSourceRequest,
@@ -261,6 +262,25 @@ export async function update(
   let datasource: Datasource = {
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
+  }
+  if (
+    datasource.source === SourceName.MONGODB &&
+    baseDatasource.source !== SourceName.MONGODB
+  ) {
+    const queries = await sdk.queries.fetch({ enrich: false, datasourceId })
+    for (const query of queries) {
+      const permissions = await sdk.permissions.getResourcePerms(query._id!)
+      if (
+        Object.values(permissions).some(
+          permission => permission.role === roles.BUILTIN_ROLE_IDS.PUBLIC
+        )
+      ) {
+        ctx.throw(
+          400,
+          "Remove public query access before changing to a MongoDB datasource"
+        )
+      }
+    }
   }
   datasource.projectIds = await resolveUpdatedProjectIds(
     ctx.request.body.projectIds,

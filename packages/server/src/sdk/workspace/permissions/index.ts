@@ -1,8 +1,9 @@
-import { context, permissions, roles } from "@budibase/backend-core"
+import { context, HTTPError, permissions, roles } from "@budibase/backend-core"
 import {
   getTableIdFromViewId,
   isTableIdOrExternalTableId,
   isViewId,
+  isQueryId,
 } from "@budibase/shared-core"
 import {
   Database,
@@ -10,6 +11,7 @@ import {
   PermissionSource,
   PermissionType,
   Role,
+  SourceName,
   VirtualDocumentType,
 } from "@budibase/types"
 import sdk from "../.."
@@ -176,6 +178,26 @@ export async function updatePermissionOnRole(
   const dbRoleId = roles.getDBRoleID(roleId)
   const dbRoles = await getAllDBRoles(db)
   const docUpdates: Role[] = []
+
+  if (
+    !remove &&
+    dbRoleId === roles.getDBRoleID(roles.BUILTIN_ROLE_IDS.PUBLIC) &&
+    isQueryId(resourceId)
+  ) {
+    const query = await sdk.queries.find(resourceId)
+    const datasource = await sdk.datasources.get(query.datasourceId)
+    const existingPermissions = dbRoles.find(role => role._id === dbRoleId)
+      ?.permissions?.[resourceId]
+    if (
+      datasource.source === SourceName.MONGODB &&
+      !existingPermissions?.includes(level)
+    ) {
+      throw new HTTPError(
+        "MongoDB queries cannot be granted public access",
+        400
+      )
+    }
+  }
 
   // the permission is for a built in, make sure it exists
   if (isABuiltin && !dbRoles.some(role => role._id === dbRoleId)) {
