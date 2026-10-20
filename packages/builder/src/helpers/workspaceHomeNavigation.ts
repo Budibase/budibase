@@ -1,6 +1,36 @@
 const buildHomePath = (workspaceId: string) =>
   `/builder/workspace/${workspaceId}/home`
 
+export const getProjectSetupRequest = ({
+  workspaceId,
+  homeUrl,
+}: {
+  workspaceId: string
+  homeUrl: string | null | undefined
+}) => {
+  if (!workspaceId || !homeUrl) {
+    return
+  }
+
+  try {
+    const home = new URL(homeUrl, window.location.origin)
+    const projectId = home.searchParams.get("project")
+    if (
+      home.origin !== window.location.origin ||
+      home.pathname !== buildHomePath(workspaceId) ||
+      !projectId ||
+      home.searchParams.get("setup") !== projectId
+    ) {
+      return
+    }
+
+    const url = `${home.pathname}${home.search}`
+    return { projectId, url }
+  } catch (_error) {
+    return
+  }
+}
+
 export const withWorkspaceHomeReturn = (
   targetUrl: string,
   homeUrl = new URLSearchParams(window.location.search).get("returnTo")

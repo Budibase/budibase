@@ -107,6 +107,23 @@ describe("Screens store", () => {
     expect(bb.store.screens).toStrictEqual(screens)
   })
 
+  it("Selects the requested screen when syncing a scoped app package", ({
+    bb,
+  }) => {
+    const screens = Array(2)
+      .fill()
+      .map(() => getScreenFixture().json())
+    const requestedScreen = screens[1]
+
+    bb.screenStore.update(state => ({
+      ...state,
+      selectedScreenId: screens[0]._id,
+    }))
+    bb.screenStore.syncAppScreens({ screens }, requestedScreen._id)
+
+    expect(bb.store.selectedScreenId).toBe(requestedScreen._id)
+  })
+
   it("Reset the screen store back to the default state", ({ bb }) => {
     expect(bb.store.screens.length).toBe(0)
 

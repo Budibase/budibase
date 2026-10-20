@@ -13,7 +13,10 @@
   import { workspacesStore, admin, aiConfigsStore, auth } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { Heading, Layout, Body, notifications } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
   import { API } from "@/api"
+  import { getProjectSetupRequest } from "@/helpers/workspaceHomeNavigation"
+  import ProjectSetupBackButton from "@/components/projects/ProjectSetupBackButton.svelte"
   import InviteUsersModal from "./_components/InviteUsersModal.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
@@ -26,6 +29,7 @@
   const workspaceInitialisation = getPackage({
     appId: workspaceId,
     requestKey: packageKey,
+    screenId: $params.screenId,
   })
   let sideNav: SideNav
   let showInviteUsersModal = false
@@ -33,15 +37,21 @@
     const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
     if (nextPackageKey !== packageKey) {
       packageKey = nextPackageKey
-      getPackage({ appId: workspaceId, requestKey: packageKey }).catch(
-        error => {
-          notifications.error(
-            error?.message || "There was a problem loading the screen"
-          )
-        }
-      )
+      getPackage({
+        appId: workspaceId,
+        requestKey: packageKey,
+        screenId: $params.screenId,
+      }).catch(error => {
+        notifications.error(
+          error?.message || "There was a problem loading the screen"
+        )
+      })
     }
   }
+  $: projectSetupReturn = getProjectSetupRequest({
+    workspaceId,
+    homeUrl: $params.returnTo,
+  })
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
   $: canManageConnections =
     $auth.user != null && sdk.users.canCreateApps($auth.user)
@@ -55,14 +65,17 @@
   async function getPackage({
     appId,
     requestKey,
+    screenId,
   }: {
     appId: string
     requestKey: string
+    screenId?: string
   }) {
     try {
       if ($admin.maintenance.length) {
         return
       }
+      previewStore.setUpdatingAppPackage(true)
       if ($builderStore.created) {
         builderStore.appCreated(false)
         await workspacesStore.load()
@@ -85,7 +98,7 @@
           if (requestKey !== packageKey) {
             return
           }
-          await initialise(pkg)
+          await initialise(pkg, screenId)
           if (requestKey === packageKey) {
             await deploymentStore.load()
           }
@@ -103,6 +116,10 @@
       sideNav.show()
 
       throw error
+    } finally {
+      if (requestKey === packageKey) {
+        previewStore.setUpdatingAppPackage(false)
+      }
     }
   }
 
@@ -130,6 +147,11 @@
     <div class="loading"></div>
   {:then _}
     <div class="body">
+      {#if projectSetupReturn}
+        <ProjectSetupBackButton
+          onReturn={() => $goto(projectSetupReturn.url)}
+        />
+      {/if}
       <slot />
     </div>
   {:catch error}
