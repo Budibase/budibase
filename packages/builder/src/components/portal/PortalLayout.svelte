@@ -15,7 +15,7 @@
   import PortalHeader from "./PortalHeader.svelte"
 
   interface Props {
-    children: Snippet
+    children?: Snippet
   }
 
   let { children }: Props = $props()
@@ -76,7 +76,7 @@
     </div>
     <div class="body">
       <div class="inner content">
-        {@render children()}
+        {@render children?.()}
       </div>
     </div>
   </div>

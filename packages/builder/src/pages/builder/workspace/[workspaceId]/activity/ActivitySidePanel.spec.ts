@@ -25,10 +25,16 @@ import ActivitySidePanel from "./ActivitySidePanel.svelte"
 
 const request: AgentRequest = {
   _id: "request-1",
+  type: "agentRequest",
+  workspaceId: "app_1",
   agentId: "agent_1",
   operationId: "operation_1",
   userId: "user-1",
   status: "needs_input",
+  statusRank: 0,
+  approvers: [],
+  pendingApprovers: [],
+  respondedApprovers: [],
   createdAt: "2026-10-05T11:00:00.000Z",
   entries: [
     {
@@ -188,11 +194,17 @@ const renderRequest = ({
   operationId = "operation_1",
 }: { operationId?: string | null } = {}) => {
   const request: AgentRequest = {
-    _id: "agentrequest_1",
+    _id: "req_1",
+    type: "agentRequest",
+    workspaceId: "app_1",
     agentId: "agent_1",
     ...(operationId ? { operationId } : {}),
     userId: "user_1",
     status: "needs_input",
+    statusRank: 0,
+    approvers: [],
+    pendingApprovers: [],
+    respondedApprovers: [],
     entries: [
       {
         sessionId: "session_1",
