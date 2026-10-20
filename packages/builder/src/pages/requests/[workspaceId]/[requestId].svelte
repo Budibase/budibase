@@ -33,12 +33,22 @@
     "status" in error &&
     error.status === 404
 
+  let loadSequence = 0
+
   const load = async () => {
+    const sequence = ++loadSequence
     try {
-      request = await API.findUserRequest({ workspaceId, requestId })
+      const result = await API.findUserRequest({ workspaceId, requestId })
+      if (sequence !== loadSequence) {
+        return
+      }
+      request = result
       notFound = false
       loadFailed = false
     } catch (error) {
+      if (sequence !== loadSequence) {
+        return
+      }
       if (isNotFound(error)) {
         request = undefined
         notFound = true
