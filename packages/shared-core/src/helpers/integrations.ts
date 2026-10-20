@@ -13,6 +13,7 @@ export function isSQL(datasource: Datasource): boolean {
     SourceName.SQL_SERVER,
     SourceName.MYSQL,
     SourceName.ORACLE,
+    SourceName.SNOWFLAKE,
   ]
   return SQL.indexOf(datasource.source) !== -1 || datasource.isSQL === true
 }

@@ -1,5 +1,5 @@
 import { findHBSBlocks } from "@budibase/string-templates"
-import { DatasourcePlus, SourceName } from "@budibase/types"
+import { SourceName, type SqlDatasource } from "@budibase/types"
 import sdk from "../../sdk"
 
 const MYSQL_CONST_CHAR_REGEX = new RegExp(`"[^"]*"|'[^']*'`, "g")
@@ -30,7 +30,7 @@ export async function interpolateSQL(
   sourceName: SourceName,
   fields: { sql: string; bindings: any[] },
   parameters: { [key: string]: any },
-  integration: DatasourcePlus,
+  integration: SqlDatasource,
   opts: { nullDefaultSupport: boolean }
 ) {
   let sql = fields.sql
