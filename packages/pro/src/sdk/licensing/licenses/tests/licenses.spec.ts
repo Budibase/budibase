@@ -4,7 +4,7 @@ jest.mock("../offline")
 import * as licenses from "../licenses"
 import { structures } from "@budibase/backend-core/tests"
 import { licenses as constants } from "../../../../constants"
-import { env } from "@budibase/backend-core"
+import { env, isOfflineMode } from "@budibase/backend-core"
 import * as _client from "../client"
 import * as _offline from "../offline"
 
@@ -14,7 +14,7 @@ const offline = jest.mocked(_offline, { shallow: false })
 describe("licenses", () => {
   beforeEach(() => {
     jest.resetAllMocks()
-    env._set("OFFLINE_MODE", 0)
+    env._set("OFFLINE_MODE", undefined)
     env._set("NODE_ENV", "production")
   })
   describe("getFreeLicense", () => {
@@ -41,19 +41,46 @@ describe("licenses", () => {
         expect(offline.dev.getOfflineLicense).not.toHaveBeenCalled()
         expect(offline.getOfflineLicense).not.toHaveBeenCalled()
       })
+
+      it("treats the string zero as online mode", async () => {
+        env._set("OFFLINE_MODE", "0")
+        const clientLicense = structures.licenses.license()
+        client.getLicense.mockResolvedValue(clientLicense)
+
+        const license = await licenses.getLicense()
+
+        expect(license).toEqual(clientLicense)
+        expect(client.getLicense).toHaveBeenCalled()
+        expect(offline.getOfflineLicense).not.toHaveBeenCalled()
+      })
+
+      it.each([
+        ["true", true],
+        ["TRUE", true],
+        [" 1 ", true],
+        [" yes ", true],
+        ["on", true],
+        ["false", false],
+        [" 0 ", false],
+        [undefined, false],
+      ])("parses OFFLINE_MODE=%s as %s", (value, expected) => {
+        env._set("OFFLINE_MODE", value)
+        expect(isOfflineMode()).toBe(expected)
+      })
     })
     describe("offline", () => {
-      beforeEach(() => {
-        env._set("OFFLINE_MODE", 1)
-      })
-      it("returns offline license", async () => {
-        const offlineLicense = structures.licenses.offlineLicense()
-        offline.getOfflineLicense.mockResolvedValue(offlineLicense)
-        const license = await licenses.getLicense()
-        expect(license).toEqual(offlineLicense)
-        expect(client.getLicense).not.toHaveBeenCalled()
-        expect(offline.dev.getOfflineLicense).not.toHaveBeenCalled()
-      })
+      it.each(["1", "true", "TRUE"])(
+        "returns offline license for OFFLINE_MODE=%s",
+        async offlineMode => {
+          env._set("OFFLINE_MODE", offlineMode)
+          const offlineLicense = structures.licenses.offlineLicense()
+          offline.getOfflineLicense.mockResolvedValue(offlineLicense)
+          const license = await licenses.getLicense()
+          expect(license).toEqual(offlineLicense)
+          expect(client.getLicense).not.toHaveBeenCalled()
+          expect(offline.dev.getOfflineLicense).not.toHaveBeenCalled()
+        }
+      )
     })
     describe("dev", () => {
       beforeEach(() => {
