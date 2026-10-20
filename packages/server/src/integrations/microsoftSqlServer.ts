@@ -221,7 +221,10 @@ const COLUMN_DEFINITION_METADATA: Record<string, ColumnDefinitionMetadata> = {
   NUMERIC: { usesPrecision: true },
 }
 
-class SqlServerIntegration extends Sql implements DatasourcePlus, SqlDatasource {
+class SqlServerIntegration
+  extends Sql
+  implements DatasourcePlus, SqlDatasource
+{
   private readonly config: MSSQLConfig
   private index = 0
   private client?: sqlServer.ConnectionPool
