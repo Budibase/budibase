@@ -27,6 +27,7 @@ export enum ViewName {
   USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
   AGENT_REQUESTS_BY_AGENT = "agent_requests_by_agent",
+  AGENT_REQUESTS_BY_AGENT_AND_USER = "agent_requests_by_agent_and_user",
   AGENT_REQUESTS_BY_UPDATED_AT = "agent_requests_by_updated_at_2",
   AGENT_REQUESTS_BY_STATUS_AND_UPDATED_AT = "agent_requests_by_status_and_updated_at",
   LINK = "by_link",

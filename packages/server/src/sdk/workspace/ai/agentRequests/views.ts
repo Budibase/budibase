@@ -4,6 +4,8 @@ import type { AgentRequest } from "@budibase/types"
 import { DocumentType } from "@budibase/types"
 
 const REQUESTS_BY_AGENT_VIEW = ViewName.AGENT_REQUESTS_BY_AGENT
+const REQUESTS_BY_AGENT_AND_USER_VIEW =
+  ViewName.AGENT_REQUESTS_BY_AGENT_AND_USER
 const REQUESTS_BY_UPDATED_AT_VIEW = ViewName.AGENT_REQUESTS_BY_UPDATED_AT
 const REQUESTS_BY_STATUS_AND_UPDATED_AT_VIEW =
   ViewName.AGENT_REQUESTS_BY_STATUS_AND_UPDATED_AT
@@ -13,6 +15,47 @@ const buildRequestsByAgentView = (): string => `function(doc) {
     emit(doc.agentId, null)
   }
 }`
+
+const buildRequestsByAgentAndUserView = (): string => `function(doc) {
+  if (doc._id && doc._id.startsWith("${DocumentType.AGENT_REQUEST}_") && doc.agentId && doc.userId) {
+    emit([doc.agentId, doc.userId, doc.updatedAt || doc.createdAt || "", doc._id], null)
+  }
+}`
+
+const createRequestsByAgentAndUserView = async () => {
+  await db.createView(
+    context.getProdWorkspaceDB(),
+    buildRequestsByAgentAndUserView(),
+    REQUESTS_BY_AGENT_AND_USER_VIEW
+  )
+}
+
+export const queryRequestsByAgentAndUser = async ({
+  agentId,
+  userId,
+  limit,
+  page,
+}: {
+  agentId: string
+  userId: string
+  limit: number
+  page: number
+}): Promise<AgentRequest[]> => {
+  const response = await db.queryViewRaw<AgentRequest>(
+    REQUESTS_BY_AGENT_AND_USER_VIEW,
+    {
+      include_docs: true,
+      descending: true,
+      startkey: [agentId, userId, {}],
+      endkey: [agentId, userId],
+      limit,
+      skip: (page - 1) * limit,
+    },
+    context.getProdWorkspaceDB(),
+    createRequestsByAgentAndUserView
+  )
+  return response.rows.flatMap(row => (row.doc ? [row.doc] : []))
+}
 
 const buildRequestsByUpdatedAtView = (): string => `function(doc) {
   if (doc._id && doc._id.startsWith("${DocumentType.AGENT_REQUEST}_") && (doc.updatedAt || doc.createdAt)) {
