@@ -8,13 +8,13 @@ import {
 } from "@budibase/string-templates"
 import {
   Datasource,
-  DatasourcePlus,
   Query,
   QueryVerb,
   RestPreviewConfig,
   RestQueryFields,
   Row,
   SourceName,
+  type SqlDatasource,
   SSOUser,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
@@ -194,9 +194,7 @@ class QueryRunner {
         datasource.source,
         fieldsClone,
         paginationEnrichedContext,
-        // Bit hacky because currently all of our SQL datasources are
-        // DatasourcePluses.
-        integration as DatasourcePlus,
+        integration as SqlDatasource,
         {
           nullDefaultSupport,
         }
