@@ -16,8 +16,6 @@ export interface FetchAgentRequestsResponse {
   bookmark?: string
 }
 
-export type FindAgentRequestResponse = AgentRequest
-
 export interface RequestRow {
   requestId: string
   workspaceId: string

@@ -4,7 +4,6 @@ import type {
   EscalationRespondResult,
   FetchAgentRequestsResponse,
   FetchRequestsResponse,
-  FindAgentRequestResponse,
   FindRequestResponse,
   RespondToEscalationRequest,
 } from "@budibase/types"
@@ -16,7 +15,6 @@ export interface AgentRequestEndpoints {
     bookmark?: string
     status?: AgentRequestStatus
   }) => Promise<FetchAgentRequestsResponse>
-  findAgentRequest: (requestId: string) => Promise<FindAgentRequestResponse>
   fetchUserRequests: (opts?: {
     awaitingMe?: boolean
     isRequester?: boolean
@@ -54,10 +52,6 @@ export const buildAgentRequestEndpoints = (
     return await API.get({
       url: `/api/agent/requests${query ? `?${query}` : ""}`,
     })
-  },
-
-  findAgentRequest: async requestId => {
-    return await API.get({ url: `/api/agent/requests/${requestId}` })
   },
 
   fetchUserRequests: async (opts = {}) => {

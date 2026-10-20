@@ -5,7 +5,6 @@ import {
   type AgentRequestStatus,
   type FetchAgentRequestsResponse,
   type FetchRequestsResponse,
-  type FindAgentRequestResponse,
   type FindRequestResponse,
   type UserCtx,
 } from "@budibase/types"
@@ -79,16 +78,6 @@ export async function fetchAgentRequests(
     sdk.ai.agentRequests.fetchRequestsSummary(),
   ])
   ctx.body = { requests, summary, bookmark: nextBookmark }
-}
-
-export async function findAgentRequest(
-  ctx: UserCtx<void, FindAgentRequestResponse, { id: string }>
-) {
-  const request = await sdk.ai.agentRequests.fetchRequest(ctx.params.id)
-  if (!request) {
-    throw new HTTPError("Request not found", 404)
-  }
-  ctx.body = request
 }
 
 const sanitizeOneOfQuery = <T extends string>(

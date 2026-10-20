@@ -9,6 +9,8 @@ import {
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { automations } from "@budibase/pro"
 import {
+  AutomationActionStepId,
+  AutomationStep,
   BasicOperator,
   CreateRowActionRequest,
   Datasource,
@@ -18,6 +20,8 @@ import {
   Table,
   TableRowActions,
 } from "@budibase/types"
+import { BUILTIN_ACTION_DEFINITIONS } from "../../../automations"
+import { captureRunMetadata } from "../../../automations/tests/utilities"
 import { generateRowActionsID } from "../../../db/utils"
 import {
   DatabaseName,
@@ -684,6 +688,36 @@ describe("/rowsActions", () => {
             },
           },
         }),
+      ])
+    })
+
+    it("attributes a row action run to the user who ran it", async () => {
+      const automation = await config.api.automation.get(rowAction.automationId)
+      const { id: _ignored, ...serverLogDefinition } =
+        BUILTIN_ACTION_DEFINITIONS.SERVER_LOG as AutomationStep
+      await config.api.automation.update({
+        ...automation,
+        definition: {
+          ...automation.definition,
+          steps: [
+            {
+              ...serverLogDefinition,
+              id: "server-log-step",
+              stepId: AutomationActionStepId.SERVER_LOG,
+              inputs: { text: "hello" },
+            },
+          ],
+        },
+      })
+      await config.publish()
+
+      const metadata = await captureRunMetadata(() =>
+        config.api.rowAction.trigger(viewId, rowAction.id, { rowId })
+      )
+
+      const { _id, firstName, lastName } = config.getUser()
+      expect(metadata.map(run => run?.triggeredBy)).toEqual([
+        { type: "user", id: _id, label: `${firstName} ${lastName}` },
       ])
     })
 

@@ -1,7 +1,11 @@
 import {
+  type ActionSourceContext,
   Database,
   IdentityContext,
   License,
+  type PlatformActionEnvironment,
+  type PlatformActionSessionMetadata,
+  type PlatformActionSessionMetadataScope,
   Snippet,
   Table,
   Workspace,
@@ -299,6 +303,40 @@ export function getTenantId(): string {
 export function getAutomationId(): string | undefined {
   const context = Context.get()
   return context?.automationId
+}
+
+export function doInPlatformActionSessionContext<T>(
+  scope: PlatformActionSessionMetadataScope,
+  task: () => T
+) {
+  return newContext({ platformActionSession: scope }, task)
+}
+
+// Only returns metadata captured for this exact source, so an action emitted
+// for another session inside this scope never inherits it
+export function getPlatformActionSessionMetadata({
+  sourceType,
+  sourceId,
+}: ActionSourceContext): PlatformActionSessionMetadata | undefined {
+  const scope = Context.get()?.platformActionSession
+  if (scope?.sourceType !== sourceType || scope.sourceId !== sourceId) {
+    return undefined
+  }
+  const { asset, triggeredBy } = scope
+  if (!asset && !triggeredBy) {
+    return undefined
+  }
+  return { asset, triggeredBy }
+}
+
+export const getPlatformActionEnvironment = (): PlatformActionEnvironment => {
+  const workspaceId = getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error(
+      "Unable to retrieve platform action environment - no workspace ID."
+    )
+  }
+  return conversions.isDevWorkspaceID(workspaceId) ? "dev" : "prod"
 }
 
 export function getWorkspaceId(): string | undefined {
