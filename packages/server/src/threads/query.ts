@@ -14,11 +14,12 @@ import {
   RestQueryFields,
   Row,
   SourceName,
+  type SqlDatasource,
   SSOUser,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
-import { getIntegration, isSQL } from "../integrations"
+import { getIntegration } from "../integrations"
 import { IsolatedVM } from "../jsRunner/vm"
 import sdk from "../sdk"
 import {
@@ -33,6 +34,7 @@ import { default as threadUtils } from "./utils"
 threadUtils.threadSetup()
 
 import { interpolateSQL } from "../integrations/queries/sql"
+import { isSQL } from "../integrations/utils"
 
 class QueryRunner {
   datasource: Datasource
@@ -155,7 +157,7 @@ class QueryRunner {
     // Handle SQL pagination bindings
     let paginationEnrichedContext = enrichedContext
     if (
-      isSQL(integration) &&
+      isSQL(datasourceClone) &&
       this.pagination &&
       fieldsClone.pagination?.enabled
     ) {
@@ -187,12 +189,12 @@ class QueryRunner {
     }
 
     // handle SQL injections by interpolating the variables
-    if (isSQL(integration)) {
+    if (isSQL(datasourceClone)) {
       query = await interpolateSQL(
         datasource.source,
         fieldsClone,
         paginationEnrichedContext,
-        integration,
+        integration as SqlDatasource,
         {
           nullDefaultSupport,
         }
