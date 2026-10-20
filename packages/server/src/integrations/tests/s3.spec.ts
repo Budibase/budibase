@@ -1,4 +1,9 @@
 import { default as S3Integration } from "../s3"
+import { enrichContext } from "../../sdk/workspace/queries/queries"
+
+jest.mock("../../sdk/utils", () => ({
+  getEnvironmentVariables: jest.fn(() => ({})),
+}))
 jest.mock("@aws-sdk/client-s3", () => {
   class S3Mock {
     response(body: any, extra?: any) {
@@ -122,6 +127,26 @@ describe("S3 Integration", () => {
       ACL: undefined,
     })
   })
+
+  it.each(["safe.txt", 'safe.txt"},{"Key":"victim.txt'])(
+    "passes the enriched delete key unchanged to S3: %s",
+    async key => {
+      const query = await enrichContext(
+        {
+          bucket: "test",
+          delete: '{"Objects":[{"Key":"{{ key }}"}]}',
+        },
+        { key }
+      )
+
+      await config.integration.delete(query)
+
+      expect(config.integration.client.deleteObjects).toHaveBeenCalledWith({
+        Bucket: "test",
+        Delete: { Objects: [{ Key: key }] },
+      })
+    }
+  )
 
   it("calls the delete method with the correct params", async () => {
     await config.integration.delete({

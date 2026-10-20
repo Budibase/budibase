@@ -23,9 +23,42 @@ jobs:
   structure-test:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
+
+      - name: Configure AWS credentials for ECR Public
+        id: aws-credentials
+        if: >-
+          github.event_name != 'pull_request'
+          || github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::545012296077:role/github-actions-ecr-public
+          aws-region: us-east-1
+          retry-max-attempts: 1
+
+      - name: Log in to ECR Public
+        if: steps.aws-credentials.outcome == 'success'
+        continue-on-error: true
+        run: |
+          aws ecr-public get-login-password --region us-east-1 \
+            | docker login --username AWS --password-stdin public.ecr.aws
+
+      - name: Scrub AWS credentials from the job environment
+        if: steps.aws-credentials.conclusion != 'skipped'
+        run: |
+          {
+            echo "AWS_ACCESS_KEY_ID="
+            echo "AWS_SECRET_ACCESS_KEY="
+            echo "AWS_SESSION_TOKEN="
+            echo "AWS_REGION="
+            echo "AWS_DEFAULT_REGION="
+          } >> "$GITHUB_ENV"
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6

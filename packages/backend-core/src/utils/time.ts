@@ -1,4 +1,4 @@
-import { Duration } from "./Duration"
+import { Duration } from "@budibase/shared-core"
 
 export async function time<T>(f: () => Promise<T>): Promise<[T, Duration]> {
   const start = performance.now()

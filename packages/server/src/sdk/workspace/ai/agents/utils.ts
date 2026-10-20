@@ -234,7 +234,12 @@ export async function buildPromptAndTools(
         }
         return (await visibility)
           ? tool
-          : { ...tool, tool: tool.requesterRedactedTool }
+          : {
+              ...tool,
+              authoritativeInputSchema:
+                tool.authoritativeInputSchema ?? tool.tool.inputSchema,
+              tool: tool.requesterRedactedTool,
+            }
       })
     )
   }
