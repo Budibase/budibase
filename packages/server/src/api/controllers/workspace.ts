@@ -21,6 +21,7 @@ import {
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
 } from "@budibase/shared-core"
+import { rm } from "fs/promises"
 import Joi from "joi"
 import {
   AddWorkspaceSampleDataResponse,
@@ -620,7 +621,8 @@ async function performWorkspaceCreate(
   ctx: UserCtx<
     CreateWorkspaceRequest | OnboardingWorkspaceRequest,
     CreateWorkspaceResponse
-  >
+  >,
+  serverFilePath?: string
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
@@ -662,9 +664,9 @@ async function performWorkspaceCreate(
       path,
       password: encryptionPassword,
     }
-  } else if (typeof body.file?.path === "string") {
+  } else if (serverFilePath) {
     instanceConfig.file = {
-      path: body.file?.path,
+      path: serverFilePath,
     }
   }
 
@@ -937,9 +939,12 @@ async function workspacePostCreate(
 }
 
 export async function create(
-  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
+  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>,
+  serverFilePath?: string
 ) {
-  const newApplication = await quotas.addApp(() => performWorkspaceCreate(ctx))
+  const newApplication = await quotas.addApp(() =>
+    performWorkspaceCreate(ctx, serverFilePath)
+  )
   await workspacePostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
   ctx.body = newApplication
@@ -1152,12 +1157,30 @@ async function destroyWorkspace(ctx: UserCtx) {
     await cache.workspace.invalidateWorkspaceMetadata(prodWorkspaceId)
   }
 
-  const db = dbCore.getDB(devWorkspaceId)
-  // standard app deletion flow
-  const result = await db.destroy()
-  await quotas.removeApp()
-  await events.app.deleted(app)
-
+  // Actions writers only write while the dev workspace exists and hold this
+  // lock while they check, so a late write can't recreate the Actions DB
+  const result =
+    await events.platformActions.doWithActionsWorkspaceDeletionLock({
+      workspaceId: prodWorkspaceId,
+      task: async () => {
+        const db = dbCore.getDB(devWorkspaceId)
+        // standard app deletion flow
+        const result = await db.destroy()
+        try {
+          await quotas.removeApp()
+          await events.app.deleted(app)
+        } finally {
+          // Actions are shared by both environments in one dedicated database -
+          // only destroy it here, on full workspace deletion
+          const actionsDbName =
+            events.platformActions.getActionsDbName(prodWorkspaceId)
+          if (await dbCore.dbExists(actionsDbName)) {
+            await dbCore.getDB(actionsDbName, { skip_setup: true }).destroy()
+          }
+        }
+        return result
+      },
+    })
   await deleteAppFiles(prodWorkspaceId)
 
   await removeWorkspaceFromUserRoles(ctx, ctx.params.appId)
@@ -1310,7 +1333,11 @@ export async function duplicateWorkspace(
   } as UserCtx<CreateWorkspaceRequest, Workspace>
 
   // Build the new application
-  await create(createRequest)
+  try {
+    await create(createRequest, tmpPath)
+  } finally {
+    await rm(tmpPath, { recursive: true, force: true })
+  }
   const { body: newApplication } = createRequest
 
   if (!newApplication) {

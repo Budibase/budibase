@@ -63,6 +63,8 @@ export enum DocumentType {
   AUTO_COLUMN_STATE = "autocolumn_state",
   ESCALATION_CONTEXT = "escalation_context",
   ESCALATION_NOTIFICATION = "escalation_notification",
+  PLATFORM_ACTION_EVENT = "platform_action",
+  PLATFORM_ACTION_SESSION = "platform_action_session",
 }
 
 // these are the core documents that make up the data, design
@@ -88,6 +90,14 @@ export const DocumentTypesToImport: DocumentType[] = [
   // Deprecated but still copied
   DocumentType.INSTANCE,
   DocumentType.LAYOUT,
+]
+
+// runtime records that belong to the workspace DB (dev or prod) that created
+// them - never replicated between dev and prod, or included in exports
+export const RuntimeDocumentTypes: DocumentType[] = [
+  DocumentType.AGENT_REQUEST,
+  DocumentType.ESCALATION_CONTEXT,
+  DocumentType.ESCALATION_NOTIFICATION,
 ]
 
 export enum InternalTable {

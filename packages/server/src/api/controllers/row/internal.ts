@@ -202,15 +202,23 @@ export async function bulkDestroy(ctx: UserCtx) {
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const fieldName = ctx.request.query.field as string | undefined
   const db = context.getWorkspaceDB()
-  const { tableId } = utils.getSourceId(ctx)
+  const { tableId, viewId } = utils.getSourceId(ctx)
   const rowId = ctx.params.rowId as string
   // need table to work out where links go in row, as well as the link docs
-  const [table, links] = await Promise.all([
+  const [table, links, view] = await Promise.all([
     sdk.tables.getTable(tableId),
     linkRows.getLinkDocuments({ tableId, rowId, fieldName }),
+    viewId ? sdk.views.get(viewId) : undefined,
   ])
-  let row = await findRow(tableId, rowId)
-  row = await outputProcessing(table, row)
+  const allowedViewFields = view
+    ? new Set(Object.keys(helpers.views.basicFields(view)))
+    : undefined
+  let row = viewId
+    ? await sdk.rows.utils.findRowInView(viewId, rowId)
+    : await findRow(tableId, rowId)
+  if (!viewId) {
+    row = await outputProcessing(table, row)
+  }
   const linkVals = links as LinkDocumentValue[]
 
   // look up the actual rows based on the ids
@@ -242,6 +250,9 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
     let field = table.schema[fieldName]
+    if (allowedViewFields && !allowedViewFields.has(fieldName)) {
+      continue
+    }
     if (field.type === FieldType.LINK) {
       // find the links that pertain to this field
       const links = linkVals.filter(link => link.fieldName === fieldName)

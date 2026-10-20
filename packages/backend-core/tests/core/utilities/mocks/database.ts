@@ -1,0 +1,27 @@
+import type { Database } from "@budibase/types"
+
+export const createDatabaseMock = (): jest.Mocked<Database> => ({
+  name: "test",
+  exists: jest.fn(),
+  get: jest.fn(),
+  tryGet: jest.fn(),
+  getConflicts: jest.fn(),
+  getMultiple: jest.fn(),
+  remove: jest.fn(),
+  bulkRemove: jest.fn(),
+  put: jest.fn(),
+  bulkDocs: jest.fn(),
+  sql: jest.fn(),
+  sqlPurgeDocument: jest.fn(),
+  sqlDiskCleanup: jest.fn(),
+  find: jest.fn(),
+  allDocs: jest.fn(),
+  query: jest.fn(),
+  destroy: jest.fn(),
+  compact: jest.fn(),
+  dump: jest.fn(),
+  load: jest.fn(),
+  createIndex: jest.fn(),
+  deleteIndex: jest.fn(),
+  getIndexes: jest.fn(),
+})

@@ -1,4 +1,10 @@
-import { context, docIds, features, roles } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  events,
+  features,
+  roles,
+} from "@budibase/backend-core"
 import {
   ActionType,
   AgentChannelProvider,
@@ -6,6 +12,7 @@ import {
   FeatureFlag,
 } from "@budibase/types"
 import type {
+  ActionSourceContext,
   Agent,
   AgentOperation,
   ChatConversation,
@@ -1039,7 +1046,7 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("agentChatStream", () => {
-    it("counts each completed tool call as one action", async () => {
+    it("does not count reported tool results, which are counted when the tool executes", async () => {
       jest.mocked(streamText).mockImplementation(
         mockPipeStreamText({
           toolResults: [{ toolCallId: "c1" }, { toolCallId: "c2" }],
@@ -1064,7 +1071,48 @@ describe("Agent chat tool call tracking", () => {
         })
 
       expect(res.status).toBe(200)
-      expect(addActionMock).toHaveBeenCalledTimes(2)
+      expect(addActionMock).not.toHaveBeenCalled()
+    })
+
+    it("records the agent and the developer as the session's asset and origin", async () => {
+      jest.mocked(streamText).mockImplementation(mockPipeStreamText() as any)
+      const captured: unknown[] = []
+      jest
+        .spyOn(events.action, "aiAgentExecuted")
+        .mockImplementation((source: ActionSourceContext) => {
+          captured.push(context.getPlatformActionSessionMetadata(source))
+        })
+
+      const headers = await config.defaultHeaders()
+      const res = await config
+        .getRequest()!
+        .post(agentPreviewStreamPath(agentId))
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          isPreview: true,
+          previewRoleId: roles.BUILTIN_ROLE_IDS.BASIC,
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+
+      expect(res.status).toBe(200)
+      const { _id, firstName, lastName } = config.getUser()
+      expect(captured).toEqual([
+        {
+          asset: { type: "agent", id: "agent-1", label: "Test Agent" },
+          triggeredBy: {
+            type: "user",
+            id: _id,
+            label: `${firstName} ${lastName}`,
+          },
+        },
+      ])
     })
 
     it("classifies preview streams as Chat Preview even without a sessionId", async () => {
@@ -1387,6 +1435,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
 
           expect(result.assistantText).toBe("response")
@@ -1394,7 +1443,7 @@ describe("Agent chat tool call tracking", () => {
       )
     })
 
-    it("counts each completed tool call as one action", async () => {
+    it("does not count reported tool results, which are counted when the tool executes", async () => {
       jest.mocked(streamText).mockImplementation(
         makeWebhookStreamTextMock({
           toolResults: [
@@ -1425,11 +1474,12 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
         }
       )
 
-      expect(addActionMock).toHaveBeenCalledTimes(3)
+      expect(addActionMock).not.toHaveBeenCalled()
     })
 
     it("creates and finalizes an agent request for webhook channels (e.g. Slack)", async () => {
@@ -1464,6 +1514,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-1" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1524,6 +1575,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-2" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1598,6 +1650,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-3" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1665,6 +1718,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-status" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1716,6 +1770,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-4" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1800,6 +1855,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
       )
 
@@ -1848,6 +1904,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
             onAssistantStream: async stream => {
               for await (const chunk of stream) {
                 streamedText += chunk
@@ -1883,6 +1940,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
       )
 
@@ -1938,6 +1996,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
 
           expect(result.messages[1]).toMatchObject({
@@ -1984,6 +2043,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
         }
       )
@@ -2039,6 +2099,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
         })
       ).rejects.toThrow("response metadata failed")
