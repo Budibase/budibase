@@ -2,6 +2,7 @@ import { context } from "@budibase/backend-core"
 import {
   DocumentType,
   EscalationSource,
+  prefixed,
   SEPARATOR,
   SortOrder,
 } from "@budibase/types"
@@ -10,11 +11,11 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import migration from "../../../../workspaceMigrations/migrations/20261015162044_move_agent_requests_to_tenant_db"
 import { fetchRequestsForUser, findRequestForUser } from "./requestInbox"
 
-const REQUESTER = "us_requester"
-const OTHER_REQUESTER = "us_other"
-const RESPONDED_APPROVER = "us_responded"
-const PENDING_APPROVER = "us_pending"
-const OUTSIDER = "us_outsider"
+const REQUESTER = `${prefixed(DocumentType.USER)}requester`
+const OTHER_REQUESTER = `${prefixed(DocumentType.USER)}other`
+const RESPONDED_APPROVER = `${prefixed(DocumentType.USER)}responded`
+const PENDING_APPROVER = `${prefixed(DocumentType.USER)}pending`
+const OUTSIDER = `${prefixed(DocumentType.USER)}outsider`
 
 describe("request inbox", () => {
   const config = new TestConfiguration()
