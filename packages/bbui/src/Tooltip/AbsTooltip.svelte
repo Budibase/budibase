@@ -10,6 +10,7 @@
   export let text: string = ""
   export let fixed: boolean = false
   export let color: string | undefined = undefined
+  export let unclamped: boolean = false
   export let noWrap: boolean = false
   export let disabledTarget: boolean = false
   export let calculateWidth:
@@ -101,6 +102,7 @@
   <Portal target=".spectrum">
     <span
       class="spectrum-Tooltip spectrum-Tooltip--{type} spectrum-Tooltip--{position} is-open"
+      class:unclamped
       class:noWrap
       class:calculated-width={tooltipWidth != null}
       style:left={`${left}px`}
@@ -154,6 +156,11 @@
     overflow: hidden;
     font-size: 12px;
     font-weight: 600;
+  }
+
+  .spectrum-Tooltip.unclamped .spectrum-Tooltip-label {
+    display: block;
+    overflow-wrap: anywhere;
   }
 
   /* Colour overrides for default type */

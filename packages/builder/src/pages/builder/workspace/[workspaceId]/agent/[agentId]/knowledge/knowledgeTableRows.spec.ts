@@ -7,7 +7,6 @@ import {
 } from "@budibase/types"
 import {
   formatTimestamp,
-  getFileKnowledgeCounts,
   getSharePointFileProcessingCounts,
   getSharePointFilesForSite,
   getSharePointLastSyncLabel,
@@ -198,40 +197,6 @@ describe("knowledgeTableRows", () => {
     expect(onDismissRejected).toHaveBeenCalledWith("rejected-1")
   })
 
-  it("counts file rows by status", () => {
-    const rows = toFileKnowledgeRows({
-      files: [
-        makeFile({ _id: "1", status: KnowledgeBaseFileStatus.READY }),
-        makeFile({ _id: "2", status: KnowledgeBaseFileStatus.PROCESSING }),
-        makeFile({ _id: "3", status: KnowledgeBaseFileStatus.FAILED }),
-      ],
-      pendingUploads: [
-        {
-          tempId: "pending-1",
-          filename: "b.md",
-          createdAt: "2026-01-01T00:00:00.000Z",
-        },
-      ],
-      rejectedUploads: [
-        {
-          tempId: "rejected-1",
-          filename: "c.md",
-          size: 10,
-          reason: "Bad Gateway",
-          retryable: true,
-          createdAt: "2026-01-01T00:00:00.000Z",
-        },
-      ],
-    })
-
-    expect(getFileKnowledgeCounts(rows)).toEqual({
-      ready: 1,
-      processing: 2,
-      failed: 2,
-      total: 5,
-    })
-  })
-
   it("filters and counts sharepoint files by site", () => {
     const files = [
       makeFile({
@@ -349,7 +314,6 @@ describe("knowledgeTableRows", () => {
 
     expect(rows[0].displayStatus).toBe("18/125 ready")
     expect(rows[0].hasSynced).toBe(true)
-    expect(rows[0].__clickable).toBe(true)
   })
 
   it("shows loading label when site metadata is not available yet", () => {

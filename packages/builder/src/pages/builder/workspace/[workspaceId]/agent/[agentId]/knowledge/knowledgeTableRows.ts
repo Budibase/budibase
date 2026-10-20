@@ -123,16 +123,6 @@ export const toFileKnowledgeRows = ({
   )
 }
 
-export const getFileKnowledgeCounts = (rows: FileKnowledgeTableRow[]) => ({
-  ready: rows.filter(row => row.status === KnowledgeBaseFileStatus.READY)
-    .length,
-  processing: rows.filter(
-    row => row.status === KnowledgeBaseFileStatus.PROCESSING
-  ).length,
-  failed: rows.filter(isFailedRow).length,
-  total: rows.length,
-})
-
 export const getSharePointFilesForSite = (
   files: KnowledgeBaseFile[],
   siteId: string
@@ -281,7 +271,6 @@ export const toSharePointConnectionRows = ({
       return {
         kind: "sharepoint_connection" as const,
         knowledgeSearchConfigured,
-        __clickable: hasSynced,
         _id: siteId,
         sourceId: source.id,
         siteId,

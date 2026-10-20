@@ -23,7 +23,6 @@ vi.mock("@/api", () => {
       uploadOperationFile: vi.fn(),
       deleteOperationFile: vi.fn(),
       retryOperationFile: vi.fn(),
-      retryFailedOperationFiles: vi.fn(),
       syncOperationKnowledgeSources: vi.fn(),
       resetOperationKnowledgeBaseStore: vi.fn(),
     },
@@ -36,7 +35,6 @@ const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
 const uploadOperationFile = vi.mocked(API.uploadOperationFile)
 const deleteOperationFile = vi.mocked(API.deleteOperationFile)
 const retryOperationFile = vi.mocked(API.retryOperationFile)
-const retryFailedOperationFiles = vi.mocked(API.retryFailedOperationFiles)
 const syncOperationKnowledgeSources = vi.mocked(
   API.syncOperationKnowledgeSources
 )
@@ -540,60 +538,6 @@ describe("AgentsStore file operations", () => {
     expect(
       store.getOperationKnowledge("agent_1", "operation_1")?.files
     ).toEqual([retriedFile])
-  })
-
-  it("retryAllFailedOperationKnowledge requeues failed files and re-uploads retryable rejections", async () => {
-    const retriedFile = {
-      _id: "kb_file_1",
-      filename: "failed.txt",
-      status: KnowledgeBaseFileStatus.PROCESSING,
-    } as KnowledgeBaseFile
-    const reuploadedFile = {
-      _id: "kb_file_2",
-      filename: "rejected.txt",
-      status: KnowledgeBaseFileStatus.PROCESSING,
-    } as KnowledgeBaseFile
-    retryFailedOperationFiles.mockResolvedValue({ files: [retriedFile] })
-    uploadOperationFile.mockRejectedValueOnce({ message: "Bad Gateway" })
-    uploadOperationFile.mockResolvedValueOnce({ file: reuploadedFile })
-    fetchAgents.mockResolvedValue({ agents: [] })
-    fetchAgentKnowledge.mockResolvedValue({
-      operations: {
-        operation_1: {
-          files: [retriedFile, reuploadedFile],
-          sharePointSources: [],
-        },
-      },
-      configuration: knowledgeConfiguration,
-    })
-    const rejectedFile = new File(["hello"], "rejected.txt")
-    const oversizedFile = new File(["hello"], "huge.pdf")
-    Object.defineProperty(oversizedFile, "size", { value: 101 * 1024 * 1024 })
-    await store.uploadOperationFiles("agent_1", "operation_1", [
-      rejectedFile,
-      oversizedFile,
-    ])
-
-    await store.retryAllFailedOperationKnowledge({
-      agentId: "agent_1",
-      operationId: "operation_1",
-    })
-
-    expect(retryFailedOperationFiles).toHaveBeenCalledWith({
-      agentId: "agent_1",
-      operationId: "operation_1",
-    })
-    expect(uploadOperationFile).toHaveBeenLastCalledWith(
-      "agent_1",
-      "operation_1",
-      rejectedFile
-    )
-    expect(
-      store.getOperationUploadState("agent_1", "operation_1").rejectedUploads
-    ).toEqual([expect.objectContaining({ filename: "huge.pdf" })])
-    expect(
-      store.getOperationKnowledge("agent_1", "operation_1")?.files
-    ).toEqual([retriedFile, reuploadedFile])
   })
 
   it("calls resetOperationKnowledgeBaseStore and re-fetches knowledge on reset", async () => {

@@ -792,35 +792,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     this.upsertOperationKnowledgeFile(agentId, operationId, file)
   }
 
-  retryAllFailedOperationKnowledge = async ({
-    agentId,
-    operationId,
-  }: {
-    agentId: string
-    operationId: string
-  }): Promise<{ retried: number }> => {
-    const { files } = await API.retryFailedOperationFiles({
-      agentId,
-      operationId,
-    })
-    for (const file of files) {
-      this.upsertOperationKnowledgeFile(agentId, operationId, file)
-    }
-
-    const retryableTempIds = this.getOperationUploadState(agentId, operationId)
-      .rejectedUploads.filter(rejected => rejected.retryable)
-      .map(rejected => rejected.tempId)
-    if (retryableTempIds.length === 0) {
-      return { retried: files.length }
-    }
-    const { successfulUploads } = await this.reuploadRejectedUploads({
-      agentId,
-      operationId,
-      tempIds: retryableTempIds,
-    })
-    return { retried: files.length + successfulUploads }
-  }
-
   removeOperationKnowledgeFile = async (
     agentId: string,
     operationId: string,

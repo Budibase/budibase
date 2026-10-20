@@ -1,80 +1,99 @@
-import { cleanup, fireEvent, render } from "@testing-library/svelte"
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/svelte"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { KnowledgeBaseFileStatus } from "@budibase/types"
 import KnowledgeCard from "./KnowledgeCard.svelte"
-import type { SharePointConnectionTableRow } from "./renderers/types"
+import type {
+  FileKnowledgeTableRow,
+  SharePointConnectionTableRow,
+} from "./renderers/types"
 
-const createRow = (): SharePointConnectionTableRow => ({
+const createSharePointRow = (): SharePointConnectionTableRow => ({
   kind: "sharepoint_connection",
-  __clickable: true,
   _id: "source-1",
   sourceId: "source-1",
   siteId: "site-1",
   filename: "Support documents",
-  subtitle: "2 files",
-  displayStatus: "Synced",
-  syncedCount: 2,
-  totalCount: 2,
+  subtitle: "SharePoint",
+  displayStatus: "Processing",
+  syncedCount: 0,
+  totalCount: 0,
   failedCount: 0,
   processingCount: 0,
-  hasSynced: true,
+  hasSynced: false,
   isSyncing: false,
-  knowledgeSearchConfigured: true,
+  knowledgeSearchConfigured: false,
   onDelete: async () => {},
   onSync: async () => {},
+})
+
+const createFileRow = (): FileKnowledgeTableRow => ({
+  kind: "file",
+  _id: "file-1",
+  filename: "Support notes.txt",
+  status: KnowledgeBaseFileStatus.PROCESSING,
+  displayStatus: "Uploading",
+  size: "1 KB",
+  updatedAt: "2026-01-01",
+  isUploading: true,
+  canRetry: false,
+  knowledgeSearchConfigured: false,
 })
 
 afterEach(cleanup)
 
 describe("KnowledgeCard", () => {
-  it("does not offer to open a source when knowledge search is unavailable", async () => {
-    const onClick = vi.fn()
-    const { container, queryByRole } = render(KnowledgeCard, {
-      row: { ...createRow(), knowledgeSearchConfigured: false },
-      showActions: false,
-      onClick,
-    })
-    const card = container.firstElementChild!
-    await fireEvent.click(card)
-    await fireEvent.keyDown(card, { key: "Enter" })
-
-    expect(queryByRole("button")).toBeNull()
-    expect(onClick).not.toHaveBeenCalled()
-    expect(card.hasAttribute("tabindex")).toBe(false)
-  })
-
-  it.each(["Enter", " "])(
-    "leaves %s on a nested action to that action",
-    async key => {
+  it.each([createSharePointRow(), createFileRow()])(
+    "opens $kind details before processing completes, even without knowledge search",
+    async row => {
       const onClick = vi.fn()
-      const { getByRole } = render(KnowledgeCard, {
-        row: createRow(),
-        showActions: false,
-        onClick,
-      })
-      const action = document.createElement("button")
-      getByRole("button").appendChild(action)
-      const event = new KeyboardEvent("keydown", {
-        key,
-        bubbles: true,
-        cancelable: true,
-      })
-      await fireEvent(action, event)
+      const { getByRole } = render(KnowledgeCard, { row, onClick })
+      await fireEvent.click(getByRole("button"))
 
-      expect(event.defaultPrevented).toBe(false)
-      expect(onClick).not.toHaveBeenCalled()
+      expect(onClick).toHaveBeenCalledWith(row)
+      expect(getByRole("button").tagName).toBe("BUTTON")
     }
   )
 
-  it.each(["Enter", " "])("opens the source with %s on the card", async key => {
-    const row = createRow()
-    const onClick = vi.fn()
-    const { getByRole } = render(KnowledgeCard, {
-      row,
-      showActions: false,
-      onClick,
+  it("keeps failure information and actions in details rather than the card", () => {
+    const { getByRole, queryByText } = render(KnowledgeCard, {
+      row: {
+        ...createFileRow(),
+        status: KnowledgeBaseFileStatus.FAILED,
+        displayStatus: "Failed",
+        isUploading: false,
+        canRetry: true,
+        errorMessage: "Upload rejected",
+        onRetry: async () => {},
+        onDelete: async () => {},
+      },
     })
-    await fireEvent.keyDown(getByRole("button"), { key })
 
-    expect(onClick).toHaveBeenCalledWith(row)
+    expect(getByRole("button")).toHaveTextContent("Support notes.txt")
+    expect(getByRole("button")).toHaveTextContent("Failed")
+    expect(queryByText("Upload rejected")).toBeNull()
+    expect(queryByText("Retry")).toBeNull()
+    expect(queryByText("Remove")).toBeNull()
+  })
+
+  it("shows the full filename on hover using the Budibase tooltip", async () => {
+    const filename = `${"Very long filename ".repeat(20)}.txt`
+    const target = document.createElement("div")
+    target.className = "spectrum"
+    document.body.appendChild(target)
+    try {
+      const { getByText } = render(KnowledgeCard, {
+        props: { row: { ...createFileRow(), filename } },
+        target,
+      })
+      await fireEvent.mouseOver(getByText(filename))
+
+      await waitFor(() => {
+        expect(
+          target.querySelector(".spectrum-Tooltip.unclamped")
+        ).toHaveTextContent(filename)
+      })
+    } finally {
+      target.remove()
+    }
   })
 })

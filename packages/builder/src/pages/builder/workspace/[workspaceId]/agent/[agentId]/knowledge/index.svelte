@@ -25,13 +25,10 @@
     SharePointSelectionMode,
   } from "./renderers/types"
   import {
-    getFileKnowledgeCounts,
     toFileKnowledgeRows,
     toSharePointConnectionRows,
   } from "./knowledgeTableRows"
-  import KnowledgeProgressSummary from "./KnowledgeProgressSummary.svelte"
-  import FailedKnowledgeFilesModal from "./FailedKnowledgeFilesModal.svelte"
-  import DisplaySharePointSiteModal from "./sharepoint/DisplaySharePointSiteModal.svelte"
+  import KnowledgeDetailsModal from "./KnowledgeDetailsModal.svelte"
   import SelectSharePointFilesModal from "./sharepoint/SelectSharePointFilesModal.svelte"
   import { tick } from "svelte"
 
@@ -51,9 +48,9 @@
   let resetting = $state(false)
   let selectedSharePointSiteId = $state("")
   let selectSharePointSiteModal = $state<SelectSharePointSiteModal>()
-  let displaySharePointSiteModal = $state<DisplaySharePointSiteModal>()
+  let knowledgeDetailsModal = $state<KnowledgeDetailsModal>()
+  let selectedKnowledgeRow = $state<KnowledgeTableRow>()
   let selectSharePointFilesModal = $state<SelectSharePointFilesModal>()
-  let failedKnowledgeFilesModal = $state<FailedKnowledgeFilesModal>()
 
   let agentId = $derived(currentAgent?._id)
   let operationId = $derived(operation.id)
@@ -165,10 +162,6 @@
       onDismissRejected: dismissRejectedUpload,
     })
   )
-  let fileCounts = $derived(getFileKnowledgeCounts(fileTableRows))
-  let failedFileRows = $derived(
-    fileTableRows.filter(row => row.status === KnowledgeBaseFileStatus.FAILED)
-  )
   let sharePointConnectionRows = $derived.by(() =>
     toSharePointConnectionRows({
       sharePointSources,
@@ -182,6 +175,21 @@
     ...sharePointConnectionRows,
     ...fileTableRows,
   ])
+
+  let currentKnowledgeRow = $derived(
+    knowledgeTableRows.find(
+      row =>
+        row.kind === selectedKnowledgeRow?.kind &&
+        row._id === selectedKnowledgeRow?._id
+    )
+  )
+
+  $effect(() => {
+    if (selectedKnowledgeRow && !currentKnowledgeRow) {
+      knowledgeDetailsModal?.hide()
+      selectedKnowledgeRow = undefined
+    }
+  })
 
   $effect(() => {
     if (!agentId || !operationId) {
@@ -242,19 +250,9 @@
     await selectSharePointFilesModal?.show()
   }
 
-  async function openSharePointSiteConfigModal(siteId: string) {
-    selectedSharePointSiteId = siteId
-    displaySharePointSiteModal?.show()
-  }
-
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
-    if (knowledgeSearchUnavailable || row.kind !== "sharepoint_connection") {
-      return
-    }
-    openSharePointSiteConfigModal(row.siteId).catch(error => {
-      console.error(error)
-      notifications.error("Failed to load SharePoint folders/files")
-    })
+    selectedKnowledgeRow = row
+    knowledgeDetailsModal?.show()
   }
 
   async function syncSharePointNow(sourceId: string) {
@@ -378,31 +376,6 @@
     agentsStore.dismissRejectedUpload({ agentId, operationId, tempId })
   }
 
-  async function retryAllFailedFiles() {
-    if (!agentId || !operationId) {
-      return
-    }
-    try {
-      const { retried } = await agentsStore.retryAllFailedOperationKnowledge({
-        agentId,
-        operationId,
-      })
-      if (retried === 0) {
-        notifications.error("No failed files could be retried")
-        return
-      }
-      syncOperationFromStore()
-      await refreshDeploymentStatus()
-      failedKnowledgeFilesModal?.hide()
-      notifications.info(
-        retried === 1 ? "Retrying 1 file" : `Retrying ${retried} files`
-      )
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to retry failed files")
-    }
-  }
-
   async function resetKnowledgeStore() {
     if (!agentId || !operationId) {
       return
@@ -505,13 +478,6 @@
       </div>
     {/if}
 
-    {#if !loading && fileCounts.total > 0}
-      <KnowledgeProgressSummary
-        counts={fileCounts}
-        onShowFailed={() => failedKnowledgeFilesModal?.show()}
-      />
-    {/if}
-
     <KnowledgeCardList
       {loading}
       isUploading={uploadState.uploading}
@@ -521,13 +487,6 @@
   </div>
 </Layout>
 
-<FailedKnowledgeFilesModal
-  bind:this={failedKnowledgeFilesModal}
-  rows={failedFileRows}
-  retryDisabled={uploadState.uploading || knowledgeSearchUnavailable}
-  onRetryAll={retryAllFailedFiles}
-/>
-
 <SelectSharePointSiteModal
   bind:this={selectSharePointSiteModal}
   agentId={agentId || ""}
@@ -536,11 +495,11 @@
   onCreated={onSharePointSiteCreated}
 />
 
-<DisplaySharePointSiteModal
-  bind:this={displaySharePointSiteModal}
+<KnowledgeDetailsModal
+  bind:this={knowledgeDetailsModal}
+  row={currentKnowledgeRow}
   {agentId}
   {operationId}
-  siteId={selectedSharePointSiteId}
   onEdit={openSharePointSiteSelectionModal}
 />
 

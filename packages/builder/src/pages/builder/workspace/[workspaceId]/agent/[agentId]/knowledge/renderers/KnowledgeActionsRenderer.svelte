@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AbsTooltip, ActionButton } from "@budibase/bbui"
+  import { Button } from "@budibase/bbui"
   import type {
     FileKnowledgeTableRow,
     KnowledgeTableRow,
@@ -57,74 +57,58 @@
   }
 </script>
 
-<div class="file-actions" class:loading={processing || retrying}>
+<div class="file-actions">
   {#if row.kind === "sharepoint_connection"}
-    <AbsTooltip
-      text={!row.knowledgeSearchConfigured
+    <Button
+      icon="arrows-clockwise"
+      tooltip={!row.knowledgeSearchConfigured
         ? unavailableTooltip
         : getSyncTooltip(row)}
-      noWrap
+      size="S"
+      secondary
+      on:click={() => sync(row)}
+      disabled={!row.knowledgeSearchConfigured || processing}
+      >{syncing ? "Syncing..." : "Sync"}</Button
     >
-      <ActionButton
-        icon={"arrows-clockwise"}
-        size="M"
-        quiet
-        on:click={() => sync(row)}
-        disabled={!row.knowledgeSearchConfigured || processing}
-        loading={syncing}
-      ></ActionButton>
-    </AbsTooltip>
-    <AbsTooltip
-      text={!row.knowledgeSearchConfigured ? unavailableTooltip : "Disconnect"}
-      noWrap
+    <Button
+      icon="trash"
+      tooltip={!row.knowledgeSearchConfigured
+        ? unavailableTooltip
+        : "Disconnect"}
+      size="S"
+      secondary
+      on:click={remove}
+      disabled={!row.knowledgeSearchConfigured || processing}>Disconnect</Button
     >
-      <ActionButton
-        icon="trash"
-        size="M"
-        quiet
-        on:click={remove}
-        disabled={!row.knowledgeSearchConfigured || processing}
-      />
-    </AbsTooltip>
   {:else}
     {#if row.canRetry && row.onRetry}
-      <AbsTooltip
-        text={!row.knowledgeSearchConfigured ? unavailableTooltip : "Retry"}
-        noWrap
+      <Button
+        icon="arrows-clockwise"
+        tooltip={!row.knowledgeSearchConfigured ? unavailableTooltip : "Retry"}
+        size="S"
+        secondary
+        on:click={() => retry(row)}
+        disabled={!row.knowledgeSearchConfigured || retrying}
+        >{retrying ? "Retrying..." : "Retry"}</Button
       >
-        <ActionButton
-          icon="arrows-clockwise"
-          size="M"
-          quiet
-          on:click={() => retry(row)}
-          disabled={!row.knowledgeSearchConfigured || retrying}
-          loading={retrying}
-        />
-      </AbsTooltip>
     {/if}
     {#if row.isRejected && row.onDismiss}
-      <AbsTooltip text="Dismiss" noWrap>
-        <ActionButton
-          icon="x"
-          size="M"
-          quiet
-          on:click={() => row.onDismiss?.()}
-          disabled={retrying}
-        />
-      </AbsTooltip>
-    {:else if row.onDelete}
-      <AbsTooltip
-        text={!row.knowledgeSearchConfigured ? unavailableTooltip : "Remove"}
-        noWrap
+      <Button
+        icon="x"
+        size="S"
+        secondary
+        on:click={() => row.onDismiss?.()}
+        disabled={retrying}>Dismiss</Button
       >
-        <ActionButton
-          icon="trash"
-          size="M"
-          quiet
-          on:click={remove}
-          disabled={!row.knowledgeSearchConfigured || retrying}
-        />
-      </AbsTooltip>
+    {:else if row.onDelete}
+      <Button
+        icon="trash"
+        tooltip={!row.knowledgeSearchConfigured ? unavailableTooltip : "Remove"}
+        size="S"
+        secondary
+        on:click={remove}
+        disabled={!row.knowledgeSearchConfigured || retrying}>Remove</Button
+      >
     {/if}
   {/if}
 </div>
@@ -133,10 +117,6 @@
   .file-actions {
     display: flex;
     justify-content: flex-end;
-    margin-left: auto;
-  }
-
-  .file-actions.loading :global(.spectrum-ActionButton-label) {
-    display: contents;
+    gap: var(--spacing-s);
   }
 </style>
