@@ -114,6 +114,7 @@ describe("knowledgeBase uploads", () => {
   it("removes the previous failed ingestion job before requeueing", async () => {
     const callOrder: string[] = []
     mockRemoveRagFileIngestionJob.mockImplementation(async () => {
+      await Promise.resolve()
       callOrder.push("remove")
     })
     mockEnqueueRagFileIngestion.mockImplementation(async () => {

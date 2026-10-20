@@ -247,6 +247,7 @@
 
   async function openSharePointSiteSelectionModal(siteId: string) {
     selectedSharePointSiteId = siteId
+    await tick()
     await selectSharePointFilesModal?.show()
   }
 
@@ -343,6 +344,7 @@
         operationId,
         fileId,
       })
+      await refreshDeploymentStatus()
     } catch (error) {
       console.error(error)
       notifications.error(`Failed to retry ${file.filename}`)

@@ -160,6 +160,8 @@
 
   .spectrum-Tooltip.unclamped .spectrum-Tooltip-label {
     display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
     overflow-wrap: anywhere;
   }
 

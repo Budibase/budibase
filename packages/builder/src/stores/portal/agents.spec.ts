@@ -482,6 +482,39 @@ describe("AgentsStore file operations", () => {
     ).toEqual([uploadedFile])
   })
 
+  it("keeps a rejected upload available when its individual retry also fails", async () => {
+    const file = new File(["hello"], "notes.txt")
+    uploadOperationFile.mockRejectedValue({
+      message: "Bad Gateway",
+      status: 502,
+    })
+    await store.uploadOperationFiles("agent_1", "operation_1", [file])
+    const [rejected] = store.getOperationUploadState(
+      "agent_1",
+      "operation_1"
+    ).rejectedUploads
+
+    await store.retryRejectedUpload({
+      agentId: "agent_1",
+      operationId: "operation_1",
+      tempId: rejected.tempId,
+    })
+
+    expect(store.getOperationUploadState("agent_1", "operation_1")).toEqual({
+      pendingUploads: [],
+      rejectedUploads: [
+        expect.objectContaining({
+          file,
+          filename: "notes.txt",
+          reason: "Bad Gateway",
+          retryable: true,
+        }),
+      ],
+      uploading: false,
+      progress: "",
+    })
+  })
+
   it("dismissRejectedUpload removes the rejection", async () => {
     uploadOperationFile.mockRejectedValue({ message: "Bad Gateway" })
     await store.uploadOperationFiles("agent_1", "operation_1", [

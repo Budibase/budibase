@@ -64,7 +64,6 @@
       tooltip={!row.knowledgeSearchConfigured
         ? unavailableTooltip
         : getSyncTooltip(row)}
-      size="S"
       secondary
       on:click={() => sync(row)}
       disabled={!row.knowledgeSearchConfigured || processing}
@@ -75,7 +74,6 @@
       tooltip={!row.knowledgeSearchConfigured
         ? unavailableTooltip
         : "Disconnect"}
-      size="S"
       secondary
       on:click={remove}
       disabled={!row.knowledgeSearchConfigured || processing}>Disconnect</Button
@@ -85,7 +83,6 @@
       <Button
         icon="arrows-clockwise"
         tooltip={!row.knowledgeSearchConfigured ? unavailableTooltip : "Retry"}
-        size="S"
         secondary
         on:click={() => retry(row)}
         disabled={!row.knowledgeSearchConfigured || retrying}
@@ -95,7 +92,6 @@
     {#if row.isRejected && row.onDismiss}
       <Button
         icon="x"
-        size="S"
         secondary
         on:click={() => row.onDismiss?.()}
         disabled={retrying}>Dismiss</Button
@@ -104,8 +100,7 @@
       <Button
         icon="trash"
         tooltip={!row.knowledgeSearchConfigured ? unavailableTooltip : "Remove"}
-        size="S"
-        secondary
+        warning
         on:click={remove}
         disabled={!row.knowledgeSearchConfigured || retrying}>Remove</Button
       >

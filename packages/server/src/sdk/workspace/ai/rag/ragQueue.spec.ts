@@ -476,12 +476,18 @@ describe("RAG ingestion retries", () => {
       })
       const completion = job.finished().catch(() => {})
       await active
-      const removal = removeRagFileIngestionJob("file-1")
-      await new Promise(resolve => setTimeout(resolve, 100))
-      finishJob()
-      await removal
+      const isActive = job.isActive.bind(job)
+      let observedActive = false
+      jest.spyOn(queue, "getJob").mockResolvedValueOnce(job)
+      jest.spyOn(job, "isActive").mockImplementationOnce(async () => {
+        observedActive = await isActive()
+        finishJob()
+        return observedActive
+      })
+      await removeRagFileIngestionJob("file-1")
       await completion
 
+      expect(observedActive).toBe(true)
       expect(await queue.getJob("file-1")).toBeNull()
     })
 

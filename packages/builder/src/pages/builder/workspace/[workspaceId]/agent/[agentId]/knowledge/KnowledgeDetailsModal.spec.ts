@@ -5,8 +5,11 @@ import {
   screen,
   waitFor,
 } from "@testing-library/svelte"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { KnowledgeBaseFileStatus } from "@budibase/types"
+import { get } from "svelte/store"
+import { agentsStore } from "@/stores/portal"
+import { createKnowledgeFile, seedKnowledge } from "./testUtils"
 import KnowledgeDetailsModal from "./KnowledgeDetailsModal.svelte"
 import type {
   FileKnowledgeTableRow,
@@ -54,7 +57,12 @@ const renderModal = () => {
   return target
 }
 
+const initialAgentState = get(agentsStore)
+
+beforeEach(() => seedKnowledge())
+
 afterEach(() => {
+  agentsStore.set(initialAgentState)
   cleanup()
   document.body.replaceChildren()
 })
@@ -125,12 +133,12 @@ describe("KnowledgeDetailsModal", () => {
     expect(screen.queryByRole("button", { name: /Remove$/ })).toBeNull()
   })
 
-  it("preserves SharePoint content and editing before the first sync", async () => {
+  it("shows the pre-sync empty state and supports SharePoint actions", async () => {
     const row = createSharePointRow()
     const onEdit = vi.fn(async () => {})
     const { component } = render(KnowledgeDetailsModal, {
       target: renderModal(),
-      props: { row, operationId: "operation-1", onEdit },
+      props: { row, agentId: "agent-1", operationId: "operation-1", onEdit },
     })
     component.show()
     await screen.findByRole("dialog")
@@ -145,5 +153,45 @@ describe("KnowledgeDetailsModal", () => {
 
     expect(onEdit).toHaveBeenCalledWith("site-1")
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+  it("shows only the selected SharePoint source's synced content", async () => {
+    seedKnowledge({
+      files: [
+        createKnowledgeFile({ sourceId: "source-1" }),
+        createKnowledgeFile({
+          filename: "other-site-policy.txt",
+          sourceId: "source-2",
+          siteId: "site-2",
+        }),
+        createKnowledgeFile({ filename: "uploaded-notes.txt" }),
+      ],
+    })
+    const { component } = render(KnowledgeDetailsModal, {
+      target: renderModal(),
+      props: {
+        row: {
+          ...createSharePointRow(),
+          hasSynced: true,
+          displayStatus: "1/1 ready",
+          syncedCount: 1,
+          totalCount: 1,
+        },
+        agentId: "agent-1",
+        operationId: "operation-1",
+        onEdit: async () => {},
+      },
+    })
+    component.show()
+    await screen.findByRole("dialog")
+
+    expect(screen.getByText("support-policy.txt")).toBeVisible()
+    expect(screen.getByText("Ready")).toBeVisible()
+    expect(screen.queryByText("other-site-policy.txt")).toBeNull()
+    expect(screen.queryByText("uploaded-notes.txt")).toBeNull()
+    expect(
+      screen.queryByText(
+        "This SharePoint site does not contain synced content."
+      )
+    ).toBeNull()
   })
 })
