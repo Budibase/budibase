@@ -97,7 +97,6 @@ export const DocumentTypesToImport: DocumentType[] = [
 // them - never replicated between dev and prod, or included in exports
 export const RuntimeDocumentTypes: DocumentType[] = [
   DocumentType.AGENT_REQUEST,
-  DocumentType.REQUEST,
   DocumentType.ESCALATION_CONTEXT,
   DocumentType.ESCALATION_NOTIFICATION,
 ]
