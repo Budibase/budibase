@@ -5,6 +5,7 @@ import {
   Integration,
   QueryType,
   SqlQuery,
+  type SqlDatasource,
 } from "@budibase/types"
 import snowflakeSdk, { SnowflakeError } from "snowflake-sdk"
 import { promisify } from "util"
@@ -136,7 +137,7 @@ class SnowflakePromise {
   }
 }
 
-class SnowflakeIntegration {
+class SnowflakeIntegration implements SqlDatasource {
   private client: SnowflakePromise
 
   constructor(config: SnowflakeConfig) {
@@ -153,6 +154,14 @@ class SnowflakeIntegration {
         error: e.message as string,
       }
     }
+  }
+
+  getBindingIdentifier(): string {
+    return "?"
+  }
+
+  getStringConcat(parts: string[]): string {
+    return `concat(${parts.join(", ")})`
   }
 
   async internalQuery(query: SqlQuery) {
