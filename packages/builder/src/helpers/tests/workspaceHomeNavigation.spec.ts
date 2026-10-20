@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest"
 import {
+  buildProjectSetupHomeUrl,
+  getProjectSetupRequest,
   getWorkspaceHomeUrl,
   withWorkspaceHomeReturn,
 } from "../workspaceHomeNavigation"
@@ -82,5 +84,101 @@ describe("workspace home navigation", () => {
     expect(getWorkspaceHomeUrl("app_1", agentSearch)).toBe(
       "/builder/workspace/app_1/home?type=agent&q=support"
     )
+  })
+
+  it("returns to the selected project's setup and preserves home filters", () => {
+    const homeUrl = buildProjectSetupHomeUrl({
+      workspaceId: "app_1",
+      projectId: "project_1",
+      search: "?type=agent&q=support&project=old_project",
+    })
+    const agentUrl = withWorkspaceHomeReturn(
+      "/builder/workspace/app_1/agent/agent_1/config",
+      homeUrl
+    )
+
+    expect(
+      getProjectSetupRequest({
+        workspaceId: "app_1",
+        homeUrl: getWorkspaceHomeUrl(
+          "app_1",
+          new URL(agentUrl, location.origin).search
+        ),
+      })
+    ).toEqual({
+      projectId: "project_1",
+      url: "/builder/workspace/app_1/home?type=agent&q=support&project=project_1&setup=project_1",
+      cleanUrl:
+        "/builder/workspace/app_1/home?type=agent&q=support&project=project_1",
+    })
+  })
+
+  it("consumes the setup marker so ordinary reloads do not reopen setup", () => {
+    const request = getProjectSetupRequest({
+      workspaceId: "app_1",
+      homeUrl:
+        "/builder/workspace/app_1/home?project=project_1&setup=project_1",
+    })
+
+    expect(request).toEqual({
+      projectId: "project_1",
+      url: "/builder/workspace/app_1/home?project=project_1&setup=project_1",
+      cleanUrl: "/builder/workspace/app_1/home?project=project_1",
+    })
+    expect(
+      getProjectSetupRequest({
+        workspaceId: "app_1",
+        homeUrl: request?.cleanUrl,
+      })
+    ).toBeUndefined()
+  })
+
+  it.each(["config", "deployment", "tests", "logs"])(
+    "keeps project setup available after switching to the agent %s tab",
+    tab => {
+      const homeUrl = buildProjectSetupHomeUrl({
+        workspaceId: "app_1",
+        projectId: "project_1",
+        search: "",
+      })
+      window.history.replaceState(
+        {},
+        "",
+        withWorkspaceHomeReturn(
+          "/builder/workspace/app_1/agent/agent_1/config",
+          homeUrl
+        )
+      )
+      const tabUrl = withWorkspaceHomeReturn(`./${tab}`)
+
+      expect(
+        getProjectSetupRequest({
+          workspaceId: "app_1",
+          homeUrl: getWorkspaceHomeUrl(
+            "app_1",
+            new URL(tabUrl, window.location.href).search
+          ),
+        })
+      ).toEqual({
+        projectId: "project_1",
+        url: "/builder/workspace/app_1/home?project=project_1&setup=project_1",
+        cleanUrl: "/builder/workspace/app_1/home?project=project_1",
+      })
+    }
+  )
+
+  it.each([
+    undefined,
+    "http://[invalid",
+    "https://example.com/builder/workspace/app_1/home?project=project_1&setup=project_1",
+    "/builder/workspace/app_2/home?project=project_1&setup=project_1",
+    "/builder/workspace/app_1/agent/agent_1?project=project_1&setup=project_1",
+    "/builder/workspace/app_1/home?setup=project_1",
+    "/builder/workspace/app_1/home?project=project_1",
+    "/builder/workspace/app_1/home?project=project_1&setup=project_2",
+  ])("rejects an invalid project setup return context: %s", homeUrl => {
+    expect(
+      getProjectSetupRequest({ workspaceId: "app_1", homeUrl })
+    ).toBeUndefined()
   })
 })

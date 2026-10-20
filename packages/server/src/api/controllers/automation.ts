@@ -57,11 +57,9 @@ import { DocumentType } from "../../db/utils"
 import env from "../../environment"
 import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
+import { getValidProjectIdsForDuplication } from "../../sdk/workspace/projects/utils"
 import { isQsTrue } from "../../utilities"
-import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../utilities/projects"
+import { projectAssignmentResult } from "../../utilities/projects"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
 
@@ -71,18 +69,25 @@ import { builderSocket } from "../../websockets"
  *                       *
  *************************/
 
-export async function create(
+async function createUnlocked(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
-  let automation = ctx.request.body
+  const { sourceAutomationId, ...automation } = ctx.request.body
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
-    await update(ctx)
+    await updateUnlocked(ctx)
     return
   }
 
-  automation.projectIds = await resolveProjectIds(automation.projectIds)
+  const restoringDeletedAutomation = ctx.method === "PUT" && !!automation._id
+  const sourceAutomation =
+    sourceAutomationId && !restoringDeletedAutomation
+      ? await sdk.automations.get(sourceAutomationId)
+      : undefined
+  automation.projectIds = sourceAutomation
+    ? await getValidProjectIdsForDuplication(sourceAutomation.projectIds)
+    : await sdk.projects.resolveProjectIds(automation.projectIds)
   automation.appId = ctx.appId
 
   let createdAutomation: Automation
@@ -107,38 +112,80 @@ export async function create(
     createdAutomation = await sdk.automations.create(automation)
   }
 
+  let projectAssignment
+  // A history restore replays the saved snapshot, including its exclusions.
+  if (!restoringDeletedAutomation) {
+    projectAssignment = await projectAssignmentResult(
+      sdk.projects.propagateProjectDependencyChanges({
+        rootResourceId: createdAutomation._id!,
+        currentProjectIds: createdAutomation.projectIds,
+        previousProjectIds: sourceAutomation?.projectIds,
+        previousResource: sourceAutomation,
+        savedResource: createdAutomation,
+      })
+    )
+  }
+
   ctx.body = {
     message: "Automation created successfully",
     automation: createdAutomation,
+    projectAssignment,
   }
   builderSocket?.emitAutomationUpdate(ctx, automation)
+}
+
+async function updateUnlocked(
+  ctx: UserCtx<UpdateAutomationRequest, UpdateAutomationResponse>
+) {
+  const { sourceAutomationId: _sourceAutomationId, ...automation } =
+    ctx.request.body
+  automation.appId = ctx.appId
+
+  // Call through to create if it doesn't exist
+  if (!automation._id || !automation._rev) {
+    await createUnlocked(ctx)
+    return
+  }
+
+  const existingAutomation = await sdk.automations.get(automation._id)
+  automation.projectIds = await sdk.projects.resolveUpdatedProjectIds({
+    projectIds: automation.projectIds,
+    currentProjectIds: existingAutomation.projectIds,
+  })
+
+  const updatedAutomation = await sdk.automations.update(automation)
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectDependencyChanges({
+      rootResourceId: updatedAutomation._id!,
+      currentProjectIds: updatedAutomation.projectIds,
+      previousProjectIds: existingAutomation.projectIds,
+      previousResource: existingAutomation,
+      savedResource: updatedAutomation,
+    })
+  )
+
+  ctx.body = {
+    message: `Automation ${automation._id} updated successfully.`,
+    automation: updatedAutomation,
+    projectAssignment,
+  }
+  builderSocket?.emitAutomationUpdate(ctx, automation)
+}
+
+export async function create(
+  ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    createUnlocked(ctx)
+  )
 }
 
 export async function update(
   ctx: UserCtx<UpdateAutomationRequest, UpdateAutomationResponse>
 ) {
-  let automation = ctx.request.body
-  automation.appId = ctx.appId
-
-  // Call through to create if it doesn't exist
-  if (!automation._id || !automation._rev) {
-    await create(ctx)
-    return
-  }
-
-  const existingAutomation = await sdk.automations.get(automation._id)
-  automation.projectIds = await resolveUpdatedProjectIds(
-    automation.projectIds,
-    existingAutomation.projectIds
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    updateUnlocked(ctx)
   )
-
-  const updatedAutomation = await sdk.automations.update(automation)
-
-  ctx.body = {
-    message: `Automation ${automation._id} updated successfully.`,
-    automation: updatedAutomation,
-  }
-  builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {
