@@ -6,14 +6,6 @@ import {
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
-interface SignedDatasourceUpload extends GetSignedUploadUrlRequest {
-  datasourceId: string
-}
-
-interface ExternalUpload extends SignedDatasourceUpload {
-  data: Blob
-}
-
 export interface AttachmentEndpoints {
   downloadAttachment: (
     datasourceId: string,
@@ -21,7 +13,9 @@ export interface AttachmentEndpoints {
     columnName: string
   ) => Promise<DownloadAttachmentResponse>
   getSignedDatasourceURL: (
-    upload: SignedDatasourceUpload
+    datasourceId: string,
+    bucket: string,
+    key: string
   ) => Promise<GetSignedUploadUrlResponse>
   uploadAttachment: (
     tableId: string,
@@ -32,7 +26,10 @@ export interface AttachmentEndpoints {
     data: FormData
   ) => Promise<{ icons: Array<{ src: string; sizes: string; type: string }> }>
   externalUpload: (
-    upload: ExternalUpload
+    datasourceId: string,
+    bucket: string,
+    key: string,
+    data: any
   ) => Promise<{ publicUrl: string | undefined }>
 }
 
@@ -42,15 +39,17 @@ export const buildAttachmentEndpoints = (
   const endpoints: Pick<AttachmentEndpoints, "getSignedDatasourceURL"> = {
     /**
      * Generates a signed URL to upload a file to an external datasource.
-     * @param upload the configured upload destination
+     * @param datasourceId the ID of the datasource to upload to
+     * @param bucket the name of the bucket to upload to
+     * @param key the name of the file to upload to
      */
-    getSignedDatasourceURL: async ({ datasourceId, ...upload }) => {
+    getSignedDatasourceURL: async (datasourceId, bucket, key) => {
       return await API.post<
         GetSignedUploadUrlRequest,
         GetSignedUploadUrlResponse
       >({
         url: `/api/attachments/${datasourceId}/url`,
-        body: upload,
+        body: { bucket, key },
       })
     },
   }
@@ -93,11 +92,17 @@ export const buildAttachmentEndpoints = (
 
     /**
      * Uploads a file to an external datasource.
-     * @param upload the file and configured upload destination
+     * @param datasourceId the ID of the datasource to upload to
+     * @param bucket the name of the bucket to upload to
+     * @param key the name of the file to upload to
+     * @param data the file to upload
      */
-    externalUpload: async ({ data, ...upload }) => {
-      const { signedUrl, publicUrl } =
-        await endpoints.getSignedDatasourceURL(upload)
+    externalUpload: async (datasourceId, bucket, key, data) => {
+      const { signedUrl, publicUrl } = await endpoints.getSignedDatasourceURL(
+        datasourceId,
+        bucket,
+        key
+      )
       if (!signedUrl) {
         return { publicUrl: undefined }
       }

@@ -42,7 +42,6 @@ router
   .post(
     "/api/attachments/:datasourceId/url",
     recaptcha,
-    paramResource("datasourceId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     controller.getSignedUploadURL
   )

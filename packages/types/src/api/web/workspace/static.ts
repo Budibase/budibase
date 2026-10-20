@@ -18,9 +18,7 @@ export type ServeClientLibraryResponse = stream.Readable
 
 export interface GetSignedUploadUrlRequest {
   bucket: string
-  componentId: string
   key: string
-  screenId: string
 }
 export interface GetSignedUploadUrlResponse {
   signedUrl?: string

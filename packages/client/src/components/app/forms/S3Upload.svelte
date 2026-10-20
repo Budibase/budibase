@@ -2,9 +2,8 @@
   import Field from "./Field.svelte"
   import { CoreDropzone, ProgressCircle, Helpers } from "@budibase/bbui"
   import { getContext, onMount, onDestroy } from "svelte"
-  import { processStringSync } from "@budibase/string-templates"
   import { builderStore } from "@/stores/builder"
-  import { screenStore } from "@/stores/screens"
+  import { processStringSync } from "@budibase/string-templates"
 
   export let datasourceId
   export let bucket
@@ -94,14 +93,12 @@
     const processedFileKey = processStringSync(key, $context)
     loading = true
     try {
-      const res = await API.externalUpload({
+      const res = await API.externalUpload(
         datasourceId,
         bucket,
-        key: processedFileKey,
-        data,
-        componentId: $component.id,
-        screenId: $screenStore.activeScreen._id,
-      })
+        processedFileKey,
+        data
+      )
       notificationStore.actions.success("File uploaded successfully")
       loading = false
       return res
