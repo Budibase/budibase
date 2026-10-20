@@ -98,7 +98,7 @@ describe("agentRequests crud", () => {
           source: "Chat",
         })
 
-        expect(result?.requestId).toContain("req_")
+        expect(result?.requestId).toMatch(/^req_/)
 
         const [request] = await fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("active")
@@ -768,7 +768,7 @@ describe("agentRequests crud", () => {
           source: "Chat",
         })
 
-        expect(result?.requestId).toContain("req_")
+        expect(result?.requestId).toMatch(/^req_/)
         const [request] = await fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("active")
         expect(request.title).toBeUndefined()
@@ -2150,7 +2150,7 @@ describe("agentRequests crud", () => {
           userId: "user_1",
         })
 
-        expect(created?.request._id).toContain("req_")
+        expect(created?.request._id).toMatch(/^req_/)
         expect(created?.request.entries).toHaveLength(1)
         expect(created?.request.entries[0]).toEqual({
           sessionId: "session_1",
