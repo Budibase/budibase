@@ -138,19 +138,20 @@
       </a>
     {/each}
   </div>
-  {#if page > 1 || hasNextPage}
-    <div class="pagination">
-      <Pagination
-        {page}
-        hasPrevPage={page > 1 && !loading}
-        hasNextPage={hasNextPage && !loading}
-        goToPrevPage={() => load({ tab: activeTab, nextPage: page - 1 })}
-        goToNextPage={() => load({ tab: activeTab, nextPage: page + 1 })}
-      />
-    </div>
-  {/if}
 {:else if !loading}
   <Body size="S">{activeTab.empty}</Body>
+{/if}
+
+{#if page > 1 || hasNextPage}
+  <div class="pagination">
+    <Pagination
+      {page}
+      hasPrevPage={page > 1 && !loading}
+      hasNextPage={hasNextPage && !loading}
+      goToPrevPage={() => load({ tab: activeTab, nextPage: page - 1 })}
+      goToNextPage={() => load({ tab: activeTab, nextPage: page + 1 })}
+    />
+  </div>
 {/if}
 
 <style>
