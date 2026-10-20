@@ -1476,6 +1476,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user,
+                triggeredBy: { type: "user" },
               })
 
               expect(
