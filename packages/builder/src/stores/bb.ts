@@ -198,17 +198,23 @@ export class BBStore extends BudiStore<BBState> {
 
   hideSettings(path?: string) {
     const matchedRoute = path ? settingsRouteResolver?.(path) : undefined
-    this.update(state => ({
-      ...state,
-      settings: {
-        ...state.settings,
-        ...(matchedRoute ? { route: matchedRoute } : {}),
-        locked: undefined,
-        open: false,
-        pendingPath: undefined,
-        pendingParams: undefined,
-      },
-    }))
+    this.update(state => {
+      const route = matchedRoute || state.settings.route
+      const params = { ...route?.params }
+      delete params.projectSetupReturnTo
+
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          ...(route ? { route: { ...route, params } } : {}),
+          locked: undefined,
+          open: false,
+          pendingPath: undefined,
+          pendingParams: undefined,
+        },
+      }
+    })
   }
 
   goToParent() {

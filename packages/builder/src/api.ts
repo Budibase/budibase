@@ -1,4 +1,5 @@
 import {
+  type APIClient,
   Constants,
   CookieUtils,
   createAPIClient,
@@ -7,9 +8,10 @@ import { workspaceStore } from "@/stores/builder"
 import { get } from "svelte/store"
 import { auth, navigation } from "./stores/portal"
 import { sdk, Header, ClientHeader } from "@budibase/shared-core"
+import { withProjectAssignmentNotification } from "./helpers/projectAssignmentResults"
 
-const newClient = (opts?: { production?: boolean }) =>
-  createAPIClient({
+const newClient = (opts?: { production?: boolean }): APIClient => {
+  const client = createAPIClient({
     attachHeaders: (headers, request) => {
       const isWorkspaceDeleteRequest =
         request?.method === "DELETE" &&
@@ -82,6 +84,44 @@ const newClient = (opts?: { production?: boolean }) =>
       )
     },
   })
+
+  return {
+    ...client,
+    saveTable: withProjectAssignmentNotification(client.saveTable),
+    saveQuery: withProjectAssignmentNotification(client.saveQuery),
+    importQueries: withProjectAssignmentNotification(client.importQueries),
+    saveScreen: withProjectAssignmentNotification(client.saveScreen),
+    createDatasource: withProjectAssignmentNotification(
+      client.createDatasource
+    ),
+    updateDatasource: withProjectAssignmentNotification(
+      client.updateDatasource
+    ),
+    createAutomation: withProjectAssignmentNotification(
+      client.createAutomation
+    ),
+    updateAutomation: withProjectAssignmentNotification(
+      client.updateAutomation
+    ),
+    createAgent: withProjectAssignmentNotification(client.createAgent),
+    updateAgent: withProjectAssignmentNotification(client.updateAgent),
+    createAgentOperation: withProjectAssignmentNotification(
+      client.createAgentOperation
+    ),
+    updateAgentOperation: withProjectAssignmentNotification(
+      client.updateAgentOperation
+    ),
+    workspaceApp: {
+      ...client.workspaceApp,
+      create: withProjectAssignmentNotification(client.workspaceApp.create),
+      update: withProjectAssignmentNotification(client.workspaceApp.update),
+    },
+    rowActions: {
+      ...client.rowActions,
+      create: withProjectAssignmentNotification(client.rowActions.create),
+    },
+  }
+}
 
 export const API = newClient()
 export const productionAPI = newClient({ production: true })

@@ -276,6 +276,7 @@ export async function run(
       },
       user,
       appId: context.getWorkspaceId(),
+      triggeredBy: sdk.platformActions.getUserOrigin(user),
     },
     { getResponses: true }
   )

@@ -2,9 +2,12 @@ import { API } from "@/api"
 import { downloadStream } from "@budibase/frontend-core"
 import type {
   CreateProjectRequest,
+  ExportProjectRequest,
   ImportProjectRequest,
   ImportProjectResponse,
+  PreviewProjectAssignmentRequest,
   ProjectResponse,
+  UpdateProjectAssignmentRequest,
   UpdateProjectRequest,
 } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
@@ -84,12 +87,10 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     return response.project
   }
 
-  exportProject = async (
-    id: string,
-    body?: {
-      encryptPassword?: string
-    }
-  ) => {
+  exportProject = async ({
+    id,
+    ...body
+  }: ExportProjectRequest & { id: string }) => {
     const response = await API.projects.exportBundle(id, body)
     await downloadStream(response)
   }
@@ -98,12 +99,16 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     file: File,
     body?: ImportProjectRequest
   ): Promise<ImportProjectResponse> => {
+    const workspaceId = this.workspaceId
     const response = await API.projects.importBundle(file, body)
-    try {
-      await this.fetch(this.workspaceId)
-    } catch (err) {
-      this.loaded = false
-      console.warn("Failed to refresh projects after import", err)
+    if (this.workspaceId === workspaceId) {
+      this.invalidateFetch()
+      this.update(state =>
+        sortProjectsByName([
+          ...state.filter(project => project._id !== response.project._id),
+          response.project,
+        ])
+      )
     }
     return response
   }
@@ -124,6 +129,17 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     )
     return response.project
   }
+
+  previewAssignment = async (request: PreviewProjectAssignmentRequest) =>
+    await API.projects.previewAssignment(request)
+
+  updateAssignment = async ({
+    resourceId,
+    request,
+  }: {
+    resourceId: string
+    request: UpdateProjectAssignmentRequest
+  }) => await API.projects.updateAssignment({ resourceId, request })
 
   deleteProject = async (id: string, rev: string) => {
     const workspaceId = this.workspaceId

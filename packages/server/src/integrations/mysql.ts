@@ -6,6 +6,7 @@ import {
   Table,
   TableSchema,
   DatasourcePlus,
+  type SqlDatasource,
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
@@ -140,7 +141,7 @@ export function bindingTypeCoerce(bindings: SqlQueryBinding) {
   return bindings
 }
 
-class MySQLIntegration extends Sql implements DatasourcePlus {
+class MySQLIntegration extends Sql implements DatasourcePlus, SqlDatasource {
   private readonly config: MySQLConfig
   private client?: mysql.Connection
 
