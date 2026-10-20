@@ -29,7 +29,7 @@ import type {
   SearchFilters,
   Table,
 } from "@budibase/types"
-import { getContextDoc } from "../../escalations"
+import { getContextDoc } from "../../escalationContext"
 
 export const USER_FILTER_FIELDS = [
   "isRequester",
@@ -122,7 +122,7 @@ const ARRAY_FIELDS = [
 const builder = new sql.Sql(SqlClient.SQL_LITE)
 
 export interface RequestSort {
-  field: "statusRank" | "createdAt" | "updatedAt" | "pendingApprovers"
+  field: "statusRank" | "createdAt" | "updatedAt" | "pendingApprovers" | "_id"
   direction: SortOrder
   containsValue?: string
 }

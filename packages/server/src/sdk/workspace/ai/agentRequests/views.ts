@@ -1,11 +1,11 @@
 import { context, db, HTTPError, ViewName } from "@budibase/backend-core"
-import { AGENT_REQUEST_TYPE } from "@budibase/types"
+import { AGENT_REQUEST_TYPE, SortOrder } from "@budibase/types"
 import type {
   AgentRequest,
   AgentRequestStatus,
   DatabaseQueryOpts,
 } from "@budibase/types"
-import { STATUS_RANK } from "./requestsStore"
+import { searchRequests, STATUS_RANK } from "./requestsStore"
 
 const isRequest = `doc.type === "${AGENT_REQUEST_TYPE}"`
 
@@ -188,6 +188,34 @@ export const queryRequestsByWorkspaceAgent = async (
     createByWorkspaceAgentView,
     { arrayResponse: true }
   )) as AgentRequest[]
+}
+
+export const queryRequestsByAgentAndUser = async ({
+  agentId,
+  userId,
+  limit,
+  page,
+}: {
+  agentId: string
+  userId: string
+  limit: number
+  page: number
+}): Promise<AgentRequest[]> => {
+  const { requests } = await searchRequests({
+    filters: {
+      equal: { workspaceId: context.getProdWorkspaceId(), agentId, userId },
+    },
+    sort: [
+      { field: "updatedAt", direction: SortOrder.DESCENDING },
+      { field: "_id", direction: SortOrder.DESCENDING },
+    ],
+    page,
+    limit,
+  })
+  return await context.getRequestsDB().getMultiple<AgentRequest>(
+    requests.map(request => request._id!),
+    { allowMissing: true }
+  )
 }
 
 export const queryRequestIdsByUser = async (
