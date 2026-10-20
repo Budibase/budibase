@@ -275,9 +275,13 @@ export async function createDesignDoc() {
 }
 
 const isNotFoundError = (err: unknown) =>
-  typeof err === "object" && err !== null && "status" in err
-    ? err.status === 404
-    : false
+  typeof err === "object" &&
+  err !== null &&
+  "status" in err &&
+  err.status === 404 &&
+  "message" in err &&
+  typeof err.message === "string" &&
+  err.message.includes(SQLITE_DESIGN_DOC_ID)
 
 export async function searchRequests(
   {
