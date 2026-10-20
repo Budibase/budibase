@@ -27,9 +27,13 @@ export enum ViewName {
   USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
   AGENT_REQUESTS_BY_AGENT = "agent_requests_by_agent",
-  AGENT_REQUESTS_BY_AGENT_AND_USER = "agent_requests_by_agent_and_user",
   AGENT_REQUESTS_BY_UPDATED_AT = "agent_requests_by_updated_at_2",
   AGENT_REQUESTS_BY_STATUS_AND_UPDATED_AT = "agent_requests_by_status_and_updated_at",
+  REQUESTS_BY_WORKSPACE = "requests_by_workspace",
+  REQUESTS_BY_WORKSPACE_STATUS = "requests_by_workspace_status",
+  REQUESTS_BY_WORKSPACE_AGENT = "requests_by_workspace_agent",
+  REQUESTS_BY_USER = "requests_by_user",
+  REQUESTS_COUNT_BY_STATUS = "requests_count_by_status",
   LINK = "by_link",
   ROUTING = "screen_routes_2",
   PROJECT_MEMBERS = "project_members",
@@ -81,6 +85,9 @@ export const StaticDatabases = {
   },
   SCIM_LOGS: {
     name: "scim-logs",
+  },
+  REQUESTS: {
+    name: "requests",
   },
   // Used by self-host users making use of Budicloud resources. Introduced when
   // we started letting self-host users use Budibase AI in the cloud.

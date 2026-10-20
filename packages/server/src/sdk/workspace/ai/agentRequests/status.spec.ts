@@ -1,8 +1,30 @@
 import { context } from "@budibase/backend-core"
+import { AGENT_REQUEST_TYPE } from "@budibase/types"
 import type { AgentRequest } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { STATUS_RANK } from "./requestsStore"
 import { buildRequestStatusPrompt } from "./status"
 import { queryRequestsByAgentAndUser } from "./views"
+
+type SeedRequest = Omit<
+  AgentRequest,
+  | "type"
+  | "workspaceId"
+  | "statusRank"
+  | "approvers"
+  | "pendingApprovers"
+  | "respondedApprovers"
+>
+
+const toRequest = (request: SeedRequest): AgentRequest => ({
+  ...request,
+  type: AGENT_REQUEST_TYPE,
+  workspaceId: context.getProdWorkspaceId(),
+  statusRank: STATUS_RANK[request.status],
+  approvers: [],
+  pendingApprovers: [],
+  respondedApprovers: [],
+})
 
 describe("request status lookup", () => {
   const config = new TestConfiguration()
@@ -17,19 +39,19 @@ describe("request status lookup", () => {
 
   it("bounds oversized facts and refuses to infer a status from incomplete history", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const request: AgentRequest = {
-        _id: "agentrequest_large_history",
+      const request = toRequest({
+        _id: "req_large_history",
         agentId: "large_history_agent",
         userId: "large_history_user",
         title: "Buy a laptop",
         status: "needs_input",
         entries: [],
         error: "Oversized recorded details ".repeat(10000),
-      }
-      await context.getWorkspaceDB().put(request)
-      await context.getWorkspaceDB().put({
+      })
+      await context.getRequestsDB().put(request)
+      await context.getRequestsDB().put({
         ...request,
-        _id: "agentrequest_small_history",
+        _id: "req_small_history",
         title: "Buy a melon",
         error: undefined,
       })
@@ -50,10 +72,9 @@ describe("request status lookup", () => {
 
   it("pages only the user's requests and includes requests beyond the first page when they fit", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const requests = Array.from(
-        { length: 27 },
-        (_, index): AgentRequest => ({
-          _id: `agentrequest_paged_${String(index).padStart(2, "0")}`,
+      const requests = Array.from({ length: 27 }, (_, index) =>
+        toRequest({
+          _id: `req_paged_${String(index).padStart(2, "0")}`,
           agentId: "paged_agent",
           userId: "paged_user",
           title: `Request ${String(index).padStart(2, "0")}`,
@@ -61,16 +82,16 @@ describe("request status lookup", () => {
           entries: [],
         })
       )
-      await context.getWorkspaceDB().bulkDocs([
+      await context.getRequestsDB().bulkDocs([
         ...requests,
-        {
-          _id: "agentrequest_paged_other_user",
+        toRequest({
+          _id: "req_paged_other_user",
           agentId: "paged_agent",
           userId: "other_user",
           title: "Another user's request",
           status: "active",
           entries: [],
-        },
+        }),
       ])
 
       const page = await queryRequestsByAgentAndUser({
@@ -96,42 +117,12 @@ describe("request status lookup", () => {
     })
   })
 
-  it("reads the user's published requests from the builder's development workspace", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const request: AgentRequest = {
-        _id: "agentrequest_preview_book",
-        agentId: "preview_agent",
-        userId: "preview_user",
-        title: "Buy a book for 5 euros",
-        status: "completed",
-        entries: [],
-      }
-      await context.getWorkspaceDB().put(request)
-    })
-
-    const prompt = await config.doInContext(config.getDevWorkspaceId(), () =>
-      buildRequestStatusPrompt({
-        agentId: "preview_agent",
-        userId: "preview_user",
-        isPreview: true,
-      })
-    )
-
-    expect(prompt).toContain(
-      '"title":"Buy a book for 5 euros","status":"completed"'
-    )
-    expect(prompt).not.toContain(
-      "The user's saved request status is unavailable."
-    )
-    expect(prompt).not.toContain("The saved request lookup failed.")
-  })
-
   it("reads saved statuses across conversations and preserves completed and failed requests without changing them", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const db = context.getWorkspaceDB()
-      const requests: AgentRequest[] = [
+      const db = context.getRequestsDB()
+      const requests: SeedRequest[] = [
         {
-          _id: "agentrequest_laptop",
+          _id: "req_laptop",
           agentId: "agent_1",
           userId: "user_1",
           title: "Buy a laptop",
@@ -158,7 +149,7 @@ describe("request status lookup", () => {
           ],
         },
         {
-          _id: "agentrequest_melon",
+          _id: "req_melon",
           agentId: "agent_1",
           userId: "user_1",
           title: "Buy a melon",
@@ -168,7 +159,7 @@ describe("request status lookup", () => {
           entries: [],
         },
         {
-          _id: "agentrequest_other_user",
+          _id: "req_other_user",
           agentId: "agent_1",
           userId: "user_2",
           title: "Another user's private request",
@@ -176,7 +167,7 @@ describe("request status lookup", () => {
           entries: [],
         },
         {
-          _id: "agentrequest_other_agent",
+          _id: "req_other_agent",
           agentId: "agent_2",
           userId: "user_1",
           title: "Another agent's request",
@@ -185,16 +176,16 @@ describe("request status lookup", () => {
         },
       ]
       for (const request of requests) {
-        await db.put(request)
+        await db.put(toRequest(request))
       }
 
       const initialPrompt = await buildRequestStatusPrompt({
         agentId: "agent_1",
         userId: "user_1",
       })
-      const laptop = await db.get<AgentRequest>("agentrequest_laptop")
+      const laptop = await db.get<AgentRequest>("req_laptop")
       await db.put({ ...laptop, status: "completed" })
-      const savedLaptop = await db.get<AgentRequest>("agentrequest_laptop")
+      const savedLaptop = await db.get<AgentRequest>("req_laptop")
 
       const currentPrompt = await buildRequestStatusPrompt({
         agentId: "agent_1",
@@ -229,9 +220,7 @@ describe("request status lookup", () => {
           recentActivity: [],
         },
       ])
-      expect(await db.get<AgentRequest>("agentrequest_laptop")).toEqual(
-        savedLaptop
-      )
+      expect(await db.get<AgentRequest>("req_laptop")).toEqual(savedLaptop)
     })
   })
 })

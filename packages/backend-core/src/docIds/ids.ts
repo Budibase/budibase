@@ -134,6 +134,10 @@ export const generateAgentRequestID = (id = newid()) => {
   return `${DocumentType.AGENT_REQUEST}${SEPARATOR}${id}`
 }
 
+export const generateRequestID = (id = newid()) => {
+  return `${DocumentType.REQUEST}${SEPARATOR}${id}`
+}
+
 export const getAgentTestSuiteID = (agentId: string) => {
   return `${DocumentType.AGENT_TEST_SUITE}${SEPARATOR}${agentId}`
 }
