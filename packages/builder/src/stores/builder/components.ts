@@ -831,7 +831,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
         }))
       }
     }
-    if (!savedScreen) {
+    if (!savedScreen || resetVersion !== this.resetVersion) {
       return
     }
 
