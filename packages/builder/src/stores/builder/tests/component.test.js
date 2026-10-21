@@ -298,45 +298,68 @@ describe("Component store", () => {
   })
 
   it.each([
-    { fails: false, copyDuringSave: false },
-    { fails: true, copyDuringSave: false },
-    { fails: false, copyDuringSave: true },
-    { fails: true, copyDuringSave: true },
+    { outcome: "saved", copyDuringSave: false },
+    { outcome: "failed", copyDuringSave: false },
+    { outcome: "skipped", copyDuringSave: false },
+    { outcome: "saved", copyDuringSave: true },
+    { outcome: "failed", copyDuringSave: true },
+    { outcome: "skipped", copyDuringSave: true },
+    { outcome: "failed", copyDuringSave: false, resetDuringSave: true },
+    { outcome: "skipped", copyDuringSave: false, resetDuringSave: true },
+    { outcome: "failed", copyDuringSave: true, resetDuringSave: true },
+    { outcome: "skipped", copyDuringSave: true, resetDuringSave: true },
   ])(
-    "restores unsuccessful cuts without overwriting a new copy: %j",
-    async ({ fails, copyDuringSave }) => {
+    "handles cut clipboard consumption across copies and workspace resets: %j",
+    async ({ outcome, copyDuringSave, resetDuringSave }) => {
       const store = new ComponentStore()
       const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
       const target = getComponentFixture(`${COMP_PREFIX}/container`).json()
       const destination = getScreenFixture().addChild(target).json()
+      destination._id = "screen_destination"
+      componentScreenStore.set({ screens: [destination] })
       const clipboard = { ...component, isCut: true, screenId: "screen_source" }
       store.update(state => ({ ...state, componentToPaste: clipboard }))
       let finishSave
       const pendingSave = new Promise(resolve => {
         finishSave = resolve
       })
-      componentScreenStore.patch.mockImplementation(async () => {
+      componentScreenStore.patch.mockImplementation(async patch => {
+        const clone = JSON.parse(JSON.stringify(destination))
         await pendingSave
-        if (fails) {
+        if (outcome === "skipped") {
+          clone.props._children = []
+        }
+        if (patch(clone) === false) {
+          return
+        }
+        if (outcome === "failed") {
           throw new Error("Save failed")
         }
+        componentScreenStore.set({ screens: [clone] })
+        return clone
       })
 
       const paste = store.paste(target, "below", destination)
+      let expectedClipboard = outcome === "saved" ? undefined : clipboard
+      if (resetDuringSave) {
+        store.reset()
+        expectedClipboard = undefined
+      }
       if (copyDuringSave) {
         await store.copy(target)
+        expectedClipboard = get(store).componentToPaste
       }
-      const expectedClipboard = copyDuringSave
-        ? get(store).componentToPaste
-        : clipboard
       finishSave()
-      if (fails) {
+      if (outcome === "failed") {
         await expect(paste).rejects.toThrow("Save failed")
       } else {
         await paste
       }
 
       expect(get(store).componentToPaste).toEqual(expectedClipboard)
+      expect(get(componentScreenStore).screens[0].props._children).toEqual(
+        outcome === "saved" ? [target, component] : [target]
+      )
     }
   )
 

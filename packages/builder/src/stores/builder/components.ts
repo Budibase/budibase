@@ -64,6 +64,8 @@ export const INITIAL_COMPONENTS_STATE: ComponentState = {
 }
 
 export class ComponentStore extends BudiStore<ComponentState> {
+  private resetVersion = 0
+
   constructor() {
     super(INITIAL_COMPONENTS_STATE)
     this.reset = this.reset.bind(this)
@@ -102,6 +104,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
    * Reset the component store to default values
    */
   reset() {
+    this.resetVersion++
     this.store.set({ ...INITIAL_COMPONENTS_STATE })
   }
 
@@ -731,6 +734,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     let newComponentId = ""
 
     const clipboard = state.componentToPaste
+    const resetVersion = this.resetVersion
     let componentToPaste = cloneDeep(clipboard)
 
     // Patch screen
@@ -816,7 +820,11 @@ export class ComponentStore extends BudiStore<ComponentState> {
     try {
       savedScreen = await screenStore.patch(patch, targetScreenId)
     } finally {
-      if (!savedScreen && clipboard.isCut) {
+      if (
+        !savedScreen &&
+        clipboard.isCut &&
+        resetVersion === this.resetVersion
+      ) {
         this.update(state => ({
           ...state,
           componentToPaste: state.componentToPaste || clipboard,
