@@ -188,6 +188,18 @@
     overflow-wrap: anywhere;
   }
 
+  .preview :global(.markdown-viewer a[href]),
+  .latest-notes :global(.markdown-viewer a[href]) {
+    color: var(--spectrum-global-color-blue-600);
+  }
+
+  .preview :global(.markdown-viewer a[href]:hover),
+  .preview :global(.markdown-viewer a[href]:focus-visible),
+  .latest-notes :global(.markdown-viewer a[href]:hover),
+  .latest-notes :global(.markdown-viewer a[href]:focus-visible) {
+    color: var(--spectrum-global-color-blue-500);
+  }
+
   .save-error {
     color: var(--spectrum-semantic-negative-color-default);
     font-size: var(--font-size-s);

@@ -147,6 +147,15 @@
     max-width: 100%;
   }
 
+  .project-notes__body :global(.markdown-viewer a[href]) {
+    color: var(--spectrum-global-color-blue-600);
+  }
+
+  .project-notes__body :global(.markdown-viewer a[href]:hover),
+  .project-notes__body :global(.markdown-viewer a[href]:focus-visible) {
+    color: var(--spectrum-global-color-blue-500);
+  }
+
   .project-notes--focused .project-notes__body {
     max-width: 880px;
     margin: 0 auto;
