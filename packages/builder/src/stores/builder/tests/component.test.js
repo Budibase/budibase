@@ -10,6 +10,7 @@ import { API } from "@/api"
 import {
   workspaceStore,
   screenStore as componentScreenStore,
+  componentTreeNodesStore,
   tables,
   setComponentStore,
   setDatasourcesStore,
@@ -360,6 +361,44 @@ describe("Component store", () => {
       expect(get(componentScreenStore).screens[0].props._children).toEqual(
         outcome === "saved" ? [target, component] : [target]
       )
+    }
+  )
+
+  it.each([
+    { cut: false, selectComponent: false },
+    { cut: false, selectComponent: true },
+    { cut: true, selectComponent: false },
+    { cut: true, selectComponent: true },
+  ])(
+    "ignores paste selection and tree updates after a reset: %j",
+    async ({ cut, selectComponent }) => {
+      const store = new ComponentStore()
+      const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const target = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const destination = getScreenFixture().addChild(target).json()
+      store.update(state => ({
+        ...state,
+        componentToPaste: { ...component, isCut: cut },
+      }))
+      let finishSave
+      const pendingSave = new Promise(resolve => {
+        finishSave = resolve
+      })
+      componentScreenStore.patch.mockImplementation(async patch => {
+        const clone = JSON.parse(JSON.stringify(destination))
+        patch(clone)
+        await pendingSave
+        return clone
+      })
+
+      const paste = store.paste(target, "below", destination, selectComponent)
+      store.reset()
+      const resetState = { ...get(store) }
+      finishSave()
+      await paste
+
+      expect(get(store)).toEqual(resetState)
+      expect(componentTreeNodesStore.makeNodeVisible).not.toHaveBeenCalled()
     }
   )
 
