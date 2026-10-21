@@ -1,5 +1,5 @@
 import { context, roles } from "@budibase/backend-core"
-import { findHBSBlocks } from "@budibase/string-templates"
+import { findHBSBlocks, isJSBinding } from "@budibase/string-templates"
 import {
   type Component,
   DocumentType,
@@ -112,6 +112,10 @@ export const matchesConfiguredKey = ({
   }
 
   const blocks = findHBSBlocks(template)
+  // JavaScript bindings retain browser-selected keys for compatibility.
+  if (blocks.some(isJSBinding)) {
+    return true
+  }
   const parts: string[] = []
   const userValues = new Map(Object.entries(user))
   let literal = ""
