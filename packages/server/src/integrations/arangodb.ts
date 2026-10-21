@@ -97,9 +97,11 @@ class ArangoDBIntegration implements IntegrationBase {
     return response
   }
 
-  async read(query: { sql: string }) {
+  async read(query: { sql: string; bindVars?: Record<string, string> }) {
     try {
-      const result = await this.client.query(query.sql)
+      const result = query.bindVars
+        ? await this.client.query(query.sql, query.bindVars)
+        : await this.client.query(query.sql)
       return result.all()
     } catch (err) {
       // @ts-ignore

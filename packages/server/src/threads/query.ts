@@ -34,6 +34,7 @@ import { default as threadUtils } from "./utils"
 threadUtils.threadSetup()
 
 import { interpolateSQL } from "../integrations/queries/sql"
+import { interpolateAQL } from "../integrations/queries/aql"
 import { isSQL } from "../integrations/utils"
 
 class QueryRunner {
@@ -199,6 +200,8 @@ class QueryRunner {
           nullDefaultSupport,
         }
       )
+    } else if (datasourceClone.source === SourceName.ARANGODB) {
+      query = await interpolateAQL(fieldsClone, enrichedContext)
     } else {
       const rawPath = fieldsClone.path
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
