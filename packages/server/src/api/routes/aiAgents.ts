@@ -1,4 +1,5 @@
 import { auth } from "@budibase/backend-core"
+import { agentActivityEnabled } from "../../middleware/agentActivityEnabled"
 import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
 import { knowledgeSearchConfigured } from "../../middleware/knowledgeSearchConfigured"
 import * as ai from "../controllers/ai"
@@ -155,5 +156,5 @@ publicRoutes.get(
 )
 publicRoutes.get("/api/agent/slack/oauth/callback", ai.completeSlackOAuth)
 publicRoutes
-  .get("/api/requests", ai.fetchUserRequests)
-  .get("/api/requests/:id", ai.findUserRequest)
+  .get("/api/requests", agentActivityEnabled, ai.fetchUserRequests)
+  .get("/api/requests/:id", agentActivityEnabled, ai.findUserRequest)
