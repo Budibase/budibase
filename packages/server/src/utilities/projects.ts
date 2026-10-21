@@ -1,70 +1,50 @@
-import { features, HTTPError } from "@budibase/backend-core"
-import { DocumentType, FeatureFlag, prefixed } from "@budibase/types"
-import sdk from "../sdk"
+import type {
+  ProjectAssignmentResult,
+  ProjectAssignmentResponse,
+} from "@budibase/types"
+import type { ProjectPropagationOutcome } from "../sdk/workspace/projects/dependencies"
 
-const validateProjectIds = (projectIds?: string[] | null) => {
-  if (projectIds === undefined) {
-    return undefined
-  }
-  if (projectIds === null) {
-    throw new HTTPError("Project ids must be an array.", 400)
-  }
-
-  if (!Array.isArray(projectIds)) {
-    throw new HTTPError("Project ids must be an array.", 400)
-  }
-
-  return projectIds.map(projectId => {
-    if (typeof projectId !== "string" || !projectId.trim()) {
-      throw new HTTPError("Project ids must be non-empty strings.", 400)
-    }
-    const trimmed = projectId.trim()
-    if (!trimmed.startsWith(prefixed(DocumentType.PROJECT))) {
-      throw new HTTPError(`Project '${trimmed}' not found.`, 404)
-    }
-    return trimmed
-  })
+export const withoutProjectAssignmentResult = <T>(resource: T): T => {
+  const { projectAssignment: _result, ...saved } = resource as T &
+    ProjectAssignmentResponse
+  return saved as T
 }
 
-const dedupeProjectIds = (projectIds: string[]) => {
-  const deduped = Array.from(new Set(projectIds))
-  return deduped.length ? deduped : undefined
+export const projectAssignmentResult = async (
+  propagation: Promise<ProjectPropagationOutcome>
+): Promise<ProjectAssignmentResult | undefined> => {
+  const outcome = await propagation
+  const result = {
+    assignedDependencyIds: outcome.assignedResourceIds || [],
+    failedDependencyIds:
+      outcome.status === "incomplete" ? outcome.resourceIds : [],
+  }
+  // Preserve ordinary resource responses when propagation had no work to do.
+  if (
+    !result.assignedDependencyIds.length &&
+    !result.failedDependencyIds.length
+  ) {
+    return undefined
+  }
+  return result
 }
 
-export const resolveProjectIds = async (projectIds?: string[] | null) => {
-  const validated = validateProjectIds(projectIds)
-  if (!validated?.length) {
-    return undefined
-  }
-
-  const ids = dedupeProjectIds(validated)
-  if (!ids?.length) {
-    return undefined
-  }
-
-  if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-    throw new HTTPError("Projects feature is not enabled.", 404)
-  }
-
-  await Promise.all(
-    ids.map(async projectId => {
-      const project = await sdk.projects.get(projectId)
-      if (!project) {
-        throw new HTTPError(`Project '${projectId}' not found.`, 404)
-      }
-    })
+export const mergeProjectAssignmentResults = (
+  outcomes: (ProjectAssignmentResult | undefined)[]
+): ProjectAssignmentResult | undefined => {
+  const results = outcomes.filter(
+    (result): result is ProjectAssignmentResult => !!result
   )
-
-  return ids
-}
-
-export const resolveUpdatedProjectIds = async (
-  projectIds: string[] | null | undefined,
-  currentProjectIds?: string[]
-) => {
-  if (projectIds === undefined) {
-    return currentProjectIds
+  if (!results.length) {
+    return undefined
   }
-
-  return await resolveProjectIds(projectIds)
+  const failedDependencyIds = Array.from(
+    new Set(results.flatMap(result => result.failedDependencyIds))
+  )
+  return {
+    assignedDependencyIds: Array.from(
+      new Set(results.flatMap(result => result.assignedDependencyIds))
+    ).filter(id => !failedDependencyIds.includes(id)),
+    failedDependencyIds,
+  }
 }

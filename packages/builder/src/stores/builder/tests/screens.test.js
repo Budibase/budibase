@@ -85,6 +85,8 @@ describe("Screens store", () => {
     vi.clearAllMocks()
 
     const screenStore = new ScreenStore()
+    API.get.mockImplementation(async () => get(screenStore).screens)
+    API.fetchAppRoutes.mockResolvedValue({ routes: [] })
     ctx.bb = {
       get store() {
         return get(screenStore)
@@ -146,7 +148,9 @@ describe("Screens store", () => {
     expect(bb.store).toStrictEqual(initialScreenState)
   })
 
-  it("retains loaded screen children when syncing truncated screens", ({ bb }) => {
+  it("retains loaded screen children when syncing truncated screens", ({
+    bb,
+  }) => {
     const screen = getScreenFixture()
       .addChild(getComponentFixture(`${COMP_PREFIX}/container`))
       .json()
@@ -155,7 +159,11 @@ describe("Screens store", () => {
     bb.screenStore.syncAppScreens({ screens: [screen] })
     bb.screenStore.syncAppScreens({
       screens: [
-        { ...screen, _rev: undefined, props: { ...screen.props, _children: [] } },
+        {
+          ...screen,
+          _rev: undefined,
+          props: { ...screen.props, _children: [] },
+        },
       ],
     })
 

@@ -1,6 +1,8 @@
 import crypto from "crypto"
 import fs from "fs"
 import { join } from "path"
+import { Transform } from "stream"
+import { pipeline } from "stream/promises"
 import zlib from "zlib"
 import env from "../environment"
 
@@ -149,10 +151,17 @@ async function getSaltAndIV(path: string) {
   return { salt, iv }
 }
 
+export class DecryptionSizeLimitError extends Error {
+  constructor() {
+    super("Decrypted file exceeds the size limit.")
+  }
+}
+
 export async function decryptFile(
   inputPath: string,
   outputPath: string,
-  secret: string
+  secret: string,
+  { maxOutputBytes = Infinity }: { maxOutputBytes?: number } = {}
 ) {
   if (fs.lstatSync(inputPath).isDirectory()) {
     throw new Error("Unable to decrypt directory")
@@ -171,36 +180,23 @@ export async function decryptFile(
     new Uint8Array(iv)
   )
 
-  const unzip = zlib.createGunzip()
-
-  inputFile.pipe(decipher).pipe(unzip).pipe(outputFile)
-
-  return new Promise<void>((res, rej) => {
-    outputFile.on("finish", () => {
-      outputFile.close()
-      res()
-    })
-
-    inputFile.on("error", e => {
-      outputFile.close()
-      rej(e)
-    })
-
-    decipher.on("error", e => {
-      outputFile.close()
-      rej(e)
-    })
-
-    unzip.on("error", e => {
-      outputFile.close()
-      rej(e)
-    })
-
-    outputFile.on("error", e => {
-      outputFile.close()
-      rej(e)
-    })
-  })
+  let outputBytes = 0
+  await pipeline(
+    inputFile,
+    decipher,
+    zlib.createGunzip(),
+    new Transform({
+      transform(chunk: Buffer, _encoding, callback) {
+        outputBytes += chunk.length
+        if (outputBytes > maxOutputBytes) {
+          callback(new DecryptionSizeLimitError())
+          return
+        }
+        callback(null, chunk)
+      },
+    }),
+    outputFile
+  )
 }
 
 function readBytes(stream: fs.ReadStream, length: number) {

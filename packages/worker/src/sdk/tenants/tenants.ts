@@ -1,6 +1,8 @@
 import {
   configs,
+  context,
   db as dbCore,
+  events,
   platform,
   tenancy,
 } from "@budibase/backend-core"
@@ -11,6 +13,7 @@ export async function deleteTenant(tenantId: string) {
   await quotas.bustCache()
   await removeTenantUsers(tenantId)
   await removeTenantApps(tenantId)
+  await removeRequestsDB(tenantId)
   await removeGlobalDB(tenantId)
 }
 
@@ -72,16 +75,47 @@ async function removeGlobalDB(tenantId: string) {
   }
 }
 
+async function removeRequestsDB(tenantId: string) {
+  const name = context.getRequestsDBName(tenantId)
+  if (await dbCore.dbExists(name)) {
+    await dbCore.getDB(name, { skip_setup: true }).destroy()
+  }
+}
+
 async function removeTenantApps(tenantId: string) {
   try {
     const workspaces = await dbCore.getAllWorkspaces({
       all: true,
     })
-    const destroyPromises = workspaces.map(workspace => {
-      const db = dbCore.getDB(workspace.appId)
-      return db.destroy()
-    })
-    await Promise.allSettled(destroyPromises)
+    const workspaceIdsByProdId = new Map<string, string[]>()
+    for (const { appId } of workspaces) {
+      const prodWorkspaceId = dbCore.getProdWorkspaceID(appId)
+      workspaceIdsByProdId.set(prodWorkspaceId, [
+        ...(workspaceIdsByProdId.get(prodWorkspaceId) ?? []),
+        appId,
+      ])
+    }
+    // Actions writers only write while the dev workspace exists and hold this
+    // lock while they check, so a late write can't recreate the Actions DB
+    await Promise.all(
+      [...workspaceIdsByProdId].map(([prodWorkspaceId, workspaceIds]) =>
+        events.platformActions.doWithActionsWorkspaceDeletionLock({
+          workspaceId: prodWorkspaceId,
+          task: async () => {
+            const actionsDbName =
+              events.platformActions.getActionsDbName(prodWorkspaceId)
+            if (await dbCore.dbExists(actionsDbName)) {
+              await dbCore.getDB(actionsDbName, { skip_setup: true }).destroy()
+            }
+            await Promise.allSettled(
+              workspaceIds.map(workspaceId =>
+                dbCore.getDB(workspaceId).destroy()
+              )
+            )
+          },
+        })
+      )
+    )
   } catch (err) {
     console.error(`Error removing tenant ${tenantId} apps`, err)
     throw err

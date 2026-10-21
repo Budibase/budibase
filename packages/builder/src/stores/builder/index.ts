@@ -116,6 +116,7 @@ export const reset = () => {
 
 const refreshBuilderData = async () => {
   await Promise.all([
+    agentsStore.init(),
     automationStore.actions.fetch(),
     datasources.init(),
     integrations.init(),
@@ -153,7 +154,6 @@ export const initialise = async (
   screenStore.syncAppScreens(pkg, selectedScreenId)
   layoutStore.syncAppLayouts(pkg)
   await workspaceFavouriteStore.sync()
-  agentsStore.init()
   resetBuilderHistory()
   await refreshBuilderData()
 }

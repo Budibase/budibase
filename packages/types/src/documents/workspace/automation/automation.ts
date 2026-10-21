@@ -275,6 +275,8 @@ export interface AutomationStepInputBase {
   appId: string
   apiKey?: string
   automationId?: string
+  // Name of the running automation at execution time
+  automationName?: string
   stepId?: string
   isTestRun?: boolean
 }

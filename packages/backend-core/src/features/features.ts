@@ -261,6 +261,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.FEATURE_FLAG_OVERRIDES]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
   [FeatureFlag.AI_AGENT_ACTIVITY]: false,
+  [FeatureFlag.PLATFORM_ACTIONS]: false,
 }
 export const flags = new FlagSet(featureFlagDefaults)
 

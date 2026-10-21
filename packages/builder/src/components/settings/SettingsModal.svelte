@@ -15,6 +15,9 @@
   import { beforeUrlChange, goto } from "@roxi/routify"
   import ModalSideBar from "./ModalSideBar.svelte"
   import SideNavLink from "@/pages/builder/workspace/[workspaceId]/_components/SideNav/SideNavLink.svelte"
+  import ProjectSetupBackButton from "@/components/projects/ProjectSetupBackButton.svelte"
+  import { getProjectSetupRequest } from "@/helpers/workspaceHomeNavigation"
+  import { workspaceStore } from "@/stores/builder"
 
   export const show = () => modal.show()
 
@@ -29,6 +32,16 @@
 
   $: ({ route, open, locked } = $bb.settings ?? {})
   $: matchedRoute = route
+  $: projectSetupReturn = getProjectSetupRequest({
+    workspaceId: $workspaceStore.appId || "",
+    homeUrl: matchedRoute?.params?.projectSetupReturnTo,
+  })
+
+  const returnToProjectSetup = async () => {
+    if (await bb.runBeforeClose()) {
+      bb.hideSettings()
+    }
+  }
 
   $beforeUrlChange(() => {
     bb.hideSettings()
@@ -247,6 +260,9 @@
           </ModalSideBar>
         {/if}
         <div class="setting-main" class:scrolling>
+          {#if projectSetupReturn}
+            <ProjectSetupBackButton onReturn={returnToProjectSetup} />
+          {/if}
           <RouteHeader />
           <div bind:this={page} class="setting-page" on:scroll={handleScroll}>
             <Router route={matchedRoute} />

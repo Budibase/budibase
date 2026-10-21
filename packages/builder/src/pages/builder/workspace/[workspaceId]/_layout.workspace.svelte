@@ -1,6 +1,6 @@
 <script lang="ts">
   import { sdk } from "@budibase/shared-core"
-  import { params } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import {
     initialise,
     reset,
@@ -14,7 +14,6 @@
   import { workspacesStore, admin, aiConfigsStore, auth } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { Heading, Layout, Body, notifications } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
   import { API } from "@/api"
   import { getProjectSetupRequest } from "@/helpers/workspaceHomeNavigation"
   import ProjectSetupBackButton from "@/components/projects/ProjectSetupBackButton.svelte"
@@ -154,7 +153,11 @@
     <div class="body">
       {#if projectSetupReturn}
         <ProjectSetupBackButton
-          onReturn={() => $goto(projectSetupReturn.url)}
+          onReturn={() => {
+            if (projectSetupReturn) {
+              $goto(projectSetupReturn.url)
+            }
+          }}
         />
       {/if}
       <slot />

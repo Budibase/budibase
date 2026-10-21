@@ -226,7 +226,10 @@ describe("Component store", () => {
         if (fails) {
           throw new Error("Save failed")
         }
-        componentScreenStore.set({ screens: [clone], selectedScreenId: clone._id })
+        componentScreenStore.set({
+          screens: [clone],
+          selectedScreenId: clone._id,
+        })
         return clone
       })
 

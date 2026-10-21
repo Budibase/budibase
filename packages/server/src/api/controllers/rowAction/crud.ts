@@ -1,6 +1,7 @@
-import { events } from "@budibase/backend-core"
+import { events, features } from "@budibase/backend-core"
 import {
   CreateRowActionRequest,
+  FeatureFlag,
   Ctx,
   RowActionPermissions,
   RowActionPermissionsResponse,
@@ -8,6 +9,7 @@ import {
   RowActionsResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { projectAssignmentResult } from "../../../utilities/projects"
 
 async function getTable(ctx: Ctx) {
   const { tableId } = ctx.params
@@ -50,7 +52,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
   ctx.body = result
 }
 
-export async function create(
+async function createUnlocked(
   ctx: Ctx<CreateRowActionRequest, RowActionResponse>
 ) {
   const table = await getTable(ctx)
@@ -60,16 +62,35 @@ export async function create(
     name: ctx.request.body.name,
   })
 
+  let projectAssignment
+  if (await features.isEnabled(FeatureFlag.PROJECTS)) {
+    projectAssignment = await projectAssignmentResult(
+      sdk.projects.propagateProjectIdsToDependencyIds({
+        dependencyIds: [createdAction.automationId],
+        projectIds: table.projectIds || [],
+      })
+    )
+  }
+
   await events.rowAction.created(createdAction)
 
   ctx.body = {
     tableId,
+    projectAssignment,
     id: createdAction.id,
     name: createdAction.name,
     automationId: createdAction.automationId,
     allowedSources: flattenAllowedSources(tableId, createdAction.permissions),
   }
   ctx.status = 201
+}
+
+export async function create(
+  ctx: Ctx<CreateRowActionRequest, RowActionResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    createUnlocked(ctx)
+  )
 }
 
 export async function remove(ctx: Ctx<void, void>) {
