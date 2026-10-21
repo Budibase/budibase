@@ -1,5 +1,6 @@
-import { features } from "@budibase/backend-core"
-import { FeatureFlag } from "@budibase/types"
+import { context, features } from "@budibase/backend-core"
+import { AGENT_REQUEST_TYPE, FeatureFlag } from "@budibase/types"
+import type { AgentRequest } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
 describe("/api/requests", () => {
@@ -19,7 +20,6 @@ describe("/api/requests", () => {
       { [FeatureFlag.AI_AGENT_ACTIVITY]: false },
       async () => {
         await config.api.agentRequest.fetch({ status: 404 })
-        await config.api.agentRequest.find("req_unknown", { status: 404 })
         await config.api.agentRequest.fetchForWorkspace({ status: 404 })
       }
     )
@@ -35,6 +35,44 @@ describe("/api/requests", () => {
         const workspaceResponse =
           await config.api.agentRequest.fetchForWorkspace()
         expect(workspaceResponse.requests).toEqual([])
+      }
+    )
+  })
+
+  it("serves request detail only when the feature flag is enabled", async () => {
+    const requestId = "req_flag_gate"
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const request: AgentRequest = {
+        _id: requestId,
+        type: AGENT_REQUEST_TYPE,
+        workspaceId: config.getProdWorkspaceId(),
+        agentId: "agent_flag_gate",
+        userId: config.getUser()._id,
+        title: "Buy a laptop",
+        entries: [],
+        status: "completed",
+        statusRank: 2,
+        approvers: [],
+        pendingApprovers: [],
+        respondedApprovers: [],
+      }
+      await context.getRequestsDB().put(request)
+    })
+
+    await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+      async () => {
+        const response = await config.api.agentRequest.find(requestId)
+        expect(response.requestId).toEqual(requestId)
+      }
+    )
+
+    await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.AI_AGENT_ACTIVITY]: false },
+      async () => {
+        await config.api.agentRequest.find(requestId, { status: 404 })
       }
     )
   })
