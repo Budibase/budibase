@@ -190,14 +190,29 @@
 
   .preview :global(.markdown-viewer a[href]),
   .latest-notes :global(.markdown-viewer a[href]) {
-    color: var(--spectrum-global-color-blue-600);
+    color: color-mix(
+      in srgb,
+      var(--spectrum-global-color-blue-700) 60%,
+      var(--spectrum-global-color-gray-900)
+    );
+    font-weight: 500;
   }
 
   .preview :global(.markdown-viewer a[href]:hover),
   .preview :global(.markdown-viewer a[href]:focus-visible),
   .latest-notes :global(.markdown-viewer a[href]:hover),
   .latest-notes :global(.markdown-viewer a[href]:focus-visible) {
-    color: var(--spectrum-global-color-blue-500);
+    color: color-mix(
+      in srgb,
+      var(--spectrum-global-color-blue-700) 45%,
+      var(--spectrum-global-color-gray-900)
+    );
+  }
+
+  .preview :global(.markdown-viewer a[href]:focus-visible),
+  .latest-notes :global(.markdown-viewer a[href]:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
   }
 
   .save-error {

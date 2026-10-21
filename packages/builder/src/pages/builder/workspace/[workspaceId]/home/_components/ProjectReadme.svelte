@@ -148,12 +148,26 @@
   }
 
   .project-notes__body :global(.markdown-viewer a[href]) {
-    color: var(--spectrum-global-color-blue-600);
+    color: color-mix(
+      in srgb,
+      var(--spectrum-global-color-blue-700) 60%,
+      var(--spectrum-global-color-gray-900)
+    );
+    font-weight: 500;
   }
 
   .project-notes__body :global(.markdown-viewer a[href]:hover),
   .project-notes__body :global(.markdown-viewer a[href]:focus-visible) {
-    color: var(--spectrum-global-color-blue-500);
+    color: color-mix(
+      in srgb,
+      var(--spectrum-global-color-blue-700) 45%,
+      var(--spectrum-global-color-gray-900)
+    );
+  }
+
+  .project-notes__body :global(.markdown-viewer a[href]:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
   }
 
   .project-notes--focused .project-notes__body {
