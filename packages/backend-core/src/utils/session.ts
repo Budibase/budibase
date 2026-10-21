@@ -1,4 +1,4 @@
-import { Duration } from "./Duration"
+import { Duration } from "@budibase/shared-core"
 import env from "../environment"
 
 export function getSessionExpirySeconds() {

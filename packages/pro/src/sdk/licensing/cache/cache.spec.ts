@@ -15,7 +15,7 @@ jest.mock("../licenses/client", () => ({
   getFreeLicense: () => licenseMock.getFreeLicense(),
 }))
 
-import { PlanType } from "@budibase/types"
+import { ConstantQuotaName, PlanType } from "@budibase/types"
 import { getCachedLicense as sut } from "./cache"
 import { structures } from "@budibase/backend-core/tests"
 import { context } from "@budibase/backend-core"
@@ -79,6 +79,27 @@ describe("licensing cache SWR", () => {
 
     expect(result).toEqual(license)
     expect(result2).toEqual(license)
+    expect(licenseMock.getLicense).toHaveBeenCalledTimes(1)
+  })
+
+  it("preserves the platform actions retention quota from the cached license", async () => {
+    const license = structures.licenses.license({ planType: PlanType.TEAM })
+    license.quotas.constant[
+      ConstantQuotaName.PLATFORM_ACTIONS_RETENTION_DAYS
+    ].value = 45
+    licenseMock.getLicense.mockReturnValue(license)
+    const tenantId = structures.tenant.id()
+
+    await getCachedLicense(tenantId)
+    const result = await getCachedLicense(tenantId)
+
+    expect(
+      result.quotas.constant[ConstantQuotaName.PLATFORM_ACTIONS_RETENTION_DAYS]
+    ).toEqual({
+      name: "Platform Actions Retention",
+      value: 45,
+      triggers: [],
+    })
     expect(licenseMock.getLicense).toHaveBeenCalledTimes(1)
   })
 

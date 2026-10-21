@@ -4,6 +4,8 @@ import fs from "fs"
 import { join } from "path"
 import { objectStore } from "@budibase/backend-core"
 import stream from "stream"
+import { pipeline } from "stream/promises"
+import { loadAutomationPlugin, loadDatasourcePlugin } from "../pluginRunner"
 
 const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 const AUTOMATION_PATH = join(budibaseTempDir(), "automation")
@@ -40,7 +42,7 @@ export const getPluginMetadata = async (
   }
 }
 
-async function getPluginImpl(path: string, plugin: Plugin) {
+async function getPluginFile(path: string, plugin: Plugin) {
   const hash = plugin.schema?.hash
   if (!fs.existsSync(path)) {
     fs.mkdirSync(path)
@@ -51,7 +53,7 @@ async function getPluginImpl(path: string, plugin: Plugin) {
     const currentHash = fs.readFileSync(metadataName, "utf8")
     // if hash is the same return the file, otherwise remove it and re-download
     if (currentHash === hash) {
-      return require(filename)
+      return filename
     } else {
       console.log(`Updating plugin: ${plugin.name}`)
       delete require.cache[require.resolve(filename)]
@@ -65,19 +67,21 @@ async function getPluginImpl(path: string, plugin: Plugin) {
   )
 
   if (pluginJs instanceof stream.Readable) {
-    pluginJs.pipe(fs.createWriteStream(filename))
+    await pipeline(pluginJs, fs.createWriteStream(filename))
   } else {
     fs.writeFileSync(filename, pluginJs)
   }
   fs.writeFileSync(metadataName, hash)
 
-  return require(filename)
+  return filename
 }
 
 export const getDatasourcePlugin = async (plugin: Plugin) => {
-  return getPluginImpl(DATASOURCE_PATH, plugin)
+  const filename = await getPluginFile(DATASOURCE_PATH, plugin)
+  return loadDatasourcePlugin({ filename, hash: plugin.hash })
 }
 
 export const getAutomationPlugin = async (plugin: Plugin) => {
-  return getPluginImpl(AUTOMATION_PATH, plugin)
+  const filename = await getPluginFile(AUTOMATION_PATH, plugin)
+  return loadAutomationPlugin({ filename, hash: plugin.hash })
 }

@@ -153,6 +153,12 @@ export const setAgentLogsQuota = (value: number) => {
   return useLicense(license)
 }
 
+export const setEscalationDurationQuota = (value: number) => {
+  const license = cloneDeep(UNLIMITED_LICENSE)
+  license.quotas.constant.escalationDurationDays.value = value
+  return useLicense(license)
+}
+
 export const setUsersQuota = async (value: number) => {
   const license = await getCachedLicense()
   license.quotas.usage.static.users.value = value

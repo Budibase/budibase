@@ -361,6 +361,29 @@ describe("/applications", () => {
       })
     })
 
+    it("ignores a client supplied file path when creating an app", async () => {
+      const response = await config.api.workspace.request
+        .post("/api/applications")
+        .set(await config.api.workspace.getHeaders())
+        .send({
+          name: generateAppName(),
+          file: {
+            path: path.resolve(__dirname, "data", "old-app.txt"),
+          },
+        })
+        .expect(200)
+
+      const newApp = response.body as Workspace
+      expect(events.app.fileImported).not.toHaveBeenCalled()
+
+      await config.withApp(newApp, async () => {
+        const definition = await config.api.workspace.getDefinition(
+          newApp.appId
+        )
+        expect(definition.screens).toHaveLength(0)
+      })
+    })
+
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,

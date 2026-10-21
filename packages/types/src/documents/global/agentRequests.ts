@@ -1,5 +1,6 @@
 import { Document } from "../../"
 import { EscalationNotificationChannel } from "../workspace"
+import type { AgentOperation } from "./agents"
 
 export const AGENT_REQUEST_STATUSES = [
   "active",
@@ -10,10 +11,14 @@ export const AGENT_REQUEST_STATUSES = [
 
 export type AgentRequestStatus = (typeof AGENT_REQUEST_STATUSES)[number]
 
+export interface AgentRequestOperation
+  extends Pick<AgentOperation, "id" | "name"> {
+  prompt: string
+}
+
 export interface AgentRequestEntry {
   sessionId: string
   source: string
-  operationNames: string[]
   createdAt: string
   updatedAt: string
   status: AgentRequestStatus
@@ -73,6 +78,7 @@ export type AgentRequestAction =
 export interface AgentRequest extends Document {
   title?: string
   agentId: string
+  operationId?: string
   userId: string
   entries: AgentRequestEntry[]
   actions?: AgentRequestAction[]

@@ -11,6 +11,7 @@ enum Resource {
   USERS = "users",
   QUERIES = "queries",
   SEARCH = "search",
+  GROUPS = "groups",
 }
 
 function isAttachment(ctx: Ctx) {
@@ -77,14 +78,18 @@ export default async (ctx: Ctx, next: () => Promise<void>) => {
   if (!ctx.body || noResponse(ctx) || isAttachment(ctx)) {
     return await next()
   }
-  let urlParts = ctx.url.split("/")
+  let urlParts = ctx.path.split("/")
   urlParts = urlParts.slice(4, urlParts.length)
   let body = {}
 
   switch (urlParts[0]) {
     case Resource.APPLICATION:
     case Resource.WORKSPACE:
-      body = processApplications(ctx)
+      if (urlParts[2] === Resource.GROUPS) {
+        body = mapping.mapGroups(ctx)
+      } else {
+        body = processApplications(ctx)
+      }
       break
     case Resource.TABLES:
       if (urlParts[2] === Resource.ROWS) {

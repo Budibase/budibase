@@ -372,6 +372,106 @@ describe("/automations", () => {
     })
   })
 
+  describe("test authorization", () => {
+    describe.each([
+      { caller: "BASIC", publicExecute: false, anonymous: false, status: 403 },
+      {
+        caller: "BASIC with public execution",
+        publicExecute: true,
+        anonymous: false,
+        status: 403,
+      },
+      {
+        caller: "anonymous with public execution",
+        publicExecute: true,
+        anonymous: true,
+        status: 401,
+      },
+    ])("$caller", ({ publicExecute, anonymous, status }) => {
+      it.each([
+        { method: "post", path: "test", userAgent: undefined },
+        { method: "post", path: "test", userAgent: "x" },
+        { method: "post", path: "test?async=true", userAgent: "" },
+        { method: "get", path: "test/status", userAgent: undefined },
+        { method: "get", path: "test/status", userAgent: "x" },
+        { method: "get", path: "test/status", userAgent: "" },
+      ] as const)(
+        "denies $method $path with User-Agent $userAgent",
+        async ({ method, path, userAgent }) => {
+          const table = await config.createTable()
+          const runner = await createAutomationBuilder(config)
+            .onAppAction()
+            .createRow({ row: { tableId: table._id!, name: "unauthorized" } })
+            .save({ disabled: true })
+
+          if (publicExecute) {
+            await config.api.permission.add({
+              roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+              resourceId: runner.automation._id!,
+              level: PermissionLevel.EXECUTE,
+            })
+          }
+
+          const headers = anonymous
+            ? config.publicHeaders({ prodApp: false })
+            : await config.login({
+                roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+                userId: "automation-test-user@example.com",
+                builder: false,
+                prodApp: false,
+              })
+          const url = `/api/automations/${runner.automation._id}/${path}`
+          const request = config.request![method](url).set(headers)
+          if (userAgent === undefined) {
+            request.unset("User-Agent")
+          } else {
+            request.set("User-Agent", userAgent)
+          }
+          if (method === "post") {
+            request.send({ fields: {} })
+          }
+
+          await request.expect(status)
+          expect(await config.api.row.fetch(table._id!)).toEqual([])
+        }
+      )
+    })
+
+    it.each([false, true])(
+      "allows builders to test disabled automations and read progress with async=%s",
+      async isAsync => {
+        const table = await config.createTable()
+        const runner = await createAutomationBuilder(config)
+          .onAppAction()
+          .createRow({ row: { tableId: table._id!, name: "builder test" } })
+          .save({ disabled: true })
+        const completed = new Promise<void>(resolve => {
+          jest
+            .mocked(events.automation.tested)
+            .mockImplementationOnce(async () => {
+              resolve()
+            })
+        })
+
+        await config
+          .request!.post(`/api/automations/${runner.automation._id}/test`)
+          .set(config.defaultHeaders())
+          .send({ fields: {}, async: isAsync })
+          .expect(isAsync ? 202 : 200)
+        await completed
+        const response = await config
+          .request!.get(`/api/automations/${runner.automation._id}/test/status`)
+          .set(config.defaultHeaders({ "User-Agent": "x" }))
+          .expect(200)
+
+        expect(response.body).toMatchObject({ completed: true })
+        expect(await config.api.row.fetch(table._id!)).toEqual([
+          expect.objectContaining({ name: "builder test" }),
+        ])
+      }
+    )
+  })
+
   describe("test", () => {
     it("rejects preview role selection by non-builders", async () => {
       const runner = await createAutomationBuilder(config)
@@ -400,7 +500,7 @@ describe("/automations", () => {
           {
             status: 403,
             body: {
-              message: "Only builders or admins can select a preview role",
+              message: "Not Authorized",
             },
           }
         )
@@ -585,6 +685,41 @@ describe("/automations", () => {
   })
 
   describe("trigger", () => {
+    it.each([false, true])(
+      "allows permitted published app triggers with anonymous=%s",
+      async anonymous => {
+        mocks.licenses.useSyncAutomations()
+        const runner = await createAutomationBuilder(config)
+          .onAppAction()
+          .collect({ collection: "allowed" })
+          .save()
+        if (anonymous) {
+          await config.api.permission.add({
+            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+            resourceId: runner.automation._id!,
+            level: PermissionLevel.EXECUTE,
+          })
+        }
+        await config.api.workspace.publish()
+        const headers = anonymous
+          ? config.publicHeaders()
+          : await config.login({
+              roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+              userId: "automation-trigger-user@example.com",
+              builder: false,
+              prodApp: true,
+            })
+
+        const response = await config
+          .request!.post(`/api/automations/${runner.automation._id}/trigger`)
+          .set(headers)
+          .send({ fields: {} })
+          .expect(200)
+
+        expect(response.body).toEqual({ success: true, value: "allowed" })
+      }
+    )
+
     it("triggers an asynchronous automation in dev", async () => {
       const { automation } = await config.api.automation.post(newAutomation())
       await config.api.automation.trigger(

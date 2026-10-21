@@ -1,7 +1,9 @@
 <script lang="ts">
   import {
     ActionMenu,
+    Button,
     Heading,
+    Helpers,
     Icon,
     Layout,
     MenuItem,
@@ -255,6 +257,11 @@
       notifications.error("Error fetching user group data")
     }
   })
+
+  const copyGroupId = async () => {
+    await Helpers.copyToClipboard(groupId)
+    notifications.success("Group ID copied to clipboard")
+  }
 </script>
 
 {#if loaded}
@@ -263,6 +270,9 @@
       <GroupIcon {group} size="M" />
       <Heading size="S">{group?.name}</Heading>
       <div class="header-actions">
+        <Button secondary size="S" icon="copy" on:click={copyGroupId}>
+          Copy group ID
+        </Button>
         <div
           class="default-toggle"
           title={isScimGroup ? "Group synced from your AD" : undefined}

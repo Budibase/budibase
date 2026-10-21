@@ -31,7 +31,7 @@ const hbsInstance = create()
 registerAll(hbsInstance)
 const helperNames = Object.keys(hbsInstance.helpers)
 const hbsInstanceNoHelpers = create()
-registerMinimum(hbsInstanceNoHelpers)
+registerMinimum(hbsInstanceNoHelpers, { includeJS: false })
 const defaultOpts: ProcessOptions = {
   noHelpers: false,
   cacheTemplates: false,

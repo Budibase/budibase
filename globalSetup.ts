@@ -113,7 +113,7 @@ export default async function setup() {
       )
 
     const minio = new GenericContainer(
-      "public.ecr.aws/x1w3a5n5/third-party:minio-RELEASE.2025-09-07T16-13-09Z"
+      "budibase/minio:final"
     )
       .withName("minio_testcontainer")
       .withExposedPorts(9000)

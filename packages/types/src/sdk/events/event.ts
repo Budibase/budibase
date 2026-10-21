@@ -216,6 +216,8 @@ export enum Event {
   ACTION_CRUD_FAILED = "action:crud:failed",
   ACTION_AI_AGENT_EXECUTED = "action:ai_agent:executed",
   ACTION_AI_AGENT_FAILED = "action:ai_agent:failed",
+  ACTION_AI_AGENT_TOOL_EXECUTED = "action:ai_agent_tool:executed",
+  ACTION_AI_AGENT_TOOL_FAILED = "action:ai_agent_tool:failed",
 
   // WORKSPACE APP
   WORKSPACE_APP_CREATED = "workspace_app:created",
@@ -394,6 +396,8 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.ACTION_CRUD_FAILED]: undefined,
   [Event.ACTION_AI_AGENT_EXECUTED]: undefined,
   [Event.ACTION_AI_AGENT_FAILED]: undefined,
+  [Event.ACTION_AI_AGENT_TOOL_EXECUTED]: undefined,
+  [Event.ACTION_AI_AGENT_TOOL_FAILED]: undefined,
 
   // ROLE - NOT AUDITED
   [Event.ROLE_CREATED]: undefined,

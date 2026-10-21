@@ -90,6 +90,14 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.LAYOUT,
 ]
 
+// runtime records that belong to the workspace DB (dev or prod) that created
+// them - never replicated between dev and prod, or included in exports
+export const RuntimeDocumentTypes: DocumentType[] = [
+  DocumentType.AGENT_REQUEST,
+  DocumentType.ESCALATION_CONTEXT,
+  DocumentType.ESCALATION_NOTIFICATION,
+]
+
 export enum InternalTable {
   USER_METADATA = "ta_users",
 }

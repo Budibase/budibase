@@ -1,3 +1,13 @@
+jest.mock("@budibase/pro", () => ({
+  quotas: {
+    addAction: jest
+      .fn()
+      .mockImplementation((_type: ActionType, fn: () => Promise<unknown>) =>
+        fn()
+      ),
+  },
+}))
+
 import type {
   LanguageModelV3FinishReason,
   LanguageModelV3GenerateResult,
@@ -7,6 +17,7 @@ import { stepCountIs, tool, ToolLoopAgent, type ToolSet } from "ai"
 import { MockLanguageModelV3 } from "ai/test"
 import { z } from "zod"
 import {
+  ActionType,
   ApprovalToolResultStatus,
   ToolExecutionPrincipal,
   ToolType,

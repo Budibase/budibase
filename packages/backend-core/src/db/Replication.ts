@@ -1,4 +1,4 @@
-import { Document, DocumentType } from "@budibase/types"
+import { Document, DocumentType, RuntimeDocumentTypes } from "@budibase/types"
 import PouchDB from "pouchdb"
 import { DesignDocuments, SEPARATOR } from "../constants"
 import { closePouchDB, getPouchDB } from "./couch"
@@ -50,6 +50,17 @@ function isDataDocumentId(id: string) {
     id.startsWith(DocumentType.LINK + SEPARATOR)
   )
 }
+
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+const startsWith = (prefix: string): PouchDB.Find.Selector => ({
+  _id: { $regex: `^${escapeRegExp(prefix)}` },
+})
+const not = (selector: PouchDB.Find.Selector): PouchDB.Find.Selector => ({
+  $nor: [selector],
+})
+
+const excludeRuntimeDocuments = (): PouchDB.Find.Selector[] =>
+  RuntimeDocumentTypes.map(type => not(startsWith(type + SEPARATOR)))
 
 class Replication {
   source: PouchDB.Database
@@ -594,6 +605,9 @@ class Replication {
         if (startsWithID(doc._id, DocumentType.SLACK_APP_CONFIG)) {
           return false
         }
+        if (RuntimeDocumentTypes.some(type => startsWithID(doc._id, type))) {
+          return false
+        }
         if (
           direction === ReplicationDirection.TO_PRODUCTION &&
           !isCreation &&
@@ -665,16 +679,10 @@ class Replication {
       hasCustomFilter,
     } = opts
     const toDev = direction === ReplicationDirection.TO_DEV
-    const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    const startsWith = (prefix: string): PouchDB.Find.Selector => ({
-      _id: { $regex: `^${escapeRegExp(prefix)}` },
-    })
-    const not = (selector: PouchDB.Find.Selector): PouchDB.Find.Selector => ({
-      $nor: [selector],
-    })
 
     const unconditional: PouchDB.Find.Selector[] = [
       not(startsWith(DocumentType.SLACK_APP_CONFIG + SEPARATOR)),
+      ...excludeRuntimeDocuments(),
     ]
     if (!isCreation) {
       unconditional.push(not({ _id: DesignDocuments.MIGRATIONS }))
@@ -748,7 +756,7 @@ class Replication {
     // Recreate the DB again
     this.target = getPouchDB(this.target.name)
     // take the opportunity to remove deleted tombstones
-    await this.replicate()
+    await this.replicate({ selector: { $and: excludeRuntimeDocuments() } })
   }
 }
 

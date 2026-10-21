@@ -6,7 +6,9 @@ const baseConfig: Config = {
   setupFilesAfterEnv: ["./tests/jestSetup.ts"],
   transform: {
     "^.+\\.ts?$": "@swc/jest",
+    "^.+\\.js$": "@swc/jest",
   },
+  transformIgnorePatterns: ["/node_modules/(?!uuid/).*"],
   moduleNameMapper: {
     "@budibase/types": "<rootDir>/../types/src",
     "@budibase/shared-core": ["<rootDir>/../shared-core/src"],

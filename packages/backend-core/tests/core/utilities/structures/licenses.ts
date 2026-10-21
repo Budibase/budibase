@@ -114,6 +114,16 @@ export function quotas(): Quotas {
         value: 1,
         triggers: [],
       },
+      escalationDurationDays: {
+        name: "Escalation Duration",
+        value: 3,
+        triggers: [],
+      },
+      platformActionsRetentionDays: {
+        name: "Platform Actions Retention",
+        value: 1,
+        triggers: [],
+      },
     },
   }
 }

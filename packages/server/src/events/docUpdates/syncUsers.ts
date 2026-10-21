@@ -3,6 +3,8 @@ import { sdk as proSdk } from "@budibase/pro"
 import { DocUpdateEvent, WorkspaceUserSyncEvents } from "@budibase/types"
 import { syncUsersAcrossWorkspaces } from "../../sdk/workspace/workspaces/sync"
 
+const MAX_WAITING_JOBS = 500_000
+
 export class UserSyncProcessor {
   private static _queue: queue.BudibaseQueue<{ userId: string }>
 
@@ -40,6 +42,14 @@ export class UserSyncProcessor {
   }
 
   async add(userIds: string[]) {
+    const bullQueue = UserSyncProcessor.queue.getBullQueue()
+    const waiting = await bullQueue.getWaitingCount()
+    if (waiting > MAX_WAITING_JOBS) {
+      logging.logAlert(
+        `User sync queue has ${waiting} waiting jobs, discarding them. A manual user sync is required.`
+      )
+      await bullQueue.empty()
+    }
     for (const userId of userIds) {
       await UserSyncProcessor.queue.add({ userId })
     }

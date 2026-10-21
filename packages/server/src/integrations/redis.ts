@@ -3,6 +3,7 @@ import {
   DatasourceFeature,
   DatasourceFieldType,
   Integration,
+  type IntegrationBase,
   QueryType,
 } from "@budibase/types"
 import Redis from "ioredis"
@@ -95,7 +96,7 @@ const SCHEMA: Integration = {
   },
 }
 
-class RedisIntegration {
+class RedisIntegration implements IntegrationBase {
   private readonly config: RedisConfig
   private client
 

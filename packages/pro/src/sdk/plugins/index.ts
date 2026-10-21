@@ -36,10 +36,10 @@ export async function storePlugin(
     directory,
     bucketPath
   )
-  const jsFile = files.find((file: any) => file.name.endsWith(".js"))
+  const jsFile = files.find((file: any) => file.name === "plugin.min.js")
   const iconFile = files.find((file: any) => file.name.endsWith(".svg"))
   if (!jsFile) {
-    throw new Error(`Plugin missing .js file.`)
+    throw new Error(`Plugin missing plugin.min.js file.`)
   }
   // validate the JS for a datasource
   if (metadata.schema.type === PluginType.DATASOURCE) {

@@ -6,4 +6,5 @@ export interface SaveUserOpts {
   skipPasswordRegexValidation?: boolean
   allowChangingEmail?: boolean
   isAccountHolder?: boolean
+  assignDefaultGroup?: boolean
 }

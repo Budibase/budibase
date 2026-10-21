@@ -21,6 +21,7 @@ import {
   IntegrationBase,
   DatasourcePlus,
 } from "@budibase/types"
+import type { IntegrationFactory } from "../utilities/pluginRunner"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
 import cloneDeep from "lodash/cloneDeep"
@@ -49,12 +50,10 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
 }
 
 type IntegrationBaseConstructor = new (...args: any[]) => IntegrationBase
-type DatasourcePlusConstructor = new (...args: any[]) => DatasourcePlus
-
-export function isDatasourcePlusConstructor(
-  integration: IntegrationBaseConstructor
-): integration is DatasourcePlusConstructor {
-  return !!integration.prototype.query
+export function isDatasourcePlus(
+  integration: IntegrationBase
+): integration is DatasourcePlus {
+  return "query" in integration && typeof integration.query === "function"
 }
 
 const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
@@ -116,21 +115,16 @@ export async function getDefinitions() {
 
 export async function getIntegration(
   integration: SourceName
-): Promise<IntegrationBaseConstructor> {
+): Promise<IntegrationFactory> {
   if (INTEGRATIONS[integration]) {
-    return INTEGRATIONS[integration]
+    const Integration = INTEGRATIONS[integration]
+    return async config => new Integration(config)
   }
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.DATASOURCE)
     for (let plugin of plugins) {
       if (plugin.name === integration) {
-        // need to use commonJS require due to its dynamic runtime nature
-        const retrieved = await getDatasourcePlugin(plugin)
-        if (retrieved.integration) {
-          return retrieved.integration
-        } else {
-          return retrieved
-        }
+        return await getDatasourcePlugin(plugin)
       }
     }
   }

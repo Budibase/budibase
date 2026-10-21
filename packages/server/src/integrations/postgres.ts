@@ -5,6 +5,7 @@ import {
   SqlQuery,
   Table,
   DatasourcePlus,
+  type SqlDatasource,
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
@@ -157,7 +158,7 @@ function processBindings(bindings: SqlQueryBinding): SqlQueryBinding {
   })
 }
 
-class PostgresIntegration extends Sql implements DatasourcePlus {
+class PostgresIntegration extends Sql implements DatasourcePlus, SqlDatasource {
   private readonly client: Client
   private readonly config: PostgresConfig
   private index = 1

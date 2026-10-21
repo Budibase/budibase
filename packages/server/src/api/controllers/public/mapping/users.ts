@@ -13,6 +13,7 @@ function user(body: any): RequiredKeys<User> {
     builder: body.builder,
     admin: body.admin,
     roles: body.roles,
+    userGroups: body.userGroups,
   }
 }
 

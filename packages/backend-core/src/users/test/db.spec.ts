@@ -218,6 +218,116 @@ describe("UserDB", () => {
         )
       })
 
+      it.each([true, false])(
+        "uses the signed creator delta when adding membership is %s",
+        async adding => {
+          await config.doInTenant(async () => {
+            const groupId = `gr_${generator.guid()}`
+            await getGlobalDB().put<UserGroup>({
+              ...structures.userGroups.userGroup(),
+              _id: groupId,
+              roles: { app_example: "CREATOR" },
+            })
+            if (!adding) {
+              user = await db.save({ ...user, userGroups: [groupId] })
+            }
+            jest.clearAllMocks()
+
+            const saved = await db.save({
+              ...user,
+              userGroups: adding ? [groupId] : [],
+            })
+
+            expect(saved.userGroups).toEqual(adding ? [groupId] : [])
+            expect(quotas.addUsers).toHaveBeenCalledWith(
+              0,
+              adding ? 1 : -1,
+              expect.any(Function)
+            )
+            expect(quotas.removeUsers).not.toHaveBeenCalled()
+          })
+        }
+      )
+
+      it("preserves creator memberships and quotas during partial updates", async () => {
+        await config.doInTenant(async () => {
+          const groupId = `gr_${generator.guid()}`
+          await getGlobalDB().put<UserGroup>({
+            ...structures.userGroups.userGroup(),
+            _id: groupId,
+            roles: { app_example: "CREATOR" },
+          })
+          user = await db.save({ ...user, userGroups: [groupId] })
+          jest.clearAllMocks()
+
+          const saved = await db.save({
+            _id: user._id,
+            _rev: user._rev,
+            email: user.email,
+            tenantId: user.tenantId,
+            roles: user.roles,
+            firstName: "Updated",
+          })
+
+          expect(saved).toMatchObject({
+            firstName: "Updated",
+            userGroups: [groupId],
+          })
+          expect(quotas.addUsers).toHaveBeenCalledWith(
+            0,
+            0,
+            expect.any(Function)
+          )
+          expect(quotas.removeUsers).not.toHaveBeenCalled()
+        })
+      })
+
+      it("preserves creator status and quota usage during partial updates", async () => {
+        await config.doInTenant(async () => {
+          user = await db.save({ ...user, builder: { creator: true } })
+          jest.clearAllMocks()
+
+          const saved = await db.save({
+            _id: user._id,
+            _rev: user._rev,
+            email: user.email,
+            tenantId: user.tenantId,
+            roles: user.roles,
+            firstName: "Updated",
+          })
+
+          expect(saved).toMatchObject({
+            firstName: "Updated",
+            builder: { creator: true },
+          })
+          expect(quotas.addUsers).toHaveBeenCalledWith(
+            0,
+            0,
+            expect.any(Function)
+          )
+          expect(quotas.removeUsers).not.toHaveBeenCalled()
+        })
+      })
+
+      it("preserves creator quota usage when self-permission changes are ignored", async () => {
+        await config.doInTenant(async () => {
+          user = await db.save({ ...user, builder: { creator: true } })
+          jest.clearAllMocks()
+
+          const saved = await db.save(
+            { ...user, builder: { creator: false } },
+            { currentUserId: user._id }
+          )
+
+          expect(saved.builder?.creator).toBe(true)
+          expect(quotas.addUsers).toHaveBeenCalledWith(
+            0,
+            0,
+            expect.any(Function)
+          )
+        })
+      })
+
       it("can update user properties", async () => {
         await config.doInTenant(async () => {
           const updatedName = generator.first()

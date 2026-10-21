@@ -901,13 +901,11 @@ if (descriptions.length) {
                   }).toContainExactly([{ name: "foo" }, { name: "bar" }])
                 })
 
-                // onEmptyFilter cannot be sent to view searches
-                !isView &&
-                  it("should return nothing if onEmptyFilter is RETURN_NONE", async () => {
-                    await expectQuery({
-                      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-                    }).toFindNothing()
-                  })
+                it("should return nothing if onEmptyFilter is RETURN_NONE", async () => {
+                  await expectQuery({
+                    onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                  }).toFindNothing()
+                })
 
                 it("should respect limit", async () => {
                   await expectSearch({
@@ -1056,14 +1054,12 @@ if (descriptions.length) {
                   }).toContainExactly([])
                 })
 
-                // onEmptyFilter cannot be sent to view searches
-                !isView &&
-                  it("empty arrays return no rows when onEmptyFilter is set to return 'none'", async () => {
-                    await expectQuery({
-                      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-                      oneOf: { name: [] },
-                    }).toContainExactly([])
-                  })
+                it("empty arrays return no rows when onEmptyFilter is set to return 'none'", async () => {
+                  await expectQuery({
+                    onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                    oneOf: { name: [] },
+                  }).toContainExactly([])
+                })
               })
 
               describe("notOneOf", () => {
@@ -3731,30 +3727,33 @@ if (descriptions.length) {
                   }).toContainExactly([row])
                 })
 
-                isInternal &&
-                  describe("search by _id for relations", () => {
-                    it("can filter by the related _id", async () => {
-                      await expectSearch({
-                        query: {
-                          equal: { "rel._id": row.rel[0]._id },
-                        },
-                      }).toContainExactly([row])
+                describe("search by _id for relations", () => {
+                  it("can filter by the related _id", async () => {
+                    await expectSearch({
+                      query: {
+                        equal: { "rel._id": row.rel[0]._id },
+                      },
+                    }).toContainExactly([row])
 
-                      await expectSearch({
-                        query: {
-                          equal: { "rel._id": row.rel[1]._id },
-                        },
-                      }).toContainExactly([row])
-                    })
-
-                    it("can filter by the related _id and find nothing", async () => {
-                      await expectSearch({
-                        query: {
-                          equal: { "rel._id": "rel_none" },
-                        },
-                      }).toFindNothing()
-                    })
+                    await expectSearch({
+                      query: {
+                        equal: { "rel._id": row.rel[1]._id },
+                      },
+                    }).toContainExactly([row])
                   })
+
+                  it("can filter by the related _id and find nothing", async () => {
+                    await expectSearch({
+                      query: {
+                        equal: {
+                          "rel._id": isInternal
+                            ? "rel_none"
+                            : generateRowIdField([2147483647]),
+                        },
+                      },
+                    }).toFindNothing()
+                  })
+                })
               })
 
             !isInternal &&
@@ -3960,18 +3959,16 @@ if (descriptions.length) {
                   )
                 })
 
-              // onEmptyFilter cannot be sent to view searches
-              !isView &&
-                it("returns no rows when onEmptyFilter set to none", async () => {
-                  await expectSearch({
-                    query: {
-                      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-                      $and: {
-                        conditions: [{ equal: { name: "" } }],
-                      },
+              it("returns no rows when onEmptyFilter set to none", async () => {
+                await expectSearch({
+                  query: {
+                    onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                    $and: {
+                      conditions: [{ equal: { name: "" } }],
                     },
-                  }).toFindNothing()
-                })
+                  },
+                }).toFindNothing()
+              })
 
               it("returns all rows when onEmptyFilter set to all", async () => {
                 await expectSearch({
@@ -4120,18 +4117,16 @@ if (descriptions.length) {
                 }).toContainExactly([{ age: 1, name: "Jane" }])
               })
 
-              // onEmptyFilter cannot be sent to view searches
-              !isView &&
-                it("returns no rows when onEmptyFilter set to none", async () => {
-                  await expectSearch({
-                    query: {
-                      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
-                      $or: {
-                        conditions: [{ equal: { name: "" } }],
-                      },
+              it("returns no rows when onEmptyFilter set to none", async () => {
+                await expectSearch({
+                  query: {
+                    onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+                    $or: {
+                      conditions: [{ equal: { name: "" } }],
                     },
-                  }).toFindNothing()
-                })
+                  },
+                }).toFindNothing()
+              })
 
               it("returns all rows when onEmptyFilter set to all", async () => {
                 await expectSearch({

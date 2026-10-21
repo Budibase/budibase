@@ -1,5 +1,5 @@
 import { BaseEvent } from "./event"
-import { QueryVerb } from "../../documents"
+import { QueryVerb, ToolAction, ToolType } from "../../documents"
 
 export enum ActionFailureReason {
   ERROR = "error",
@@ -35,6 +35,20 @@ export interface ActionAiAgentExecuted extends BaseEvent {
 
 export interface ActionAiAgentFailed extends BaseEvent {
   agentId: string
+  reason: ActionFailureReason
+  errorMessage?: string
+}
+
+export interface ActionAiAgentToolExecuted extends BaseEvent {
+  agentId: string
+  sessionId: string
+  operationId: string
+  toolName: string
+  sourceType: ToolType
+  action?: ToolAction
+}
+
+export interface ActionAiAgentToolFailed extends ActionAiAgentToolExecuted {
   reason: ActionFailureReason
   errorMessage?: string
 }

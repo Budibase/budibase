@@ -5,7 +5,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { enrichQueryJson } from "../../sdk/workspace/rows/utils"
-import { getIntegration, isDatasourcePlusConstructor } from "../index"
+import { getIntegration, isDatasourcePlus } from "../index"
 
 function isEnriched(
   json: QueryJson | EnrichedQueryJson
@@ -27,12 +27,13 @@ export async function makeExternalQuery(
     throw new Error("No datasource provided for external query")
   }
 
-  const Integration = await getIntegration(json.datasource.source)
+  const createIntegration = await getIntegration(json.datasource.source)
 
-  if (!isDatasourcePlusConstructor(Integration)) {
+  const integration = await createIntegration(json.datasource.config)
+
+  if (!isDatasourcePlus(integration)) {
     throw "Datasource does not support query."
   }
 
-  const integration = new Integration(json.datasource.config)
   return integration.query(json)
 }

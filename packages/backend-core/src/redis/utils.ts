@@ -47,7 +47,7 @@ export enum SelectableDatabase {
   SOCKET_IO = 1,
   RATE_LIMITING = 2,
   OPENAPI_IMPORT_SPECS = 3,
-  UNUSED_3 = 4,
+  SESSIONS = 4,
   UNUSED_4 = 5,
   UNUSED_5 = 6,
   UNUSED_6 = 7,

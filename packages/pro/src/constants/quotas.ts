@@ -142,6 +142,26 @@ export const appBackupRetentionDays = (value: number) => {
   }
 }
 
+export const escalationDurationDays = (value: number) => {
+  return {
+    [ConstantQuotaName.ESCALATION_DURATION_DAYS]: {
+      name: "Escalation Duration",
+      value,
+      triggers: [],
+    },
+  }
+}
+
+export const platformActionsRetentionDays = (value: number) => {
+  return {
+    [ConstantQuotaName.PLATFORM_ACTIONS_RETENTION_DAYS]: {
+      name: "Platform Actions Retention",
+      value,
+      triggers: [],
+    },
+  }
+}
+
 export const customAIConfigurations = (value: number) => {
   return {
     [StaticQuotaName.AI_CUSTOM_CONFIGS]: {

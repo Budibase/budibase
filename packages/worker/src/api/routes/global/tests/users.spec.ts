@@ -5,14 +5,19 @@ import {
   prefixed,
   User,
 } from "@budibase/types"
+import type { Database } from "@budibase/types"
 import { randomUUID } from "crypto"
 
 import {
   accounts as _accounts,
   cache,
+  constants,
+  context,
+  db,
   events,
   middleware,
   tenancy,
+  utils,
   withEnv,
 } from "@budibase/backend-core"
 import { mocks as featureMocks } from "@budibase/backend-core/tests"
@@ -52,6 +57,144 @@ describe("/api/global/users", () => {
     await config.login(user)
     return user
   }
+
+  describe("POST /api/global/users/init", () => {
+    let defaultTenantDB: Database
+    let restoreGlobalDBName: () => void
+
+    beforeEach(() => {
+      const name = context.getGlobalDBName(structures.tenant.id())
+      defaultTenantDB = db.getDB(name)
+      const replacement = jest.replaceProperty(
+        constants.StaticDatabases.GLOBAL,
+        "name",
+        name
+      )
+      restoreGlobalDBName = () => replacement.restore()
+    })
+
+    afterEach(async () => {
+      restoreGlobalDBName()
+      if (await defaultTenantDB.exists()) {
+        await defaultTenantDB.destroy()
+      }
+    })
+
+    it("should reject an invalid internal API key without creating a tenant database", async () => {
+      await withEnv({ MULTI_TENANCY: "" }, async () => {
+        config.selfHosted()
+        try {
+          const tenantId = structures.tenant.id()
+          await config.request
+            .post("/api/global/users/init")
+            .set(constants.Header.API_KEY, "invalid-internal-api-key")
+            .send({
+              tenantId,
+              email: structures.email(),
+              password: "password123!",
+            })
+            .expect(403)
+
+          const databaseExists = await context.doInTenant(tenantId, () =>
+            context.getGlobalDB().exists()
+          )
+          expect(databaseExists).toBe(false)
+        } finally {
+          config.cloudHosted()
+        }
+      })
+    })
+
+    it.each(["password", "sso"])(
+      "should allow tenant creation with a valid internal API key for a %s user",
+      async authType => {
+        const tenantId = structures.tenant.id()
+        const email = structures.email()
+        const password = await utils.hash("password123!")
+        const isPassword = authType === "password"
+        const query = isPassword
+          ? "hashPassword=false"
+          : "requirePassword=false"
+
+        const response = await config.request
+          .post(`/api/global/users/init?${query}`)
+          .set(config.internalAPIHeaders())
+          .send({
+            tenantId,
+            email,
+            ...(isPassword ? { password } : { ssoId: "portal-sso-user" }),
+          })
+          .expect(200)
+
+        const user = await context.doInTenant(tenantId, () =>
+          context.getGlobalDB().get<User>(response.body._id)
+        )
+        expect(user).toMatchObject({
+          email,
+          tenantId,
+          admin: { global: true },
+          builder: { global: true },
+          ...(isPassword ? { password } : { ssoId: "portal-sso-user" }),
+        })
+      }
+    )
+
+    it("should allow public single-tenant bootstrap and reject subsequent initialization", async () => {
+      await withEnv({ MULTI_TENANCY: "" }, async () => {
+        config.selfHosted()
+        try {
+          await config.request
+            .post("/api/global/users/init")
+            .send({
+              tenantId: "default",
+              email: structures.email(),
+              password: "password123!",
+            })
+            .expect(200)
+          await config.request
+            .post("/api/global/users/init")
+            .send({
+              tenantId: "default",
+              email: structures.email(),
+              password: "password123!",
+            })
+            .expect(403)
+        } finally {
+          config.cloudHosted()
+        }
+      })
+    })
+
+    it("should reject an unauthenticated init request for a different tenant on a single-tenant deployment", async () => {
+      await withEnv({ MULTI_TENANCY: "" }, async () => {
+        config.selfHosted()
+        try {
+          const tenantId = structures.tenant.id()
+          await context.doInTenant("default", () =>
+            userSdk.db.createAdminUser(structures.email(), "default", {
+              password: "password123!",
+            })
+          )
+
+          const response = await config.request
+            .post("/api/global/users/init")
+            .send({
+              email: structures.email(),
+              password: "password123!",
+              tenantId,
+            })
+
+          expect(response.status).toBe(403)
+          const databaseExists = await context.doInTenant(tenantId, () =>
+            context.getGlobalDB().exists()
+          )
+          expect(databaseExists).toBe(false)
+        } finally {
+          config.cloudHosted()
+        }
+      })
+    })
+  })
 
   describe("GET /api/global/users/invites", () => {
     let invite: { code: string; email: string }
@@ -1056,6 +1199,38 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(user.email)
     })
 
+    it("should page an empty email search in email order", async () => {
+      // emails sort in the reverse of creation order, so they are unlikely to
+      // match the (random) user ID order
+      const prefix = structures.uuid().slice(0, 8)
+      for (const letter of ["e", "d", "c", "b", "a"]) {
+        await config.createUser({
+          email: `${prefix}-${letter}@example.com`,
+        })
+      }
+
+      const emails: string[] = []
+      let bookmark: string | undefined
+      do {
+        const response = await config.api.users.searchUsers({
+          query: { string: { email: "" } },
+          bookmark,
+          limit: 2,
+        })
+        emails.push(...response.body.data.map((user: User) => user.email))
+        bookmark = response.body.hasNextPage
+          ? response.body.nextPage
+          : undefined
+      } while (bookmark)
+
+      const lowerEmails = emails.map(email => email.toLowerCase())
+      expect(lowerEmails).toEqual([...lowerEmails].sort())
+      expect(new Set(lowerEmails).size).toBe(lowerEmails.length)
+      expect(emails.filter(email => email.startsWith(prefix))).toEqual(
+        ["a", "b", "c", "d", "e"].map(l => `${prefix}-${l}@example.com`)
+      )
+    })
+
     it("should support fuzzy email fragments", async () => {
       const email = structures.users.newEmail()
       await config.createUser({ email })
@@ -1104,6 +1279,7 @@ describe("/api/global/users", () => {
       const workspaceId = "app_workspace_filter_group"
       const email = structures.users.newEmail()
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const group = await config.doInTenant(() =>
         proSdk.groups.save({
           ...structures.groups.UserGroup(),
@@ -1127,6 +1303,7 @@ describe("/api/global/users", () => {
 
     it("should filter users by any selected group", async () => {
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const [firstGroup, secondGroup, otherGroup] = await Promise.all(
         Array.from({ length: 3 }).map(() =>
           config.doInTenant(() =>
@@ -1156,6 +1333,7 @@ describe("/api/global/users", () => {
     it("should apply the selected group filter to workspace users", async () => {
       const workspaceId = "app_workspace_group_filter"
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const [selectedGroup, otherGroup] = await Promise.all([
         config.doInTenant(() =>
           proSdk.groups.save(structures.groups.UserGroup())
@@ -1208,6 +1386,7 @@ describe("/api/global/users", () => {
       const workspaceId = "app_workspace_group_role_filter"
       const email = structures.users.newEmail()
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const group = await config.doInTenant(() =>
         proSdk.groups.save({
           ...structures.groups.UserGroup(),
@@ -1230,6 +1409,7 @@ describe("/api/global/users", () => {
     it("should combine group and workspace role filters", async () => {
       const workspaceId = "app_workspace_combined_user_filter"
       featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
       const [selectedGroup, otherGroup] = await Promise.all([
         config.doInTenant(() =>
           proSdk.groups.save(structures.groups.UserGroup())

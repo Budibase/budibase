@@ -1,4 +1,6 @@
-import { Endpoint } from "@budibase/backend-core"
+import { auth, Endpoint } from "@budibase/backend-core"
+import { middleware as proMiddleware } from "@budibase/pro"
+import { Feature } from "@budibase/types"
 import controller from "../../controllers/public/workspaces"
 import { applicationValidator, nameValidator } from "../utils/validators"
 
@@ -221,6 +223,39 @@ read.push(
  *                 $ref: '#/components/examples/workspace'
  */
 read.push(new Endpoint("get", "/workspaces/:appId", controller.read))
+
+/**
+ * @openapi
+ * /workspaces/{workspaceId}/groups:
+ *   get:
+ *     operationId: workspaceListGroups
+ *     summary: List user groups for a workspace
+ *     description: Returns groups that grant role or builder access to this workspace. Requires a global admin API key and the user groups and expanded public API features. Both development and production workspace IDs are accepted. SCIM-managed groups are included but their memberships cannot be changed through the public user API.
+ *     tags:
+ *       - workspaces
+ *     parameters:
+ *       - $ref: '#/components/parameters/workspaceId'
+ *     responses:
+ *       200:
+ *         description: Returns the groups associated with the workspace.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/userGroupList'
+ *             examples:
+ *               userGroups:
+ *                 $ref: '#/components/examples/userGroups'
+ */
+read.push(
+  new Endpoint("get", "/workspaces/:appId/groups", controller.listGroups)
+    .addMiddleware(auth.adminOnly)
+    .addMiddleware(
+      proMiddleware.feature.requireFeatures(
+        Feature.USER_GROUPS,
+        Feature.EXPANDED_PUBLIC_API
+      )
+    )
+)
 
 /**
  * @openapi
