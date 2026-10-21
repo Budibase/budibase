@@ -7,6 +7,7 @@ import {
 } from "@budibase/backend-core"
 import {
   ActionType,
+  AGENT_REQUEST_TYPE,
   AgentChannelProvider,
   DocumentType,
   FeatureFlag,
@@ -1432,23 +1433,31 @@ describe("Agent chat tool call tracking", () => {
           await context.doInWorkspaceContext(
             config.getProdWorkspaceId(),
             async () => {
-              const db = context.getWorkspaceDB()
+              const db = context.getRequestsDB()
+              const fields = {
+                type: AGENT_REQUEST_TYPE,
+                workspaceId: config.getProdWorkspaceId(),
+                agentId,
+                userId: "request_owner",
+                entries: [],
+                approvers: [],
+                pendingApprovers: [],
+                respondedApprovers: [],
+              } satisfies Partial<AgentRequest>
               const requests: AgentRequest[] = [
                 {
-                  _id: "agentrequest_status_laptop",
-                  agentId,
-                  userId: "request_owner",
+                  ...fields,
+                  _id: "req_status_laptop",
                   title: "Buy a laptop",
                   status: "needs_input",
-                  entries: [],
+                  statusRank: 0,
                 },
                 {
-                  _id: "agentrequest_status_melon",
-                  agentId,
-                  userId: "request_owner",
+                  ...fields,
+                  _id: "req_status_melon",
                   title: "Buy a melon",
                   status: "completed",
-                  entries: [],
+                  statusRank: 2,
                 },
               ]
               for (const request of requests) {

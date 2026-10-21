@@ -64,7 +64,7 @@ describe("Activity requests page", () => {
     })
     expect(mocks.fetchAgentRequests).toHaveBeenCalledWith({
       limit: 20,
-      page: 1,
+      bookmark: undefined,
       status: undefined,
     })
   })
@@ -96,7 +96,7 @@ describe("Activity requests page", () => {
     expect(screen.queryByText("Unavailable")).not.toBeInTheDocument()
     expect(mocks.fetchAgentRequests).toHaveBeenLastCalledWith({
       limit: 20,
-      page: 1,
+      bookmark: undefined,
       status: undefined,
     })
   })
@@ -121,6 +121,7 @@ describe("Activity requests page", () => {
           completed: 21,
           failed: 0,
         },
+        bookmark: "page-2-bookmark",
       })
       .mockRejectedValueOnce(new Error("DB unavailable"))
 
@@ -135,8 +136,8 @@ describe("Activity requests page", () => {
 
     expect(await screen.findByText("7")).toBeInTheDocument()
     expect(
-      mocks.fetchAgentRequests.mock.calls.map(([query]) => query.page)
-    ).toEqual([1, 2, 2])
+      mocks.fetchAgentRequests.mock.calls.map(([query]) => query.bookmark)
+    ).toEqual([undefined, "page-2-bookmark", "page-2-bookmark"])
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
   })
 })

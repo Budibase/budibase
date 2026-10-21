@@ -404,7 +404,7 @@ export const prepareAgentRunContext = async ({
     span,
     agentId
   )
-  const routingDecision = await selectOperationForRun({
+  const route = await selectOperationForRun({
     agent,
     sessionId,
     latestQuestion,
@@ -412,6 +412,10 @@ export const prepareAgentRunContext = async ({
     llm,
     recentChatContext,
   })
+  const routingDecision: OperationRoute =
+    isPreview && route.action === "request_status"
+      ? { action: "no_operation" }
+      : route
   if (routingDecision.action === "request_status") {
     return {
       llm,
@@ -422,7 +426,6 @@ export const prepareAgentRunContext = async ({
         await buildRequestStatusPrompt({
           agentId,
           userId,
-          isPreview,
           maxTokens: Math.min(
             MAX_REQUEST_STATUS_PROMPT_TOKENS,
             Math.floor((llm.contextWindowTokens ?? 32768) / 4)

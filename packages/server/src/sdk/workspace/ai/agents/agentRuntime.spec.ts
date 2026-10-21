@@ -1,3 +1,4 @@
+import { AGENT_REQUEST_TYPE } from "@budibase/types"
 import type { Agent, AgentRequest, LLMResponse } from "@budibase/types"
 
 const mockRouterStream = jest.fn()
@@ -441,73 +442,105 @@ describe("prepareAgentRunContext", () => {
     })
   })
 
-  it.each([false, true])(
-    "reads current request statuses without exposing execution tools or selecting a sticky operation (preview: %s)",
-    async isPreview => {
-      mockRouterStream.mockResolvedValue({
-        output: Promise.resolve({
-          action: "request_status",
-          operationId: null,
-          intent: null,
-          reason: "Following up on a pending request",
-        }),
-      })
-      jest.mocked(cache.get).mockResolvedValue("operation_1")
-      jest.mocked(queryRequestsByAgentAndUser).mockResolvedValue([
-        {
-          _id: "request_laptop",
-          agentId: "agent_1",
-          userId: "user_1",
-          title: "Buy a laptop",
-          status: "completed",
-          entries: [],
-        },
-        {
-          _id: "request_melon",
-          agentId: "agent_1",
-          userId: "user_1",
-          title: "Buy a melon",
-          status: "needs_input",
-          entries: [],
-        },
-        {
-          _id: "private_request",
-          agentId: "agent_1",
-          userId: "another_user",
-          title: "Private request",
-          status: "active",
-          entries: [],
-        },
-      ] satisfies AgentRequest[])
-
-      const result = await prepareAgentRunContext({
-        agent,
-        agentId: "agent_1",
-        sessionId: "session_1",
-        userId: "user_1",
-        isPreview,
-        latestQuestion: "How is my request going?",
-      })
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          routingAction: "request_status",
-          operationIntent: "query",
-          tools: {},
-          toolDisplayNames: {},
-        })
-      )
-      expect(result.selectedOperation).toBeUndefined()
-      expect(result.systemPrompt).toContain(
-        '"title":"Buy a laptop","status":"completed"'
-      )
-      expect(result.systemPrompt).toContain(
-        '"title":"Buy a melon","status":"needs_input"'
-      )
-      expect(result.systemPrompt).not.toContain("Private request")
-      expect(buildPromptAndTools).not.toHaveBeenCalled()
+  it("reads current request statuses without exposing execution tools or selecting a sticky operation", async () => {
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "Following up on a pending request",
+      }),
+    })
+    jest.mocked(cache.get).mockResolvedValue("operation_1")
+    const requestFields: Omit<
+      AgentRequest,
+      "_id" | "userId" | "title" | "status" | "statusRank"
+    > = {
+      type: AGENT_REQUEST_TYPE,
+      workspaceId: "app_1",
+      agentId: "agent_1",
+      entries: [],
+      approvers: [],
+      pendingApprovers: [],
+      respondedApprovers: [],
     }
-  )
+    jest.mocked(queryRequestsByAgentAndUser).mockResolvedValue([
+      {
+        ...requestFields,
+        _id: "request_laptop",
+        userId: "user_1",
+        title: "Buy a laptop",
+        status: "completed",
+        statusRank: 2,
+      },
+      {
+        ...requestFields,
+        _id: "request_melon",
+        userId: "user_1",
+        title: "Buy a melon",
+        status: "needs_input",
+        statusRank: 0,
+      },
+      {
+        ...requestFields,
+        _id: "private_request",
+        userId: "another_user",
+        title: "Private request",
+        status: "active",
+        statusRank: 1,
+      },
+    ] satisfies AgentRequest[])
+
+    const result = await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      userId: "user_1",
+      latestQuestion: "How is my request going?",
+    })
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        routingAction: "request_status",
+        operationIntent: "query",
+        tools: {},
+        toolDisplayNames: {},
+      })
+    )
+    expect(result.selectedOperation).toBeUndefined()
+    expect(result.systemPrompt).toContain(
+      '"title":"Buy a laptop","status":"completed"'
+    )
+    expect(result.systemPrompt).toContain(
+      '"title":"Buy a melon","status":"needs_input"'
+    )
+    expect(result.systemPrompt).not.toContain("Private request")
+    expect(buildPromptAndTools).not.toHaveBeenCalled()
+  })
+
+  it("does not read request data for a status question in builder preview", async () => {
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "Following up on a pending request",
+      }),
+    })
+
+    const result = await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      userId: "user_1",
+      isPreview: true,
+      latestQuestion: "How is my request going?",
+    })
+
+    expect(result.routingAction).toBe("no_operation")
+    expect(result.systemPrompt).toBe("system prompt")
+    expect(queryRequestsByAgentAndUser).not.toHaveBeenCalled()
+  })
 
   it("passes a capabilities-summary prompt when the router chooses summarize_operations", async () => {
     mockIsEnabled.mockResolvedValue(true)
@@ -854,7 +887,7 @@ describe("prepareAgentChatRun - approval gating", () => {
     )
   })
 
-  it("explains that builder preview does not create tracked requests instead of reporting a lookup failure", async () => {
+  it("answers a status question in builder preview without reading request data", async () => {
     mockRouterStream.mockResolvedValue({
       output: Promise.resolve({
         action: "request_status",
@@ -896,15 +929,10 @@ describe("prepareAgentChatRun - approval gating", () => {
 
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        instructions: expect.stringContaining(
-          "Preview conversations do not create tracked agent requests."
-        ),
-        tools: undefined,
+        instructions: expect.not.stringContaining("Saved request facts"),
       })
     )
-    expect(queryRequestsByAgentAndUser).toHaveBeenCalledWith(
-      expect.objectContaining({ agentId: "agent_1", userId: "user_1" })
-    )
+    expect(queryRequestsByAgentAndUser).not.toHaveBeenCalled()
   })
 
   it("does not configure structured output for an empty schema", async () => {

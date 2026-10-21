@@ -826,10 +826,11 @@ export const getSignedUploadURL = async function (
       })
       const params = { Bucket: bucket, Key: key }
       signedUrl = await getSignedUrl(s3, new PutObjectCommand(params))
+      const encodedKey = key.split("/").map(encodeURIComponent).join("/")
       if (endpoint) {
-        publicUrl = `${endpoint}/${bucket}/${key}`
+        publicUrl = `${endpoint}/${bucket}/${encodedKey}`
       } else {
-        publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+        publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${encodedKey}`
       }
     } catch (error: any) {
       ctx.throw(400, error)

@@ -1,4 +1,5 @@
 import { generateText } from "ai"
+import { AGENT_REQUEST_TYPE } from "@budibase/types"
 import type {
   Agent,
   AgentRequest,
@@ -29,7 +30,9 @@ jest.mock("../../..", () => ({
 }))
 
 const buildThread = (overrides: Partial<AgentRequest> = {}): AgentRequest => ({
-  _id: "agentrequest_thread_1",
+  _id: "req_thread_1",
+  type: AGENT_REQUEST_TYPE,
+  workspaceId: "app_1",
   agentId: "agent_1",
   operationId: "op_support",
   userId: "user_1",
@@ -46,6 +49,10 @@ const buildThread = (overrides: Partial<AgentRequest> = {}): AgentRequest => ({
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
   status: "completed",
+  statusRank: 2,
+  approvers: [],
+  pendingApprovers: [],
+  respondedApprovers: [],
   ...overrides,
 })
 
@@ -96,7 +103,7 @@ describe("analyzeAgentRequestLink", () => {
       buildGenerateTextResult(
         JSON.stringify({
           decision: "existing_thread",
-          requestId: "agentrequest_thread_1",
+          requestId: "req_thread_1",
           entryAction: "append_latest_entry",
         })
       )
@@ -121,7 +128,7 @@ describe("analyzeAgentRequestLink", () => {
       })
     ).resolves.toEqual({
       decision: "existing_thread",
-      requestId: "agentrequest_thread_1",
+      requestId: "req_thread_1",
       entryAction: "append_latest_entry",
     })
     expect(createLLMMock).toHaveBeenCalledWith(
@@ -150,7 +157,7 @@ describe("analyzeAgentRequestLink", () => {
           ],
           candidateRequests: [
             {
-              requestId: "agentrequest_thread_1",
+              requestId: "req_thread_1",
               operationId: "op_support",
               title: undefined,
               status: "completed",
