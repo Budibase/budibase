@@ -20,6 +20,7 @@ describe("/api/requests", () => {
       async () => {
         await config.api.agentRequest.fetch({ status: 404 })
         await config.api.agentRequest.find("req_unknown", { status: 404 })
+        await config.api.agentRequest.fetchForWorkspace({ status: 404 })
       }
     )
   })
@@ -31,6 +32,9 @@ describe("/api/requests", () => {
       async () => {
         const response = await config.api.agentRequest.fetch()
         expect(response.requests).toEqual([])
+        const workspaceResponse =
+          await config.api.agentRequest.fetchForWorkspace()
+        expect(workspaceResponse.requests).toEqual([])
       }
     )
   })
