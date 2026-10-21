@@ -19,6 +19,7 @@ import {
   ComponentDefinition,
   DeleteScreenResponse,
   FetchAppPackageResponse,
+  FetchScreenResponse,
   SaveScreenRequest,
   SaveScreenResponse,
   Screen,
@@ -86,7 +87,14 @@ export class ScreenStore extends BudiStore<ScreenState> {
       },
     })
 
-    this.delete = this.history.wrapDeleteDoc(this.deleteScreen)
+    const deleteWithHistory = this.history.wrapDeleteDoc(this.deleteScreen)
+    this.delete = async screen => {
+      if (screen && !Array.isArray(screen) && !screen._rev) {
+        const screens = await API.get<FetchScreenResponse>({ url: "/api/screens" })
+        screen = screens.find(fullScreen => fullScreen._id === screen._id)!
+      }
+      await deleteWithHistory(screen)
+    }
     this.save = this.history.wrapSaveDoc(this.saveScreen)
   }
   /**
@@ -101,8 +109,12 @@ export class ScreenStore extends BudiStore<ScreenState> {
    * @param {FetchAppPackageResponse} pkg
    */
   syncAppScreens(pkg: FetchAppPackageResponse, selectedScreenId?: string) {
-    const screens = [...pkg.screens]
     this.update(state => {
+      const screens = pkg.screens.map(screen =>
+        screen._rev
+          ? screen
+          : state.screens.find(existing => existing._id === screen._id) || screen
+      )
       const nextSelectedScreenId = selectedScreenId || state.selectedScreenId
       const { selectedScreenId: _previous, ...rest } = state
       const hasSelectedScreen = screens.some(

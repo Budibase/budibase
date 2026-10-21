@@ -1043,14 +1043,18 @@ describe("/applications", () => {
       }
     )
 
-    it("should retrieve all the screens for builder calls", async () => {
-      await config.api.screen.save(basicScreen())
-      await config.api.screen.save(basicScreen())
-      await config.api.screen.save(basicScreen())
+    it("should retrieve full screens for builder data routes", async () => {
+      const screen = basicScreen()
+      screen.props._children = [basicScreen().props]
+      const savedScreen = await config.api.screen.save(screen)
 
-      const res = await config.api.workspace.getAppPackage(workspace.appId)
+      const res = await config.api.workspace.getAppPackage(workspace.appId, {
+        headers: {
+          referer: `https://example.com/builder/workspace/${workspace.appId}/data`,
+        },
+      })
 
-      expect(res.screens).toHaveLength(3) // 3 created screens
+      expect(res.screens).toEqual([savedScreen])
     })
 
     it("should omit revisions from truncated builder screens", async () => {
