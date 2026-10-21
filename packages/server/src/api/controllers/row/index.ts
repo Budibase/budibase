@@ -354,6 +354,12 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
       ? await utils.enrichSearchContext(query, { user: userBindings })
       : utils.resolveReaderSearchBindings({ query, user: userBindings })
 
+  const fields = viewId
+    ? Object.entries((await sdk.views.get(viewId)).schema || {})
+        .filter(([, field]) => field.visible)
+        .map(([name]) => name)
+    : undefined
+
   const searchParams: RequiredKeys<RowSearchParams> = {
     query: enrichedQuery,
     tableId,
@@ -367,7 +373,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
     countRows: searchRequest.countRows,
     version: searchRequest.version,
     disableEscaping: searchRequest.disableEscaping,
-    fields: undefined,
+    fields,
     indexer: undefined,
     rows: undefined,
   }
