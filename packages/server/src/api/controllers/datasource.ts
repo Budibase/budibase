@@ -260,7 +260,7 @@ export async function update(
 
   let datasource: Datasource = {
     ...baseDatasource,
-    ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
+    ...(await sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource)),
   }
   datasource.projectIds = await resolveUpdatedProjectIds(
     ctx.request.body.projectIds,

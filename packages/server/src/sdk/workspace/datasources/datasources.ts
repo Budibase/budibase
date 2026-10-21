@@ -291,7 +291,7 @@ export async function removeSecretSingle(datasource: Datasource) {
   return (await removeSecrets([datasource]))[0]
 }
 
-export function mergeConfigs(update: Datasource, old: Datasource) {
+export async function mergeConfigs(update: Datasource, old: Datasource) {
   if (!update.config || !old.config) {
     return update
   }
@@ -339,6 +339,18 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
 
     const storedSettings = { ...old.config }
     const updatedSettings = { ...restoredConfig }
+    const definition = await getDefinition(old.source)
+    for (const [key, field] of Object.entries(definition?.datasource || {})) {
+      if (
+        (field.type === DatasourceFieldType.PASSWORD ||
+          field.type === DatasourceFieldType.SENSITIVE_LONGFORM) &&
+        Object.hasOwn(update.config, key) &&
+        update.config[key] !== PASSWORD_REPLACEMENT
+      ) {
+        delete storedSettings[key]
+        delete updatedSettings[key]
+      }
+    }
     // SQL query variables do not change the connection used by the stored password.
     if (
       [

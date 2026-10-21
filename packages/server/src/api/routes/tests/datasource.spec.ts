@@ -129,7 +129,94 @@ describe("/datasources", () => {
   })
 
   describe("secret redaction", () => {
-    it("requires explicit S3 credentials when changing the endpoint", () => {
+    it("allows Snowflake private key rotation while retaining a masked password", async () => {
+      const stored = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.SNOWFLAKE,
+        config: {
+          account: "trusted.example",
+          username: "reader",
+          password: "",
+          privateKey: "old-key",
+          warehouse: "main",
+          database: "app",
+          schema: "public",
+        },
+      })
+
+      const updated = await config.api.datasource.update({
+        ...stored,
+        config: {
+          ...stored.config,
+          privateKey: "new-key",
+        },
+      })
+
+      const saved = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => await sdk.datasources.get(stored._id!)
+      )
+      expect(updated.config!.privateKey).toBe(PASSWORD_REPLACEMENT)
+      expect(saved.config!.privateKey).toBe("new-key")
+      expect(saved.config!.password).toBe("")
+
+      await config.api.datasource.update(
+        {
+          ...updated,
+          config: {
+            ...updated.config,
+            account: "attacker.example",
+            privateKey: "newer-key",
+          },
+        },
+        { status: 400 }
+      )
+    })
+
+    it("allows DynamoDB secret rotation while retaining a masked access key", async () => {
+      const stored = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.DYNAMODB,
+        config: {
+          region: "us-east-1",
+          accessKeyId: "stored-access-key",
+          secretAccessKey: "old-secret",
+          endpoint: "https://dynamodb.example.com",
+        },
+      })
+
+      const updated = await config.api.datasource.update({
+        ...stored,
+        config: {
+          ...stored.config,
+          secretAccessKey: "new-secret",
+        },
+      })
+
+      const saved = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => await sdk.datasources.get(stored._id!)
+      )
+      expect(updated.config!.accessKeyId).toBe(PASSWORD_REPLACEMENT)
+      expect(saved.config!.accessKeyId).toBe("stored-access-key")
+      expect(saved.config!.secretAccessKey).toBe("new-secret")
+
+      await config.api.datasource.update(
+        {
+          ...updated,
+          config: {
+            ...updated.config,
+            endpoint: "https://attacker.example.com",
+            secretAccessKey: "newer-secret",
+          },
+        },
+        { status: 400 }
+      )
+    })
+
+    it("requires explicit S3 credentials when changing the endpoint", async () => {
       const stored: Datasource = {
         type: "datasource",
         source: SourceName.S3,
@@ -139,7 +226,7 @@ describe("/datasources", () => {
         },
       }
 
-      expect(() =>
+      await expect(
         sdk.datasources.mergeConfigs(
           {
             ...stored,
@@ -151,19 +238,21 @@ describe("/datasources", () => {
           },
           stored
         )
-      ).toThrow("Datasource settings cannot change")
+      ).rejects.toThrow("Datasource settings cannot change")
 
       expect(
-        sdk.datasources.mergeConfigs(
-          {
-            ...stored,
-            config: {
-              ...stored.config,
-              secretAccessKey: "stored-secret",
-              endpoint: "https://s3.example.com",
+        (
+          await sdk.datasources.mergeConfigs(
+            {
+              ...stored,
+              config: {
+                ...stored.config,
+                secretAccessKey: "stored-secret",
+                endpoint: "https://s3.example.com",
+              },
             },
-          },
-          stored
+            stored
+          )
         ).config
       ).toEqual({
         ...stored.config,
@@ -171,7 +260,7 @@ describe("/datasources", () => {
       })
     })
 
-    it("allows SQL query variables to change while preserving stored credentials", () => {
+    it("allows SQL query variables to change while preserving stored credentials", async () => {
       const stored: Datasource = {
         type: "datasource",
         source: SourceName.ORACLE,
@@ -184,7 +273,7 @@ describe("/datasources", () => {
         },
       }
 
-      const merged = sdk.datasources.mergeConfigs(
+      const merged = await sdk.datasources.mergeConfigs(
         {
           ...stored,
           config: {
@@ -212,7 +301,7 @@ describe("/datasources", () => {
       })
     })
 
-    it("rejects a changed SQL host even when query variables change", () => {
+    it("rejects a changed SQL host even when query variables change", async () => {
       const stored: Datasource = {
         type: "datasource",
         source: SourceName.ORACLE,
@@ -222,7 +311,7 @@ describe("/datasources", () => {
         },
       }
 
-      expect(() =>
+      await expect(
         sdk.datasources.mergeConfigs(
           {
             ...stored,
@@ -240,10 +329,10 @@ describe("/datasources", () => {
           },
           stored
         )
-      ).toThrow("Datasource settings cannot change")
+      ).rejects.toThrow("Datasource settings cannot change")
     })
 
-    it("rejects using a stored password with a different datasource source", () => {
+    it("rejects using a stored password with a different datasource source", async () => {
       const stored: Datasource = {
         type: "datasource",
         source: SourceName.POSTGRES,
@@ -253,7 +342,7 @@ describe("/datasources", () => {
         },
       }
 
-      expect(() =>
+      await expect(
         sdk.datasources.mergeConfigs(
           {
             ...stored,
@@ -265,10 +354,10 @@ describe("/datasources", () => {
           },
           stored
         )
-      ).toThrow("Datasource settings cannot change")
+      ).rejects.toThrow("Datasource settings cannot change")
     })
 
-    it("preserves an empty stored password", () => {
+    it("preserves an empty stored password", async () => {
       const stored: Datasource = {
         type: "datasource",
         source: SourceName.ORACLE,
@@ -278,7 +367,7 @@ describe("/datasources", () => {
         },
       }
 
-      const merged = sdk.datasources.mergeConfigs(
+      const merged = await sdk.datasources.mergeConfigs(
         {
           ...stored,
           config: {
@@ -297,7 +386,7 @@ describe("/datasources", () => {
       { source: SourceName.SQL_SERVER, hostField: "server" },
     ])(
       "allows $source schema changes without exposing stored credentials to a new host",
-      ({ source, hostField }) => {
+      async ({ source, hostField }) => {
         const stored: Datasource = {
           type: "datasource",
           source,
@@ -309,7 +398,7 @@ describe("/datasources", () => {
           },
         }
 
-        const merged = sdk.datasources.mergeConfigs(
+        const merged = await sdk.datasources.mergeConfigs(
           {
             ...stored,
             config: {
@@ -326,7 +415,7 @@ describe("/datasources", () => {
           schema: "other",
         })
 
-        expect(() =>
+        await expect(
           sdk.datasources.mergeConfigs(
             {
               ...stored,
@@ -339,7 +428,7 @@ describe("/datasources", () => {
             },
             stored
           )
-        ).toThrow("Datasource settings cannot change")
+        ).rejects.toThrow("Datasource settings cannot change")
       }
     )
 
@@ -401,7 +490,7 @@ describe("/datasources", () => {
       )
     })
 
-    it("rejects a changed host when stored auth settings are merged", () => {
+    it("rejects a changed host when stored auth settings are merged", async () => {
       const stored: Datasource = {
         type: "datasource",
         source: SourceName.POSTGRES,
@@ -412,7 +501,7 @@ describe("/datasources", () => {
         },
       }
 
-      expect(() =>
+      await expect(
         sdk.datasources.mergeConfigs(
           {
             ...stored,
@@ -424,7 +513,7 @@ describe("/datasources", () => {
           },
           stored
         )
-      ).toThrow("Datasource settings cannot change")
+      ).rejects.toThrow("Datasource settings cannot change")
     })
 
     it("should redact and preserve MongoDB connection strings", async () => {
