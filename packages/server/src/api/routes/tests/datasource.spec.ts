@@ -129,6 +129,48 @@ describe("/datasources", () => {
   })
 
   describe("secret redaction", () => {
+    it("requires explicit S3 credentials when changing the endpoint", () => {
+      const stored: Datasource = {
+        type: "datasource",
+        source: SourceName.S3,
+        config: {
+          accessKeyId: "bb",
+          secretAccessKey: "stored-secret",
+        },
+      }
+
+      expect(() =>
+        sdk.datasources.mergeConfigs(
+          {
+            ...stored,
+            config: {
+              ...stored.config,
+              secretAccessKey: PASSWORD_REPLACEMENT,
+              endpoint: "https://s3.example.com",
+            },
+          },
+          stored
+        )
+      ).toThrow("Datasource settings cannot change")
+
+      expect(
+        sdk.datasources.mergeConfigs(
+          {
+            ...stored,
+            config: {
+              ...stored.config,
+              secretAccessKey: "stored-secret",
+              endpoint: "https://s3.example.com",
+            },
+          },
+          stored
+        ).config
+      ).toEqual({
+        ...stored.config,
+        endpoint: "https://s3.example.com",
+      })
+    })
+
     it("allows SQL query variables to change while preserving stored credentials", () => {
       const stored: Datasource = {
         type: "datasource",
