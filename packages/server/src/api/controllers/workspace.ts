@@ -473,7 +473,7 @@ export async function fetchAppPackage(
       /\/design\/workspace_app_[^/]+\/(screen_[^/]+)/
     )?.[1]
     screens = screens.map(screen =>
-      screen._id === screenId
+      !screenId || screen._id === screenId
         ? screen
         : {
             ...screen,

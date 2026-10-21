@@ -683,7 +683,8 @@ export class ComponentStore extends BudiStore<ComponentState> {
       cut && selectParent
         ? findComponentParent(get(selectedScreen)?.props, component._id)
         : undefined
-    if (cut) {
+    // Drag moves defer deletion until paste so both changes share one save.
+    if (cut && selectParent) {
       await this.delete(component)
     }
 
@@ -729,14 +730,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
     let newComponentId = ""
 
-    // Remove copied component if cutting, regardless if pasting works
     let componentToPaste = cloneDeep(state.componentToPaste)
-    if (componentToPaste.isCut) {
-      this.update(state => {
-        delete state.componentToPaste
-        return state
-      })
-    }
 
     // Patch screen
     const patch = (screen: Screen) => {
@@ -747,6 +741,17 @@ export class ComponentStore extends BudiStore<ComponentState> {
       }
       const cut = componentToPaste.isCut
       const sourceScreenId = componentToPaste.screenId
+      if (cut && sourceScreenId === screen._id) {
+        if (findComponent(componentToPaste, targetComponent._id!)) {
+          return false
+        }
+        const parent = findComponentParent(screen.props, componentToPaste._id)
+        if (parent) {
+          parent._children = parent._children!.filter(
+            child => child._id !== componentToPaste._id
+          )
+        }
+      }
       delete componentToPaste.isCut
       delete componentToPaste.screenId
 
@@ -800,7 +805,16 @@ export class ComponentStore extends BudiStore<ComponentState> {
       }
     }
     const targetScreenId = targetScreen?._id ?? state.selectedScreenId ?? null
-    await screenStore.patch(patch, targetScreenId)
+    const savedScreen = await screenStore.patch(patch, targetScreenId)
+    if (!savedScreen) {
+      return
+    }
+    if (state.componentToPaste.isCut) {
+      this.update(state => {
+        delete state.componentToPaste
+        return state
+      })
+    }
 
     // Select the new component
     if (selectComponent) {

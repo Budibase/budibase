@@ -9,6 +9,7 @@
     deploymentStore,
     workspaceStore,
     componentStore,
+    screenStore,
   } from "@/stores/builder"
   import {
     workspacesStore,
@@ -126,7 +127,11 @@
           if (requestKey !== packageKey) {
             return
           }
-          await initialise(pkg, screenId)
+          if (isSameWorkspace && $workspaceStore.hasAppPackage) {
+            screenStore.syncAppScreens(pkg, screenId)
+          } else {
+            await initialise(pkg, screenId)
+          }
           if (requestKey === packageKey) {
             await deploymentStore.load()
           }

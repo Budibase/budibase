@@ -79,6 +79,7 @@ vi.mock("@/stores/builder", async () => {
     workspaceStore,
     tables: writable(),
     screenComponentsList: mockScreenComponentsList,
+    componentTreeNodesStore: { makeNodeVisible: vi.fn() },
     screenStore: {
       subscribe: mockScreenStore.subscribe,
       set: mockScreenStore.set,
@@ -194,7 +195,7 @@ describe("Component store", () => {
       patch(targetScreen)
     })
 
-    await ctx.test.componentStore.copy(component, true, false)
+    await ctx.test.componentStore.copy(component, true)
 
     expect(sourceScreen.props._children).toEqual([])
     expect(ctx.test.store.componentToPaste).toEqual({
@@ -203,6 +204,52 @@ describe("Component store", () => {
       screenId: sourceScreen._id,
     })
   })
+
+  it.each([false, true])(
+    "keeps drag moves atomic when save fails: %s",
+    async fails => {
+      const store = new ComponentStore()
+      const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const target = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const sourceScreen = getScreenFixture()
+        .addChild(component)
+        .addChild(target)
+        .json()
+      sourceScreen._id = "screen_source"
+      componentScreenStore.set({
+        screens: [sourceScreen],
+        selectedScreenId: sourceScreen._id,
+      })
+      componentScreenStore.patch.mockImplementation(async patch => {
+        const clone = JSON.parse(JSON.stringify(sourceScreen))
+        patch(clone)
+        if (fails) {
+          throw new Error("Save failed")
+        }
+        componentScreenStore.set({ screens: [clone], selectedScreenId: clone._id })
+        return clone
+      })
+
+      await store.copy(component, true, false)
+      const paste = store.paste(target, "below", sourceScreen)
+      if (fails) {
+        await expect(paste).rejects.toThrow("Save failed")
+        expect(get(componentScreenStore).screens[0].props._children).toEqual([
+          component,
+          target,
+        ])
+        expect(get(store).componentToPaste._id).toBe(component._id)
+      } else {
+        await paste
+        expect(get(componentScreenStore).screens[0].props._children).toEqual([
+          target,
+          component,
+        ])
+        expect(get(store).componentToPaste).toBeUndefined()
+      }
+      expect(componentScreenStore.patch).toHaveBeenCalledTimes(1)
+    }
+  )
 
   it("Refresh the component definitions", async ctx => {
     const componentDefs = componentDefinitionMap()
