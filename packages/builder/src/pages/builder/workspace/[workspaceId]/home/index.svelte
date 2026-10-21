@@ -173,7 +173,7 @@
   $: readingProjectNotes =
     !!notesProjectId && notesProjectId === selectedProjectId
   $: if (notesProjectId && notesProjectId !== selectedProjectId) {
-    notesProjectId = ""
+    backToResources()
   }
 
   const readProjectNotes = async () => {

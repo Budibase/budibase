@@ -173,7 +173,7 @@ describe("workspace home project notes", () => {
     history.replaceState(
       {},
       "",
-      "/builder/workspace/app_dev_test/home?project=project_operations&type=automation&q=missing&sort=name&order=asc"
+      "/builder/workspace/app_dev_test/home?project=project_operations&type=app&q=missing&sort=name&order=asc"
     )
   })
 
@@ -186,6 +186,8 @@ describe("workspace home project notes", () => {
     const { container } = render(WorkspaceHome)
     await screen.findByRole("heading", { name: "Project setup" })
     expect(screen.getByPlaceholderText("Search")).toHaveValue("missing")
+    expect(screen.getByText("No results in Operations.")).toBeInTheDocument()
+    expect(screen.queryByText("Customer portal")).toBeNull()
     const home = container.querySelector<HTMLDivElement>(".workspace-home")!
     home.scrollTop = 275
     const homeUrl = window.location.search
@@ -202,6 +204,7 @@ describe("workspace home project notes", () => {
     )
 
     expect(screen.getByPlaceholderText("Search")).toHaveValue("missing")
+    expect(screen.getByText("No results in Operations.")).toBeInTheDocument()
     expect(window.location.search).toBe(homeUrl)
     expect(home.scrollTop).toBe(275)
     expect(screen.getByRole("button", { name: "Operations" })).toHaveAttribute(
@@ -210,19 +213,40 @@ describe("workspace home project notes", () => {
     )
   })
 
-  it("returns to resources when changing projects and hides the guide for All projects", async () => {
-    render(WorkspaceHome)
-    await screen.findByRole("button", { name: "Read project notes" })
-    await fireEvent.click(
-      screen.getByRole("button", { name: "Read project notes" })
-    )
-    await fireEvent.click(screen.getByRole("button", { name: "All projects" }))
-    await waitFor(() =>
-      expect(screen.queryByRole("region", { name: "Project notes" })).toBeNull()
-    )
-    expect(
-      screen.queryByRole("button", { name: "Back to resources" })
-    ).toBeNull()
-    expect(screen.getByPlaceholderText("Search")).toHaveValue("missing")
-  })
+  it.each(["Finance", "All projects"])(
+    "restores resource scroll when switching to %s from the reader",
+    async targetProject => {
+      mocks.projects.set([
+        project,
+        {
+          ...project,
+          _id: "project_finance",
+          name: "Finance",
+          readme: "# Finance guide",
+        },
+      ])
+      const { container } = render(WorkspaceHome)
+      await screen.findByRole("button", { name: "Read project notes" })
+      const home = container.querySelector<HTMLDivElement>(".workspace-home")!
+      home.scrollTop = 275
+      await fireEvent.click(
+        screen.getByRole("button", { name: "Read project notes" })
+      )
+      await fireEvent.click(screen.getByRole("button", { name: targetProject }))
+      await waitFor(() => expect(home.scrollTop).toBe(275))
+      expect(
+        screen.queryByRole("button", { name: "Back to resources" })
+      ).toBeNull()
+      expect(screen.getByPlaceholderText("Search")).toHaveValue("missing")
+      if (targetProject === "All projects") {
+        expect(
+          screen.queryByRole("region", { name: "Project notes" })
+        ).toBeNull()
+      } else {
+        expect(
+          screen.getByRole("heading", { name: "Finance guide" })
+        ).toBeInTheDocument()
+      }
+    }
+  )
 })

@@ -98,6 +98,8 @@ describe("ProjectReadme", () => {
   })
 
   it("retains the draft when selection disappears after a failed reload", async () => {
+    onSave.mockRejectedValueOnce({ status: 409 })
+    onReload.mockRejectedValueOnce(new Error("Latest notes unavailable"))
     const { rerender } = render(ProjectReadme, {
       project,
       canEdit: true,
@@ -108,7 +110,15 @@ describe("ProjectReadme", () => {
     await fireEvent.input(screen.getByRole("textbox"), {
       target: { value: "Keep this work" },
     })
+    await fireEvent.click(screen.getByRole("button", { name: "Save notes" }))
+    await screen.findByText("Latest notes unavailable")
     await rerender({ project: undefined, canEdit: true, onSave, onReload })
+    expect(onReload).toHaveBeenCalledExactlyOnceWith(project._id)
+    expect(screen.getByText("Latest notes unavailable")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Save notes" })).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: "Load latest saved notes" })
+    ).toBeInTheDocument()
     expect(screen.getByRole("textbox")).toHaveValue("Keep this work")
     expect(
       within(screen.getByRole("dialog")).getByRole("heading", {
