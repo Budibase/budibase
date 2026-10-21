@@ -1,4 +1,5 @@
 import execa from "execa"
+import path from "path"
 import { findHBSBlocks, processStringSync } from "@budibase/string-templates"
 import * as automationUtils from "../automationUtils"
 import environment from "../../environment"
@@ -9,6 +10,8 @@ const COMMAND_BINDINGS_ERROR =
   "Budibase bash automation failed: Command bindings are not supported. Use the args field for dynamic values."
 const ARGS_VALIDATION_ERROR =
   "Budibase bash automation failed: Args must be a JSON array of strings."
+const SCRIPT_BINDINGS_ERROR =
+  "Budibase bash automation failed: Script bindings are not supported. Pass dynamic values as positional arguments to a fixed script."
 
 interface JsonEditorInput {
   value?: unknown
@@ -50,8 +53,125 @@ const parseArgs = (args: unknown) => {
   throw new Error(ARGS_VALIDATION_ERROR)
 }
 
-const processArgs = (args: unknown, context: object) => {
-  return parseArgs(args).map(arg => processStringSync(arg, context))
+const scriptArgumentIndex = ({
+  command,
+  args,
+}: {
+  command: string
+  args: string[]
+}): number => {
+  const executable = path.basename(command).toLowerCase()
+
+  if (executable === "env") {
+    for (let index = 0; index < args.length; index++) {
+      const arg = args[index]
+      if (arg === "-S") {
+        return index + 1
+      }
+      if (arg.startsWith("-S") && arg.length > 2) {
+        return index
+      }
+      if (["-u", "--unset", "-C", "--chdir"].includes(arg)) {
+        index++
+        continue
+      }
+      if (
+        arg === "--" ||
+        arg.startsWith("-") ||
+        /^[A-Za-z_][A-Za-z_0-9]*=/.test(arg)
+      ) {
+        continue
+      }
+      const nestedIndex = scriptArgumentIndex({
+        command: arg,
+        args: args.slice(index + 1),
+      })
+      return nestedIndex < 0 ? -1 : index + 1 + nestedIndex
+    }
+
+    return -1
+  }
+
+  if (executable === "timeout") {
+    for (let index = 0; index < args.length; index++) {
+      const arg = args[index]
+      if (["-s", "--signal", "-k", "--kill-after"].includes(arg)) {
+        index++
+        continue
+      }
+      if (arg.startsWith("-")) {
+        continue
+      }
+      if (index + 1 < args.length) {
+        const nestedIndex = scriptArgumentIndex({
+          command: args[index + 1],
+          args: args.slice(index + 2),
+        })
+        return nestedIndex < 0 ? -1 : index + 2 + nestedIndex
+      }
+      return -1
+    }
+
+    return -1
+  }
+
+  const isShell = ["bash", "sh", "dash", "zsh", "ksh"].includes(executable)
+  const isPython = /^python(?:\d+(?:\.\d+)?)?$/.test(executable)
+  const isNode = ["node", "nodejs"].includes(executable)
+
+  if (!isShell && !isPython && !isNode) {
+    return -1
+  }
+
+  for (const [index, arg] of args.entries()) {
+    if (arg === "--") {
+      return -1
+    }
+
+    if (isShell && /^-[a-zA-Z]*c$/.test(arg)) {
+      return index + 1
+    }
+
+    if (isPython && arg === "-c") {
+      return index + 1
+    }
+
+    if (isNode && ["-e", "--eval", "-p", "--print"].includes(arg)) {
+      return index + 1
+    }
+
+    if ((isShell || isPython) && /^-[a-zA-Z]*c.+/.test(arg)) {
+      return index
+    }
+
+    if (isNode && (/^-[ep].+/.test(arg) || /^--(?:eval|print)=/.test(arg))) {
+      return index
+    }
+  }
+
+  return -1
+}
+
+const processArgs = ({
+  command,
+  args,
+  context,
+}: {
+  command: string
+  args: unknown
+  context: object
+}) => {
+  const parsedArgs = parseArgs(args)
+  const codeIndex = scriptArgumentIndex({ command, args: parsedArgs })
+  if (
+    codeIndex >= 0 &&
+    codeIndex < parsedArgs.length &&
+    findHBSBlocks(parsedArgs[codeIndex]).length > 0
+  ) {
+    throw new Error(SCRIPT_BINDINGS_ERROR)
+  }
+
+  return parsedArgs.map(arg => processStringSync(arg, context))
 }
 
 export async function run({
@@ -87,7 +207,7 @@ export async function run({
       }
     }
 
-    const args = processArgs(inputs.args, context)
+    const args = processArgs({ command, args: inputs.args, context })
 
     let stdout,
       success = true

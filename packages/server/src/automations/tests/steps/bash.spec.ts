@@ -175,6 +175,84 @@ describe("Execute Bash Automations", () => {
     expect(fs.existsSync(injectedPath)).toEqual(false)
   })
 
+  it.each(["bash", "sh"])(
+    "should reject bindings in %s script arguments",
+    async command => {
+      const injectedPath = path.join(
+        os.tmpdir(),
+        "budibase-bash-step-injection"
+      )
+      const payload = `safe'; printf injected > ${injectedPath}; #`
+
+      const result = await createAutomationBuilder(config)
+        .onAppAction()
+        .bash({
+          command,
+          args: ["-c", "printf '%s\\n' '{{ trigger.fields.value }}'"],
+        })
+        .test({ fields: { value: payload } })
+
+      expect(result.steps[0].outputs.success).toEqual(false)
+      expect(fs.existsSync(injectedPath)).toEqual(false)
+    }
+  )
+
+  it("should reject bindings in node script arguments", async () => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+    const payload = `safe'); require('fs').writeFileSync('${injectedPath}', 'injected'); //`
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "node",
+        args: ["-e", "process.stdout.write('{{ trigger.fields.value }}')"],
+      })
+      .test({ fields: { value: payload } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it.each([
+    { command: "env", args: ["bash", "-c"] },
+    { command: "env", args: ["-u", "BASH_ENV", "bash", "-c"] },
+    { command: "timeout", args: ["5", "bash", "-c"] },
+    { command: "timeout", args: ["--signal", "TERM", "5", "bash", "-c"] },
+  ])("should reject script bindings through $command", async input => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+    const payload = `safe'; printf injected > ${injectedPath}; #`
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: input.command,
+        args: [...input.args, "printf '%s\\n' '{{ trigger.fields.value }}'"],
+      })
+      .test({ fields: { value: payload } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it("should pass bindings as positional values to a fixed shell script", async () => {
+    const payload = "hello'; printf injected; #"
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "bash",
+        args: [
+          "-c",
+          'printf "%s\\n" "$1"',
+          "budibase",
+          "{{ trigger.fields.value }}",
+        ],
+      })
+      .test({ fields: { value: payload } })
+
+    expect(result.steps[0].outputs.success).toEqual(true)
+    expect(result.steps[0].outputs.stdout).toEqual(`${payload}\n`)
+  })
+
   it("should reject command bindings", async () => {
     const payload = "echo"
 
