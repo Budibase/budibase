@@ -254,6 +254,92 @@ describe("Component store", () => {
     }
   )
 
+  it("pastes a cross-screen cut only once when saves overlap", async ctx => {
+    const store = ctx.test.componentStore
+    const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
+    const target = getComponentFixture(`${COMP_PREFIX}/container`).json()
+    const destination = getScreenFixture().addChild(target).json()
+    destination._id = "screen_destination"
+    store.update(state => ({
+      ...state,
+      componentToPaste: {
+        ...component,
+        isCut: true,
+        screenId: "screen_source",
+      },
+    }))
+    let finishSave
+    const pendingSave = new Promise(resolve => {
+      finishSave = resolve
+    })
+    componentScreenStore.set({ screens: [destination] })
+    componentScreenStore.patch.mockImplementation(
+      Utils.sequential(async patch => {
+        const clone = JSON.parse(
+          JSON.stringify(get(componentScreenStore).screens[0])
+        )
+        patch(clone)
+        await pendingSave
+        componentScreenStore.set({ screens: [clone] })
+        return clone
+      })
+    )
+
+    const firstPaste = store.paste(target, "below", destination)
+    const secondPaste = store.paste(target, "below", destination)
+    finishSave()
+    await Promise.all([firstPaste, secondPaste])
+
+    expect(get(componentScreenStore).screens[0].props._children).toEqual([
+      target,
+      component,
+    ])
+    expect(get(store).componentToPaste).toBeUndefined()
+  })
+
+  it.each([
+    { fails: false, copyDuringSave: false },
+    { fails: true, copyDuringSave: false },
+    { fails: false, copyDuringSave: true },
+    { fails: true, copyDuringSave: true },
+  ])(
+    "restores unsuccessful cuts without overwriting a new copy: %j",
+    async ({ fails, copyDuringSave }) => {
+      const store = new ComponentStore()
+      const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const target = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const destination = getScreenFixture().addChild(target).json()
+      const clipboard = { ...component, isCut: true, screenId: "screen_source" }
+      store.update(state => ({ ...state, componentToPaste: clipboard }))
+      let finishSave
+      const pendingSave = new Promise(resolve => {
+        finishSave = resolve
+      })
+      componentScreenStore.patch.mockImplementation(async () => {
+        await pendingSave
+        if (fails) {
+          throw new Error("Save failed")
+        }
+      })
+
+      const paste = store.paste(target, "below", destination)
+      if (copyDuringSave) {
+        await store.copy(target)
+      }
+      const expectedClipboard = copyDuringSave
+        ? get(store).componentToPaste
+        : clipboard
+      finishSave()
+      if (fails) {
+        await expect(paste).rejects.toThrow("Save failed")
+      } else {
+        await paste
+      }
+
+      expect(get(store).componentToPaste).toEqual(expectedClipboard)
+    }
+  )
+
   it("Refresh the component definitions", async ctx => {
     const componentDefs = componentDefinitionMap()
     let mockAPIResponse = {
