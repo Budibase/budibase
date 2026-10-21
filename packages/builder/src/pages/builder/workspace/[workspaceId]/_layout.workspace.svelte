@@ -37,6 +37,7 @@
   let projectsRequested = false
   let packageKey = `${workspaceId}:${$params.screenId || ""}`
   let packageInitialisation = Promise.resolve()
+  let initialisedWorkspaceId: string | undefined
   const workspaceInitialisation = getPackage({
     appId: workspaceId,
     requestKey: packageKey,
@@ -115,6 +116,7 @@
           : undefined
         if (!isSameWorkspace) {
           reset()
+          initialisedWorkspaceId = undefined
         }
         componentStore.update(state => ({ ...state, componentToPaste }))
         workspaceStore.update(state => ({ ...state, appId }))
@@ -127,10 +129,11 @@
           if (requestKey !== packageKey) {
             return
           }
-          if (isSameWorkspace && $workspaceStore.hasAppPackage) {
+          if (isSameWorkspace && initialisedWorkspaceId === appId) {
             screenStore.syncAppScreens(pkg, screenId)
           } else {
             await initialise(pkg, screenId)
+            initialisedWorkspaceId = appId
           }
           if (requestKey === packageKey) {
             await deploymentStore.load()

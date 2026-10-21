@@ -730,7 +730,8 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
     let newComponentId = ""
 
-    let componentToPaste = cloneDeep(state.componentToPaste)
+    const clipboard = state.componentToPaste
+    let componentToPaste = cloneDeep(clipboard)
 
     // Patch screen
     const patch = (screen: Screen) => {
@@ -805,15 +806,25 @@ export class ComponentStore extends BudiStore<ComponentState> {
       }
     }
     const targetScreenId = targetScreen?._id ?? state.selectedScreenId ?? null
-    const savedScreen = await screenStore.patch(patch, targetScreenId)
-    if (!savedScreen) {
-      return
-    }
-    if (state.componentToPaste.isCut) {
+    if (clipboard.isCut) {
       this.update(state => {
         delete state.componentToPaste
         return state
       })
+    }
+    let savedScreen: Screen | void = undefined
+    try {
+      savedScreen = await screenStore.patch(patch, targetScreenId)
+    } finally {
+      if (!savedScreen && clipboard.isCut) {
+        this.update(state => ({
+          ...state,
+          componentToPaste: state.componentToPaste || clipboard,
+        }))
+      }
+    }
+    if (!savedScreen) {
+      return
     }
 
     // Select the new component
