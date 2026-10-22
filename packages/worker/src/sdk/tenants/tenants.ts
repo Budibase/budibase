@@ -1,5 +1,6 @@
 import {
   configs,
+  context,
   db as dbCore,
   events,
   platform,
@@ -12,6 +13,7 @@ export async function deleteTenant(tenantId: string) {
   await quotas.bustCache()
   await removeTenantUsers(tenantId)
   await removeTenantApps(tenantId)
+  await removeRequestsDB(tenantId)
   await removeGlobalDB(tenantId)
 }
 
@@ -70,6 +72,13 @@ async function removeGlobalDB(tenantId: string) {
   } catch (err) {
     console.error(`Error removing tenant ${tenantId} users from info db`, err)
     throw err
+  }
+}
+
+async function removeRequestsDB(tenantId: string) {
+  const name = context.getRequestsDBName(tenantId)
+  if (await dbCore.dbExists(name)) {
+    await dbCore.getDB(name, { skip_setup: true }).destroy()
   }
 }
 

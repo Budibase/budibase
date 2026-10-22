@@ -25,9 +25,10 @@ import {
 import { IsolatedVM } from "../../jsRunner/vm"
 import { RESOLUTION_STRATEGY_SNIPPETS } from "../../escalation/resolutionStrategies"
 import { getFullUser } from "../../utilities/users"
+import { refreshRequestForEscalation } from "./ai/agentRequests/crud"
+import { getContextDoc, getDocId } from "./escalationContext"
 
-const getDocId = (escalationId: string): string =>
-  `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
+export { getContextDoc }
 
 const ESCALATION_LOCK_TTL_MS = Duration.fromSeconds(10).toMs()
 
@@ -48,16 +49,6 @@ export const withEscalationLock = async <T>(
     task
   )
   return result
-}
-
-// A copy of another workspace's escalation (e.g. from an old export) keeps the
-// original's appId - acting on it would resume or cancel the original
-export async function getContextDoc(
-  escalationId: string
-): Promise<EscalationContextDoc | undefined> {
-  const db = context.getWorkspaceDB()
-  const doc = await db.tryGet<EscalationContextDoc>(getDocId(escalationId))
-  return doc?.appId === context.getWorkspaceId() ? doc : undefined
 }
 
 // Lean poll payload for the originating chat - inflates the resumed assistant
@@ -228,9 +219,13 @@ export async function respond(
   response: EscalationResponse,
   resolve: (escalationId: string, response: EscalationResponse) => Promise<void>
 ): Promise<EscalationRespondResult> {
-  return await withEscalationLock(escalationId, () =>
+  const result = await withEscalationLock(escalationId, () =>
     respondUnderLock(escalationId, notificationDocId, response, resolve)
   )
+  if (result.status === "recorded") {
+    await refreshRequestForEscalation(escalationId)
+  }
+  return result
 }
 
 const respondUnderLock = async (
@@ -302,6 +297,9 @@ const respondUnderLock = async (
       actionId: response.actionId,
       respondedAt: new Date().toISOString(),
       ...(notificationDocId ? { notificationDocId } : {}),
+      ...(typeof response.note === "string" && response.note
+        ? { note: response.note }
+        : {}),
     })
     if (approved.status === "already_responded") {
       return { status: "already_responded" }

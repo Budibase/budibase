@@ -5,7 +5,14 @@ import {
   unlockTenant,
   setActivation,
 } from "../tenants"
-import { configs, tenancy, db, events, platform } from "@budibase/backend-core"
+import {
+  configs,
+  context,
+  tenancy,
+  db,
+  events,
+  platform,
+} from "@budibase/backend-core"
 import {
   LockReason,
   ConfigType,
@@ -140,9 +147,11 @@ describe("tenants", () => {
 
         await deleteTenant(tenantId)
 
-        expect(jest.mocked(db.dbExists).mock.calls).toEqual(
-          names.map(name => [name])
-        )
+        expect(
+          jest
+            .mocked(db.dbExists)
+            .mock.calls.filter(([name]) => names.includes(name))
+        ).toEqual(names.map(name => [name]))
         expect(
           jest
             .mocked(db.getDB)
@@ -184,7 +193,9 @@ describe("tenants", () => {
         workspaceId,
         secondWorkspaceId,
       ])
-      expect(db.getDB).not.toHaveBeenCalled()
+      expect(jest.mocked(db.getDB).mock.calls).toEqual([
+        [context.getRequestsDBName(tenantId), { skip_setup: true }],
+      ])
     })
 
     it("does not delete workspace or tenant databases when Actions cleanup fails", async () => {
@@ -209,8 +220,31 @@ describe("tenants", () => {
       expect(db.getDB).not.toHaveBeenCalledWith(workspaceId)
       expect(actionsDb.destroy).toHaveBeenCalledTimes(1)
       expect(workspaceDb.destroy).not.toHaveBeenCalled()
+      expect(
+        getDatabaseMock(context.getRequestsDBName(tenantId)).destroy
+      ).not.toHaveBeenCalled()
       expect(tenantDb.destroy).not.toHaveBeenCalled()
     })
+
+    it.each([true, false])(
+      "removes the tenant's requests database when present=%s",
+      async exists => {
+        const tenantId = structures.tenant.id()
+        const requestsDbName = context.getRequestsDBName(tenantId)
+        const requestsDb = getDatabaseMock(requestsDbName)
+        jest.mocked(db.getAllWorkspaces).mockResolvedValue([])
+        jest.mocked(db.dbExists).mockResolvedValue(exists)
+
+        await deleteTenant(tenantId)
+
+        expect(jest.mocked(db.dbExists).mock.calls).toEqual([[requestsDbName]])
+        expect(jest.mocked(db.getDB).mock.calls).toEqual(
+          exists ? [[requestsDbName, { skip_setup: true }]] : []
+        )
+        expect(requestsDb.destroy).toHaveBeenCalledTimes(exists ? 1 : 0)
+        expect(tenantDb.destroy).toHaveBeenCalledTimes(1)
+      }
+    )
   })
 
   describe("lockTenant", () => {
