@@ -207,6 +207,10 @@ vi.mock(
   "./_components/HomeProjectTabs.svelte",
   () => import("@/test/mocks/MockSlot.svelte")
 )
+vi.mock(
+  "./_components/ProjectReadme.svelte",
+  () => import("@/test/mocks/MockSlot.svelte")
+)
 
 import WorkspaceHome from "./index.svelte"
 

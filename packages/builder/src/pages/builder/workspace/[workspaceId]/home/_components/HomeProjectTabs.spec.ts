@@ -34,6 +34,29 @@ const projects: ProjectResponse[] = [
 ]
 
 describe("HomeProjectTabs", () => {
+  it("offers a notes shortcut only for a selected project", async () => {
+    const onReadProjectNotes = vi.fn()
+    const { rerender } = render(HomeProjectTabs, {
+      projects,
+      showReadProjectNotes: true,
+      onReadProjectNotes,
+    })
+    expect(
+      screen.queryByRole("button", { name: "Read project notes" })
+    ).toBeNull()
+
+    await rerender({
+      projects,
+      selectedProjectId: "project_operations",
+      showReadProjectNotes: true,
+      onReadProjectNotes,
+    })
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Read project notes" })
+    )
+    expect(onReadProjectNotes).toHaveBeenCalledOnce()
+  })
+
   it("selects projects and renders optional project colours", async () => {
     const onSelect = vi.fn()
     render(HomeProjectTabs, {

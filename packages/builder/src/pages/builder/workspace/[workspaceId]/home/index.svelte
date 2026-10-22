@@ -19,6 +19,7 @@
   import HomeTable from "./_components/HomeTable.svelte"
   import ImportProjectModal from "./_components/ImportProjectModal.svelte"
   import ImportProjectResultModal from "./_components/ImportProjectResultModal.svelte"
+  import ProjectReadme from "./_components/ProjectReadme.svelte"
   import {
     workspaceStore,
     automationStore,
@@ -62,6 +63,7 @@
     type ImportProjectResponse,
     type ProjectImportRequirement,
     type ExportProjectRequest,
+    type UpdateProjectRequest,
     PublishResourceState,
     type Agent,
     type Table,
@@ -69,9 +71,10 @@
     type WorkspaceResource,
     SourceName,
   } from "@budibase/types"
+  import { sdk } from "@budibase/shared-core"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import { goto as gotoStore, url as urlStore } from "@roxi/routify"
-  import { onMount } from "svelte"
+  import { onMount, tick } from "svelte"
   import {
     buildHomeRows,
     filterHomeRows,
@@ -143,6 +146,9 @@
   let searchTerm = ""
   let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
+  let notesProjectId = ""
+  let workspaceHome: HTMLDivElement
+  let resourceScrollTop = 0
 
   let highlightedRowId: string | null = null
 
@@ -151,6 +157,7 @@
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
+  $: canEditProjectNotes = sdk.users.hasBuilderPermissions($auth.user)
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: selectedProjectResource = projectAssignmentRow
@@ -163,6 +170,44 @@
       }
     : null
   $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
+  $: readingProjectNotes =
+    !!notesProjectId && notesProjectId === selectedProjectId
+  $: if (notesProjectId && notesProjectId !== selectedProjectId) {
+    backToResources()
+  }
+
+  const readProjectNotes = async () => {
+    if (!selectedProjectId) {
+      return
+    }
+    resourceScrollTop = workspaceHome.scrollTop
+    notesProjectId = selectedProjectId
+    await tick()
+    workspaceHome.scrollTop = 0
+  }
+
+  const backToResources = async () => {
+    notesProjectId = ""
+    await tick()
+    workspaceHome.scrollTop = resourceScrollTop
+  }
+
+  const saveProjectNotes = async (request: UpdateProjectRequest) => {
+    const updatedProject = await projectsStore.updateProject(request)
+    notifications.success("Project notes saved")
+    return updatedProject
+  }
+
+  const reloadProjectNotes = async (projectId: string) => {
+    const projects = await projectsStore.fetch($workspaceStore.appId)
+    const project = projects.find(project => project._id === projectId)
+    if (!project) {
+      throw new Error(
+        "This project no longer exists. Your draft has been kept."
+      )
+    }
+    return project
+  }
 
   let getFavourite: (
     resourceType: WorkspaceResource,
@@ -1044,7 +1089,7 @@
   })
 </script>
 
-<div class="workspace-home">
+<div class="workspace-home" bind:this={workspaceHome}>
   <div class="content" class:content--projects={projectsEnabled}>
     <div class="header">
       <div class="title">
@@ -1065,7 +1110,7 @@
       />
     </div>
 
-    {#if automationErrorEntries.length}
+    {#if !readingProjectNotes && automationErrorEntries.length}
       <div class="automation-errors">
         {#each automationErrorEntries as entry (entry.automationId)}
           <Notification
@@ -1085,7 +1130,7 @@
       </div>
     {/if}
 
-    {#if automationStopEntries.length}
+    {#if !readingProjectNotes && automationStopEntries.length}
       <div class="automation-errors">
         {#each automationStopEntries as entry (entry.automationId)}
           <Notification
@@ -1102,7 +1147,9 @@
       </div>
     {/if}
 
-    <HomeMetrics {showBudibaseAIMetric} />
+    {#if !readingProjectNotes}
+      <HomeMetrics {showBudibaseAIMetric} />
+    {/if}
 
     {#if projectsEnabled}
       <div class="project-resources">
@@ -1116,64 +1163,79 @@
           onImportProject={importProject}
           onExportProject={exportProject}
           onSetupProject={openProjectSetup}
+          showReadProjectNotes={!readingProjectNotes &&
+            !!selectedProject &&
+            (!!selectedProject.readme?.trim() || canEditProjectNotes)}
+          onReadProjectNotes={readProjectNotes}
           exportProjectDisabled={selectedProjectExportDisabled}
         />
 
-        <HomeResourcePanel>
-          {#snippet toolbar()}
-            <div class="panel-toolbar">
-              <HomeControls
-                {typeFilter}
-                variant="panel"
-                onTypeChange={setTypeFilter}
-              />
-              <div class="panel-toolbar__right">
-                <div class="search-wrapper">
-                  <Icon name="magnifying-glass" size="S" />
-                  <input
-                    class="search-input"
-                    type="text"
-                    placeholder="Search"
-                    bind:value={searchTerm}
+        {#if !readingProjectNotes}
+          <HomeResourcePanel>
+            {#snippet toolbar()}
+              <div class="panel-toolbar">
+                <HomeControls
+                  {typeFilter}
+                  variant="panel"
+                  onTypeChange={setTypeFilter}
+                />
+                <div class="panel-toolbar__right">
+                  <div class="search-wrapper">
+                    <Icon name="magnifying-glass" size="S" />
+                    <input
+                      class="search-input"
+                      type="text"
+                      placeholder="Search"
+                      bind:value={searchTerm}
+                    />
+                  </div>
+                  <HomeCreateMenu
+                    variant="pill"
+                    onCreateAgent={createAgent}
+                    onCreateAutomation={createAutomation}
+                    onCreateApp={createApp}
+                    onCreateConnection={() => goToCreate("data/new")}
+                    onCreateTable={openCreateTable}
+                    onCreateApi={() => goToCreate("apis/new")}
                   />
                 </div>
-                <HomeCreateMenu
-                  variant="pill"
-                  onCreateAgent={createAgent}
-                  onCreateAutomation={createAutomation}
-                  onCreateApp={createApp}
-                  onCreateConnection={() => goToCreate("data/new")}
-                  onCreateTable={openCreateTable}
-                  onCreateApi={() => goToCreate("apis/new")}
-                />
               </div>
-            </div>
-          {/snippet}
+            {/snippet}
 
-          <HomeTable
-            rows={filteredRows}
-            allRowsCount={allRows.length}
-            {typeFilter}
-            {searchTerm}
-            {projectsEnabled}
-            {selectedProjectName}
-            {sortColumn}
-            {sortOrder}
-            {highlightedRowId}
-            variant="panel"
-            onOpenRow={openRow}
-            onOpenContextMenu={openHomeContextMenu}
-            onClearSearch={() => (searchTerm = "")}
-            onResetFilters={() => {
-              typeFilter = "all"
-              selectedProjectId = ""
-            }}
-            onSortChange={setSort}
-            onCreateAgent={createAgent}
-            onCreateAutomation={createAutomation}
-            onCreateApp={createApp}
-          />
-        </HomeResourcePanel>
+            <HomeTable
+              rows={filteredRows}
+              allRowsCount={allRows.length}
+              {typeFilter}
+              {searchTerm}
+              {projectsEnabled}
+              {selectedProjectName}
+              {sortColumn}
+              {sortOrder}
+              {highlightedRowId}
+              variant="panel"
+              onOpenRow={openRow}
+              onOpenContextMenu={openHomeContextMenu}
+              onClearSearch={() => (searchTerm = "")}
+              onResetFilters={() => {
+                typeFilter = "all"
+                selectedProjectId = ""
+              }}
+              onSortChange={setSort}
+              onCreateAgent={createAgent}
+              onCreateAutomation={createAutomation}
+              onCreateApp={createApp}
+            />
+          </HomeResourcePanel>
+        {/if}
+
+        <ProjectReadme
+          project={selectedProject}
+          canEdit={canEditProjectNotes}
+          focused={readingProjectNotes}
+          onBack={backToResources}
+          onSave={saveProjectNotes}
+          onReload={reloadProjectNotes}
+        />
       </div>
     {:else}
       <div class="controls-row">
