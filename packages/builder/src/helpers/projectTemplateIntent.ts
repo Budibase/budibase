@@ -1,4 +1,5 @@
 import { notifications } from "@budibase/bbui"
+import { Constants, CookieUtils } from "@budibase/frontend-core"
 import { PROJECT_TEMPLATE_KEY_PATTERN } from "@budibase/shared-core"
 import type { ProjectTemplateIntent } from "@budibase/types"
 import { auth } from "@/stores/portal/auth"
@@ -63,6 +64,9 @@ export const initialiseBuilderWithTemplateIntent = async ({
           ? "Unable to preserve the Project template link. Try again."
           : "Unable to clear the previous Project template link. Try again."
       )
+    }
+    if (result.intent) {
+      CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
     }
     window.history.replaceState(
       {},

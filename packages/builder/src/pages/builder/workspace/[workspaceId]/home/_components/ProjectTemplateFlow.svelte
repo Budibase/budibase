@@ -175,6 +175,7 @@
     workspaceId?: string
     workspaceName?: string
   }) => {
+    const originWorkspaceId = currentWorkspaceId
     isImporting = true
     try {
       let destinationWorkspaceId = workspaceId
@@ -191,8 +192,13 @@
         templateKey,
         workspaceId: destinationWorkspaceId,
       })
+      if ($auth.initInfo?.projectTemplate?.templateKey === templateKey) {
+        auth.clearInitInfoState()
+      }
+      if (isDestroyed || originWorkspaceId !== currentWorkspaceId) {
+        return
+      }
       modal?.hide()
-      auth.clearInitInfoState()
       template = undefined
       createdWorkspace = undefined
       createdWorkspaceAppId = ""

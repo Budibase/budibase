@@ -213,6 +213,76 @@ describe("ProjectTemplateFlow", () => {
     })
   })
 
+  it("ignores direct-link completion after the current workspace changes", async () => {
+    let resolveImport!: (response: typeof importResponse) => void
+    const importing = new Promise<typeof importResponse>(resolve => {
+      resolveImport = resolve
+    })
+    mocks.importTemplate.mockReturnValueOnce(importing)
+    const onImported = vi.fn()
+    const { rerender } = renderFlow({ onImported })
+    await screen.findByRole("heading", { name: "Use Support Template" })
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Import project" })
+    )
+
+    await rerender({
+      currentWorkspaceId: "app_dev_other",
+      currentWorkspaceName: "Finance",
+      onImported,
+    })
+    resolveImport(importResponse)
+    await importing
+    await tick()
+
+    expect(onImported).not.toHaveBeenCalled()
+    expect(mocks.authState.get().initInfo).toEqual({})
+  })
+
+  it("ignores direct-link completion after leaving the page", async () => {
+    let resolveImport!: (response: typeof importResponse) => void
+    const importing = new Promise<typeof importResponse>(resolve => {
+      resolveImport = resolve
+    })
+    mocks.importTemplate.mockReturnValueOnce(importing)
+    const onImported = vi.fn()
+    const { unmount } = renderFlow({ onImported })
+    await screen.findByRole("heading", { name: "Use Support Template" })
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Import project" })
+    )
+
+    unmount()
+    resolveImport(importResponse)
+    await importing
+    await tick()
+
+    expect(onImported).not.toHaveBeenCalled()
+    expect(mocks.authState.get().initInfo).toEqual({})
+  })
+
+  it("preserves a newer intent when a previous direct-link import finishes", async () => {
+    let resolveImport!: (response: typeof importResponse) => void
+    const importing = new Promise<typeof importResponse>(resolve => {
+      resolveImport = resolve
+    })
+    mocks.importTemplate.mockReturnValueOnce(importing)
+    const { unmount } = renderFlow()
+    await screen.findByRole("heading", { name: "Use Support Template" })
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Import project" })
+    )
+
+    unmount()
+    const nextIntent = { projectTemplate: { templateKey: "project/finance" } }
+    mocks.authState.set({ initInfo: nextIntent, user: { _id: "us_test" } })
+    resolveImport(importResponse)
+    await importing
+    await tick()
+
+    expect(mocks.authState.get().initInfo).toEqual(nextIntent)
+  })
+
   it("clears a dormant intent when templates are disabled", async () => {
     mocks.featureFlags.set({ PROJECTS: true, TEMPLATES: false })
     renderFlow()

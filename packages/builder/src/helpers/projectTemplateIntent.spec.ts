@@ -1,9 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { auth } from "@/stores/portal/auth"
 import { notifications } from "@budibase/bbui"
+import { Constants, CookieUtils } from "@budibase/frontend-core"
 
 vi.mock("@/stores/portal/auth", () => ({ auth: { setInitInfo: vi.fn() } }))
-vi.mock("@budibase/bbui", () => ({ notifications: { error: vi.fn() } }))
+vi.mock("@budibase/bbui", () => ({
+  notifications: { error: vi.fn() },
+  Helpers: { uuid: () => "session-id" },
+}))
 import {
   initialiseBuilderWithTemplateIntent,
   readProjectTemplateUrlIntent,
@@ -64,8 +68,45 @@ describe("Project template URL intents", () => {
 describe("builder initialization with a template link", () => {
   afterEach(() => {
     vi.resetAllMocks()
+    CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
     window.history.replaceState({}, "", "/")
   })
+
+  it("clears an older return destination before initializing a valid template link", async () => {
+    CookieUtils.setCookie(
+      Constants.Cookies.ReturnUrl,
+      "/builder/workspace/app_dev_previous/automations"
+    )
+    window.history.replaceState({}, "", "/builder?template=project%2Fsupport")
+    let returnUrl: string | undefined
+
+    await initialiseBuilderWithTemplateIntent({
+      initialise: async () => {
+        returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
+      },
+    })
+
+    expect(returnUrl).toBeUndefined()
+    expect(window.location.pathname).toBe("/builder")
+    expect(auth.setInitInfo).toHaveBeenCalledWith({
+      projectTemplate: { templateKey: "project/support" },
+    })
+  })
+
+  it.each(["", "?template=invalid"])(
+    "preserves the return destination without a valid template link: %s",
+    async search => {
+      const returnUrl = "/builder/workspace/app_dev_previous/automations"
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
+      window.history.replaceState({}, "", `/builder${search}`)
+
+      await initialiseBuilderWithTemplateIntent({
+        initialise: async () => {},
+      })
+
+      expect(CookieUtils.getCookie(Constants.Cookies.ReturnUrl)).toBe(returnUrl)
+    }
+  )
 
   it("initializes normally without changing a saved intent when no template is present", async () => {
     window.history.replaceState({}, "", "/builder?utm_source=website")
@@ -79,6 +120,8 @@ describe("builder initialization with a template link", () => {
   })
 
   it("keeps a failed pre-login save recoverable and resumes login on retry", async () => {
+    const returnUrl = "/builder/workspace/app_dev_previous/automations"
+    CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
     window.history.replaceState(
       {},
       "",
@@ -100,6 +143,7 @@ describe("builder initialization with a template link", () => {
       "?template=project%2Fsupport&utm_source=website"
     )
     expect(initialise).not.toHaveBeenCalled()
+    expect(CookieUtils.getCookie(Constants.Cookies.ReturnUrl)).toBe(returnUrl)
 
     await initialiseBuilderWithTemplateIntent({ initialise })
 
@@ -108,6 +152,7 @@ describe("builder initialization with a template link", () => {
     })
     expect(window.location.pathname).toBe("/builder/auth/login")
     expect(initialise).toHaveBeenCalledOnce()
+    expect(CookieUtils.getCookie(Constants.Cookies.ReturnUrl)).toBeUndefined()
   })
 
   it("preserves the query and destination hash when consuming a template link", async () => {
