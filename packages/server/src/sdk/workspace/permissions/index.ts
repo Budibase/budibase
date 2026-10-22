@@ -184,18 +184,17 @@ export async function updatePermissionOnRole(
     dbRoleId === roles.getDBRoleID(roles.BUILTIN_ROLE_IDS.PUBLIC) &&
     isQueryId(resourceId)
   ) {
-    const query = await sdk.queries.find(resourceId)
-    const datasource = await sdk.datasources.get(query.datasourceId)
     const existingPermissions = dbRoles.find(role => role._id === dbRoleId)
       ?.permissions?.[resourceId]
-    if (
-      datasource.source === SourceName.MONGODB &&
-      !existingPermissions?.includes(level)
-    ) {
-      throw new HTTPError(
-        "MongoDB queries cannot be granted public access",
-        400
-      )
+    if (!existingPermissions?.includes(level)) {
+      const query = await sdk.queries.find(resourceId)
+      const datasource = await sdk.datasources.get(query.datasourceId)
+      if (datasource.source === SourceName.MONGODB) {
+        throw new HTTPError(
+          "MongoDB queries cannot be granted public access",
+          400
+        )
+      }
     }
   }
 

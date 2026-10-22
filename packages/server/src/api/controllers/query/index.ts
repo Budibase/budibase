@@ -3,7 +3,6 @@ import {
   context,
   events,
   HTTPError,
-  roles,
   utils,
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
@@ -248,21 +247,12 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     )
     eventFn = () => events.query.updated(datasource, query)
   }
-  if (
-    datasource.source === SourceName.MONGODB &&
-    existingQuery &&
-    existingQuery.datasourceId !== query.datasourceId
-  ) {
-    const permissions = await sdk.permissions.getResourcePerms(query._id!)
-    if (
-      Object.values(permissions).some(
-        permission => permission.role === roles.BUILTIN_ROLE_IDS.PUBLIC
-      )
-    ) {
-      ctx.throw(
-        400,
-        "Remove public access before changing to a MongoDB datasource"
-      )
+  if (existingQuery && existingQuery.datasourceId !== query.datasourceId) {
+    const existingDatasource = await sdk.datasources.get(
+      existingQuery.datasourceId
+    )
+    if (existingDatasource.source !== datasource.source) {
+      ctx.throw(400, "Cannot change the integration type of an existing query")
     }
   }
   if (existingQuery && existingQuery.name !== query.name) {
