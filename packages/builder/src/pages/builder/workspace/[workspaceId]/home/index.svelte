@@ -7,6 +7,7 @@
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
+  import { saveProjectAssignment } from "@/components/projects/assignments"
   import CreateProjectModal from "./_components/CreateProjectModal.svelte"
   import ExportProjectModal from "./_components/ExportProjectModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
@@ -17,12 +18,12 @@
   import HomeResourcePanel from "./_components/HomeResourcePanel.svelte"
   import HomeTable from "./_components/HomeTable.svelte"
   import ImportProjectModal from "./_components/ImportProjectModal.svelte"
+  import ImportProjectResultModal from "./_components/ImportProjectResultModal.svelte"
   import {
     workspaceStore,
     automationStore,
     contextMenuStore,
     datasources,
-    integrations,
     tables,
     workspaceAppStore,
     workspaceFavouriteStore,
@@ -36,6 +37,7 @@
     projectsStore,
   } from "@/stores/portal"
   import { getErrorMessage } from "@/helpers/errors"
+  import { bb } from "@/stores/bb"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     Body,
@@ -48,6 +50,7 @@
   } from "@budibase/bbui"
   import {
     FeatureFlag,
+    type UpdateProjectAssignmentRequest,
     type UIAutomation,
     type UIWorkspaceApp,
     type HomeRow,
@@ -56,6 +59,9 @@
     type HomeType,
     type ProjectFormPayload,
     type ProjectResponse,
+    type ImportProjectResponse,
+    type ProjectImportRequirement,
+    type ExportProjectRequest,
     PublishResourceState,
     type Agent,
     type Table,
@@ -63,11 +69,9 @@
     type WorkspaceResource,
     SourceName,
   } from "@budibase/types"
-  import { integrationForDatasource } from "@/stores/selectors"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import { goto as gotoStore, url as urlStore } from "@roxi/routify"
   import { onMount } from "svelte"
-  import { get } from "svelte/store"
   import {
     buildHomeRows,
     filterHomeRows,
@@ -79,7 +83,11 @@
     normaliseHomeSortColumn,
     type HomeUrlState,
   } from "./_components/urlState"
-  import { withWorkspaceHomeReturn } from "@/helpers/workspaceHomeNavigation"
+  import {
+    buildProjectSetupHomeUrl,
+    getProjectSetupRequest,
+    withWorkspaceHomeReturn,
+  } from "@/helpers/workspaceHomeNavigation"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
@@ -110,6 +118,7 @@
   let updateAgentModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
   let selectedRow: HomeRow | null = null
+  let projectAssignmentRow: HomeRow | null = null
 
   let createProjectModal: ModalAPI
   let editProjectModal: ModalAPI
@@ -117,8 +126,15 @@
   let assignProjectModal: ModalAPI
   let exportProjectModal: ModalAPI
   let importProjectModal: ModalAPI
+  let importProjectResultModal: ModalAPI
+  let importResult: ImportProjectResponse | undefined
+  let isSetupReview = false
+  let setupSettingsContext:
+    | { workspaceId: string; projectId: string }
+    | undefined
   let createProjectModalKey = 0
   let editProjectModalKey = 0
+  let assignProjectModalKey = 0
   let exportProjectModalKey = 0
   let importProjectModalKey = 0
 
@@ -137,11 +153,13 @@
   $: currentUserId = $auth.user?._id || ""
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
-  $: selectedProjectResource = selectedRow
+  $: selectedProjectResource = projectAssignmentRow
     ? {
-        name: selectedRow.name,
-        typeLabel: getTypeLabel(selectedRow.type),
-        projectIds: selectedRow.projectIds,
+        id: projectAssignmentRow.id,
+        revision: projectAssignmentRow.resource._rev || "",
+        name: projectAssignmentRow.name,
+        typeLabel: getTypeLabel(projectAssignmentRow.type),
+        projectIds: projectAssignmentRow.projectIds,
       }
     : null
   $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
@@ -276,6 +294,13 @@
     importProjectModal?.show()
   }
 
+  const openAssignProjectModal = () => {
+    projectAssignmentRow = selectedRow
+    // Reset selections even when reopening during the modal's outro.
+    assignProjectModalKey += 1
+    assignProjectModal?.show()
+  }
+
   const goToCreate = (target: "data/new" | "apis/new") => {
     goto(url(`../${target}`))
   }
@@ -394,74 +419,24 @@
     }
   }
 
-  const assignProject = async (projectIds: string[] | undefined) => {
-    if (!projectsEnabled || !selectedRow) {
+  const assignProject = async (selection: UpdateProjectAssignmentRequest) => {
+    if (!projectsEnabled || !projectAssignmentRow) {
       return keepOpen
     }
 
+    await saveProjectAssignment({
+      resourceId: projectAssignmentRow.id,
+      selection,
+    })
+    assignProjectModal?.hide()
+
     try {
-      if (selectedRow.type === "app") {
-        const { resource } = selectedRow
-        await workspaceAppStore.edit({
-          _id: resource._id!,
-          _rev: resource._rev!,
-          name: resource.name,
-          url: resource.url,
-          navigation: resource.navigation,
-          disabled: resource.disabled,
-          isDefault: resource.isDefault,
-          projectIds,
-        })
-      } else if (selectedRow.type === "automation") {
-        const { resource } = selectedRow
-        const { publishStatus: _publishStatus, ...automation } = resource
-        await automationStore.actions.save(
-          {
-            ...automation,
-            projectIds,
-          },
-          { skipUnpublishedChanges: true }
-        )
-      } else if (selectedRow.type === "agent") {
-        const { resource } = selectedRow
-        const { operations: _operations, ...agent } = resource
-        await agentsStore.updateAgent({
-          ...agent,
-          projectIds,
-        })
-      } else if (selectedRow.type === "datasource") {
-        const { resource } = selectedRow
-        await datasources.save({
-          datasource: {
-            ...resource,
-            projectIds,
-          },
-          integration: integrationForDatasource(get(integrations), resource),
-          skipConnectionCheck: true,
-        })
-      } else if (selectedRow.type === "table") {
-        const { resource } = selectedRow
-        await tables.save({
-          ...resource,
-          projectIds,
-        })
-      }
-
-      notifications.success("Projects updated successfully")
-      assignProjectModal?.hide()
-
-      try {
-        await Promise.all([workspaceStore.refresh(), agentsStore.fetchAgents()])
-      } catch (error) {
-        console.error(error)
-        notifications.warning(
-          "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
-        )
-      }
+      await workspaceStore.refresh()
     } catch (error) {
       console.error(error)
-      notifications.error("Unable to update project")
-      return keepOpen
+      notifications.warning(
+        "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
+      )
     }
   }
 
@@ -512,7 +487,7 @@
       notifications.success(`Project '${projectName}' deleted successfully`)
 
       try {
-        await Promise.all([workspaceStore.refresh(), agentsStore.fetchAgents()])
+        await workspaceStore.refresh()
       } catch (error) {
         console.error(error)
         notifications.warning(
@@ -527,12 +502,10 @@
   const handleExportProject = async ({
     id,
     encryptPassword,
-  }: {
-    id: string
-    encryptPassword?: string
-  }) => {
+    includeRows,
+  }: ExportProjectRequest & { id: string }) => {
     try {
-      await projectsStore.exportProject(id, { encryptPassword })
+      await projectsStore.exportProject({ id, encryptPassword, includeRows })
       exportProjectModal?.hide()
     } catch (error) {
       console.error(error)
@@ -541,21 +514,67 @@
     }
   }
 
-  const notifyImportFollowUps = (
-    response: Awaited<ReturnType<typeof projectsStore.importProject>>
-  ) => {
-    if (response.requirements.length) {
-      const names = response.requirements
-        .map(requirement => requirement.name)
-        .join(", ")
-      notifications.warning(`Some imported resources need secrets: ${names}`)
+  const openImportedResource = ({
+    type,
+    resourceId,
+  }: ProjectImportRequirement) => {
+    const workspaceId = $workspaceStore.appId
+    const projectId = selectedProjectId
+    if (!workspaceId || !projectId) {
+      return
+    }
+    const homeUrl = buildProjectSetupHomeUrl({ workspaceId, projectId })
+    importProjectResultModal.hide()
+    let route: string
+    if (type === "datasource_secrets") {
+      const datasource = $datasources.list.find(item => item._id === resourceId)
+      if (datasource?.source === SourceName.REST) {
+        bb.settings(`/connections/api-connections/${resourceId}`, {
+          projectSetupReturnTo: homeUrl,
+        })
+        setupSettingsContext = { workspaceId, projectId }
+        return
+      }
+      route = `../data/datasource/${resourceId}`
+    } else if (type === "automation_credentials") {
+      route = `../automation/${resourceId}`
+    } else if (type === "agent_secrets") {
+      route = `../agent/${resourceId}/deployment`
+    } else {
+      route = `../agent/${resourceId}/config`
+    }
+    goto(withWorkspaceHomeReturn(url(route), homeUrl))
+  }
+
+  const openProjectSetup = async ({ refresh = true } = {}) => {
+    const projectId = selectedProjectId
+    const workspaceId = $workspaceStore.appId
+    if (!projectId || !workspaceId) {
+      return
     }
 
-    if (response.unsupportedContent.length) {
-      const summary = response.unsupportedContent
-        .map(item => `${item.count} ${item.type}`)
-        .join(", ")
-      notifications.warning(`Some Project content was not imported: ${summary}`)
+    try {
+      const projects = refresh
+        ? await projectsStore.fetch(workspaceId)
+        : await projectsStore.ensureFetched(workspaceId)
+      if (
+        selectedProjectId !== projectId ||
+        $workspaceStore.appId !== workspaceId
+      ) {
+        return
+      }
+      const project = projects.find(project => project._id === projectId)
+      if (!project?.importSetup) {
+        return
+      }
+      importResult = { project, ...project.importSetup }
+      isSetupReview = true
+      importProjectResultModal.show()
+    } catch (error) {
+      console.error(error)
+      notifications.error(
+        getErrorMessage(error) || "Unable to load project setup"
+      )
     }
   }
 
@@ -571,14 +590,28 @@
         encryptPassword,
       })
       importProjectModal?.hide()
-      notifications.success(`Imported project '${response.project.name}'`)
-      notifyImportFollowUps(response)
-
-      const refreshes = await Promise.allSettled([workspaceStore.refresh()])
-      if (refreshes.some(result => result.status === "rejected")) {
+      const showImportResult =
+        response.requirements.length > 0 ||
+        response.unsupportedContent.length > 0 ||
+        !!response.dataImport
+      if (!showImportResult) {
+        notifications.success(`Imported project '${response.project.name}'`)
+      }
+      selectedProjectId = response.project._id
+      typeFilter = "all"
+      searchTerm = ""
+      importResult = response
+      isSetupReview = false
+      try {
+        await workspaceStore.refresh()
+      } catch (error) {
+        console.error(error)
         notifications.warning(
           "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
         )
+      }
+      if (showImportResult) {
+        importProjectResultModal?.show()
       }
     } catch (error) {
       console.error(error)
@@ -618,7 +651,7 @@
           icon: "stack",
           name: "Assign project",
           visible: projectsEnabled,
-          callback: () => assignProjectModal.show(),
+          callback: openAssignProjectModal,
         },
         {
           icon: "globe-simple",
@@ -672,7 +705,7 @@
           icon: "stack",
           name: "Assign project",
           visible: projectsEnabled,
-          callback: () => assignProjectModal.show(),
+          callback: openAssignProjectModal,
         },
         {
           icon: "copy",
@@ -707,7 +740,7 @@
           icon: "stack",
           name: "Assign project",
           visible: projectsEnabled,
-          callback: () => assignProjectModal.show(),
+          callback: openAssignProjectModal,
         },
         {
           icon: "copy",
@@ -737,7 +770,7 @@
           icon: "stack",
           name: "Assign project",
           visible: projectsEnabled,
-          callback: () => assignProjectModal.show(),
+          callback: openAssignProjectModal,
         },
       ]
     }
@@ -809,12 +842,28 @@
   const loadProjects = async (workspaceId: string) => {
     try {
       projectsRequestedForWorkspace = workspaceId
-      await projectsStore.ensureFetched(workspaceId)
+      await projectsStore.fetch(workspaceId)
     } catch (error) {
       projectsRequestedForWorkspace = ""
       if ($workspaceStore.appId === workspaceId && projectsEnabled) {
         notifications.error(getErrorMessage(error) || "Unable to load projects")
       }
+    }
+  }
+
+  $: if (
+    setupSettingsContext &&
+    !$bb.settings.open &&
+    !$bb.settings.pendingPath
+  ) {
+    const { workspaceId, projectId } = setupSettingsContext
+    setupSettingsContext = undefined
+    if (
+      projectsEnabled &&
+      $workspaceStore.appId === workspaceId &&
+      selectedProjectId === projectId
+    ) {
+      openProjectSetup()
     }
   }
 
@@ -952,6 +1001,13 @@
     }
 
     const { q, type, project, sort, order } = readUrlState()
+    const setupRequest = getProjectSetupRequest({
+      workspaceId,
+      homeUrl: window.location.href,
+    })
+    if (setupRequest) {
+      history.replaceState({}, "", setupRequest.cleanUrl)
+    }
     if (q) {
       searchTerm = q
     }
@@ -982,6 +1038,9 @@
     })
 
     await agentsStore.fetchAgents()
+    if (setupRequest && projectsEnabled) {
+      await openProjectSetup({ refresh: false })
+    }
   })
 </script>
 
@@ -1056,6 +1115,7 @@
           onDeleteProject={() => confirmDeleteProjectDialog?.show()}
           onImportProject={importProject}
           onExportProject={exportProject}
+          onSetupProject={openProjectSetup}
           exportProjectDisabled={selectedProjectExportDisabled}
         />
 
@@ -1175,10 +1235,15 @@
   </Modal>
 
   <Modal bind:this={assignProjectModal}>
-    <AssignProjectModal
-      resource={selectedProjectResource}
-      onConfirm={assignProject}
-    />
+    {#key assignProjectModalKey}
+      {#if selectedProjectResource}
+        <AssignProjectModal
+          resource={selectedProjectResource}
+          onPreview={projectsStore.previewAssignment}
+          onConfirm={assignProject}
+        />
+      {/if}
+    {/key}
   </Modal>
 
   <Modal bind:this={editProjectModal}>
@@ -1217,6 +1282,16 @@
     {#key importProjectModalKey}
       <ImportProjectModal onConfirm={handleImportProject} />
     {/key}
+  </Modal>
+
+  <Modal bind:this={importProjectResultModal}>
+    {#if importResult}
+      <ImportProjectResultModal
+        response={importResult}
+        {isSetupReview}
+        onOpenResource={openImportedResource}
+      />
+    {/if}
   </Modal>
 {/if}
 

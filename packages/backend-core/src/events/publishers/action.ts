@@ -7,6 +7,8 @@ import {
   ActionCrudFailed,
   ActionAiAgentExecuted,
   ActionAiAgentFailed,
+  ActionAiAgentToolExecuted,
+  ActionAiAgentToolFailed,
 } from "@budibase/types"
 
 function automationStepExecuted(
@@ -47,15 +49,37 @@ function aiAgentExecuted(
   })
 }
 
-function aiAgentFailed(action: ActionAiAgentFailed) {
-  publishEvent(Event.ACTION_AI_AGENT_FAILED, action).catch(err => {
+function aiAgentFailed(
+  action: ActionAiAgentFailed,
+  timestamp?: string | number
+) {
+  publishEvent(Event.ACTION_AI_AGENT_FAILED, action, timestamp).catch(err => {
     console.error("aiAgentFailed telemetry failed", { action, err })
+  })
+}
+
+function aiAgentToolExecuted(
+  action: ActionAiAgentToolExecuted,
+  timestamp?: string | number
+) {
+  publishEvent(Event.ACTION_AI_AGENT_TOOL_EXECUTED, action, timestamp).catch(
+    err => {
+      console.error("aiAgentToolExecuted telemetry failed", { action, err })
+    }
+  )
+}
+
+function aiAgentToolFailed(action: ActionAiAgentToolFailed) {
+  publishEvent(Event.ACTION_AI_AGENT_TOOL_FAILED, action).catch(err => {
+    console.error("aiAgentToolFailed telemetry failed", { action, err })
   })
 }
 
 export default {
   aiAgentExecuted,
   aiAgentFailed,
+  aiAgentToolExecuted,
+  aiAgentToolFailed,
   automationStepExecuted,
   automationStepFailed,
   crudExecuted,

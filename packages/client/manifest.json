@@ -6024,17 +6024,19 @@
         "type": "dataSource/s3",
         "label": "S3 datasource",
         "key": "datasourceId",
-        "info": "This component can't be used with S3 datasources that use custom endpoints"
+        "supportsConditions": false
       },
       {
         "type": "text",
         "label": "Bucket",
-        "key": "bucket"
+        "key": "bucket",
+        "supportsConditions": false
       },
       {
         "type": "text",
         "label": "File name",
         "key": "key",
+        "supportsConditions": false,
         "nested": true
       },
       {

@@ -1,19 +1,8 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
-import {
-  DocumentType,
-  prefixed,
-  type AnyDocument,
-  type Datasource,
-  type Project,
-} from "@budibase/types"
-import { isExternalTableID } from "../../../integrations/utils"
-import {
-  fetchAssignedProjectDocs,
-  getProjectAssignedEntities,
-  hasProject,
-  removeProjectId,
-} from "./utils"
+import { DocumentType, prefixed, type Project } from "@budibase/types"
+import { doWithProjectAssignmentsLock } from "./lock"
+import { fetchAssignedProjectDocs, hasProject, removeProjectId } from "./utils"
 
 interface CreateProjectInput {
   name: string
@@ -138,112 +127,40 @@ async function clearAssignments(projectId: string) {
   const db = context.getWorkspaceDB()
   const rollbacks: Rollback[] = []
   const assignedDocs = await fetchAssignedProjectDocs(projectId)
-
-  const changedDocs: AnyDocument[] = []
-  const originals: AnyDocument[] = []
-
-  const assignmentUpdates = assignedDocs
-    .filter(
-      doc =>
-        doc._id &&
-        !isExternalTableID(doc._id) &&
-        !doc._id.startsWith(prefixed(DocumentType.DATASOURCE)) &&
-        hasProject(doc, projectId)
-    )
-    .map(current => ({
-      original: current,
-      updated: removeProjectId(current, projectId),
-    }))
-
-  for (const { original, updated } of assignmentUpdates) {
-    originals.push(original)
-    changedDocs.push(updated)
-  }
-
-  const datasourceCandidates = assignedDocs.filter(datasource => {
-    if (
-      !datasource._id?.startsWith(prefixed(DocumentType.DATASOURCE)) ||
-      typeof datasource.source !== "string"
-    ) {
-      return false
-    }
-
-    return (
-      hasProject(datasource, projectId) ||
-      getProjectAssignedEntities(datasource).some(entity =>
-        hasProject(entity, projectId)
-      )
-    )
-  })
-
-  const datasourceUpdates = await Promise.all(
-    datasourceCandidates.map(async datasource => {
-      const current = await db.get<Datasource>(datasource._id!)
-      const entityKeys = Object.entries(current.entities || {})
-        .filter(([_, entity]) => hasProject(entity, projectId))
-        .map(([key]) => key)
-      const entities = { ...current.entities }
-      for (const key of entityKeys) {
-        const entity = entities[key]
-        if (entity) {
-          entities[key] = removeProjectId(entity, projectId)
-        }
-      }
-      return {
-        original: current,
-        updated: {
-          ...removeProjectId(current, projectId),
-          entities,
-        },
-      }
-    })
+  const originals = assignedDocs.filter(
+    doc => doc._id && hasProject(doc, projectId)
   )
 
-  for (const { original, updated } of datasourceUpdates) {
-    originals.push(original)
-    changedDocs.push(updated)
-  }
-
-  if (!changedDocs.length) {
+  if (!originals.length) {
     return rollbacks
   }
 
   try {
-    const results = await db.bulkDocs(changedDocs)
-    const failures = results
-      .map((result, index) => ({ result, index }))
-      .filter(({ result }) => result.error)
-
-    if (failures.length) {
-      for (const { result, index } of results
-        .map((result, index) => ({ result, index }))
-        .filter(({ result }) => !result.error)) {
-        const original = originals[index]
-        rollbacks.push(async () => {
-          await db.put({ ...original, _rev: result.rev })
-        })
-      }
-      await rollbackAssignments(rollbacks)
-      throw new HTTPError("Failed to clear project assignments.", 500)
-    }
-
+    const results = await db.bulkDocs(
+      originals.map(doc => removeProjectId(doc, projectId))
+    )
     for (const [index, result] of results.entries()) {
+      if (result.error) {
+        continue
+      }
       const original = originals[index]
       rollbacks.push(async () => {
         await db.put({ ...original, _rev: result.rev })
       })
     }
-  } catch (err) {
-    if (!(err instanceof HTTPError)) {
-      await rollbackAssignments(rollbacks)
+
+    if (results.some(result => result.error)) {
+      throw new HTTPError("Failed to clear project assignments.", 500)
     }
+  } catch (err) {
+    await rollbackAssignments(rollbacks)
     throw err
   }
 
   return rollbacks
 }
 
-export async function remove(id: string, rev: string) {
+async function removeUnlocked(id: string, rev: string) {
   const db = context.getWorkspaceDB()
   const project = await get(id)
   if (!project) {
@@ -260,4 +177,8 @@ export async function remove(id: string, rev: string) {
     await rollbackAssignments(rollbacks)
     throw err
   }
+}
+
+export async function remove(id: string, rev: string) {
+  return await doWithProjectAssignmentsLock(() => removeUnlocked(id, rev))
 }

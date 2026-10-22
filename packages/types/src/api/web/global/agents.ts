@@ -1,3 +1,4 @@
+import type { ProjectAssignmentResponse } from "../workspace/project"
 import { Optional } from "../../../shared"
 import {
   Agent,
@@ -186,7 +187,8 @@ export type CreateAgentRequest = Optional<
 export type CreateAgentResponse = Omit<
   Agent,
   "knowledgeSources" | "knowledgeBases"
->
+> &
+  ProjectAssignmentResponse
 export type DuplicateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
@@ -196,7 +198,8 @@ export type UpdateAgentRequest = Omit<
 export type UpdateAgentResponse = Omit<
   Agent,
   "knowledgeSources" | "knowledgeBases"
->
+> &
+  ProjectAssignmentResponse
 
 export type AgentOperationConfigRequest = Pick<
   AgentOperation,
@@ -216,4 +219,5 @@ export type UpdateAgentOperationRequest = Partial<AgentOperationConfigRequest>
 export type AgentOperationMutationResponse = Omit<
   Agent,
   "knowledgeSources" | "knowledgeBases"
->
+> &
+  ProjectAssignmentResponse

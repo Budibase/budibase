@@ -149,6 +149,7 @@ export interface EscalationApproval {
   actionId: string
   respondedAt: string
   notificationDocId?: string
+  note?: string
 }
 
 export interface EscalationRespondResult {

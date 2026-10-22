@@ -162,3 +162,6 @@ publicRoutes.get(
   ai.completeSharePointAuth
 )
 publicRoutes.get("/api/agent/slack/oauth/callback", ai.completeSlackOAuth)
+publicRoutes
+  .get("/api/requests", ai.fetchUserRequests)
+  .get("/api/requests/:id", ai.findUserRequest)

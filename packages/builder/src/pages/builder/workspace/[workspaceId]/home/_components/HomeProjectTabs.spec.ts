@@ -1,18 +1,21 @@
 import { fireEvent, render, screen } from "@testing-library/svelte"
+import type { ProjectResponse } from "@budibase/types"
 import { describe, expect, it, vi } from "vitest"
 import MockActionMenu from "@/test/mocks/MockActionMenu.svelte"
 import MockIcon from "@/test/mocks/MockIcon.svelte"
 import MockMenuItem from "@/test/mocks/MockMenuItem.svelte"
+import MockSlot from "@/test/mocks/MockSlot.svelte"
 
 vi.mock("@budibase/bbui", () => ({
   ActionMenu: MockActionMenu,
   Icon: MockIcon,
   MenuItem: MockMenuItem,
+  MenuSeparator: MockSlot,
 }))
 
 import HomeProjectTabs from "./HomeProjectTabs.svelte"
 
-const projects = [
+const projects: ProjectResponse[] = [
   {
     _id: "project_operations",
     _rev: "1-operations",
@@ -116,5 +119,121 @@ describe("HomeProjectTabs", () => {
     expect(
       screen.getByRole("button", { name: "Export project" })
     ).toBeDisabled()
+  })
+
+  it.each(["", "project_operations"])(
+    "keeps incomplete project tabs quiet when selection is %s",
+    selectedProjectId => {
+      render(HomeProjectTabs, {
+        projects: [
+          {
+            ...projects[0],
+            importSetup: {
+              resources: {},
+              requirements: [
+                {
+                  type: "datasource_secrets",
+                  resourceId: "datasource_1",
+                  name: "Customer database",
+                  reason: "Add connection credentials.",
+                },
+              ],
+              unsupportedContent: [],
+            },
+          },
+          projects[1],
+        ],
+        selectedProjectId,
+      })
+
+      expect(screen.queryByRole("img", { name: "Setup incomplete" })).toBeNull()
+      expect(screen.getByRole("button", { name: "Operations" })).toBeTruthy()
+      expect(screen.getByRole("button", { name: "Reporting" })).toBeTruthy()
+    }
+  )
+
+  it("opens project setup with a remaining count grouped by resource", async () => {
+    const onSetupProject = vi.fn()
+    render(HomeProjectTabs, {
+      projects: [
+        {
+          ...projects[0],
+          importSetup: {
+            resources: {},
+            requirements: [
+              {
+                type: "agent_ai_config",
+                resourceId: "agent_1",
+                name: "Support agent",
+                reason: "Choose an AI model.",
+              },
+              {
+                type: "agent_secrets",
+                resourceId: "agent_1",
+                name: "Support agent",
+                reason: "Reconnect integrations.",
+              },
+              {
+                type: "datasource_secrets",
+                resourceId: "datasource_1",
+                name: "Customer database",
+                reason: "Add connection credentials.",
+              },
+            ],
+            unsupportedContent: [],
+          },
+        },
+      ],
+      selectedProjectId: "project_operations",
+      onSetupProject,
+    })
+
+    const setupAction = screen.getByRole("button", {
+      name: "Project setup 2 remaining",
+    })
+    expect(setupAction).toHaveAttribute("data-icon", "list-checks")
+    expect(screen.queryByText("Finish setup")).toBeNull()
+    expect(
+      screen.queryByText(/Hide setup reminder|Show setup reminder/)
+    ).toBeNull()
+    await fireEvent.click(setupAction)
+
+    expect(onSetupProject).toHaveBeenCalledOnce()
+  })
+
+  it("keeps project setup available without a count once setup is complete", async () => {
+    const onSetupProject = vi.fn()
+    render(HomeProjectTabs, {
+      projects: [
+        {
+          ...projects[0],
+          importSetup: {
+            resources: {},
+            requirements: [],
+            unsupportedContent: [],
+          },
+        },
+      ],
+      selectedProjectId: "project_operations",
+      onSetupProject,
+    })
+
+    expect(screen.queryByRole("img", { name: "Setup incomplete" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Finish setup" })).toBeNull()
+    expect(screen.queryByText(/remaining/)).toBeNull()
+    await fireEvent.click(screen.getByRole("button", { name: "Project setup" }))
+
+    expect(onSetupProject).toHaveBeenCalledOnce()
+  })
+
+  it("does not offer import setup for projects without an import", () => {
+    render(HomeProjectTabs, {
+      projects,
+      selectedProjectId: "project_operations",
+    })
+
+    expect(screen.queryByRole("img", { name: "Setup incomplete" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Finish setup" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Project setup" })).toBeNull()
   })
 })

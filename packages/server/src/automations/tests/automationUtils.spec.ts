@@ -1,5 +1,9 @@
-import { AutomationIOType } from "@budibase/types"
-import { cleanInputValues, substituteLoopStep } from "../automationUtils"
+import { AutomationIOType, AutomationStatus } from "@budibase/types"
+import {
+  cleanInputValues,
+  inferAutomationRunActionStatus,
+  substituteLoopStep,
+} from "../automationUtils"
 
 describe("automationUtils", () => {
   describe("substituteLoopStep", () => {
@@ -110,6 +114,25 @@ describe("automationUtils", () => {
       expect(two.b).toBe(true)
       expect(two.c).toBe(false)
       expect(two.d).toBe(1)
+    })
+  })
+
+  describe("inferAutomationRunActionStatus", () => {
+    it.each([
+      [AutomationStatus.SUCCESS, "completed"],
+      [AutomationStatus.STOPPED, "completed"],
+      [AutomationStatus.ERROR, "failed"],
+      [AutomationStatus.STOPPED_ERROR, "failed"],
+      [AutomationStatus.TIMED_OUT, "failed"],
+      [AutomationStatus.SUSPENDED, "waiting"],
+    ])("maps %s to %s", (status, expected) => {
+      expect(inferAutomationRunActionStatus(status)).toBe(expected)
+    })
+
+    it("throws for a status that is never a whole-run result", () => {
+      expect(() =>
+        inferAutomationRunActionStatus(AutomationStatus.NO_CONDITION_MET)
+      ).toThrow()
     })
   })
 })

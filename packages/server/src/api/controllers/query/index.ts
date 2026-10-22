@@ -11,6 +11,7 @@ import { findHBSBlocks } from "@budibase/string-templates"
 import {
   ActionFailureReason,
   ActionType,
+  Agent,
   ContextUser,
   CreateDatasourceRequest,
   Datasource,
@@ -28,6 +29,7 @@ import {
   JsonFieldSubType,
   PreviewQueryRequest,
   PreviewQueryResponse,
+  ProjectAssignmentResult,
   Query,
   QueryResponse,
   QuerySchema,
@@ -48,11 +50,12 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
-import { builderSocket } from "../../../websockets"
 import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
+  projectAssignmentResult,
+  mergeProjectAssignmentResults,
+  withoutProjectAssignmentResult,
 } from "../../../utilities/projects"
+import { builderSocket } from "../../../websockets"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
 import { mergePreviewSchema } from "./schema"
@@ -96,6 +99,7 @@ const _import = async (
     : body
   const importer = await createImporter(importerInput)
   const importInfo = importer.getInfo()
+  const projectAssignments: ProjectAssignmentResult[] = []
 
   let datasourceId
   if (!body.datasourceId) {
@@ -132,52 +136,91 @@ const _import = async (
     })
     await saveDatasource(datasourceCtx)
     datasourceId = datasourceCtx.body.datasource._id
-  } else {
-    if (body.restTemplateId) {
-      await sdk.restTemplates.withCustomRestTemplateLock({
-        resource: body.restTemplateId,
-        task: async () => {
-          const templateExists = await sdk.restTemplates.exists(
-            body.restTemplateId!
-          )
-          if (!templateExists) {
-            throw new HTTPError("Custom REST template not found", 404)
-          }
-
-          const datasource = await sdk.datasources.get(body.datasourceId!)
-          if (datasource.source !== SourceName.REST) {
-            throw new HTTPError(
-              "Custom REST templates can only be associated with REST datasources",
-              400
-            )
-          }
-          importer.prepareDatasourceConfig(datasource)
-          datasource.restTemplateId = body.restTemplateId
-          const response = await context
-            .getWorkspaceDB()
-            .put(sdk.tables.populateExternalTableSchemas(datasource))
-          datasource._rev = response.rev
-          await events.datasource.updated(datasource)
-          builderSocket?.emitDatasourceUpdate(ctx, datasource)
-        },
-      })
+    if (datasourceCtx.body.projectAssignment) {
+      projectAssignments.push(datasourceCtx.body.projectAssignment)
     }
-    // use existing datasource
+  } else {
     datasourceId = body.datasourceId
   }
 
-  let importResult
-  try {
-    importResult = await importer.importQueries(
-      datasourceId,
-      body.selectedEndpointId
-    )
-  } catch (error: any) {
-    if (body.selectedEndpointId && error?.message) {
-      ctx.throw(400, error.message)
+  const importResult = await sdk.projects.doWithProjectAssignmentsLockIfEnabled(
+    async () => {
+      const importQueries = async (
+        staticVariables?: Record<string, string>
+      ) => {
+        try {
+          return await importer.importQueries({
+            datasourceId,
+            selectedEndpointId: body.selectedEndpointId,
+            staticVariables,
+          })
+        } catch (error) {
+          if (body.selectedEndpointId && error instanceof Error) {
+            ctx.throw(400, error.message)
+          }
+          throw error
+        }
+      }
+
+      let result
+      if (body.datasourceId && body.restTemplateId) {
+        result = await sdk.restTemplates.withCustomRestTemplateLock({
+          resource: body.restTemplateId,
+          task: async () => {
+            const templateExists = await sdk.restTemplates.exists(
+              body.restTemplateId!
+            )
+            if (!templateExists) {
+              throw new HTTPError("Custom REST template not found", 404)
+            }
+
+            const datasource = await sdk.datasources.get(body.datasourceId!)
+            if (datasource.source !== SourceName.REST) {
+              throw new HTTPError(
+                "Custom REST templates can only be associated with REST datasources",
+                400
+              )
+            }
+            importer.prepareDatasourceConfig(datasource)
+            datasource.restTemplateId = body.restTemplateId
+            const result = await importQueries(
+              datasource.config?.staticVariables
+            )
+            try {
+              const response = await context
+                .getWorkspaceDB()
+                .put(sdk.tables.populateExternalTableSchemas(datasource))
+              datasource._rev = response.rev
+              await events.datasource.updated(datasource)
+              builderSocket?.emitDatasourceUpdate(ctx, datasource)
+              return result
+            } catch (error) {
+              await importer.rollbackQueries(result.queries)
+              throw error
+            }
+          },
+        })
+      } else {
+        result = await importQueries()
+      }
+
+      const datasource = await sdk.datasources.get(datasourceId)
+      const projectAssignment = await projectAssignmentResult(
+        sdk.projects.propagateCreatedResourceDependencies({
+          rootResourceId: datasourceId,
+          projectIds: datasource.projectIds,
+          savedResources: result.queries,
+        })
+      )
+      return {
+        ...result,
+        projectAssignment: mergeProjectAssignmentResults([
+          ...projectAssignments,
+          projectAssignment,
+        ]),
+      }
     }
-    throw error
-  }
+  )
 
   ctx.body = {
     ...importResult,
@@ -215,9 +258,10 @@ export async function importInfo(
   }
 }
 
-export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
+async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()
-  const query: Query = ctx.request.body
+  const query: Query = withoutProjectAssignmentResult(ctx.request.body)
+  delete query.projectIds
 
   // Validate query name
   if (!query?.name.match(ValidQueryNameRegex)) {
@@ -228,8 +272,8 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
 
   let eventFn
   let existingQuery: Query | undefined
+  let existingDatasource = datasource
   if (!query._id && !query._rev) {
-    query.projectIds = await resolveProjectIds(query.projectIds)
     query._id = generateQueryID(query.datasourceId)
     // flag to state whether the default bindings are empty strings (old behaviour) or null
     query.nullDefaultSupport = true
@@ -237,19 +281,31 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   } else {
     // check if flag has previously been set, don't let it change
     // allow it to be explicitly set to false via API incase this is ever needed
-    existingQuery = await db.get<Query>(query._id)
-    if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
+    const persistedQuery = await db.get<Query>(query._id)
+    if (persistedQuery._rev !== query._rev) {
+      ctx.throw(409, "Query revision does not match.")
+    }
+    existingQuery = persistedQuery
+    if (persistedQuery.datasourceId !== datasource._id) {
+      existingDatasource = await sdk.datasources.get(
+        persistedQuery.datasourceId
+      )
+    }
+    if (persistedQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
-    query.projectIds = await resolveUpdatedProjectIds(
-      query.projectIds,
-      existingQuery.projectIds
-    )
     eventFn = () => events.query.updated(datasource, query)
   }
-  if (existingQuery && existingQuery.name !== query.name) {
-    await sdk.ai.agents.migrateQueryToolReferences({
-      existingDatasource: datasource,
+  const datasourceChanged =
+    existingQuery?.datasourceId !== undefined &&
+    existingQuery.datasourceId !== datasource._id
+  let referencingAgents: Agent[] = []
+  if (
+    existingQuery &&
+    (datasourceChanged || existingQuery.name !== query.name)
+  ) {
+    referencingAgents = await sdk.ai.agents.migrateQueryToolReferences({
+      existingDatasource,
       updatedDatasource: datasource,
       existingQuery,
       updatedQuery: query,
@@ -259,7 +315,36 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   await eventFn()
   query._rev = response.rev
 
-  ctx.body = query
+  let projectAssignment
+  if (!existingQuery || existingQuery.datasourceId === datasource._id) {
+    projectAssignment = await projectAssignmentResult(
+      sdk.projects.propagateProjectDependencyChanges({
+        rootResourceId: datasource._id!,
+        currentProjectIds: datasource.projectIds,
+        previousProjectIds: datasource.projectIds,
+        previousResource: existingQuery,
+        savedResource: query,
+      })
+    )
+  } else {
+    projectAssignment = await projectAssignmentResult(
+      sdk.projects.propagateMovedQueryDependencies({
+        existingDatasource,
+        datasource,
+        existingQuery,
+        query,
+        referencingAgents,
+      })
+    )
+  }
+
+  ctx.body = { ...query, projectAssignment }
+}
+
+export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    saveUnlocked(ctx)
+  )
 }
 
 export async function find(ctx: UserCtx<void, FindQueryResponse>) {
@@ -320,7 +405,7 @@ export async function preview(
   // this stops dynamic variables from calling the same query
   const queryId = ctx.request.body.queryId
   // the body contains the makings of a query, which has not been saved yet
-  const query: Query = ctx.request.body
+  const query: Query = withoutProjectAssignmentResult(ctx.request.body)
   // hasn't been saved, new query
   if (!queryId && !query._id) {
     query.nullDefaultSupport = true
