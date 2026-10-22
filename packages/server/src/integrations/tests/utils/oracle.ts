@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process"
 import knex, { type Knex } from "knex"
 import { GenericContainer, Wait, type WaitStrategy } from "testcontainers"
 import { getContainerRuntimeClient } from "testcontainers/build/container-runtime"
@@ -22,35 +23,67 @@ class OracleWaitStrategy extends AbstractWaitStrategy {
       WaitStrategy["waitUntilReady"]
     >
   ) {
-    const deadline = Date.now() + this.startupTimeoutMs
-    // The PDB opens before startup finishes resetting SYSTEM's password.
-    await Wait.forLogMessage("DATABASE IS READY TO USE!")
-      .withStartupTimeout(this.startupTimeoutMs)
-      .waitUntilReady(container, boundPorts, startTime)
+    try {
+      const deadline = Date.now() + this.startupTimeoutMs
+      // The PDB opens before startup finishes resetting SYSTEM's password.
+      await Wait.forLogMessage("DATABASE IS READY TO USE!")
+        .withStartupTimeout(this.startupTimeoutMs)
+        .waitUntilReady(container, boundPorts, startTime)
 
-    const command = `sqlplus -L -s /nolog <<'SQL'
-WHENEVER OSERROR EXIT FAILURE
-WHENEVER SQLERROR EXIT FAILURE
-CONNECT SYSTEM/${password}@//127.0.0.1:1521/FREEPDB1
-SELECT 1 FROM dual;
-EXIT SUCCESS
-SQL`
-    const client = await getContainerRuntimeClient()
-    let output = ""
-    do {
-      const result = await client.container.exec(container, [
-        "/bin/sh",
-        "-c",
-        command,
-      ])
-      if (result.exitCode === 0) {
-        return
+      const command = `sqlplus -L -s /nolog <<'SQL'
+  WHENEVER OSERROR EXIT FAILURE
+  WHENEVER SQLERROR EXIT FAILURE
+  CONNECT SYSTEM/${password}@//127.0.0.1:1521/FREEPDB1
+  SELECT 1 FROM dual;
+  EXIT SUCCESS
+  SQL`
+      const client = await getContainerRuntimeClient()
+      let output = ""
+      do {
+        const result = await client.container.exec(container, [
+          "/bin/sh",
+          "-c",
+          command,
+        ])
+        if (result.exitCode === 0) {
+          return
+        }
+        output = result.output
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      } while (Date.now() < deadline)
+
+      throw new Error(`Oracle readiness check failed: ${output.trim()}`)
+    } catch (error) {
+      const commands = [
+        ["logs", "--tail", "200", container.id],
+        [
+          "exec",
+          container.id,
+          "/bin/sh",
+          "-c",
+          'tail -n 200 "$ORACLE_BASE"/diag/rdbms/*/"$ORACLE_SID"/trace/alert_*.log',
+        ],
+        ["inspect", "--format", "{{json .State}}", container.id],
+      ]
+      for (const command of commands) {
+        process.stderr.write(
+          `\nOracle startup diagnostics (${container.id}, ${command[0]}):\n`
+        )
+        try {
+          const output = execFileSync("docker", command, {
+            encoding: "utf8",
+            timeout: 5000,
+            stdio: ["ignore", "pipe", "pipe"],
+          })
+          process.stderr.write(output)
+        } catch (diagnosticError) {
+          process.stderr.write(
+            `Could not collect Oracle diagnostics: ${diagnosticError}\n`
+          )
+        }
       }
-      output = result.output
-      await new Promise(resolve => setTimeout(resolve, 1000))
-    } while (Date.now() < deadline)
-
-    throw new Error(`Oracle readiness check failed: ${output.trim()}`)
+      throw error
+    }
   }
 }
 
