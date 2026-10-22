@@ -7,6 +7,7 @@ export interface ProjectResponse {
   _rev: string
   name: string
   description?: string
+  readme?: string
   color?: string
   createdAt: string
   updatedAt: string
@@ -20,6 +21,7 @@ export interface FetchProjectsResponse {
 export interface CreateProjectRequest {
   name: string
   description?: string
+  readme?: string
   color?: string
 }
 
@@ -32,6 +34,7 @@ export interface UpdateProjectRequest {
   _rev: string
   name: string
   description?: string
+  readme?: string
   color?: string
 }
 
