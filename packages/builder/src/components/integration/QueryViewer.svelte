@@ -11,11 +11,14 @@
     Divider,
     ActionButton,
     Checkbox,
+    Icon,
   } from "@budibase/bbui"
   import { capitalise } from "@/helpers"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
   import IntegrationQueryEditor from "@/components/integration/index.svelte"
-  import QueryViewerSidePanel from "./QueryViewerSidePanel/index.svelte"
+  import QueryViewerSidePanel, {
+    type QueryResultTab,
+  } from "./QueryViewerSidePanel/index.svelte"
   import { cloneDeep } from "lodash/fp"
   import BindingBuilder from "@/components/integration/QueryViewerBindingBuilder.svelte"
   import CodeMirrorEditor from "@/components/common/CodeMirrorEditor.svelte"
@@ -53,6 +56,8 @@
   let modified = false
   let scrolling = false
   let showSidePanel = false
+  let hasRunQuery = false
+  let activeResultTab: QueryResultTab = "JSON"
   let nameError: string | null = null
   let canSaveQuery = false
   let schemaQueryHash = ""
@@ -86,8 +91,9 @@
     modified = false
     nameError = null
     showSidePanel = false
+    hasRunQuery = false
+    activeResultTab = query._id ? "Schema" : "JSON"
     rows = []
-    nestedSchemaFields = {}
 
     datasource = $datasources.list.find(
       (ds: DatasourceOption) => ds._id === query.datasourceId
@@ -100,6 +106,7 @@
     schemaType = matchingIntegration.query[query.queryVerb].type as QueryField
 
     newQuery = cloneDeep(query)
+    nestedSchemaFields = newQuery.nestedSchemaFields || {}
     // init schema from the query if one already exists
     schema = newQuery.schema
     // Set the location where the query code will be written to an empty string so that it doesn't
@@ -139,12 +146,14 @@
 
   $: schemaIsCurrent = schemaQueryHash === getSchemaQueryHash(newQuery)
 
-  $: canSaveQuery =
-    rows.length > 0 ||
-    (!!newQuery?._id && Object.keys(schema || {}).length > 0 && schemaIsCurrent)
+  $: canSaveQuery = rows.length > 0 || (!!newQuery?._id && schemaIsCurrent)
+
+  $: sidePanelAvailable = !!query._id || hasRunQuery
 
   async function runQuery({ suppressErrors = true }: RunQueryOptions = {}) {
     try {
+      hasRunQuery = true
+      activeResultTab = "JSON"
       showSidePanel = true
       loading = true
       const response = await queries.preview({ ...newQuery, schema })
@@ -227,6 +236,7 @@
   const handleSchemaChange = (newSchema?: QuerySchemaMap) => {
     if (newSchema) {
       schema = newSchema
+      newQuery = { ...newQuery, schema: newSchema }
     }
   }
 
@@ -257,10 +267,15 @@
   }
 </script>
 
-<svelte:window on:keydown={handleKeyDown} />
+<svelte:window onkeydown={handleKeyDown} />
 <QueryViewerSavePromptModal
   checkIsModified={() => checkIsModified(newQuery)}
-  attemptSave={() => runQuery({ suppressErrors: false }).then(saveQuery)}
+  attemptSave={async () => {
+    if (!canSaveQuery) {
+      await runQuery({ suppressErrors: false })
+    }
+    return saveQuery()
+  }}
 />
 <div class="queryViewer">
   <div class="main">
@@ -283,7 +298,10 @@
         >
           Run query
         </ActionButton>
-        <div class="tooltip" title="Run your query to enable saving">
+        <div
+          class="tooltip"
+          title={canSaveQuery ? undefined : "Run your query to enable saving"}
+        >
           <ActionButton
             icon="floppy-disk"
             on:click={async () => {
@@ -310,7 +328,7 @@
       </div>
     </div>
 
-    <div class="body" on:scroll={handleScroll}>
+    <div class="body" onscroll={handleScroll}>
       <div class="bodyInner">
         <div class="configField" data-testid="query-config-fields">
           <Label>Name</Label>
@@ -454,14 +472,37 @@
     </div>
   </div>
 
-  <div class:showSidePanel class="sidePanel">
-    <QueryViewerSidePanel
-      onClose={() => (showSidePanel = false)}
-      onSchemaChange={handleSchemaChange}
-      {rows}
-      {schema}
-    />
-  </div>
+  {#if sidePanelAvailable}
+    {#if !showSidePanel}
+      <div class="collapsedSidePanel">
+        <button
+          class="expandSidePanel"
+          aria-label="Expand query results"
+          title="Expand query results"
+          onclick={() => (showSidePanel = true)}
+        >
+          <span class="queryResultsIcon">
+            <Icon
+              name="SQLQuery"
+              color="var(--spectrum-global-color-static-gray-50)"
+              weight="bold"
+            />
+          </span>
+        </button>
+      </div>
+    {/if}
+    <div class:showSidePanel class="sidePanel">
+      <div class="sidePanelContent" hidden={!showSidePanel}>
+        <QueryViewerSidePanel
+          onClose={() => (showSidePanel = false)}
+          onSchemaChange={handleSchemaChange}
+          bind:activeTab={activeResultTab}
+          {rows}
+          {schema}
+        />
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -482,6 +523,7 @@
   }
 
   .main {
+    min-width: 0;
     flex-grow: 1;
     height: 100%;
     display: flex;
@@ -596,6 +638,40 @@
 
   .sidePanel :global(.panel) {
     height: 100%;
+  }
+
+  .sidePanelContent {
+    height: 100%;
+  }
+
+  .collapsedSidePanel {
+    width: 48px;
+    flex-shrink: 0;
+    border-left: var(--border-light);
+    background: var(--background);
+  }
+
+  .expandSidePanel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .expandSidePanel:hover {
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .queryResultsIcon {
+    background-color: #aa4321;
+    border: 0.5px solid #c96442;
+    padding: 4px;
+    border-radius: 8px;
   }
 
   .showSidePanel {
