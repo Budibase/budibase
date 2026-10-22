@@ -24,9 +24,9 @@ export async function getDatasource(): Promise<Datasource> {
           ORACLE_PASSWORD: password,
         })
         .withWaitStrategy(
-          Wait.forLogMessage("DATABASE IS READY TO USE!").withStartupTimeout(
-            240000
-          )
+          Wait.forSuccessfulCommand(
+            "/opt/oracle/healthcheck.sh FREEPDB1"
+          ).withStartupTimeout(240000)
         )
     )
   }
