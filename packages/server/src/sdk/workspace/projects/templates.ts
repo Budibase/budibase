@@ -1,4 +1,5 @@
 import { env as coreEnv, HTTPError } from "@budibase/backend-core"
+import { PROJECT_TEMPLATE_KEY_PATTERN } from "@budibase/shared-core"
 import type {
   FetchProjectTemplatesResponse,
   ProjectTemplateCompatibility,
@@ -22,7 +23,6 @@ const PROJECT_CATALOGUE_POINTER_PATH = "catalogue/project/v1/current.json"
 const MAX_POINTER_SIZE_BYTES = 4096
 const MAX_CATALOGUE_SIZE_BYTES = 1024 * 1024
 const FETCH_TIMEOUT_MS = 15000
-const PROJECT_TEMPLATE_KEY_PATTERN = /^project\/[a-z0-9]+(?:-[a-z0-9]+)*$/
 const PROJECT_TEMPLATE_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const PROJECT_TEMPLATE_VERSION_PATTERN = /^[0-9]+\.[0-9]+\.[0-9]+$/
 const CATALOGUE_VERSION_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$/
