@@ -585,6 +585,120 @@ describe("/static", () => {
         )
       })
 
+      it.each([
+        {
+          configuredBucket: encodeJSBinding('return "foo"'),
+          configuredFileName: encodeJSBinding('return "test.jpg"'),
+          requestedKey: "test.jpg",
+        },
+        {
+          configuredBucket: encodeJSBinding('return "foo"'),
+          configuredFileName: encodeJSBinding(`
+            const reportLabel = new Date().getTime() + "_" + helpers.pluck($("ReportForm.Fields.Files"), "name")
+            const studyCode = $("StudiesDP.Rows.0.study_code")
+            return "ResearchArchive/" + studyCode + "/Reports/" + reportLabel
+          `),
+          requestedKey:
+            "ResearchArchive/study-42/Reports/1700000000000_notes.pdf",
+        },
+      ])(
+        "should sign JavaScript filename uploads for BASIC users (case %#)",
+        async ({ configuredBucket, configuredFileName, requestedKey }) => {
+          const configuredScreen = await configureUpload({
+            extra: { bucket: configuredBucket, key: configuredFileName },
+          })
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            const res = await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "foo",
+                key: requestedKey,
+                componentId,
+                screenId: configuredScreen._id,
+              })
+              .set(config.defaultHeaders())
+              .expect(200)
+
+            expect(res.body.signedUrl).toStartWith(
+              `https://foo.s3.eu-west-1.amazonaws.com/${requestedKey}?`
+            )
+            expect(res.body.signedUrl).toContain("X-Amz-Signature=")
+            expect(res.body.publicUrl).toBe(
+              `https://foo.s3.eu-west-1.amazonaws.com/${requestedKey}`
+            )
+          })
+        }
+      )
+
+      it.each([
+        {
+          endpoint: undefined,
+          publicUrlPrefix: "https://foo.s3.eu-west-1.amazonaws.com",
+        },
+        {
+          endpoint: "https://s3.example.com",
+          publicUrlPrefix: "https://s3.example.com/foo",
+        },
+      ])(
+        "should encode JavaScript upload keys in public URLs (case %#)",
+        async ({ endpoint, publicUrlPrefix }) => {
+          await config.api.datasource.update({
+            ...datasource,
+            config: { ...datasource.config, endpoint },
+          })
+          const requestedKey =
+            "Research Archive/study-42/Reports/report#1? 50% café.pdf"
+          const configuredScreen = await configureUpload({
+            extra: {
+              key: encodeJSBinding(`return ${JSON.stringify(requestedKey)}`),
+            },
+          })
+          const encodedKey =
+            "Research%20Archive/study-42/Reports/report%231%3F%2050%25%20caf%C3%A9.pdf"
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            const res = await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "foo",
+                key: requestedKey,
+                componentId,
+                screenId: configuredScreen._id,
+              })
+              .set(config.defaultHeaders())
+              .expect(200)
+
+            expect(new URL(res.body.signedUrl).pathname).toBe(`/${encodedKey}`)
+            expect(res.body.publicUrl).toBe(`${publicUrlPrefix}/${encodedKey}`)
+          })
+        }
+      )
+
+      it.each([
+        { bucket: "other-bucket" },
+        { componentId: "other-component" },
+        { screenId: "screen_missing" },
+      ])(
+        "should preserve destination authorization for JavaScript uploads (case %#)",
+        async overrides => {
+          const configuredScreen = await configureUpload({
+            extra: { key: encodeJSBinding('return "test.jpg"') },
+          })
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            await request
+              .post(`/api/attachments/${datasource._id}/url`)
+              .send({
+                bucket: "foo",
+                key: "test.jpg",
+                componentId,
+                screenId: configuredScreen._id,
+                ...overrides,
+              })
+              .set(config.defaultHeaders())
+              .expect(403)
+          })
+        }
+      )
+
       it("should handle an invalid datasource ID", async () => {
         const res = await request
           .post(`/api/attachments/foo/url`)

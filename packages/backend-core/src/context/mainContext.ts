@@ -44,6 +44,17 @@ export function getAuditLogDBName(tenantId?: string) {
   }
 }
 
+export function getRequestsDBName(tenantId?: string) {
+  if (!tenantId) {
+    tenantId = getTenantId()
+  }
+  if (tenantId === DEFAULT_TENANT_ID) {
+    return StaticDatabases.REQUESTS.name
+  } else {
+    return `${tenantId}${SEPARATOR}${StaticDatabases.REQUESTS.name}`
+  }
+}
+
 export function getScimDBName(tenantId?: string) {
   if (!tenantId) {
     tenantId = getTenantId()
@@ -442,6 +453,13 @@ export function getAuditLogsDB(): Database {
     throw new Error("No tenant ID found - cannot open audit log DB")
   }
   return getDB(getAuditLogDBName())
+}
+
+export function getRequestsDB(): Database {
+  if (!getTenantId()) {
+    throw new Error("No tenant ID found - cannot open requests DB")
+  }
+  return getDB(getRequestsDBName())
 }
 
 /**

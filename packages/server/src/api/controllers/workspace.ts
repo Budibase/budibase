@@ -1167,6 +1167,7 @@ async function destroyWorkspace(ctx: UserCtx) {
         // standard app deletion flow
         const result = await db.destroy()
         try {
+          await sdk.ai.agentRequests.deleteWorkspaceRequests(prodWorkspaceId)
           await quotas.removeApp()
           await events.app.deleted(app)
         } finally {
