@@ -69,7 +69,7 @@ export const buildProjectEndpoints = (
     })
   },
   update: async project => {
-    const { _id, _rev, name, description, color } = project
+    const { _id, _rev, name, description, readme, color } = project
     return await API.put({
       url: `/api/projects/${_id}`,
       body: {
@@ -77,6 +77,7 @@ export const buildProjectEndpoints = (
         _rev,
         name,
         description,
+        readme,
         color,
       },
     })

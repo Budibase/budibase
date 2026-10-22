@@ -12,6 +12,8 @@
     onImportProject?: () => void
     onExportProject?: () => void
     onSetupProject?: () => void
+    showReadProjectNotes?: boolean
+    onReadProjectNotes?: () => void
     exportProjectDisabled?: boolean
   }
 
@@ -25,6 +27,8 @@
     onImportProject = () => {},
     onExportProject = () => {},
     onSetupProject = () => {},
+    showReadProjectNotes = false,
+    onReadProjectNotes = () => {},
     exportProjectDisabled = false,
   }: Props = $props()
 </script>
@@ -144,10 +148,23 @@
       </MenuItem>
     </ActionMenu>
   </div>
+  {#if selectedProjectId && showReadProjectNotes}
+    <button
+      type="button"
+      class="read-project-notes"
+      onclick={onReadProjectNotes}
+    >
+      <Icon name="book-open" hidden size="S" />
+      Read project notes
+    </button>
+  {/if}
 </nav>
 
 <style>
   .project-tabs {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--spacing-m);
     position: relative;
     z-index: 1;
     width: 100%;
@@ -160,9 +177,50 @@
     align-items: flex-end;
     gap: 4px;
     min-width: 0;
+    flex: 1;
     overflow-x: auto;
     padding: 4px 4px 0 0;
     scrollbar-width: none;
+  }
+
+  .read-project-notes {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    color: var(--spectrum-global-color-gray-800);
+    font: inherit;
+    font-size: var(--font-size-s);
+    cursor: pointer;
+  }
+
+  .read-project-notes:hover {
+    color: var(--spectrum-global-color-gray-900);
+    text-decoration: underline;
+  }
+
+  .read-project-notes:focus-visible {
+    outline: 2px solid var(--spectrum-global-color-blue-400);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 720px) {
+    .project-tabs {
+      flex-wrap: wrap;
+      gap: var(--spacing-xs);
+    }
+
+    .project-tabs__scroll {
+      flex-basis: 100%;
+      order: 1;
+    }
+
+    .read-project-notes {
+      margin-left: auto;
+    }
   }
 
   .project-tabs__scroll::-webkit-scrollbar {
