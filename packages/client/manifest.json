@@ -6024,20 +6024,17 @@
         "type": "dataSource/s3",
         "label": "S3 datasource",
         "key": "datasourceId",
-        "supportsConditions": false,
-        "info": "This component can't be used with S3 datasources that use custom endpoints"
+        "supportsConditions": false
       },
       {
         "type": "text",
         "label": "Bucket",
         "key": "bucket",
-        "supportsConditions": false,
-        "info": "Literal names and fixed text in simple bindings (for example, uploads-{{ region }}) restrict the bucket name. Helpers, conditionals and JavaScript allow users to select any bucket permitted by the datasource's S3 credentials. Prefer simple bindings to keep those restrictions."
+        "supportsConditions": false
       },
       {
         "type": "text",
         "label": "File name",
-        "info": "Use fixed folders or Current User ID bindings for folders, and simple bindings for the file name. Current User bindings support only _id, globalId, userId, email, firstName, lastName, fullName and roleId; custom user fields are not supported. Helper expressions and JavaScript bindings are not supported.",
         "key": "key",
         "supportsConditions": false,
         "nested": true

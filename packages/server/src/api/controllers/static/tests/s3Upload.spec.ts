@@ -1,3 +1,4 @@
+import { encodeJSBinding } from "@budibase/string-templates"
 import { matchesConfiguredBucket, matchesConfiguredKey } from "../s3Upload"
 
 describe("S3 upload key authorization", () => {
@@ -60,6 +61,56 @@ describe("S3 upload key authorization", () => {
     { template: "{{ fileName }}", key: "a".repeat(1024) },
   ])("allows an authorized filename (case %#)", ({ template, key }) => {
     expect(matchesConfiguredKey({ template, key, user })).toBe(true)
+  })
+
+  it.each([
+    {
+      configuredFileName: encodeJSBinding('return "test.jpg"'),
+      requestedKey: "test.jpg",
+    },
+    {
+      configuredFileName: encodeJSBinding(`
+        const reportLabel = new Date().getTime() + "_" + helpers.pluck($("ReportForm.Fields.Files"), "name")
+        const studyCode = $("StudiesDP.Rows.0.study_code")
+        return "ResearchArchive/" + studyCode + "/Reports/" + reportLabel
+      `),
+      requestedKey: "ResearchArchive/study-42/Reports/1700000000000_notes.pdf",
+    },
+    {
+      configuredFileName: encodeJSBinding('return "test.jpg"'),
+      requestedKey: "another-folder/report.pdf",
+    },
+    {
+      configuredFileName: `uploads/${encodeJSBinding('return "report.pdf"')}`,
+      requestedKey: "uploads/report.pdf",
+    },
+  ])(
+    "allows browser-selected keys for JavaScript filename bindings (case %#)",
+    ({ configuredFileName, requestedKey }) => {
+      expect(
+        matchesConfiguredKey({
+          template: configuredFileName,
+          key: requestedKey,
+          user,
+        })
+      ).toBe(true)
+    }
+  )
+
+  it.each([
+    "",
+    "uploads/",
+    "uploads/../report.pdf",
+    "uploads/./report.pdf",
+    "a".repeat(1025),
+  ])("rejects invalid JavaScript upload keys (case %#)", requestedKey => {
+    expect(
+      matchesConfiguredKey({
+        template: encodeJSBinding('return "report.pdf"'),
+        key: requestedKey,
+        user,
+      })
+    ).toBe(false)
   })
 
   it.each([
