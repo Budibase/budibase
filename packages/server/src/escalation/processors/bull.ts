@@ -206,6 +206,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       resolvedAt: now,
       updatedAt: now,
     })
+    await sdk.ai.agentRequests.refreshRequestForEscalation(escalationId)
   }
 
   async list(appId: string): Promise<EscalationSummary[]> {
