@@ -116,4 +116,116 @@ describe("view row route scope", () => {
     const row = await config.api.row.get(table._id!, hiddenRow._id!)
     expect(row.name).toEqual("other")
   })
+
+  describe("current-user-filtered views", () => {
+    let userViewId: string
+
+    beforeAll(async () => {
+      const view = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: "Current user's rows",
+        queryUI: {
+          groups: [
+            {
+              filters: [
+                {
+                  operator: BasicOperator.EQUAL,
+                  field: "name",
+                  value: "{{ [user].[globalId] }}",
+                },
+              ],
+            },
+          ],
+        },
+        schema: {
+          name: { visible: true },
+          description: { visible: true },
+        },
+      })
+      userViewId = view.id
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        resourceId: userViewId,
+        level: PermissionLevel.READ,
+      })
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        resourceId: userViewId,
+        level: PermissionLevel.WRITE,
+      })
+      await config.publish()
+    })
+
+    it.each(["patch", "delete", "export"])(
+      "allows a reader to %s their own rows and rejects other rows",
+      async operation => {
+        await config.withProdApp(async () => {
+          const foreignRow = await config.api.row.save(table._id!, {
+            name: "other@example.com",
+            description: "secret",
+          })
+          await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+            const ownRow = await config.api.row.save(userViewId, {
+              name: config.getUser()._id,
+              description: "owned",
+            })
+
+            if (operation === "patch") {
+              await config.api.row.patch(
+                userViewId,
+                {
+                  ...foreignRow,
+                  _id: foreignRow._id!,
+                  _rev: foreignRow._rev!,
+                  tableId: table._id!,
+                  description: "unauthorized",
+                },
+                { status: 404 }
+              )
+              const updated = await config.api.row.patch(userViewId, {
+                ...ownRow,
+                _id: ownRow._id!,
+                _rev: ownRow._rev!,
+                tableId: table._id!,
+                description: "updated",
+              })
+              expect(updated.description).toEqual("updated")
+            } else if (operation === "delete") {
+              await config.api.row.bulkDelete(
+                userViewId,
+                { rows: [ownRow._id!, foreignRow._id!] },
+                { status: 404 }
+              )
+              const deleted = await config.api.row.bulkDelete(userViewId, {
+                rows: [ownRow._id!],
+              })
+              expect(deleted.map(row => row._id)).toEqual([ownRow._id])
+            } else {
+              await config.api.row.exportRows(
+                userViewId,
+                { rows: [ownRow._id!, foreignRow._id!] },
+                undefined,
+                { status: 404 }
+              )
+              const exported = await config.api.row.exportRows(userViewId, {
+                rows: [ownRow._id!],
+              })
+              expect(JSON.parse(exported)).toEqual([
+                expect.objectContaining({
+                  name: config.getUser()._id,
+                  description: "owned",
+                }),
+              ])
+            }
+          })
+
+          const unchanged = await config.api.row.get(
+            table._id!,
+            foreignRow._id!
+          )
+          expect(unchanged.description).toEqual("secret")
+        })
+      }
+    )
+  })
 })

@@ -65,12 +65,15 @@ export const viewRowScopeMiddleware = async (ctx: UserCtx, next: Next) => {
 
   const uniqueIds = [...new Set(ids.filter(Boolean))]
   if (uniqueIds.length > 0) {
-    const { rows } = await sdk.rows.search({
-      tableId,
-      viewId,
-      query: { oneOf: { _id: uniqueIds } },
-      limit: uniqueIds.length,
-    })
+    const { rows } = await sdk.rows.search(
+      {
+        tableId,
+        viewId,
+        query: { oneOf: { _id: uniqueIds } },
+        limit: uniqueIds.length,
+      },
+      { user: sdk.users.getUserContextBindings(ctx.user) }
+    )
     if (rows.length !== uniqueIds.length) {
       ctx.throw(404, "Row not found")
     }
