@@ -1,14 +1,44 @@
-import { Datasource, SourceName } from "@budibase/types"
-import { GenericContainer, Wait } from "testcontainers"
+import type { Container } from "dockerode"
+import knex, { type Knex } from "knex"
+import { GenericContainer, Wait, type BoundPorts } from "testcontainers"
+import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
+
+import { type Datasource, SourceName } from "@budibase/types"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
-import knex, { Knex } from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 
+// password needs to conform to Oracle standards
+const password = "password"
+
+class OracleWaitStrategy extends AbstractWaitStrategy {
+  async waitUntilReady(
+    container: Container,
+    boundPorts: BoundPorts,
+    startTime?: Date
+  ) {
+    const deadline = Date.now() + this.startupTimeoutMs
+    // The PDB opens before startup finishes resetting SYSTEM's password.
+    await Wait.forLogMessage("DATABASE IS READY TO USE!")
+      .withStartupTimeout(this.startupTimeoutMs)
+      .waitUntilReady(container, boundPorts, startTime)
+
+    await Wait.forSuccessfulCommand(
+      `sqlplus -L -s /nolog <<'SQL'
+WHENEVER OSERROR EXIT FAILURE
+WHENEVER SQLERROR EXIT FAILURE
+CONNECT SYSTEM/${password}@//127.0.0.1:1521/FREEPDB1
+SELECT 1 FROM dual;
+EXIT SUCCESS
+SQL`
+    )
+      .withStartupTimeout(Math.max(1, deadline - Date.now()))
+      .waitUntilReady(container)
+  }
+}
+
 export async function getDatasource(): Promise<Datasource> {
-  // password needs to conform to Oracle standards
-  const password = "password"
   if (!ports) {
     // couldn't build 19.3.0 for X64
     let image = "budibase/oracle-database:23.2-slim-faststart"
@@ -23,11 +53,7 @@ export async function getDatasource(): Promise<Datasource> {
         .withEnvironment({
           ORACLE_PASSWORD: password,
         })
-        .withWaitStrategy(
-          Wait.forSuccessfulCommand(
-            "/opt/oracle/healthcheck.sh FREEPDB1"
-          ).withStartupTimeout(240000)
-        )
+        .withWaitStrategy(new OracleWaitStrategy().withStartupTimeout(240000))
     )
   }
 
