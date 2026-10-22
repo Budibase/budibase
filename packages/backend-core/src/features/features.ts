@@ -259,6 +259,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.FRONT_COMPANION]: false,
   [FeatureFlag.PROJECTS]: false,
   [FeatureFlag.FEATURE_FLAG_OVERRIDES]: env.isDev(),
+  [FeatureFlag.TEMPLATES]: false,
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
   [FeatureFlag.AI_AGENT_ACTIVITY]: false,
   [FeatureFlag.PLATFORM_ACTIONS]: false,
