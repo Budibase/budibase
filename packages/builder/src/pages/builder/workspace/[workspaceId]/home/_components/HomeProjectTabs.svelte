@@ -6,6 +6,7 @@
     projects?: ProjectResponse[]
     selectedProjectId?: string
     onSelect?: (projectId: string) => void
+    templatesEnabled?: boolean
     onCreateProject?: () => void
     onEditProject?: () => void
     onDeleteProject?: () => void
@@ -13,11 +14,13 @@
     onExportProject?: () => void
     onSetupProject?: () => void
     exportProjectDisabled?: boolean
+    onUseTemplate?: () => void
   }
 
   let {
     projects = [],
     selectedProjectId = "",
+    templatesEnabled = false,
     onSelect = () => {},
     onCreateProject = () => {},
     onEditProject = () => {},
@@ -26,7 +29,11 @@
     onExportProject = () => {},
     onSetupProject = () => {},
     exportProjectDisabled = false,
+    onUseTemplate = () => {},
   }: Props = $props()
+
+  let createActionButton: HTMLButtonElement
+  export const focusCreateAction = () => createActionButton.focus()
 </script>
 
 <nav class="project-tabs" aria-label="Projects">
@@ -132,6 +139,7 @@
         type="button"
         class="project-tab project-tab--icon"
         aria-label="Project create and import actions"
+        bind:this={createActionButton}
       >
         <Icon name="plus" size="S" hoverable color="inherit" />
       </button>
@@ -142,6 +150,11 @@
       <MenuItem icon="upload-simple" on:click={onImportProject}>
         Import project
       </MenuItem>
+      {#if templatesEnabled}
+        <MenuItem icon="grid-four" on:click={onUseTemplate}>
+          Use template
+        </MenuItem>
+      {/if}
     </ActionMenu>
   </div>
 </nav>

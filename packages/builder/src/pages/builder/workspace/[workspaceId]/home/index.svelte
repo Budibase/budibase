@@ -19,6 +19,7 @@
   import HomeTable from "./_components/HomeTable.svelte"
   import ImportProjectModal from "./_components/ImportProjectModal.svelte"
   import ImportProjectResultModal from "./_components/ImportProjectResultModal.svelte"
+  import ProjectTemplateFlow from "./_components/ProjectTemplateFlow.svelte"
   import {
     workspaceStore,
     automationStore,
@@ -60,6 +61,7 @@
     type ProjectFormPayload,
     type ProjectResponse,
     type ImportProjectResponse,
+    type ImportProjectTemplateResponse,
     type ProjectImportRequirement,
     type ExportProjectRequest,
     PublishResourceState,
@@ -126,6 +128,8 @@
   let assignProjectModal: ModalAPI
   let exportProjectModal: ModalAPI
   let importProjectModal: ModalAPI
+  let projectTemplateFlow: ProjectTemplateFlow
+  let homeProjectTabs: HomeProjectTabs
   let importProjectResultModal: ModalAPI
   let importResult: ImportProjectResponse | undefined
   let isSetupReview = false
@@ -152,6 +156,7 @@
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: templatesEnabled = projectsEnabled && $featureFlags[FeatureFlag.TEMPLATES]
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: selectedProjectResource = projectAssignmentRow
     ? {
@@ -578,6 +583,32 @@
     }
   }
 
+  const completeProjectImport = async (response: ImportProjectResponse) => {
+    const showImportResult =
+      response.requirements.length > 0 ||
+      response.unsupportedContent.length > 0 ||
+      !!response.dataImport
+    if (!showImportResult) {
+      notifications.success(`Imported project '${response.project.name}'`)
+    }
+    selectedProjectId = response.project._id
+    typeFilter = "all"
+    searchTerm = ""
+    importResult = response
+    isSetupReview = false
+    try {
+      await workspaceStore.refresh()
+    } catch (error) {
+      console.error(error)
+      notifications.warning(
+        "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
+      )
+    }
+    if (showImportResult) {
+      importProjectResultModal?.show()
+    }
+  }
+
   const handleImportProject = async ({
     file,
     encryptPassword,
@@ -590,34 +621,20 @@
         encryptPassword,
       })
       importProjectModal?.hide()
-      const showImportResult =
-        response.requirements.length > 0 ||
-        response.unsupportedContent.length > 0 ||
-        !!response.dataImport
-      if (!showImportResult) {
-        notifications.success(`Imported project '${response.project.name}'`)
-      }
-      selectedProjectId = response.project._id
-      typeFilter = "all"
-      searchTerm = ""
-      importResult = response
-      isSetupReview = false
-      try {
-        await workspaceStore.refresh()
-      } catch (error) {
-        console.error(error)
-        notifications.warning(
-          "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
-        )
-      }
-      if (showImportResult) {
-        importProjectResultModal?.show()
-      }
+      await completeProjectImport(response)
     } catch (error) {
       console.error(error)
       notifications.error(getErrorMessage(error) || "Unable to import project")
       return keepOpen
     }
+  }
+
+  const handleProjectTemplateImported = async ({
+    response,
+  }: {
+    response: ImportProjectTemplateResponse
+  }) => {
+    await completeProjectImport(response)
   }
 
   const getContextMenuItemsForRow = (row: HomeRow) => {
@@ -1107,8 +1124,10 @@
     {#if projectsEnabled}
       <div class="project-resources">
         <HomeProjectTabs
+          bind:this={homeProjectTabs}
           projects={$projectsStore}
           {selectedProjectId}
+          {templatesEnabled}
           onSelect={projectId => (selectedProjectId = projectId)}
           onCreateProject={createProject}
           onEditProject={editProject}
@@ -1117,6 +1136,7 @@
           onExportProject={exportProject}
           onSetupProject={openProjectSetup}
           exportProjectDisabled={selectedProjectExportDisabled}
+          onUseTemplate={() => projectTemplateFlow?.showGallery()}
         />
 
         <HomeResourcePanel>
@@ -1283,6 +1303,14 @@
       <ImportProjectModal onConfirm={handleImportProject} />
     {/key}
   </Modal>
+
+  <ProjectTemplateFlow
+    bind:this={projectTemplateFlow}
+    currentWorkspaceId={$workspaceStore.appId}
+    currentWorkspaceName={$workspaceStore.name}
+    onImported={handleProjectTemplateImported}
+    onGalleryClose={() => homeProjectTabs?.focusCreateAction()}
+  />
 
   <Modal bind:this={importProjectResultModal}>
     {#if importResult}
