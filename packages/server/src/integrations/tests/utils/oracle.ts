@@ -8,6 +8,10 @@ import { startContainer } from "."
 
 let ports: Promise<testContainerUtils.Port[]>
 
+const startupTimeoutMs = 90000
+const startupAttempts = 3
+export const testTimeoutMs = startupTimeoutMs * startupAttempts + 90000
+
 // password needs to conform to Oracle standards
 const password = "password"
 
@@ -52,7 +56,10 @@ export async function getDatasource(): Promise<Datasource> {
         .withEnvironment({
           ORACLE_PASSWORD: password,
         })
-        .withWaitStrategy(new OracleWaitStrategy().withStartupTimeout(240000))
+        .withWaitStrategy(
+          new OracleWaitStrategy().withStartupTimeout(startupTimeoutMs)
+        ),
+      { maxAttempts: startupAttempts }
     )
   }
 
