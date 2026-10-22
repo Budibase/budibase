@@ -10,6 +10,7 @@ import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import {
   basicDatasource,
   basicQuery,
+  basicRole,
 } from "../../../../tests/utilities/structures"
 
 const { PUBLIC, BASIC } = roles.BUILTIN_ROLE_IDS
@@ -73,6 +74,64 @@ describe("MongoDB public query permissions", () => {
     const result = await config.api.permission.get(query._id!)
     expect(result.permissions.write.role).toBe(BASIC)
   })
+
+  it.each([BASIC, PUBLIC])(
+    "preserves custom role access when the role inherits from %s",
+    async inherits => {
+      const role = await config.api.roles.save({ ...basicRole(), inherits })
+      const roleId = roles.getExternalRoleID(role._id!, role.version)
+      for (const level of [PermissionLevel.READ, PermissionLevel.WRITE]) {
+        await config.api.permission.add({
+          roleId,
+          resourceId: query._id!,
+          level,
+        })
+      }
+
+      await config.api.query.save({
+        ...query,
+        name: "Custom role query edited",
+      })
+
+      await config.api.permission.add(
+        {
+          roleId: PUBLIC,
+          resourceId: query._id!,
+          level: PermissionLevel.WRITE,
+        },
+        { status: 400 }
+      )
+
+      const result = await config.api.permission.get(query._id!)
+      expect(result.permissions).toMatchObject({
+        read: { role: roleId },
+        write: { role: roleId },
+      })
+      await config.doInContext(undefined, async () => {
+        for (const permissionLevel of [
+          PermissionLevel.READ,
+          PermissionLevel.WRITE,
+        ]) {
+          expect(
+            await sdk.permissions.canRoleAccessResource({
+              roleId,
+              resourceId: query._id!,
+              permissionType: PermissionType.QUERY,
+              permissionLevel,
+            })
+          ).toBe(true)
+          expect(
+            await sdk.permissions.canRoleAccessResource({
+              roleId: PUBLIC,
+              resourceId: query._id!,
+              permissionType: PermissionType.QUERY,
+              permissionLevel,
+            })
+          ).toBe(false)
+        }
+      })
+    }
+  )
 
   it("preserves public access when an existing query is edited", async () => {
     await seedExistingPublicQuery()
