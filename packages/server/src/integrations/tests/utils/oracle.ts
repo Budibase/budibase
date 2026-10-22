@@ -1,5 +1,6 @@
 import knex, { type Knex } from "knex"
 import { GenericContainer, Wait, type WaitStrategy } from "testcontainers"
+import { getContainerRuntimeClient } from "testcontainers/build/container-runtime"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
 
 import { type Datasource, SourceName } from "@budibase/types"
@@ -27,17 +28,29 @@ class OracleWaitStrategy extends AbstractWaitStrategy {
       .withStartupTimeout(this.startupTimeoutMs)
       .waitUntilReady(container, boundPorts, startTime)
 
-    await Wait.forSuccessfulCommand(
-      `sqlplus -L -s /nolog <<'SQL'
+    const command = `sqlplus -L -s /nolog <<'SQL'
 WHENEVER OSERROR EXIT FAILURE
 WHENEVER SQLERROR EXIT FAILURE
 CONNECT SYSTEM/${password}@//127.0.0.1:1521/FREEPDB1
 SELECT 1 FROM dual;
 EXIT SUCCESS
 SQL`
-    )
-      .withStartupTimeout(Math.max(1, deadline - Date.now()))
-      .waitUntilReady(container)
+    const client = await getContainerRuntimeClient()
+    let output = ""
+    do {
+      const result = await client.container.exec(container, [
+        "/bin/sh",
+        "-c",
+        command,
+      ])
+      if (result.exitCode === 0) {
+        return
+      }
+      output = result.output
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    } while (Date.now() < deadline)
+
+    throw new Error(`Oracle readiness check failed: ${output.trim()}`)
   }
 }
 
