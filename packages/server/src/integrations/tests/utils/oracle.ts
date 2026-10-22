@@ -1,6 +1,5 @@
-import type { Container } from "dockerode"
 import knex, { type Knex } from "knex"
-import { GenericContainer, Wait, type BoundPorts } from "testcontainers"
+import { GenericContainer, Wait, type WaitStrategy } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
 
 import { type Datasource, SourceName } from "@budibase/types"
@@ -14,9 +13,9 @@ const password = "password"
 
 class OracleWaitStrategy extends AbstractWaitStrategy {
   async waitUntilReady(
-    container: Container,
-    boundPorts: BoundPorts,
-    startTime?: Date
+    ...[container, boundPorts, startTime]: Parameters<
+      WaitStrategy["waitUntilReady"]
+    >
   ) {
     const deadline = Date.now() + this.startupTimeoutMs
     // The PDB opens before startup finishes resetting SYSTEM's password.
