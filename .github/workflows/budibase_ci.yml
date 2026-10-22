@@ -456,6 +456,14 @@ jobs:
         with:
           path: ./packages/server/images-sha.env
 
+      - name: Free disk space for Oracle
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true' && matrix.datasource == 'oracle'
+        run: |
+          df -h /
+          # Oracle's data files need room to grow beyond the downloaded image.
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet
+          df -h /
+
       - name: Pull testcontainers images
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
         # These values reach the shell through the environment rather than
