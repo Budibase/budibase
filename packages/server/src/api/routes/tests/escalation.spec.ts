@@ -1,8 +1,9 @@
-import { constants, context } from "@budibase/backend-core"
+import { constants, context, features } from "@budibase/backend-core"
 import {
   Document,
   DocumentType,
   EscalationAction,
+  FeatureFlag,
   EscalationContextDoc,
   EscalationNotificationDoc,
   EscalationSource,
@@ -198,26 +199,58 @@ describe("/api/escalations", () => {
   describe("respond", () => {
     // A cross-site form post carries the session cookie but no CSRF header;
     // JSON posts are excluded from the check because CORS preflight covers them
+    const withActivityEnabled = (task: () => Promise<unknown>) =>
+      features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        task
+      )
+
     it("rejects a cross-site form post that lacks the CSRF token", async () => {
-      await config.api.escalation.respond(
-        "esc_unknown",
-        { actionId: EscalationAction.APPROVE },
-        {
-          headers: {
-            "content-type": "application/x-www-form-urlencoded",
-            [constants.Header.CSRF_TOKEN]: "",
-          },
-          expectations: { status: 403 },
-        }
+      await withActivityEnabled(() =>
+        config.api.escalation.respond(
+          "esc_unknown",
+          { actionId: EscalationAction.APPROVE },
+          {
+            headers: {
+              "content-type": "application/x-www-form-urlencoded",
+              [constants.Header.CSRF_TOKEN]: "",
+            },
+            expectations: { status: 403 },
+          }
+        )
       )
     })
 
     it("reaches the controller with a valid CSRF token", async () => {
-      await config.api.escalation.respond(
-        "esc_unknown",
-        { actionId: EscalationAction.APPROVE },
-        { expectations: { status: 404 } }
+      await withActivityEnabled(() =>
+        config.api.escalation.respond(
+          "esc_unknown",
+          { actionId: EscalationAction.APPROVE },
+          { expectations: { status: 404 } }
+        )
       )
+    })
+
+    it("returns 404 when the feature flag is disabled", async () => {
+      const escalationId = "esc-respond-flag-off"
+      await seedPending({ escalationId })
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: false },
+        async () => {
+          await config.api.escalation.respond(
+            escalationId,
+            { actionId: EscalationAction.APPROVE },
+            { expectations: { status: 404 } }
+          )
+        }
+      )
+
+      const doc = await getDoc(escalationId)
+      expect(doc.resolution).toEqual("pending")
+      expect(doc.approvals).toBeUndefined()
     })
   })
 })
