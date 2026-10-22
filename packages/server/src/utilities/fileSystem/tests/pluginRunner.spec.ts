@@ -3,7 +3,7 @@ import os from "os"
 import path from "path"
 import childProcess from "child_process"
 import { buildSync } from "esbuild"
-import type { ContextEmitter, DatasourcePlus } from "@budibase/types"
+import type { ContextEmitter, SqlDatasource } from "@budibase/types"
 
 import { loadAutomationPlugin, loadDatasourcePlugin } from "../../pluginRunner"
 import environment from "../../../environment"
@@ -297,7 +297,7 @@ module.exports = { integration: Integration }
           }
           async read() { return { index: this.index } }
         }
-      `)) as DatasourcePlus
+      `)) as SqlDatasource
 
       const bindings = await Promise.all([
         integration.getBindingIdentifier(),
@@ -407,7 +407,7 @@ module.exports = { integration: Integration }
         module.exports = class {
           async getBindingIdentifier() { return "$1" }
         }
-      `)) as DatasourcePlus
+      `)) as SqlDatasource
 
       await integration.getBindingIdentifier()
       await new Promise(resolve => setTimeout(resolve, 650))

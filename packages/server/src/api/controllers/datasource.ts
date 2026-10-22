@@ -26,6 +26,7 @@ import {
   FindDatasourcesResponse,
   RelationshipFieldMetadata,
   RestAuthType,
+  RestTemplateId,
   RowValue,
   SourceName,
   Table,
@@ -41,10 +42,7 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
-import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../utilities/projects"
+import { projectAssignmentResult } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
@@ -217,10 +215,7 @@ async function invalidateVariables(
 const isDatasourceEntity = (entity: unknown): entity is Table =>
   typeof entity === "object" && entity !== null && !Array.isArray(entity)
 
-const resolveDatasourceEntityProjectIds = async (
-  datasource: Datasource,
-  existingDatasource?: Datasource
-) => {
+const validateDatasourceEntities = (datasource: Datasource) => {
   if (!datasource.entities) {
     return
   }
@@ -229,17 +224,19 @@ const resolveDatasourceEntityProjectIds = async (
     if (!isDatasourceEntity(entity)) {
       throw new HTTPError(`Datasource entity '${name}' must be an object.`, 400)
     }
-
-    entity.projectIds = existingDatasource
-      ? await resolveUpdatedProjectIds(
-          entity.projectIds,
-          existingDatasource.entities?.[name]?.projectIds
-        )
-      : await resolveProjectIds(entity.projectIds)
   }
 }
 
-export async function update(
+const validateCustomRestTemplate = async (restTemplateId?: RestTemplateId) => {
+  if (
+    isCustomRestTemplateId(restTemplateId) &&
+    !(await sdk.restTemplates.exists(restTemplateId))
+  ) {
+    throw new HTTPError("Custom REST template not found", 404)
+  }
+}
+
+async function updateUnlocked(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
   const db = context.getWorkspaceDB()
@@ -262,11 +259,11 @@ export async function update(
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
-  datasource.projectIds = await resolveUpdatedProjectIds(
-    ctx.request.body.projectIds,
-    baseDatasource.projectIds
-  )
-  await resolveDatasourceEntityProjectIds(datasource, baseDatasource)
+  datasource.projectIds = await sdk.projects.resolveUpdatedProjectIds({
+    projectIds: ctx.request.body.projectIds,
+    currentProjectIds: baseDatasource.projectIds,
+  })
+  validateDatasourceEntities(datasource)
 
   // this block is specific to GSheets, if no auth set, set it back
   const auth = baseDatasource.config?.auth
@@ -299,13 +296,7 @@ export async function update(
   }
   await clearOAuth2TokenCaches(baseDatasource)
   const persistDatasource = async () => {
-    const restTemplateId = datasource.restTemplateId
-    if (isCustomRestTemplateId(restTemplateId)) {
-      const templateExists = await sdk.restTemplates.exists(restTemplateId)
-      if (!templateExists) {
-        throw new HTTPError("Custom REST template not found", 404)
-      }
-    }
+    await validateCustomRestTemplate(datasource.restTemplateId)
 
     const response = await db.put(
       sdk.tables.populateExternalTableSchemas(datasource)
@@ -322,8 +313,19 @@ export async function update(
     : await persistDatasource()
   datasource._rev = response.rev
 
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectDependencyChanges({
+      rootResourceId: datasource._id!,
+      currentProjectIds: datasource.projectIds,
+      previousProjectIds: baseDatasource.projectIds,
+      previousResource: baseDatasource,
+      savedResource: datasource,
+    })
+  )
+
   ctx.message = "Datasource saved successfully."
   ctx.body = {
+    projectAssignment,
     datasource: await sdk.datasources.removeSecretSingle(
       sdk.datasources.addDatasourceFlags(datasource)
     ),
@@ -341,48 +343,62 @@ export async function update(
   }
 }
 
+export async function update(
+  ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    updateUnlocked(ctx)
+  )
+}
+
 export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
-  const {
-    datasource: datasourceData,
-    fetchSchema,
-    tablesFilter,
-  } = ctx.request.body
-  datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
-  await resolveDatasourceEntityProjectIds(datasourceData)
-  const saveDatasource = async () => {
-    const restTemplateId = datasourceData.restTemplateId
-    if (isCustomRestTemplateId(restTemplateId)) {
-      const templateExists = await sdk.restTemplates.exists(restTemplateId)
-      if (!templateExists) {
-        throw new HTTPError("Custom REST template not found", 404)
+  await validateCustomRestTemplate(ctx.request.body.datasource.restTemplateId)
+  validateDatasourceEntities(ctx.request.body.datasource)
+  const { datasource, errors } = await sdk.datasources.prepareForSave(
+    ctx.request.body
+  )
+
+  const projectAssignment =
+    await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
+      datasource.projectIds = await sdk.projects.resolveProjectIds(
+        datasource.projectIds
+      )
+      validateDatasourceEntities(datasource)
+      const persistDatasource = async () => {
+        await validateCustomRestTemplate(datasource.restTemplateId)
+        return await sdk.datasources.save({ datasource })
       }
-    }
 
-    const { datasource, errors } = await sdk.datasources.save(datasourceData, {
-      fetchSchema,
-      tablesFilter,
+      const restTemplateId = datasource.restTemplateId
+      if (isCustomRestTemplateId(restTemplateId)) {
+        await sdk.restTemplates.withCustomRestTemplateLock({
+          resource: restTemplateId,
+          task: persistDatasource,
+        })
+      } else {
+        await persistDatasource()
+      }
+
+      return await projectAssignmentResult(
+        sdk.projects.propagateProjectDependencyChanges({
+          rootResourceId: datasource._id!,
+          currentProjectIds: datasource.projectIds,
+          previousProjectIds: [],
+          savedResource: datasource,
+        })
+      )
     })
 
-    ctx.body = {
-      datasource: await sdk.datasources.removeSecretSingle(
-        sdk.datasources.addDatasourceFlags(datasource)
-      ),
-      errors,
-    }
-    builderSocket?.emitDatasourceUpdate(ctx, datasource)
+  ctx.body = {
+    projectAssignment,
+    datasource: await sdk.datasources.removeSecretSingle(
+      sdk.datasources.addDatasourceFlags(datasource)
+    ),
+    errors,
   }
-
-  const restTemplateId = datasourceData.restTemplateId
-  if (isCustomRestTemplateId(restTemplateId)) {
-    await sdk.restTemplates.withCustomRestTemplateLock({
-      resource: restTemplateId,
-      task: saveDatasource,
-    })
-  } else {
-    await saveDatasource()
-  }
+  builderSocket?.emitDatasourceUpdate(ctx, datasource)
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {

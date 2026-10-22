@@ -1157,12 +1157,31 @@ async function destroyWorkspace(ctx: UserCtx) {
     await cache.workspace.invalidateWorkspaceMetadata(prodWorkspaceId)
   }
 
-  const db = dbCore.getDB(devWorkspaceId)
-  // standard app deletion flow
-  const result = await db.destroy()
-  await quotas.removeApp()
-  await events.app.deleted(app)
-
+  // Actions writers only write while the dev workspace exists and hold this
+  // lock while they check, so a late write can't recreate the Actions DB
+  const result =
+    await events.platformActions.doWithActionsWorkspaceDeletionLock({
+      workspaceId: prodWorkspaceId,
+      task: async () => {
+        const db = dbCore.getDB(devWorkspaceId)
+        // standard app deletion flow
+        const result = await db.destroy()
+        try {
+          await sdk.ai.agentRequests.deleteWorkspaceRequests(prodWorkspaceId)
+          await quotas.removeApp()
+          await events.app.deleted(app)
+        } finally {
+          // Actions are shared by both environments in one dedicated database -
+          // only destroy it here, on full workspace deletion
+          const actionsDbName =
+            events.platformActions.getActionsDbName(prodWorkspaceId)
+          if (await dbCore.dbExists(actionsDbName)) {
+            await dbCore.getDB(actionsDbName, { skip_setup: true }).destroy()
+          }
+        }
+        return result
+      },
+    })
   await deleteAppFiles(prodWorkspaceId)
 
   await removeWorkspaceFromUserRoles(ctx, ctx.params.appId)

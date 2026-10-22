@@ -8,12 +8,20 @@ import {
   ImportProjectRequest,
   ImportProjectResponse,
   KoaFile,
+  PreviewProjectAssignmentRequest,
+  PreviewProjectAssignmentResponse,
   Project,
   ProjectResponse,
+  UpdateProjectAssignmentRequest,
+  UpdateProjectAssignmentResponse,
   UpdateProjectRequest,
   UpdateProjectResponse,
 } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
+import fsp from "fs/promises"
+import type { Next } from "koa"
 import sdk from "../../sdk"
+import { refreshProjectImportSetup } from "../../sdk/workspace/projects/importSetup"
 
 export const toProjectResponse = (project: Project): ProjectResponse => {
   return {
@@ -24,11 +32,14 @@ export const toProjectResponse = (project: Project): ProjectResponse => {
     color: project.color,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
+    importSetup: project.importSetup,
   }
 }
 
 export async function fetch(ctx: Ctx<void, FetchProjectsResponse>) {
-  const projects = await sdk.projects.fetch()
+  const projects = await refreshProjectImportSetup({
+    projects: await sdk.projects.fetch(),
+  })
   ctx.body = {
     projects: projects.map(toProjectResponse),
   }
@@ -68,9 +79,107 @@ export async function update(
     color: body.color,
   }
   const updated = await sdk.projects.update(project)
+  const [refreshed] = await refreshProjectImportSetup({ projects: [updated] })
   ctx.body = {
-    project: toProjectResponse(updated),
+    project: toProjectResponse(refreshed),
   }
+}
+
+const getAssignmentInput = async ({
+  resourceId,
+  projectIds: requestedProjectIds,
+}: PreviewProjectAssignmentRequest) => {
+  const projectIds =
+    (await sdk.projects.resolveProjectIds(requestedProjectIds)) || []
+  const resource = await sdk.projects.getProjectAssignableResource(resourceId)
+  return {
+    resourceId,
+    resourceRev: resource._rev,
+    resourceProjectIds: resource.projectIds || [],
+    projectIds,
+  }
+}
+
+export async function previewAssignment(
+  ctx: Ctx<PreviewProjectAssignmentRequest, PreviewProjectAssignmentResponse>
+) {
+  const input = await getAssignmentInput(ctx.request.body)
+  ctx.body = await sdk.projects.getProjectAssignmentPreview(input)
+}
+
+export async function updateAssignment(
+  ctx: Ctx<UpdateProjectAssignmentRequest, UpdateProjectAssignmentResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(async () => {
+    const { resourceId } = ctx.params
+    const { dependencyFingerprint, resourceRev, dependencyIds } =
+      ctx.request.body
+    const input = await getAssignmentInput({
+      resourceId,
+      projectIds: ctx.request.body.projectIds,
+    })
+    const { projectIds } = input
+
+    let selectedDependencyIds: string[] = []
+    if (dependencyIds.length) {
+      if (!projectIds.length) {
+        throw new HTTPError(
+          "Dependencies cannot be assigned without a project.",
+          400
+        )
+      }
+
+      const preview = await sdk.projects.getProjectAssignmentPreview(input)
+      if (preview.dependencyFingerprint !== dependencyFingerprint) {
+        throw new HTTPError(
+          "Resource dependencies changed. Preview the project assignment again.",
+          409
+        )
+      }
+      const { dependencies } = preview
+      const dependencyIdsSet = new Set(dependencyIds)
+      const validDependencyIds = new Set(
+        dependencies.map(dependency => dependency.id)
+      )
+      const invalidDependencyId = dependencyIds.find(
+        dependencyId => !validDependencyIds.has(dependencyId)
+      )
+      if (invalidDependencyId) {
+        throw new HTTPError(
+          `Resource '${invalidDependencyId}' is not an assignable dependency.`,
+          400
+        )
+      }
+
+      selectedDependencyIds = dependencies
+        .map(dependency => dependency.id)
+        .filter(dependencyId => dependencyIdsSet.has(dependencyId))
+    }
+
+    const updatedResource =
+      await sdk.projects.updateResourceProjectAssignmentUnlocked({
+        resourceId,
+        resourceRev,
+        projectIds,
+      })
+    const outcome = await sdk.projects.propagateProjectIdsToDependencyIds({
+      dependencyIds: selectedDependencyIds,
+      projectIds,
+    })
+    const failedIds = new Set(
+      outcome.status === "incomplete" ? outcome.resourceIds : []
+    )
+
+    ctx.body = {
+      resourceId,
+      resourceRev: updatedResource._rev,
+      projectIds,
+      failedDependencyIds: Array.from(failedIds),
+      assignedDependencyIds: selectedDependencyIds.filter(
+        dependencyId => !failedIds.has(dependencyId)
+      ),
+    }
+  })
 }
 
 export async function remove(ctx: Ctx<void, void>) {
@@ -95,15 +204,39 @@ export async function exportBundle(
 
   const extension = encryptPassword ? "enc.tar.gz" : "tar.gz"
   const identifier = `${project.name}-project-export-${Date.now()}.${extension}`
-  ctx.attachment(identifier)
-  ctx.body = await sdk.projects.streamExportProject({
+  const exportStream = await sdk.projects.streamExportProject({
     projectId: id,
     encryptPassword,
+    includeRows: ctx.request.body?.includeRows,
   })
+  ctx.attachment(identifier)
+  ctx.body = exportStream
 }
 
-type ProjectImportFiles = {
-  file?: KoaFile | KoaFile[]
+interface ProjectImportFiles {
+  [field: string]: KoaFile | KoaFile[]
+}
+
+export async function cleanupImportFiles(ctx: Ctx, next: Next) {
+  try {
+    await next()
+  } finally {
+    const files = ctx.request.files as ProjectImportFiles | undefined
+    await Promise.all(
+      Object.values(files || {})
+        .flat()
+        .map(async file => {
+          if (file.filepath) {
+            await fsp.rm(file.filepath, { force: true }).catch(error => {
+              console.log(
+                "Failed to remove uploaded Project import archive",
+                error
+              )
+            })
+          }
+        })
+    )
+  }
 }
 
 export async function importBundle(

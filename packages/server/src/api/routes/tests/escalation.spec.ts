@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { constants, context } from "@budibase/backend-core"
 import {
   Document,
   DocumentType,
@@ -192,6 +192,32 @@ describe("/api/escalations", () => {
       expect(
         await getRawDoc<EscalationNotificationDoc>(notificationId)
       ).not.toHaveProperty("responses")
+    })
+  })
+
+  describe("respond", () => {
+    // A cross-site form post carries the session cookie but no CSRF header;
+    // JSON posts are excluded from the check because CORS preflight covers them
+    it("rejects a cross-site form post that lacks the CSRF token", async () => {
+      await config.api.escalation.respond(
+        "esc_unknown",
+        { actionId: EscalationAction.APPROVE },
+        {
+          headers: {
+            "content-type": "application/x-www-form-urlencoded",
+            [constants.Header.CSRF_TOKEN]: "",
+          },
+          expectations: { status: 403 },
+        }
+      )
+    })
+
+    it("reaches the controller with a valid CSRF token", async () => {
+      await config.api.escalation.respond(
+        "esc_unknown",
+        { actionId: EscalationAction.APPROVE },
+        { expectations: { status: 404 } }
+      )
     })
   })
 })
