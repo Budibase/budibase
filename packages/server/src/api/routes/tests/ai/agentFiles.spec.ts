@@ -8,11 +8,14 @@ import {
   type AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceType,
   AgentKnowledgeSourceSyncRunStatus,
+  type KnowledgeBaseFileSource,
+  KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   RestAuthType,
   SharePointScopeMode,
 } from "@budibase/types"
 import environment, { setEnv } from "../../../../environment"
+import sdk from "../../../../sdk"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
 import * as knowledgeSourceSyncQueue from "../../../../sdk/workspace/ai/rag/sources/knowledgeSourceSyncQueue"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
@@ -307,6 +310,235 @@ describe("agent files", () => {
       operationId
     )
     expect(files).toHaveLength(0)
+  })
+
+  const uploadFailedFile = async ({
+    agentId,
+    operationId,
+    name,
+    source,
+  }: {
+    agentId: string
+    operationId: string
+    name: string
+    source?: KnowledgeBaseFileSource
+  }) => {
+    mockGeminiIngest(`gemini-${name}`)
+    const upload = await config.api.agent.uploadFile(agentId, operationId, {
+      file: fileBuffer,
+      name,
+    })
+    await utils.queue.processMessages(getQueue().getBullQueue())
+    return await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const file = await sdk.ai.knowledgeBase.getKnowledgeBaseFileOrThrow(
+        upload.file._id!
+      )
+      return await sdk.ai.knowledgeBase.updateKnowledgeBaseFile({
+        ...file,
+        source,
+        status: KnowledgeBaseFileStatus.FAILED,
+        errorMessage: "Resource has been exhausted (e.g. check quota).",
+      })
+    })
+  }
+
+  it("retries a failed agent file ingestion", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Retry Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    const failedFile = await uploadFailedFile({
+      agentId: created._id!,
+      operationId,
+      name: "retry.txt",
+    })
+    const queueAddSpy = jest.spyOn(getQueue(), "add")
+
+    await config.api.agent.retryFile(created._id!, operationId, failedFile._id!)
+
+    expect(queueAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ fileId: failedFile._id }),
+      { jobId: failedFile._id }
+    )
+    const { files } = await config.api.agent.fetchFiles(
+      created._id!,
+      operationId
+    )
+    expect(files).toEqual([
+      expect.objectContaining({
+        _id: failedFile._id,
+        status: KnowledgeBaseFileStatus.PROCESSING,
+      }),
+    ])
+    expect(files[0].errorMessage).toBeUndefined()
+  })
+
+  it("returns 400 when retrying a file that has not failed", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Retry Ready Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    mockGeminiIngest("gemini-file-ready")
+    const upload = await config.api.agent.uploadFile(
+      created._id!,
+      operationId,
+      {
+        file: fileBuffer,
+        name: "ready.txt",
+      }
+    )
+    await utils.queue.processMessages(getQueue().getBullQueue())
+
+    await config.api.agent.retryFile(
+      created._id!,
+      operationId,
+      upload.file._id!,
+      {
+        status: 400,
+        body: { message: "Knowledge base file is not in failed state" },
+      }
+    )
+  })
+
+  it("returns 404 when retrying a file from another operation", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Retry Other Operation Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+    const other = await config.api.agent.createWithOperation(
+      {
+        name: "Other Agent",
+        aiconfig: "default",
+      },
+      { ...operation, id: "operation_2" }
+    )
+    const otherOperationId = other.operations?.[0]?.id || "operation_2"
+
+    mockAutoKnowledgeBaseCreate()
+    const failedFile = await uploadFailedFile({
+      agentId: created._id!,
+      operationId,
+      name: "other.txt",
+    })
+
+    await config.api.agent.retryFile(
+      other._id!,
+      otherOperationId,
+      failedFile._id!,
+      {
+        status: 404,
+        body: { message: "File does not belong to this operation" },
+      }
+    )
+  })
+
+  it("does not retry failed SharePoint files when retrying all", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Retry All SharePoint Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    const sharePointFailed = await uploadFailedFile({
+      agentId: created._id!,
+      operationId,
+      name: "sharepoint.txt",
+      source: {
+        type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
+        knowledgeSourceId: "sharepoint_site_site-1",
+        siteId: "site-1",
+        driveId: "drive-1",
+        itemId: "item-1",
+        path: "/sharepoint.txt",
+      },
+    })
+
+    const response = await config.api.agent.retryFailedFiles(
+      created._id!,
+      operationId
+    )
+
+    expect(response.files).toEqual([])
+    const { files } = await config.api.agent.fetchFiles(
+      created._id!,
+      operationId
+    )
+    expect(files).toEqual([
+      expect.objectContaining({
+        _id: sharePointFailed._id,
+        status: KnowledgeBaseFileStatus.FAILED,
+      }),
+    ])
+  })
+
+  it("retries all failed files for an operation", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Retry All Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    const firstFailed = await uploadFailedFile({
+      agentId: created._id!,
+      operationId,
+      name: "first.txt",
+    })
+    const secondFailed = await uploadFailedFile({
+      agentId: created._id!,
+      operationId,
+      name: "second.txt",
+    })
+    mockGeminiIngest("gemini-file-ok")
+    const ready = await config.api.agent.uploadFile(created._id!, operationId, {
+      file: fileBuffer,
+      name: "ok.txt",
+    })
+    await utils.queue.processMessages(getQueue().getBullQueue())
+
+    const response = await config.api.agent.retryFailedFiles(
+      created._id!,
+      operationId
+    )
+
+    expect(response.files.map(file => file._id).sort()).toEqual(
+      [firstFailed._id, secondFailed._id].sort()
+    )
+    const { files } = await config.api.agent.fetchFiles(
+      created._id!,
+      operationId
+    )
+    const statusById = Object.fromEntries(
+      files.map(file => [file._id, file.status])
+    )
+    expect(statusById).toEqual({
+      [firstFailed._id!]: KnowledgeBaseFileStatus.PROCESSING,
+      [secondFailed._id!]: KnowledgeBaseFileStatus.PROCESSING,
+      [ready.file._id!]: KnowledgeBaseFileStatus.READY,
+    })
   })
 
   it("returns 403 when knowledge source downloads are disabled for the operation", async () => {

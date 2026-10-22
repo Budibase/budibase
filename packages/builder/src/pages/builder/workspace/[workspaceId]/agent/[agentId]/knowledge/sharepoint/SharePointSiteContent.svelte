@@ -1,11 +1,5 @@
 <script lang="ts">
-  import {
-    Body,
-    Modal,
-    ModalContent,
-    TreeView,
-    notifications,
-  } from "@budibase/bbui"
+  import { Body, TreeView } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
     KnowledgeBaseFileSourceType,
@@ -19,11 +13,9 @@
     agentId?: string
     operationId: string
     siteId?: string
-    onEdit?: (siteId: string) => Promise<void> | void
   }
 
-  let { agentId, operationId, siteId, onEdit }: Props = $props()
-  let modal = $state<Modal>()
+  let { agentId, operationId, siteId }: Props = $props()
 
   const sharePointSource = $derived.by(() => {
     if (!siteId) {
@@ -40,16 +32,9 @@
     )
   })
 
-  const selectedSiteLabel = $derived(
-    sharePointSource?.config.site.name ||
-      sharePointSource?.config.site.webUrl ||
-      siteId ||
-      ""
-  )
-
-  const sharePointFiles = $derived.by(() => {
+  const sharePointFiles: KnowledgeBaseFile[] = $derived.by(() => {
     if (!agentId || !operationId || !sharePointSource?.id) {
-      return [] as KnowledgeBaseFile[]
+      return []
     }
     const _store = $agentsStore
     const files =
@@ -77,58 +62,20 @@
       }))
     )
   )
-
-  export function show() {
-    modal?.show()
-  }
-
-  export function hide() {
-    modal?.hide()
-  }
-
-  const handleEdit = async () => {
-    if (!siteId || !onEdit) {
-      return
-    }
-
-    try {
-      await onEdit(siteId)
-      hide()
-    } catch (error) {
-      console.error(error)
-      notifications.error(
-        "Failed to load SharePoint files. Check your network connection and try again."
-      )
-    }
-  }
 </script>
 
-<Modal bind:this={modal}>
-  <ModalContent
-    title={`SharePoint - ${selectedSiteLabel}`}
-    showDivider={false}
-    size="XL"
-    showCloseIcon={false}
-    showConfirmButton
-    confirmText="Edit files"
-    onConfirm={handleEdit}
-    onCancel={hide}
-  >
-    {#if entryTree.length === 0}
-      <Body size="S">This SharePoint site does not contain synced content.</Body
-      >
-    {:else}
-      <Body size="S">The following content is synced for this site:</Body>
-      <div class="entries-list">
-        <TreeView standalone={false} quiet width="auto">
-          {#each entryTree as node (node.path)}
-            <SharePointEntryTreeItem {node} />
-          {/each}
-        </TreeView>
-      </div>
-    {/if}
-  </ModalContent>
-</Modal>
+{#if entryTree.length === 0}
+  <Body size="S">This SharePoint site does not contain synced content.</Body>
+{:else}
+  <Body size="S">The following content is synced for this site:</Body>
+  <div class="entries-list">
+    <TreeView standalone={false} quiet width="auto">
+      {#each entryTree as node (node.path)}
+        <SharePointEntryTreeItem {node} />
+      {/each}
+    </TreeView>
+  </div>
+{/if}
 
 <style>
   .entries-list {

@@ -10,7 +10,7 @@ import {
   getSharePointFileProcessingCounts,
   getSharePointFilesForSite,
   getSharePointLastSyncLabel,
-  toFileTableRows,
+  toFileKnowledgeRows,
   toSharePointConnectionRows,
 } from "./knowledgeTableRows"
 
@@ -33,17 +33,16 @@ describe("knowledgeTableRows", () => {
   })
 
   it("includes pending upload rows", () => {
-    const rows = toFileTableRows(
-      [makeFile({ filename: "a.md" })],
-      async () => {},
-      [
+    const rows = toFileKnowledgeRows({
+      files: [makeFile({ filename: "a.md" })],
+      pendingUploads: [
         {
           tempId: "pending-1",
           filename: "b.md",
           createdAt: "2026-01-01T00:00:00.000Z",
         },
-      ]
-    )
+      ],
+    })
 
     expect(rows.map(row => row.filename)).toEqual(["a.md", "b.md"])
     expect(rows.find(row => row.filename === "b.md")?.displayStatus).toBe(
@@ -52,15 +51,14 @@ describe("knowledgeTableRows", () => {
   })
 
   it("shows pending uploads even when another file has the same filename", () => {
-    const rows = toFileTableRows(
-      [
+    const rows = toFileKnowledgeRows({
+      files: [
         makeFile({
           filename: "notes.txt",
           status: KnowledgeBaseFileStatus.PROCESSING,
         }),
       ],
-      async () => {},
-      [
+      pendingUploads: [
         {
           tempId: "pending-1",
           filename: "notes.txt",
@@ -71,8 +69,8 @@ describe("knowledgeTableRows", () => {
           filename: "notes.txt",
           createdAt: "2026-01-01T00:00:01.000Z",
         },
-      ]
-    )
+      ],
+    })
 
     expect(rows).toHaveLength(3)
     expect(
@@ -85,13 +83,13 @@ describe("knowledgeTableRows", () => {
 
   it("builds and sorts file rows", async () => {
     const onDelete = vi.fn(async () => {})
-    const rows = toFileTableRows(
-      [
+    const rows = toFileKnowledgeRows({
+      files: [
         makeFile({ _id: "2", filename: "z.md" }),
         makeFile({ _id: "1", filename: "a.md" }),
       ],
-      onDelete
-    )
+      onDelete,
+    })
 
     expect(rows.map(row => row.filename)).toEqual(["a.md", "z.md"])
     await rows[0].onDelete?.()
@@ -99,14 +97,104 @@ describe("knowledgeTableRows", () => {
   })
 
   it("marks file actions unavailable when knowledge search is unavailable", () => {
-    const rows = toFileTableRows(
-      [makeFile({ filename: "notes.md" })],
-      async () => {},
-      undefined,
-      false
-    )
+    const rows = toFileKnowledgeRows({
+      files: [makeFile({ filename: "notes.md" })],
+      knowledgeSearchConfigured: false,
+    })
 
     expect(rows[0].knowledgeSearchConfigured).toBe(false)
+  })
+
+  it("sorts failed files first", () => {
+    const rows = toFileKnowledgeRows({
+      files: [
+        makeFile({ _id: "1", filename: "a.md" }),
+        makeFile({
+          _id: "2",
+          filename: "z.md",
+          status: KnowledgeBaseFileStatus.FAILED,
+        }),
+      ],
+    })
+
+    expect(rows.map(row => row.filename)).toEqual(["z.md", "a.md"])
+  })
+
+  it("retries a failed file", async () => {
+    const onRetry = vi.fn(async () => {})
+    const failedFile = makeFile({
+      status: KnowledgeBaseFileStatus.FAILED,
+      errorMessage: "Resource has been exhausted",
+    })
+    const rows = toFileKnowledgeRows({ files: [failedFile], onRetry })
+
+    expect(rows[0]).toEqual(
+      expect.objectContaining({
+        displayStatus: "Failed",
+        errorMessage: "Resource has been exhausted",
+        canRetry: true,
+      })
+    )
+    await rows[0].onRetry?.()
+    expect(onRetry).toHaveBeenCalledWith(failedFile)
+  })
+
+  it("does not offer retry for files that have not failed", () => {
+    const rows = toFileKnowledgeRows({
+      files: [makeFile({ status: KnowledgeBaseFileStatus.READY })],
+      onRetry: async () => {},
+    })
+
+    expect(rows[0].canRetry).toBe(false)
+  })
+
+  it("includes rejected uploads as failed rows with their reason", async () => {
+    const onRetryRejected = vi.fn(async () => {})
+    const onDismissRejected = vi.fn()
+    const rows = toFileKnowledgeRows({
+      files: [],
+      rejectedUploads: [
+        {
+          tempId: "rejected-1",
+          filename: "notes.txt",
+          size: 10,
+          reason: "Bad Gateway",
+          retryable: true,
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          tempId: "rejected-2",
+          filename: "huge.pdf",
+          size: 10,
+          reason: "File exceeds the 100MB limit",
+          retryable: false,
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+      onRetryRejected,
+      onDismissRejected,
+    })
+
+    expect(rows).toEqual([
+      expect.objectContaining({
+        filename: "huge.pdf",
+        status: KnowledgeBaseFileStatus.FAILED,
+        displayStatus: "Failed",
+        errorMessage: "File exceeds the 100MB limit",
+        isRejected: true,
+        canRetry: false,
+      }),
+      expect.objectContaining({
+        filename: "notes.txt",
+        errorMessage: "Bad Gateway",
+        isRejected: true,
+        canRetry: true,
+      }),
+    ])
+    await rows[1].onRetry?.()
+    rows[1].onDismiss?.()
+    expect(onRetryRejected).toHaveBeenCalledWith("rejected-1")
+    expect(onDismissRejected).toHaveBeenCalledWith("rejected-1")
   })
 
   it("filters and counts sharepoint files by site", () => {
@@ -192,7 +280,7 @@ describe("knowledgeTableRows", () => {
 
     expect(rows).toHaveLength(1)
     expect(rows[0].hasSynced).toBe(true)
-    expect(rows[0].displayStatus).toBe("0/1 items")
+    expect(rows[0].displayStatus).toBe("0/1 ready")
   })
 
   it("shows file counts while sync is still running", () => {
@@ -224,9 +312,8 @@ describe("knowledgeTableRows", () => {
       onSync: async () => {},
     })
 
-    expect(rows[0].displayStatus).toBe("18/125 items")
+    expect(rows[0].displayStatus).toBe("18/125 ready")
     expect(rows[0].hasSynced).toBe(true)
-    expect(rows[0].__clickable).toBe(true)
   })
 
   it("shows loading label when site metadata is not available yet", () => {
@@ -303,6 +390,33 @@ describe("knowledgeTableRows", () => {
 
     expect(rows).toHaveLength(1)
     expect(rows[0].hasSynced).toBe(true)
-    expect(rows[0].displayStatus).toBe("3/3 items")
+    expect(rows[0].displayStatus).toBe("3/3 ready")
+  })
+
+  it("shows failed file counts separately from ready files", () => {
+    const rows = toSharePointConnectionRows({
+      sharePointSources: [
+        {
+          id: "source-1",
+          config: { site: { id: "site-1", name: "Site 1" } },
+        },
+      ],
+      sharePointSourceSnapshots: [
+        {
+          sourceId: "source-1",
+          name: "Site 1",
+          syncedCount: 300,
+          failedCount: 300,
+          processingCount: 0,
+          totalCount: 600,
+          runStatus: AgentKnowledgeSourceSyncRunStatus.SUCCESS,
+          lastRunAt: "2026-04-08T10:00:00.000Z",
+        },
+      ],
+      onDelete: async () => {},
+      onSync: async () => {},
+    })
+
+    expect(rows[0].displayStatus).toBe("300/600 ready · 300 failed")
   })
 })
