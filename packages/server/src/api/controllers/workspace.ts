@@ -460,18 +460,8 @@ export async function fetchAppPackage(
   const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
   const isDev = isDevWorkspaceID(ctx.params.appId)
   if (isBuilder) {
-    const urlPath = ctx.headers.referer
-      ? (() => {
-          try {
-            return new URL(ctx.headers.referer).pathname
-          } catch {
-            return ""
-          }
-        })()
-      : ""
-    const screenId = urlPath.match(
-      /\/design\/workspace_app_[^/]+\/(screen_[^/]+)/
-    )?.[1]
+    const screenId =
+      typeof ctx.query.screenId === "string" ? ctx.query.screenId : undefined
     screens = screens.map(screen =>
       !screenId || screen._id === screenId
         ? screen

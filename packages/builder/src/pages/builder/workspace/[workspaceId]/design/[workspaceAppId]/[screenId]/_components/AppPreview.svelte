@@ -187,7 +187,7 @@
 
       // Cut and paste the component to the new destination
       if (source && destination) {
-        await componentStore.copy(source, true, false)
+        componentStore.copy(source, true, false)
         await componentStore.paste(destination, data.mode)
       }
     } else if (type === "request-add-component") {

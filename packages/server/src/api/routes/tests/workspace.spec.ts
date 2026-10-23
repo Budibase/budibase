@@ -1058,16 +1058,12 @@ describe("/applications", () => {
       }
     )
 
-    it("should retrieve full screens for builder data routes", async () => {
+    it("should retrieve full screens when no screen is requested", async () => {
       const screen = basicScreen()
       screen.props._children = [basicScreen().props]
       const savedScreen = await config.api.screen.save(screen)
 
-      const res = await config.api.workspace.getAppPackage(workspace.appId, {
-        headers: {
-          referer: `https://example.com/builder/workspace/${workspace.appId}/data`,
-        },
-      })
+      const res = await config.api.workspace.getAppPackage(workspace.appId)
 
       expect(res.screens).toContainEqual(
         expect.objectContaining({
@@ -1082,9 +1078,7 @@ describe("/applications", () => {
       const otherScreen = await config.api.screen.save(basicScreen("/two"))
 
       const res = await config.api.workspace.getAppPackage(workspace.appId, {
-        headers: {
-          referer: `https://example.com/builder/workspace/${workspace.appId}/design/${currentScreen.workspaceAppId}/${currentScreen._id}`,
-        },
+        query: { screenId: currentScreen._id },
       })
 
       const fetchedCurrentScreen = res.screens.find(

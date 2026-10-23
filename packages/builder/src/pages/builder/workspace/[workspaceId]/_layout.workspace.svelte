@@ -1,5 +1,6 @@
 <script lang="ts">
   import { sdk } from "@budibase/shared-core"
+  import { get } from "svelte/store"
   import { goto, params } from "@roxi/routify"
   import {
     initialise,
@@ -76,6 +77,15 @@
       if ($admin.maintenance.length) {
         return
       }
+      const isScreenLoaded =
+        !!screenId &&
+        initialisedWorkspaceId === appId &&
+        get(screenStore).screens.some(
+          screen => screen._id === screenId && screen._rev
+        )
+      if (isScreenLoaded) {
+        return
+      }
       previewStore.setUpdatingAppPackage(true)
       if ($builderStore.created) {
         builderStore.appCreated(false)
@@ -91,7 +101,7 @@
         }
         componentStore.update(state => ({ ...state, componentToPaste }))
         workspaceStore.update(state => ({ ...state, appId }))
-        const pkg = await API.fetchAppPackage(appId)
+        const pkg = await API.fetchAppPackage(appId, screenId)
         if (requestKey !== packageKey) {
           return
         }

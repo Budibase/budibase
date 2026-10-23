@@ -122,7 +122,7 @@ export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
   const id = ctx.params.screenId
   const screen = await db.get<Screen>(id)
 
-  await db.remove(id, screen._rev!)
+  await db.remove(id, ctx.params.screenRev)
 
   await sdk.navigation.deleteLink(screen.routing.route, screen.workspaceAppId)
 

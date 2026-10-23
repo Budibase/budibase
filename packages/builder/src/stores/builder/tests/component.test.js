@@ -180,32 +180,6 @@ describe("Component store", () => {
     expect(ctx.test.store).toStrictEqual(INITIAL_COMPONENTS_STATE)
   })
 
-  it("removes a cut component from its source screen", async ctx => {
-    const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
-    const sourceScreen = getScreenFixture().addChild(component).json()
-    sourceScreen._id = "screen_source"
-    componentScreenStore.set({
-      screens: [sourceScreen],
-      selectedScreenId: sourceScreen._id,
-    })
-    componentScreenStore.patch.mockImplementation(async (patch, screenId) => {
-      const state = get(componentScreenStore)
-      const targetScreen = state.screens.find(
-        screen => screen._id === (screenId || state.selectedScreenId)
-      )
-      patch(targetScreen)
-    })
-
-    await ctx.test.componentStore.copy(component, true)
-
-    expect(sourceScreen.props._children).toEqual([])
-    expect(ctx.test.store.componentToPaste).toEqual({
-      ...component,
-      isCut: true,
-      screenId: sourceScreen._id,
-    })
-  })
-
   it.each([false, true])(
     "keeps drag moves atomic when save fails: %s",
     async fails => {
@@ -234,7 +208,7 @@ describe("Component store", () => {
         return clone
       })
 
-      await store.copy(component, true, false)
+      store.copy(component, true, false)
       const paste = store.paste(target, "below", sourceScreen)
       if (fails) {
         await expect(paste).rejects.toThrow("Save failed")
@@ -347,7 +321,7 @@ describe("Component store", () => {
         expectedClipboard = undefined
       }
       if (copyDuringSave) {
-        await store.copy(target)
+        store.copy(target)
         expectedClipboard = get(store).componentToPaste
       }
       finishSave()

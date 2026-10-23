@@ -103,7 +103,7 @@ const createDNDStore = () => {
       actions.reset()
 
       // Cut and paste the component
-      await componentStore.copy(state.source, true, false)
+      componentStore.copy(state.source, true, false)
       await componentStore.paste(state.target, state.dropPosition)
     },
   }

@@ -31,8 +31,8 @@
     ["Ctrl+c"]: component => {
       componentStore.copy(component, false)
     },
-    ["Ctrl+x"]: async component => {
-      await componentStore.copy(component, true)
+    ["Ctrl+x"]: component => {
+      componentStore.copy(component, true)
     },
     ["Ctrl+v"]: async component => {
       await componentStore.paste(component, "inside")
