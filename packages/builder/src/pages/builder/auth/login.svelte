@@ -67,9 +67,8 @@
         pushNumSessionsInvalidated(loginResult.invalidatedSessionCount || 0)
 
         const isChatLinkHandoff =
-          new URLSearchParams(window.location.search).get(
-            "chatLinkHandoff"
-          ) === "true"
+          new URLSearchParams(window.location.search).get("chatLinkHandoff") ===
+          "true"
         const chatLinkReturnUrl = isChatLinkHandoff
           ? CookieUtils.getCookie(Constants.Cookies.ChatLinkReturnUrl)
           : undefined
