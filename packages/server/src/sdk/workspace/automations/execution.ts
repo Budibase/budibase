@@ -49,7 +49,9 @@ export async function trigger(
     )
     return (
       collectedValue?.outputs ?? {
-        success: response.status === AutomationStatus.SUCCESS,
+        success:
+          response.status === AutomationStatus.SUCCESS ||
+          response.status === AutomationStatus.STOPPED,
       }
     )
   } else {

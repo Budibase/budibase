@@ -375,7 +375,9 @@ export async function trigger(
         step => step.stepId === AutomationActionStepId.COLLECT
       )
       ctx.body = collectedValue?.outputs ?? {
-        success: response.status === AutomationStatus.SUCCESS,
+        success:
+          response.status === AutomationStatus.SUCCESS ||
+          response.status === AutomationStatus.STOPPED,
       }
     } catch (err: any) {
       if (err.message) {

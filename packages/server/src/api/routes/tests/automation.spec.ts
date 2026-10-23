@@ -745,6 +745,7 @@ describe("/automations", () => {
     it.each([
       { branch: "collect", expected: { success: true, value: "branch value" } },
       { branch: "log", expected: { success: true } },
+      { branch: "stop", expected: { success: true } },
       { branch: "error", expected: { success: false } },
     ])(
       "returns a response for the $branch branch",
@@ -762,6 +763,15 @@ describe("/automations", () => {
             uncollected: {
               condition: { equal: { "{{ trigger.fields.branch }}": "log" } },
               steps: builder => builder.serverLog({ text: "Branch completed" }),
+            },
+            stopped: {
+              condition: { equal: { "{{ trigger.fields.branch }}": "stop" } },
+              steps: builder =>
+                builder.filter({
+                  field: 1,
+                  condition: FilterCondition.EQUAL,
+                  value: 2,
+                }),
             },
             failed: {
               condition: { equal: { "{{ trigger.fields.branch }}": "error" } },
