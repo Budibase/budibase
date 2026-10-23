@@ -212,7 +212,10 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
   async refresh() {
     const { appId } = get(this.store)
     const { selectedScreenId } = get(screenStore)
-    const appPackage = await API.fetchAppPackage(appId, selectedScreenId ?? null)
+    const appPackage = await API.fetchAppPackage(
+      appId,
+      selectedScreenId ?? null
+    )
     await initialise(appPackage)
   }
 
