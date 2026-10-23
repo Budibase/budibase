@@ -3,6 +3,7 @@ import { mocks } from "@budibase/backend-core/tests"
 import {
   Automation,
   AutomationResults,
+  AutomationIOType,
   AutomationTriggerStepId,
   ConfigType,
   EmailTrigger,
@@ -750,7 +751,7 @@ describe("/automations", () => {
       async ({ branch, expected }) => {
         mocks.licenses.useSyncAutomations()
         const { automation } = await createAutomationBuilder(config)
-          .onAppAction({ fields: { branch: FieldType.STRING } })
+          .onAppAction({ fields: { branch: AutomationIOType.STRING } })
           .branch({
             collected: {
               condition: {
