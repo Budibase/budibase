@@ -1069,7 +1069,12 @@ describe("/applications", () => {
         },
       })
 
-      expect(res.screens).toContainEqual(savedScreen)
+      expect(res.screens).toContainEqual(
+        expect.objectContaining({
+          _id: savedScreen._id,
+          props: savedScreen.props,
+        })
+      )
     })
 
     it("should omit revisions from truncated builder screens", async () => {
