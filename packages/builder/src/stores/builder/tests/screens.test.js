@@ -49,6 +49,7 @@ vi.mock("@/stores/builder", async () => {
 
   return {
     componentStore,
+    selectedComponent: writable(),
     workspaceStore,
     navigationStore,
     layoutStore: {
@@ -71,6 +72,7 @@ vi.mock("@/api", () => {
   return {
     API: {
       fetchAppPackage: vi.fn(),
+      get: vi.fn(),
       fetchAppRoutes: vi.fn(),
       saveScreen: vi.fn(),
       deleteScreen: vi.fn(),
@@ -83,6 +85,8 @@ describe("Screens store", () => {
     vi.clearAllMocks()
 
     const screenStore = new ScreenStore()
+    API.get.mockImplementation(async () => get(screenStore).screens)
+    API.fetchAppRoutes.mockResolvedValue({ routes: [] })
     ctx.bb = {
       get store() {
         return get(screenStore)
@@ -107,6 +111,23 @@ describe("Screens store", () => {
     expect(bb.store.screens).toStrictEqual(screens)
   })
 
+  it("Selects the requested screen when syncing a scoped app package", ({
+    bb,
+  }) => {
+    const screens = Array(2)
+      .fill()
+      .map(() => getScreenFixture().json())
+    const requestedScreen = screens[1]
+
+    bb.screenStore.update(state => ({
+      ...state,
+      selectedScreenId: screens[0]._id,
+    }))
+    bb.screenStore.syncAppScreens({ screens }, requestedScreen._id)
+
+    expect(bb.store.selectedScreenId).toBe(requestedScreen._id)
+  })
+
   it("Reset the screen store back to the default state", ({ bb }) => {
     expect(bb.store.screens.length).toBe(0)
 
@@ -125,6 +146,53 @@ describe("Screens store", () => {
     bb.screenStore.reset()
 
     expect(bb.store).toStrictEqual(initialScreenState)
+  })
+
+  it("retains loaded screen children when syncing truncated screens", ({
+    bb,
+  }) => {
+    const screen = getScreenFixture()
+      .addChild(getComponentFixture(`${COMP_PREFIX}/container`))
+      .json()
+    screen._id = "screen_source"
+    screen._rev = "1-source"
+    bb.screenStore.syncAppScreens({ screens: [screen] })
+    bb.screenStore.syncAppScreens({
+      screens: [
+        {
+          ...screen,
+          _rev: undefined,
+          props: { ...screen.props, _children: [] },
+        },
+      ],
+    })
+
+    expect(bb.store.screens).toEqual([screen])
+  })
+
+  it("restores full children when undoing deletion of a truncated screen", async ({
+    bb,
+  }) => {
+    const screen = getScreenFixture()
+      .addChild(getComponentFixture(`${COMP_PREFIX}/container`))
+      .json()
+    screen._id = "screen_source"
+    screen._rev = "1-source"
+    const truncated = {
+      ...screen,
+      _rev: undefined,
+      props: { ...screen.props, _children: [] },
+    }
+    bb.screenStore.syncAppScreens({ screens: [truncated] })
+    API.get.mockResolvedValueOnce([screen])
+    API.fetchAppRoutes.mockResolvedValueOnce({ routes: [] })
+    API.saveScreen.mockResolvedValueOnce(screen)
+    workspaceStore.set({})
+
+    await bb.screenStore.delete(truncated)
+    await bb.screenStore.history.undo()
+
+    expect(bb.store.screens).toEqual([screen])
   })
 
   it("Marks a valid screen as selected", ({ bb }) => {
