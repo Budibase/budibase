@@ -680,31 +680,25 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }, null)
   }
 
-  async copy(component: Component, cut = false, selectParent = true) {
-    const sourceScreenId = get(screenStore).selectedScreenId
-    const parent =
-      cut && selectParent
-        ? findComponentParent(get(selectedScreen)?.props, component._id)
-        : undefined
-    // Drag moves defer deletion until paste so both changes share one save.
-    if (cut && selectParent) {
-      await this.delete(component)
-    }
-
+  copy(component: Component, cut = false, selectParent = true) {
     // Update store with copied component
     this.update(state => {
       state.componentToPaste = cloneDeep(component)
       state.componentToPaste.isCut = cut
-      state.componentToPaste.screenId = sourceScreenId
+      state.componentToPaste.screenId = get(screenStore).selectedScreenId
       return state
     })
 
     // Select the parent if cutting
-    if (parent) {
-      this.update(state => {
-        state.selectedComponentId = parent._id
-        return state
-      })
+    if (cut && selectParent) {
+      const screen = get(selectedScreen)
+      const parent = findComponentParent(screen?.props, component._id)
+      if (parent) {
+        this.update(state => {
+          state.selectedComponentId = parent._id
+          return state
+        })
+      }
     }
   }
 

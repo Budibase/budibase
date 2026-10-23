@@ -44,7 +44,7 @@ vi.mock("@/stores/builder", async () => {
     },
     deploymentStore: { load: vi.fn() },
     componentStore: writable({}),
-    screenStore: { syncAppScreens: vi.fn() },
+    screenStore: { ...writable({ screens: [] }), syncAppScreens: vi.fn() },
   }
 })
 
