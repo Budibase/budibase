@@ -51,7 +51,7 @@
   }
   $: projectSetupReturn = getProjectSetupRequest({
     workspaceId,
-    homeUrl: $params.returnTo,
+    homeUrl: $params["?returnTo"],
   })
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
   $: canManageConnections =
