@@ -47,7 +47,7 @@
   let showInviteUsersModal = false
   $: projectSetupReturn = getProjectSetupRequest({
     workspaceId,
-    homeUrl: $params.returnTo,
+    homeUrl: $params["?returnTo"],
   })
   $: {
     const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
