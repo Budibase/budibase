@@ -12,6 +12,7 @@ import {
 } from "@budibase/types"
 import { get } from "svelte/store"
 import { initialise, navigationStore, workspaceAppStore } from "."
+import { screenStore } from "./screens"
 import { BudiStore } from "../BudiStore"
 
 interface ClientFeatures {
@@ -210,7 +211,8 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
 
   async refresh() {
     const { appId } = get(this.store)
-    const appPackage = await API.fetchAppPackage(appId)
+    const { selectedScreenId } = get(screenStore)
+    const appPackage = await API.fetchAppPackage(appId, selectedScreenId ?? null)
     await initialise(appPackage)
   }
 
