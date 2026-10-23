@@ -463,7 +463,7 @@ export async function fetchAppPackage(
     const screenId =
       typeof ctx.query.screenId === "string" ? ctx.query.screenId : undefined
     screens = screens.map(screen =>
-      !screenId || screen._id === screenId
+      screenId === undefined || screen._id === screenId
         ? screen
         : {
             ...screen,
