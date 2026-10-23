@@ -16,8 +16,10 @@ import {
   MS_SCOPE_GRAPH,
 } from "../../../escalation/notifications/ms-teams"
 
-const CHAT_LINK_RETURN_URL_COOKIE = "budibase:returnurl"
+const CHAT_LINK_RETURN_URL_COOKIE = "budibase:chatlink:returnurl"
 const BUILDER_LOGIN_PATH = "/builder/auth/login"
+const CHAT_LINK_LOGIN_QUERY = "chatLinkHandoff=true"
+const CHAT_LINK_RETURN_URL_EXPIRY_MS = 10 * 60 * 1000
 
 const CHAT_LINK_PAGE_STYLES = `
       :root {
@@ -206,10 +208,12 @@ const renderLinkSuccessPage = () => {
 export async function handoffChatLinkSession(
   ctx: UserCtx<void, string, { instance: string; token: string }>
 ) {
+  utils.clearCookie(ctx, CHAT_LINK_RETURN_URL_COOKIE)
   const token = resolveToken(ctx.params.token)
   const session =
     await sdk.ai.chatIdentityLinks.getChatIdentityLinkSession(token)
   if (!session) {
+    utils.clearCookie(ctx, CHAT_LINK_RETURN_URL_COOKIE)
     throw new HTTPError("Link token is invalid or has expired", 400)
   }
   assertSessionMatchesInstance({
@@ -222,9 +226,13 @@ export async function handoffChatLinkSession(
       ctx,
       `/api/chat-links/${ctx.params.instance}/${token}/handoff`,
       CHAT_LINK_RETURN_URL_COOKIE,
-      { sign: false }
+      {
+        sign: false,
+        sameSite: "lax",
+        expires: new Date(Date.now() + CHAT_LINK_RETURN_URL_EXPIRY_MS),
+      }
     )
-    ctx.redirect(BUILDER_LOGIN_PATH)
+    ctx.redirect(`${BUILDER_LOGIN_PATH}?${CHAT_LINK_LOGIN_QUERY}`)
     return
   }
 
@@ -235,6 +243,7 @@ export async function handoffChatLinkSession(
       currentGlobalUserId
     )
   if (!confirmationSession) {
+    utils.clearCookie(ctx, CHAT_LINK_RETURN_URL_COOKIE)
     throw new HTTPError("Link token is invalid or has expired", 400)
   }
 
@@ -252,6 +261,7 @@ export async function confirmChatLinkSession(
     { instance: string; token: string }
   >
 ) {
+  utils.clearCookie(ctx, CHAT_LINK_RETURN_URL_COOKIE)
   const token = resolveToken(ctx.params.token)
   const session =
     await sdk.ai.chatIdentityLinks.getChatIdentityLinkSession(token)
@@ -280,6 +290,7 @@ export async function confirmChatLinkSession(
   const consumedSession =
     await sdk.ai.chatIdentityLinks.consumeChatIdentityLinkSession(token)
   if (!consumedSession) {
+    utils.clearCookie(ctx, CHAT_LINK_RETURN_URL_COOKIE)
     throw new HTTPError("Link token is invalid or has expired", 400)
   }
   assertSessionMatchesInstance({
@@ -298,6 +309,7 @@ export async function confirmChatLinkSession(
     linkedBy: currentGlobalUserId,
   })
 
+  utils.clearCookie(ctx, CHAT_LINK_RETURN_URL_COOKIE)
   ctx.type = "text/html"
   ctx.body = renderLinkSuccessPage()
 }

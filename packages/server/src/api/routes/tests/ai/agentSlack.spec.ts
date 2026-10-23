@@ -1104,21 +1104,36 @@ describe("agent slack integration provisioning", () => {
         .getRequest()!
         .get(handoffPath)
         .expect(302)
-      expect(unauthHandoff.headers.location).toEqual("/builder/auth/login")
+      expect(unauthHandoff.headers.location).toEqual(
+        "/builder/auth/login?chatLinkHandoff=true"
+      )
       const cookies = Array.isArray(unauthHandoff.headers["set-cookie"])
         ? unauthHandoff.headers["set-cookie"]
         : []
       expect(
         cookies.some((cookie: string) =>
-          cookie.startsWith("budibase:returnurl=/api/chat-links/")
+          cookie.startsWith("budibase:chatlink:returnurl=/api/chat-links/")
         )
       ).toBe(true)
+      expect(
+        cookies.some((cookie: string) =>
+          cookie.startsWith("budibase:returnurl=/api/chat-links/")
+        )
+      ).toBe(false)
 
       const authHandoff = await config
         .getRequest()!
         .get(handoffPath)
         .set(config.defaultHeaders({}, true))
         .expect(200)
+      const clearedCookies = Array.isArray(authHandoff.headers["set-cookie"])
+        ? authHandoff.headers["set-cookie"]
+        : []
+      expect(
+        clearedCookies.some((cookie: string) =>
+          cookie.startsWith("budibase:chatlink:returnurl=")
+        )
+      ).toBe(true)
       expect(authHandoff.type).toEqual("text/html")
       expect(authHandoff.text).toContain("Confirm chat account link")
       expect(authHandoff.text).toContain("<style>")

@@ -66,10 +66,26 @@
         notifications.success("Logged in successfully")
         pushNumSessionsInvalidated(loginResult.invalidatedSessionCount || 0)
 
-        // Check for return URL cookie and redirect there if it exists
-        const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
+        const isChatLinkHandoff =
+          new URLSearchParams(window.location.search).get(
+            "chatLinkHandoff"
+          ) === "true"
+        const chatLinkReturnUrl = isChatLinkHandoff
+          ? CookieUtils.getCookie(Constants.Cookies.ChatLinkReturnUrl)
+          : undefined
+        let returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
+        if (chatLinkReturnUrl?.startsWith("/api/chat-links/")) {
+          returnUrl = chatLinkReturnUrl
+        }
+
+        if (isChatLinkHandoff) {
+          CookieUtils.removeCookie(Constants.Cookies.ChatLinkReturnUrl)
+        }
+
         if (returnUrl) {
-          CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
+          if (!chatLinkReturnUrl) {
+            CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
+          }
           if (returnUrl.startsWith("/builder")) {
             goto(returnUrl)
           } else {

@@ -26,6 +26,7 @@ export const Cookies = {
   Auth: "budibase:auth",
   CurrentApp: "budibase:currentapp",
   ReturnUrl: "budibase:returnurl",
+  ChatLinkReturnUrl: "budibase:chatlink:returnurl",
   AccountReturnUrl: "budibase:account:returnurl",
   OnboardingProcessCorrelationKey: BpmCorrelationKey.ONBOARDING,
 }
