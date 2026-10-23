@@ -741,6 +741,55 @@ describe("/automations", () => {
       )
     })
 
+    it.each([
+      { branch: "collect", expected: { success: true, value: "branch value" } },
+      { branch: "log", expected: { success: true } },
+      { branch: "error", expected: { success: false } },
+    ])(
+      "returns a response for the $branch branch",
+      async ({ branch, expected }) => {
+        mocks.licenses.useSyncAutomations()
+        const { automation } = await createAutomationBuilder(config)
+          .onAppAction({ fields: { branch: FieldType.STRING } })
+          .branch({
+            collected: {
+              condition: {
+                equal: { "{{ trigger.fields.branch }}": "collect" },
+              },
+              steps: builder => builder.collect({ collection: "branch value" }),
+            },
+            uncollected: {
+              condition: { equal: { "{{ trigger.fields.branch }}": "log" } },
+              steps: builder => builder.serverLog({ text: "Branch completed" }),
+            },
+            failed: {
+              condition: { equal: { "{{ trigger.fields.branch }}": "error" } },
+              steps: builder =>
+                builder.executeScript({
+                  code: "throw new Error('Branch failed')",
+                }),
+            },
+          })
+          .save()
+
+        await config.api.automation.trigger(
+          automation._id!,
+          { fields: { branch }, timeout: 10 },
+          {
+            status: 200,
+            body: expected,
+          }
+        )
+
+        const response = await config.doInContext(
+          config.getDevWorkspaceId(),
+          () =>
+            sdk.automations.execution.trigger(automation._id!, { branch }, 10)
+        )
+        expect(response).toEqual(expected)
+      }
+    )
+
     it("triggers a synchronous automation", async () => {
       mocks.licenses.useSyncAutomations()
       const { automation } =

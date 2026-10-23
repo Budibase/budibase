@@ -13,6 +13,7 @@ import { BuilderSocketEvent } from "@budibase/shared-core"
 import {
   Automation,
   AutomationActionStepId,
+  AutomationStatus,
   ClearAutomationLogRequest,
   ClearAutomationLogResponse,
   CreateAutomationRequest,
@@ -373,7 +374,9 @@ export async function trigger(
       let collectedValue = response.steps.find(
         step => step.stepId === AutomationActionStepId.COLLECT
       )
-      ctx.body = collectedValue?.outputs
+      ctx.body = collectedValue?.outputs ?? {
+        success: response.status === AutomationStatus.SUCCESS,
+      }
     } catch (err: any) {
       if (err.message) {
         ctx.throw(400, err.message)
