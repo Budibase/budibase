@@ -101,7 +101,7 @@
         }
         componentStore.update(state => ({ ...state, componentToPaste }))
         workspaceStore.update(state => ({ ...state, appId }))
-        const pkg = await API.fetchAppPackage(appId, screenId)
+        const pkg = await API.fetchAppPackage(appId, screenId ?? null)
         if (requestKey !== packageKey) {
           return
         }
