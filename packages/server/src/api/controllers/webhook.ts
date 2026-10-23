@@ -3,6 +3,7 @@ import * as pro from "@budibase/pro"
 import {
   Automation,
   AutomationActionStepId,
+  AutomationStatus,
   AutomationIOType,
   BuildWebhookSchemaRequest,
   BuildWebhookSchemaResponse,
@@ -183,7 +184,9 @@ export async function trigger(
             step => step.stepId === AutomationActionStepId.COLLECT
           )
 
-          ctx.body = collectedValue?.outputs
+          ctx.body = collectedValue?.outputs ?? {
+            success: response.status === AutomationStatus.SUCCESS,
+          }
         } else {
           ctx.throw(400, "Automation did not have a collect block.")
         }

@@ -67,6 +67,50 @@ describe("Webhook trigger test", () => {
     expect(collectedInfo.value).toEqual("testing")
   })
 
+  it.each([
+    { branch: "collect", expected: { success: true, value: "branch value" } },
+    { branch: "log", expected: { success: true } },
+    { branch: "error", expected: { success: false } },
+  ])(
+    "returns a response for the $branch branch",
+    async ({ branch, expected }) => {
+      const { automation } = await createAutomationBuilder(config)
+        .onWebhook({ body: { branch: "string" } })
+        .branch({
+          collected: {
+            condition: { equal: { "{{ trigger.branch }}": "collect" } },
+            steps: builder => builder.collect({ collection: "branch value" }),
+          },
+          uncollected: {
+            condition: { equal: { "{{ trigger.branch }}": "log" } },
+            steps: builder => builder.serverLog({ text: "Branch completed" }),
+          },
+          failed: {
+            condition: { equal: { "{{ trigger.branch }}": "error" } },
+            steps: builder =>
+              builder.executeScript({
+                code: "throw new Error('Branch failed')",
+              }),
+          },
+        })
+        .save()
+      const webhook = await config.api.webhook.save({
+        name: "branching hook",
+        live: true,
+        action: { type: WebhookActionType.AUTOMATION, target: automation._id! },
+        bodySchema: {},
+      })
+      await config.publish()
+
+      const response = await config.withProdApp(() =>
+        config.api.webhook.trigger(config.getProdWorkspaceId(), webhook._id!, {
+          branch,
+        })
+      )
+      expect(response).toEqual(expected)
+    }
+  )
+
   it("attributes a webhook run to the webhook, not to a person", async () => {
     const { automation } = await createAutomationBuilder(config)
       .onWebhook({ body: {} })
