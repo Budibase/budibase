@@ -23,8 +23,9 @@ const getDefaultSchema = rows => {
 
 export const parseFile = file => {
   return new Promise((resolve, reject) => {
-    const extension = file.name.split(".").pop()?.toLowerCase()
-    if (extension !== "csv" && extension !== "json") {
+    const fileName = file.name.toLowerCase()
+    const isJson = fileName.endsWith(".json")
+    if (!fileName.endsWith(".csv") && !isJson) {
       reject(new Error("Only CSV and JSON files are supported."))
       return
     }
@@ -47,7 +48,7 @@ export const parseFile = file => {
 
     reader.addEventListener("load", function (e) {
       const fileData = e.target.result
-      if (extension === "json") {
+      if (isJson) {
         try {
           const parsedFileData = JSON.parse(fileData)
           if (Array.isArray(parsedFileData)) {

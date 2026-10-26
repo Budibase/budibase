@@ -152,6 +152,12 @@ describe("TableDataImport", () => {
     { name: "image.png", type: "image/png" },
     { name: "people.txt", type: "text/csv" },
     { name: "people.csv.exe", type: "application/octet-stream" },
+    { name: "csv", type: "text/csv" },
+    { name: "CSV", type: "text/csv" },
+    { name: "json", type: "application/json" },
+    { name: "JSON", type: "application/json" },
+    { name: "people.csv.", type: "text/csv" },
+    { name: "people.json.", type: "application/json" },
   ])("rejects $name before importing", async ({ name, type }) => {
     render(TableDataImport)
     await fireEvent.drop(screen.getByRole("region"), {
