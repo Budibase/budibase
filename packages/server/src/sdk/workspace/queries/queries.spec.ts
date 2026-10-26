@@ -15,6 +15,7 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
+import { BodyType } from "@budibase/types"
 import { enrichContext, fetch } from "./queries"
 
 jest.mock("../../utils", () => ({
@@ -68,6 +69,95 @@ describe("queries SDK", () => {
 
       expect(result).toEqual({ json: false })
     })
+
+    it.each(["requestBody", "json", "customData"])(
+      "preserves null properties in literal JSON in %s",
+      async field => {
+        const body = {
+          phone: null,
+          nested: { deletedAt: null },
+          items: [null, { value: null }],
+          active: false,
+          count: 0,
+          label: "",
+        }
+        const result = await enrichContext({
+          [field]: JSON.stringify(body),
+        })
+
+        expect(result.json).toStrictEqual(body)
+      }
+    )
+
+    it.each(["requestBody", "json", "customData"])(
+      "preserves null properties in a JSON string bound to %s",
+      async field => {
+        const payload = {
+          phone: null,
+          nested: { deletedAt: null },
+          items: [null, { value: null }],
+        }
+        const result = await enrichContext(
+          { [field]: "{{ payload }}" },
+          { payload: JSON.stringify(payload) }
+        )
+
+        expect(result.json).toStrictEqual(payload)
+      }
+    )
+
+    it("preserves null values and dynamic keys in JSON objects while omitting undefined properties", async () => {
+      const result = await enrichContext(
+        {
+          json: {
+            "{{ fieldName }}": null,
+            nested: { value: null, omitted: undefined },
+            omitted: undefined,
+          },
+        },
+        { fieldName: "phone" }
+      )
+
+      expect(result).toStrictEqual({
+        json: { phone: null, nested: { value: null } },
+      })
+    })
+
+    it("still omits null configuration fields and headers", async () => {
+      const result = await enrichContext({
+        json: null,
+        customData: null,
+        requestBody: undefined,
+        headers: { "X-Optional": null, "X-Keep": "value" },
+      })
+
+      expect(result).toStrictEqual({ headers: { "X-Keep": "value" } })
+    })
+
+    it("preserves null request properties in JSON bodies", async () => {
+      const body = { phone: null, active: false }
+      const objectResult = await enrichContext({
+        bodyType: BodyType.JSON,
+        requestBody: body,
+      })
+      const literalResult = await enrichContext({
+        bodyType: BodyType.JSON,
+        requestBody: JSON.stringify(body),
+      })
+
+      expect(objectResult.requestBody).toStrictEqual(body)
+      expect(literalResult.requestBody).toStrictEqual(body)
+    })
+
+    it.each(["delete", "row", "rows"])(
+      "preserves nested null properties in the %s JSON field",
+      async field => {
+        const body = { phone: null, nested: { deletedAt: null } }
+        const result = await enrichContext({ [field]: JSON.stringify(body) })
+
+        expect(result[field]).toStrictEqual(body)
+      }
+    )
 
     it("enriches object keys recursively", async () => {
       const result = await enrichContext(
