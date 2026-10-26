@@ -127,6 +127,8 @@
 
   let rawRows: Row[] = $state([])
   let rowsHash = $state("")
+  let fileSequence = 0
+  let validationSequence = 0
 
   const displayColumnOptions = $derived(
     Object.keys(schema || {}).filter(column => {
@@ -138,9 +140,10 @@
   )
 
   $effect(() => {
+    const column = displayColumn ? schema[displayColumn] : undefined
     if (
       displayColumn &&
-      !canBeDisplayColumn(schema[displayColumn] as UIFieldSchema)
+      (!column || !canBeDisplayColumn(column as UIFieldSchema))
     ) {
       displayColumn = null
     }
@@ -161,24 +164,35 @@
       JSON.stringify(validationRows) + JSON.stringify(schema)
     if (newValidateHash !== validateHash) {
       if (validationRows.length) {
-        validate(validationRows, schema)
+        validate({ rowsToValidate: validationRows, schema })
       } else {
         validation = {}
-        allValid = true
         errors = {}
-        error = null
-        loading = false
       }
     }
     validateHash = newValidateHash
   })
 
+  const resetImport = () => {
+    validationSequence++
+    displayColumn = null
+    rawRows = []
+    rows = []
+    schema = {}
+    selectedColumnTypes = {}
+    validation = {}
+    errors = {}
+    validateHash = ""
+    rowsHash = ""
+  }
+
   async function handleFile(e: CustomEvent<File[]>) {
+    const sequence = ++fileSequence
+    resetImport()
+    error = null
+    loading = false
+    allValid = e.detail.length === 0
     if (e.detail.length === 0) {
-      rawRows = []
-      schema = {}
-      selectedColumnTypes = {}
-      error = null
       return
     }
     if (e.detail.length !== 1) {
@@ -187,11 +201,12 @@
       return
     }
     loading = true
-    error = null
-    validation = {}
 
     try {
       const response = (await parseFile(e.detail[0])) as ParsedFile
+      if (sequence !== fileSequence) {
+        return
+      }
       rawRows = response.rows
       schema = response.schema
       selectedColumnTypes = Object.entries(response.schema).reduce(
@@ -201,34 +216,54 @@
         }),
         {}
       )
+      if (response.rows.length === 0) {
+        allValid = true
+        loading = false
+      }
     } catch (e) {
+      if (sequence !== fileSequence) {
+        return
+      }
+      resetImport()
       files = []
       error = e instanceof Error ? e.message : String(e)
-    } finally {
+      allValid = false
       loading = false
     }
   }
 
-  async function validate(rowsToValidate: Row[], schema: TableSchema) {
+  async function validate({
+    rowsToValidate,
+    schema,
+  }: {
+    rowsToValidate: Row[]
+    schema: TableSchema
+  }) {
+    const sequence = ++validationSequence
+    allValid = false
     loading = true
     try {
-      if (rowsToValidate.length > 0) {
-        const response = await API.validateNewTableImport(
-          rowsToValidate,
-          schema
-        )
-        validation = response.schemaValidation
-        allValid = response.allValid
-        errors = response.errors
-        error = null
+      const response = await API.validateNewTableImport(rowsToValidate, schema)
+      if (sequence !== validationSequence) {
+        return
       }
+      validation = response.schemaValidation
+      allValid = response.allValid
+      errors = response.errors
+      error = null
     } catch (e) {
+      if (sequence !== validationSequence) {
+        return
+      }
       error = e instanceof Error ? e.message : String(e)
       validation = {}
       allValid = false
       errors = {}
+    } finally {
+      if (sequence === validationSequence) {
+        loading = false
+      }
     }
-    loading = false
   }
 
   const handleChange = (name: string, e: CustomEvent<string>) => {

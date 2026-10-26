@@ -241,7 +241,8 @@
   onConfirm={saveTable}
   disabled={!!error ||
     !name ||
-    (rows.length > 0 && (!allValid || displayColumn == null))}
+    !allValid ||
+    (rows.length > 0 && displayColumn == null)}
   size="M"
 >
   <Input label="Table Name" on:input={checkValid} bind:value={name} {error} />
