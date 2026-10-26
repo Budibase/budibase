@@ -1,4 +1,5 @@
 import { auth } from "@budibase/backend-core"
+import { agentActivityEnabled } from "../../middleware/agentActivityEnabled"
 import * as controller from "../controllers/escalation"
 import { endpointGroupList, publicRoutes } from "./endpointGroups"
 
@@ -17,6 +18,7 @@ escalationRoutes
 // and has to apply CSRF protection itself
 publicRoutes.post(
   "/api/escalations/:id/respond",
+  agentActivityEnabled,
   auth.buildCsrfMiddleware(),
   controller.respond
 )
