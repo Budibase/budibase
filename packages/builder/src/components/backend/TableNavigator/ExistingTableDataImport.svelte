@@ -104,7 +104,7 @@
     validation = {}
 
     try {
-      const response = await parseFile(e)
+      const response = await parseFile(e.target.files[0])
       rows = response.rows
       fileName = response.fileName
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Select, Icon, Layout, Label } from "@budibase/bbui"
+  import { Select, Icon, Layout, Label, Dropzone } from "@budibase/bbui"
   import { FIELDS } from "@/constants/backend"
   import { utils } from "@budibase/shared-core"
   import { canBeDisplayColumn } from "@budibase/frontend-core"
@@ -15,7 +15,6 @@
   interface ParsedFile {
     rows: Row[]
     schema: TableSchema
-    fileName: string
   }
 
   interface ImportFieldConfig {
@@ -29,7 +28,6 @@
     schema?: TableSchema
     allValid?: boolean
     displayColumn?: string | null
-    promptUpload?: boolean
   }
 
   let {
@@ -37,7 +35,6 @@
     schema = $bindable({}),
     allValid = $bindable(true),
     displayColumn = $bindable(null),
-    promptUpload = false,
   }: Props = $props()
 
   const typeOptions: Record<
@@ -120,9 +117,8 @@
     },
   }
 
-  let fileInput: HTMLInputElement | undefined = $state()
+  let files: File[] = $state([])
   let error: string | null = $state(null)
-  let fileName: string | null = $state(null)
   let loading = $state(false)
   let validation: Record<string, boolean> = $state({})
   let validateHash = $state("")
@@ -177,20 +173,27 @@
     validateHash = newValidateHash
   })
 
-  $effect(() => {
-    openFileUpload(promptUpload, fileInput)
-  })
-
-  async function handleFile(e: Event) {
+  async function handleFile(e: CustomEvent<File[]>) {
+    if (e.detail.length === 0) {
+      rawRows = []
+      schema = {}
+      selectedColumnTypes = {}
+      error = null
+      return
+    }
+    if (e.detail.length !== 1) {
+      files = []
+      error = "Choose one CSV or JSON file."
+      return
+    }
     loading = true
     error = null
     validation = {}
 
     try {
-      const response = (await parseFile(e)) as ParsedFile
+      const response = (await parseFile(e.detail[0])) as ParsedFile
       rawRows = response.rows
       schema = response.schema
-      fileName = response.fileName
       selectedColumnTypes = Object.entries(response.schema).reduce(
         (acc, [colName, fieldConfig]) => ({
           ...acc,
@@ -199,8 +202,10 @@
         {}
       )
     } catch (e) {
-      loading = false
+      files = []
       error = e instanceof Error ? e.message : String(e)
+    } finally {
+      loading = false
     }
   }
 
@@ -243,15 +248,6 @@
     schema = schema
   }
 
-  const openFileUpload = (
-    promptUpload: boolean,
-    fileInput: HTMLInputElement | undefined
-  ) => {
-    if (promptUpload && fileInput) {
-      fileInput.click()
-    }
-  }
-
   const deleteColumn = (name: string) => {
     if (loading) {
       return
@@ -266,25 +262,16 @@
     <Label muted size="S">
       Create a Table from a CSV or JSON file (Optional)
     </Label>
-    <div class="dropzone">
-      <input
-        bind:this={fileInput}
-        disabled={loading}
-        id="file-upload"
-        accept="text/csv,application/json"
-        type="file"
-        onchange={handleFile}
-      />
-      <label for="file-upload" class:uploaded={rawRows.length > 0}>
-        {#if error}
-          Error: {error}
-        {:else if fileName}
-          {fileName}
-        {:else}
-          Upload
-        {/if}
-      </label>
-    </div>
+    <Dropzone
+      bind:value={files}
+      disabled={loading}
+      error={error || undefined}
+      extensions=".csv,.json"
+      fileTags={["CSV", "JSON"]}
+      maximum={1}
+      gallery={false}
+      on:change={handleFile}
+    />
   </Layout>
 
   {#if rawRows.length > 0 && !error}
@@ -333,49 +320,6 @@
 </Layout>
 
 <style>
-  .dropzone {
-    text-align: center;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    border-radius: 10px;
-    transition: all 0.3s;
-  }
-
-  input {
-    display: none;
-  }
-
-  label {
-    cursor: pointer;
-    font-weight: 600;
-    box-sizing: border-box;
-    overflow: hidden;
-    border-radius: var(--border-radius-s);
-    padding: var(--spacing-m) var(--spacing-l);
-    transition: all 0.2s ease 0s;
-    display: inline-flex;
-    text-rendering: optimizeLegibility;
-    min-width: auto;
-    outline: none;
-    font-feature-settings:
-      "case" 1,
-      "rlig" 1,
-      "calt" 0;
-    -webkit-box-align: center;
-    user-select: none;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    background-color: var(--spectrum-global-color-gray-300);
-    font-size: var(--font-size-s);
-    line-height: normal;
-    border: var(--border-transparent);
-  }
-  .uploaded {
-    color: var(--spectrum-global-color-blue-600);
-  }
   .field {
     display: grid;
     grid-template-columns: 2fr 2fr 1fr auto;

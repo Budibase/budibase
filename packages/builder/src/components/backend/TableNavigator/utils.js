@@ -21,12 +21,16 @@ const getDefaultSchema = rows => {
   return newSchema
 }
 
-export const parseFile = e => {
+export const parseFile = file => {
   return new Promise((resolve, reject) => {
-    const file = Array.from(e.target.files)[0]
+    const extension = file.name.split(".").pop()?.toLowerCase()
+    if (extension !== "csv" && extension !== "json") {
+      reject(new Error("Only CSV and JSON files are supported."))
+      return
+    }
 
     if (file.size >= FILE_SIZE_LIMIT) {
-      reject("file too large")
+      reject(new Error("Files must be smaller than 10MB."))
       return
     }
 
@@ -43,15 +47,22 @@ export const parseFile = e => {
 
     reader.addEventListener("load", function (e) {
       const fileData = e.target.result
-      if (file.type?.includes("json")) {
-        const parsedFileData = JSON.parse(fileData)
-
-        if (Array.isArray(parsedFileData)) {
-          resolveRows(parsedFileData)
-        } else if (typeof parsedFileData === "object") {
-          resolveRows(parsedFileData.rows, parsedFileData.schema)
-        } else {
-          reject("invalid json format")
+      if (extension === "json") {
+        try {
+          const parsedFileData = JSON.parse(fileData)
+          if (Array.isArray(parsedFileData)) {
+            resolveRows(parsedFileData)
+          } else if (parsedFileData && Array.isArray(parsedFileData.rows)) {
+            resolveRows(parsedFileData.rows, parsedFileData.schema)
+          } else {
+            reject(new Error("JSON must contain an array of rows."))
+          }
+        } catch {
+          reject(
+            new Error(
+              "Cannot parse JSON. Check that the file contains valid JSON."
+            )
+          )
         }
       } else {
         API.csvToJson(fileData)
@@ -59,9 +70,12 @@ export const parseFile = e => {
             resolveRows(rows)
           })
           .catch(() => {
-            reject("cannot parse csv")
+            reject(new Error("Cannot parse CSV."))
           })
       }
+    })
+    reader.addEventListener("error", () => {
+      reject(new Error("Cannot read the selected file."))
     })
 
     reader.readAsText(file)

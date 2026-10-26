@@ -78,7 +78,7 @@
         <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
       </DatasourceOption>
       <DatasourceOption
-        on:click={() => internalTableModal.show({ promptUpload: true })}
+        on:click={() => internalTableModal.show()}
         title="Upload CSV / JSON"
         {disabled}
       >
