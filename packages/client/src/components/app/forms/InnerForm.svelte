@@ -28,6 +28,7 @@
       validator: ((value: T) => string | null) | null
       error: string | null | undefined
       lastUpdate: number
+      userEdited: boolean
     }
     fieldApi: {
       setValue(_value: T): void
@@ -229,34 +230,19 @@
       let initialValue = Helpers.deepGet(initialValues, field) ?? defaultValue
       let initialError = null
       let fieldId = `id-${Helpers.uuid()}`
+      let userEdited = false
       const existingField = getField(field)
 
-      const hasUserValue = (
-        value: FieldInfo["fieldState"]["value"],
-        previousDefault: FieldInfo["fieldState"]["defaultValue"]
-      ) => {
-        if (
-          value === null ||
-          value === undefined ||
-          value === "" ||
-          value === previousDefault
-        ) {
-          return false
-        }
-        if (Array.isArray(value)) {
-          return value.length > 0
-        }
-        return true
-      }
       if (existingField) {
         const { fieldState } = get(existingField)
         fieldId = fieldState.fieldId
+        userEdited = fieldState.userEdited
 
         // Determine the initial value for this field, reusing the current
-        // value if one exists
-        initialValue = hasUserValue(fieldState.value, fieldState.defaultValue)
-          ? fieldState.value
-          : defaultValue
+        // value if it has been edited by the user
+        if (fieldState.userEdited) {
+          initialValue = fieldState.value
+        }
 
         // If this field has already been registered and we previously had an
         // error set, then re-run the validator to see if we can unset it
@@ -284,6 +270,7 @@
           defaultValue,
           validator,
           lastUpdate: Date.now(),
+          userEdited,
         },
         fieldApi: makeFieldApi(field),
         fieldSchema: schema?.[field] ?? {},
@@ -383,6 +370,7 @@
         state.fieldState.value = value
         state.fieldState.error = error
         state.fieldState.lastUpdate = Date.now()
+        state.fieldState.userEdited = true
         return state
       })
 
@@ -400,6 +388,7 @@
         state.fieldState.value = newValue
         state.fieldState.error = null
         state.fieldState.lastUpdate = Date.now()
+        state.fieldState.userEdited = false
         return state
       })
     }
