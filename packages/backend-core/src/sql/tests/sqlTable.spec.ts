@@ -93,3 +93,50 @@ describe("SQL table identifier escaping", () => {
     })
   })
 })
+
+describe("Postgres JSON columns", () => {
+  const oldTable: Table = {
+    ...buildTable({ name: "documents", column: "title" }),
+    primary: ["id"],
+  }
+  const table: Table = {
+    ...oldTable,
+    schema: {
+      ...oldTable.schema,
+      metadata: { name: "metadata", type: FieldType.JSON },
+    },
+  }
+
+  it.each([
+    [
+      Operation.CREATE_TABLE,
+      'create table "documents" ("id" serial primary key, "title" text, "metadata" json)',
+    ],
+    [
+      Operation.UPDATE_TABLE,
+      'alter table "documents" add column "metadata" json',
+    ],
+  ])("generates JSON DDL for %s", (operation, sql) => {
+    expect(
+      new SqlTable(SqlClient.POSTGRES)._tableQuery({
+        operation,
+        table,
+        tables: { documents: table },
+        meta: { oldTable },
+      })
+    ).toEqual([{ sql, bindings: [] }])
+  })
+
+  it.each([SqlClient.MY_SQL, SqlClient.MS_SQL, SqlClient.ORACLE])(
+    "does not enable JSON creation for %s",
+    client => {
+      expect(() =>
+        new SqlTable(client)._tableQuery({
+          operation: Operation.CREATE_TABLE,
+          table,
+          tables: { documents: table },
+        })
+      ).toThrow("json is not a valid SQL type")
+    }
+  )
+})
