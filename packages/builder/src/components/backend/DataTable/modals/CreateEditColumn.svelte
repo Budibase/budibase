@@ -619,6 +619,7 @@
     if (isExternalTable && isSqlTable) {
       return [
         ...allTableFields,
+        ...(datasource?.source === SourceName.POSTGRES ? [FIELDS.JSON] : []),
         FIELDS.USER,
         FIELDS.USERS,
         FIELDS.ATTACHMENT_SINGLE,

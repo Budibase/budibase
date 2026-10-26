@@ -43,7 +43,15 @@ const descriptions = datasourceDescribe({ plus: true })
 if (descriptions.length) {
   describe.each(descriptions)(
     "/tables ($dbName)",
-    ({ config, dsProvider, isInternal, isOracle, isSql, dbName }) => {
+    ({
+      config,
+      dsProvider,
+      isInternal,
+      isOracle,
+      isPostgres,
+      isSql,
+      dbName,
+    }) => {
       let datasource: Datasource | undefined
 
       beforeAll(async () => {
@@ -287,6 +295,49 @@ if (descriptions.length) {
           })
         })
       })
+
+      if (isPostgres) {
+        describe("JSON columns", () => {
+          afterEach(() => {
+            jest.clearAllMocks()
+          })
+
+          it.each(["create", "add"])(
+            "can %s a JSON column and round-trip nested values",
+            async operation => {
+              const jsonSchema: TableSchema = {
+                metadata: { name: "metadata", type: FieldType.JSON },
+              }
+              let table = await config.api.table.save(
+                tableForDatasource(datasource, {
+                  schema: operation === "create" ? jsonSchema : {},
+                })
+              )
+              if (operation === "add") {
+                table = await config.api.table.save({
+                  ...table,
+                  schema: { ...table.schema, ...jsonSchema },
+                })
+              }
+
+              const metadata = {
+                customer: { name: "Ada", active: true },
+                tags: ["priority", "postgres"],
+                count: 3,
+                optional: null,
+              }
+              const row = await config.api.row.save(table._id!, { metadata })
+              const savedRow = await config.api.row.get(table._id!, row._id!)
+              const savedTable = await config.api.table.get(table._id!)
+
+              expect(savedTable.schema.metadata).toEqual(
+                expect.objectContaining({ type: FieldType.JSON })
+              )
+              expect(savedRow.metadata).toEqual(metadata)
+            }
+          )
+        })
+      }
 
       describe("permissions", () => {
         it("get the base permissions for the table", async () => {
