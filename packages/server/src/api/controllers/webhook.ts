@@ -185,7 +185,9 @@ export async function trigger(
           )
 
           ctx.body = collectedValue?.outputs ?? {
-            success: response.status === AutomationStatus.SUCCESS,
+            success:
+              response.status === AutomationStatus.SUCCESS ||
+              response.status === AutomationStatus.STOPPED,
           }
         } else {
           ctx.throw(400, "Automation did not have a collect block.")

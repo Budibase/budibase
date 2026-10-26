@@ -1,5 +1,10 @@
 import { mocks } from "@budibase/backend-core/tests"
-import { Table, Webhook, WebhookActionType } from "@budibase/types"
+import {
+  FilterCondition,
+  Table,
+  Webhook,
+  WebhookActionType,
+} from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { automationQueue } from "../../bullboard"
 import { externalTrigger } from "../../triggers"
@@ -70,6 +75,7 @@ describe("Webhook trigger test", () => {
   it.each([
     { branch: "collect", expected: { success: true, value: "branch value" } },
     { branch: "log", expected: { success: true } },
+    { branch: "stop", expected: { success: true } },
     { branch: "error", expected: { success: false } },
   ])(
     "returns a response for the $branch branch",
@@ -84,6 +90,15 @@ describe("Webhook trigger test", () => {
           uncollected: {
             condition: { equal: { "{{ trigger.branch }}": "log" } },
             steps: builder => builder.serverLog({ text: "Branch completed" }),
+          },
+          stopped: {
+            condition: { equal: { "{{ trigger.branch }}": "stop" } },
+            steps: builder =>
+              builder.filter({
+                field: 1,
+                condition: FilterCondition.EQUAL,
+                value: 2,
+              }),
           },
           failed: {
             condition: { equal: { "{{ trigger.branch }}": "error" } },
