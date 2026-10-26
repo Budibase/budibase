@@ -1607,6 +1607,7 @@
     }
 
     .controls-row .search-wrapper {
+      flex: none;
       width: 100%;
     }
   }
