@@ -1541,10 +1541,8 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
-    margin-left: auto;
     flex-shrink: 0;
     flex-wrap: wrap;
-    justify-content: flex-end;
     max-width: 100%;
   }
 
