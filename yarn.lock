@@ -8086,13 +8086,13 @@
   dependencies:
     argparse "^2.0.1"
 
-"@zone-eu/mailsplit@5.4.15":
-  version "5.4.15"
-  resolved "https://registry.yarnpkg.com/@zone-eu/mailsplit/-/mailsplit-5.4.15.tgz#15d150f6873e654f46b79935947ca73c8ffa8220"
-  integrity sha512-c7ZpxauvF4AEkDJlKDYO7iMUtMuqJMBnDWNff1cyx+d7zaBVR3iFEmXhNHOVoMmVyVF3pTZLsLIJsEFKDldOAA==
+"@zone-eu/mailsplit@5.4.17":
+  version "5.4.17"
+  resolved "https://registry.yarnpkg.com/@zone-eu/mailsplit/-/mailsplit-5.4.17.tgz#a53778592bc73cf7978f7c3cf52b5198570b9d56"
+  integrity sha512-LOMzdrKRVgaghLaezIPdHRhsGpfDiWNQo1RptWc84CRllI4dWLwqX/L4x1iTt1CaeyvyUfMXM/6mjIsEisT3Tg==
   dependencies:
     libbase64 "1.3.0"
-    libmime "5.4.2"
+    libmime "5.4.4"
     libqp "2.1.1"
 
 "@zone-eu/mailsplit@5.4.29":
@@ -11122,11 +11122,6 @@ encoding-down@^6.3.0:
     inherits "^2.0.3"
     level-codec "^9.0.0"
     level-errors "^2.0.0"
-
-encoding-japanese@2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/encoding-japanese/-/encoding-japanese-2.2.0.tgz#0ef2d2351250547f432a2dd155453555c16deb59"
-  integrity sha512-EuJWwlHPZ1LbADuKTClvHtwbaFn4rOD+dRAbWysqEOXRc2Uui0hJInNJrsdH0c+OhJA4nrCBdSkW4DD5YxAo6A==
 
 encoding-japanese@2.4.0:
   version "2.4.0"
@@ -15595,12 +15590,12 @@ libbase64@1.4.1:
   resolved "https://registry.yarnpkg.com/libbase64/-/libbase64-1.4.1.tgz#17be19d66d9c4c51fbfb505fe2263f66e3400962"
   integrity sha512-Nyh3H90B3gRtrcxIe56Ayy7635J0jmh6AbxbQgQae8wrSPQMH5wFqJChiMTB13yKG512L3YspbA5DzumhFTITA==
 
-libmime@5.4.2:
-  version "5.4.2"
-  resolved "https://registry.yarnpkg.com/libmime/-/libmime-5.4.2.tgz#66e37709e273865990bfc3e54471de7702989a8e"
-  integrity sha512-+IQnCOdPiufGBkOii+Ze8F7iniyBzOwvWDbn1DyExBpc9pT2B3IEMQi7GUc/PpqhNUh/sr1SG9UXDITQoR0VIA==
+libmime@5.4.4:
+  version "5.4.4"
+  resolved "https://registry.yarnpkg.com/libmime/-/libmime-5.4.4.tgz#89646e47082fb7d2b364f9f4f577ba6d03349bd3"
+  integrity sha512-d3zZ2k8s6iO+8u9Vfkl6HfhD5lSVocGcmOViTz/i0CJcwhJADyubEJ/+TkBhuLDUSIBOiG+D8G5kJKwXwKbXXA==
   dependencies:
-    encoding-japanese "2.2.0"
+    encoding-japanese "2.4.0"
     iconv-lite "0.7.3"
     libbase64 "1.3.0"
     libqp "2.1.1"
@@ -16002,19 +15997,19 @@ magicast@^0.5.2:
     "@babel/types" "^7.29.0"
     source-map-js "^1.2.1"
 
-mailparser@3.9.16:
-  version "3.9.16"
-  resolved "https://registry.yarnpkg.com/mailparser/-/mailparser-3.9.16.tgz#5a762fc71a659f4436ec1e6b20849af35047bc9f"
-  integrity sha512-TvbU4YMEDLPkDIft/oUTjjV5PvoR/mj9gw+zzNP6SHJHxBd9FsRWP+rDt80a1wOJ4dKyNesRrYATZ+n0RKyDtw==
+mailparser@3.9.28:
+  version "3.9.28"
+  resolved "https://registry.yarnpkg.com/mailparser/-/mailparser-3.9.28.tgz#f379bfe747ab52fe7df5d437c8163e433e0624b1"
+  integrity sha512-O7oCYzWW9YH5lHk/y3Z8R8dFnUq8wqaH146BuU2NDt/3MGjdfMLzGF2Ft7WksTCeq00covNKpwxQabcG3zJFqQ==
   dependencies:
-    "@zone-eu/mailsplit" "5.4.15"
-    encoding-japanese "2.2.0"
+    "@zone-eu/mailsplit" "5.4.17"
+    encoding-japanese "2.4.0"
     he "1.2.0"
     html-to-text "10.0.1"
     iconv-lite "0.7.3"
-    libmime "5.4.2"
+    libmime "5.4.4"
     linkify-it "5.0.2"
-    nodemailer "9.0.5"
+    nodemailer "10.0.10"
     punycode.js "2.3.1"
     tlds "1.261.0"
 
@@ -17138,20 +17133,20 @@ node-source-walk@^5.0.0, node-source-walk@^5.0.1:
   dependencies:
     "@babel/parser" "^7.21.4"
 
+nodemailer@10.0.10:
+  version "10.0.10"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.0.10.tgz#a5ac2828272903740cb04ce17d1a4468e2e06cb3"
+  integrity sha512-He9XskOFms62SyAKkLu8CcGcYHAo+BSHSsORI8s4PJH8qZgZY4L4lDfvyN0twvmbpyG+eGrxpyBlskj9d9rJ8A==
+
 nodemailer@10.1.3:
   version "10.1.3"
   resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.1.3.tgz#429fc129dde22553a1b01ced6c8450a3c254931d"
   integrity sha512-KXIsjylUgdxBKFJ9XGwV+qIHb1XvVZQ15l1DmHLzDvSvxG9puEPhNoWuu/DmJ303t828mA+Cax5ucFaZKGN0mw==
 
-nodemailer@9.0.1:
-  version "9.0.1"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.0.1.tgz#871c04d8423fc0c790289f4a8f6f71f1b3563e8c"
-  integrity sha512-Gwv8SQewT616ZM/URn0H54b8PWo/Wum7md3EW2aWy1lO27+WZCX+Xyak3J+NlmHUjDh5ME+uesJUDRbR3Ye8Bw==
-
-nodemailer@9.0.5:
-  version "9.0.5"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.0.5.tgz#edf488e2d25b1688614922d7e733f551114099fc"
-  integrity sha512-wvjiKvjczmsN7U/8006JOdXubgBk2XFAbioDMbT+sM7cPs0QrhJTa6KBRX7P5REGGkDcLUz/EarWidb8G8C1jQ==
+nodemailer@10.2.1:
+  version "10.2.1"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.2.1.tgz#255f4220fc401ff76ae28ef3b7e67349ea293c88"
+  integrity sha512-ZrDNsPFoDMwefNs7sJwrYiEJ/CG4ClJWDZv05iNJsEBWa8GRDry1QJHTJxsuTAY9eDDKjX4k+q3SxslXJOao7w==
 
 nodemon@2.0.15:
   version "2.0.15"
@@ -20359,13 +20354,13 @@ smol-toml@1.9.0, smol-toml@^1.8.0:
   resolved "https://registry.yarnpkg.com/smol-toml/-/smol-toml-1.9.0.tgz#f36b8dc7eb621c541c48f9fba6925dab95172817"
   integrity sha512-hpd+HLON7HdZXqYchMM/+LaTTbdK0AU3NngIJ4KVyWbY9bfQqdL9cD+4yf6dUoU2Ap4VsU0JkQi6FxAI1B2mXQ==
 
-smtp-server@^3.13.4:
-  version "3.19.1"
-  resolved "https://registry.yarnpkg.com/smtp-server/-/smtp-server-3.19.1.tgz#040a8e3ac78c8fe27848335fa508a441fc329842"
-  integrity sha512-2IeTkoLkmRm9LiG3vlws3OddCgp+sDXAVEUXJeBMoW1fpBYUU5iPOxp3hLWGt/D3a+YfT/NrIdRAUjKapy4dhQ==
+smtp-server@^3.21.1:
+  version "3.21.1"
+  resolved "https://registry.yarnpkg.com/smtp-server/-/smtp-server-3.21.1.tgz#000c9021a457faf22111100fd2927bfd08f235a4"
+  integrity sha512-gj95f6YhcL0uu3m3FvRnQ6LSotursugAuVjK5V4f0f2C/4OSVpn/+h28F4pPJFob/myli9V+F7/Hxx9DJVdwvg==
   dependencies:
     ipv6-normalize "1.0.1"
-    nodemailer "9.0.1"
+    nodemailer "10.2.1"
     punycode.js "2.3.1"
 
 snowflake-sdk@^3.4.0:
