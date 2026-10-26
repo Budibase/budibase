@@ -1,9 +1,6 @@
 import { setEnv as setCoreEnv } from "@budibase/backend-core"
-import {
-  FilterCondition,
-  SendEmailResponse,
-  SmtpEmailStepInputs,
-} from "@budibase/types"
+import { FilterCondition } from "@budibase/types"
+import type { SendEmailResponse, SmtpEmailStepInputs } from "@budibase/types"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import { mockChatGPTResponse } from "../../../tests/utilities/mocks/ai/openai"
 import * as workerRequests from "../../../utilities/workerRequests"
@@ -26,6 +23,9 @@ const emailResponse = (to: string): SendEmailResponse => ({
   pending: [],
   rejected: [],
   response: "queued",
+  envelopeTime: 0,
+  messageTime: 0,
+  messageSize: 0,
 })
 
 describe("Support escalation email automations", () => {
