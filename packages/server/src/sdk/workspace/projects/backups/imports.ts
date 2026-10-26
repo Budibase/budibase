@@ -22,6 +22,7 @@ import {
   ImportProjectResponse,
   isEmailTrigger,
   isWebhookTrigger,
+  MAX_PROJECT_README_LENGTH,
   Project,
   ProjectImportRequirement,
   ProjectPackageDependencyIndex,
@@ -782,7 +783,10 @@ const validateProject = (project: Project) => {
     !isRecord(project) ||
     typeof project._id !== "string" ||
     getResourceType(project._id) !== ResourceType.PROJECT ||
-    typeof project.name !== "string"
+    typeof project.name !== "string" ||
+    (project.readme !== undefined &&
+      (typeof project.readme !== "string" ||
+        project.readme.length > MAX_PROJECT_README_LENGTH))
   ) {
     throw new HTTPError("Project package project.json is invalid.", 400)
   }
@@ -1524,6 +1528,7 @@ export async function importProject(
         importedProject = await sdk.projects.create({
           name: extracted.project.name,
           description: extracted.project.description,
+          readme: extracted.project.readme,
           color: extracted.project.color,
         })
         const importedProjectId = importedProject._id!
@@ -1626,6 +1631,7 @@ export async function importProject(
             _rev: importedProject._rev!,
             name: importedProject.name,
             description: importedProject.description,
+            readme: importedProject.readme,
             color: importedProject.color,
             createdAt,
             updatedAt: toTimestamp(importedProject.updatedAt) ?? createdAt,
