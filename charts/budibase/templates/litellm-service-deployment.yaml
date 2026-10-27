@@ -38,19 +38,27 @@ spec:
             - /app/config.yaml
           env:
             - name: LITELLM_MASTER_KEY
-              value: {{ .Values.services.litellm.masterKey | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.globals.secretName | default "budicloud" }}
+                  key: litellm_master_key
             - name: LITELLM_SALT_KEY
-              value: {{ .Values.services.litellm.saltKey | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.globals.secretName | default "budicloud" }}
+                  key: litellm_salt_key
             - name: LITELLM_REASONING_AUTO_SUMMARY
               value: "true"
           {{- if .Values.services.litellm.uiUsername }}
             - name: UI_USERNAME
               value: {{ .Values.services.litellm.uiUsername | quote }}
           {{- end }}
-          {{- if .Values.services.litellm.uiPassword }}
             - name: UI_PASSWORD
-              value: {{ .Values.services.litellm.uiPassword | quote }}
-          {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.globals.secretName | default "budicloud" }}
+                  key: litellm_ui_password
+                  optional: true
           {{- if .Values.services.litellm.extraEnv }}
             {{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
           {{- end }}
