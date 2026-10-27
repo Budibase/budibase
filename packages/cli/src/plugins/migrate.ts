@@ -312,11 +312,11 @@ export function migratePackageJson(): MigrationResult {
   const bumpedVersion = bumpMinorVersion(previousVersion)
 
   if (!json.dependencies) json.dependencies = {}
-  json.dependencies["svelte"] = "^5.0.0"
+  json.dependencies["svelte"] = "5.40.2"
 
   json.peerDependencies = {
     ...(json.peerDependencies || {}),
-    svelte: "^5.0.0",
+    svelte: "5.40.2",
   }
 
   const dev = json.devDependencies || {}
@@ -493,14 +493,14 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
   // package.json
   const pkgRaw = fs.readFileSync("package.json", "utf8")
   const pkg = JSON.parse(pkgRaw)
+  const svelteDep = pkg?.dependencies?.svelte || pkg?.peerDependencies?.svelte
   const usingSvelte5 =
-    pkg?.dependencies?.svelte?.startsWith("^5") ||
-    pkg?.peerDependencies?.svelte?.startsWith("^5")
+    svelteDep?.startsWith("^5") || svelteDep?.startsWith("5.")
   const currentVersion =
     typeof pkg?.version === "string" ? pkg.version.trim() : undefined
   const projectedVersion = bumpMinorVersion(currentVersion)
   if (!usingSvelte5) {
-    report.push("Will bump svelte to ^5.0.0 and align dev/peer dependencies.")
+    report.push("Will bump svelte to 5.40.2 and align dev/peer dependencies.")
   } else {
     report.push("package.json appears to already depend on Svelte 5.")
   }
