@@ -95,6 +95,7 @@ spec:
             secretKeyRef:
               name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: internal_api_key_fallback
+              optional: true
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
@@ -198,6 +199,7 @@ spec:
             secretKeyRef:
               name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: smtp_pass
+              optional: true
         - name: SMTP_HOST
           value: {{ .Values.globals.smtp.host | quote }}
         - name: SMTP_PORT

@@ -89,6 +89,7 @@ spec:
             secretKeyRef:
               name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: internal_api_key_fallback
+              optional: true
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
