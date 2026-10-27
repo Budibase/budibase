@@ -1,12 +1,20 @@
 <script lang="ts">
   import { bb } from "@/stores/bb"
-  import { aiConfigsStore } from "@/stores/portal"
+  import { admin, aiConfigsStore, featureFlags } from "@/stores/portal"
   import { Button, Layout, notifications } from "@budibase/bbui"
-  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
+  import {
+    AIConfigType,
+    BUDIBASE_AI_PROVIDER_ID,
+    FeatureFlag,
+  } from "@budibase/types"
   import { onMount } from "svelte"
   import AIConfigList from "./AIConfigList.svelte"
   import { ensureAILicenseStatus } from "../licenseStatus"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+
+  let isCreationDisabled = $derived(
+    $admin.cloud && $featureFlags[FeatureFlag.DISABLE_CUSTOM_AI_CONFIG_CREATION]
+  )
 
   let completionConfigs = $derived(
     [...$aiConfigsStore.customConfigsPerType.completions]
@@ -75,11 +83,13 @@
 </script>
 
 <Layout noPadding gap="XS">
-  <RouteActions>
-    <Button size="M" cta on:click={() => createAIConfig()}>
-      Connect to a custom provider
-    </Button>
-  </RouteActions>
+  {#if !isCreationDisabled}
+    <RouteActions>
+      <Button size="M" cta on:click={() => createAIConfig()}>
+        Connect to a custom provider
+      </Button>
+    </RouteActions>
+  {/if}
 
   {#if completionConfigs.length}
     <div class="section-header">

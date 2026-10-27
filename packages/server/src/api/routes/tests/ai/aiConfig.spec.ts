@@ -1,6 +1,16 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { db, docIds, encryption } from "@budibase/backend-core"
+import jwt from "jsonwebtoken"
+import {
+  constants,
+  context,
+  db,
+  docIds,
+  encryption,
+  env,
+  features,
+  withEnv,
+} from "@budibase/backend-core"
 import {
   CustomAIProviderConfig,
   BUDIBASE_AI_PROVIDER_ID,
@@ -8,9 +18,9 @@ import {
   WebSearchProvider,
   AIConfigType,
   CreateAIConfigRequest,
+  FeatureFlag,
   LiteLLMKeyConfig,
 } from "@budibase/types"
-import { context } from "@budibase/backend-core"
 import environment from "../../../../environment"
 import { licensing } from "@budibase/pro"
 import { mocks } from "@budibase/backend-core/tests"
@@ -122,6 +132,197 @@ describe("BudibaseAI", () => {
       mockLiteLLMProviders()
       mockLiteLLMModelCostMap()
       mockLiteLLMTeam()
+    })
+
+    describe("custom config creation policy", () => {
+      const withCreationPolicy = async <T>({
+        disabled,
+        selfHosted,
+        fn,
+      }: {
+        disabled: boolean
+        selfHosted: boolean
+        fn: () => Promise<T>
+      }) => {
+        return await withEnv({ SELF_HOSTED: selfHosted }, () =>
+          features.testutils.withFeatureFlags(
+            config.getTenantId(),
+            { [FeatureFlag.DISABLE_CUSTOM_AI_CONFIG_CREATION]: disabled },
+            fn
+          )
+        )
+      }
+
+      const mockCustomConfigCreation = () =>
+        nock(environment.LITELLM_URL)
+          .post("/key/generate")
+          .reply(200, { token_id: "policy-key", key: "policy-secret" })
+          .post("/health/test_connection")
+          .reply(200, { status: "success" })
+          .post("/model/new")
+          .reply(200, { model_id: "policy-model" })
+          .post("/key/update")
+          .reply(200, { status: "success" })
+
+      it.each([
+        {
+          description:
+            "blocks new custom configs in cloud without side effects",
+          override: false,
+        },
+        {
+          description: "does not allow a browser override to bypass the block",
+          override: true,
+        },
+      ])("$description", async ({ override }) => {
+        await withCreationPolicy({
+          disabled: true,
+          selfHosted: false,
+          fn: async () => {
+            const headers: Record<string, string> = override
+              ? {
+                  Cookie: `${constants.Cookie.FeatureFlags}=${jwt.sign(
+                    {
+                      flags: {
+                        [FeatureFlag.DISABLE_CUSTOM_AI_CONFIG_CREATION]: false,
+                      },
+                    },
+                    env.JWT_SECRET!
+                  )}`,
+                }
+              : {}
+
+            await config.withHeaders(headers, async () => {
+              await config.api.ai.createConfig(defaultRequest, {
+                status: 403,
+                body: {
+                  message:
+                    "Creating custom AI configurations is temporarily unavailable on Budibase Cloud",
+                },
+              })
+            })
+
+            const configsResponse = await config.api.ai.fetchConfigs()
+            const keyDoc = await config.doInContext(
+              config.getDevWorkspaceId(),
+              () =>
+                context
+                  .getWorkspaceDB()
+                  .tryGet<LiteLLMKeyConfig>(docIds.getLiteLLMKeyID())
+            )
+            expect(configsResponse).toEqual([])
+            expect(keyDoc).toBeUndefined()
+          },
+        })
+      })
+
+      it.each([
+        {
+          description: "allows cloud creation when the block is disabled",
+          disabled: false,
+          selfHosted: false,
+        },
+        {
+          description: "allows self-hosted creation when the block is enabled",
+          disabled: true,
+          selfHosted: true,
+        },
+      ])("$description", async ({ disabled, selfHosted }) => {
+        const liteLLMScope = mockCustomConfigCreation()
+
+        await withCreationPolicy({
+          disabled,
+          selfHosted,
+          fn: async () => {
+            const created = await config.api.ai.createConfig(defaultRequest)
+            const configsResponse = await config.api.ai.fetchConfigs()
+
+            expect(configsResponse).toEqual([
+              expect.objectContaining({
+                _id: created._id,
+                name: defaultRequest.name,
+                provider: defaultRequest.provider,
+                liteLLMModelId: "policy-model",
+              }),
+            ])
+            expect(liteLLMScope.isDone()).toBe(true)
+          },
+        })
+      })
+
+      it("allows managed Budibase AI creation while custom configs are blocked", async () => {
+        const liteLLMScope = nock(environment.LITELLM_URL)
+          .post("/key/generate")
+          .reply(200, { token_id: "managed-key", key: "managed-secret" })
+          .post("/key/update")
+          .reply(200, { status: "success" })
+
+        await withCreationPolicy({
+          disabled: true,
+          selfHosted: false,
+          fn: async () => {
+            await config.api.ai.createConfig({
+              name: "Budibase AI",
+              provider: BUDIBASE_AI_PROVIDER_ID,
+              model: "budibase/legacy/gpt-5-mini",
+              credentialsFields: {},
+              configType: AIConfigType.COMPLETIONS,
+            })
+            const configsResponse = await config.api.ai.fetchConfigs()
+
+            expect(configsResponse).toEqual([
+              expect.objectContaining({
+                _id: docIds.generateAIConfigID("bbai"),
+                provider: BUDIBASE_AI_PROVIDER_ID,
+                liteLLMModelId: BUDIBASE_AI_PROVIDER_ID,
+              }),
+            ])
+            expect(liteLLMScope.isDone()).toBe(true)
+          },
+        })
+      })
+
+      it("allows existing custom configs to be updated while creation is blocked", async () => {
+        const creationScope = mockCustomConfigCreation()
+        const created = await withCreationPolicy({
+          disabled: false,
+          selfHosted: false,
+          fn: () => config.api.ai.createConfig(defaultRequest),
+        })
+        const updateScope = nock(environment.LITELLM_URL)
+          .post("/health/test_connection")
+          .reply(200, { status: "success" })
+          .patch(`/model/${created.liteLLMModelId}/update`)
+          .reply(200, { status: "success" })
+          .post("/key/update")
+          .reply(200, { status: "success" })
+
+        await withCreationPolicy({
+          disabled: true,
+          selfHosted: false,
+          fn: async () => {
+            await config.api.ai.updateConfig({
+              ...created,
+              name: "Updated existing config",
+              model: "gpt-4o",
+            })
+            const configsResponse = await config.api.ai.fetchConfigs()
+
+            expect(configsResponse).toEqual([
+              expect.objectContaining({
+                _id: created._id,
+                name: "Updated existing config",
+                model: "gpt-4o",
+                credentialsFields: expect.objectContaining({
+                  api_key: PASSWORD_REPLACEMENT,
+                }),
+              }),
+            ])
+            expect(creationScope.isDone()).toBe(true)
+            expect(updateScope.isDone()).toBe(true)
+          },
+        })
+      })
     })
 
     it("fetches provider-specific models from LiteLLM cost map", async () => {

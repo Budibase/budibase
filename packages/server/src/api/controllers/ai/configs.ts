@@ -1,4 +1,4 @@
-import { HTTPError } from "@budibase/backend-core"
+import { env, features, HTTPError } from "@budibase/backend-core"
 import {
   CustomAIProviderConfig,
   AIConfigListResponse,
@@ -11,6 +11,7 @@ import {
   LLMProvidersResponse,
   AIConfigResponse,
   BUDIBASE_AI_PROVIDER_ID,
+  FeatureFlag,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { isEnvironmentVariableKey } from "../../../sdk/utils"
@@ -80,6 +81,19 @@ export const createAIConfig = async (
   ctx: UserCtx<CreateAIConfigRequest, AIConfigResponse>
 ) => {
   const body = ctx.request.body
+
+  if (
+    !env.SELF_HOSTED &&
+    body.provider !== BUDIBASE_AI_PROVIDER_ID &&
+    (await features.isEnabledWithoutOverrides(
+      FeatureFlag.DISABLE_CUSTOM_AI_CONFIG_CREATION
+    ))
+  ) {
+    throw new HTTPError(
+      "Creating custom AI configurations is temporarily unavailable on Budibase Cloud",
+      403
+    )
+  }
 
   if (!body.name) {
     throw new HTTPError("Config name is required", 400)
