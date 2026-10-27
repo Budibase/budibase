@@ -22,7 +22,9 @@ serviceAccount:
   name: ""
 
 service:
-  # -- Service type for the service that points to the main Budibase proxy pod.
+  # -- Whether to create the chart's top-level Service.
+  enabled: true
+  # -- Service type for the chart's top-level Service.
   type: ClusterIP
   # -- Port to expose on the service.
   port: 10000
