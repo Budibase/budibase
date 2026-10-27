@@ -124,6 +124,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | globals.budibaseEnv | string | `"PRODUCTION"` | Sets the environment variable BUDIBASE_ENVIRONMENT for the apps and worker pods. Should not ordinarily need to be changed. |
 | globals.cookieDomain | string | `""` | Sets the domain attribute of the cookie that Budibase uses to store session information. See <https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent> for details on why you might want to set this. |
 | globals.createSecrets | bool | `true` | Create an internal API key, JWT secret, object store access key and secret, and store them in a Kubernetes `Secret`. |
+| globals.secretName | string | `""` | Name of the Kubernetes Secret used for Budibase credentials. Defaults to the release fullname. When `createSecrets` is true, the chart creates this Secret if missing and fills missing keys from the configured values or generated defaults. Existing Secret data takes precedence. |
 | globals.enableAnalytics | string | `"1"` | Whether to enable analytics or not. You can read more about our analytics here: <https://docs.budibase.com/docs/analytics>. |
 | globals.google | object | `{"clientId":"","secret":""}` | Google OAuth settings. These can also be set in the Budibase UI, see <https://docs.budibase.com/docs/sso-with-google> for details. |
 | globals.google.clientId | string | `""` | Client ID of your Google OAuth app. |

@@ -107,6 +107,8 @@ globals:
   internalAccountPortalUrl: ""
   # @ignore (only needs to be set in our cloud environment)
   accountPortalApiKey: ""
+  # @ignore (only used when setting the initial admin user password)
+  bbAdminUserPassword: ""
   # -- Sets the domain attribute of the cookie that Budibase uses to store session information.
   # See <https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent>
   # for details on why you might want to set this.
@@ -130,9 +132,13 @@ globals:
   # looping here: <https://docs.budibase.com/docs/looping>.
   automationMaxIterations: "200"
 
-  # -- Create an internal API key, JWT secret, object store access key and
-  # secret, and store them in a Kubernetes `Secret`.
+  # -- Create a Kubernetes `Secret` containing Budibase credentials. Existing
+  # data is preserved and missing keys are populated from these values or
+  # generated defaults.
   createSecrets: true
+  # -- Name of the Kubernetes Secret used for Budibase credentials. Defaults to
+  # the release fullname.
+  secretName: ""
 
   # -- Used for encrypting API keys and environment variables when stored in the database.
   # You don't need to set this if `createSecrets` is true.

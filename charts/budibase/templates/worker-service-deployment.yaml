@@ -81,29 +81,29 @@ spec:
         - name: API_ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: apiEncryptionKey
         - name: HTTP_LOGGING
           value: {{ .Values.services.worker.httpLogging | quote }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: internalApiKey
         - name: INTERNAL_API_KEY_FALLBACK
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.globals.secretName | default "budicloud" }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: internal_api_key_fallback
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: jwtSecret
         - name: JWT_SECRET_FALLBACK
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.globals.secretName | default "budicloud" }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: jwt_secret_fallback
               optional: true
         {{ if .Values.services.objectStore.region }}
@@ -115,12 +115,12 @@ spec:
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: objectStoreAccess
         - name: MINIO_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
@@ -133,7 +133,7 @@ spec:
         - name: CLOUDFRONT_PRIVATE_KEY_64
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.globals.secretName | default "budicloud" }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: cloudfront_private_key_64
         - name: PLUGIN_BUCKET_NAME
           value: {{ .Values.services.objectStore.pluginBucketName | quote }}
@@ -156,7 +156,7 @@ spec:
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.globals.secretName | default "budicloud" }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: redis_password
         {{- if .Values.services.redis.username }}
         - name: REDIS_USERNAME
@@ -183,7 +183,7 @@ spec:
         - name: ACCOUNT_PORTAL_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.globals.secretName | default "budicloud" }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: account_portal_api_key
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
@@ -196,7 +196,7 @@ spec:
         - name: SMTP_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.globals.secretName | default "budicloud" }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: smtp_pass
         - name: SMTP_HOST
           value: {{ .Values.globals.smtp.host | quote }}
@@ -211,14 +211,14 @@ spec:
         - name: GOOGLE_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.globals.secretName | default "budicloud" }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: google_client_secret
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: bbEncryptionKey
         {{ if .Values.globals.datadogApmEnabled }}
         - name: DD_LOGS_INJECTION
