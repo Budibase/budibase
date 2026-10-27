@@ -3,17 +3,19 @@
 
 ## Prerequisites
 
-- `helm` v3 or above
-- Kubernetes 1.4+
-- A storage controller (if you want to use persistent storage)
-- An ingress controller (if you want to define an `Ingress` resource)
+- Helm 3
+- Kubernetes 1.21+
+- Dynamic volume provisioning or suitable pre-provisioned volumes. The default
+  installation creates persistent volume claims for CouchDB, MinIO, and Redis.
+- An ingress controller, unless you set `ingress.enabled: false`. The chart
+  creates an Ingress by default.
 - `metrics-server` (if you want to make use of horizontal pod autoscaling)
 
 ## Chart dependencies
 
 This chart depends on the official Apache CouchDB chart. You can see its
 documentation here:
-<https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
+<https://github.com/apache/couchdb-helm/tree/couchdb-4.5.6/couchdb>.
 
 ## Upgrading
 
@@ -66,11 +68,51 @@ $ cd budibase/charts/budibase
 $ helm install --create-namespace --namespace budibase budibase .
 ```
 
+## Traffic and services
+
+The chart-created Ingress sends traffic to `proxy-service` on port `10000`.
+The separate top-level Service named from the Helm release is retained for
+resource compatibility and is not used by that Ingress. Its selector does not
+match the current workloads, so it has no endpoints. Use `proxy-service` for
+in-cluster traffic and set `service.enabled: false` unless another workflow
+expects the legacy Service resource.
+
+## Service accounts
+
+`serviceAccount.create` creates a ServiceAccount resource, but the Budibase
+workloads currently use the namespace's default ServiceAccount. Setting
+`serviceAccount.name` or `serviceAccount.annotations` does not attach that
+ServiceAccount to the pods.
+
+## Secrets
+
+With `globals.createSecrets: true` (the default), the chart creates or updates
+the Secret named by `globals.secretName`. If no name is set, it uses the release
+fullname. Existing Secret data takes precedence, and missing keys are populated
+from chart values or generated defaults.
+
+Values supplied to Helm are stored in Helm release metadata. To manage secrets
+outside Helm, create the Secret first, set `globals.secretName` to its name, and
+set `globals.createSecrets: false`. The external Secret must contain these keys:
+
+- `apiEncryptionKey`, `bbEncryptionKey`, `internalApiKey`, `jwtSecret`,
+  `objectStoreAccess`, and `objectStoreSecret`
+- `internal_api_key_fallback`, `cloudfront_private_key_64`, `redis_password`,
+  `litellm_master_key`, `account_portal_api_key`, `google_client_secret`, and
+  `smtp_pass`
+
+`jwt_secret_fallback` is optional. `bbai_litellm_key`,
+`bb_admin_user_password`, `litellm_salt_key`, and `litellm_ui_password` are
+required only when their corresponding features or values are enabled.
+
+Environment variables sourced from a Secret do not update in running pods.
+After rotating an externally managed Secret, restart the app, worker,
+automation worker, and LiteLLM deployments that consume the changed keys.
+
 ## Example minimal configuration
 
-Here's an example `values.yaml` that would get a Budibase instance running in a home
-cluster using an nginx ingress controller and NFS as cluster storage (basically one of our
-staff's homelabs).
+This example runs Budibase with an nginx ingress controller and an NFS storage
+class. Replace the host and storage class with values for your cluster.
 
 <details>
 
@@ -93,8 +135,6 @@ couchdb:
   persistentVolume:
     enabled: true
     storageClass: "nfs-client"
-  adminPassword: admin
-
 services:
   objectStore:
     storageClass: "nfs-client"

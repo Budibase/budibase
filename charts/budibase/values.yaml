@@ -13,16 +13,20 @@ podDisruptionBudget:
 nameOverride: ""
 
 serviceAccount:
-  # -- Specifies whether a service account should be created
+  # -- Specifies whether a ServiceAccount resource should be created. Budibase
+  # workload pods currently use the namespace's default ServiceAccount.
   create: true
-  # -- Annotations to add to the service account
+  # -- Annotations to add to the created ServiceAccount resource. These do not
+  # apply to Budibase workload pods because they use the default ServiceAccount.
   annotations: {}
-  # -- The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- Name of the ServiceAccount resource to create. This does not select the
+  # ServiceAccount used by Budibase workload pods.
   name: ""
 
 service:
-  # -- Whether to create the chart's top-level Service.
+  # -- Whether to create the chart's legacy top-level Service. The chart-created
+  # Ingress sends traffic directly to `proxy-service`; this Service does not
+  # select current workloads and therefore has no endpoints.
   enabled: true
   # -- Service type for the chart's top-level Service.
   type: ClusterIP
@@ -134,9 +138,10 @@ globals:
   # looping here: <https://docs.budibase.com/docs/looping>.
   automationMaxIterations: "200"
 
-  # -- Create a Kubernetes `Secret` containing Budibase credentials. Existing
-  # data is preserved and missing keys are populated from these values or
-  # generated defaults.
+  # -- Create or update the Kubernetes `Secret` containing Budibase credentials.
+  # Existing data is preserved and missing keys are populated from these values
+  # or generated defaults. Set this to false when `secretName` identifies a
+  # Secret managed outside Helm.
   createSecrets: true
   # -- Name of the Kubernetes Secret used for Budibase credentials. Defaults to
   # the release fullname. Before changing this on an existing installation,
@@ -670,7 +675,7 @@ services:
     # default, and the configuration for the CouchDB instance is under the
     # `couchdb` key at the root of this file. You can see what options are
     # available to you by looking at the official CouchDB Helm chart:
-    # <https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
+    # <https://github.com/apache/couchdb-helm/tree/couchdb-4.5.6/couchdb>.
     enabled: true
     # url: "" # only change if pointing to existing couch server
     # user: "" # only change if pointing to existing couch server
@@ -874,11 +879,11 @@ services:
 
 # Override values in couchDB subchart. We're only specifying the values we're changing.
 # If you want to see all of the available values, see:
-#   https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb
+#   https://github.com/apache/couchdb-helm/tree/couchdb-4.5.6/couchdb
 # Warning: The upstream Helm chart does not set a persistent password for the admin user by default.
 #
 # To have a specific password persist, you can set the adminPassword value.
-# See: https://github.com/apache/couchdb-helm/blob/couchdb-4.3.0/couchdb/values.yaml#L41
+# See: https://github.com/apache/couchdb-helm/blob/couchdb-4.5.6/couchdb/values.yaml#L41
 #
 # adminPassword: ""
 
