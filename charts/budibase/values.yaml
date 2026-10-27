@@ -139,7 +139,10 @@ globals:
   # generated defaults.
   createSecrets: true
   # -- Name of the Kubernetes Secret used for Budibase credentials. Defaults to
-  # the release fullname.
+  # the release fullname. Before changing this on an existing installation,
+  # copy all data from the current Secret to the new Secret name. The chart
+  # cannot migrate Secret data between names, and regenerating encryption keys
+  # makes existing encrypted data unreadable.
   secretName: ""
 
   # -- Used for encrypting API keys and environment variables when stored in the database.

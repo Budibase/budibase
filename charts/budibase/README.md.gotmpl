@@ -17,6 +17,15 @@ documentation here:
 
 ## Upgrading
 
+### Changing `globals.secretName`
+
+> [!WARNING]
+> Before changing `globals.secretName` on an existing installation, copy all
+> data from the current Secret to a Secret with the new name. The chart cannot
+> migrate Secret data between names. If the encryption keys are regenerated,
+> existing encrypted data becomes unreadable. Create the copied Secret before
+> upgrading the release with the new value.
+
 ### `2.x` to `3.0.0`
 
 We made a number of breaking changes in this release to make the chart more
