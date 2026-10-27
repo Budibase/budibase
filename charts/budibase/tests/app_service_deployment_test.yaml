@@ -179,6 +179,11 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: BB_ADMIN_USER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase
+                key: bb_admin_user_password
+                optional: true
 
   - it: should set terminationGracePeriodSeconds to 70 by default
     asserts:

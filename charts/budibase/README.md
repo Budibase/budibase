@@ -107,8 +107,13 @@ set `globals.createSecrets: false`. The external Secret must contain these keys:
 required only when their corresponding features or values are enabled.
 
 Environment variables sourced from a Secret do not update in running pods.
-After rotating an externally managed Secret, restart the app, worker,
-automation worker, and LiteLLM deployments that consume the changed keys.
+For chart-managed Secrets, an existing `redis_password` value takes precedence
+over `services.redis.password`; changing the Helm value alone does not rotate an
+existing Redis password. Update the `redis_password` key in the Secret to rotate
+it. After rotating that key, restart `redis-service` and the app, worker, and
+automation worker deployments. After rotating other externally managed keys,
+restart the deployments that consume those keys, including LiteLLM when its
+credentials change.
 
 ## Example minimal configuration
 
@@ -322,7 +327,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.redis.extraVolumeMounts | list | `[]` | Additional volumeMounts to the main redis container. |
 | services.redis.extraVolumes | list | `[]` | Additional volumes to the redis pod. |
 | services.redis.image | string | `"redis"` | The Redis image to use. |
-| services.redis.password | string | `"budibase"` | The password to use when connecting to Redis. It's recommended that you change this from the default if you're running Redis in-cluster. |
+| services.redis.password | string | `"budibase"` | The password to use when connecting to Redis. It's recommended that you change this from the default if you're running Redis in-cluster. With chart-managed Secrets, an existing `redis_password` value takes precedence over this setting. To rotate it, update that Secret key and restart redis-service and its clients. |
 | services.redis.port | int | `6379` | Port to expose Redis on. |
 | services.redis.resources | object | `{}` | The resources to use for Redis pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.redis.storage | string | `"100Mi"` | How much persistent storage to allocate to Redis. |

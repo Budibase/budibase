@@ -707,7 +707,9 @@ services:
     # connection details here.
     url: ""
     # -- The password to use when connecting to Redis. It's recommended that you change
-    # this from the default if you're running Redis in-cluster.
+    # this from the default if you're running Redis in-cluster. With chart-managed
+    # Secrets, an existing `redis_password` value takes precedence over this setting.
+    # To rotate it, update that Secret key and restart redis-service and its clients.
     password: "budibase"
     # -- The username to use when connecting to Redis. Only required for Redis 6+ with ACL
     # authentication enabled.

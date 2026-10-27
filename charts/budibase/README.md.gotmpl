@@ -106,8 +106,13 @@ set `globals.createSecrets: false`. The external Secret must contain these keys:
 required only when their corresponding features or values are enabled.
 
 Environment variables sourced from a Secret do not update in running pods.
-After rotating an externally managed Secret, restart the app, worker,
-automation worker, and LiteLLM deployments that consume the changed keys.
+For chart-managed Secrets, an existing `redis_password` value takes precedence
+over `services.redis.password`; changing the Helm value alone does not rotate an
+existing Redis password. Update the `redis_password` key in the Secret to rotate
+it. After rotating that key, restart `redis-service` and the app, worker, and
+automation worker deployments. After rotating other externally managed keys,
+restart the deployments that consume those keys, including LiteLLM when its
+credentials change.
 
 ## Example minimal configuration
 
