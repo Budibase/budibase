@@ -1,6 +1,6 @@
 import * as licenseClient from "./client"
 import { licenses as constants } from "../../../constants"
-import { env } from "@budibase/backend-core"
+import { env, isOfflineMode } from "@budibase/backend-core"
 import { License } from "@budibase/types"
 import * as offline from "./offline"
 import { tracer } from "dd-trace"
@@ -8,8 +8,8 @@ import { tracer } from "dd-trace"
 export const getLicense = async () => {
   return await tracer.trace("getLicense", async span => {
     // always use only the offline license when
-    // offline mode is set
-    if (env.OFFLINE_MODE) {
+    // offline mode is explicitly enabled
+    if (isOfflineMode()) {
       span.addTags({ offline: true })
       return offline.getOfflineLicense()
     }

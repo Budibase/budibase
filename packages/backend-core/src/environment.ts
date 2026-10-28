@@ -38,6 +38,19 @@ function parseIntSafe(number?: string) {
   }
 }
 
+function parseOfflineMode(value?: string | number | boolean): boolean {
+  if (value === true || value === 1) {
+    return true
+  }
+
+  if (typeof value !== "string") {
+    return false
+  }
+
+  const normalized = value?.trim().toLowerCase()
+  return ["1", "true", "yes", "on"].includes(normalized || "")
+}
+
 const DefaultBucketName = {
   BACKUPS: "backups",
   APPS: "prod-budi-app-assets",
@@ -255,12 +268,17 @@ const environment = {
     process.env.OIDC_ALLOW_UNVERIFIED_EMAIL_LINKING,
   ...getPackageJsonFields(),
   DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
-  OFFLINE_MODE: process.env.OFFLINE_MODE,
+  OFFLINE_MODE: parseOfflineMode(process.env.OFFLINE_MODE),
   SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
   _set(key: any, value: any) {
-    process.env[key] = value
+    if (value === undefined) {
+      delete process.env[key]
+    } else {
+      process.env[key] = value
+    }
     // @ts-ignore
-    environment[key] = value
+    environment[key] =
+      key === "OFFLINE_MODE" ? parseOfflineMode(process.env[key]) : value
   },
   ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
   ENABLE_SCIM_LOGGER: process.env.ENABLE_SCIM_LOGGER,
@@ -279,6 +297,10 @@ const environment = {
   OPENROUTER_BASE_URL:
     process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
   COUCH_DB_SQS_PORT: process.env.COUCH_DB_SQS_PORT || "4984",
+}
+
+export function isOfflineMode() {
+  return parseOfflineMode(environment.OFFLINE_MODE)
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {

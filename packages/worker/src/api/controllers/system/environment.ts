@@ -1,4 +1,4 @@
-import { env as coreEnv, db as dbCore, security } from "@budibase/backend-core"
+import { db as dbCore, isOfflineMode, security } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import { Ctx, GetEnvironmentResponse, MaintenanceType } from "@budibase/types"
 import nodeFetch from "node-fetch"
@@ -49,7 +49,7 @@ async function isSqsMissing() {
 export const fetch = async (ctx: Ctx<void, GetEnvironmentResponse>) => {
   ctx.body = {
     multiTenancy: !!env.MULTI_TENANCY,
-    offlineMode: !!coreEnv.OFFLINE_MODE,
+    offlineMode: isOfflineMode(),
     cloud: !env.SELF_HOSTED,
     accountPortalUrl: env.ACCOUNT_PORTAL_URL,
     disableAccountPortal: !!env.DISABLE_ACCOUNT_PORTAL,
