@@ -255,6 +255,7 @@ export class FlagSet<T extends { [name: string]: boolean }> {
 }
 
 const featureFlagDefaults: Record<FeatureFlag, boolean> = {
+  [FeatureFlag.DISABLE_CUSTOM_AI_CONFIG_CREATION]: false,
   [FeatureFlag.AI_TESTS]: false,
   [FeatureFlag.FRONT_COMPANION]: false,
   [FeatureFlag.PROJECTS]: false,

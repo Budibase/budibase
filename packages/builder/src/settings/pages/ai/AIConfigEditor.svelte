@@ -1,7 +1,7 @@
 <script lang="ts">
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
-  import { aiConfigsStore } from "@/stores/portal"
+  import { admin, aiConfigsStore, featureFlags } from "@/stores/portal"
   import { Button, Helpers, Input, notifications, Select } from "@budibase/bbui"
   import type {
     AIConfigResponse,
@@ -11,7 +11,7 @@
     UpdateAIConfigRequest,
     AIConfigType,
   } from "@budibase/types"
-  import { BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
+  import { BUDIBASE_AI_PROVIDER_ID, FeatureFlag } from "@budibase/types"
   import { onMount } from "svelte"
   import EnvVariableInput from "@/components/portal/environment/EnvVariableInput.svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
@@ -78,6 +78,12 @@
 
   let draft: AIConfigResponse = $state(createDraft())
   let isEdit = $derived(!!draft._id)
+  let isCreationDisabled = $derived(
+    $admin.cloud &&
+      $featureFlags[FeatureFlag.DISABLE_CUSTOM_AI_CONFIG_CREATION] &&
+      !isEdit &&
+      draft.provider !== BUDIBASE_AI_PROVIDER_ID
+  )
 
   const reasoningEffortOptions = [
     { label: "Low", value: "low" },
@@ -104,7 +110,7 @@
     JSON.stringify(savedSnapshot) !== JSON.stringify(draft)
   )
   let canSave = $derived.by(() => {
-    if (isSaving) {
+    if (isSaving || isCreationDisabled) {
       return false
     }
 
@@ -141,6 +147,10 @@
   })
 
   async function saveConfig() {
+    if (isCreationDisabled) {
+      return
+    }
+
     draft.name = draft.name.trim()
     draft.model = draft.model.trim()
     if (!draft.reasoningEffort) {
@@ -210,20 +220,22 @@
   }
 </script>
 
-<RouteActions>
-  <div class="actions">
-    {#if isEdit}
-      <Button on:click={deleteConfig} quiet overBackground>Delete</Button>
-    {/if}
-    <Button on:click={saveConfig} cta disabled={!canSave}>
-      {#if !isEdit}
-        Connect
-      {:else}
-        Save
+{#if !isCreationDisabled}
+  <RouteActions>
+    <div class="actions">
+      {#if isEdit}
+        <Button on:click={deleteConfig} quiet overBackground>Delete</Button>
       {/if}
-    </Button>
-  </div>
-</RouteActions>
+      <Button on:click={saveConfig} cta disabled={!canSave}>
+        {#if !isEdit}
+          Connect
+        {:else}
+          Save
+        {/if}
+      </Button>
+    </div>
+  </RouteActions>
+{/if}
 
 <div class="form">
   {#if !isManagedProvider}
