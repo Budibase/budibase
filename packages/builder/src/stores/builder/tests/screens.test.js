@@ -170,6 +170,22 @@ describe("Screens store", () => {
     expect(bb.store.screens).toEqual([screen])
   })
 
+  it("replaces a loaded screen with a fresh complete screen", ({ bb }) => {
+    const screen = getScreenFixture()
+      .addChild(getComponentFixture(`${COMP_PREFIX}/container`))
+      .json()
+    screen._rev = "1-original"
+    const revertedScreen = {
+      ...screen,
+      _rev: "2-reverted",
+      props: { ...screen.props, _children: [] },
+    }
+    bb.screenStore.syncAppScreens({ screens: [screen] })
+    bb.screenStore.syncAppScreens({ screens: [revertedScreen] })
+
+    expect(bb.store.screens).toEqual([revertedScreen])
+  })
+
   it("restores full children when undoing deletion of a truncated screen", async ({
     bb,
   }) => {

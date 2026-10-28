@@ -114,7 +114,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
     this.update(state => {
       const screens = pkg.screens.map(screen => {
         const existing = state.screens.find(s => s._id === screen._id)
-        return existing?._rev ? existing : screen
+        return !screen._rev && existing?._rev ? existing : screen
       })
       const nextSelectedScreenId = selectedScreenId || state.selectedScreenId
       const { selectedScreenId: _previous, ...rest } = state
