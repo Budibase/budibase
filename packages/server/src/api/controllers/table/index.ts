@@ -527,6 +527,12 @@ async function publishTableInternal(
             async () => {
               // Seed stored values without regenerating Auto IDs or other auto columns.
               const result = await prodDb.bulkDocs(sanitizedRows)
+              if (result.some(row => row.error)) {
+                throw new HTTPError(
+                  `Failed to seed production rows for table ${tableId}`,
+                  500
+                )
+              }
               const autoColumnState = await prodDb.tryGet<Document>(
                 `${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}${tableId}`
               )
@@ -546,6 +552,7 @@ async function publishTableInternal(
         `Failed to copy dev rows to prod for table ${tableId}`,
         error
       )
+      throw error
     }
   }
   const tableSegment = `${SEPARATOR}${tableId}${SEPARATOR}`

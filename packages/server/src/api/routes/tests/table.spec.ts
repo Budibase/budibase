@@ -1,4 +1,11 @@
-import { context, docIds, events, locks } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  docIds,
+  events,
+  locks,
+} from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
@@ -14,10 +21,12 @@ import {
   LockName,
   LockType,
   PermissionLevel,
+  QuotaUsageType,
   RelationshipType,
   Row,
   RowExportFormat,
   SaveTableRequest,
+  StaticQuotaName,
   Table,
   TableSchema,
   TableSourceType,
@@ -1726,6 +1735,79 @@ if (descriptions.length) {
             expect(prodRowsAfter.length).toBe(1)
             expect(prodRowsAfter[0]._id).toEqual(devRow._id)
           })
+
+          it.each([0, 1])(
+            "rejects failed bulk results without reporting an import (%s rows stored)",
+            async successfulRows => {
+              const table = await config.api.table.save(basicTable())
+              await config.api.table.publish(table._id!)
+              await config.api.row.save(table._id!, { name: "First seed row" })
+              await config.api.row.save(table._id!, { name: "Second seed row" })
+
+              const prodWorkspaceId = config.getProdWorkspaceId()
+              const getUsage = () =>
+                config.doInContext(prodWorkspaceId, () =>
+                  quotas.getCurrentUsageValues(
+                    QuotaUsageType.STATIC,
+                    StaticQuotaName.ROWS,
+                    table._id!
+                  )
+                )
+              const usageBefore = await getUsage()
+              jest.mocked(events.rows.imported).mockClear()
+
+              let storedRowId: string | undefined
+              const originalBulkDocs = dbCore.DatabaseImpl.prototype.bulkDocs
+              const bulkDocs = jest
+                .spyOn(dbCore.DatabaseImpl.prototype, "bulkDocs")
+                .mockImplementation(async function (
+                  this: dbCore.DatabaseImpl,
+                  docs
+                ) {
+                  if (
+                    context.getWorkspaceId() !== prodWorkspaceId ||
+                    !docs.some(
+                      doc => doc.tableId === table._id && !doc._deleted
+                    )
+                  ) {
+                    return originalBulkDocs.call(this, docs)
+                  }
+
+                  const saved = await originalBulkDocs.call(
+                    this,
+                    docs.slice(0, successfulRows)
+                  )
+                  storedRowId = docs.slice(0, successfulRows)[0]?._id
+                  return docs.map((doc, index) => {
+                    if (index < successfulRows) {
+                      return saved[index]
+                    }
+                    return {
+                      id: doc._id!,
+                      error: "conflict",
+                      reason: "Seed row could not be written",
+                    }
+                  })
+                })
+
+              try {
+                await config.api.table.publish(
+                  table._id!,
+                  { seedProductionTables: true },
+                  { status: 500 }
+                )
+              } finally {
+                bulkDocs.mockRestore()
+              }
+
+              const prodRows = await config.api.row.fetchProd(table._id!)
+              const usageAfter = await getUsage()
+              const expectedRowIds = successfulRows ? [storedRowId] : []
+              expect(prodRows.map(row => row._id)).toEqual(expectedRowIds)
+              expect(usageAfter).toEqual(usageBefore)
+              expect(events.rows.imported).not.toHaveBeenCalled()
+            }
+          )
 
           it.each([
             { alreadyPublished: false, deletedProdRows: 0 },
