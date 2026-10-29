@@ -1541,9 +1541,9 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
-    margin-left: auto;
     flex-shrink: 0;
-    justify-content: flex-end;
+    flex-wrap: wrap;
+    max-width: 100%;
   }
 
   .controls-row .search-wrapper {
@@ -1585,30 +1585,6 @@
     border: 1px solid var(--spectrum-global-color-gray-200);
     padding: var(--spacing-xs);
     margin-top: var(--spacing-xs);
-  }
-
-  @media (max-width: 1080px) {
-    .controls-row .controls-right {
-      width: 100%;
-      margin-left: 0;
-      flex-shrink: 1;
-      justify-content: flex-end;
-    }
-
-    .controls-row .search-wrapper {
-      max-width: none;
-    }
-  }
-
-  @media (max-width: 720px) {
-    .controls-row .controls-right {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .controls-row .search-wrapper {
-      width: 100%;
-    }
   }
 
   .create-popover-container :global(.spectrum-Menu) {
