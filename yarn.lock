@@ -8874,17 +8874,17 @@ bn.js@^4.0.0:
   integrity sha512-fGTi3gxV/23FTYdAoUtLYp6qySe2KE3teyZitipKNRuVYcBkoP/bB3guXN/XVKUe9mxCHXnc9C4ocyz8OmgN0g==
 
 body-parser@^2.2.1:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-2.3.0.tgz#6d8662f4d8c336028b8ac9aa24251b0ca64ba437"
-  integrity sha512-2cGmJupaNgg+QUwVLAucDuWuoMZ6EX9iHDRswZ5lsNYEmwPaRknMPCLZz07yTzVq/83p4o/wzbDZbBrTvGGTIw==
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-2.4.0.tgz#337a76249270f83e450ad385a9606ca3b4a75c06"
+  integrity sha512-Ifk1KcLrxaGt1occQagQNFNNOqRt1LFuehEnHHzB8Z6cRgIxRU1TBaiIsUiCdA+gy5PL7Y1IX31DNKkRmxtXjQ==
   dependencies:
     bytes "^3.1.2"
-    content-type "^2.0.0"
+    content-type "^2.1.0"
     debug "^4.4.3"
     http-errors "^2.0.1"
-    iconv-lite "^0.7.2"
+    iconv-lite "^0.7.3"
     on-finished "^2.4.1"
-    qs "^6.15.2"
+    qs "^6.16.1"
     raw-body "^3.0.2"
     type-is "^2.1.0"
 
@@ -9777,6 +9777,11 @@ content-type@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/content-type/-/content-type-2.0.0.tgz#2fb3ede69dffa0af78ca7c4ce7589680638b56df"
   integrity sha512-j/O/d7GcZCyNl7/hwZAb606rzqkyvaDctLmckbxLzHvFBzTJHuGEdodATcP3yIRoDrLHkIATJuvzbFlp/ki2cQ==
+
+content-type@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/content-type/-/content-type-2.1.0.tgz#d9389c43c0a8cf6a355db464d21e07092a40493a"
+  integrity sha512-mj7UPXE0jaqaOsukNZRUEfEi2AcL7C/vwmwcHV0O97eO1E1pxBZuyjlZrx5seTaNBg1U6+o35wpa35Qfcc+7ag==
 
 conventional-changelog-angular@9.2.1:
   version "9.2.1"
@@ -10826,9 +10831,9 @@ domhandler@^6.0.0:
     domelementtype "^3.0.0"
 
 dompurify@^3.3.1:
-  version "3.4.16"
-  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.4.16.tgz#c51b3709ea15ee9abb07e804f2ef30ea9b953128"
-  integrity sha512-sqo+pNp3qRhCIpbgRi1y8Tgk27Bo2Ry7w0dC1NBeNTdZChWjz9Xb/KOoZbRP/R6pQZ80Qw8YhXw13hWWBbMRnQ==
+  version "3.4.17"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.4.17.tgz#074bbb24eaa419535ac19ffe7f663104b0e1543d"
+  integrity sha512-B/pSlYVHQ58kqISD/yDjuJ1yfzI34m1gF4lAod2bwSRhiN4K5Cl3H8Af7hqB2PmTL911tdEudnnXn5FnhRoz0w==
   optionalDependencies:
     "@types/trusted-types" "^2.0.7"
 
@@ -13328,7 +13333,7 @@ iconv-lite@0.7.2:
   dependencies:
     safer-buffer ">= 2.1.2 < 3.0.0"
 
-iconv-lite@0.7.3, iconv-lite@^0.7.0, iconv-lite@^0.7.2, iconv-lite@~0.7.0:
+iconv-lite@0.7.3, iconv-lite@^0.7.0, iconv-lite@^0.7.2, iconv-lite@^0.7.3, iconv-lite@~0.7.0:
   version "0.7.3"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.7.3.tgz#84ee12f963e7de50bc01a13e160a078b3b0f415f"
   integrity sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ==
@@ -17142,10 +17147,10 @@ node-source-walk@^5.0.0, node-source-walk@^5.0.1:
   dependencies:
     "@babel/parser" "^7.21.4"
 
-nodemailer@10.1.4:
-  version "10.1.4"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.1.4.tgz#66063221b29cb146c987e325ea92776f534e6524"
-  integrity sha512-EsMnOR2oRv4LGnWvHgcVYkkQ4O2j8KO4WTw6l+PHR4sOXo8SAgIraxtEnGDmotjbhv0hDsu3IuDIFZm8iXwO4A==
+nodemailer@10.1.5:
+  version "10.1.5"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.1.5.tgz#038023022fce9a38737eba3706829d9343a0428c"
+  integrity sha512-lftc1Fxos2mPXHChDaCtkyD9umvlLw1iMREXgXv6LAaJycVzJ8GcpE90o02B+AqnICq8zy8gzo8FrKEzXZhlGg==
 
 nodemailer@9.0.1:
   version "9.0.1"
@@ -19296,10 +19301,10 @@ qrcode-generator@^1.4.4:
   resolved "https://registry.yarnpkg.com/qrcode-generator/-/qrcode-generator-1.5.2.tgz#43faea8061a60d2b4ca5e9b0c0c0fb99e2d93e3a"
   integrity sha512-pItrW0Z9HnDBnFmgiNrY1uxRdri32Uh9EjNYLPVC2zZ3ZRIIEqBoDgm4DkvDwNNDHTK7FNkmr8zAa77BYc9xNw==
 
-qs@^6.11.0, qs@^6.14.0, qs@^6.14.1, qs@^6.14.2, qs@^6.15.2, qs@^6.5.2:
-  version "6.16.0"
-  resolved "https://registry.yarnpkg.com/qs/-/qs-6.16.0.tgz#c22c723a28a920f3aacdce8289fabd43eccb79fd"
-  integrity sha512-h6fhOIaRrID2CbEY2fqs+7t+UXZo+MLAnU5gRIq85uFtdiUPCdsApMlHhXogKVM4HM2DVbIjGNTTYH2OcmP1vA==
+qs@^6.11.0, qs@^6.14.0, qs@^6.14.1, qs@^6.14.2, qs@^6.16.1, qs@^6.5.2:
+  version "6.17.1"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.17.1.tgz#43ac71d29ca0e9d0eed16a218e35b6cde5628e81"
+  integrity sha512-jd3COkaKVgGUW+ZHyEHCG9bH7RoaaiWuMgzsIBjUMVjLAaWGWpoUAVwljVvBHxRu/2qEHnadLGZrkutYUBPQJA==
   dependencies:
     es-define-property "^1.0.1"
     side-channel "^1.1.1"
@@ -21667,9 +21672,9 @@ toidentifier@1.0.1, toidentifier@~1.0.1:
   integrity sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==
 
 toml@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/toml/-/toml-5.0.0.tgz#687e98925aa3a5039719d8c652ca30c21a99b7f3"
-  integrity sha512-bsqEd+g7fzlrw7LEynQ6W6aOK/lTOlepz5x1sJyIV9fTZVJS2Q76nuju6FK+gZhW5bUpvB7mCEqdR0u4WziMFw==
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/toml/-/toml-5.0.1.tgz#67ca011810a2dd8741c2cede1027ee2084b73d67"
+  integrity sha512-EqYNA/YvUNndrA2B3O2ojzLQoTQrBxeZ9UIjQwk8t10oe6n7dwclBwd9IdZQTOKwe6vWX+AXtl6IntXRbepdxQ==
 
 toposort@^2.0.2:
   version "2.0.2"
@@ -23088,15 +23093,10 @@ zod@^3.24.2:
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.25.76.tgz#26841c3f6fd22a6a2760e7ccb719179768471e34"
   integrity sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==
 
-"zod@^3.25 || ^4.0", zod@^4.1.12, zod@^4.2.1:
-  version "4.3.6"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-4.3.6.tgz#89c56e0aa7d2b05107d894412227087885ab112a"
-  integrity sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==
-
-zod@^4.4.3:
-  version "4.6.5"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-4.6.5.tgz#e3af3edbdc260239c52f73caad05dbbffe6e82cd"
-  integrity sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==
+"zod@^3.25 || ^4.0", zod@^4.1.12, zod@^4.2.1, zod@^4.4.3:
+  version "4.6.6"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-4.6.6.tgz#0bb0cf57b87011a71ec28ed2e1b51f6455563f9a"
+  integrity sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==
 
 zwitch@^2.0.0:
   version "2.0.4"
