@@ -275,7 +275,7 @@
     secondaryAction={remove}
     onConfirm={save}
     disabled={!name.trim() ||
-      !recipients.length ||
+      (!approvers.length && !recipients.length) ||
       (expiry === CUSTOM && !customValid)}
   >
     <div class="configuration-field">

@@ -255,7 +255,10 @@ export const createEscalationGateRuntime = ({
     }
 
     const policy = resolvePolicy(operation, rule.policyId)
-    if (!policy?.notifications?.recipients?.length) {
+    if (
+      !policy ||
+      (!policy.approvers?.length && !policy.notifications?.recipients?.length)
+    ) {
       return unavailableResult(label)
     }
     const { notifications, ...policySnapshot } = policy
