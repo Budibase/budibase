@@ -34,6 +34,7 @@ import { generator } from "@budibase/backend-core/tests"
 import timekeeper from "timekeeper"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
+import sdk from "../../../sdk"
 
 const { basicTable, viewV2: viewV2Structures } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
@@ -1725,6 +1726,111 @@ if (descriptions.length) {
             expect(prodRowsAfter.length).toBe(1)
             expect(prodRowsAfter[0]._id).toEqual(devRow._id)
           })
+
+          it.each([
+            { alreadyPublished: false, deletedProdRows: 0 },
+            { alreadyPublished: true, deletedProdRows: 0 },
+            { alreadyPublished: true, deletedProdRows: 1 },
+            { alreadyPublished: true, deletedProdRows: 5 },
+          ])(
+            "preserves seeded Auto IDs and independent counters (published: $alreadyPublished, deleted prod rows: $deletedProdRows)",
+            async ({ alreadyPublished, deletedProdRows }) => {
+              const table = await config.api.table.save(
+                basicTable(undefined, {
+                  schema: {
+                    name: { name: "name", type: FieldType.STRING },
+                    autoId: {
+                      name: "autoId",
+                      type: FieldType.NUMBER,
+                      subtype: AutoFieldSubType.AUTO_ID,
+                      autocolumn: true,
+                    },
+                  },
+                })
+              )
+
+              if (alreadyPublished) {
+                await config.api.workspace.publish(config.getDevWorkspaceId())
+                await config.withProdApp(async () => {
+                  for (let i = 0; i < deletedProdRows; i++) {
+                    const row = await config.api.row.save(table._id!, {
+                      name: "deleted-prod-row",
+                    })
+                    await config.api.row.delete(table._id!, {
+                      _id: row._id!,
+                    })
+                  }
+                })
+              }
+
+              const { row: firstRow } = await config.doInContext(
+                config.getDevWorkspaceId(),
+                () =>
+                  sdk.rows.save(
+                    table._id!,
+                    {
+                      _id: docIds.generateRowID(table._id!, "c"),
+                      name: "first",
+                    },
+                    config.user?._id
+                  )
+              )
+              const deletedRow = await config.api.row.save(table._id!, {
+                name: "deleted-dev-row",
+              })
+              await config.api.row.delete(table._id!, {
+                _id: deletedRow._id!,
+              })
+              const { row: secondRow } = await config.doInContext(
+                config.getDevWorkspaceId(),
+                () =>
+                  sdk.rows.save(
+                    table._id!,
+                    {
+                      _id: docIds.generateRowID(table._id!, "a"),
+                      name: "second",
+                    },
+                    config.user?._id
+                  )
+              )
+
+              await config.api.table.publish(table._id!, {
+                seedProductionTables: true,
+              })
+              config.prodWorkspaceId = config
+                .getDevWorkspaceId()
+                .replace("_dev", "")
+
+              const prodRows = await config.api.row.fetchProd(table._id!)
+              const newProdRow = await config.withProdApp(() =>
+                config.api.row.save(table._id!, { name: "new-prod-row" })
+              )
+              await config.withProdApp(() =>
+                config.api.row.save(table._id!, { name: "another-prod-row" })
+              )
+              const newDevRow = await config.api.row.save(table._id!, {
+                name: "new-dev-row",
+              })
+
+              expect(prodRows).toHaveLength(2)
+              expect(prodRows).toEqual(
+                expect.arrayContaining([
+                  expect.objectContaining({
+                    _id: firstRow._id,
+                    name: "first",
+                    autoId: 1,
+                  }),
+                  expect.objectContaining({
+                    _id: secondRow._id,
+                    name: "second",
+                    autoId: 3,
+                  }),
+                ])
+              )
+              expect(newProdRow.autoId).toBe(4)
+              expect(newDevRow.autoId).toBe(4)
+            }
+          )
 
           it("strips timezone suffixes for ignoreTimezones fields when seeding", async () => {
             const table = await config.api.table.save(
