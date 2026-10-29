@@ -156,12 +156,9 @@ export async function startMailserver(
     authOptional: true,
     disabledCommands: ["AUTH", "STARTTLS"],
     onData(stream, session, callback) {
-      const chunks: Uint8Array[] = []
+      const chunks: Buffer[] = []
       stream.on("data", chunk => {
-        const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
-        chunks.push(
-          new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
-        )
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
       })
       stream.on("error", error => callback(error))
       stream.on("end", async () => {
