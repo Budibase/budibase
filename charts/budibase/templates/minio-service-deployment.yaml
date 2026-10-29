@@ -27,12 +27,12 @@ spec:
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: objectStoreAccess
         - name: MINIO_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
               key: objectStoreSecret
 
         image: {{ .Values.globals.dockerRegistry | default "" }}budibase/minio:final

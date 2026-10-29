@@ -30,7 +30,13 @@ spec:
       - args:
         - redis-server
         - --requirepass
-        - {{ .Values.services.redis.password }}
+        - $(REDIS_PASSWORD)
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.globals.secretName | default (include "budibase.fullname" .) }}
+              key: redis_password
         image: {{ .Values.services.redis.image | default (printf "%sredis" (.Values.globals.dockerRegistry | default "")) }}
         imagePullPolicy: ""
         {{- with .Values.services.redis.securityContext }}

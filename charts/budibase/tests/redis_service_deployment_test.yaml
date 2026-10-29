@@ -102,6 +102,22 @@ tests:
           path: spec.template.spec.containers[0].ports[0].containerPort
           value: 6379
 
+  - it: should source the password from the configured Secret
+    set:
+      globals.secretName: test-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args[2]
+          value: $(REDIS_PASSWORD)
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: test-secret
+                key: redis_password
+
   - it: should mount redis-data volume
     set:
       services.redis.enabled: true
