@@ -7169,13 +7169,6 @@
   dependencies:
     "@types/node" "*"
 
-"@types/nodemailer@7.0.11":
-  version "7.0.11"
-  resolved "https://registry.yarnpkg.com/@types/nodemailer/-/nodemailer-7.0.11.tgz#f04f91aac57eb4f2b79600867288bafe61c360d3"
-  integrity sha512-E+U4RzR2dKrx+u3N4DlsmLaDC6mMZOM/TPROxA0UAPiTgI0y4CEFBmZE+coGWTjakDriRsXG368lNk1u9Q0a2g==
-  dependencies:
-    "@types/node" "*"
-
 "@types/oracledb@6.5.1":
   version "6.5.1"
   resolved "https://registry.yarnpkg.com/@types/oracledb/-/oracledb-6.5.1.tgz#17d021cabc9d216dfa6d3d65ae3ee585c33baab3"
