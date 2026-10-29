@@ -36,6 +36,8 @@
 - Do not add backwards compatibility paths or broad "handle every scenario" logic unless explicitly instructed to do so for the task.
 - Testing: Jest framework, use describe/it structure, mock external services
   using `nock`.
+- Prefer separate tests for distinct scenarios over conditional branches in tests.
+  Use `it.each` for variations within a scenario and avoid `if` statements where possible.
 - Only comment when it's really necessary to explain an unclear behaviour.
 - Never use console.log in tests, the output will not be visible in STDOUT
   when you run the tests. It is a waste of time.

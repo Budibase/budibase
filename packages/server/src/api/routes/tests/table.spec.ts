@@ -1809,14 +1809,92 @@ if (descriptions.length) {
             }
           )
 
-          it.each([
-            { alreadyPublished: false, deletedProdRows: 0 },
-            { alreadyPublished: true, deletedProdRows: 0 },
-            { alreadyPublished: true, deletedProdRows: 1 },
-            { alreadyPublished: true, deletedProdRows: 5 },
-          ])(
-            "preserves seeded Auto IDs and independent counters (published: $alreadyPublished, deleted prod rows: $deletedProdRows)",
-            async ({ alreadyPublished, deletedProdRows }) => {
+          it("preserves seeded Auto IDs and independent counters when not already published", async () => {
+            const table = await config.api.table.save(
+              basicTable(undefined, {
+                schema: {
+                  name: { name: "name", type: FieldType.STRING },
+                  autoId: {
+                    name: "autoId",
+                    type: FieldType.NUMBER,
+                    subtype: AutoFieldSubType.AUTO_ID,
+                    autocolumn: true,
+                  },
+                },
+              })
+            )
+
+            const { row: firstRow } = await config.doInContext(
+              config.getDevWorkspaceId(),
+              () =>
+                sdk.rows.save(
+                  table._id!,
+                  {
+                    _id: docIds.generateRowID(table._id!, "c"),
+                    name: "first",
+                  },
+                  config.user?._id
+                )
+            )
+            const deletedRow = await config.api.row.save(table._id!, {
+              name: "deleted-dev-row",
+            })
+            await config.api.row.delete(table._id!, {
+              _id: deletedRow._id!,
+            })
+            const { row: secondRow } = await config.doInContext(
+              config.getDevWorkspaceId(),
+              () =>
+                sdk.rows.save(
+                  table._id!,
+                  {
+                    _id: docIds.generateRowID(table._id!, "a"),
+                    name: "second",
+                  },
+                  config.user?._id
+                )
+            )
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+            config.prodWorkspaceId = config
+              .getDevWorkspaceId()
+              .replace("_dev", "")
+
+            const prodRows = await config.api.row.fetchProd(table._id!)
+            const newProdRow = await config.withProdApp(() =>
+              config.api.row.save(table._id!, { name: "new-prod-row" })
+            )
+            await config.withProdApp(() =>
+              config.api.row.save(table._id!, { name: "another-prod-row" })
+            )
+            const newDevRow = await config.api.row.save(table._id!, {
+              name: "new-dev-row",
+            })
+
+            expect(prodRows).toHaveLength(2)
+            expect(prodRows).toEqual(
+              expect.arrayContaining([
+                expect.objectContaining({
+                  _id: firstRow._id,
+                  name: "first",
+                  autoId: 1,
+                }),
+                expect.objectContaining({
+                  _id: secondRow._id,
+                  name: "second",
+                  autoId: 3,
+                }),
+              ])
+            )
+            expect(newProdRow.autoId).toBe(4)
+            expect(newDevRow.autoId).toBe(4)
+          })
+
+          it.each([0, 1, 5])(
+            "preserves seeded Auto IDs and independent counters when already published (%s deleted prod rows)",
+            async deletedProdRows => {
               const table = await config.api.table.save(
                 basicTable(undefined, {
                   schema: {
@@ -1831,19 +1909,17 @@ if (descriptions.length) {
                 })
               )
 
-              if (alreadyPublished) {
-                await config.api.workspace.publish(config.getDevWorkspaceId())
-                await config.withProdApp(async () => {
-                  for (let i = 0; i < deletedProdRows; i++) {
-                    const row = await config.api.row.save(table._id!, {
-                      name: "deleted-prod-row",
-                    })
-                    await config.api.row.delete(table._id!, {
-                      _id: row._id!,
-                    })
-                  }
-                })
-              }
+              await config.api.workspace.publish(config.getDevWorkspaceId())
+              await config.withProdApp(async () => {
+                for (let i = 0; i < deletedProdRows; i++) {
+                  const row = await config.api.row.save(table._id!, {
+                    name: "deleted-prod-row",
+                  })
+                  await config.api.row.delete(table._id!, {
+                    _id: row._id!,
+                  })
+                }
+              })
 
               const { row: firstRow } = await config.doInContext(
                 config.getDevWorkspaceId(),
