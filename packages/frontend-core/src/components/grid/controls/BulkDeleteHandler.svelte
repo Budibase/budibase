@@ -82,7 +82,8 @@
 <Modal bind:this={rowsModal}>
   <ModalContent
     title="Delete rows"
-    confirmText="Continue"
+    confirmText={`Delete ${promptQuantity} rows`}
+    warning
     cancelText="Cancel"
     onConfirm={bulkDeleteRows}
     size="M"
@@ -102,7 +103,8 @@
 <Modal bind:this={cellsModal}>
   <ModalContent
     title="Delete cells"
-    confirmText="Continue"
+    confirmText={`Delete ${promptQuantity} cells`}
+    warning
     cancelText="Cancel"
     onConfirm={bulkDeleteCells}
     size="M"
