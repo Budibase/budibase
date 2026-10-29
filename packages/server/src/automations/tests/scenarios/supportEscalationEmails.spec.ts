@@ -23,9 +23,6 @@ const emailResponse = (to: string): SendEmailResponse => ({
   pending: [],
   rejected: [],
   response: "queued",
-  envelopeTime: 0,
-  messageTime: 0,
-  messageSize: 0,
 })
 
 describe("Support escalation email automations", () => {

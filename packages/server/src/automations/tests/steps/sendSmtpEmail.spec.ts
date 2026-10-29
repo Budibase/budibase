@@ -19,9 +19,6 @@ function generateResponse(to: string, from: string): SendEmailResponse {
     pending: [],
     rejected: [],
     response: "response",
-    envelopeTime: 0,
-    messageTime: 0,
-    messageSize: 0,
   }
 }
 
