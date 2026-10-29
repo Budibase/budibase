@@ -458,14 +458,27 @@ describe("policy snapshot", () => {
     }
   )
 
-  // This will change when the Request portal goes in
-  // Right now you cant escalate without a notif
-  it("returns unavailable and raises nothing when the policy has no recipients", async () => {
+  it("raises an escalation when the policy has approvers but no recipients", async () => {
     const result = await gateFor({
       id: "policy_1",
       name: "Manager approval",
       approvers: ["us_1", "us_2"],
       approvalType: ResolutionStrategy.UNANIMOUS,
+      notifications: { recipients: [] },
+    }).intercept({ title: "Planning" }, { toolCallId: "call_1" })
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        status: ApprovalToolResultStatus.PENDING_APPROVAL,
+      })
+    )
+    expect(escalationProcessor.create).toHaveBeenCalledTimes(1)
+  })
+
+  it("returns unavailable and raises nothing when the policy has no approvers or recipients", async () => {
+    const result = await gateFor({
+      id: "policy_1",
+      name: "Manager approval",
       notifications: { recipients: [] },
     }).intercept({ title: "Planning" }, { toolCallId: "call_1" })
 
