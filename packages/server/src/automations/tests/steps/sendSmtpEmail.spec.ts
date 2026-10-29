@@ -1,4 +1,4 @@
-import { SendEmailResponse, SmtpEmailStepInputs } from "@budibase/types"
+import type { SendEmailResponse, SmtpEmailStepInputs } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import * as workerRequests from "../../../utilities/workerRequests"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
@@ -15,6 +15,9 @@ function generateResponse(to: string, from: string): SendEmailResponse {
       from: from,
       to: [to],
     },
+    envelopeTime: 0,
+    messageTime: 0,
+    messageSize: 0,
     messageId: "messageId",
     pending: [],
     rejected: [],
