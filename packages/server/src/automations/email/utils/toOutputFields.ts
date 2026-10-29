@@ -1,4 +1,4 @@
-import type { FetchMessageObject, MessageAddressObject } from "imapflow"
+import { FetchMessageObject, MessageAddressObject } from "imapflow"
 import { simpleParser } from "mailparser"
 import type { EmailTriggerOutputs } from "@budibase/types"
 import { htmlToText } from "html-to-text"
@@ -17,17 +17,6 @@ const extractAddresses = (addresses: MessageAddressObject[] = []): string[] =>
     if (address) acc.push(address)
     return acc
   }, [])
-
-const getSentAt = (date: Date | string | undefined): string | undefined => {
-  if (date === undefined) {
-    return undefined
-  }
-
-  const parsedDate = typeof date === "string" ? new Date(date) : date
-  return Number.isNaN(parsedDate.getTime())
-    ? undefined
-    : parsedDate.toISOString()
-}
 
 const applyBodyLimit = (body: string | undefined): BodyLimitResult => {
   if (!body) {
@@ -82,7 +71,7 @@ export const toOutputFields = async (
     to: toAddresses.join(", ") || "unknown",
     cc,
     subject: message.envelope?.subject,
-    sentAt: getSentAt(message.envelope?.date),
+    sentAt: message.envelope?.date?.toISOString(),
     bodyText,
     bodyTextTruncated,
   }

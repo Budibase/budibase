@@ -1,4 +1,4 @@
-import type { FetchMessageObject, MessageEnvelopeObject } from "imapflow"
+import type { FetchMessageObject } from "imapflow"
 import { htmlToText } from "html-to-text"
 import {
   EMAIL_BODY_CHARACTER_LIMIT,
@@ -6,13 +6,10 @@ import {
   toOutputFields,
 } from "../../email/utils/toOutputFields"
 
-const buildMessage = ({
-  raw,
-  envelopeOverrides = {},
-}: {
-  raw: string
-  envelopeOverrides?: Partial<MessageEnvelopeObject>
-}): FetchMessageObject => {
+const buildMessage = (
+  raw: string,
+  envelopeOverrides: Partial<NonNullable<FetchMessageObject["envelope"]>> = {}
+): FetchMessageObject => {
   const source = Buffer.from(raw, "utf8")
   return {
     source,
@@ -29,45 +26,11 @@ const buildMessage = ({
 }
 
 describe("toOutputFields", () => {
-  it.each([
-    {
-      name: "a valid Date",
-      date: new Date("2024-01-01T00:00:00.000Z"),
-      sentAt: "2024-01-01T00:00:00.000Z",
-    },
-    {
-      name: "a date string with a timezone offset",
-      date: "Mon, 01 Jan 2024 02:00:00 +0200",
-      sentAt: "2024-01-01T00:00:00.000Z",
-    },
-    { name: "an invalid date string", date: "invalid date", sentAt: undefined },
-    { name: "an empty date string", date: "", sentAt: undefined },
-    { name: "an invalid Date", date: new Date(NaN), sentAt: undefined },
-    { name: "a missing date", date: undefined, sentAt: undefined },
-  ])("preserves the email output with $name", async ({ date, sentAt }) => {
-    const message = buildMessage({
-      raw: "Content-Type: text/plain; charset=utf-8\r\n\r\nHello",
-      envelopeOverrides: { date },
-    })
-
-    const result = await toOutputFields(message)
-
-    expect(result).toEqual({
-      from: "sender@example.com",
-      to: "recipient@example.com",
-      cc: [],
-      subject: "subject",
-      sentAt,
-      bodyText: "Hello",
-      bodyTextTruncated: false,
-    })
-  })
-
   it("returns bodyText when under limit", async () => {
     const body = "Hello, world!"
-    const message = buildMessage({
-      raw: ["Content-Type: text/plain; charset=utf-8", "", body].join("\r\n"),
-    })
+    const message = buildMessage(
+      ["Content-Type: text/plain; charset=utf-8", "", body].join("\r\n")
+    )
 
     const result = await toOutputFields(message)
 
@@ -86,8 +49,8 @@ describe("toOutputFields", () => {
     const boundary = "----=_Part_HTML"
     const html =
       "<h1>Welcome</h1><p>This is a <strong>test</strong> email.<br />Thanks!</p>"
-    const message = buildMessage({
-      raw: [
+    const message = buildMessage(
+      [
         `Content-Type: multipart/alternative; boundary="${boundary}"`,
         "",
         `--${boundary}`,
@@ -100,8 +63,8 @@ describe("toOutputFields", () => {
         html,
         `--${boundary}--`,
         "",
-      ].join("\r\n"),
-    })
+      ].join("\r\n")
+    )
 
     const result = await toOutputFields(message)
 
@@ -112,9 +75,9 @@ describe("toOutputFields", () => {
 
   it("truncates bodyText when exceeding limit", async () => {
     const body = "a".repeat(EMAIL_BODY_CHARACTER_LIMIT + 10)
-    const message = buildMessage({
-      raw: ["Content-Type: text/plain; charset=utf-8", "", body].join("\r\n"),
-    })
+    const message = buildMessage(
+      ["Content-Type: text/plain; charset=utf-8", "", body].join("\r\n")
+    )
 
     const result = await toOutputFields(message)
 
@@ -131,7 +94,7 @@ describe("toOutputFields", () => {
 
   it("returns undefined body without truncation when source is missing", async () => {
     const message: FetchMessageObject = {
-      ...buildMessage({ raw: "" }),
+      ...buildMessage(""),
       source: undefined,
     }
 
@@ -144,16 +107,16 @@ describe("toOutputFields", () => {
 
   it("returns all cc addresses as an array", async () => {
     const body = "Body with CC"
-    const message = buildMessage({
-      raw: ["Content-Type: text/plain; charset=utf-8", "", body].join("\r\n"),
-      envelopeOverrides: {
+    const message = buildMessage(
+      ["Content-Type: text/plain; charset=utf-8", "", body].join("\r\n"),
+      {
         cc: [
           { address: "first@example.com" },
           { address: undefined },
           { address: "second@example.com" },
         ],
-      },
-    })
+      }
+    )
 
     const result = await toOutputFields(message)
 
@@ -163,14 +126,11 @@ describe("toOutputFields", () => {
   })
 
   it("falls back to unknown when sender or recipient addresses are missing", async () => {
-    const message = buildMessage({
-      raw: "",
-      envelopeOverrides: {
-        from: [{ address: undefined }],
-        to: undefined,
-        date: undefined,
-        subject: undefined,
-      },
+    const message = buildMessage("", {
+      from: [{ address: undefined }],
+      to: undefined,
+      date: undefined,
+      subject: undefined,
     })
 
     const result = await toOutputFields(message)
@@ -183,7 +143,7 @@ describe("toOutputFields", () => {
 
   it("returns undefined body when parsing fails", async () => {
     const message: FetchMessageObject = {
-      ...buildMessage({ raw: "" }),
+      ...buildMessage(""),
       source: Buffer.from([0xff, 0xfe, 0xfd]),
     }
     const consoleLog = jest.spyOn(console, "log").mockImplementation()

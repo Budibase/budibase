@@ -70,7 +70,6 @@ const startOAuthImapServer = async () => {
     socket.write("* OK Mock IMAP server ready\r\n")
 
     let buffer = ""
-    let authTag: string | undefined
     socket.on("data", chunk => {
       buffer += chunk.toString("utf8")
 
@@ -81,16 +80,12 @@ const startOAuthImapServer = async () => {
         commands.push(line)
 
         const [tag, command] = line.split(" ")
-        if (authTag) {
-          socket.write(`${authTag} OK AUTHENTICATE completed\r\n`)
-          authTag = undefined
-        } else if (command?.toUpperCase() === "CAPABILITY") {
+        if (command?.toUpperCase() === "CAPABILITY") {
           socket.write(
             `* CAPABILITY IMAP4rev1 AUTH=XOAUTH2\r\n${tag} OK CAPABILITY completed\r\n`
           )
         } else if (command?.toUpperCase() === "AUTHENTICATE") {
-          authTag = tag
-          socket.write("+ \r\n")
+          socket.write(`${tag} OK AUTHENTICATE completed\r\n`)
         } else if (command?.toUpperCase() === "LOGOUT") {
           socket.write(`* BYE Logging out\r\n${tag} OK LOGOUT completed\r\n`)
           socket.end()
@@ -175,10 +170,14 @@ describe("getClient", () => {
       await client.connect()
       await client.logout()
 
-      const authCommandIndex = server.commands.findIndex(command =>
+      const authCommand = server.commands.find(command =>
         command.includes("AUTHENTICATE XOAUTH2")
       )
-      const encodedToken = server.commands[authCommandIndex + 1]
+      if (!authCommand) {
+        throw new Error("Expected XOAUTH2 authentication command")
+      }
+
+      const encodedToken = authCommand.split(" ")[3]
       const decodedToken = Buffer.from(encodedToken, "base64").toString("utf8")
 
       expect(getTokenFromConfig).toHaveBeenCalledWith(
