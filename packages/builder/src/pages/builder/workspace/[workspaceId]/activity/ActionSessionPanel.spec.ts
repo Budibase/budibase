@@ -500,10 +500,16 @@ describe("ActionSessionPanel", () => {
       renderPanel(session)
       await screen.findByText(/Step executed/)
 
-      notify()
-      notify()
-      notify()
-      refresh.resolve(eventsResponse({ ids: ["event-1"] }))
+      vi.useFakeTimers()
+      try {
+        notify()
+        notify()
+        notify()
+        refresh.resolve(eventsResponse({ ids: ["event-1"] }))
+        await vi.advanceTimersByTimeAsync(1000)
+      } finally {
+        vi.useRealTimers()
+      }
 
       await screen.findByText("Showing 1–2 of 2 items")
       expect(mocks.fetchActionSessionEvents).toHaveBeenCalledTimes(3)

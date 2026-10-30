@@ -6,13 +6,11 @@
   $: goto = $gotoStore
 
   let modal
-  let promptUpload = false
   let tableModalKey = 0
 
   export let initialProjectIds = []
 
-  export function show({ promptUpload: newPromptUpload = false } = {}) {
-    promptUpload = newPromptUpload
+  export function show() {
     tableModalKey += 1
     modal.show()
   }
@@ -25,10 +23,6 @@
 
 <Modal bind:this={modal} closeOnOutsideClick={false}>
   {#key tableModalKey}
-    <CreateTableModal
-      {promptUpload}
-      {initialProjectIds}
-      afterSave={handleInternalTableSave}
-    />
+    <CreateTableModal {initialProjectIds} afterSave={handleInternalTableSave} />
   {/key}
 </Modal>
