@@ -2,6 +2,7 @@ import { middleware } from "@budibase/backend-core"
 import { MAX_PROJECT_README_LENGTH } from "@budibase/types"
 import Joi from "joi"
 import { projectsEnabled } from "../../middleware/projectsEnabled"
+import { projectTemplatesEnabled } from "../../middleware/projectTemplatesEnabled"
 import {
   AppType,
   middleware as appInfoMiddleware,
@@ -18,6 +19,26 @@ const baseSchema = {
 
 builderRoutes
   .get("/api/projects", projectsEnabled, controller.fetch)
+  .get(
+    "/api/projects/templates",
+    projectTemplatesEnabled,
+    controller.fetchTemplates
+  )
+  .post(
+    "/api/projects/templates/import",
+    projectTemplatesEnabled,
+    appInfoMiddleware({ appType: AppType.DEV }),
+    middleware.joiValidator.body(
+      Joi.object({
+        templateKey: Joi.string()
+          .pattern(/^project\/[a-z0-9]+(?:-[a-z0-9]+)*$/)
+          .max(200)
+          .required(),
+      }),
+      { allowUnknown: false }
+    ),
+    controller.importTemplate
+  )
   .post(
     "/api/projects/assignments/preview",
     projectsEnabled,
