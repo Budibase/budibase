@@ -3,12 +3,12 @@ import fs from "fs"
 import os from "os"
 import { join } from "path"
 import { processStringSync } from "@budibase/string-templates"
+import { SVELTE_VERSION } from "./svelteVersion"
 
 const download = require("download")
 const tar = require("tar")
 
 const HBS_FILES = ["package.json.hbs", "schema.json.hbs", "README.md.hbs"]
-const SVELTE_VERSION = "5.40.2"
 
 async function getSkeletonUrl(type: string) {
   const resp = await fetch(
