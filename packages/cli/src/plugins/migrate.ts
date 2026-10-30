@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 import os from "os"
 import { getSkeleton } from "./skeleton"
+import { SVELTE_VERSION } from "./svelteVersion"
 
 type MigrationResult = {
   changed: boolean
@@ -312,11 +313,11 @@ export function migratePackageJson(): MigrationResult {
   const bumpedVersion = bumpMinorVersion(previousVersion)
 
   if (!json.dependencies) json.dependencies = {}
-  json.dependencies["svelte"] = "^5.0.0"
+  json.dependencies["svelte"] = SVELTE_VERSION
 
   json.peerDependencies = {
     ...(json.peerDependencies || {}),
-    svelte: "^5.0.0",
+    svelte: SVELTE_VERSION,
   }
 
   const dev = json.devDependencies || {}
@@ -352,7 +353,7 @@ export function migratePackageJson(): MigrationResult {
   if (before === after) {
     return {
       changed: false,
-      message: "package.json already appears Svelte 5 ready. Skipping.",
+      message: `package.json already appears ready for Svelte ${SVELTE_VERSION}. Skipping.`,
     }
   }
 
@@ -364,8 +365,8 @@ export function migratePackageJson(): MigrationResult {
       ? ` (version ${previousVersion} -> ${bumpedVersion})`
       : ""
   const message = bumpedVersion
-    ? `Updated package.json for Svelte 5, Rollup 4, scripts, and version bump${versionMessage}.`
-    : "Updated package.json for Svelte 5, Rollup 4, and scripts."
+    ? `Updated package.json for Svelte ${SVELTE_VERSION}, Rollup 4, scripts, and version bump${versionMessage}.`
+    : `Updated package.json for Svelte ${SVELTE_VERSION}, Rollup 4, and scripts.`
 
   return {
     changed: true,
@@ -493,16 +494,20 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
   // package.json
   const pkgRaw = fs.readFileSync("package.json", "utf8")
   const pkg = JSON.parse(pkgRaw)
-  const usingSvelte5 =
-    pkg?.dependencies?.svelte?.startsWith("^5") ||
-    pkg?.peerDependencies?.svelte?.startsWith("^5")
+  const usingPinnedSvelte =
+    pkg?.dependencies?.svelte === SVELTE_VERSION &&
+    pkg?.peerDependencies?.svelte === SVELTE_VERSION
   const currentVersion =
     typeof pkg?.version === "string" ? pkg.version.trim() : undefined
   const projectedVersion = bumpMinorVersion(currentVersion)
-  if (!usingSvelte5) {
-    report.push("Will bump svelte to ^5.0.0 and align dev/peer dependencies.")
+  if (!usingPinnedSvelte) {
+    report.push(
+      `Will pin the Svelte dependency and peer dependency to ${SVELTE_VERSION}.`
+    )
   } else {
-    report.push("package.json appears to already depend on Svelte 5.")
+    report.push(
+      `package.json already pins the Svelte dependency and peer dependency to ${SVELTE_VERSION}.`
+    )
   }
   if (pkg?.dependencies?.["@crownframework/svelte-error-boundary"]) {
     report.push(
@@ -586,7 +591,7 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
     report.push("schema.json not found - cannot update metadata.")
   }
 
-  const packageJsonStatus: AnalysisResult["packageJson"] = usingSvelte5
+  const packageJsonStatus: AnalysisResult["packageJson"] = usingPinnedSvelte
     ? "looks-new"
     : "needs-migration"
 
