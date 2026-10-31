@@ -27,7 +27,10 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface AppEndpoints {
-  fetchAppPackage: (workspaceId: string) => Promise<FetchAppPackageResponse>
+  fetchAppPackage: (
+    workspaceId: string,
+    screenId?: string | null
+  ) => Promise<FetchAppPackageResponse>
   saveAppMetadata: (
     workspaceId: string,
     metadata: UpdateWorkspaceRequest
@@ -77,10 +80,16 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   /**
    * Fetches screen definition for a workspace.
    * @param workspaceId the ID of the workspace to fetch from
+   * @param screenId the screen to return in full for builders, other screens are truncated.
+   * Pass null when no screen is open to truncate all screens.
    */
-  fetchAppPackage: async workspaceId => {
+  fetchAppPackage: async (workspaceId, screenId) => {
     return await API.get({
-      url: `/api/applications/${workspaceId}/appPackage`,
+      url: `/api/applications/${workspaceId}/appPackage${
+        screenId === undefined
+          ? ""
+          : `?screenId=${encodeURIComponent(screenId ?? "")}`
+      }`,
     })
   },
 

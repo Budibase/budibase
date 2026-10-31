@@ -9,6 +9,8 @@ import { QueryStore } from "@/stores/builder/queries"
 import { API } from "@/api"
 import {
   workspaceStore,
+  screenStore as componentScreenStore,
+  componentTreeNodesStore,
   tables,
   setComponentStore,
   setDatasourcesStore,
@@ -60,6 +62,7 @@ vi.mock("@/stores/preferences", () => {
 vi.mock("@/stores/builder", async () => {
   const mockWorkspaceStore = writable()
   const mockScreenComponentsList = writable([])
+  const mockScreenStore = writable({ screens: [] })
   const workspaceStore = {
     subscribe: mockWorkspaceStore.subscribe,
     update: mockWorkspaceStore.update,
@@ -77,6 +80,12 @@ vi.mock("@/stores/builder", async () => {
     workspaceStore,
     tables: writable(),
     screenComponentsList: mockScreenComponentsList,
+    componentTreeNodesStore: { makeNodeVisible: vi.fn() },
+    screenStore: {
+      subscribe: mockScreenStore.subscribe,
+      set: mockScreenStore.set,
+      patch: vi.fn(),
+    },
     get datasources() {
       return datasourcesStore
     },
@@ -120,6 +129,7 @@ describe("Component store", () => {
     vi.clearAllMocks()
     vi.resetAllMocks()
     screenStore.reset()
+    componentScreenStore.set({ screens: [] })
     mockGetDefaultLayoutPreference.mockReturnValue("grid")
 
     let componentStoreInstance = new ComponentStore()
@@ -169,6 +179,202 @@ describe("Component store", () => {
 
     expect(ctx.test.store).toStrictEqual(INITIAL_COMPONENTS_STATE)
   })
+
+  it.each([false, true])(
+    "keeps drag moves atomic when save fails: %s",
+    async fails => {
+      const store = new ComponentStore()
+      const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const target = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const sourceScreen = getScreenFixture()
+        .addChild(component)
+        .addChild(target)
+        .json()
+      sourceScreen._id = "screen_source"
+      componentScreenStore.set({
+        screens: [sourceScreen],
+        selectedScreenId: sourceScreen._id,
+      })
+      componentScreenStore.patch.mockImplementation(async patch => {
+        const clone = JSON.parse(JSON.stringify(sourceScreen))
+        patch(clone)
+        if (fails) {
+          throw new Error("Save failed")
+        }
+        componentScreenStore.set({
+          screens: [clone],
+          selectedScreenId: clone._id,
+        })
+        return clone
+      })
+
+      store.copy(component, true, false)
+      const paste = store.paste(target, "below", sourceScreen)
+      if (fails) {
+        await expect(paste).rejects.toThrow("Save failed")
+        expect(get(componentScreenStore).screens[0].props._children).toEqual([
+          component,
+          target,
+        ])
+        expect(get(store).componentToPaste._id).toBe(component._id)
+      } else {
+        await paste
+        expect(get(componentScreenStore).screens[0].props._children).toEqual([
+          target,
+          component,
+        ])
+        expect(get(store).componentToPaste).toBeUndefined()
+      }
+      expect(componentScreenStore.patch).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  it("pastes a cross-screen cut only once when saves overlap", async ctx => {
+    const store = ctx.test.componentStore
+    const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
+    const target = getComponentFixture(`${COMP_PREFIX}/container`).json()
+    const destination = getScreenFixture().addChild(target).json()
+    destination._id = "screen_destination"
+    store.update(state => ({
+      ...state,
+      componentToPaste: {
+        ...component,
+        isCut: true,
+        screenId: "screen_source",
+      },
+    }))
+    let finishSave
+    const pendingSave = new Promise(resolve => {
+      finishSave = resolve
+    })
+    componentScreenStore.set({ screens: [destination] })
+    componentScreenStore.patch.mockImplementation(
+      Utils.sequential(async patch => {
+        const clone = JSON.parse(
+          JSON.stringify(get(componentScreenStore).screens[0])
+        )
+        patch(clone)
+        await pendingSave
+        componentScreenStore.set({ screens: [clone] })
+        return clone
+      })
+    )
+
+    const firstPaste = store.paste(target, "below", destination)
+    const secondPaste = store.paste(target, "below", destination)
+    finishSave()
+    await Promise.all([firstPaste, secondPaste])
+
+    expect(get(componentScreenStore).screens[0].props._children).toEqual([
+      target,
+      component,
+    ])
+    expect(get(store).componentToPaste).toBeUndefined()
+  })
+
+  it.each([
+    { outcome: "saved", copyDuringSave: false },
+    { outcome: "failed", copyDuringSave: false },
+    { outcome: "skipped", copyDuringSave: false },
+    { outcome: "saved", copyDuringSave: true },
+    { outcome: "failed", copyDuringSave: true },
+    { outcome: "skipped", copyDuringSave: true },
+    { outcome: "failed", copyDuringSave: false, resetDuringSave: true },
+    { outcome: "skipped", copyDuringSave: false, resetDuringSave: true },
+    { outcome: "failed", copyDuringSave: true, resetDuringSave: true },
+    { outcome: "skipped", copyDuringSave: true, resetDuringSave: true },
+  ])(
+    "handles cut clipboard consumption across copies and workspace resets: %j",
+    async ({ outcome, copyDuringSave, resetDuringSave }) => {
+      const store = new ComponentStore()
+      const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const target = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const destination = getScreenFixture().addChild(target).json()
+      destination._id = "screen_destination"
+      componentScreenStore.set({ screens: [destination] })
+      const clipboard = { ...component, isCut: true, screenId: "screen_source" }
+      store.update(state => ({ ...state, componentToPaste: clipboard }))
+      let finishSave
+      const pendingSave = new Promise(resolve => {
+        finishSave = resolve
+      })
+      componentScreenStore.patch.mockImplementation(async patch => {
+        const clone = JSON.parse(JSON.stringify(destination))
+        await pendingSave
+        if (outcome === "skipped") {
+          clone.props._children = []
+        }
+        if (patch(clone) === false) {
+          return
+        }
+        if (outcome === "failed") {
+          throw new Error("Save failed")
+        }
+        componentScreenStore.set({ screens: [clone] })
+        return clone
+      })
+
+      const paste = store.paste(target, "below", destination)
+      let expectedClipboard = outcome === "saved" ? undefined : clipboard
+      if (resetDuringSave) {
+        store.reset()
+        expectedClipboard = undefined
+      }
+      if (copyDuringSave) {
+        store.copy(target)
+        expectedClipboard = get(store).componentToPaste
+      }
+      finishSave()
+      if (outcome === "failed") {
+        await expect(paste).rejects.toThrow("Save failed")
+      } else {
+        await paste
+      }
+
+      expect(get(store).componentToPaste).toEqual(expectedClipboard)
+      expect(get(componentScreenStore).screens[0].props._children).toEqual(
+        outcome === "saved" ? [target, component] : [target]
+      )
+    }
+  )
+
+  it.each([
+    { cut: false, selectComponent: false },
+    { cut: false, selectComponent: true },
+    { cut: true, selectComponent: false },
+    { cut: true, selectComponent: true },
+  ])(
+    "ignores paste selection and tree updates after a reset: %j",
+    async ({ cut, selectComponent }) => {
+      const store = new ComponentStore()
+      const component = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const target = getComponentFixture(`${COMP_PREFIX}/container`).json()
+      const destination = getScreenFixture().addChild(target).json()
+      store.update(state => ({
+        ...state,
+        componentToPaste: { ...component, isCut: cut },
+      }))
+      let finishSave
+      const pendingSave = new Promise(resolve => {
+        finishSave = resolve
+      })
+      componentScreenStore.patch.mockImplementation(async patch => {
+        const clone = JSON.parse(JSON.stringify(destination))
+        patch(clone)
+        await pendingSave
+        return clone
+      })
+
+      const paste = store.paste(target, "below", destination, selectComponent)
+      store.reset()
+      const resetState = { ...get(store) }
+      finishSave()
+      await paste
+
+      expect(get(store)).toEqual(resetState)
+      expect(componentTreeNodesStore.makeNodeVisible).not.toHaveBeenCalled()
+    }
+  )
 
   it("Refresh the component definitions", async ctx => {
     const componentDefs = componentDefinitionMap()

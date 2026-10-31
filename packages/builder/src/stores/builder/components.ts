@@ -64,6 +64,8 @@ export const INITIAL_COMPONENTS_STATE: ComponentState = {
 }
 
 export class ComponentStore extends BudiStore<ComponentState> {
+  private resetVersion = 0
+
   constructor() {
     super(INITIAL_COMPONENTS_STATE)
     this.reset = this.reset.bind(this)
@@ -102,6 +104,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
    * Reset the component store to default values
    */
   reset() {
+    this.resetVersion++
     this.store.set({ ...INITIAL_COMPONENTS_STATE })
   }
 
@@ -724,14 +727,9 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }
     let newComponentId = ""
 
-    // Remove copied component if cutting, regardless if pasting works
-    let componentToPaste = cloneDeep(state.componentToPaste)
-    if (componentToPaste.isCut) {
-      this.update(state => {
-        delete state.componentToPaste
-        return state
-      })
-    }
+    const clipboard = state.componentToPaste
+    const resetVersion = this.resetVersion
+    let componentToPaste = cloneDeep(clipboard)
 
     // Patch screen
     const patch = (screen: Screen) => {
@@ -742,7 +740,17 @@ export class ComponentStore extends BudiStore<ComponentState> {
       }
       const cut = componentToPaste.isCut
       const sourceScreenId = componentToPaste.screenId
-      const originalId = componentToPaste._id
+      if (cut && sourceScreenId === screen._id) {
+        if (findComponent(componentToPaste, targetComponent._id!)) {
+          return false
+        }
+        const parent = findComponentParent(screen.props, componentToPaste._id)
+        if (parent) {
+          parent._children = parent._children!.filter(
+            child => child._id !== componentToPaste._id
+          )
+        }
+      }
       delete componentToPaste.isCut
       delete componentToPaste.screenId
 
@@ -762,16 +770,6 @@ export class ComponentStore extends BudiStore<ComponentState> {
           ) {
             delete componentToPaste._styles.normal[style]
           }
-        }
-      }
-
-      // Delete old component if cutting
-      if (cut) {
-        const parent = findComponentParent(screen.props, originalId)
-        if (parent?._children) {
-          parent._children = parent._children.filter(
-            (component: Component) => component._id !== originalId
-          )
         }
       }
 
@@ -806,7 +804,30 @@ export class ComponentStore extends BudiStore<ComponentState> {
       }
     }
     const targetScreenId = targetScreen?._id ?? state.selectedScreenId ?? null
-    await screenStore.patch(patch, targetScreenId)
+    if (clipboard.isCut) {
+      this.update(state => {
+        delete state.componentToPaste
+        return state
+      })
+    }
+    let savedScreen: Screen | void = undefined
+    try {
+      savedScreen = await screenStore.patch(patch, targetScreenId)
+    } finally {
+      if (
+        !savedScreen &&
+        clipboard.isCut &&
+        resetVersion === this.resetVersion
+      ) {
+        this.update(state => ({
+          ...state,
+          componentToPaste: state.componentToPaste || clipboard,
+        }))
+      }
+    }
+    if (!savedScreen || resetVersion !== this.resetVersion) {
+      return
+    }
 
     // Select the new component
     if (selectComponent) {
