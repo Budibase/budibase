@@ -17,7 +17,6 @@
     notifications,
   } from "@budibase/bbui"
   import {
-    MAX_RESOURCE_NAME_LENGTH,
     PublishResourceState,
     type UIWorkspaceApp,
     type WorkspaceApp,
@@ -54,25 +53,18 @@
     touched: Partial<Record<keyof WorkspaceApp, boolean>>
   }
 
-  const validateWorkspaceApp = (draft: Partial<WorkspaceApp>) => {
+  const validateWorkspaceApp = (workspaceApp: Partial<WorkspaceApp>) => {
     const validator = z.object({
-      name: requiredString("Name is required.")
-        .refine(
-          value =>
-            draft.name === workspaceApp?.name ||
-            value.length <= MAX_RESOURCE_NAME_LENGTH,
-          `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
-        )
-        .refine(
-          val =>
-            !$workspaceAppStore.workspaceApps
-              .filter(a => a._id !== draft._id)
-              .map(a => normalize(a.name))
-              .includes(normalize(val)),
-          {
-            message: "This name is already taken.",
-          }
-        ),
+      name: requiredString("Name is required.").refine(
+        val =>
+          !$workspaceAppStore.workspaceApps
+            .filter(a => a._id !== workspaceApp._id)
+            .map(a => normalize(a.name))
+            .includes(normalize(val)),
+        {
+          message: "This name is already taken.",
+        }
+      ),
       url: requiredString("Url prefix is required.")
         .regex(/^\/[\w-]*$/, {
           message:
@@ -81,7 +73,7 @@
         .refine(
           val =>
             !$workspaceAppStore.workspaceApps
-              .filter(a => a._id !== draft._id)
+              .filter(a => a._id !== workspaceApp._id)
               .map(a => normalize(a.url))
               .includes(normalize(val)),
           {
@@ -90,7 +82,7 @@
         ),
     }) satisfies ZodType<Omit<WorkspaceApp, "navigation" | "isDefault">>
 
-    const validationResult = validator.safeParse(draft)
+    const validationResult = validator.safeParse(workspaceApp)
     validationState.errors = {}
     if (!validationResult.success) {
       const flattenedErrors = validationResult.error.flatten().fieldErrors

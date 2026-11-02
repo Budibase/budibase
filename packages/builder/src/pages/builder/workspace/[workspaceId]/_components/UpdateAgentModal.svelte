@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { MAX_RESOURCE_NAME_LENGTH } from "@budibase/types"
   import { getErrorMessage } from "@/helpers/errors"
   import { agentsStore } from "@/stores/portal"
   import { notifications, Input, ModalContent, Modal } from "@budibase/bbui"
@@ -40,10 +39,6 @@
     name = target.value
     if (!name) {
       error = "Name is required"
-      return
-    }
-    if (name !== agent?.name && name.length > MAX_RESOURCE_NAME_LENGTH) {
-      error = `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
       return
     }
     error = ""

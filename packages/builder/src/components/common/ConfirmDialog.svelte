@@ -41,18 +41,9 @@
     {disabled}
     {size}
   >
-    <div class="confirmation-body">
-      <Body size="S">
-        {body}
-        <slot />
-      </Body>
-    </div>
+    <Body size="S">
+      {body}
+      <slot />
+    </Body>
   </ModalContent>
 </Modal>
-
-<style>
-  .confirmation-body {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-</style>

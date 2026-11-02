@@ -1,4 +1,3 @@
-import { resourceNameValidator } from "./utils/validators"
 import * as queryController from "../controllers/query"
 import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
@@ -37,7 +36,6 @@ builderRoutes
     "/api/queries",
     bodySubResource("datasourceId", "_id"),
     generateQueryValidation(),
-    resourceNameValidator(),
     queryController.save
   )
   .post("/api/queries/import/info", queryController.importInfo)

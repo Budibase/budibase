@@ -1,11 +1,6 @@
-import sdk from "../../../sdk"
 import controller from "../../controllers/public/tables"
 import { Endpoint } from "@budibase/backend-core"
-import {
-  tableValidator,
-  nameValidator,
-  resourceNameValidator,
-} from "../utils/validators"
+import { tableValidator, nameValidator } from "../utils/validators"
 
 const read = [],
   write = []
@@ -42,9 +37,9 @@ const read = [],
  *                 $ref: '#/components/examples/table'
  */
 write.push(
-  new Endpoint("post", "/tables", controller.create)
-    .addMiddleware(tableValidator())
-    .addMiddleware(resourceNameValidator({ isCreate: true }))
+  new Endpoint("post", "/tables", controller.create).addMiddleware(
+    tableValidator()
+  )
 )
 
 /**
@@ -79,14 +74,9 @@ write.push(
  *                 $ref: '#/components/examples/table'
  */
 write.push(
-  new Endpoint("put", "/tables/:tableId", controller.update)
-    .addMiddleware(tableValidator())
-    .addMiddleware(
-      resourceNameValidator({
-        getExistingName: async ctx =>
-          (await sdk.tables.getTable(ctx.params.tableId)).name,
-      })
-    )
+  new Endpoint("put", "/tables/:tableId", controller.update).addMiddleware(
+    tableValidator()
+  )
 )
 
 /**

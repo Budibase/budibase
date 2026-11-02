@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { helpers } from "@budibase/shared-core"
   import {
-    MAX_RESOURCE_NAME_LENGTH,
+    MAX_PROJECT_NAME_LENGTH,
     type ProjectFormPayload,
     type ProjectResponse,
   } from "@budibase/types"
@@ -28,10 +28,7 @@
   let colorError: string | undefined = $state(undefined)
 
   $effect(() => {
-    if (
-      name.trim() &&
-      (name === project?.name || name.trim().length <= MAX_RESOURCE_NAME_LENGTH)
-    ) {
+    if (name.trim() && name.trim().length <= MAX_PROJECT_NAME_LENGTH) {
       nameError = undefined
     }
     color
@@ -44,11 +41,8 @@
       return keepOpen
     }
 
-    if (
-      name !== project?.name &&
-      name.trim().length > MAX_RESOURCE_NAME_LENGTH
-    ) {
-      nameError = `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
+    if (name.trim().length > MAX_PROJECT_NAME_LENGTH) {
+      nameError = `Name must be at most ${MAX_PROJECT_NAME_LENGTH} characters`
       return keepOpen
     }
 
@@ -61,7 +55,7 @@
     }
 
     return onConfirm({
-      name: name === project?.name ? name : name.trim(),
+      name: name.trim(),
       description: description.trim() || undefined,
       color: normalizedColor,
     })
@@ -74,7 +68,12 @@
   size="M"
   onConfirm={confirm}
 >
-  <Input bind:value={name} label="Name" error={nameError} />
+  <Input
+    bind:value={name}
+    label="Name"
+    error={nameError}
+    helpText={`Maximum ${MAX_PROJECT_NAME_LENGTH} characters`}
+  />
   <TextArea
     bind:value={description}
     label="Description"

@@ -1,5 +1,4 @@
 <script>
-  import { MAX_RESOURCE_NAME_LENGTH } from "@budibase/types"
   import { Handle, Position } from "@xyflow/svelte"
   import {
     Icon,
@@ -35,9 +34,6 @@
   const validateName = (name, roles) => {
     if (!name?.length) {
       return "Please enter a name"
-    }
-    if (name !== data?.displayName && name.length > MAX_RESOURCE_NAME_LENGTH) {
-      return `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
     }
     if (roles.some(x => x.uiMetadata.displayName === name && x._id !== id)) {
       return "That name is already used by another role"

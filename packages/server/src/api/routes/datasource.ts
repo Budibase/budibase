@@ -1,6 +1,5 @@
-import sdk from "../../sdk"
 import * as datasourceController from "../controllers/datasource"
-import { datasourceValidator, resourceNameValidator } from "./utils/validators"
+import { datasourceValidator } from "./utils/validators"
 import { builderRoutes } from "./endpointGroups"
 
 builderRoutes
@@ -17,21 +16,6 @@ builderRoutes
     datasourceController.buildSchemaFromSource
   )
   .get("/api/datasources/:datasourceId", datasourceController.find)
-  .put(
-    "/api/datasources/:datasourceId",
-    resourceNameValidator({
-      getExistingName: async ctx =>
-        (await sdk.datasources.get(ctx.params.datasourceId)).name,
-    }),
-    datasourceController.update
-  )
-  .post(
-    "/api/datasources",
-    datasourceValidator(),
-    resourceNameValidator({
-      isCreate: true,
-      getName: resource => resource.datasource?.name,
-    }),
-    datasourceController.save
-  )
+  .put("/api/datasources/:datasourceId", datasourceController.update)
+  .post("/api/datasources", datasourceValidator(), datasourceController.save)
   .delete("/api/datasources/:datasourceId/:revId", datasourceController.destroy)

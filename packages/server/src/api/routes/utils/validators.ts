@@ -1,7 +1,5 @@
-import { auth, permissions, context } from "@budibase/backend-core"
+import { auth, permissions } from "@budibase/backend-core"
 import {
-  MAX_RESOURCE_NAME_LENGTH,
-  type UserCtx,
   AutomationActionStepId,
   AutomationStep,
   AutomationStepType,
@@ -20,7 +18,6 @@ import {
   DocumentType,
   prefixed,
 } from "@budibase/types"
-import type { Next } from "koa"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
@@ -151,53 +148,6 @@ export function viewValidator() {
         .optional(),
     })
   )
-}
-
-interface NamedResource {
-  name?: string
-  _id?: string
-  tableId?: string
-  originalName?: string
-  datasource?: { name?: string }
-  uiMetadata?: { displayName?: string }
-}
-
-interface ResourceNameValidationOptions {
-  isCreate?: boolean
-  getName?: (resource: NamedResource) => string | undefined
-  getExistingName?: (ctx: UserCtx<NamedResource>) => Promise<string | undefined>
-  getResourceId?: (ctx: UserCtx<NamedResource>) => string | undefined
-}
-
-export function resourceNameValidator({
-  isCreate = false,
-  getName = resource => resource.name,
-  getExistingName,
-  getResourceId = ctx => ctx.request.body._id,
-}: ResourceNameValidationOptions = {}) {
-  return async (ctx: UserCtx<NamedResource>, next: Next) => {
-    const name = getName(ctx.request.body)
-    if (typeof name === "string" && name.length > MAX_RESOURCE_NAME_LENGTH) {
-      let existingName: string | undefined
-      if (!isCreate) {
-        if (getExistingName) {
-          existingName = await getExistingName(ctx)
-        } else if (getResourceId(ctx)) {
-          const existing = await context
-            .getWorkspaceDB()
-            .tryGet<NamedResource>(getResourceId(ctx)!)
-          existingName = existing && getName(existing)
-        }
-      }
-      if (name !== existingName) {
-        ctx.throw(
-          400,
-          `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
-        )
-      }
-    }
-    return next()
-  }
 }
 
 export function nameValidator() {

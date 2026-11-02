@@ -15,7 +15,7 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   isEmailTrigger,
   isWebhookTrigger,
-  MAX_RESOURCE_NAME_LENGTH,
+  MAX_PROJECT_NAME_LENGTH,
   MAX_PROJECT_README_LENGTH,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
@@ -501,9 +501,9 @@ describe("/projects", () => {
 
   it("accepts project names at the maximum length on create and update", async () => {
     await withProjectsEnabled(async () => {
-      const name = "a".repeat(MAX_RESOURCE_NAME_LENGTH)
+      const name = "a".repeat(MAX_PROJECT_NAME_LENGTH)
       const { project } = await config.api.project.create({ name })
-      const updatedName = "b".repeat(MAX_RESOURCE_NAME_LENGTH)
+      const updatedName = "b".repeat(MAX_PROJECT_NAME_LENGTH)
       await config.api.project.update({ ...project, name: updatedName })
 
       expect((await config.api.project.fetch()).projects).toEqual([
@@ -513,7 +513,7 @@ describe("/projects", () => {
     })
   })
 
-  it.each([MAX_RESOURCE_NAME_LENGTH + 1, 1001])(
+  it.each([MAX_PROJECT_NAME_LENGTH + 1, 1001])(
     "rejects project names of %s characters on create and update",
     async length => {
       await withProjectsEnabled(async () => {
@@ -531,9 +531,9 @@ describe("/projects", () => {
 
   it("rejects oversized project names when using the SDK directly", async () => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
-      const name = "a".repeat(MAX_RESOURCE_NAME_LENGTH + 1)
+      const name = "a".repeat(MAX_PROJECT_NAME_LENGTH + 1)
       await expect(projects.create({ name })).rejects.toThrow(
-        `Project name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters.`
+        `Project name must be at most ${MAX_PROJECT_NAME_LENGTH} characters.`
       )
       const project = await projects.create({ name: "Operations" })
       await expect(
@@ -544,45 +544,9 @@ describe("/projects", () => {
           name,
         })
       ).rejects.toThrow(
-        `Project name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters.`
+        `Project name must be at most ${MAX_PROJECT_NAME_LENGTH} characters.`
       )
       expect(await projects.fetch()).toEqual([project])
-    })
-  })
-
-  it("allows updates to unchanged oversized project names", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const legacyName = "a".repeat(1001)
-      const legacy = await config.doInContext(
-        config.getDevWorkspaceId(),
-        async () => {
-          return (
-            await context
-              .getWorkspaceDB()
-              .put({ ...project, name: legacyName }, { returnDoc: true })
-          ).doc
-        }
-      )
-      await config.api.project.update(
-        { ...legacy, name: "b".repeat(MAX_RESOURCE_NAME_LENGTH + 1) },
-        { status: 400 }
-      )
-      const updated = await config.api.project.update({
-        ...legacy,
-        description: "Updated description",
-      })
-      const corrected = await config.api.project.update({
-        ...updated.project,
-        name: "Corrected name",
-      })
-      expect(updated.project).toMatchObject({
-        name: legacyName,
-        description: "Updated description",
-      })
-      expect(corrected.project.name).toBe("Corrected name")
     })
   })
 

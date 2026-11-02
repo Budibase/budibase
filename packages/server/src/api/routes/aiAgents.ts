@@ -1,5 +1,3 @@
-import sdk from "../../sdk"
-import { resourceNameValidator } from "./utils/validators"
 import { auth } from "@budibase/backend-core"
 import { agentActivityEnabled } from "../../middleware/agentActivityEnabled"
 import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
@@ -29,33 +27,16 @@ import {
 
 builderAdminRoutes
   .get("/api/agent", ai.fetchAgents)
-  .post(
-    "/api/agent",
-    createAgentValidator(),
-    resourceNameValidator({ isCreate: true }),
-    ai.createAgent
-  )
-  .put(
-    "/api/agent",
-    updateAgentValidator(),
-    resourceNameValidator(),
-    ai.updateAgent
-  )
+  .post("/api/agent", createAgentValidator(), ai.createAgent)
+  .put("/api/agent", updateAgentValidator(), ai.updateAgent)
   .post(
     "/api/agent/:agentId/operations",
     createAgentOperationValidator(),
-    resourceNameValidator({ isCreate: true }),
     ai.createAgentOperation
   )
   .put(
     "/api/agent/:agentId/operations/:operationId",
     updateAgentOperationValidator(),
-    resourceNameValidator({
-      getExistingName: async ctx =>
-        (await sdk.ai.agents.getOrThrow(ctx.params.agentId)).operations?.find(
-          operation => operation.id === ctx.params.operationId
-        )?.name,
-    }),
     ai.updateAgentOperation
   )
   .delete(
