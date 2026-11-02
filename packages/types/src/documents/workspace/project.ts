@@ -1,6 +1,7 @@
 import { Document } from "../document"
 import type { ProjectImportSetup } from "../../api/web/workspace/project"
 
+export const MAX_PROJECT_NAME_LENGTH = 100
 export const MAX_PROJECT_README_LENGTH = 100000
 
 export interface Project extends Omit<Document, "createdAt" | "updatedAt"> {
