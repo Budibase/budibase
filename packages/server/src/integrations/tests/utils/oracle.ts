@@ -1,14 +1,93 @@
-import { Datasource, SourceName } from "@budibase/types"
-import { GenericContainer, Wait } from "testcontainers"
+import { execFileSync } from "node:child_process"
+import knex, { type Knex } from "knex"
+import { GenericContainer, Wait, type WaitStrategy } from "testcontainers"
+import { getContainerRuntimeClient } from "testcontainers/build/container-runtime"
+import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
+
+import { type Datasource, SourceName } from "@budibase/types"
 import { generator, testContainerUtils } from "@budibase/backend-core/tests"
 import { startContainer } from "."
-import knex, { Knex } from "knex"
 
 let ports: Promise<testContainerUtils.Port[]>
 
+const startupTimeoutMs = 90000
+const startupAttempts = 3
+export const testTimeoutMs = startupTimeoutMs * startupAttempts + 90000
+
+// password needs to conform to Oracle standards
+const password = "password"
+
+class OracleWaitStrategy extends AbstractWaitStrategy {
+  async waitUntilReady(
+    ...[container, boundPorts, startTime]: Parameters<
+      WaitStrategy["waitUntilReady"]
+    >
+  ) {
+    try {
+      const deadline = Date.now() + this.startupTimeoutMs
+      // The PDB opens before startup finishes resetting SYSTEM's password.
+      await Wait.forLogMessage("DATABASE IS READY TO USE!")
+        .withStartupTimeout(this.startupTimeoutMs)
+        .waitUntilReady(container, boundPorts, startTime)
+
+      const command = `sqlplus -L -s /nolog <<'SQL'
+  WHENEVER OSERROR EXIT FAILURE
+  WHENEVER SQLERROR EXIT FAILURE
+  CONNECT SYSTEM/${password}@//127.0.0.1:1521/FREEPDB1
+  SELECT 1 FROM dual;
+  EXIT SUCCESS
+  SQL`
+      const client = await getContainerRuntimeClient()
+      let output = ""
+      do {
+        const result = await client.container.exec(container, [
+          "/bin/sh",
+          "-c",
+          command,
+        ])
+        if (result.exitCode === 0) {
+          return
+        }
+        output = result.output
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      } while (Date.now() < deadline)
+
+      throw new Error(`Oracle readiness check failed: ${output.trim()}`)
+    } catch (error) {
+      const commands = [
+        ["logs", "--tail", "200", container.id],
+        [
+          "exec",
+          container.id,
+          "/bin/sh",
+          "-c",
+          'tail -n 200 "$ORACLE_BASE"/diag/rdbms/*/"$ORACLE_SID"/trace/alert_*.log',
+        ],
+        ["inspect", "--format", "{{json .State}}", container.id],
+      ]
+      for (const command of commands) {
+        process.stderr.write(
+          `\nOracle startup diagnostics (${container.id}, ${command[0]}):\n`
+        )
+        try {
+          const output = execFileSync("docker", command, {
+            encoding: "utf8",
+            timeout: 5000,
+            stdio: ["ignore", "pipe", "pipe"],
+          })
+          process.stderr.write(output)
+        } catch (diagnosticError) {
+          process.stderr.write(
+            `Could not collect Oracle diagnostics: ${diagnosticError}\n`
+          )
+        }
+      }
+      throw error
+    }
+  }
+}
+
 export async function getDatasource(): Promise<Datasource> {
-  // password needs to conform to Oracle standards
-  const password = "password"
   if (!ports) {
     // couldn't build 19.3.0 for X64
     let image = "budibase/oracle-database:23.2-slim-faststart"
@@ -24,10 +103,9 @@ export async function getDatasource(): Promise<Datasource> {
           ORACLE_PASSWORD: password,
         })
         .withWaitStrategy(
-          Wait.forLogMessage("DATABASE IS READY TO USE!").withStartupTimeout(
-            240000
-          )
-        )
+          new OracleWaitStrategy().withStartupTimeout(startupTimeoutMs)
+        ),
+      { maxAttempts: startupAttempts }
     )
   }
 
