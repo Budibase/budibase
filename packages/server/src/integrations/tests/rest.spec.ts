@@ -211,6 +211,38 @@ describe("REST Integration", () => {
     expect(data).toEqual({ foo: "bar" })
   })
 
+  it.each(["literal", "binding"])(
+    "sends null properties in an enriched %s JSON body",
+    async source => {
+      const body = {
+        phone: null,
+        nested: { deletedAt: null },
+        items: [null, { value: null }],
+      }
+      queueJsonResponse(
+        (_url, options) => {
+          expect(options?.body).toEqual(JSON.stringify(body))
+        },
+        { ok: true }
+      )
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const fields = await sdk.queries.enrichContext(
+          {
+            path: "api",
+            bodyType: BodyType.JSON,
+            requestBody:
+              source === "literal" ? JSON.stringify(body) : "{{ payload }}",
+          },
+          { payload: JSON.stringify(body) }
+        )
+        const { data } = await integration.create(fields)
+
+        expect(data).toEqual({ ok: true })
+      })
+    }
+  )
+
   it("calls the read method with the correct params", async () => {
     queueResponse(async (url, options) => {
       expect(url).toEqual("https://example.com/api?test=1")
