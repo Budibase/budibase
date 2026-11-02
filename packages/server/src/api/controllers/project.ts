@@ -37,6 +37,7 @@ export const toProjectResponse = (project: Project): ProjectResponse => {
     _rev: project._rev!,
     name: project.name,
     description: project.description,
+    readme: project.readme,
     color: project.color,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
@@ -60,6 +61,7 @@ export async function create(
   const project = {
     name: body.name,
     description: body.description,
+    readme: body.readme,
     color: body.color,
   }
 
@@ -84,6 +86,7 @@ export async function update(
     _rev: body._rev,
     name: body.name,
     description: body.description,
+    ...(body.readme !== undefined ? { readme: body.readme } : {}),
     color: body.color,
   }
   const updated = await sdk.projects.update(project)
