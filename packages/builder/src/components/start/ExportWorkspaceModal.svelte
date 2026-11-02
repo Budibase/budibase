@@ -12,7 +12,7 @@
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
   import { sdk } from "@budibase/shared-core"
 
-  export let appId: string
+  export let workspaceId: string
   export let published
   let includeInternalTablesRows = true
   let encrypt = true
@@ -58,8 +58,8 @@
 
   const exportWorkspace = async () => {
     const id = published
-      ? sdk.workspaces.getProdWorkspaceID(appId)
-      : sdk.workspaces.getDevWorkspaceID(appId)
+      ? sdk.workspaces.getProdWorkspaceID(workspaceId)
+      : sdk.workspaces.getDevWorkspaceID(workspaceId)
     const url = `/api/backups/export?appId=${id}`
 
     try {

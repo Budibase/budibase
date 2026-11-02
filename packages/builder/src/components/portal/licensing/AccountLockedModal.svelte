@@ -21,7 +21,7 @@
   export let deactivationScheduledAt: string | undefined = undefined
   export let onConfirm: () => void
   export let isOwner = true
-  export let appId: string | undefined = undefined
+  export let workspaceId: string | undefined = undefined
 
   export function show() {
     modal.show()
@@ -118,7 +118,7 @@
         <Button cta on:click={onConfirm}>
           {isOwner ? "Upgrade plan" : "View plans"}
         </Button>
-        {#if appId}
+        {#if workspaceId}
           <Button secondary on:click={handleExport}>Export workspace</Button>
         {/if}
         <Link
@@ -147,9 +147,9 @@
   {/if}
 </Modal>
 
-{#if appId}
+{#if workspaceId}
   <Modal bind:this={exportModal}>
-    <ExportWorkspaceModal {appId} published={false} />
+    <ExportWorkspaceModal {workspaceId} published={false} />
   </Modal>
 {/if}
 

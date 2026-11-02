@@ -358,7 +358,7 @@
 
 {#if selectedWorkspaceForMenu}
   <WorkspaceContextMenuModals
-    app={selectedWorkspaceForMenu}
+    workspace={selectedWorkspaceForMenu}
     bind:this={workspaceContextMenuModals}
   />
 {/if}

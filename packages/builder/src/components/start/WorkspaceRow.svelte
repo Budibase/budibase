@@ -43,7 +43,10 @@
 
   const goToApp = () => {
     if (workspace.deployed && workspace.url) {
-      window.open(`/app${workspace.url}${workspace.defaultWorkspaceAppUrl}`, "_blank")
+      window.open(
+        `/app${workspace.url}${workspace.defaultWorkspaceAppUrl}`,
+        "_blank"
+      )
     }
   }
 
@@ -132,7 +135,7 @@
     </div>
   </div>
   <WorkspaceContextMenuModals
-    app={workspace}
+    {workspace}
     bind:this={workspaceContextMenuModals}
   />
 </div>

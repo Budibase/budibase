@@ -6,7 +6,7 @@
   import ExportWorkspaceModal from "./ExportWorkspaceModal.svelte"
   import type { EnrichedWorkspace } from "@/types"
 
-  export let app: EnrichedWorkspace
+  export let workspace: EnrichedWorkspace
 
   let exportPublishedVersion = false
 
@@ -35,8 +35,8 @@
 
 <DeleteModal
   bind:this={deleteModal}
-  appId={app?.devId}
-  appName={app?.name}
+  workspaceId={workspace?.devId}
+  workspaceName={workspace?.name}
   onDeleteSuccess={async () => {
     await licensing.init()
   }}
@@ -44,15 +44,15 @@
 
 <Modal bind:this={exportModal}>
   <ExportWorkspaceModal
-    appId={app.devId || ""}
+    workspaceId={workspace.devId || ""}
     published={exportPublishedVersion}
   />
 </Modal>
 
 <Modal bind:this={duplicateModal}>
   <DuplicateWorkspaceModal
-    appId={app.devId || ""}
-    appName={app?.name}
+    workspaceId={workspace.devId || ""}
+    workspaceName={workspace?.name}
     onDuplicateSuccess={async () => {
       await licensing.init()
     }}

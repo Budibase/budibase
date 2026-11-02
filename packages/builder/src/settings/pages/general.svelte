@@ -303,7 +303,7 @@
 
 <Modal bind:this={exportModal}>
   <ExportWorkspaceModal
-    appId={$workspaceStore.appId}
+    workspaceId={$workspaceStore.appId}
     published={exportPublishedVersion}
   />
 </Modal>
@@ -328,8 +328,8 @@
 
 <DeleteModal
   bind:this={deleteModal}
-  appId={$workspaceStore.appId}
-  appName={$workspaceStore.name}
+  workspaceId={$workspaceStore.appId}
+  workspaceName={$workspaceStore.name}
 />
 
 <style>

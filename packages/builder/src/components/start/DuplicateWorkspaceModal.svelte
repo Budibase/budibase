@@ -15,18 +15,18 @@
   import { onMount } from "svelte"
   import { get, writable } from "svelte/store"
 
-  export let appId: string
-  export let appName: string
+  export let workspaceId: string
+  export let workspaceName: string
   export let onDuplicateSuccess = () => {}
 
   const validation = createValidationStore()
   const values = writable<{ name: string; url: string | null }>({
-    name: appName + " copy",
+    name: workspaceName + " copy",
     url: null,
   })
   const appPrefix = "/app"
 
-  let defaultAppName = appName + " copy"
+  let defaultWorkspaceName = workspaceName + " copy"
   let duplicating = false
 
   $: {
@@ -50,8 +50,8 @@
     return encodeURI(parsedUrl)
   }
 
-  const nameToUrl = (appName: string) => {
-    let resolvedUrl = resolveAppUrl(appName)
+  const nameToUrl = (workspaceName: string) => {
+    let resolvedUrl = resolveAppUrl(workspaceName)
     tidyUrl(resolvedUrl)
   }
 
@@ -62,7 +62,7 @@
     $values.url = url === "" ? null : url
   }
 
-  const duplicateApp = async () => {
+  const duplicateWorkspace = async () => {
     duplicating = true
 
     const data: CreateWorkspaceRequest = {
@@ -74,9 +74,9 @@
     }
 
     try {
-      const app = await API.duplicateApp(appId, data)
+      const workspace = await API.duplicateApp(workspaceId, data)
       workspacesStore.load()
-      if (!sdk.users.isBuilder($auth.user, app?.duplicateAppId)) {
+      if (!sdk.users.isBuilder($auth.user, workspace?.duplicateAppId)) {
         // Refresh for access to created applications
         await auth.getSelf()
       }
@@ -89,9 +89,9 @@
   }
 
   const setupValidation = async () => {
-    const applications = get(workspacesStore).apps
-    workspaceValidation.name(validation, { workspaces: applications })
-    workspaceValidation.url(validation, { workspaces: applications })
+    const workspaces = get(workspacesStore).apps
+    workspaceValidation.name(validation, { workspaces })
+    workspaceValidation.url(validation, { workspaces })
 
     const { url } = $values
     validation.check({
@@ -119,7 +119,7 @@
       ...$values,
     })
     if ($validation.valid) {
-      await duplicateApp()
+      await duplicateWorkspace()
     } else {
       return keepOpen
     }
@@ -134,7 +134,7 @@
       on:blur={() => ($validation.touched.name = true)}
       on:change={() => nameToUrl($values.name)}
       label="Name"
-      placeholder={defaultAppName}
+      placeholder={defaultWorkspaceName}
     />
     <span>
       <Input

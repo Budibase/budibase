@@ -9,8 +9,8 @@
 
   $: goto = $gotoStore
 
-  export let appId
-  export let appName
+  export let workspaceId
+  export let workspaceName
   export let onDeleteSuccess = async () => {}
 
   let deleting = false
@@ -24,35 +24,35 @@
   }
 
   let deletionModal
-  let deletionConfirmationAppName
+  let deletionConfirmationWorkspaceName
 
   const copyName = () => {
-    deletionConfirmationAppName = appName
+    deletionConfirmationWorkspaceName = workspaceName
   }
 
-  const getPostDeleteRedirectPath = deletedAppId => {
+  const getPostDeleteRedirectPath = deletedWorkspaceId => {
     const nextWorkspace = get(enrichedApps).find(
-      workspace => workspace.editable && workspace.devId !== deletedAppId
+      workspace => workspace.editable && workspace.devId !== deletedWorkspaceId
     )
     return nextWorkspace?.devId
       ? `/builder/workspace/${nextWorkspace.devId}`
       : "/"
   }
 
-  const redirectAfterDeletingCurrentWorkspace = async deletedAppId => {
-    goto(getPostDeleteRedirectPath(deletedAppId))
+  const redirectAfterDeletingCurrentWorkspace = async deletedWorkspaceId => {
+    goto(getPostDeleteRedirectPath(deletedWorkspaceId))
   }
 
-  const deleteApp = async () => {
-    if (!appId) {
-      console.error("No app id provided")
+  const deleteWorkspace = async () => {
+    if (!workspaceId) {
+      console.error("No workspace id provided")
       return
     }
     deleting = true
-    const deletedCurrentWorkspace = $workspaceStore.appId === appId
+    const deletedCurrentWorkspace = $workspaceStore.appId === workspaceId
     let deletedSuccessfully = false
     try {
-      await API.deleteApp(appId)
+      await API.deleteApp(workspaceId)
       deletedSuccessfully = true
 
       if (deletedCurrentWorkspace) {
@@ -71,7 +71,7 @@
       }
 
       if (deletedCurrentWorkspace) {
-        await redirectAfterDeletingCurrentWorkspace(appId)
+        await redirectAfterDeletingCurrentWorkspace(workspaceId)
       }
     } catch (err) {
       if (!deletedSuccessfully) {
@@ -90,19 +90,22 @@
   bind:this={deletionModal}
   title={`Delete workspace`}
   okText="Delete"
-  onOk={deleteApp}
-  onCancel={() => (deletionConfirmationAppName = null)}
-  disabled={deletionConfirmationAppName !== appName || deleting}
+  onOk={deleteWorkspace}
+  onCancel={() => (deletionConfirmationWorkspaceName = null)}
+  disabled={deletionConfirmationWorkspaceName !== workspaceName || deleting}
 >
   Are you sure you want to delete
   <span class="app-name" role="button" tabindex={-1} on:click={copyName}>
-    {appName}
+    {workspaceName}
   </span>?
 
   <br />
   Please enter the workspace name below to confirm.
   <br /><br />
-  <Input bind:value={deletionConfirmationAppName} placeholder={appName} />
+  <Input
+    bind:value={deletionConfirmationWorkspaceName}
+    placeholder={workspaceName}
+  />
 </ConfirmDialog>
 
 <style>
