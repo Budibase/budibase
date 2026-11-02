@@ -2,9 +2,12 @@ import {
   CreateProjectRequest,
   CreateProjectResponse,
   ExportProjectRequest,
+  FetchProjectTemplatesResponse,
   FetchProjectsResponse,
   ImportProjectRequest,
   ImportProjectResponse,
+  ImportProjectTemplateRequest,
+  ImportProjectTemplateResponse,
   PreviewProjectAssignmentRequest,
   PreviewProjectAssignmentResponse,
   UpdateProjectRequest,
@@ -16,12 +19,16 @@ import { BaseAPIClient } from "./types"
 
 export interface ProjectEndpoints {
   fetch: () => Promise<FetchProjectsResponse>
+  fetchTemplates: () => Promise<FetchProjectTemplatesResponse>
   create: (project: CreateProjectRequest) => Promise<CreateProjectResponse>
   exportBundle: (id: string, body?: ExportProjectRequest) => Promise<Response>
   importBundle: (
     file: File,
     body?: ImportProjectRequest
   ) => Promise<ImportProjectResponse>
+  importTemplate: (
+    params: ImportProjectTemplateRequest & { workspaceId: string }
+  ) => Promise<ImportProjectTemplateResponse>
   update: (project: UpdateProjectRequest) => Promise<UpdateProjectResponse>
   previewAssignment: (
     request: PreviewProjectAssignmentRequest
@@ -39,6 +46,11 @@ export const buildProjectEndpoints = (
   fetch: async () => {
     return await API.get({
       url: "/api/projects",
+    })
+  },
+  fetchTemplates: async () => {
+    return await API.get({
+      url: "/api/projects/templates",
     })
   },
   create: async project => {
@@ -66,6 +78,16 @@ export const buildProjectEndpoints = (
       url: "/api/projects/import",
       body: formData,
       json: false,
+    })
+  },
+  importTemplate: async ({ workspaceId, ...body }) => {
+    return await API.post<
+      ImportProjectTemplateRequest,
+      ImportProjectTemplateResponse
+    >({
+      url: "/api/projects/templates/import",
+      body,
+      workspaceId,
     })
   },
   update: async project => {

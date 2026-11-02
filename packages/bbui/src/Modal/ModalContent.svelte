@@ -78,6 +78,7 @@
   role="dialog"
   tabindex="-1"
   aria-modal="true"
+  aria-label={title}
 >
   <div class="modal-core" class:spectrum-Dialog-grid={!custom}>
     {#if title || $$slots.header}
