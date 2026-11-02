@@ -12297,9 +12297,9 @@ fn.name@1.x.x:
   integrity sha512-GRnmB5gPyJpAhTQdSZTSp9uaPSvl09KoYcMQtsB9rQoOmzs9dH6ffeccH+Z+cv6P68Hu5bC6JjRh4Ah/mHSNRw==
 
 follow-redirects@^1.16.0:
-  version "1.16.1"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.16.1.tgz#6e0efa40a727fb369b98dab15883ec34787d675e"
-  integrity sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==
+  version "1.16.2"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.16.2.tgz#a233160dd1bc9b16cbbab43709e6adc7cc941c8c"
+  integrity sha512-/kVP2U8z596Ia0gwFrwyIeo74ta5aVmSeU1FfAUMAmcEP5EP7zydmag3SLiN64NaRKef3lxsq7i/g7ltJQDGow==
 
 for-each@^0.3.3, for-each@^0.3.5:
   version "0.3.5"
@@ -14711,10 +14711,10 @@ jiti@^2.7.0:
   resolved "https://registry.yarnpkg.com/jiti/-/jiti-2.7.0.tgz#974228f2f4ca2bc21885a1797b45fea68e950c64"
   integrity sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==
 
-joi@18.2.9:
-  version "18.2.9"
-  resolved "https://registry.yarnpkg.com/joi/-/joi-18.2.9.tgz#8f489aebefab85cfa9979ea4471e3eea022787b1"
-  integrity sha512-2mD929bUVKUhOLQQEVhlf6EZ0Mlo0DeRb5MO7cViR9AXLtBauuccEtB1py9Ocxpo/P7ucnh442iY/iOwrh3IQw==
+joi@18.3.1:
+  version "18.3.1"
+  resolved "https://registry.yarnpkg.com/joi/-/joi-18.3.1.tgz#0d80d63b8ff103e61b414edc7943666e72458a3b"
+  integrity sha512-mV9M4Llh4va3NT90p7KBtQhoZqjs8xLX7EWYE4y/GG3yLF6REbIBEHSUb0UX1JXRht2w5tiLSsvmpYc5akiqIw==
   dependencies:
     "@hapi/address" "^5.1.1"
     "@hapi/formula" "^3.0.2"
@@ -17124,10 +17124,10 @@ nodemailer@10.0.10:
   resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.0.10.tgz#a5ac2828272903740cb04ce17d1a4468e2e06cb3"
   integrity sha512-He9XskOFms62SyAKkLu8CcGcYHAo+BSHSsORI8s4PJH8qZgZY4L4lDfvyN0twvmbpyG+eGrxpyBlskj9d9rJ8A==
 
-nodemailer@10.1.5:
-  version "10.1.5"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.1.5.tgz#038023022fce9a38737eba3706829d9343a0428c"
-  integrity sha512-lftc1Fxos2mPXHChDaCtkyD9umvlLw1iMREXgXv6LAaJycVzJ8GcpE90o02B+AqnICq8zy8gzo8FrKEzXZhlGg==
+nodemailer@10.1.6:
+  version "10.1.6"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.1.6.tgz#34335e4ca692a7017579b9d67a3cf1a0f5529572"
+  integrity sha512-8j/UEmA4AXr51URr3Ob0h+RCBtr0NKJ76Y2P9wJT6Eu3dRyruj2ULh2e6aiKrGg8nlUj1oX6N5h8dHA82EouaQ==
 
 nodemailer@10.2.1:
   version "10.2.1"
@@ -21953,12 +21953,7 @@ undici@7.29.0, undici@^7.19.0, undici@^7.28.0:
   resolved "https://registry.yarnpkg.com/undici/-/undici-7.29.0.tgz#ae0f6f62e06e057a9cbb7b2b5fde2bb74f791b8f"
   integrity sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==
 
-undici@^8.4.1:
-  version "8.12.3"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-8.12.3.tgz#e76a91feee9c275ad0f43bfc0eb632b6124d3bb6"
-  integrity sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==
-
-undici@^8.5.0, undici@^8.9.0:
+undici@^8.4.1, undici@^8.5.0, undici@^8.9.0:
   version "8.12.3"
   resolved "https://registry.yarnpkg.com/undici/-/undici-8.12.3.tgz#e76a91feee9c275ad0f43bfc0eb632b6124d3bb6"
   integrity sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==
