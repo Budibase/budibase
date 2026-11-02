@@ -321,6 +321,9 @@ export function migratePackageJson(): MigrationResult {
   }
 
   const dev = json.devDependencies || {}
+  if (dev.svelte !== undefined) {
+    dev.svelte = SVELTE_VERSION
+  }
   dev["rollup"] = "^4.21.0"
   dev["@rollup/plugin-commonjs"] = "^25.0.7"
   dev["@rollup/plugin-node-resolve"] = "^15.2.3"
@@ -496,17 +499,19 @@ export async function analysePluginForSvelte5(): Promise<AnalysisResult> {
   const pkg = JSON.parse(pkgRaw)
   const usingPinnedSvelte =
     pkg?.dependencies?.svelte === SVELTE_VERSION &&
-    pkg?.peerDependencies?.svelte === SVELTE_VERSION
+    pkg?.peerDependencies?.svelte === SVELTE_VERSION &&
+    (pkg?.devDependencies?.svelte === undefined ||
+      pkg.devDependencies.svelte === SVELTE_VERSION)
   const currentVersion =
     typeof pkg?.version === "string" ? pkg.version.trim() : undefined
   const projectedVersion = bumpMinorVersion(currentVersion)
   if (!usingPinnedSvelte) {
     report.push(
-      `Will pin the Svelte dependency and peer dependency to ${SVELTE_VERSION}.`
+      `Will pin the Svelte dependency, peer dependency, and any existing dev dependency to ${SVELTE_VERSION}.`
     )
   } else {
     report.push(
-      `package.json already pins the Svelte dependency and peer dependency to ${SVELTE_VERSION}.`
+      `package.json already pins the Svelte dependency, peer dependency, and any existing dev dependency to ${SVELTE_VERSION}.`
     )
   }
   if (pkg?.dependencies?.["@crownframework/svelte-error-boundary"]) {
