@@ -13,12 +13,18 @@ export interface LogoutResponse {
   message: string
 }
 
-export interface SetInitInfoRequest extends Record<string, any> {}
+export interface ProjectTemplateIntent {
+  templateKey: string
+}
+
+export interface SetInitInfoRequest {
+  projectTemplate?: ProjectTemplateIntent
+}
 export interface SetInitInfoResponse {
   message: string
 }
 
-export interface GetInitInfoResponse extends Record<string, any> {}
+export interface GetInitInfoResponse extends SetInitInfoRequest {}
 
 export interface PasswordResetRequest {
   email: string

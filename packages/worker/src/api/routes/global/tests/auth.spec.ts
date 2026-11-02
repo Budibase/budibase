@@ -54,6 +54,117 @@ describe("/api/global/auth", () => {
     })
   }
 
+  describe("Project template init info", () => {
+    it("preserves template intent before a user or tenant has been selected", async () => {
+      const user = config.user
+      config.user = undefined
+      try {
+        await config.api.auth.setInitInfo({
+          body: {
+            projectTemplate: {
+              templateKey: "project/expense-approval",
+            },
+          },
+        })
+
+        const response = await config.api.auth.getInitInfo()
+
+        expect(response.body).toEqual({
+          projectTemplate: {
+            templateKey: "project/expense-approval",
+          },
+        })
+      } finally {
+        config.user = user
+      }
+    })
+
+    it("persists an allow-listed Project template intent in the signed init cookie", async () => {
+      const setResponse = await config.api.auth.setInitInfo({
+        body: {
+          projectTemplate: {
+            templateKey: "project/expense-approval",
+          },
+        },
+      })
+
+      const cookie = setResponse.headers["set-cookie"]?.[0]
+      expect(cookie).toMatch(/budibase:init=/i)
+      expect(cookie).toMatch(/HttpOnly/i)
+      expect(cookie).toMatch(/SameSite=Lax/i)
+      const expiry = cookie?.match(/Expires=([^;]+)/i)?.[1]
+      expect(new Date(expiry!).getTime()).toBeGreaterThan(
+        Date.now() + 6 * 24 * 60 * 60 * 1000
+      )
+      expect(new Date(expiry!).getTime()).toBeLessThan(
+        Date.now() + 8 * 24 * 60 * 60 * 1000
+      )
+
+      const response = await config.api.auth.getInitInfo()
+
+      expect(response.body).toEqual({
+        projectTemplate: {
+          templateKey: "project/expense-approval",
+        },
+      })
+    })
+
+    it("replaces the Project template intent with empty init info", async () => {
+      await config.api.auth.setInitInfo({
+        body: {
+          projectTemplate: {
+            templateKey: "project/expense-approval",
+          },
+        },
+      })
+
+      const clearResponse = await config.api.auth.setInitInfo({ body: {} })
+
+      const response = await config.api.auth.getInitInfo()
+      expect(response.body).toEqual({})
+      expect(clearResponse.headers["set-cookie"]?.[0]).toMatch(
+        /budibase:init=;/i
+      )
+    })
+
+    it("rejects arbitrary URLs and malformed template keys", async () => {
+      await config.api.auth.setInitInfo({
+        body: {
+          projectTemplate: {
+            templateKey: "https://example.com/template.tar.gz",
+          },
+        },
+        opts: { status: 400 },
+      })
+      await config.api.auth.setInitInfo({
+        body: {
+          projectTemplate: {
+            templateKey: "../project/expense-approval",
+          },
+        },
+        opts: { status: 400 },
+      })
+      await config.api.auth.setRawInitInfo({
+        body: {
+          projectTemplate: {
+            templateKey: "project/expense-approval",
+            artifactUrl: "https://example.com/template.tar.gz",
+          },
+        },
+        opts: { status: 400 },
+      })
+    })
+
+    it("clears a tampered init cookie", async () => {
+      const response = await config.api.auth.getInitInfoWithCookie({
+        cookie: "budibase:init=not-a-signed-cookie",
+      })
+
+      expect(response.body).toEqual({})
+      expect(response.headers["set-cookie"]?.[0]).toMatch(/budibase:init=;/i)
+    })
+  })
+
   describe("password", () => {
     describe("POST /api/global/auth/:tenantId/login", () => {
       const flushIpCounters = async () => {

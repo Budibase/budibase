@@ -1,6 +1,58 @@
-import { TestAPI, TestAPIOpts } from "./base"
+import type { SetInitInfoRequest } from "@budibase/types"
+import { TestAPI, type TestAPIOpts } from "./base"
 
 export class AuthAPI extends TestAPI {
+  private initCookie = ""
+
+  setRawInitInfo = async ({
+    body,
+    opts,
+  }: {
+    body: object
+    opts?: TestAPIOpts
+  }) => {
+    const response = await this.request
+      .post("/api/global/auth/init")
+      .send(body)
+      .expect("Content-Type", /json/)
+      .expect(opts?.status ? opts.status : 200)
+    const cookies = response.headers["set-cookie"]
+    if (cookies) {
+      this.initCookie = (Array.isArray(cookies) ? cookies : [cookies])
+        .map(cookie => cookie.split(";")[0])
+        .join("; ")
+    }
+    return response
+  }
+
+  setInitInfo = async ({
+    body,
+    opts,
+  }: {
+    body: SetInitInfoRequest
+    opts?: TestAPIOpts
+  }) => {
+    return await this.setRawInitInfo({ body, opts })
+  }
+
+  getInitInfo = (opts?: TestAPIOpts) => {
+    return this.getInitInfoWithCookie({ cookie: this.initCookie, opts })
+  }
+
+  getInitInfoWithCookie = ({
+    cookie,
+    opts,
+  }: {
+    cookie: string
+    opts?: TestAPIOpts
+  }) => {
+    return this.request
+      .get("/api/global/auth/init")
+      .set("Cookie", cookie)
+      .expect("Content-Type", /json/)
+      .expect(opts?.status ? opts.status : 200)
+  }
+
   updatePassword = (
     resetCode: string,
     password: string,

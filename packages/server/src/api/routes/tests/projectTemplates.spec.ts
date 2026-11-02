@@ -1,4 +1,9 @@
-import { features, objectStore } from "@budibase/backend-core"
+import {
+  constants,
+  env as coreEnv,
+  features,
+  objectStore,
+} from "@budibase/backend-core"
 import { Header } from "@budibase/shared-core"
 import {
   FeatureFlag,
@@ -9,6 +14,7 @@ import {
 } from "@budibase/types"
 import type { IncomingMessage } from "http"
 import nock from "nock"
+import jwt from "jsonwebtoken"
 import { Readable } from "stream"
 import { buffer } from "stream/consumers"
 import { ObjectStoreBuckets } from "../../../constants"
@@ -44,6 +50,12 @@ describe("Project template catalogue API", () => {
       },
       f
     )
+
+  const templateIntentCookie = (templateKey: string) =>
+    `${constants.Cookie.Init}=${jwt.sign(
+      { projectTemplate: { templateKey } },
+      coreEnv.JWT_SECRET!
+    )}`
 
   it.each([
     {
@@ -91,7 +103,7 @@ describe("Project template catalogue API", () => {
     ])
   })
 
-  it("imports an approved artifact through the Project importer", async () => {
+  it("imports an approved artifact and clears its matching template intent", async () => {
     await withProjectTemplatesEnabled(async () => {
       const { project } = await config.api.project.create({ name: "Support" })
       const artifact = await config.api.project.export(project._id)
@@ -103,12 +115,17 @@ describe("Project template catalogue API", () => {
           "Content-Length": artifact.length.toString(),
         })
 
-      const response = await withEnv(
-        { PROJECT_TEMPLATE_REPOSITORY_URL: repositoryUrl },
+      const response = await config.withHeaders(
+        { Cookie: templateIntentCookie(template.key) },
         () =>
-          config.api.project.importTemplate({
-            templateKey: template.key,
-          })
+          withEnv({ PROJECT_TEMPLATE_REPOSITORY_URL: repositoryUrl }, () =>
+            config.api.project.importTemplate({
+              templateKey: template.key,
+              expectations: {
+                headers: { "set-cookie": /budibase:init=;/i },
+              },
+            })
+          )
       )
 
       expect(response.template).toEqual({
@@ -228,9 +245,35 @@ describe("Project template catalogue API", () => {
       .reply(200, artifact)
     return await withEnv(
       { PROJECT_TEMPLATE_REPOSITORY_URL: repositoryUrl },
-      () => config.api.project.importTemplate({ templateKey: template.key })
+      () =>
+        config.api.project.importTemplate({
+          templateKey: template.key,
+          expectations: { headersNotPresent: ["set-cookie"] },
+        })
     )
   }
+
+  it("preserves pending intent for a different template after a successful import", async () => {
+    await withProjectTemplatesEnabled(async () => {
+      const source = await exportSampleDataTemplate()
+
+      await config.withHeaders(
+        { Cookie: templateIntentCookie("project/another-template") },
+        () => importApprovedTemplate(source)
+      )
+    })
+  })
+
+  it("imports successfully when the init cookie is invalid", async () => {
+    await withProjectTemplatesEnabled(async () => {
+      const source = await exportSampleDataTemplate()
+
+      await config.withHeaders(
+        { Cookie: `${constants.Cookie.Init}=invalid-signed-cookie` },
+        () => importApprovedTemplate(source)
+      )
+    })
+  })
 
   const readImportedData = async (copy: ImportProjectTemplateResponse) => {
     const tables = (await config.api.table.fetch()).filter(table =>

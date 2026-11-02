@@ -22,6 +22,10 @@
   import ProjectTemplateFlow from "./_components/ProjectTemplateFlow.svelte"
   import ProjectReadme from "./_components/ProjectReadme.svelte"
   import {
+    saveProjectImportResult,
+    takeProjectImportResult,
+  } from "@/helpers/projectImportResult"
+  import {
     workspaceStore,
     automationStore,
     contextMenuStore,
@@ -34,6 +38,7 @@
     agentsStore,
     workspacesStore,
     auth,
+    enrichedApps,
     featureFlags,
     licensing,
     projectsStore,
@@ -164,6 +169,17 @@
   $: canEditProjectNotes = sdk.users.hasBuilderPermissions($auth.user)
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: templatesEnabled = projectsEnabled && $featureFlags[FeatureFlag.TEMPLATES]
+  $: canCreateProjectTemplateWorkspace =
+    !!$auth.user &&
+    sdk.users.canCreateApps($auth.user) &&
+    !$licensing.isFreePlan
+  $: projectTemplateWorkspaces = $enrichedApps
+    .filter(workspace => workspace.editable && workspace.devId)
+    .map(workspace => ({
+      id: workspace.devId!,
+      name: workspace.name?.trim() || "Untitled workspace",
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: selectedProjectResource = projectAssignmentRow
     ? {
@@ -676,9 +692,20 @@
 
   const handleProjectTemplateImported = async ({
     response,
+    workspaceId,
   }: {
     response: ImportProjectTemplateResponse
+    workspaceId: string
   }) => {
+    if (workspaceId !== $workspaceStore.appId) {
+      saveProjectImportResult({ workspaceId, userId: currentUserId, response })
+      goto(
+        `/builder/workspace/${workspaceId}/home?project=${encodeURIComponent(
+          response.project._id
+        )}`
+      )
+      return
+    }
     await completeProjectImport(response)
   }
 
@@ -1099,8 +1126,16 @@
       projectsEnabled,
     })
 
+    const pendingImport = takeProjectImportResult({
+      workspaceId,
+      userId: currentUserId,
+    })
+    if (pendingImport) {
+      await completeProjectImport(pendingImport)
+    }
+
     await agentsStore.fetchAgents()
-    if (setupRequest && projectsEnabled) {
+    if (!pendingImport && setupRequest && projectsEnabled) {
       await openProjectSetup({ refresh: false })
     }
   })
@@ -1368,8 +1403,10 @@
 
   <ProjectTemplateFlow
     bind:this={projectTemplateFlow}
+    workspaces={projectTemplateWorkspaces}
     currentWorkspaceId={$workspaceStore.appId}
     currentWorkspaceName={$workspaceStore.name}
+    canCreateWorkspace={canCreateProjectTemplateWorkspace}
     onImported={handleProjectTemplateImported}
     onGalleryClose={() => homeProjectTabs?.focusCreateAction()}
   />

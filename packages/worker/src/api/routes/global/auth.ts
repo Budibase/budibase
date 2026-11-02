@@ -1,5 +1,6 @@
 import * as authController from "../../controllers/global/auth"
 import { auth } from "@budibase/backend-core"
+import { PROJECT_TEMPLATE_KEY_PATTERN } from "@budibase/shared-core"
 import Joi from "joi"
 import { loggedInRoutes } from "../endpointGroups"
 import { emailLockout, ipLockout } from "../../../middleware"
@@ -27,6 +28,23 @@ function buildResetUpdateValidation() {
   }).required().unknown(false))
 }
 
+function buildInitInfoValidation() {
+  return auth.joiValidator.body(
+    Joi.object({
+      projectTemplate: Joi.object({
+        templateKey: Joi.string()
+          .pattern(PROJECT_TEMPLATE_KEY_PATTERN)
+          .max(200)
+          .required(),
+      })
+        .unknown(false)
+        .optional(),
+    })
+      .required()
+      .unknown(false)
+  )
+}
+
 loggedInRoutes
   // PASSWORD
   .post(
@@ -48,7 +66,11 @@ loggedInRoutes
     authController.resetUpdate
   )
   // INIT
-  .post("/api/global/auth/init", authController.setInitInfo)
+  .post(
+    "/api/global/auth/init",
+    buildInitInfoValidation(),
+    authController.setInitInfo
+  )
   .get("/api/global/auth/init", authController.getInitInfo)
 
   // DATASOURCE - MULTI TENANT
