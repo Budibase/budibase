@@ -1,7 +1,14 @@
 <script lang="ts">
   import { API } from "@/api"
-  import { admin, auth, organisation, translations } from "@/stores/portal"
+  import {
+    admin,
+    auth,
+    featureFlags,
+    organisation,
+    translations,
+  } from "@/stores/portal"
   import { ActionMenu, Icon, MenuItem, Modal } from "@budibase/bbui"
+  import { FeatureFlag } from "@budibase/types"
   import {
     ChangePasswordModal,
     ProfileModal,
@@ -21,10 +28,12 @@
 
   const { accountPortalAccountUrl } = helpers
 
-  const links = [
+  const links = $derived([
     { id: "apps", label: "Apps", href: "/apps" },
-    { id: "requests", label: "Requests", href: "/requests" },
-  ]
+    ...($featureFlags[FeatureFlag.AI_AGENT_ACTIVITY]
+      ? [{ id: "requests", label: "Requests", href: "/requests" }]
+      : []),
+  ])
 
   let isOwner = $derived($auth.accountPortalAccess && $admin.cloud)
   let translationOverrides = $derived.by(() => {

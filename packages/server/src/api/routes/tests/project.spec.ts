@@ -15,6 +15,7 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   isEmailTrigger,
   isWebhookTrigger,
+  MAX_PROJECT_README_LENGTH,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
   PASSWORD_REPLACEMENT,
@@ -367,12 +368,17 @@ describe("/projects", () => {
       const { project } = await config.api.project.create({
         name: "Operations",
         description: "Operational workflows",
+        readme:
+          "# Operations\n\nBuild together.\n\n- [Setup](https://example.com/setup)",
         color: "#8CA171",
       })
 
       expect(project._id).toBeDefined()
       expect(project.name).toBe("Operations")
       expect(project.description).toBe("Operational workflows")
+      expect(project.readme).toBe(
+        "# Operations\n\nBuild together.\n\n- [Setup](https://example.com/setup)"
+      )
       expect(project.color).toBe("#8CA171")
       expect(project.createdAt).toBeDefined()
       expect(project.updatedAt).toBeDefined()
@@ -385,13 +391,90 @@ describe("/projects", () => {
         _rev: project._rev,
         name: "Operations revised",
         description: "Updated",
+        readme: "# Updated operations\n\nStart here.",
         color: " #7E8F68 ",
       })
 
       expect(updated.project.name).toBe("Operations revised")
       expect(updated.project.description).toBe("Updated")
+      expect(updated.project.readme).toBe("# Updated operations\n\nStart here.")
       expect(updated.project.color).toBe("#7E8F68")
       expect(updated.project.createdAt).toBe(project.createdAt)
+    })
+  })
+
+  it("preserves the README when project metadata updates omit it", async () => {
+    await withProjectsEnabled(async () => {
+      const readme = "# Operations\n\nShared build notes."
+      const { project } = await config.api.project.create({
+        name: "Operations",
+        readme,
+      })
+
+      await config.api.project.update({
+        _id: project._id,
+        _rev: project._rev,
+        name: "Renamed operations",
+      })
+
+      const { projects } = await config.api.project.fetch()
+      expect(projects.find(existing => existing._id === project._id)).toEqual(
+        expect.objectContaining({ name: "Renamed operations", readme })
+      )
+    })
+  })
+
+  it("clears the README when an update supplies an empty string", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+        readme: "# Operations\n\nShared build notes.",
+      })
+
+      await config.api.project.update({
+        _id: project._id,
+        _rev: project._rev,
+        name: project.name,
+        readme: "",
+      })
+
+      const { projects } = await config.api.project.fetch()
+      expect(
+        projects.find(existing => existing._id === project._id)?.readme
+      ).toBe("")
+    })
+  })
+
+  it.each([
+    { name: "null", readme: null },
+    { name: "numeric", readme: 42 },
+    { name: "object", readme: { content: "# Operations" } },
+    { name: "oversized", readme: "x".repeat(MAX_PROJECT_README_LENGTH + 1) },
+  ])("rejects $name READMEs on create and update", async ({ readme }) => {
+    await withProjectsEnabled(async () => {
+      await config
+        .request!.post("/api/projects")
+        .set(config.defaultHeaders())
+        .send({ name: "Invalid README", readme })
+        .expect(400)
+
+      const { project } = await config.api.project.create({
+        name: "Operations",
+        readme: "# Shared notes",
+      })
+      await config
+        .request!.put(`/api/projects/${project._id}`)
+        .set(config.defaultHeaders())
+        .send({
+          _id: project._id,
+          _rev: project._rev,
+          name: project.name,
+          readme,
+        })
+        .expect(400)
+
+      const { projects } = await config.api.project.fetch()
+      expect(projects).toEqual([project])
     })
   })
 
@@ -456,21 +539,32 @@ describe("/projects", () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "Operations",
+        readme: "# Initial notes",
       })
 
       await config.api.project.update({
         ...project,
         name: "Updated operations",
+        readme: "# Latest notes",
       })
 
       await config.api.project.update(
         {
           ...project,
           name: "Stale operations",
+          readme: "# Stale notes",
         },
         {
           status: 409,
         }
+      )
+
+      const { projects } = await config.api.project.fetch()
+      expect(projects.find(existing => existing._id === project._id)).toEqual(
+        expect.objectContaining({
+          name: "Updated operations",
+          readme: "# Latest notes",
+        })
       )
     })
   })
@@ -1824,6 +1918,50 @@ describe("/projects", () => {
     })
   })
 
+  it.each([
+    {
+      name: "Markdown",
+      readme:
+        "# Operations 🚀\n\n- [Setup](https://example.com/setup)\n\n```js\nconst ready = true\n```\n",
+    },
+    { name: "empty", readme: "" },
+    { name: "maximum length", readme: "x".repeat(MAX_PROJECT_README_LENGTH) },
+  ])(
+    "preserves a $name README through project export and import",
+    async ({ readme }) => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+          readme,
+        })
+        const packageBuffer = await config.api.project.export(project._id)
+        const entries = await readTarEntries(packageBuffer)
+        const exported: Project = JSON.parse(
+          entries.get("project.json")!.toString()
+        )
+        const destinationWorkspace = await config.api.workspace.create({
+          name: "Imported workspace",
+        })
+
+        await config.withHeaders(
+          { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
+          async () => {
+            const imported = await config.api.project.import(packageBuffer)
+            const { projects } = await config.api.project.fetch()
+
+            expect(exported.readme).toBe(readme)
+            expect(imported.project.readme).toBe(readme)
+            expect(imported.project._id).not.toBe(project._id)
+            expect(
+              projects.find(existing => existing._id === imported.project._id)
+                ?.readme
+            ).toBe(readme)
+          }
+        )
+      })
+    }
+  )
+
   it("exports and remaps external tables through their assigned datasource", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -2561,6 +2699,25 @@ describe("/projects", () => {
       })
     }
   )
+
+  it.each([
+    { name: "null", readme: null },
+    { name: "numeric", readme: 42 },
+    { name: "object", readme: { content: "# Operations" } },
+    { name: "oversized", readme: "x".repeat(MAX_PROJECT_README_LENGTH + 1) },
+  ])("rejects packages with a $name README", async ({ readme }) => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({ project: { readme } })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: { message: "Project package project.json is invalid." },
+      })
+      expect((await config.api.project.fetch()).projects).toEqual([])
+    })
+  })
 
   it("rejects packages with an invalid source project id", async () => {
     await withProjectsEnabled(async () => {

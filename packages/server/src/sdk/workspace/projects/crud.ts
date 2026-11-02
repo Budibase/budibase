@@ -1,12 +1,18 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
-import { DocumentType, prefixed, type Project } from "@budibase/types"
+import {
+  DocumentType,
+  MAX_PROJECT_README_LENGTH,
+  prefixed,
+  type Project,
+} from "@budibase/types"
 import { doWithProjectAssignmentsLock } from "./lock"
 import { fetchAssignedProjectDocs, hasProject, removeProjectId } from "./utils"
 
 interface CreateProjectInput {
   name: string
   description?: string
+  readme?: string
   color?: string
 }
 
@@ -15,6 +21,7 @@ interface UpdateProjectInput {
   _rev: string
   name?: string
   description?: string
+  readme?: string
   color?: string
 }
 
@@ -31,6 +38,18 @@ const normaliseProjectColor = (color?: string) => {
 const validateProjectName = (name?: string) => {
   if (typeof name !== "string" || !name.trim()) {
     throw new HTTPError("Project name is required.", 400)
+  }
+}
+
+const validateProjectReadme = (readme: unknown) => {
+  if (
+    readme !== undefined &&
+    (typeof readme !== "string" || readme.length > MAX_PROJECT_README_LENGTH)
+  ) {
+    throw new HTTPError(
+      `Project README must be a string of at most ${MAX_PROJECT_README_LENGTH} characters.`,
+      400
+    )
   }
 }
 
@@ -61,6 +80,7 @@ export async function get(id: string): Promise<Project | undefined> {
 
 export async function create(project: CreateProjectInput): Promise<Project> {
   validateProjectName(project.name)
+  validateProjectReadme(project.readme)
 
   const db = context.getWorkspaceDB()
   const now = new Date().toISOString()
@@ -89,6 +109,7 @@ export async function update(project: UpdateProjectInput): Promise<Project> {
   if (Object.hasOwn(project, "name")) {
     validateProjectName(project.name)
   }
+  validateProjectReadme(project.readme)
 
   const db = context.getWorkspaceDB()
   const persisted = await get(project._id)
@@ -100,6 +121,7 @@ export async function update(project: UpdateProjectInput): Promise<Project> {
     {
       ...persisted,
       ...project,
+      readme: project.readme ?? persisted.readme,
       ...(Object.hasOwn(project, "color")
         ? { color: normaliseProjectColor(project.color) }
         : {}),
