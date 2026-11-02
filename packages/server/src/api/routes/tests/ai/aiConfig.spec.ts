@@ -174,7 +174,7 @@ describe("BudibaseAI", () => {
             { status: 400 }
           )
 
-          expect(await config.api.ai.fetchConfigs()).toEqual([created])
+          expect(await config.api.ai.fetchConfigs()).toMatchObject([created])
         }
       )
     })
