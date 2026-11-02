@@ -9,6 +9,44 @@ interface StreamUsageState {
   usageCaptured: boolean
 }
 
+const allowedChatCompletionFields = new Set([
+  "audio",
+  "frequency_penalty",
+  "function_call",
+  "functions",
+  "logit_bias",
+  "logprobs",
+  "max_completion_tokens",
+  "max_tokens",
+  "messages",
+  "metadata",
+  "modalities",
+  "model",
+  "n",
+  "parallel_tool_calls",
+  "prediction",
+  "presence_penalty",
+  "prompt_cache_key",
+  "prompt_cache_retention",
+  "reasoning_effort",
+  "response_format",
+  "safety_identifier",
+  "seed",
+  "service_tier",
+  "stop",
+  "store",
+  "stream",
+  "stream_options",
+  "temperature",
+  "tool_choice",
+  "tools",
+  "top_logprobs",
+  "top_p",
+  "user",
+  "verbosity",
+  "web_search_options",
+])
+
 const getBBAITags = () => {
   const tags = ["bbai-self"]
   try {
@@ -76,21 +114,27 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
   if (!model) {
     ctx.throw(400, "Missing required field: model")
   }
-  if (!model?.startsWith("budibase/")) {
+  if (model !== "budibase/v1") {
     throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
+  }
+
+  const requestBody: Record<string, unknown> = {}
+  for (const [field, value] of Object.entries(ctx.request.body)) {
+    if (!allowedChatCompletionFields.has(field)) {
+      ctx.throw(400, `Unsupported chat completion field: ${field}`)
+    }
+    if (field !== "metadata") {
+      requestBody[field] = value
+    }
+  }
+  requestBody.metadata = {
+    ...ctx.request.body.metadata,
+    tags: getBBAITags(),
   }
 
   const bbaiKey = bbai.getBBAIKey()
 
   await quotas.throwIfBudibaseAICreditsExceeded()
-
-  const requestBody = {
-    ...ctx.request.body,
-    metadata: {
-      ...ctx.request.body.metadata,
-      tags: getBBAITags(),
-    },
-  }
 
   const upstreamResponse = await fetch(
     `${environment.LITELLM_URL.replace(/\/$/, "")}/chat/completions`,
