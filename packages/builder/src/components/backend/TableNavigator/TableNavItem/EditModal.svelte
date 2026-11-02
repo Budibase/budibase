@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { MAX_RESOURCE_NAME_LENGTH } from "@budibase/types"
   import { get } from "svelte/store"
   import { tables, datasources } from "@/stores/builder"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
@@ -40,6 +41,13 @@
 
   function checkValid(evt: Event) {
     const tableName = (evt.target as HTMLInputElement).value
+    if (
+      tableName !== originalName &&
+      tableName.length > MAX_RESOURCE_NAME_LENGTH
+    ) {
+      error = `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
+      return
+    }
     error = get(tables).list.some(
       existing => existing._id !== table._id && existing.name === tableName
     )

@@ -1,3 +1,4 @@
+import { MAX_RESOURCE_NAME_LENGTH } from "@budibase/types"
 import { derived, get, writable } from "svelte/store"
 import { capitalise } from "@/helpers"
 import { string } from "yup"
@@ -13,7 +14,15 @@ export const createValidatedNameStore = (name: string, isVisible: boolean) => {
     }
 
     try {
-      await string().required().validate(get(nameStore), { abortEarly: false })
+      await string()
+        .required()
+        .test(
+          "name-length",
+          `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`,
+          value =>
+            value === name || !value || value.length <= MAX_RESOURCE_NAME_LENGTH
+        )
+        .validate(get(nameStore), { abortEarly: false })
 
       errorStore.set(null)
 

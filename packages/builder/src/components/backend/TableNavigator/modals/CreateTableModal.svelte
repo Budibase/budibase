@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto as gotoStore, url as urlStore } from "@roxi/routify"
   import {
+    MAX_RESOURCE_NAME_LENGTH,
     DataEnvironmentMode,
     FieldType,
     TableSourceType,
@@ -185,6 +186,10 @@
 
   function checkValid(evt: Event) {
     const tableName = (evt.target as HTMLInputElement).value
+    if (tableName.length > MAX_RESOURCE_NAME_LENGTH) {
+      error = `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
+      return
+    }
     if (tableNames.includes(tableName)) {
       error = `Table with name ${tableName} already exists. Please choose another name.`
       return

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { MAX_RESOURCE_NAME_LENGTH } from "@budibase/types"
   import { goto as gotoStore } from "@roxi/routify"
   import { datasources, integrations, queries } from "@/stores/builder"
   import {
@@ -321,7 +322,12 @@
                 e.currentTarget instanceof HTMLInputElement
                   ? e.currentTarget.value
                   : ""
-              if (newValue.match(ValidQueryNameRegex)) {
+              if (
+                newValue.trim() !== query.name &&
+                newValue.trim().length > MAX_RESOURCE_NAME_LENGTH
+              ) {
+                nameError = `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
+              } else if (newValue.match(ValidQueryNameRegex)) {
                 newQuery.name = newValue.trim()
                 nameError = null
               } else {

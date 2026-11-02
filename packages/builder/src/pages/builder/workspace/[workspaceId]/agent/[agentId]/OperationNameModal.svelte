@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { MAX_RESOURCE_NAME_LENGTH } from "@budibase/types"
   import { Input, keepOpen, Modal, ModalContent } from "@budibase/bbui"
 
   let modal: Modal
   let modalContent: ModalContent
+  let initialName = $state("")
   let name = $state("")
   let touched = $state(false)
   let submitting = $state(false)
@@ -36,6 +38,10 @@
       return "Operation name is required"
     }
 
+    if (name !== initialName && trimmedName.length > MAX_RESOURCE_NAME_LENGTH) {
+      return `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
+    }
+
     return validateName(trimmedName)
   })
 
@@ -49,8 +55,9 @@
     return !trimmedName || !!nameError || submitting
   }
 
-  export const show = (initialName = "") => {
-    name = initialName
+  export const show = (value = "") => {
+    initialName = value
+    name = value
     resetState()
     modal?.show()
   }
@@ -69,7 +76,7 @@
 
     submitting = true
     try {
-      await onConfirm(trimmedName)
+      await onConfirm(name === initialName ? name : trimmedName)
       modal?.hide()
     } catch (error) {
       submitError = error instanceof Error ? error.message : "Failed to save"

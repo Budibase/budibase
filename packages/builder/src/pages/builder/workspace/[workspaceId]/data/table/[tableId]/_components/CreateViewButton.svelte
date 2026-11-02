@@ -1,4 +1,5 @@
 <script>
+  import { MAX_RESOURCE_NAME_LENGTH } from "@budibase/types"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import {
     Input,
@@ -24,7 +25,12 @@
   $: views = Object.keys(table?.views || {}).map(x => x.toLowerCase())
   $: trimmedName = name?.trim()
   $: nameExists = views.includes(trimmedName?.toLowerCase())
-  $: nameValid = trimmedName?.length && !nameExists
+  $: nameTooLong = trimmedName?.length > MAX_RESOURCE_NAME_LENGTH
+  $: nameError = nameExists ? "A view already exists with that name" : undefined
+  $: if (nameTooLong) {
+    nameError = `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
+  }
+  $: nameValid = trimmedName?.length && !nameExists && !nameTooLong
 
   export const show = () => {
     popover?.show()
@@ -111,13 +117,7 @@
       />
     </div>
   </div>
-  <Input
-    label="Name"
-    thin
-    bind:value={name}
-    error={nameExists ? "A view already exists with that name" : null}
-    autofocus
-  />
+  <Input label="Name" thin bind:value={name} error={nameError} autofocus />
   <div>
     <Button cta on:click={saveView} disabled={nameExists || !nameValid}>
       Create view

@@ -1,3 +1,4 @@
+import { resourceNameValidator } from "./utils/validators"
 import { middleware } from "@budibase/backend-core"
 import { AppFontFamily, Theme } from "@budibase/types"
 import Joi from "joi"
@@ -50,12 +51,14 @@ builderRoutes
   .post(
     "/api/workspaceApp",
     workspaceAppValidator(insertSchema),
+    resourceNameValidator({ isCreate: true }),
     controller.create
   )
   .post("/api/workspaceApp/:id/duplicate", controller.duplicate)
   .put(
     "/api/workspaceApp/:id",
     workspaceAppValidator(updateSchema),
+    resourceNameValidator(),
     controller.edit
   )
   .delete("/api/workspaceApp/:id/:rev", controller.remove)

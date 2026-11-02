@@ -7,7 +7,7 @@ import {
   AppType,
 } from "../../middleware/appInfo"
 import recaptcha from "../../middleware/recaptcha"
-import { automationValidator } from "./utils/validators"
+import { automationValidator, resourceNameValidator } from "./utils/validators"
 import { builderRoutes, endpointGroupList } from "./endpointGroups"
 import { EmailTriggerAuthType } from "@budibase/types"
 import Joi from "joi"
@@ -72,9 +72,15 @@ builderRoutes
     "/api/automations",
     bodyResource("_id"),
     automationValidator(false),
+    resourceNameValidator(),
     controller.update
   )
-  .post("/api/automations", automationValidator(false), controller.create)
+  .post(
+    "/api/automations",
+    automationValidator(false),
+    resourceNameValidator({ isCreate: true }),
+    controller.create
+  )
   .post("/api/automations/logs/search", controller.logSearch)
   .delete("/api/automations/logs", controller.clearLogError)
   .delete("/api/automations/:id/:rev", paramResource("id"), controller.destroy)

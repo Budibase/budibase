@@ -2,7 +2,7 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import {
   DocumentType,
-  MAX_PROJECT_NAME_LENGTH,
+  MAX_RESOURCE_NAME_LENGTH,
   MAX_PROJECT_README_LENGTH,
   prefixed,
   type Project,
@@ -36,13 +36,19 @@ const normaliseProjectColor = (color?: string) => {
   }
 }
 
-const validateProjectName = (name?: string) => {
+const validateProjectName = ({
+  name,
+  existingName,
+}: {
+  name?: string
+  existingName?: string
+}) => {
   if (typeof name !== "string" || !name.trim()) {
     throw new HTTPError("Project name is required.", 400)
   }
-  if (name.length > MAX_PROJECT_NAME_LENGTH) {
+  if (name !== existingName && name.length > MAX_RESOURCE_NAME_LENGTH) {
     throw new HTTPError(
-      `Project name must be at most ${MAX_PROJECT_NAME_LENGTH} characters.`,
+      `Project name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters.`,
       400
     )
   }
@@ -86,7 +92,7 @@ export async function get(id: string): Promise<Project | undefined> {
 }
 
 export async function create(project: CreateProjectInput): Promise<Project> {
-  validateProjectName(project.name)
+  validateProjectName({ name: project.name })
   validateProjectReadme(project.readme)
 
   const db = context.getWorkspaceDB()
@@ -113,15 +119,16 @@ export async function update(project: UpdateProjectInput): Promise<Project> {
   if (!project._rev) {
     throw new HTTPError("Project revision is required.", 400)
   }
-  if (Object.hasOwn(project, "name")) {
-    validateProjectName(project.name)
-  }
   validateProjectReadme(project.readme)
 
   const db = context.getWorkspaceDB()
   const persisted = await get(project._id)
   if (!persisted) {
     throw new HTTPError(`Project with id '${project._id}' not found.`, 404)
+  }
+
+  if (Object.hasOwn(project, "name")) {
+    validateProjectName({ name: project.name, existingName: persisted.name })
   }
 
   const response = await db.put(

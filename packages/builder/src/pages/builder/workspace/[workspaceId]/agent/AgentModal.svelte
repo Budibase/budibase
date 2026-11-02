@@ -11,6 +11,7 @@
   } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
   import { onMount } from "svelte"
+  import { MAX_RESOURCE_NAME_LENGTH } from "@budibase/types"
 
   $: goto = $gotoStore
   export let initialProjectIds: string[] = []
@@ -32,14 +33,32 @@
   let loading = false
 
   $: trimmedName = name.trim()
-  $: nameError = touched && !trimmedName ? "Name is required" : undefined
+  const getNameError = ({
+    name,
+    touched,
+  }: {
+    name: string
+    touched: boolean
+  }) => {
+    if (!touched) {
+      return undefined
+    }
+    if (!name) {
+      return "Name is required"
+    }
+    if (name.length > MAX_RESOURCE_NAME_LENGTH) {
+      return `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
+    }
+  }
+
+  $: nameError = getNameError({ name: trimmedName, touched })
 
   async function createAgent() {
     if (loading) {
       return keepOpen
     }
     touched = true
-    if (!trimmedName) {
+    if (getNameError({ name: trimmedName, touched: true })) {
       return keepOpen
     }
 

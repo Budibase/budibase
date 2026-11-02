@@ -1,0 +1,1 @@
+export const MAX_RESOURCE_NAME_LENGTH = 128

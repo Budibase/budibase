@@ -2,7 +2,7 @@ import * as tableController from "../controllers/table"
 import { authorizedMiddleware as authorized } from "../../middleware/authorized"
 import { paramResource, bodyResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
-import { tableValidator } from "./utils/validators"
+import { tableValidator, resourceNameValidator } from "./utils/validators"
 import recaptcha from "../../middleware/recaptcha"
 import { builderRoutes, endpointGroupList } from "./endpointGroups"
 
@@ -31,6 +31,7 @@ builderRoutes
     // allows control over updating a table
     bodyResource("_id"),
     tableValidator(),
+    resourceNameValidator(),
     tableController.save
   )
   .post("/api/convert/csvToJson", tableController.csvToJson)

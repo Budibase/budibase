@@ -1,3 +1,4 @@
+import sdk from "../../../sdk"
 import { Endpoint } from "@budibase/backend-core"
 import { viewSearch } from "../../controllers/public/rows"
 import controller from "../../controllers/public/views"
@@ -5,6 +6,7 @@ import {
   externalSearchValidator,
   nameValidator,
   viewValidator,
+  resourceNameValidator,
 } from "../utils/validators"
 
 const read = [],
@@ -41,9 +43,9 @@ const read = [],
  *                 $ref: '#/components/examples/view'
  */
 write.push(
-  new Endpoint("post", "/views", controller.create).addMiddleware(
-    viewValidator()
-  )
+  new Endpoint("post", "/views", controller.create)
+    .addMiddleware(viewValidator())
+    .addMiddleware(resourceNameValidator({ isCreate: true }))
 )
 
 /**
@@ -78,9 +80,14 @@ write.push(
  *                 $ref: '#/components/examples/view'
  */
 write.push(
-  new Endpoint("put", "/views/:viewId", controller.update).addMiddleware(
-    viewValidator()
-  )
+  new Endpoint("put", "/views/:viewId", controller.update)
+    .addMiddleware(viewValidator())
+    .addMiddleware(
+      resourceNameValidator({
+        getExistingName: async ctx =>
+          (await sdk.views.get(ctx.params.viewId)).name,
+      })
+    )
 )
 
 /**

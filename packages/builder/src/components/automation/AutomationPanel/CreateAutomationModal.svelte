@@ -4,6 +4,7 @@
   import { workspaceStore, automationStore } from "@/stores/builder"
   import {
     notifications,
+    keepOpen,
     Input,
     ModalContent,
     Layout,
@@ -11,6 +12,7 @@
     Icon,
     Label,
   } from "@budibase/bbui"
+  import { MAX_RESOURCE_NAME_LENGTH } from "@budibase/types"
   import { TriggerStepID } from "@/constants/backend/automations"
 
   $: goto = $gotoStore
@@ -23,13 +25,28 @@
   let nameTouched = false
   let triggerVal
 
-  $: nameError =
-    nameTouched && !name ? "Please specify a name for the automation." : null
+  const getNameError = ({ name, touched }) => {
+    if (!touched) {
+      return undefined
+    }
+    if (!name) {
+      return "Please specify a name for the automation."
+    }
+    if (name.length > MAX_RESOURCE_NAME_LENGTH) {
+      return `Name must be at most ${MAX_RESOURCE_NAME_LENGTH} characters`
+    }
+  }
+
+  $: nameError = getNameError({ name, touched: nameTouched })
   $: triggers = Object.entries(
     $automationStore.blockDefinitions.CREATABLE_TRIGGER
   )
 
   async function createAutomation() {
+    nameTouched = true
+    if (getNameError({ name, touched: true })) {
+      return keepOpen
+    }
     try {
       const workspaceId = $workspaceStore.appId
       const trigger = automationStore.actions.constructBlock(
@@ -70,7 +87,7 @@
   <Input
     bind:value={name}
     on:input={() => (nameTouched = true)}
-    bind:error={nameError}
+    error={nameError}
     label="Name"
   />
 
