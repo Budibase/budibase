@@ -135,7 +135,10 @@ const resetBuilderHistory = () => {
   automationHistoryStore.reset()
 }
 
-export const initialise = async (pkg: FetchAppPackageResponse) => {
+export const initialise = async (
+  pkg: FetchAppPackageResponse,
+  selectedScreenId?: string
+) => {
   const { application, recaptchaKey } = pkg
   // must be first operation to make sure subsequent requests have correct app ID
   workspaceStore.syncWorkspacePackage(pkg)
@@ -148,7 +151,7 @@ export const initialise = async (pkg: FetchAppPackageResponse) => {
   themeStore.syncAppTheme(application)
   recaptchaStore.syncRecaptcha(application, recaptchaKey)
   snippets.syncMetadata(application)
-  screenStore.syncAppScreens(pkg)
+  screenStore.syncAppScreens(pkg, selectedScreenId)
   layoutStore.syncAppLayouts(pkg)
   await workspaceFavouriteStore.sync()
   resetBuilderHistory()

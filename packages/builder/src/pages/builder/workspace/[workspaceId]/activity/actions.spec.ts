@@ -995,14 +995,20 @@ describe("Activity actions page", () => {
       const { findInTable } = renderPage()
       await findInTable("Support agent")
 
-      notify()
-      notify()
-      notify()
-      notify()
-      refresh.resolve(response)
+      vi.useFakeTimers()
+      try {
+        notify()
+        notify()
+        notify()
+        notify()
+        await vi.advanceTimersByTimeAsync(1000)
+        refresh.resolve(response)
 
-      await findInTable("Final refresh")
-      expect(queries()).toHaveLength(3)
+        await findInTable("Final refresh")
+        expect(queries()).toHaveLength(3)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it("refreshes again after a filter load that was in flight when a change arrived", async () => {

@@ -79,7 +79,10 @@
 
   // Refresh the preview when required
   $: json = JSON.stringify(previewData)
-  $: refreshContent(json)
+  // The API strips _rev from screens whose component trees were truncated.
+  $: isPreviewBlocked =
+    $previewStore.isUpdatingAppPackage || !$selectedScreen?._rev
+  $: refreshContent({ message: json, isBlocked: isPreviewBlocked })
 
   // Determine if the add component menu is active
   $: isAddingComponent = $isActive(`./${selectedComponentId}/new`)
@@ -101,7 +104,10 @@
   })
 
   // Update the iframe with the builder info to render the correct preview
-  const refreshContent = message => {
+  const refreshContent = ({ message, isBlocked }) => {
+    if (isBlocked) {
+      return
+    }
     iframe?.contentWindow.postMessage(message)
   }
 
@@ -130,7 +136,7 @@
       if (!loading) {
         return
       }
-      refreshContent(json)
+      refreshContent({ message: json, isBlocked: isPreviewBlocked })
     } else if (type === MessageTypes.ERROR) {
       // Catch any app errors
       loading = false

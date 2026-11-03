@@ -57,7 +57,7 @@
     }
   }
 
-  $: noPaste = !$componentStore.componentToPaste
+  $: noPaste = !$componentStore.componentToPaste || !screen._rev
 
   const pasteComponent = (mode: "inside") => {
     try {
@@ -85,7 +85,7 @@
         name: "Duplicate",
         keyBind: null,
         visible: true,
-        disabled: false,
+        disabled: !screen._rev,
         callback: screenDetailsModal.show,
       },
       {
