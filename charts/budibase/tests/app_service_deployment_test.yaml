@@ -135,12 +135,55 @@ tests:
   - it: should propagate BBAI_LITELLM_KEY when configured
     set:
       services.litellm.bbaiKey: "sk-bbai-test"
+      globals.secretName: test-secret
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: BBAI_LITELLM_KEY
-            value: "sk-bbai-test"
+            valueFrom:
+              secretKeyRef:
+                name: test-secret
+                key: bbai_litellm_key
+
+  - it: should allow the internal API fallback key to be absent
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: INTERNAL_API_KEY_FALLBACK
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase
+                key: internal_api_key_fallback
+                optional: true
+
+  - it: should render the initial admin password from the Secret when configured
+    set:
+      globals.bbAdminUserPassword: admin-test
+      globals.secretName: test-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: BB_ADMIN_USER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: test-secret
+                key: bb_admin_user_password
+                optional: true
+
+  - it: should omit the initial admin password when unset
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: BB_ADMIN_USER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase
+                key: bb_admin_user_password
+                optional: true
 
   - it: should set terminationGracePeriodSeconds to 70 by default
     asserts:

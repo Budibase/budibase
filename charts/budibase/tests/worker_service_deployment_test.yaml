@@ -144,6 +144,27 @@ tests:
             name: SMTP_HOST
             value: "smtp.example.com"
 
+  - it: should allow optional Secret keys to be absent
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: INTERNAL_API_KEY_FALLBACK
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase
+                key: internal_api_key_fallback
+                optional: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SMTP_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase
+                key: smtp_pass
+                optional: true
+
   - it: should set terminationGracePeriodSeconds to 70 by default
     asserts:
       - equal:

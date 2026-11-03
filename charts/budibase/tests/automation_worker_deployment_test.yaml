@@ -94,12 +94,30 @@ tests:
     set:
       services.automationWorkers.enabled: true
       services.litellm.bbaiKey: "sk-bbai-test"
+      globals.secretName: test-secret
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: BBAI_LITELLM_KEY
-            value: "sk-bbai-test"
+            valueFrom:
+              secretKeyRef:
+                name: test-secret
+                key: bbai_litellm_key
+
+  - it: should allow the internal API fallback key to be absent
+    set:
+      services.automationWorkers.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: INTERNAL_API_KEY_FALLBACK
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase
+                key: internal_api_key_fallback
+                optional: true
 
   - it: should not render BBAI_LITELLM_KEY when unset
     set:

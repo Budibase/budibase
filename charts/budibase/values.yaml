@@ -13,16 +13,22 @@ podDisruptionBudget:
 nameOverride: ""
 
 serviceAccount:
-  # -- Specifies whether a service account should be created
+  # -- Specifies whether a ServiceAccount resource should be created. Budibase
+  # workload pods currently use the namespace's default ServiceAccount.
   create: true
-  # -- Annotations to add to the service account
+  # -- Annotations to add to the created ServiceAccount resource. These do not
+  # apply to Budibase workload pods because they use the default ServiceAccount.
   annotations: {}
-  # -- The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- Name of the ServiceAccount resource to create. This does not select the
+  # ServiceAccount used by Budibase workload pods.
   name: ""
 
 service:
-  # -- Service type for the service that points to the main Budibase proxy pod.
+  # -- Whether to create the chart's legacy top-level Service. The chart-created
+  # Ingress sends traffic directly to `proxy-service`; this Service does not
+  # select current workloads and therefore has no endpoints.
+  enabled: true
+  # -- Service type for the chart's top-level Service.
   type: ClusterIP
   # -- Port to expose on the service.
   port: 10000
@@ -107,6 +113,8 @@ globals:
   internalAccountPortalUrl: ""
   # @ignore (only needs to be set in our cloud environment)
   accountPortalApiKey: ""
+  # @ignore (only used when setting the initial admin user password)
+  bbAdminUserPassword: ""
   # -- Sets the domain attribute of the cookie that Budibase uses to store session information.
   # See <https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent>
   # for details on why you might want to set this.
@@ -130,9 +138,17 @@ globals:
   # looping here: <https://docs.budibase.com/docs/looping>.
   automationMaxIterations: "200"
 
-  # -- Create an internal API key, JWT secret, object store access key and
-  # secret, and store them in a Kubernetes `Secret`.
+  # -- Create or update the Kubernetes `Secret` containing Budibase credentials.
+  # Existing data is preserved and missing keys are populated from these values
+  # or generated defaults. Set this to false when `secretName` identifies a
+  # Secret managed outside Helm.
   createSecrets: true
+  # -- Name of the Kubernetes Secret used for Budibase credentials. Defaults to
+  # the release fullname. Before changing this on an existing installation,
+  # copy all data from the current Secret to the new Secret name. The chart
+  # cannot migrate Secret data between names, and regenerating encryption keys
+  # makes existing encrypted data unreadable.
+  secretName: ""
 
   # -- Used for encrypting API keys and environment variables when stored in the database.
   # You don't need to set this if `createSecrets` is true.
@@ -659,7 +675,7 @@ services:
     # default, and the configuration for the CouchDB instance is under the
     # `couchdb` key at the root of this file. You can see what options are
     # available to you by looking at the official CouchDB Helm chart:
-    # <https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
+    # <https://github.com/apache/couchdb-helm/tree/couchdb-4.5.6/couchdb>.
     enabled: true
     # url: "" # only change if pointing to existing couch server
     # user: "" # only change if pointing to existing couch server
@@ -691,7 +707,9 @@ services:
     # connection details here.
     url: ""
     # -- The password to use when connecting to Redis. It's recommended that you change
-    # this from the default if you're running Redis in-cluster.
+    # this from the default if you're running Redis in-cluster. With chart-managed
+    # Secrets, an existing `redis_password` value takes precedence over this setting.
+    # To rotate it, update that Secret key and restart redis-service and its clients.
     password: "budibase"
     # -- The username to use when connecting to Redis. Only required for Redis 6+ with ACL
     # authentication enabled.
@@ -863,11 +881,11 @@ services:
 
 # Override values in couchDB subchart. We're only specifying the values we're changing.
 # If you want to see all of the available values, see:
-#   https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb
+#   https://github.com/apache/couchdb-helm/tree/couchdb-4.5.6/couchdb
 # Warning: The upstream Helm chart does not set a persistent password for the admin user by default.
 #
 # To have a specific password persist, you can set the adminPassword value.
-# See: https://github.com/apache/couchdb-helm/blob/couchdb-4.3.0/couchdb/values.yaml#L41
+# See: https://github.com/apache/couchdb-helm/blob/couchdb-4.5.6/couchdb/values.yaml#L41
 #
 # adminPassword: ""
 
