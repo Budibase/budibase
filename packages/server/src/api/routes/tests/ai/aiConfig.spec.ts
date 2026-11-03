@@ -124,6 +124,61 @@ describe("BudibaseAI", () => {
       mockLiteLLMTeam()
     })
 
+    describe("encrypted credential injection", () => {
+      const encryptedValue = `bbai_enc::${encryption.encrypt("stored-secret")}`
+      const injectedFields: Partial<
+        Pick<CreateAIConfigRequest, "credentialsFields" | "webSearchConfig">
+      >[] = [
+        { credentialsFields: { audit_echo: encryptedValue } },
+        { credentialsFields: { api_base: encryptedValue } },
+        { credentialsFields: { api_key: encryptedValue } },
+        {
+          webSearchConfig: {
+            provider: WebSearchProvider.EXA,
+            apiKey: encryptedValue,
+          },
+        },
+      ]
+
+      it.each(injectedFields)(
+        "rejects ciphertext on creation: %o",
+        async fields => {
+          await config.api.ai.createConfig(
+            { ...defaultRequest, ...fields },
+            { status: 400 }
+          )
+
+          expect(await config.api.ai.fetchConfigs()).toEqual([])
+        }
+      )
+
+      it.each(injectedFields)(
+        "rejects ciphertext on update: %o",
+        async fields => {
+          nock(environment.LITELLM_URL)
+            .post("/key/generate")
+            .reply(200, { token_id: "key-injection", key: "secret-injection" })
+            .post("/health/test_connection")
+            .reply(200, { status: "success" })
+            .post("/model/new")
+            .reply(200, { model_id: "model-injection" })
+            .post("/key/update")
+            .reply(200, { status: "success" })
+
+          const created = await config.api.ai.createConfig({
+            ...defaultRequest,
+          })
+
+          await config.api.ai.updateConfig(
+            { ...created, ...fields },
+            { status: 400 }
+          )
+
+          expect(await config.api.ai.fetchConfigs()).toMatchObject([created])
+        }
+      )
+    })
+
     it("fetches provider-specific models from LiteLLM cost map", async () => {
       const providers = await config.api.ai.fetchProviders()
       const openAIProvider = providers.find(
