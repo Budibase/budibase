@@ -81,6 +81,7 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.cache,
       get: jest.fn().mockResolvedValue(undefined),
       store: jest.fn().mockResolvedValue(undefined),
+      destroy: jest.fn().mockResolvedValue(undefined),
     },
     context: {
       ...actual.context,
@@ -718,27 +719,26 @@ describe("prepareAgentRunContext", () => {
     )
   })
 
-  it("defaults operationIntent to execute for a sticky follow-up", async () => {
-    mockIsEnabled.mockResolvedValue(true)
+  it("clears cached operation context and falls back to default behavior on no_operation", async () => {
     mockRouterStream.mockResolvedValue({
       output: Promise.resolve({
         action: "no_operation",
         operationId: null,
         intent: null,
-        reason: "Too ambiguous to classify",
+        reason: "Unrelated question",
       }),
     })
-    jest.mocked(cache.get).mockResolvedValueOnce("operation_2")
 
     const result = await prepareAgentRunContext({
       agent,
       agentId: "agent_1",
       sessionId: "session_1",
-      latestQuestion: "yes",
+      latestQuestion: "what is the capital of france?",
     })
 
-    expect(result.selectedOperation).toEqual(agent.operations[1])
-    expect(result.operationIntent).toBe("execute")
+    expect(result.selectedOperation).toBeUndefined()
+    expect(result.routingAction).toBe("no_operation")
+    expect(cache.destroy).toHaveBeenCalledWith("agent_session_operation_session_1")
   })
 })
 

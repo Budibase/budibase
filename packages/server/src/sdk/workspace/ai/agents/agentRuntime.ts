@@ -203,6 +203,10 @@ const setSessionOperationId = async (
   )
 }
 
+const clearSessionOperationId = async (sessionId: string) => {
+  await cache.destroy(sessionOperationKey(sessionId))
+}
+
 export const chooseOperationForQuestion = async ({
   agent,
   latestQuestion,
@@ -317,22 +321,10 @@ const selectOperationForRun = async ({
     })
   }
 
-  if (route.action === "no_operation" && !operationId) {
-    const lastOperationId = await getSessionOperationId(sessionId)
-    const lastOperation = lastOperationId
-      ? getLiveOperations(agent).find(o => o.id === lastOperationId)
-      : undefined
-    if (lastOperation) {
-      route = {
-        action: "select_operation",
-        operation: lastOperation,
-        intent: "execute",
-      }
-    }
-  }
-
   if (route.action === "select_operation") {
     await setSessionOperationId(sessionId, route.operation.id)
+  } else if (route.action === "no_operation") {
+    await clearSessionOperationId(sessionId)
   }
 
   return route
