@@ -8,8 +8,6 @@ import {
   type AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceType,
   AgentKnowledgeSourceSyncRunStatus,
-  type KnowledgeBaseFileSource,
-  KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   RestAuthType,
   SharePointScopeMode,
@@ -316,12 +314,10 @@ describe("agent files", () => {
     agentId,
     operationId,
     name,
-    source,
   }: {
     agentId: string
     operationId: string
     name: string
-    source?: KnowledgeBaseFileSource
   }) => {
     mockGeminiIngest(`gemini-${name}`)
     const upload = await config.api.agent.uploadFile(agentId, operationId, {
@@ -335,7 +331,6 @@ describe("agent files", () => {
       )
       return await sdk.ai.knowledgeBase.updateKnowledgeBaseFile({
         ...file,
-        source,
         status: KnowledgeBaseFileStatus.FAILED,
         errorMessage: "Resource has been exhausted (e.g. check quota).",
       })
@@ -446,99 +441,6 @@ describe("agent files", () => {
         body: { message: "File does not belong to this operation" },
       }
     )
-  })
-
-  it("does not retry failed SharePoint files when retrying all", async () => {
-    const created = await config.api.agent.createWithOperation(
-      {
-        name: "Retry All SharePoint Agent",
-        aiconfig: "default",
-      },
-      operation
-    )
-    const operationId = created.operations?.[0]?.id || operation.id
-
-    mockAutoKnowledgeBaseCreate()
-    const sharePointFailed = await uploadFailedFile({
-      agentId: created._id!,
-      operationId,
-      name: "sharepoint.txt",
-      source: {
-        type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
-        knowledgeSourceId: "sharepoint_site_site-1",
-        siteId: "site-1",
-        driveId: "drive-1",
-        itemId: "item-1",
-        path: "/sharepoint.txt",
-      },
-    })
-
-    const response = await config.api.agent.retryFailedFiles(
-      created._id!,
-      operationId
-    )
-
-    expect(response.files).toEqual([])
-    const { files } = await config.api.agent.fetchFiles(
-      created._id!,
-      operationId
-    )
-    expect(files).toEqual([
-      expect.objectContaining({
-        _id: sharePointFailed._id,
-        status: KnowledgeBaseFileStatus.FAILED,
-      }),
-    ])
-  })
-
-  it("retries all failed files for an operation", async () => {
-    const created = await config.api.agent.createWithOperation(
-      {
-        name: "Retry All Agent",
-        aiconfig: "default",
-      },
-      operation
-    )
-    const operationId = created.operations?.[0]?.id || operation.id
-
-    mockAutoKnowledgeBaseCreate()
-    const firstFailed = await uploadFailedFile({
-      agentId: created._id!,
-      operationId,
-      name: "first.txt",
-    })
-    const secondFailed = await uploadFailedFile({
-      agentId: created._id!,
-      operationId,
-      name: "second.txt",
-    })
-    mockGeminiIngest("gemini-file-ok")
-    const ready = await config.api.agent.uploadFile(created._id!, operationId, {
-      file: fileBuffer,
-      name: "ok.txt",
-    })
-    await utils.queue.processMessages(getQueue().getBullQueue())
-
-    const response = await config.api.agent.retryFailedFiles(
-      created._id!,
-      operationId
-    )
-
-    expect(response.files.map(file => file._id).sort()).toEqual(
-      [firstFailed._id, secondFailed._id].sort()
-    )
-    const { files } = await config.api.agent.fetchFiles(
-      created._id!,
-      operationId
-    )
-    const statusById = Object.fromEntries(
-      files.map(file => [file._id, file.status])
-    )
-    expect(statusById).toEqual({
-      [firstFailed._id!]: KnowledgeBaseFileStatus.PROCESSING,
-      [secondFailed._id!]: KnowledgeBaseFileStatus.PROCESSING,
-      [ready.file._id!]: KnowledgeBaseFileStatus.READY,
-    })
   })
 
   it("returns 403 when knowledge source downloads are disabled for the operation", async () => {

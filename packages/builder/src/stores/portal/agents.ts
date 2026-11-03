@@ -709,24 +709,26 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     }
   }
 
-  private takeRejectedUploads = ({
-    cacheKey,
-    tempIds,
+  dismissRejectedUpload = ({
+    agentId,
+    operationId,
+    tempId,
   }: {
-    cacheKey: string
-    tempIds: string[]
-  }): OperationKnowledgeRejectedUpload[] => {
-    const taken = (
-      get(this.store).knowledgeUploadByOperation[cacheKey]?.rejectedUploads ||
-      []
-    ).filter(rejected => tempIds.includes(rejected.tempId))
+    agentId: string
+    operationId: string
+    tempId: string
+  }): OperationKnowledgeRejectedUpload | undefined => {
+    const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
+    const rejected = get(this.store).knowledgeUploadByOperation[
+      cacheKey
+    ]?.rejectedUploads.find(upload => upload.tempId === tempId)
     this.setOperationUploadState(cacheKey, current => ({
       ...current,
       rejectedUploads: current.rejectedUploads.filter(
-        rejected => !tempIds.includes(rejected.tempId)
+        upload => upload.tempId !== tempId
       ),
     }))
-    return taken
+    return rejected
   }
 
   retryRejectedUpload = async ({
@@ -737,42 +739,17 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     agentId: string
     operationId: string
     tempId: string
-  }): Promise<OperationKnowledgeUploadResult> =>
-    await this.reuploadRejectedUploads({
+  }): Promise<OperationKnowledgeUploadResult> => {
+    const rejected = this.dismissRejectedUpload({
       agentId,
       operationId,
-      tempIds: [tempId],
+      tempId,
     })
-
-  private reuploadRejectedUploads = async ({
-    agentId,
-    operationId,
-    tempIds,
-  }: {
-    agentId: string
-    operationId: string
-    tempIds: string[]
-  }): Promise<OperationKnowledgeUploadResult> => {
-    const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
-    const taken = this.takeRejectedUploads({ cacheKey, tempIds })
     return await this.uploadOperationFiles(
       agentId,
       operationId,
-      taken.map(rejected => rejected.file)
+      rejected ? [rejected.file] : []
     )
-  }
-
-  dismissRejectedUpload = ({
-    agentId,
-    operationId,
-    tempId,
-  }: {
-    agentId: string
-    operationId: string
-    tempId: string
-  }) => {
-    const cacheKey = getOperationKnowledgeCacheKey(agentId, operationId)
-    this.takeRejectedUploads({ cacheKey, tempIds: [tempId] })
   }
 
   retryOperationKnowledgeFile = async ({

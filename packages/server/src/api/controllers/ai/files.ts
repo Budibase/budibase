@@ -19,7 +19,6 @@ import {
   FetchAgentKnowledgeSourceEntriesResponse,
   isKnowledgeFileSupported,
   RetryAgentFileResponse,
-  RetryAgentFilesResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   UserCtx,
@@ -278,22 +277,6 @@ export async function retryAgentFile(
     fileId,
   })
   ctx.body = { file }
-  ctx.status = 200
-}
-
-export async function retryFailedAgentFiles(
-  ctx: UserCtx<
-    void,
-    RetryAgentFilesResponse,
-    { agentId: string; operationId: string }
-  >
-) {
-  const { agentId, operationId } = ctx.params
-  const files = await sdk.ai.rag.retryFailedFilesForOperation({
-    agentId,
-    operationId,
-  })
-  ctx.body = { files }
   ctx.status = 200
 }
 

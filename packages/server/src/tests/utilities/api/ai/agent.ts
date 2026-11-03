@@ -12,7 +12,6 @@ import {
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentFileUrlResponse,
   RetryAgentFileResponse,
-  RetryAgentFilesResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
@@ -319,19 +318,6 @@ export class AgentAPI extends TestAPI {
   ): Promise<RetryAgentFileResponse> => {
     return await this._post<RetryAgentFileResponse>(
       `/api/agent/${agentId}/operations/${operationId}/files/${fileId}/retry`,
-      {
-        expectations,
-      }
-    )
-  }
-
-  retryFailedFiles = async (
-    agentId: string,
-    operationId: string,
-    expectations?: Expectations
-  ): Promise<RetryAgentFilesResponse> => {
-    return await this._post<RetryAgentFilesResponse>(
-      `/api/agent/${agentId}/operations/${operationId}/files/retry`,
       {
         expectations,
       }

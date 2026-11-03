@@ -16,7 +16,6 @@ import {
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   RetryAgentFileResponse,
-  RetryAgentFilesResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   ToggleAgentDeploymentRequest,
@@ -95,10 +94,6 @@ export interface AgentEndpoints {
     operationId: string
     fileId: string
   }) => Promise<RetryAgentFileResponse>
-  retryFailedOperationFiles: (params: {
-    agentId: string
-    operationId: string
-  }) => Promise<RetryAgentFilesResponse>
   fetchOperationFileUrl: (
     agentId: string,
     operationId: string,
@@ -300,12 +295,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   retryOperationFile: async ({ agentId, operationId, fileId }) => {
     return await API.post<void, RetryAgentFileResponse>({
       url: `/api/agent/${agentId}/operations/${operationId}/files/${fileId}/retry`,
-    })
-  },
-
-  retryFailedOperationFiles: async ({ agentId, operationId }) => {
-    return await API.post<void, RetryAgentFilesResponse>({
-      url: `/api/agent/${agentId}/operations/${operationId}/files/retry`,
     })
   },
 
