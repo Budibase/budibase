@@ -7,6 +7,10 @@ metadata:
   annotations:
     "helm.sh/hook": test
 spec:
+  {{- if .Values.imagePullSecrets }}
+  imagePullSecrets:
+  {{- toYaml .Values.imagePullSecrets | nindent 2 }}
+  {{- end }}
   containers:
     - name: wget
       image: {{ .Values.testConnection.image | quote }}
