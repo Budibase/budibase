@@ -5,7 +5,7 @@ const compress = require("koa-compress")
 import zlib from "zlib"
 import { routes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
-import { auth, middleware } from "@budibase/backend-core"
+import { auth, features, middleware } from "@budibase/backend-core"
 
 const PUBLIC_ENDPOINTS = [
   // deprecated single tenant sso callback
@@ -130,9 +130,18 @@ const NO_CSRF_ENDPOINTS = [...PUBLIC_ENDPOINTS]
 
 const router: Router = new Router()
 
+router.use(middleware.errorHandling).use(middleware.featureFlagCookie)
+
+router.post(
+  "/api/internal/features/reload",
+  middleware.internalApi,
+  async ctx => {
+    await features.reload()
+    ctx.status = 204
+  }
+)
+
 router
-  .use(middleware.errorHandling)
-  .use(middleware.featureFlagCookie)
   .use(
     compress({
       threshold: 2048,

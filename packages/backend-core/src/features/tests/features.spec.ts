@@ -1,9 +1,10 @@
 import { IdentityContext, IdentityType } from "@budibase/types"
-import { FlagSet, init, shutdown } from "../"
+import { FlagSet, init, reload, shutdown } from "../"
 import * as context from "../../context"
 import environment, { withEnv } from "../../environment"
 import nodeFetch from "node-fetch"
 import nock from "nock"
+import cluster from "node:cluster"
 
 const schema = {
   TEST_BOOLEAN: false,
@@ -329,5 +330,181 @@ describe("feature flags", () => {
         shutdown()
       }
     })
+  })
+})
+
+describe("manual feature flag reload", () => {
+  const reloadError = {
+    status: 503,
+    message: "Unable to reload feature flags",
+  }
+  const cloudEnvironment = {
+    SELF_HOSTED: false,
+    TENANT_FEATURE_FLAGS: "",
+    POSTHOG_FEATURE_FLAGS_ENABLED: "true",
+    POSTHOG_API_HOST: "https://example.com",
+    POSTHOG_TOKEN: "test-project-token",
+    POSTHOG_PERSONAL_TOKEN: "test-personal-token",
+    POSTHOG_FEATURE_FLAGS_POLLING_INTERVAL_MS: undefined,
+  }
+  const identity: IdentityContext = {
+    _id: "us_reload",
+    tenantId: "default",
+    type: IdentityType.USER,
+    email: "reload@example.com",
+  }
+  const response = ({
+    status = 200,
+    body = posthogFlags({ TEST_BOOLEAN: true }),
+  }: { status?: number; body?: unknown } = {}) => ({
+    status,
+    json: async () => body,
+    text: async () => JSON.stringify(body),
+  })
+  const readFlag = () =>
+    context.doInIdentityContext(identity, async () => {
+      return (await flags.fetch()).TEST_BOOLEAN
+    })
+  const finishStartup = () =>
+    new Promise<void>(resolve => setImmediate(resolve))
+
+  afterEach(() => {
+    shutdown()
+    jest.restoreAllMocks()
+  })
+
+  it("refreshes evaluated flags while retaining the daily polling interval", async () => {
+    await withEnv(cloudEnvironment, async () => {
+      const fetch = jest.fn(async () =>
+        response({ body: posthogFlags({ TEST_BOOLEAN: false }) })
+      )
+      const timeout = jest.spyOn(globalThis, "setTimeout")
+      init({ fetch })
+      await finishStartup()
+      fetch.mockResolvedValueOnce(response())
+
+      await reload()
+
+      expect(await readFlag()).toBe(true)
+      expect(timeout).toHaveBeenCalledWith(expect.any(Function), 86400000)
+    })
+  })
+
+  it("coalesces simultaneous manual refreshes into one download", async () => {
+    await withEnv(cloudEnvironment, async () => {
+      const fetch = jest.fn(async () => response())
+      init({ fetch })
+      await finishStartup()
+      fetch.mockClear()
+
+      await Promise.all([reload(), reload(), reload()])
+
+      expect(fetch).toHaveBeenCalledTimes(1)
+      expect(await readFlag()).toBe(true)
+    })
+  })
+
+  it.each([
+    { name: "an HTTP failure", status: 503, body: "test-personal-token" },
+    { name: "missing definitions", status: 200, body: {} },
+    { name: "invalid definitions", status: 200, body: { flags: null } },
+    { name: "invalid flag entries", status: 200, body: { flags: [null] } },
+  ])(
+    "keeps loaded flags after $name and returns a generic failure",
+    async testCase => {
+      await withEnv(cloudEnvironment, async () => {
+        const fetch = jest.fn(async () => response())
+        init({ fetch })
+        await finishStartup()
+        fetch.mockResolvedValueOnce(response(testCase))
+
+        await expect(reload()).rejects.toMatchObject(reloadError)
+
+        expect(await readFlag()).toBe(true)
+      })
+    }
+  )
+
+  it("keeps loaded flags on a network failure without exposing credentials", async () => {
+    await withEnv(cloudEnvironment, async () => {
+      const fetch = jest.fn(async () => response())
+      init({ fetch })
+      await finishStartup()
+      fetch.mockRejectedValueOnce(new Error("test-personal-token"))
+
+      await expect(reload()).rejects.toMatchObject(reloadError)
+
+      expect(await readFlag()).toBe(true)
+    })
+  })
+
+  it("does not mistake an in-flight startup download for a successful reload", async () => {
+    await withEnv(cloudEnvironment, async () => {
+      let finishInitialDownload: (
+        value: ReturnType<typeof response>
+      ) => void = () => {
+        throw new Error("Startup download has not begun")
+      }
+      const fetch = jest.fn(async () => response({ status: 503 }))
+      fetch.mockImplementationOnce(
+        () => new Promise(resolve => (finishInitialDownload = resolve))
+      )
+      init({ fetch })
+      const refresh = reload()
+      finishInitialDownload(response())
+
+      await expect(refresh).rejects.toMatchObject(reloadError)
+    })
+  })
+
+  it("can retry after a failed manual reload", async () => {
+    await withEnv(cloudEnvironment, async () => {
+      const fetch = jest.fn(async () => response())
+      init({ fetch })
+      await finishStartup()
+      fetch.mockResolvedValueOnce(response({ status: 503 }))
+      await expect(reload()).rejects.toMatchObject(reloadError)
+
+      await reload()
+
+      expect(await readFlag()).toBe(true)
+      expect(fetch).toHaveBeenCalledTimes(3)
+    })
+  })
+
+  it.each([
+    { name: "disabled", overrides: { POSTHOG_FEATURE_FLAGS_ENABLED: "" } },
+    { name: "self hosted", overrides: { SELF_HOSTED: true } },
+    {
+      name: "missing a personal key",
+      overrides: { POSTHOG_PERSONAL_TOKEN: "" },
+    },
+  ])("rejects reload when PostHog is $name", async ({ overrides }) => {
+    await withEnv({ ...cloudEnvironment, ...overrides }, async () => {
+      init({ fetch: jest.fn(async () => response()) })
+
+      await expect(reload()).rejects.toMatchObject(reloadError)
+    })
+  })
+
+  it("uses the effective personal key supplied through initialization options", async () => {
+    await withEnv(
+      { ...cloudEnvironment, POSTHOG_PERSONAL_TOKEN: "" },
+      async () => {
+        init({
+          personalApiKey: "test-options-key",
+          fetch: jest.fn(async () => response()),
+        })
+        await finishStartup()
+
+        await expect(reload()).resolves.toBeUndefined()
+      }
+    )
+  })
+
+  it("rejects a clustered application worker", async () => {
+    jest.replaceProperty(cluster, "isWorker", true)
+
+    await expect(reload()).rejects.toMatchObject({ status: 409 })
   })
 })

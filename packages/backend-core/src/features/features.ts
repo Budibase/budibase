@@ -2,13 +2,23 @@ import { FeatureFlag } from "@budibase/types"
 import * as crypto from "crypto"
 import tracer from "dd-trace"
 import { cloneDeep } from "lodash"
+import { AsyncLocalStorage } from "node:async_hooks"
+import cluster from "node:cluster"
 import { PostHog, PostHogOptions } from "posthog-node"
 import * as configs from "../configs"
 import * as context from "../context"
 import env from "../environment"
+import { HTTPError } from "../errors"
 import { Duration } from "../utils"
 
+interface ReloadAttempt {
+  started: boolean
+  successful: boolean
+}
+
+const reloadAttempts = new AsyncLocalStorage<ReloadAttempt>()
 let posthog: PostHog | undefined
+let pendingReload: Promise<void> | undefined
 
 const getFeatureFlagsPollingInterval = () => {
   const configured = env.POSTHOG_FEATURE_FLAGS_POLLING_INTERVAL_MS
@@ -29,19 +39,86 @@ export function init(opts?: PostHogOptions) {
     env.POSTHOG_FEATURE_FLAGS_ENABLED
   ) {
     console.log("initializing posthog client...")
+    const fetchImplementation = opts?.fetch || globalThis.fetch
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: env.POSTHOG_API_HOST,
       personalApiKey: env.POSTHOG_PERSONAL_TOKEN,
       featureFlagsPollingInterval: getFeatureFlagsPollingInterval(),
       ...opts,
+      fetch: async (url, options) => {
+        if (new URL(url).pathname !== "/api/feature_flag/local_evaluation") {
+          return fetchImplementation(url, options)
+        }
+        const attempt = reloadAttempts.getStore()
+        // Poll timers inherit this context, so only claim the manual request.
+        const trackedAttempt = attempt && !attempt.started ? attempt : undefined
+        if (trackedAttempt) trackedAttempt.started = true
+        const response = await fetchImplementation(url, options)
+        return {
+          status: response.status,
+          text: () => response.text(),
+          json: async () => {
+            const body: unknown = await response.json()
+            if (
+              response.status !== 200 ||
+              !body ||
+              typeof body !== "object" ||
+              !("flags" in body) ||
+              !Array.isArray(body.flags) ||
+              !body.flags.every(
+                (flag: unknown) =>
+                  !!flag &&
+                  typeof flag === "object" &&
+                  "key" in flag &&
+                  typeof flag.key === "string"
+              )
+            ) {
+              throw new Error("Invalid feature flag definitions")
+            }
+            if (trackedAttempt) trackedAttempt.successful = true
+            return body
+          },
+        }
+      },
     })
   } else {
+    posthog = undefined
     console.log("posthog disabled")
   }
 }
 
+export async function reload(): Promise<void> {
+  if (cluster.isWorker) {
+    throw new HTTPError(
+      "Feature flag reload is unavailable in clustered processes",
+      409
+    )
+  }
+  const client = posthog
+  if (!client?.options.personalApiKey) {
+    throw new HTTPError("Unable to reload feature flags", 503)
+  }
+  if (!pendingReload) {
+    const attempt: ReloadAttempt = { started: false, successful: false }
+    pendingReload = reloadAttempts.run(attempt, async () => {
+      try {
+        await client.reloadFeatureFlags()
+        if (!attempt.successful) {
+          throw new Error("Feature flag definitions were not refreshed")
+        }
+      } catch {
+        throw new HTTPError("Unable to reload feature flags", 503)
+      } finally {
+        pendingReload = undefined
+      }
+    })
+  }
+  await pendingReload
+}
+
 export function shutdown() {
   posthog?.shutdown()
+  posthog = undefined
 }
 
 export interface EnvFlagEntry {
