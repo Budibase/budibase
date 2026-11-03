@@ -36,7 +36,7 @@ export const createExaTool = (apiKey: string): BudibaseToolDefinition => ({
         },
         body: JSON.stringify({
           query: args.query,
-          num_results: args.num_results,
+          numResults: args.num_results,
         }),
       })
 
