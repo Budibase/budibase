@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
 import { constants as proConstants, licensing } from "@budibase/pro"
-import { dataFilters, Duration } from "@budibase/shared-core"
+import { dataFilters, Duration, isQueryToolType } from "@budibase/shared-core"
 import {
   AgentOperation,
   AgentOperationApprovalPolicy,
@@ -81,11 +81,17 @@ interface CreateGateParams {
   readableName?: string
   displayName?: string
   sourceId?: string
+  sourceType?: ToolType
   action?: ToolAction
   // Key of the args object holding the condition fields e.g "data"
   argsKey?: string
   rules: ToolExecutionRule[]
   gateContext: EscalationGateContext
+}
+
+interface ConditionRecordResult {
+  record?: Record<string, unknown>
+  defaulted: Record<string, unknown>
 }
 
 export const resolveToolArgsKey = (tool: {
@@ -134,7 +140,7 @@ const reviewRecord = ({
   const root = conditionRecord(input)
   const nested = conditionRecord(input, argsKey)
   if (!argsKey || !root || !nested) {
-    return nested ?? input
+    return nested ? { ...nested, ...defaulted } : input
   }
   const { [argsKey]: _nested, ...directArguments } = root
   return { ...directArguments, ...nested, ...defaulted }
@@ -155,46 +161,97 @@ const ruleMatches = (
   return dataFilters.runQuery([record], query).length > 0
 }
 
+const changedFields = (
+  before: Record<string, unknown>,
+  after: Record<string, unknown>
+) =>
+  Object.fromEntries(
+    Object.entries(after).filter(([key, value]) => before[key] !== value)
+  )
+
+const queryConditionRecord = async ({
+  queryId,
+  record,
+}: {
+  queryId: string
+  record: Record<string, unknown>
+}): Promise<ConditionRecordResult> => {
+  const query = await sdk.queries.find(queryId)
+  const withDefaults: Record<string, unknown> = { ...record }
+  for (const parameter of query.parameters) {
+    const value = withDefaults[parameter.name]
+    if (value == null || value === "") {
+      withDefaults[parameter.name] = parameter.default
+    }
+  }
+  return {
+    record: await sdk.queries.enrichContext(withDefaults),
+    defaulted: changedFields(record, withDefaults),
+  }
+}
+
+const rowConditionRecord = async ({
+  tableId,
+  action,
+  input,
+  record,
+}: {
+  tableId: string
+  action?: ToolAction
+  input: unknown
+  record: Record<string, unknown>
+}): Promise<ConditionRecordResult> => {
+  const rowId = (input as Record<string, unknown>).rowId
+  const existing: Row =
+    action === ToolAction.UPDATE_ROW && typeof rowId === "string"
+      ? await sdk.rows.find(tableId, rowId)
+      : {}
+  const row: Row = { ...existing, ...record }
+  const withDefaults: Row = { ...row }
+  const table = await sdk.tables.getTable(tableId)
+  await processDefaultValues(table, withDefaults)
+  return {
+    record: withDefaults,
+    defaulted: changedFields(row, withDefaults),
+  }
+}
+
 const buildConditionRecord = async ({
   input,
   argsKey,
   toolName,
   action,
   sourceId,
+  sourceType,
 }: {
   input: unknown
   argsKey?: string
   toolName: string
   action?: ToolAction
   sourceId?: string
-}): Promise<{
-  record?: Record<string, unknown>
-  defaulted: Record<string, unknown>
-}> => {
+  sourceType?: ToolType
+}): Promise<ConditionRecordResult> => {
   const record = conditionRecord(input, argsKey)
+  const isQuery = isQueryToolType(sourceType)
   const isRowWrite =
     action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW
-  if (!record || !isRowWrite || !sourceId) {
+  if (!record || !sourceId || (!isQuery && !isRowWrite)) {
     return { record, defaulted: {} }
   }
-  const rowId = (input as Record<string, unknown>).rowId
   try {
-    const existing: Row =
-      action === ToolAction.UPDATE_ROW && typeof rowId === "string"
-        ? await sdk.rows.find(sourceId, rowId)
-        : {}
-    const row: Row = { ...existing, ...record }
-    const withDefaults: Row = { ...row }
-    const table = await sdk.tables.getTable(sourceId)
-    await processDefaultValues(table, withDefaults)
-    const defaulted = Object.fromEntries(
-      Object.entries(withDefaults).filter(([key, value]) => row[key] !== value)
-    )
-    return { record: withDefaults, defaulted }
+    if (isQuery) {
+      return await queryConditionRecord({ queryId: sourceId, record })
+    }
+    return await rowConditionRecord({
+      tableId: sourceId,
+      action,
+      input,
+      record,
+    })
   } catch (error) {
-    console.warn("escalation gate: could not build row for conditions", {
+    console.warn("escalation gate: could not apply defaults for conditions", {
       toolName,
-      rowId,
+      sourceId,
       error: error instanceof Error ? error.message : String(error),
     })
     return { record: undefined, defaulted: {} }
@@ -242,6 +299,7 @@ export const createEscalationGateRuntime = ({
   readableName,
   displayName,
   sourceId,
+  sourceType,
   action,
   argsKey,
   rules,
@@ -270,6 +328,7 @@ export const createEscalationGateRuntime = ({
       toolName,
       action,
       sourceId,
+      sourceType,
     })
     const rule = matchRule(rules, record)
     if (!rule) {

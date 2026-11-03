@@ -14,6 +14,7 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
+import { context } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { licensing } from "@budibase/pro"
 import {
@@ -25,16 +26,18 @@ import {
   FieldType,
   ResolutionStrategy,
   ToolAction,
+  ToolType,
   type AgentOperation,
   type AgentOperationApprovalPolicy,
   type ApprovalPolicyExpiry,
+  type Query,
 } from "@budibase/types"
 import { cloneDeep } from "lodash"
 import sdk from "../../.."
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
 import { initProMocks } from "../../../../tests/utilities/mocks/pro"
-import { basicTable } from "../../../../tests/utilities/structures"
+import { basicQuery, basicTable } from "../../../../tests/utilities/structures"
 import { createEscalationGateRuntime } from "./escalationGate"
 
 initProMocks()
@@ -721,6 +724,123 @@ describe("row write defaults", () => {
     expect(input.reviewContext.parameters).toEqual([
       { name: "name", value: "Review" },
       { name: "category", value: "RESTRICTED" },
+    ])
+  })
+})
+
+describe("query parameter defaults", () => {
+  const queryWithDefault = (fallback: string): Query => ({
+    ...basicQuery("datasource_1"),
+    _id: "query_1",
+    parameters: [{ name: "qaWho", default: fallback }],
+  })
+
+  const buildRuntime = ({
+    reviewParameters,
+  }: { reviewParameters?: string[] } = {}) =>
+    createEscalationGateRuntime({
+      agentId: "agent_1",
+      operation,
+      toolName: "rest_qa_who",
+      readableName: "QA who",
+      sourceId: "query_1",
+      sourceType: ToolType.REST_QUERY,
+      rules: [
+        {
+          policyId: "policy_1",
+          conditions: [
+            {
+              field: "qaWho",
+              operator: BasicOperator.EQUAL,
+              value: "RESTRICTED",
+              type: FieldType.STRING,
+            },
+          ],
+          reviewParameters,
+        },
+      ],
+      gateContext: {
+        sessionId: "session_1",
+        getMessages: () => [],
+        getRequestId: () => undefined,
+      },
+    })
+
+  let findQuery: jest.SpyInstance
+  let getEnvironmentVariables: jest.SpyInstance
+
+  beforeEach(() => {
+    mockCreateEscalation
+      .mockReset()
+      .mockResolvedValue({ escalationId: "esc_1" })
+    findQuery = jest
+      .spyOn(sdk.queries, "find")
+      .mockResolvedValue(queryWithDefault("RESTRICTED"))
+    getEnvironmentVariables = jest
+      .spyOn(context, "getEnvironmentVariables")
+      .mockReturnValue({ QA_WHO: "RESTRICTED" })
+  })
+
+  afterEach(() => {
+    findQuery.mockRestore()
+    getEnvironmentVariables.mockRestore()
+  })
+
+  it.each([
+    ["leaves out", {}],
+    ["sends blank", { qaWho: "" }],
+  ])(
+    "requires approval when a default fills a parameter the agent %s",
+    async (_, input) => {
+      const result = await buildRuntime().intercept(input, {
+        toolCallId: "call_1",
+      })
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: ApprovalToolResultStatus.PENDING_APPROVAL,
+        })
+      )
+    }
+  )
+
+  it("lets a value the agent sends override the default", async () => {
+    const result = await buildRuntime().intercept(
+      { qaWho: "PUBLIC" },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toBeUndefined()
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
+  })
+
+  it("shows reviewers the value a default filled in", async () => {
+    await buildRuntime({ reviewParameters: ["qaWho"] }).intercept(
+      {},
+      { toolCallId: "call_1" }
+    )
+
+    const [input] = mockCreateEscalation.mock.calls[0]
+    expect(input.reviewContext.parameters).toEqual([
+      { name: "qaWho", value: "RESTRICTED" },
+    ])
+  })
+
+  it("matches on a resolved environment variable default but shows reviewers the binding", async () => {
+    findQuery.mockResolvedValue(queryWithDefault("{{ env.QA_WHO }}"))
+
+    const result = await buildRuntime({
+      reviewParameters: ["qaWho"],
+    }).intercept({}, { toolCallId: "call_1" })
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        status: ApprovalToolResultStatus.PENDING_APPROVAL,
+      })
+    )
+    const [input] = mockCreateEscalation.mock.calls[0]
+    expect(input.reviewContext.parameters).toEqual([
+      { name: "qaWho", value: "{{ env.QA_WHO }}" },
     ])
   })
 })
