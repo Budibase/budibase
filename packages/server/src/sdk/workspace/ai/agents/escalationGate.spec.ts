@@ -10,6 +10,7 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.context,
       getWorkspaceId: jest.fn(() => "app_1"),
       getTenantId: jest.fn(() => "tenant_1"),
+      getWorkspaceDB: jest.fn(),
     },
   }
 })
@@ -43,6 +44,7 @@ import { createEscalationGateRuntime } from "./escalationGate"
 initProMocks()
 
 const mockCreateEscalation = escalationProcessor.create as jest.Mock
+const mockGetWorkspaceDB = context.getWorkspaceDB as jest.Mock
 
 const operation: AgentOperation = {
   id: "operation_1",
@@ -766,23 +768,22 @@ describe("query parameter defaults", () => {
       },
     })
 
-  let findQuery: jest.SpyInstance
+  const tryGet = jest.fn()
   let getEnvironmentVariables: jest.SpyInstance
 
   beforeEach(() => {
     mockCreateEscalation
       .mockReset()
       .mockResolvedValue({ escalationId: "esc_1" })
-    findQuery = jest
-      .spyOn(sdk.queries, "find")
-      .mockResolvedValue(queryWithDefault("RESTRICTED"))
+    tryGet.mockReset().mockResolvedValue(queryWithDefault("RESTRICTED"))
+    mockGetWorkspaceDB.mockReturnValue({ tryGet })
     getEnvironmentVariables = jest
       .spyOn(context, "getEnvironmentVariables")
       .mockReturnValue({ QA_WHO: "RESTRICTED" })
   })
 
   afterEach(() => {
-    findQuery.mockRestore()
+    mockGetWorkspaceDB.mockReset()
     getEnvironmentVariables.mockRestore()
   })
 
@@ -827,7 +828,7 @@ describe("query parameter defaults", () => {
   })
 
   it("matches on a resolved environment variable default but shows reviewers the binding", async () => {
-    findQuery.mockResolvedValue(queryWithDefault("{{ env.QA_WHO }}"))
+    tryGet.mockResolvedValue(queryWithDefault("{{ env.QA_WHO }}"))
 
     const result = await buildRuntime({
       reviewParameters: ["qaWho"],

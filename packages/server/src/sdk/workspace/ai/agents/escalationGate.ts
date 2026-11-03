@@ -13,6 +13,7 @@ import {
   EscalationSource,
   type EscalationReviewContext,
   type EscalationReviewParameter,
+  type Query,
   ResolutionStrategy,
   Row,
   ToolExecutionRule,
@@ -176,7 +177,10 @@ const queryConditionRecord = async ({
   queryId: string
   record: Record<string, unknown>
 }): Promise<ConditionRecordResult> => {
-  const query = await sdk.queries.find(queryId)
+  const query = await context.getWorkspaceDB().tryGet<Query>(queryId)
+  if (!query) {
+    throw new Error(`Query ${queryId} not found`)
+  }
   const withDefaults: Record<string, unknown> = { ...record }
   for (const parameter of query.parameters) {
     const value = withDefaults[parameter.name]
