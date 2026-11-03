@@ -33,13 +33,23 @@ function isIgnoredType(type: FieldType) {
   return ignored.indexOf(type) !== -1
 }
 
-function generateSchema(
-  schema: CreateTableBuilder,
-  table: Table,
-  tables: Record<string, Table>,
-  oldTable?: Table,
+interface GenerateSchemaOptions {
+  schema: CreateTableBuilder
+  table: Table
+  tables: Record<string, Table>
+  sqlClient: SqlClient
+  oldTable?: Table
   renamed?: RenameColumn
-) {
+}
+
+function generateSchema({
+  schema,
+  table,
+  tables,
+  sqlClient,
+  oldTable,
+  renamed,
+}: GenerateSchemaOptions) {
   let primaryKeys = table && table.primary ? table.primary : []
   const columns = Object.values(table.schema)
   // all columns in a junction table will be meta
@@ -166,8 +176,13 @@ function generateSchema(
       case FieldType.AI:
         // This is allowed, but nothing to do on the external datasource
         break
-      case FieldType.AUTO:
       case FieldType.JSON:
+        if (sqlClient !== SqlClient.POSTGRES) {
+          throw new Error(`${column.type} is not a valid SQL type`)
+        }
+        schema.json(key)
+        break
+      case FieldType.AUTO:
       case FieldType.INTERNAL:
         throw new Error(`${column.type} is not a valid SQL type`)
 
@@ -199,28 +214,6 @@ function generateSchema(
   }
 
   return schema
-}
-
-function buildCreateTable(
-  knex: SchemaBuilder,
-  table: Table,
-  tables: Record<string, Table>
-): SchemaBuilder {
-  return knex.createTable(table.name, schema => {
-    generateSchema(schema, table, tables)
-  })
-}
-
-function buildUpdateTable(
-  knex: SchemaBuilder,
-  table: Table,
-  tables: Record<string, Table>,
-  oldTable?: Table,
-  renamed?: RenameColumn
-): SchemaBuilder {
-  return knex.alterTable(table.name, schema => {
-    generateSchema(schema, table, tables, oldTable, renamed)
-  })
 }
 
 function buildDeleteTable(knex: SchemaBuilder, table: Table): SchemaBuilder {
@@ -271,10 +264,18 @@ class SqlTableQueryBuilder {
     if (json.table.sourceType === TableSourceType.INTERNAL) {
       throw new Error("Cannot perform table actions for SQS.")
     }
+    const { table, tables } = json
 
     switch (this._operation(json)) {
       case Operation.CREATE_TABLE:
-        query = buildCreateTable(client, json.table, json.tables)
+        query = client.createTable(json.table.name, schema => {
+          generateSchema({
+            schema,
+            table,
+            tables,
+            sqlClient: this.sqlClient,
+          })
+        })
         break
       case Operation.UPDATE_TABLE:
         if (!json.table) {
@@ -296,13 +297,16 @@ class SqlTableQueryBuilder {
           }
         }
 
-        query = buildUpdateTable(
-          client,
-          json.table,
-          json.tables,
-          json.meta?.oldTable,
-          json.meta?.renamed
-        )
+        query = client.alterTable(json.table.name, schema => {
+          generateSchema({
+            schema,
+            table,
+            tables,
+            sqlClient: this.sqlClient,
+            oldTable: json.meta?.oldTable,
+            renamed: json.meta?.renamed,
+          })
+        })
 
         // renameColumn for SQL Server returns a parameterised `sp_rename` query,
         // which is not supported by SQL Server and gives a syntax error.
