@@ -14,6 +14,7 @@ import {
   type EscalationReviewContext,
   type EscalationReviewParameter,
   ResolutionStrategy,
+  Row,
   ToolExecutionRule,
   ToolAction,
   ToolType,
@@ -30,6 +31,7 @@ import {
   stringifyToolParameters,
   truncateReviewField,
 } from "../../../../escalation/reviewContext"
+import { processDefaultValues } from "../../../../utilities/rowProcessor"
 
 const SUMMARY_MAX_LENGTH = 300
 const DAY_MS = Duration.fromDays(1).toMs()
@@ -120,14 +122,22 @@ const conditionRecord = (
     : undefined
 }
 
-const reviewRecord = (input: unknown, argsKey?: string) => {
+const reviewRecord = ({
+  input,
+  argsKey,
+  defaulted,
+}: {
+  input: unknown
+  argsKey?: string
+  defaulted: Record<string, unknown>
+}) => {
   const root = conditionRecord(input)
   const nested = conditionRecord(input, argsKey)
   if (!argsKey || !root || !nested) {
     return nested ?? input
   }
   const { [argsKey]: _nested, ...directArguments } = root
-  return { ...directArguments, ...nested }
+  return { ...directArguments, ...nested, ...defaulted }
 }
 
 const ruleMatches = (
@@ -157,25 +167,37 @@ const buildConditionRecord = async ({
   toolName: string
   action?: ToolAction
   sourceId?: string
-}): Promise<Record<string, unknown> | undefined> => {
+}): Promise<{
+  record?: Record<string, unknown>
+  defaulted: Record<string, unknown>
+}> => {
   const record = conditionRecord(input, argsKey)
-  if (!record || action !== ToolAction.UPDATE_ROW || !sourceId) {
-    return record
+  const isRowWrite =
+    action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW
+  if (!record || !isRowWrite || !sourceId) {
+    return { record, defaulted: {} }
   }
   const rowId = (input as Record<string, unknown>).rowId
-  if (typeof rowId !== "string") {
-    return record
-  }
   try {
-    const existing = await sdk.rows.find(sourceId, rowId)
-    return { ...existing, ...record }
+    const existing: Row =
+      action === ToolAction.UPDATE_ROW && typeof rowId === "string"
+        ? await sdk.rows.find(sourceId, rowId)
+        : {}
+    const row: Row = { ...existing, ...record }
+    const withDefaults: Row = { ...row }
+    const table = await sdk.tables.getTable(sourceId)
+    await processDefaultValues(table, withDefaults)
+    const defaulted = Object.fromEntries(
+      Object.entries(withDefaults).filter(([key, value]) => row[key] !== value)
+    )
+    return { record: withDefaults, defaulted }
   } catch (error) {
-    console.warn("escalation gate: could not load row for update conditions", {
+    console.warn("escalation gate: could not build row for conditions", {
       toolName,
       rowId,
       error: error instanceof Error ? error.message : String(error),
     })
-    return undefined
+    return { record: undefined, defaulted: {} }
   }
 }
 
@@ -242,7 +264,7 @@ export const createEscalationGateRuntime = ({
           "must ask again before another attempt can be requested.",
       }
     }
-    const record = await buildConditionRecord({
+    const { record, defaulted } = await buildConditionRecord({
       input,
       argsKey,
       toolName,
@@ -278,7 +300,7 @@ export const createEscalationGateRuntime = ({
 
     const requestedBy = gateContext.requesterLabel ?? "Unknown requester"
     const parameters = formatToolParameters({
-      input: reviewRecord(input, argsKey),
+      input: reviewRecord({ input, argsKey, defaulted }),
       names: rule.reviewParameters,
     })
     const actionLabel = truncateReviewField(label)
