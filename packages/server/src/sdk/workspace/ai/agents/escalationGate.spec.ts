@@ -18,18 +18,23 @@ import { mocks } from "@budibase/backend-core/tests"
 import { licensing } from "@budibase/pro"
 import {
   ApprovalToolResultStatus,
+  BasicOperator,
   ConstantQuotaName,
   EscalationNotificationChannel,
   EscalationSource,
+  FieldType,
   ResolutionStrategy,
+  ToolAction,
   type AgentOperation,
   type AgentOperationApprovalPolicy,
   type ApprovalPolicyExpiry,
 } from "@budibase/types"
 import { cloneDeep } from "lodash"
+import sdk from "../../.."
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
 import { initProMocks } from "../../../../tests/utilities/mocks/pro"
+import { basicTable } from "../../../../tests/utilities/structures"
 import { createEscalationGateRuntime } from "./escalationGate"
 
 initProMocks()
@@ -590,5 +595,132 @@ describe("policy snapshot", () => {
 
       expect(createInput().durationMs).toEqual(90 * DAY_MS)
     })
+  })
+})
+
+describe("row write defaults", () => {
+  const table = basicTable(undefined, {
+    _id: "ta_1",
+    schema: {
+      category: {
+        type: FieldType.STRING,
+        name: "category",
+        default: "RESTRICTED",
+      },
+    },
+  })
+
+  const buildRuntime = ({
+    action,
+    reviewParameters,
+  }: {
+    action: ToolAction
+    reviewParameters?: string[]
+  }) =>
+    createEscalationGateRuntime({
+      agentId: "agent_1",
+      operation,
+      toolName: `ta_1_${action}`,
+      readableName: `TestTable.${action}`,
+      sourceId: "ta_1",
+      action,
+      argsKey: "data",
+      rules: [
+        {
+          policyId: "policy_1",
+          conditions: [
+            {
+              field: "category",
+              operator: BasicOperator.EQUAL,
+              value: "RESTRICTED",
+              type: FieldType.STRING,
+            },
+          ],
+          reviewParameters,
+        },
+      ],
+      gateContext: {
+        sessionId: "session_1",
+        getMessages: () => [],
+        getRequestId: () => undefined,
+      },
+    })
+
+  let getTable: jest.SpyInstance
+  let findRow: jest.SpyInstance
+
+  beforeEach(() => {
+    mockCreateEscalation
+      .mockReset()
+      .mockResolvedValue({ escalationId: "esc_1" })
+    getTable = jest.spyOn(sdk.tables, "getTable").mockResolvedValue(table)
+    findRow = jest.spyOn(sdk.rows, "find").mockResolvedValue({
+      _id: "ro_1",
+      name: "Review",
+      category: "PUBLIC",
+    })
+  })
+
+  afterEach(() => {
+    getTable.mockRestore()
+    findRow.mockRestore()
+  })
+
+  it.each([
+    ["leaves out", { name: "Review" }],
+    ["sends blank", { name: "Review", category: "" }],
+  ])(
+    "requires approval when a default fills a field the agent %s",
+    async (_, data) => {
+      const result = await buildRuntime({
+        action: ToolAction.CREATE_ROW,
+      }).intercept({ data }, { toolCallId: "call_1" })
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: ApprovalToolResultStatus.PENDING_APPROVAL,
+        })
+      )
+    }
+  )
+
+  it("requires approval when an update blanks a field that has a default", async () => {
+    const result = await buildRuntime({
+      action: ToolAction.UPDATE_ROW,
+    }).intercept(
+      { rowId: "ro_1", rowRev: "1-test", data: { category: "" } },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        status: ApprovalToolResultStatus.PENDING_APPROVAL,
+      })
+    )
+  })
+
+  it("lets a value the agent sends override the default", async () => {
+    const result = await buildRuntime({
+      action: ToolAction.CREATE_ROW,
+    }).intercept(
+      { data: { name: "Review", category: "PUBLIC" } },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toBeUndefined()
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
+  })
+
+  it("shows reviewers the value a default filled in", async () => {
+    await buildRuntime({
+      action: ToolAction.CREATE_ROW,
+      reviewParameters: ["name", "category"],
+    }).intercept({ data: { name: "Review" } }, { toolCallId: "call_1" })
+
+    const [input] = mockCreateEscalation.mock.calls[0]
+    expect(input.reviewContext.parameters).toEqual([
+      { name: "name", value: "Review" },
+      { name: "category", value: "RESTRICTED" },
+    ])
   })
 })
