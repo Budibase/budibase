@@ -995,11 +995,17 @@ describe("Activity actions page", () => {
       const { findInTable } = renderPage()
       await findInTable("Support agent")
 
-      notify()
-      notify()
-      notify()
-      notify()
-      refresh.resolve(response)
+      vi.useFakeTimers()
+      try {
+        notify()
+        notify()
+        notify()
+        notify()
+        refresh.resolve(response)
+        await vi.advanceTimersByTimeAsync(1000)
+      } finally {
+        vi.useRealTimers()
+      }
 
       await findInTable("Final refresh")
       expect(queries()).toHaveLength(3)
@@ -1021,8 +1027,14 @@ describe("Activity actions page", () => {
         target: { value: "failed" },
       })
 
-      notify()
-      filtered.resolve(response)
+      vi.useFakeTimers()
+      try {
+        notify()
+        filtered.resolve(response)
+        await vi.advanceTimersByTimeAsync(1000)
+      } finally {
+        vi.useRealTimers()
+      }
 
       await findInTable("Refreshed")
       expect(queries().at(-1)).toEqual(

@@ -21,7 +21,6 @@
   import { SvelteSet } from "svelte/reactivity"
 
   interface Props {
-    promptUpload?: boolean
     name?: string
     beforeSave?: () => Promise<void>
     afterSave?: (table: Table) => Promise<void>
@@ -29,7 +28,6 @@
   }
 
   let {
-    promptUpload = false,
     name = $bindable(""),
     beforeSave = async () => {},
     initialProjectIds = [],
@@ -243,16 +241,11 @@
   onConfirm={saveTable}
   disabled={!!error ||
     !name ||
-    (rows.length > 0 && (!allValid || displayColumn == null))}
+    !allValid ||
+    (rows.length > 0 && displayColumn == null)}
   size="M"
 >
   <Input label="Table Name" on:input={checkValid} bind:value={name} {error} />
   <ProjectSelect bind:value={projectIds} />
-  <TableDataImport
-    {promptUpload}
-    bind:rows
-    bind:schema
-    bind:allValid
-    bind:displayColumn
-  />
+  <TableDataImport bind:rows bind:schema bind:allValid bind:displayColumn />
 </ModalContent>

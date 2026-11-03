@@ -89,6 +89,7 @@ For example, if I command `git add, commit, push` go ahead and do that once. Any
 - If you're working on a bug, the name of the PR should start with the bug ID
   in square brackets, e.g. [BUDI-1234]. The link to the bug should go into the
   "Addresses" section of pull_request_template.md.
+- When creating a PR, do not include a 'Validation' section unless explicitly asked to.
 
 ## Browser use
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Select, Icon, Layout, Label } from "@budibase/bbui"
+  import { Select, Icon, Layout, Label, Dropzone } from "@budibase/bbui"
   import { FIELDS } from "@/constants/backend"
   import { utils } from "@budibase/shared-core"
   import { canBeDisplayColumn } from "@budibase/frontend-core"
@@ -15,7 +15,6 @@
   interface ParsedFile {
     rows: Row[]
     schema: TableSchema
-    fileName: string
   }
 
   interface ImportFieldConfig {
@@ -29,7 +28,6 @@
     schema?: TableSchema
     allValid?: boolean
     displayColumn?: string | null
-    promptUpload?: boolean
   }
 
   let {
@@ -37,7 +35,6 @@
     schema = $bindable({}),
     allValid = $bindable(true),
     displayColumn = $bindable(null),
-    promptUpload = false,
   }: Props = $props()
 
   const typeOptions: Record<
@@ -120,9 +117,8 @@
     },
   }
 
-  let fileInput: HTMLInputElement | undefined = $state()
+  let files: File[] = $state([])
   let error: string | null = $state(null)
-  let fileName: string | null = $state(null)
   let loading = $state(false)
   let validation: Record<string, boolean> = $state({})
   let validateHash = $state("")
@@ -131,6 +127,8 @@
 
   let rawRows: Row[] = $state([])
   let rowsHash = $state("")
+  let fileSequence = 0
+  let validationSequence = 0
 
   const displayColumnOptions = $derived(
     Object.keys(schema || {}).filter(column => {
@@ -142,9 +140,10 @@
   )
 
   $effect(() => {
+    const column = displayColumn ? schema[displayColumn] : undefined
     if (
       displayColumn &&
-      !canBeDisplayColumn(schema[displayColumn] as UIFieldSchema)
+      (!column || !canBeDisplayColumn(column as UIFieldSchema))
     ) {
       displayColumn = null
     }
@@ -165,32 +164,51 @@
       JSON.stringify(validationRows) + JSON.stringify(schema)
     if (newValidateHash !== validateHash) {
       if (validationRows.length) {
-        validate(validationRows, schema)
+        validate({ rowsToValidate: validationRows, schema })
       } else {
         validation = {}
-        allValid = true
         errors = {}
-        error = null
-        loading = false
       }
     }
     validateHash = newValidateHash
   })
 
-  $effect(() => {
-    openFileUpload(promptUpload, fileInput)
-  })
-
-  async function handleFile(e: Event) {
-    loading = true
-    error = null
+  const resetImport = () => {
+    validationSequence++
+    displayColumn = null
+    rawRows = []
+    rows = []
+    schema = {}
+    selectedColumnTypes = {}
     validation = {}
+    errors = {}
+    validateHash = ""
+    rowsHash = ""
+  }
+
+  async function handleFile(e: CustomEvent<File[]>) {
+    const sequence = ++fileSequence
+    resetImport()
+    error = null
+    loading = false
+    allValid = e.detail.length === 0
+    if (e.detail.length === 0) {
+      return
+    }
+    if (e.detail.length !== 1) {
+      files = []
+      error = "Choose one CSV or JSON file."
+      return
+    }
+    loading = true
 
     try {
-      const response = (await parseFile(e)) as ParsedFile
+      const response = (await parseFile(e.detail[0])) as ParsedFile
+      if (sequence !== fileSequence) {
+        return
+      }
       rawRows = response.rows
       schema = response.schema
-      fileName = response.fileName
       selectedColumnTypes = Object.entries(response.schema).reduce(
         (acc, [colName, fieldConfig]) => ({
           ...acc,
@@ -198,32 +216,54 @@
         }),
         {}
       )
+      if (response.rows.length === 0) {
+        allValid = true
+        loading = false
+      }
     } catch (e) {
-      loading = false
+      if (sequence !== fileSequence) {
+        return
+      }
+      resetImport()
+      files = []
       error = e instanceof Error ? e.message : String(e)
+      allValid = false
+      loading = false
     }
   }
 
-  async function validate(rowsToValidate: Row[], schema: TableSchema) {
+  async function validate({
+    rowsToValidate,
+    schema,
+  }: {
+    rowsToValidate: Row[]
+    schema: TableSchema
+  }) {
+    const sequence = ++validationSequence
+    allValid = false
     loading = true
     try {
-      if (rowsToValidate.length > 0) {
-        const response = await API.validateNewTableImport(
-          rowsToValidate,
-          schema
-        )
-        validation = response.schemaValidation
-        allValid = response.allValid
-        errors = response.errors
-        error = null
+      const response = await API.validateNewTableImport(rowsToValidate, schema)
+      if (sequence !== validationSequence) {
+        return
       }
+      validation = response.schemaValidation
+      allValid = response.allValid
+      errors = response.errors
+      error = null
     } catch (e) {
+      if (sequence !== validationSequence) {
+        return
+      }
       error = e instanceof Error ? e.message : String(e)
       validation = {}
       allValid = false
       errors = {}
+    } finally {
+      if (sequence === validationSequence) {
+        loading = false
+      }
     }
-    loading = false
   }
 
   const handleChange = (name: string, e: CustomEvent<string>) => {
@@ -243,15 +283,6 @@
     schema = schema
   }
 
-  const openFileUpload = (
-    promptUpload: boolean,
-    fileInput: HTMLInputElement | undefined
-  ) => {
-    if (promptUpload && fileInput) {
-      fileInput.click()
-    }
-  }
-
   const deleteColumn = (name: string) => {
     if (loading) {
       return
@@ -266,25 +297,16 @@
     <Label muted size="S">
       Create a Table from a CSV or JSON file (Optional)
     </Label>
-    <div class="dropzone">
-      <input
-        bind:this={fileInput}
-        disabled={loading}
-        id="file-upload"
-        accept="text/csv,application/json"
-        type="file"
-        onchange={handleFile}
-      />
-      <label for="file-upload" class:uploaded={rawRows.length > 0}>
-        {#if error}
-          Error: {error}
-        {:else if fileName}
-          {fileName}
-        {:else}
-          Upload
-        {/if}
-      </label>
-    </div>
+    <Dropzone
+      bind:value={files}
+      disabled={loading}
+      error={error || undefined}
+      extensions=".csv,.json"
+      fileTags={["CSV", "JSON"]}
+      maximum={1}
+      gallery={false}
+      on:change={handleFile}
+    />
   </Layout>
 
   {#if rawRows.length > 0 && !error}
@@ -333,49 +355,6 @@
 </Layout>
 
 <style>
-  .dropzone {
-    text-align: center;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    border-radius: 10px;
-    transition: all 0.3s;
-  }
-
-  input {
-    display: none;
-  }
-
-  label {
-    cursor: pointer;
-    font-weight: 600;
-    box-sizing: border-box;
-    overflow: hidden;
-    border-radius: var(--border-radius-s);
-    padding: var(--spacing-m) var(--spacing-l);
-    transition: all 0.2s ease 0s;
-    display: inline-flex;
-    text-rendering: optimizeLegibility;
-    min-width: auto;
-    outline: none;
-    font-feature-settings:
-      "case" 1,
-      "rlig" 1,
-      "calt" 0;
-    -webkit-box-align: center;
-    user-select: none;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    background-color: var(--spectrum-global-color-gray-300);
-    font-size: var(--font-size-s);
-    line-height: normal;
-    border: var(--border-transparent);
-  }
-  .uploaded {
-    color: var(--spectrum-global-color-blue-600);
-  }
   .field {
     display: grid;
     grid-template-columns: 2fr 2fr 1fr auto;
