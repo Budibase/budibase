@@ -9,7 +9,7 @@ metadata:
 spec:
   containers:
     - name: wget
-      image: busybox
+      image: {{ .Values.testConnection.image | quote }}
       command: ['wget']
       args: ['{{ include "budibase.fullname" . }}:{{ .Values.service.port }}']
   restartPolicy: Never

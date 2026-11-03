@@ -1,6 +1,10 @@
 # -- Passed to all pods created by this chart. Should not ordinarily need to be changed.
 imagePullSecrets: []
 
+testConnection:
+  # -- Image used by the Helm connection test.
+  image: busybox
+
 podDisruptionBudget:
   # -- Whether to create PodDisruptionBudgets for the services.
   # Enabled by default. Requires replicaCount >= 2 per service to avoid blocking voluntary disruptions.
