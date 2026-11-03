@@ -498,6 +498,26 @@ describe("policy snapshot", () => {
     expect(escalationProcessor.create).not.toHaveBeenCalled()
   })
 
+  it("returns unavailable and raises nothing when the rule's policy no longer exists", async () => {
+    const result = await createEscalationGateRuntime({
+      agentId: "agent_1",
+      operation: { ...operation, approvalPolicies: [] },
+      toolName: "book_meeting",
+      sourceId: "automation_1",
+      rules: [{ policyId: "policy_deleted" }],
+      gateContext: {
+        sessionId: "session_1",
+        getMessages: () => [],
+        getRequestId: () => undefined,
+      },
+    }).intercept({ title: "Planning" }, { toolCallId: "call_1" })
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: ApprovalToolResultStatus.UNAVAILABLE })
+    )
+    expect(escalationProcessor.create).not.toHaveBeenCalled()
+  })
+
   it("never expires when the policy sets no duration", async () => {
     await gateFor({
       id: "policy_1",
@@ -728,6 +748,22 @@ describe("row write defaults", () => {
       { name: "category", value: "RESTRICTED" },
     ])
   })
+
+  it("refuses without raising an approval when the row to update can't be found", async () => {
+    findRow.mockRejectedValue(new Error("Row not found"))
+
+    const result = await buildRuntime({
+      action: ToolAction.UPDATE_ROW,
+    }).intercept(
+      { rowId: "ro_missing", rowRev: "1-test", data: { category: "PUBLIC" } },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: ApprovalToolResultStatus.UNAVAILABLE })
+    )
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
+  })
 })
 
 describe("query parameter defaults", () => {
@@ -843,5 +879,19 @@ describe("query parameter defaults", () => {
     expect(input.reviewContext.parameters).toEqual([
       { name: "qaWho", value: "{{ env.QA_WHO }}" },
     ])
+  })
+
+  it("refuses without raising an approval when the query can't be found", async () => {
+    tryGet.mockResolvedValue(undefined)
+
+    const result = await buildRuntime().intercept(
+      { qaWho: "PUBLIC" },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: ApprovalToolResultStatus.UNAVAILABLE })
+    )
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
   })
 })

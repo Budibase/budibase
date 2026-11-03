@@ -234,7 +234,7 @@ const buildConditionRecord = async ({
   action?: ToolAction
   sourceId?: string
   sourceType?: ToolType
-}): Promise<ConditionRecordResult> => {
+}): Promise<ConditionRecordResult | undefined> => {
   const record = conditionRecord(input, argsKey)
   const isQuery = isQueryToolType(sourceType)
   const isRowWrite =
@@ -258,7 +258,7 @@ const buildConditionRecord = async ({
       sourceId,
       error: error instanceof Error ? error.message : String(error),
     })
-    return { record: undefined, defaulted: {} }
+    return undefined
   }
 }
 
@@ -296,6 +296,13 @@ const unavailableResult = (label: string) => ({
     "right now.",
 })
 
+const unresolvedResult = (label: string) => ({
+  status: ApprovalToolResultStatus.UNAVAILABLE,
+  note:
+    `"${label}" could not be checked against its approval rules. Tell the ` +
+    "user this action cannot be run right now.",
+})
+
 export const createEscalationGateRuntime = ({
   agentId,
   operation,
@@ -326,7 +333,7 @@ export const createEscalationGateRuntime = ({
           "must ask again before another attempt can be requested.",
       }
     }
-    const { record, defaulted } = await buildConditionRecord({
+    const condition = await buildConditionRecord({
       input,
       argsKey,
       toolName,
@@ -334,6 +341,10 @@ export const createEscalationGateRuntime = ({
       sourceId,
       sourceType,
     })
+    if (!condition) {
+      return unresolvedResult(label)
+    }
+    const { record, defaulted } = condition
     const rule = matchRule(rules, record)
     if (!rule) {
       return undefined
