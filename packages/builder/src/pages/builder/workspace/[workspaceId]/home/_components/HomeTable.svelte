@@ -107,8 +107,8 @@
 
   const gridColumns = $derived(
     projectsEnabled
-      ? "1fr 140px 140px 140px 140px 60px"
-      : "1fr 140px 140px 140px 60px"
+      ? "minmax(200px, 1fr) 140px 140px 140px 140px 60px"
+      : "minmax(200px, 1fr) 140px 140px 140px 60px"
   )
 </script>
 
@@ -116,6 +116,7 @@
   <div
     class="table"
     class:table--loading={loading}
+    class:table--projects={projectsEnabled}
     style="--grid-columns: {gridColumns}"
   >
     {#if allRowsCount > 0}
@@ -339,12 +340,16 @@
     border-radius: var(--border-radius-s);
     overflow: hidden;
     background: transparent;
-    min-width: 700px;
+    min-width: 704px;
+  }
+
+  .table--projects {
+    /* Keep the name track readable alongside the fixed columns and padding. */
+    min-width: 844px;
   }
 
   .table-wrapper--panel .table {
     border-radius: 0;
-    min-width: 0;
   }
 
   .table-header,

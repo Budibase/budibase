@@ -11,6 +11,10 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import {
+  projectAssignmentResult,
+  withoutProjectAssignmentResult,
+} from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
 export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
@@ -26,20 +30,48 @@ export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   )
 }
 
-export async function save(
+async function saveUnlocked(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
-  const { navigationLinkLabel, ...screen } = ctx.request.body
+  const db = context.getWorkspaceDB()
+  const { navigationLinkLabel, ...screen } = withoutProjectAssignmentResult(
+    ctx.request.body
+  )
 
-  if (!(await sdk.workspaceApps.get(screen.workspaceAppId))) {
+  const owningWorkspaceApp = await sdk.workspaceApps.get(screen.workspaceAppId)
+  if (!owningWorkspaceApp) {
     ctx.throw(400, "Workspace app id not valid")
   }
 
   const isCreation = !screen._id
+  const storedScreen = isCreation
+    ? undefined
+    : await db.get<Screen>(screen._id!)
+  // Fetch applies the existing default-app repair for ownerless screens.
+  const previousScreen =
+    storedScreen && !storedScreen.workspaceAppId
+      ? (await sdk.screens.fetch()).find(({ _id }) => _id === storedScreen._id)
+      : storedScreen
 
   const savedScreen = isCreation
     ? await sdk.screens.create(screen)
     : await sdk.screens.update(screen)
+
+  // Screens don't carry their own projectIds - resources they reference
+  // (e.g. a button that triggers an automation) are attributed to the owning
+  // workspace app in the dependency graph, so propagate from there.
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectDependencyChanges({
+      rootResourceId: owningWorkspaceApp._id!,
+      currentProjectIds: owningWorkspaceApp.projectIds,
+      previousProjectIds: owningWorkspaceApp.projectIds,
+      previousResource:
+        previousScreen?.workspaceAppId === owningWorkspaceApp._id
+          ? previousScreen
+          : undefined,
+      savedResource: savedScreen,
+    })
+  )
 
   const pluginAdded = await sdk.plugins.addUsedPluginsForScreen(
     screen.props,
@@ -71,9 +103,18 @@ export async function save(
   ctx.message = `Screen ${screen.name} saved.`
   ctx.body = {
     ...savedScreen,
+    projectAssignment,
     pluginAdded,
   }
   builderSocket?.emitScreenUpdate(ctx, savedScreen)
+}
+
+export async function save(
+  ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    saveUnlocked(ctx)
+  )
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {

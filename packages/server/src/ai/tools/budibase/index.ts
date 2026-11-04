@@ -1,4 +1,9 @@
-import { Automation, TableSourceType, type Table } from "@budibase/types"
+import {
+  Automation,
+  TableSourceType,
+  type PlatformActionResourceOrigin,
+  type Table,
+} from "@budibase/types"
 import type { AiToolDefinition } from ".."
 import createAutomationTools from "./automations"
 import { createRowTools } from "./rows"
@@ -15,9 +20,10 @@ export const getBudibaseTools = (
   tables: Table[] = [],
   datasourceNamesById: Record<string, string> = {},
   datasourceIconTypesById: Record<string, string> = {},
-  automations: Automation[] = []
+  automations: Automation[] = [],
+  triggeredBy?: PlatformActionResourceOrigin
 ): BudibaseToolDefinition[] => {
-  const baseTools = createAutomationTools(automations)
+  const baseTools = createAutomationTools({ automations, triggeredBy })
 
   const rowTools = tables
     .filter(table => table._id)

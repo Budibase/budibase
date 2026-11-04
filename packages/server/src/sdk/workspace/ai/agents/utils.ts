@@ -7,6 +7,7 @@ import {
   WebSearchProvider,
   ApprovalToolResultStatus,
   type AgentExecutionContext,
+  type PlatformActionResourceOrigin,
 } from "@budibase/types"
 import {
   getReadableQueryToolBinding,
@@ -101,7 +102,8 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
 }
 
 export async function getAvailableTools(
-  aiconfigId?: string
+  aiconfigId?: string,
+  { invokingAgent }: { invokingAgent?: PlatformActionResourceOrigin } = {}
 ): Promise<AiToolDefinition[]> {
   const [queries, datasources, aiConfig, tables, automations] =
     await Promise.all([
@@ -156,7 +158,8 @@ export async function getAvailableTools(
       tables,
       datasourceNamesById,
       datasourceIconTypesById,
-      automations
+      automations,
+      invokingAgent
     ),
     ...restQueryTools,
     ...datasourceQueryTools,
@@ -208,7 +211,9 @@ export async function buildPromptAndTools(
   }
   const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
-  const allTools = await getAvailableTools(agent.aiconfig)
+  const allTools = await getAvailableTools(agent.aiconfig, {
+    invokingAgent: { type: "agent", id: agentId, label: agent.name },
+  })
   const toolConfigs = operation?.enabledTools || []
   const enabledToolNames = new Set(toolConfigs.map(config => config.toolName))
   const configuredTools = allTools.filter(

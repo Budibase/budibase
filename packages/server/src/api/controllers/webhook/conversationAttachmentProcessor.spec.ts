@@ -63,6 +63,9 @@ jest.mock("../../../sdk", () => ({
         ingestGeminiFile: (args: object) => mockIngestFile(args),
       },
     },
+    platformActions: jest.requireActual(
+      "../../../sdk/workspace/platformActions/metadata"
+    ),
   },
 }))
 
@@ -89,6 +92,7 @@ import {
   ConversationAttachmentTurnStatus,
 } from "@budibase/types"
 import { processConversationAttachmentJob } from "./conversationAttachmentProcessor"
+import { getGlobalUser } from "../../../utilities/global"
 
 describe("conversation attachment processor", () => {
   let conversation: ChatConversation
@@ -126,6 +130,7 @@ describe("conversation attachment processor", () => {
       pendingAttachmentTurns: [
         {
           id: "turn_1",
+          triggeredBy: { type: "user", label: "John Doe (Slack)" },
           message: {
             id: "message_1",
             role: "user",
@@ -136,7 +141,7 @@ describe("conversation attachment processor", () => {
           requester: {
             userId: "slack:T1:U1",
             linked: false,
-            displayName: "User",
+            displayName: "John Doe",
           },
           createdAt: now,
           updatedAt: now,
@@ -208,6 +213,89 @@ describe("conversation attachment processor", () => {
     )
     expect(mockReply).toHaveBeenCalledWith(
       expect.objectContaining({ text: "The report says content." })
+    )
+    expect(mockWebhookChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        triggeredBy: { type: "user", label: "John Doe (Slack)" },
+      })
+    )
+  })
+
+  it("preserves the queued origin after a linked user is renamed", async () => {
+    conversation.pendingAttachmentTurns![0].requester = {
+      userId: "us_1",
+      linked: true,
+    }
+    conversation.pendingAttachmentTurns![0].triggeredBy = {
+      type: "user",
+      id: "us_1",
+      label: "Original Name",
+    }
+    const currentUser = {
+      _id: "us_1",
+      tenantId: "tenant_1",
+      firstName: "Renamed",
+      lastName: "User",
+      email: "user@example.com",
+      roles: {},
+    }
+    jest.mocked(getGlobalUser).mockResolvedValue(currentUser)
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(mockWebhookChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user: currentUser,
+        triggeredBy: { type: "user", id: "us_1", label: "Original Name" },
+      })
+    )
+  })
+
+  it("derives the origin for a legacy linked-user turn without a snapshot", async () => {
+    delete conversation.pendingAttachmentTurns![0].triggeredBy
+    conversation.pendingAttachmentTurns![0].requester = {
+      userId: "us_1",
+      linked: true,
+    }
+    jest.mocked(getGlobalUser).mockResolvedValue({
+      _id: "us_1",
+      tenantId: "tenant_1",
+      firstName: "Current",
+      lastName: "Name",
+      email: "user@example.com",
+      roles: {},
+    })
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(mockWebhookChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        triggeredBy: { type: "user", id: "us_1", label: "Current Name" },
+      })
+    )
+  })
+
+  it("derives the provider origin for a legacy unlinked turn without a snapshot", async () => {
+    delete conversation.pendingAttachmentTurns![0].triggeredBy
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(mockWebhookChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        triggeredBy: { type: "user", label: "John Doe (Slack)" },
+      })
     )
   })
 

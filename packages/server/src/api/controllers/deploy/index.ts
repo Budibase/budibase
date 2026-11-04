@@ -681,7 +681,7 @@ export async function withPublishLock<T>(fn: () => Promise<T>): Promise<T> {
   )
   if (!lockResult.executed) {
     throw new errors.HTTPError(
-      "A publish for this app is already in progress, please wait for it to finish",
+      "A publish or table import for this app is already in progress, please wait for it to finish",
       429
     )
   }

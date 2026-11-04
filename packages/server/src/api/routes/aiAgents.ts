@@ -1,4 +1,5 @@
 import { auth } from "@budibase/backend-core"
+import { agentActivityEnabled } from "../../middleware/agentActivityEnabled"
 import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
 import { knowledgeSearchConfigured } from "../../middleware/knowledgeSearchConfigured"
 import * as ai from "../controllers/ai"
@@ -72,7 +73,7 @@ builderAdminRoutes
   )
   .get("/api/agent/:agentId/slack/manifest", ai.downloadAgentSlackManifest)
   .get("/api/agent/tools", ai.fetchTools)
-  .get("/api/agent/requests", ai.fetchAgentRequests)
+  .get("/api/agent/requests", agentActivityEnabled, ai.fetchAgentRequests)
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
   .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
   .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
@@ -121,6 +122,10 @@ builderAdminRoutes
 
 knowledgeSearchRoutes
   .post("/api/agent/:agentId/operations/:operationId/files", ai.uploadAgentFile)
+  .post(
+    "/api/agent/:agentId/operations/:operationId/files/:fileId/retry",
+    ai.retryAgentFile
+  )
   .delete(
     "/api/agent/:agentId/operations/:operationId/files/:fileId",
     ai.deleteAgentFile
@@ -154,3 +159,6 @@ publicRoutes.get(
   ai.completeSharePointAuth
 )
 publicRoutes.get("/api/agent/slack/oauth/callback", ai.completeSlackOAuth)
+publicRoutes
+  .get("/api/requests", agentActivityEnabled, ai.fetchUserRequests)
+  .get("/api/requests/:id", agentActivityEnabled, ai.findUserRequest)
