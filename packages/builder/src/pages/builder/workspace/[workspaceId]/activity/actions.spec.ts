@@ -992,17 +992,24 @@ describe("Activity actions page", () => {
           })
         )
 
-      const { findInTable } = renderPage()
+      const { findInTable, table } = renderPage()
       await findInTable("Support agent")
 
-      notify()
-      notify()
-      notify()
-      notify()
-      refresh.resolve(response)
+      vi.useFakeTimers()
+      try {
+        notify()
+        notify()
+        notify()
+        notify()
+        refresh.resolve(response)
+        await vi.advanceTimersByTimeAsync(1000)
+        await tick()
 
-      await findInTable("Final refresh")
-      expect(queries()).toHaveLength(3)
+        expect(table().getByText("Final refresh")).toBeVisible()
+        expect(queries()).toHaveLength(3)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it("refreshes again after a filter load that was in flight when a change arrived", async () => {
@@ -1015,19 +1022,26 @@ describe("Activity actions page", () => {
           sessions: [{ ...response.sessions[0], assetLabel: "Refreshed" }],
         })
 
-      const { findInTable } = renderPage()
+      const { findInTable, table } = renderPage()
       await findInTable("Support agent")
       await fireEvent.change(screen.getByDisplayValue("All statuses"), {
         target: { value: "failed" },
       })
 
-      notify()
-      filtered.resolve(response)
+      vi.useFakeTimers()
+      try {
+        notify()
+        filtered.resolve(response)
+        await vi.advanceTimersByTimeAsync(1000)
+        await tick()
 
-      await findInTable("Refreshed")
-      expect(queries().at(-1)).toEqual(
-        expect.objectContaining({ status: "failed" })
-      )
+        expect(table().getByText("Refreshed")).toBeVisible()
+        expect(queries().at(-1)).toEqual(
+          expect.objectContaining({ status: "failed" })
+        )
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it("discards a background response superseded by a filter change", async () => {
