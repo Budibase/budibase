@@ -163,8 +163,9 @@ export const importProjectPermissions = async ({
         roles.roleIDsAreEqual(role._id!, sourceRoleId)
       )
       const canMapRole =
-        roles.isBuiltin(sourceRoleId) ||
-        (sourceWorkspaceId === context.getWorkspaceId() && !!matchedRole)
+        !!matchedRole &&
+        (roles.isBuiltin(sourceRoleId) ||
+          sourceWorkspaceId === context.getWorkspaceId())
       const destinationRoleId = canMapRole
         ? roles.getDBRoleID(matchedRole?._id || sourceRoleId)
         : roles.getDBRoleID(roles.BUILTIN_ROLE_IDS.ADMIN)

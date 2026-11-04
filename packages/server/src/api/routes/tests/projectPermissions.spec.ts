@@ -1,10 +1,13 @@
-import { context, features, roles } from "@budibase/backend-core"
+import { context, db, features, roles } from "@budibase/backend-core"
 import {
   BuiltinPermissionID,
+  DocumentType,
   FeatureFlag,
   PermissionLevel,
   ResourceType,
   SourceName,
+  type Role,
+  type Workspace,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import * as importSetup from "../../../sdk/workspace/projects/importSetup"
@@ -38,6 +41,20 @@ describe("project package permissions", () => {
       { [FeatureFlag.PROJECTS]: true },
       task
     )
+
+  const setWorkspaceCreationVersion = async ({
+    workspaceId,
+    creationVersion,
+  }: {
+    workspaceId: string
+    creationVersion: string
+  }) => {
+    const workspaceDB = db.getDB(workspaceId)
+    const metadata = await workspaceDB.get<Workspace>(
+      DocumentType.WORKSPACE_METADATA
+    )
+    await workspaceDB.put({ ...metadata, creationVersion })
+  }
 
   const createPackage = async ({
     readRole = roles.BUILTIN_ROLE_IDS.ADMIN,
@@ -206,6 +223,46 @@ describe("project package permissions", () => {
     }
   )
 
+  it.each([false, true])(
+    "maps legacy POWER grants only when the destination supports POWER (legacy destination: %s)",
+    async legacyDestination => {
+      await withProjectsEnabled(async () => {
+        await setWorkspaceCreationVersion({
+          workspaceId: config.getDevWorkspaceId(),
+          creationVersion: "2.9.0",
+        })
+        const source = await createPackage({
+          readRole: roles.BUILTIN_ROLE_IDS.POWER,
+        })
+        const destination = await config.api.workspace.create({
+          name: "Destination",
+        })
+        await setWorkspaceCreationVersion({
+          workspaceId: destination.appId,
+          creationVersion: legacyDestination ? "2.9.0" : "3.0.0",
+        })
+        await config.withApp(destination, async () => {
+          const imported = await config.api.project.import(source.buffer)
+          const { permissions } = await config.api.permission.get(
+            imported.resources.table![0]
+          )
+          const powerRole = await context
+            .getWorkspaceDB()
+            .tryGet<Role>(roles.getDBRoleID(roles.BUILTIN_ROLE_IDS.POWER))
+          expect(permissions.read.role).toBe(
+            legacyDestination ? "POWER" : "ADMIN"
+          )
+          expect(!!powerRole).toBe(legacyDestination)
+          expect(
+            imported.unsupportedContent.some(
+              item => item.type === "custom_role_permissions"
+            )
+          ).toBe(!legacyDestination)
+        })
+      })
+    }
+  )
+
   it("rolls back imported permissions without changing unrelated destination permissions", async () => {
     await withProjectsEnabled(async () => {
       const source = await createPackage()
@@ -244,6 +301,86 @@ describe("project package permissions", () => {
         expect(await readRolePermissions()).toEqual(before)
         const { projects } = await config.api.project.fetch()
         expect(projects).toEqual([])
+      })
+    })
+  })
+
+  it("retains restrictions on surviving resources when failed import cleanup has conflicts", async () => {
+    await withProjectsEnabled(async () => {
+      const source = await createPackage()
+      const destination = await config.api.workspace.create({
+        name: "Destination",
+      })
+      await config.withApp(destination, async () => {
+        const unrelated = await config.api.table.save({
+          ...basicTable(),
+          name: "Unrelated",
+        })
+        await config.api.permission.add({
+          resourceId: unrelated._id!,
+          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+          level: PermissionLevel.READ,
+        })
+        jest
+          .spyOn(importSetup, "refreshProjectImportSetup")
+          .mockRejectedValueOnce(new Error("Import setup failed"))
+        const actualBulkRemove = db.DatabaseImpl.prototype.bulkRemove
+        const bulkRemove = jest
+          .spyOn(db.DatabaseImpl.prototype, "bulkRemove")
+          .mockImplementationOnce(async function (
+            this: db.DatabaseImpl,
+            docs,
+            opts
+          ) {
+            return await actualBulkRemove.call(
+              this,
+              docs.map(doc => ({
+                ...doc,
+                _rev: "1-00000000000000000000000000000000",
+              })),
+              opts
+            )
+          })
+        try {
+          await config.api.project.import({
+            file: source.buffer,
+            expectations: { status: 500 },
+          })
+        } finally {
+          bulkRemove.mockRestore()
+        }
+
+        const tables = await config.api.table.fetch()
+        const survivingTable = tables.find(
+          table => table.name === source.table.name
+        )!
+        const { permissions } = await config.api.permission.get(
+          survivingTable._id!
+        )
+        const unrelatedPermissions = await config.api.permission.get(
+          unrelated._id!
+        )
+        const { projects } = await config.api.project.fetch()
+        expect(permissions).toMatchObject({
+          read: { role: "ADMIN" },
+          write: { role: "ADMIN" },
+        })
+        expect(unrelatedPermissions.permissions.read.role).toBe("PUBLIC")
+        expect(projects).toEqual([])
+
+        await config.publish()
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          const headers = config.defaultHeaders({}, true)
+          await config
+            .request!.get(`/api/${survivingTable._id}/rows`)
+            .set(headers)
+            .expect(403)
+          await config
+            .request!.post(`/api/${survivingTable._id}/rows`)
+            .set(headers)
+            .send({ name: "Denied" })
+            .expect(403)
+        })
       })
     })
   })

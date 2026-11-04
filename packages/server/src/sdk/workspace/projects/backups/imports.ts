@@ -1596,7 +1596,7 @@ export async function importProject(
               type: "custom_role_permissions",
               count: restrictedResourceIds.length,
               reason:
-                "Custom roles could not be mapped to this workspace. Their resource permissions are restricted to Admin. Review Access settings before granting access.",
+                "Some roles could not be mapped to this workspace. Their access grants are restricted to Admin. Review Access settings before granting access.",
             })
           }
         }
@@ -1707,6 +1707,7 @@ export async function importProject(
           insertedDocs,
           importedProject,
         })
+        // Resources left behind by failed cleanup must retain their restrictions.
         if (canCleanupAttachments) {
           try {
             await rollbackProjectPermissions({ changes: permissionChanges })
