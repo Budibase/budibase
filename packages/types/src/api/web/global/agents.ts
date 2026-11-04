@@ -23,6 +23,10 @@ export interface AgentFileUploadResponse {
   file: KnowledgeBaseFile
 }
 
+export interface RetryAgentFileResponse {
+  file: KnowledgeBaseFile
+}
+
 export interface FetchAgentFileUrlResponse {
   url: string
 }
