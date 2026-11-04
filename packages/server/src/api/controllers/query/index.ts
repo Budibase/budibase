@@ -247,6 +247,14 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     )
     eventFn = () => events.query.updated(datasource, query)
   }
+  if (existingQuery && existingQuery.datasourceId !== query.datasourceId) {
+    const existingDatasource = await sdk.datasources.get(
+      existingQuery.datasourceId
+    )
+    if (existingDatasource.source !== datasource.source) {
+      ctx.throw(400, "Cannot change the integration type of an existing query")
+    }
+  }
   if (existingQuery && existingQuery.name !== query.name) {
     await sdk.ai.agents.migrateQueryToolReferences({
       existingDatasource: datasource,
