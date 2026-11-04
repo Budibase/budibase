@@ -36,7 +36,7 @@
 
       if (partialImport) {
         notifications.send(
-          "Workspace updated, but some table rows could not be confirmed as imported. Check the affected tables and re-import any missing data.",
+          "Workspace updated, but some table rows could not be confirmed as imported.",
           { type: "warning", icon: "warning", autoDismiss: false }
         )
       } else {
