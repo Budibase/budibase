@@ -1,6 +1,16 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import nock from "nock"
-import { db, docIds, encryption } from "@budibase/backend-core"
+import jwt from "jsonwebtoken"
+import {
+  constants,
+  context,
+  db,
+  docIds,
+  encryption,
+  env,
+  features,
+  withEnv,
+} from "@budibase/backend-core"
 import {
   CustomAIProviderConfig,
   BUDIBASE_AI_PROVIDER_ID,
@@ -8,9 +18,10 @@ import {
   WebSearchProvider,
   AIConfigType,
   CreateAIConfigRequest,
+  FeatureFlag,
   LiteLLMKeyConfig,
+  type User,
 } from "@budibase/types"
-import { context } from "@budibase/backend-core"
 import environment from "../../../../environment"
 import { licensing } from "@budibase/pro"
 import { mocks } from "@budibase/backend-core/tests"
@@ -84,6 +95,7 @@ const passwordMatch = (plain: string, encoded: string) => {
 
 describe("BudibaseAI", () => {
   const config = new TestConfiguration()
+  let globalAdmin: User
   beforeAll(async () => {
     mocks.licenses.useEnvironmentVariables()
     await config.init()
@@ -117,11 +129,70 @@ describe("BudibaseAI", () => {
 
     beforeEach(async () => {
       await config.newTenant()
+      globalAdmin = await config.globalUser({ admin: { global: true } })
       nock.cleanAll()
 
       mockLiteLLMProviders()
       mockLiteLLMModelCostMap()
       mockLiteLLMTeam()
+    })
+
+    it("blocks custom configs in cloud even with a browser override", async () => {
+      await withEnv({ SELF_HOSTED: false }, () =>
+        features.testutils.withFeatureFlags(
+          config.getTenantId(),
+          { [FeatureFlag.CLOUD_CUSTOM_AI_CONFIG_CREATION]: false },
+          () =>
+            config.withHeaders(
+              {
+                Cookie: `${constants.Cookie.FeatureFlags}=${jwt.sign(
+                  {
+                    flags: {
+                      [FeatureFlag.CLOUD_CUSTOM_AI_CONFIG_CREATION]: true,
+                    },
+                  },
+                  env.JWT_SECRET!
+                )}`,
+              },
+              () =>
+                config.api.ai.createConfig(defaultRequest, {
+                  status: 403,
+                  body: {
+                    message:
+                      "Creating custom AI configurations is temporarily unavailable on Budibase Cloud",
+                  },
+                })
+            )
+        )
+      )
+
+      expect(await config.api.ai.fetchConfigs()).toEqual([])
+    })
+
+    it("allows Budibase AI in cloud while custom configs are blocked", async () => {
+      nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "managed-key", key: "managed-secret" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await withEnv({ SELF_HOSTED: false }, () =>
+        features.testutils.withFeatureFlags(
+          config.getTenantId(),
+          { [FeatureFlag.CLOUD_CUSTOM_AI_CONFIG_CREATION]: false },
+          () =>
+            config.api.ai.createConfig({
+              name: "Budibase AI",
+              provider: BUDIBASE_AI_PROVIDER_ID,
+              model: "budibase/legacy/gpt-5-mini",
+              credentialsFields: {},
+              configType: AIConfigType.COMPLETIONS,
+            })
+        )
+      )
+
+      expect(created.provider).toBe(BUDIBASE_AI_PROVIDER_ID)
+      expect(created.liteLLMModelId).toBe(BUDIBASE_AI_PROVIDER_ID)
     })
 
     describe("encrypted credential injection", () => {
@@ -198,50 +269,72 @@ describe("BudibaseAI", () => {
       })
     })
 
-    it("creates a custom config and sanitizes the API key", async () => {
-      const liteLLMScope = nock(environment.LITELLM_URL)
-        .post("/key/generate")
-        .reply(200, { token_id: "key-1", key: "secret-1" })
-        .post("/health/test_connection")
-        .reply(200, { status: "success" })
-        .post("/model/new")
-        .reply(200, { model_id: "model-1" })
-        .post("/key/update", body => {
-          expect(body).toMatchObject({
-            models: ["model-1"],
+    it.each([
+      {
+        description: "cloud with the flag on",
+        selfHosted: false,
+        enabled: true,
+      },
+      {
+        description: "self-hosted with the flag off",
+        selfHosted: true,
+        enabled: false,
+      },
+    ])(
+      "creates a custom config and sanitizes the API key in $description",
+      async ({ selfHosted, enabled }) => {
+        const liteLLMScope = nock(environment.LITELLM_URL)
+          .post("/key/generate")
+          .reply(200, { token_id: "key-1", key: "secret-1" })
+          .post("/health/test_connection")
+          .reply(200, { status: "success" })
+          .post("/model/new")
+          .reply(200, { model_id: "model-1" })
+          .post("/key/update", body => {
+            expect(body).toMatchObject({
+              models: ["model-1"],
+            })
+            return true
           })
-          return true
-        })
-        .reply(200, { status: "success" })
+          .reply(200, { status: "success" })
 
-      const created = await config.api.ai.createConfig({ ...defaultRequest })
-      expect(created._id).toBeDefined()
-      expect(created.liteLLMModelId).toBe("model-1")
-      expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
-      expect(liteLLMScope.isDone()).toBe(true)
-
-      const configsResponse = await config.api.ai.fetchConfigs()
-      expect(configsResponse).toHaveLength(1)
-      expect(configsResponse[0]._id).toBe(created._id)
-      expect(configsResponse[0].credentialsFields.api_key).toBe(
-        PASSWORD_REPLACEMENT
-      )
-
-      const persistedConfig = await getPersistedConfigAI(created._id)
-      expect(
-        passwordMatch(
-          defaultRequest.credentialsFields!.api_key,
-          persistedConfig.credentialsFields!.api_key
+        const created = await withEnv({ SELF_HOSTED: selfHosted }, () =>
+          features.testutils.withFeatureFlags(
+            config.getTenantId(),
+            { [FeatureFlag.CLOUD_CUSTOM_AI_CONFIG_CREATION]: enabled },
+            () => config.api.ai.createConfig({ ...defaultRequest })
+          )
         )
-      ).toBeTrue()
-    })
+        expect(created._id).toBeDefined()
+        expect(created.liteLLMModelId).toBe("model-1")
+        expect(created.credentialsFields.api_key).toBe(PASSWORD_REPLACEMENT)
+        expect(liteLLMScope.isDone()).toBe(true)
+
+        const configsResponse = await config.api.ai.fetchConfigs()
+        expect(configsResponse).toHaveLength(1)
+        expect(configsResponse[0]._id).toBe(created._id)
+        expect(configsResponse[0].credentialsFields.api_key).toBe(
+          PASSWORD_REPLACEMENT
+        )
+
+        const persistedConfig = await getPersistedConfigAI(created._id)
+        expect(
+          passwordMatch(
+            defaultRequest.credentialsFields!.api_key,
+            persistedConfig.credentialsFields!.api_key
+          )
+        ).toBeTrue()
+      }
+    )
 
     it("resolves environment variable credentials before validating and creating a model", async () => {
-      await config.api.environment.create({
-        name: "openai_key",
-        production: "prod-openai-key",
-        development: "dev-openai-key",
-      })
+      await config.withUser(globalAdmin, () =>
+        config.api.environment.create({
+          name: "openai_key",
+          production: "prod-openai-key",
+          development: "dev-openai-key",
+        })
+      )
 
       const liteLLMScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
@@ -422,11 +515,13 @@ describe("BudibaseAI", () => {
       const created = await config.api.ai.createConfig({ ...defaultRequest })
       expect(creationScope.isDone()).toBe(true)
 
-      await config.api.environment.create({
-        name: "updated_openai_key",
-        production: "prod-updated-openai-key",
-        development: "dev-updated-openai-key",
-      })
+      await config.withUser(globalAdmin, () =>
+        config.api.environment.create({
+          name: "updated_openai_key",
+          production: "prod-updated-openai-key",
+          development: "dev-updated-openai-key",
+        })
+      )
 
       const updateScope = nock(environment.LITELLM_URL)
         .post("/health/test_connection", body => {

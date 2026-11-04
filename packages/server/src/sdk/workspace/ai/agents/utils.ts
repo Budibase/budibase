@@ -295,6 +295,7 @@ export async function buildPromptAndTools(
           readableName: tool.readableName,
           displayName: getEscalationToolDisplayName(tool),
           sourceId: tool.sourceId,
+          sourceType: tool.sourceType,
           action: tool.action,
           argsKey: resolveToolArgsKey(tool),
           rules: config.executionRules,
