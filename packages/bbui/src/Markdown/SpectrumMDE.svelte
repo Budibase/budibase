@@ -3,6 +3,10 @@
   import "easymde/dist/easymde.min.css"
   import { onDestroy, onMount, tick } from "svelte"
   import ColorPicker from "../ColorPicker/ColorPicker.svelte"
+  import {
+    getCustomToolbarIconNames,
+    useLocalToolbarIcons,
+  } from "./toolbarIcons"
 
   export let height: string | null = null
   export let scroll: boolean = true
@@ -311,33 +315,6 @@
     "guide",
   ]
 
-  const toolbarIcons: Record<string, string> = {
-    bold: "text-b",
-    italic: "text-italic",
-    heading: "text-h",
-    quote: "quotes",
-    "unordered-list": "list-bullets",
-    "ordered-list": "list-numbers",
-    link: "link",
-    image: "image",
-    "text-color": "text-aa",
-    "text-highlight": "highlighter",
-    preview: "eye",
-    "side-by-side": "columns",
-    fullscreen: "arrows-out",
-    guide: "question",
-  }
-
-  const useLocalToolbarIcons = (editor: EditorInstance) => {
-    for (const [name, icon] of Object.entries(toolbarIcons)) {
-      const element =
-        editor.toolbarElements?.[name]?.querySelector<HTMLElement>("i")
-      if (element) {
-        element.className = `ph ph-bold ph-${icon}`
-      }
-    }
-  }
-
   const getToolbar = (options: Record<string, any> | null) => {
     if (options?.toolbar !== undefined) {
       return options.toolbar
@@ -359,7 +336,7 @@
       autoDownloadFontAwesome: false,
       toolbar: getToolbar(easyMDEOptions),
     })
-    useLocalToolbarIcons(mde)
+    useLocalToolbarIcons(mde, getCustomToolbarIconNames(easyMDEOptions))
     bindCursorListener(mde)
     syncToolbarIconColors(mde)
   })
