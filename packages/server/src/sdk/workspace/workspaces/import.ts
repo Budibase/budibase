@@ -233,21 +233,38 @@ export async function updateWithExport(
       deleteDocs: filteredDelete,
       metadata: newMetadata,
     })
-    for (
-      let offset = 0;
-      offset < documents.length;
-      offset += IMPORT_BATCH_SIZE
-    ) {
-      const results = await workspaceDb.bulkDocs(
-        documents.slice(offset, offset + IMPORT_BATCH_SIZE)
-      )
-      if (results.some(r => r.error)) {
-        throw new HTTPError("Error importing documents", 500)
+    const rowDocs: Document[] = []
+    const workspaceDocs: Document[] = []
+    for (const doc of documents) {
+      if (doc._id?.startsWith(`${DocumentType.ROW}_`)) {
+        rowDocs.push(doc)
+      } else {
+        workspaceDocs.push(doc)
+      }
+    }
+    const results = await workspaceDb.bulkDocs(workspaceDocs)
+    if (results.some(r => r.error)) {
+      throw new HTTPError("Error importing documents", 500)
+    }
+
+    let partialImport = false
+    for (let offset = 0; offset < rowDocs.length; offset += IMPORT_BATCH_SIZE) {
+      try {
+        const results = await workspaceDb.bulkDocs(
+          rowDocs.slice(offset, offset + IMPORT_BATCH_SIZE)
+        )
+        if (results.some(r => r.error)) {
+          partialImport = true
+        }
+      } catch (err) {
+        console.log("Error importing workspace table rows", err)
+        partialImport = true
       }
     }
 
     await cache.destroy(getWorkspaceMigrationCacheKey(devId))
     await processMigrations(devId)
+    return { partialImport }
   } finally {
     await tempDb.destroy()
   }
