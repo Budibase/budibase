@@ -92,19 +92,9 @@ export async function getResourcePerms(
   const isInternalTable = (Object.values(InternalTables) as string[]).includes(
     resourceId
   )
-  let isMongoDBQuery = false
-  if (
-    isQueryId(resourceId) &&
-    Object.values(permissions).some(
-      permission => permission.role === roles.BUILTIN_ROLE_IDS.PUBLIC
-    )
-  ) {
-    const query = await sdk.queries.find(resourceId)
-    const datasource = await sdk.datasources.get(query.datasourceId)
-    isMongoDBQuery = datasource.source === SourceName.MONGODB
-  }
-  const mergeablePermissions =
-    isInternalTable || isMongoDBQuery ? withoutPublic(permissions) : permissions
+  const mergeablePermissions = isInternalTable
+    ? withoutPublic(permissions)
+    : permissions
 
   return { ...basePermissions, ...mergeablePermissions }
 }
@@ -194,13 +184,17 @@ export async function updatePermissionOnRole(
     dbRoleId === roles.getDBRoleID(roles.BUILTIN_ROLE_IDS.PUBLIC) &&
     isQueryId(resourceId)
   ) {
-    const query = await sdk.queries.find(resourceId)
-    const datasource = await sdk.datasources.get(query.datasourceId)
-    if (datasource.source === SourceName.MONGODB) {
-      throw new HTTPError(
-        "MongoDB queries cannot be granted public access",
-        400
-      )
+    const existingPermissions = dbRoles.find(role => role._id === dbRoleId)
+      ?.permissions?.[resourceId]
+    if (!existingPermissions?.includes(level)) {
+      const query = await sdk.queries.find(resourceId)
+      const datasource = await sdk.datasources.get(query.datasourceId)
+      if (datasource.source === SourceName.MONGODB) {
+        throw new HTTPError(
+          "MongoDB queries cannot be granted public access",
+          400
+        )
+      }
     }
   }
 

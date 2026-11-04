@@ -134,7 +134,7 @@ describe("MongoDB public query permissions", () => {
   )
 
   it.each([PermissionLevel.READ, PermissionLevel.WRITE])(
-    "denies existing public %s access",
+    "preserves existing public %s access",
     async permissionLevel => {
       await seedExistingPublicQuery()
       const allowed = await config.doInContext(undefined, () =>
@@ -145,17 +145,18 @@ describe("MongoDB public query permissions", () => {
           permissionLevel,
         })
       )
-      expect(allowed).toBe(false)
+      expect(allowed).toBe(true)
     }
   )
 
-  it("rejects public access when an existing public query is edited", async () => {
+  it("preserves public access when an existing query is edited", async () => {
     await seedExistingPublicQuery()
     await config.api.query.save({ ...query, name: "Edited query" })
-    await config.api.permission.add(
-      { roleId: PUBLIC, resourceId: query._id!, level: PermissionLevel.WRITE },
-      { status: 400 }
-    )
+    await config.api.permission.add({
+      roleId: PUBLIC,
+      resourceId: query._id!,
+      level: PermissionLevel.WRITE,
+    })
     const allowed = await config.doInContext(undefined, () =>
       sdk.permissions.canRoleAccessResource({
         roleId: PUBLIC,
@@ -164,7 +165,7 @@ describe("MongoDB public query permissions", () => {
         permissionLevel: PermissionLevel.WRITE,
       })
     )
-    expect(allowed).toBe(false)
+    expect(allowed).toBe(true)
   })
 
   it("cannot restore public access after making an existing query private", async () => {
