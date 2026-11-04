@@ -1,6 +1,7 @@
 import path from "path"
 import { join } from "path"
 import { db, objectStore } from "@budibase/backend-core"
+import type { Row } from "@budibase/types"
 import sdk from "../../../sdk"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
@@ -324,6 +325,33 @@ describe("/applications/:appId/import", () => {
     })
   })
 
+  it("updates matching documents and deletes documents absent from the import", async () => {
+    const appId = config.getDevWorkspaceId()
+    const table = await config.api.table.save(basicTable())
+    const tmpDir = await fsp.mkdtemp(join(os.tmpdir(), "bb-import-merge-test-"))
+    const exportPath = join(tmpDir, "db.txt")
+
+    try {
+      await sdk.backups.exportDB(appId, { exportPath })
+      await config.api.table.save({ ...table, name: "Changed after export" })
+      const extraTable = await config.api.table.save(
+        basicTable(undefined, { name: "Added after export" })
+      )
+
+      await request
+        .post(`/api/applications/${appId}/import`)
+        .attach("appExport", exportPath)
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      const tables = await config.api.table.fetch()
+      expect(tables.find(t => t._id === table._id)?.name).toBe(table.name)
+      expect(tables.map(t => t._id)).not.toContain(extraTable._id)
+    } finally {
+      await fsp.rm(tmpDir, { recursive: true, force: true })
+    }
+  })
+
   it("should include row data when importing into an existing workspace for newly created tables", async () => {
     const appId = config.getDevWorkspaceId()
 
@@ -363,6 +391,38 @@ describe("/applications/:appId/import", () => {
         "Alice",
         "Bob",
       ])
+    } finally {
+      await fsp.rm(tmpDir, { recursive: true, force: true })
+    }
+  })
+
+  it("imports all rows across multiple destination write batches", async () => {
+    const appId = config.getDevWorkspaceId()
+    const table = await config.api.table.save(basicTable())
+    const workspaceDb = db.getDB(appId)
+    const rows: Row[] = Array.from({ length: 1001 }, (_, index) => ({
+      _id: db.generateRowID(table._id!),
+      tableId: table._id!,
+      name: `Row ${index}`,
+    }))
+    await workspaceDb.bulkDocs(rows)
+    const tmpDir = await fsp.mkdtemp(join(os.tmpdir(), "bb-import-batches-"))
+    const exportPath = join(tmpDir, "db.txt")
+
+    try {
+      await sdk.backups.exportDB(appId, { exportPath })
+      await config.api.table.destroy(table._id!, table._rev!)
+
+      await request
+        .post(`/api/applications/${appId}/import`)
+        .attach("appExport", exportPath)
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      const imported = await workspaceDb.getMultiple<Row>(rows.map(r => r._id!))
+      expect(imported.map(r => ({ _id: r._id, name: r.name }))).toEqual(
+        rows.map(r => ({ _id: r._id, name: r.name }))
+      )
     } finally {
       await fsp.rm(tmpDir, { recursive: true, force: true })
     }

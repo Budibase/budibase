@@ -30,6 +30,8 @@ const DESIGN_DOCUMENTS_TO_IMPORT = [
   DesignDocuments.MIGRATIONS,
 ]
 
+const IMPORT_BATCH_SIZE = 1000
+
 async function getNewWorkspaceMetadata(
   tempDb: Database,
   workspaceDb: Database
@@ -61,15 +63,20 @@ async function getNewWorkspaceMetadata(
   }
 }
 
-function mergeUpdateAndDeleteDocuments(
-  updateDocs: Document[],
-  deleteDocs: Document[],
+function mergeUpdateAndDeleteDocuments({
+  updateDocs,
+  deleteDocs,
+  metadata,
+}: {
+  updateDocs: Document[]
+  deleteDocs: Document[]
   metadata: Workspace
-) {
+}) {
   // compress the documents to create and to delete (if same ID, then just update the rev)
+  const updatesById = new Map(updateDocs.map(doc => [doc._id, doc]))
   const finalToDelete = []
   for (let deleteDoc of deleteDocs) {
-    const found = updateDocs.find(doc => doc._id === deleteDoc._id)
+    const found = updatesById.get(deleteDoc._id)
     if (found) {
       found._rev = deleteDoc._rev
     } else {
@@ -221,11 +228,22 @@ export async function updateWithExport(
     )
 
     // now bulk update documents - add new ones, delete old ones and update common ones
-    const updateDocsResult = await workspaceDb.bulkDocs(
-      mergeUpdateAndDeleteDocuments(filteredUpdate, filteredDelete, newMetadata)
-    )
-    if (updateDocsResult.some(r => r.error)) {
-      throw new HTTPError("Error importing documents", 500)
+    const documents = mergeUpdateAndDeleteDocuments({
+      updateDocs: filteredUpdate,
+      deleteDocs: filteredDelete,
+      metadata: newMetadata,
+    })
+    for (
+      let offset = 0;
+      offset < documents.length;
+      offset += IMPORT_BATCH_SIZE
+    ) {
+      const results = await workspaceDb.bulkDocs(
+        documents.slice(offset, offset + IMPORT_BATCH_SIZE)
+      )
+      if (results.some(r => r.error)) {
+        throw new HTTPError("Error importing documents", 500)
+      }
     }
 
     await cache.destroy(getWorkspaceMigrationCacheKey(devId))
