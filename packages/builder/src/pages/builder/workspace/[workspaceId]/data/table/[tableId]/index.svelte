@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Banner, Button, notifications } from "@budibase/bbui"
+  import { Banner, Button, ProgressCircle, notifications } from "@budibase/bbui"
   import {
     datasources,
     tables,
@@ -395,6 +395,15 @@
               >
                 {seedPending ? "Retry seed" : "Seed from Dev"}
               </Button>
+              {#if tablePublishing}
+                <div
+                  class="seed-progress"
+                  role="progressbar"
+                  aria-label="Seeding and publishing table"
+                >
+                  <ProgressCircle size="S" />
+                </div>
+              {/if}
             {/if}
           {/if}
         </svelte:fragment>
@@ -435,6 +444,10 @@
 {/if}
 
 <style>
+  .seed-progress {
+    display: flex;
+    margin-inline-start: var(--spacing-s);
+  }
   .grid-blank-wrapper {
     position: relative;
     display: flex;
