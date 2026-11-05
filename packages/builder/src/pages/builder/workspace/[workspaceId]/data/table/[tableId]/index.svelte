@@ -286,8 +286,14 @@
       await workspaceDeploymentStore.fetch().catch(error => {
         console.error("Failed to refresh table publish status", error)
       })
+      if (isProductionMode && gridContext?.rows?.actions?.refreshData) {
+        await gridContext.rows.actions.refreshData().catch(error => {
+          console.error("Failed to refresh production rows", error)
+        })
+      }
+    } finally {
+      tablePublishing = false
     }
-    tablePublishing = false
   }
 
   const checkProductionRowPresence = async () => {

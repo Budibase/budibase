@@ -380,7 +380,7 @@ async function publishTableInternal(
         await cache.workspace.invalidateWorkspaceMetadata(prodWorkspaceId)
       }
       await seedTableRows({
-        tableId,
+        table,
         prodWorkspaceId,
         userId: ctx.user._id,
       })

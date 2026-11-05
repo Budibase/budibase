@@ -100,11 +100,6 @@ jest.mock("@budibase/pro", () => ({
   },
 }))
 
-jest.mock("../../../../sdk", () => ({
-  __esModule: true,
-  default: { tables: { getTable: async () => table } },
-}))
-
 jest.mock("../../../../db/utils", () => ({
   getRowParams: (_tableId: string, _rowId: null, options: PageOptions) =>
     options,
@@ -135,7 +130,7 @@ const createRows = (count: number) => {
   }
 }
 
-const seed = () => seedTableRows({ tableId, prodWorkspaceId, userId })
+const seed = () => seedTableRows({ table, prodWorkspaceId, userId })
 
 const expectCompleteCopy = () => {
   expect([...prodRows.keys()].sort()).toEqual([...devRows.keys()].sort())
@@ -156,6 +151,7 @@ describe("seedTableRows", () => {
     bulkDocs.mockReset().mockImplementation(saveRows)
     updateUsage.mockReset().mockResolvedValue(undefined)
     addRows.mockReset().mockImplementation(incrementRows)
+    imported.mockReset().mockResolvedValue(undefined)
   })
 
   it("pages through a large table and copies stable IDs in bounded writes", async () => {
@@ -226,6 +222,7 @@ describe("seedTableRows", () => {
     expect(prodRows.size).toBe(2)
     expect(bulkDocs).toHaveBeenCalledTimes(1)
     expect(rowUsage).toBe(2)
+    expect(imported).toHaveBeenCalledWith(table, 2)
   })
 
   it("preserves existing production rows and only copies missing IDs", async () => {
@@ -307,12 +304,13 @@ describe("seedTableRows", () => {
       }))
     })
 
-    await expect(seed()).rejects.toThrow()
+    await expect(seed()).rejects.toThrow("Write failed")
 
     expect(prodRows.size).toBe(1)
     expect(bulkDocs).toHaveBeenCalledTimes(3)
     expect(rowUsage).toBe(1)
-    expect(imported).not.toHaveBeenCalled()
+    expect(imported).toHaveBeenCalledTimes(1)
+    expect(imported).toHaveBeenCalledWith(table, 1)
   })
 
   it("resumes a failed invocation without overwriting or charging existing rows", async () => {
@@ -323,7 +321,7 @@ describe("seedTableRows", () => {
       }
       throw new Error("Gateway timeout")
     })
-    await expect(seed()).rejects.toThrow()
+    await expect(seed()).rejects.toThrow("Gateway timeout")
     bulkDocs.mockImplementation(saveRows)
 
     await seed()
@@ -331,6 +329,9 @@ describe("seedTableRows", () => {
     expectCompleteCopy()
     expect(rowUsage).toBe(4)
     expect(bulkDocs.mock.calls.at(-1)?.[0]).toHaveLength(3)
+    expect(imported).toHaveBeenCalledTimes(2)
+    expect(imported).toHaveBeenNthCalledWith(1, table, 1)
+    expect(imported).toHaveBeenNthCalledWith(2, table, 3)
   })
 
   it("stops after committed rows when the quota update fails", async () => {
@@ -341,8 +342,48 @@ describe("seedTableRows", () => {
 
     expect(prodRows.size).toBe(500)
     expect(bulkDocs).toHaveBeenCalledTimes(1)
-    expect(imported).not.toHaveBeenCalled()
+    expect(imported).toHaveBeenCalledWith(table, 500)
   })
+
+  it("counts committed rows when the import event fails", async () => {
+    createRows(501)
+    imported.mockRejectedValueOnce(new Error("Import event failed"))
+
+    await expect(seed()).rejects.toThrow("Import event failed")
+
+    expect(prodRows.size).toBe(500)
+    expect(rowUsage).toBe(500)
+    expect(bulkDocs).toHaveBeenCalledTimes(1)
+    expect(imported).toHaveBeenCalledWith(table, 500)
+  })
+
+  it.each(["quota", "event"])(
+    "preserves the write error when %s finalization also fails",
+    async failingUpdate => {
+      createRows(4)
+      bulkDocs.mockImplementation(async rows => {
+        if (!prodRows.size) {
+          await saveRows(rows.slice(0, 1))
+        }
+        throw new Error("Gateway timeout")
+      })
+      if (failingUpdate === "quota") {
+        addRows.mockRejectedValueOnce(new Error("Quota update failed"))
+      } else {
+        imported.mockRejectedValueOnce(new Error("Import event failed"))
+      }
+      const errorLog = jest.spyOn(console, "error").mockImplementation(() => {})
+      try {
+        await expect(seed()).rejects.toThrow("Gateway timeout")
+
+        expect(prodRows.size).toBe(1)
+        expect(addRows).toHaveBeenCalledWith(1, undefined, { tableId })
+        expect(imported).toHaveBeenCalledWith(table, 1)
+      } finally {
+        errorLog.mockRestore()
+      }
+    }
+  )
 
   it("does not write when the quota preflight fails", async () => {
     createRows(4)

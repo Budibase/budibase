@@ -4,7 +4,6 @@ import { quotas } from "@budibase/pro"
 import { FieldType, QuotaUsageType, StaticQuotaName } from "@budibase/types"
 import type { Database, Row, Table } from "@budibase/types"
 import { getRowParams } from "../../../db/utils"
-import sdk from "../../../sdk"
 import { parse } from "../../../utilities/schema"
 import { importToRows } from "./utils"
 
@@ -58,12 +57,13 @@ const findMissingRows = async ({
 const writeRows = async ({
   db,
   rows,
-  tableId,
+  table,
 }: {
   db: Database
   rows: Row[]
-  tableId: string
+  table: Table
 }) => {
+  const tableId = table._id!
   await quotas.updateUsage({
     usageChange: rows.length,
     name: StaticQuotaName.ROWS,
@@ -73,6 +73,7 @@ const writeRows = async ({
 
   let pending = rows
   let confirmed = 0
+  let writeFailed = false
   let failure: unknown = new Error("Failed to seed production rows")
   try {
     for (let attempt = 1; attempt <= ROW_WRITE_ATTEMPTS; attempt++) {
@@ -95,7 +96,7 @@ const writeRows = async ({
       }
 
       if (!pending.length) {
-        return
+        break
       }
 
       // A failed request can still commit rows. Keep their IDs and retry only
@@ -109,33 +110,51 @@ const writeRows = async ({
       }
 
       if (!pending.length) {
-        return
+        break
       }
       if (attempt < ROW_WRITE_ATTEMPTS) {
         await delay(attempt * 250)
       }
     }
-    throw failure
-  } finally {
-    if (confirmed) {
-      await quotas.addRows(confirmed, undefined, { tableId })
+    if (pending.length) {
+      throw failure
     }
+  } catch (error) {
+    writeFailed = true
+    failure = error
+  }
+  if (confirmed) {
+    const results = await Promise.allSettled([
+      quotas.addRows(confirmed, undefined, { tableId }),
+      events.rows.imported(table, confirmed),
+    ])
+    for (const result of results) {
+      if (result.status === "rejected") {
+        if (!writeFailed) {
+          throw result.reason
+        }
+        console.error("Failed to finalize seeded rows", result.reason)
+      }
+    }
+  }
+  if (writeFailed) {
+    throw failure
   }
 }
 
 export const seedTableRows = async ({
-  tableId,
+  table,
   prodWorkspaceId,
   userId,
 }: {
-  tableId: string
+  table: Table
   prodWorkspaceId: string
   userId?: string
 }) => {
+  const tableId = table._id!
   const sourceDb = context.getWorkspaceDB()
   await context.doInWorkspaceContext(prodWorkspaceId, async () => {
     const destinationDb = context.getWorkspaceDB()
-    const table = await sdk.tables.getTable(tableId)
     let startAfter: string | undefined
 
     while (true) {
@@ -177,8 +196,7 @@ export const seedTableRows = async ({
             keepCouchId: true,
           }
         )
-        await writeRows({ db: destinationDb, rows: prepared, tableId })
-        await events.rows.imported(table, prepared.length)
+        await writeRows({ db: destinationDb, rows: prepared, table })
       }
 
       if (page.length < ROW_PAGE_SIZE) {

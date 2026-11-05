@@ -1763,6 +1763,98 @@ if (descriptions.length) {
             expect(status.tables[table._id!].seedPending).toBeFalsy()
           })
 
+          it("seeds a column recreated with a different type in development since publication", async () => {
+            const table = await config.api.table.save(
+              basicTable(undefined, {
+                schema: {
+                  value: {
+                    name: "value",
+                    type: FieldType.DATETIME,
+                  },
+                },
+              })
+            )
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+            const { value: _removed, ...schema } = table.schema
+            const withoutValue = await config.api.table.save({
+              ...table,
+              schema,
+            })
+            await config.api.table.save({
+              ...withoutValue,
+              schema: {
+                ...withoutValue.schema,
+                value: {
+                  name: "value",
+                  type: FieldType.STRING,
+                },
+              },
+            })
+            const devRow = await config.api.row.save(table._id!, {
+              value: "ordinary text",
+            })
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRows = await config.api.row.fetchProd(table._id!)
+            const prodTable = await config.doInContext(
+              config.getProdWorkspaceId(),
+              () => context.getWorkspaceDB().get<Table>(table._id!)
+            )
+            const status = await config.api.deploy.publishStatus()
+            expect(prodRows).toEqual([
+              expect.objectContaining({
+                _id: devRow._id,
+                value: "ordinary text",
+              }),
+            ])
+            expect(prodTable.schema.value.type).toBe(FieldType.STRING)
+            expect(status.tables[table._id!].published).toBe(true)
+            expect(status.tables[table._id!].seedPending).toBeFalsy()
+          })
+
+          it("seeds values in columns added in development since publication", async () => {
+            const table = await config.api.table.save(basicTable())
+            await config.api.workspace.publish(config.getDevWorkspaceId())
+            await config.api.table.save({
+              ...table,
+              schema: {
+                ...table.schema,
+                added: {
+                  name: "added",
+                  type: FieldType.STRING,
+                },
+              },
+            })
+            const devRow = await config.api.row.save(table._id!, {
+              name: "dev-row",
+              added: "new column value",
+            })
+
+            await config.api.table.publish(table._id!, {
+              seedProductionTables: true,
+            })
+
+            const prodRows = await config.api.row.fetchProd(table._id!)
+            const prodTable = await config.doInContext(
+              config.getProdWorkspaceId(),
+              () => context.getWorkspaceDB().get<Table>(table._id!)
+            )
+            const status = await config.api.deploy.publishStatus()
+            expect(prodRows).toEqual([
+              expect.objectContaining({
+                _id: devRow._id,
+                name: "dev-row",
+                added: "new column value",
+              }),
+            ])
+            expect(prodTable.schema.added.type).toBe(FieldType.STRING)
+            expect(status.tables[table._id!].published).toBe(true)
+            expect(status.tables[table._id!].seedPending).toBeFalsy()
+          })
+
           it("reseeds an empty production table containing deleted row revisions", async () => {
             const table = await config.api.table.save(basicTable())
             await config.api.workspace.publish(config.getDevWorkspaceId())
