@@ -672,6 +672,80 @@ describe("resumeOperation", () => {
     })
   })
 
+  it.each(["failed", "completed"] as const)(
+    "completes a rejected session independently of its %s request outcome",
+    async status => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createRequest())!
+        const outcomeSpy = jest
+          .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
+          .mockResolvedValueOnce({ status })
+
+        try {
+          await resumeOperation({
+            doc: baseDoc({ requestId, response: { accepted: false } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+
+          const [request] =
+            await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+          expect(request.status).toEqual(status)
+          expect(enqueueLifecycleMock.mock.calls).toEqual([
+            [
+              {
+                sourceType: "agent_session",
+                sourceId: "session_1",
+                signal: "completed",
+                timestamp: expect.any(String),
+              },
+            ],
+          ])
+        } finally {
+          outcomeSpy.mockRestore()
+        }
+      })
+    }
+  )
+
+  it("keeps a rejected tracked session waiting while another approval is pending", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      await context.getWorkspaceDB().put(
+        baseDoc({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+          requestId,
+        })
+      )
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: false } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: baseCtx,
+      })
+
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("needs_input")
+      expect(enqueueLifecycleMock.mock.calls).toEqual([
+        [
+          {
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            signal: "waiting",
+            timestamp: expect.any(String),
+          },
+        ],
+      ])
+    })
+  })
+
   it("records escalation_resolved with outcome rejected", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
