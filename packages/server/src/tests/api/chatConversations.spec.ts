@@ -9,6 +9,7 @@ import {
   ActionType,
   AGENT_REQUEST_TYPE,
   AgentChannelProvider,
+  ApprovalToolResultStatus,
   DocumentType,
   FeatureFlag,
 } from "@budibase/types"
@@ -839,7 +840,9 @@ describe("Agent chat tool call tracking", () => {
     onMetadata,
     stepLmUsages,
     finishTotalLmUsage,
+    finishReason = "stop",
   }: {
+    finishReason?: string
     content?: {
       type: string
       toolCallId?: string
@@ -898,7 +901,7 @@ describe("Agent chat tool call tracking", () => {
             finishMetadata: pipeOptions?.messageMetadata?.({
               part: {
                 type: "finish",
-                finishReason: "stop",
+                finishReason,
                 totalUsage: finishTotalLmUsage,
               },
             }),
@@ -926,7 +929,9 @@ describe("Agent chat tool call tracking", () => {
     toolResults = [],
     text = "response",
     chunks = makeAssistantTextChunks(text),
+    finishReason = "stop",
   }: {
+    finishReason?: string
     content?: {
       type: string
       toolCallId?: string
@@ -979,6 +984,7 @@ describe("Agent chat tool call tracking", () => {
             }
           ),
         text: Promise.resolve(text),
+        finishReason: Promise.resolve(finishReason),
         response: Promise.resolve({
           id: "gen-test",
           headers: {
@@ -1116,6 +1122,41 @@ describe("Agent chat tool call tracking", () => {
           },
         },
       ])
+    })
+
+    it("fails the session when the run stops with tool work pending", async () => {
+      jest.mocked(streamText).mockImplementation(
+        mockPipeStreamText({
+          finishReason: "tool-calls",
+          onMetadata: () => {},
+        }) as any
+      )
+      const executed = jest
+        .spyOn(events.action, "aiAgentExecuted")
+        .mockImplementation(() => {})
+      const failed = jest
+        .spyOn(events.action, "aiAgentFailed")
+        .mockImplementation(() => {})
+
+      const headers = await config.defaultHeaders()
+      await config
+        .getRequest()!
+        .post(agentPreviewStreamPath(agentId))
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          isPreview: true,
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+
+      expect(failed).toHaveBeenCalledTimes(1)
+      expect(executed).not.toHaveBeenCalled()
     })
 
     it("classifies preview streams as Chat Preview even without a sessionId", async () => {
@@ -1624,6 +1665,140 @@ describe("Agent chat tool call tracking", () => {
           )
         }
       )
+    })
+
+    describe("session outcome", () => {
+      const runWebhook = (userId: string) =>
+        webhookChat({
+          chat: {
+            agentId,
+            channel: {
+              provider: AgentChannelProvider.SLACK,
+              channelId: "C123",
+              externalUserId: "slack-user-1",
+            },
+            messages: [
+              {
+                id: "msg-1",
+                role: "user",
+                parts: [{ type: "text", text: "hello" }],
+              },
+            ],
+          },
+          user: { _id: userId } as any,
+          triggeredBy: { type: "user" },
+        })
+
+      const spyOnLifecycleEvents = () => ({
+        executed: jest
+          .spyOn(events.action, "aiAgentExecuted")
+          .mockImplementation(() => {}),
+        failed: jest
+          .spyOn(events.action, "aiAgentFailed")
+          .mockImplementation(() => {}),
+      })
+
+      it("completes the session when the run ends normally but its request fails", async () => {
+        jest.mocked(streamText).mockImplementation(
+          makeWebhookStreamTextMock({
+            content: [
+              {
+                type: "tool-error",
+                toolCallId: "call-1",
+                toolName: "book_meeting",
+                input: {},
+                error: new Error("failed to book meeting"),
+              },
+            ],
+            toolCalls: [{ toolCallId: "call-1", toolName: "book_meeting" }],
+            text: "I could not book the meeting.",
+          })
+        )
+        ;(
+          sdk.ai.agents.getOrThrow as jest.MockedFunction<
+            typeof sdk.ai.agents.getOrThrow
+          >
+        ).mockResolvedValue(
+          buildWebhookTestAgent({
+            enabledTools: requesterTools("book_meeting"),
+          })
+        )
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await features.testutils.withFeatureFlags(
+          config.getTenantId(),
+          { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+          async () => {
+            await context.doInWorkspaceContext(
+              config.getProdWorkspaceId(),
+              async () => {
+                await runWebhook("user-session-outcome")
+
+                const requests =
+                  await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+                const request = requests.find(
+                  r => r.userId === "user-session-outcome"
+                )
+                expect(request?.status).toEqual("failed")
+              }
+            )
+          }
+        )
+
+        expect(executed).toHaveBeenCalledTimes(1)
+        expect(executed).toHaveBeenCalledWith({
+          agentId: "agent-1",
+          sourceType: "agent_session",
+          sourceId: expect.any(String),
+          sessionId: expect.any(String),
+          requestId: expect.any(String),
+        })
+        expect(failed).not.toHaveBeenCalled()
+      })
+
+      it("fails the session when the run stops with tool work pending", async () => {
+        jest
+          .mocked(streamText)
+          .mockImplementation(
+            makeWebhookStreamTextMock({ finishReason: "tool-calls", text: "" })
+          )
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await context.doInWorkspaceContext(config.getProdWorkspaceId(), () =>
+          runWebhook("user-1")
+        )
+
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("keeps the session waiting when the run stops awaiting an approval", async () => {
+        jest.mocked(streamText).mockImplementation(
+          makeWebhookStreamTextMock({
+            finishReason: "tool-calls",
+            toolResults: [
+              {
+                toolCallId: "call-1",
+                toolName: "book_meeting",
+                output: {
+                  status: ApprovalToolResultStatus.PENDING_APPROVAL,
+                  escalationId: "esc-1",
+                },
+              },
+            ],
+          })
+        )
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await context.doInWorkspaceContext(config.getProdWorkspaceId(), () =>
+          runWebhook("user-1")
+        )
+
+        expect(executed).toHaveBeenCalledWith(
+          expect.objectContaining({ awaitingEscalation: true })
+        )
+        expect(failed).not.toHaveBeenCalled()
+      })
     })
 
     it("marks the request as failed when an approval-gated tool call fails", async () => {
