@@ -507,7 +507,10 @@
     const label = document.querySelector<HTMLElement>(`label[for="${fieldId}"]`)
     if (label) {
       const scrollContainer = label.closest<HTMLElement>(".main-wrapper")
-      if (scrollContainer) {
+      if (
+        scrollContainer &&
+        ["auto", "scroll"].includes(getComputedStyle(scrollContainer).overflowY)
+      ) {
         scrollVerticallyIntoView({ element: label, scrollContainer })
       } else {
         label.style.scrollMargin = "100px"
