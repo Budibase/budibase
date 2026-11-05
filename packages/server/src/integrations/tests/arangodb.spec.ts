@@ -87,4 +87,49 @@ describe("arangodb integration", () => {
       bindVars: { value0: '" || true || "', value1: "42" },
     })
   })
+
+  it.each([
+    "// user's records {{ignored}}\n",
+    "// user's records {{ignored}}\r\n",
+    "/* user's records {{ignored}} */",
+    '/* "quoted" records\n{{ignored}} */',
+  ])("preserves comments and binds values after %s", async comment => {
+    const payload = '" || true || " /* injected */'
+    const result = await interpolateAQL(
+      { sql: `${comment} FOR d IN items FILTER d.name == "{{name}}" RETURN d` },
+      { name: payload, ignored: "*/ RETURN true //" }
+    )
+
+    expect(result).toEqual({
+      sql: `${comment} FOR d IN items FILTER d.name == @value0 RETURN d`,
+      bindVars: { value0: payload },
+    })
+  })
+
+  it("does not treat comment markers in strings as comments", async () => {
+    const result = await interpolateAQL(
+      { sql: 'RETURN "https://example.com/*{{name}}*/"' },
+      { name: '" RETURN true //' }
+    )
+
+    expect(result).toEqual({
+      sql: 'RETURN CONCAT("https://example.com/*", @value0, "*/")',
+      bindVars: { value0: '" RETURN true //' },
+    })
+  })
+
+  it.each(["// {{ignored}}", "/* {{ignored}} */", "/* {{ignored}}"])(
+    "does not interpolate a trailing comment: %s",
+    async comment => {
+      const result = await interpolateAQL(
+        { sql: `RETURN {{name}} ${comment}` },
+        { name: "alice", ignored: "*/ RETURN true //" }
+      )
+
+      expect(result).toEqual({
+        sql: `RETURN @value0 ${comment}`,
+        bindVars: { value0: "alice" },
+      })
+    }
+  )
 })

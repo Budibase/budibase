@@ -26,6 +26,22 @@ export const interpolateAQL = async (
 
   for (let index = 0; index < sql.length; ) {
     const character = sql[index]
+    if (sql.startsWith("//", index)) {
+      let end = index + 2
+      while (end < sql.length && sql[end] !== "\n" && sql[end] !== "\r") {
+        end++
+      }
+      parts.push(sql.slice(index, end))
+      index = end
+      continue
+    }
+    if (sql.startsWith("/*", index)) {
+      const closing = sql.indexOf("*/", index + 2)
+      const end = closing === -1 ? sql.length : closing + 2
+      parts.push(sql.slice(index, end))
+      index = end
+      continue
+    }
     if (character === '"' || character === "'") {
       const quote = character
       let end = index + 1

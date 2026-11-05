@@ -48,11 +48,18 @@ jest.mock("../integrations/utils", () => ({
   isSQL: jest.fn(() => false),
 }))
 
+jest.mock("../sdk/utils", () => ({
+  ...jest.requireActual("../sdk/utils"),
+  getEnvironmentVariables: jest.fn(async () => ({})),
+}))
+
 import { context } from "@budibase/backend-core"
 import { getIntegration } from "../integrations"
 import { execute } from "./query"
 import { BodyType, SourceName } from "@budibase/types"
 import type { QueryEvent } from "./definitions"
+import sdk from "../sdk"
+import { enrichContext } from "../sdk/workspace/queries/queries"
 
 const buildEvent = (overrides: Partial<QueryEvent> = {}): QueryEvent => ({
   appId: "app_test",
@@ -76,6 +83,42 @@ const buildEvent = (overrides: Partial<QueryEvent> = {}): QueryEvent => ({
   schema: {},
   nullDefaultSupport: false,
   ...overrides,
+})
+
+describe("QueryRunner - ArangoDB JSON creates", () => {
+  it.each(["alice", '"} INSERT {} INTO items //'])(
+    "resolves JSON create bindings as data: %s",
+    async name => {
+      const create = jest.fn(async () => [])
+      jest.mocked(getIntegration).mockResolvedValue(async () => ({ create }))
+      jest.mocked(sdk.queries.enrichContext).mockImplementation(enrichContext)
+      const event = buildEvent({
+        datasource: {
+          type: "datasource",
+          source: SourceName.ARANGODB,
+          config: {},
+          name: "ArangoDB",
+        },
+        queryVerb: "create",
+        fields: { json: '{"name":"{{name}}"}' },
+        parameters: { name },
+      })
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          execute(event, err => (err ? reject(err) : resolve()))
+        })
+        expect(create).toHaveBeenCalledWith(
+          { json: { name } },
+          expect.any(Object)
+        )
+      } finally {
+        jest
+          .mocked(sdk.queries.enrichContext)
+          .mockImplementation(async fields => fields)
+      }
+    }
+  )
 })
 
 const runEvent = (event: QueryEvent): Promise<string | undefined> => {

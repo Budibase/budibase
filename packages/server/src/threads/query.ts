@@ -200,7 +200,10 @@ class QueryRunner {
           nullDefaultSupport,
         }
       )
-    } else if (datasourceClone.source === SourceName.ARANGODB) {
+    } else if (
+      datasourceClone.source === SourceName.ARANGODB &&
+      queryVerb !== "create"
+    ) {
       query = await interpolateAQL(fieldsClone, enrichedContext)
     } else {
       const rawPath = fieldsClone.path
