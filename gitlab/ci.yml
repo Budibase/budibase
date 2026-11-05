@@ -1,0 +1,26 @@
+# Enable explicitly while Gravity runner and build-image requirements are resolved.
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+stages:
+  - preflight
+  - compatibility
+
+inspect-images:
+  stage: preflight
+  script:
+    - sh gitlab/inspect-images.sh
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - gitlab/image-metadata/
+
+node24-compatibility:
+  stage: compatibility
+  needs: []
+  script:
+    - . ./gitlab/images.env
+    - docker buildx build --platform linux/amd64 --progress plain --no-cache --file gitlab/node24.Dockerfile --build-arg "NODE_IMAGE=$GRAVITY_NODE_IMAGE" .

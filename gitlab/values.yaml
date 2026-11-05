@@ -1,0 +1,33 @@
+# Overlay on charts/budibase/values.yaml for the DoW deployment.
+# Supply the external object store URL, region and credentials separately.
+services:
+  automationWorkers:
+    enabled: true
+  couchdb:
+    enabled: true
+    backup:
+      enabled: false
+  redis:
+    enabled: true
+    image: registry-il2.gravity.spaceforce.mil/chainguard/redis@sha256:fb62cb7cecabf2f174d010cd6f93d12a0ded24bab2dec53e9e0c24187b0af00c
+  objectStore:
+    minio: false
+    url: ""
+  litellm:
+    enabled: false
+
+couchdb:
+  image:
+    repository: registry-il2.gravity.spaceforce.mil/budibase/external/database/database
+    digest: sha256:d90f656261c9fdccae7f15e73639103bf857b2897f105c4f81711ecd1234dd28
+  initImage:
+    repository: registry-il2.gravity.spaceforce.mil/chainguard/busybox
+    digest: sha256:05125a9dcfe38ec61cabf86ddd9a5ee3e02b9da978f11a57bcf351b29377c04c
+  autoSetup:
+    enabled: false
+  enableSearch: false
+  placementConfig:
+    enabled: false
+
+testConnection:
+  image: registry-il2.gravity.spaceforce.mil/chainguard/busybox@sha256:05125a9dcfe38ec61cabf86ddd9a5ee3e02b9da978f11a57bcf351b29377c04c
