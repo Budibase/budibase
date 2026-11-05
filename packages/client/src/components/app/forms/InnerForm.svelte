@@ -3,7 +3,6 @@
   import type { Readable, Writable } from "svelte/store"
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
-  import { scrollVerticallyIntoView } from "@/utils/scroll"
   import { Helpers } from "@budibase/bbui"
   import { loadTranslationsByGroup } from "@budibase/frontend-core"
   import {
@@ -506,16 +505,8 @@
     }
     const label = document.querySelector<HTMLElement>(`label[for="${fieldId}"]`)
     if (label) {
-      const scrollContainer = label.closest<HTMLElement>(".main-wrapper")
-      if (
-        scrollContainer &&
-        ["auto", "scroll"].includes(getComputedStyle(scrollContainer).overflowY)
-      ) {
-        scrollVerticallyIntoView({ element: label, scrollContainer })
-      } else {
-        label.style.scrollMargin = "100px"
-        label.scrollIntoView({ behavior: "smooth", block: "nearest" })
-      }
+      label.style.scrollMargin = "100px"
+      label.scrollIntoView({ behavior: "smooth", block: "nearest" })
     }
   }
 
