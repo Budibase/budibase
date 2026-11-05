@@ -1,5 +1,5 @@
 <script>
-  import { Modal, ModalContent, ProgressBar } from "@budibase/bbui"
+  import { Body, Modal, ModalContent, ProgressBar } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
   import { parseCellID } from "../lib/utils"
   import { sleep } from "../../../utils/utils"
@@ -82,12 +82,17 @@
 <Modal bind:this={rowsModal}>
   <ModalContent
     title="Delete rows"
-    confirmText="Continue"
+    confirmText="Delete rows"
+    warning
     cancelText="Cancel"
     onConfirm={bulkDeleteRows}
     size="M"
   >
-    Are you sure you want to delete {promptQuantity} rows?
+    <Body>
+      Are you sure you want to delete <strong
+        >{promptQuantity} selected rows</strong
+      >?
+    </Body>
     {#if processing}
       <ProgressBar
         size="L"
@@ -102,12 +107,19 @@
 <Modal bind:this={cellsModal}>
   <ModalContent
     title="Delete cells"
-    confirmText="Continue"
+    confirmText="Delete cells"
+    warning
     cancelText="Cancel"
     onConfirm={bulkDeleteCells}
     size="M"
   >
-    Are you sure you want to delete {promptQuantity} cells?
+    <Body>
+      Are you sure you want to delete <strong
+        >{promptQuantity} selected {promptQuantity === 1
+          ? "cell"
+          : "cells"}</strong
+      >?
+    </Body>
     {#if processing}
       <ProgressBar
         size="L"
