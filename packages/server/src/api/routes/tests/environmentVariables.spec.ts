@@ -1,7 +1,8 @@
 import { structures } from "./utilities"
 import { mocks } from "@budibase/backend-core/tests"
 import { setEnv } from "@budibase/backend-core"
-import { Datasource } from "@budibase/types"
+import { Datasource, Environment } from "@budibase/types"
+import { environmentVariables } from "@budibase/pro"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import {
   DatabaseName,
@@ -19,6 +20,10 @@ if (describes.length > 0) {
 
     beforeAll(async () => {
       await config.init()
+      config.user = await config.globalUser({
+        ...config.getUser(),
+        admin: { global: true },
+      })
       restoreEnv = setEnv({ ENCRYPTION_KEY: "budibase" })
       mocks.licenses.useEnvironmentVariables()
 
@@ -59,6 +64,31 @@ if (describes.length > 0) {
         production: "test1",
         development: "test1",
       })
+    })
+
+    it("rejects a workspace-scoped builder changing tenant variables", async () => {
+      const scopedBuilder = await config.globalUser({
+        builder: { apps: [config.getProdWorkspaceId()] },
+        admin: { global: false },
+      })
+
+      await config.withUser(scopedBuilder, async () => {
+        await config.api.environment.create(
+          { name: "other", production: "attacker", development: "attacker" },
+          { status: 403 }
+        )
+        await config.api.environment.update(
+          "test",
+          { production: "attacker", development: "attacker" },
+          { status: 403 }
+        )
+        await config.api.environment.destroy("test", { status: 403 })
+      })
+
+      const values = await config.doInTenant(() =>
+        environmentVariables.fetchValues(Environment.PRODUCTION)
+      )
+      expect(values).toEqual({ test: rawDatasource.config!.password })
     })
 
     it("should be able to delete the environment variable 'test'", async () => {

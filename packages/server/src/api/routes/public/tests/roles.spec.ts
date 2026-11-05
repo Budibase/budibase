@@ -110,4 +110,51 @@ describe("public roles API", () => {
     const user = await getGlobalUser(targetUser._id!)
     expect(user.admin?.global).toBe(true)
   })
+
+  it("preserves global builder privileges when assigning an app builder", async () => {
+    const privilegedUser = await config.globalUser({
+      builder: { global: true, creator: true },
+      admin: { global: false },
+    })
+
+    await appBuilderRequest.send(
+      "post",
+      "/roles/assign",
+      {
+        userIds: [privilegedUser._id],
+        appBuilder: { appId: config.getProdWorkspaceId() },
+      },
+      { status: 200 }
+    )
+
+    const user = await getGlobalUser(privilegedUser._id!)
+    expect(user.builder).toMatchObject({
+      global: true,
+      creator: true,
+      apps: [config.getProdWorkspaceId()],
+    })
+  })
+
+  it("preserves app assignments when granting global builder", async () => {
+    const appBuilder = await config.globalUser({
+      builder: {
+        creator: true,
+        apps: [config.getProdWorkspaceId()],
+      },
+    })
+
+    await globalBuilderRequest.send(
+      "post",
+      "/roles/assign",
+      { userIds: [appBuilder._id], builder: true },
+      { status: 200 }
+    )
+
+    const user = await getGlobalUser(appBuilder._id!)
+    expect(user.builder).toMatchObject({
+      global: true,
+      creator: true,
+      apps: [config.getProdWorkspaceId()],
+    })
+  })
 })

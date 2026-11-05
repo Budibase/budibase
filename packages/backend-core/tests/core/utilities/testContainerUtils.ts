@@ -141,7 +141,14 @@ export function setupEnv(...envs: any[]) {
   }
 }
 
-export async function startContainer(container: GenericContainer) {
+interface StartContainerOptions {
+  maxAttempts?: number
+}
+
+export async function startContainer(
+  container: GenericContainer,
+  { maxAttempts = 10 }: StartContainerOptions = {}
+) {
   const imageName = (container as any).imageName.string as string
   let key: string = imageName
   if (imageName.includes("@sha256")) {
@@ -157,7 +164,7 @@ export async function startContainer(container: GenericContainer) {
 
   let startedContainer: StartedTestContainer | undefined = undefined
   let lastError = undefined
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < maxAttempts; i++) {
     try {
       // container.start() is not an idempotent operation, calling `start`
       // modifies the internal state of a GenericContainer instance such that

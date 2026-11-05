@@ -8,6 +8,7 @@ import {
   RestAuthType,
   RestQueryFields,
   SourceName,
+  type User,
 } from "@budibase/types"
 import nock from "nock"
 import { getCachedVariable } from "../../../../threads/utils"
@@ -23,6 +24,7 @@ describe("rest", () => {
   let datasource: Datasource
   let mockAgent: MockAgent | undefined
   let restoreEnv: (() => void) | undefined
+  let globalAdmin: User
 
   const jsonHeaders = { "content-type": "application/json" }
 
@@ -134,6 +136,7 @@ describe("rest", () => {
     restoreEnv = setServerEnv({ REST_REJECT_UNAUTHORIZED: false })
     config = setup.getConfig()
     await config.init()
+    globalAdmin = await config.globalUser({ admin: { global: true } })
     datasource = await config.api.datasource.create({
       name: generator.guid(),
       type: "test",
@@ -1616,11 +1619,13 @@ describe("rest", () => {
       const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
       mocks.licenses.useEnvironmentVariables()
       try {
-        await config.api.environment.create({
-          name: "API_TOKEN",
-          production: "resolved-token-value",
-          development: "resolved-token-value",
-        })
+        await config.withUser(globalAdmin, () =>
+          config.api.environment.create({
+            name: "API_TOKEN",
+            production: "resolved-token-value",
+            development: "resolved-token-value",
+          })
+        )
 
         const ds = await config.api.datasource.create({
           name: generator.guid(),
@@ -1665,7 +1670,9 @@ describe("rest", () => {
           },
         })
       } finally {
-        await config.api.environment.destroy("API_TOKEN")
+        await config.withUser(globalAdmin, () =>
+          config.api.environment.destroy("API_TOKEN")
+        )
         restoreCoreEnv()
       }
     })
@@ -1674,11 +1681,13 @@ describe("rest", () => {
       const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
       mocks.licenses.useEnvironmentVariables()
       try {
-        await config.api.environment.create({
-          name: "AUTH_PASS",
-          production: "env-password",
-          development: "env-password",
-        })
+        await config.withUser(globalAdmin, () =>
+          config.api.environment.create({
+            name: "AUTH_PASS",
+            production: "env-password",
+            development: "env-password",
+          })
+        )
 
         const authId = generator.guid()
         const ds = await config.api.datasource.create({
@@ -1728,7 +1737,9 @@ describe("rest", () => {
           },
         })
       } finally {
-        await config.api.environment.destroy("AUTH_PASS")
+        await config.withUser(globalAdmin, () =>
+          config.api.environment.destroy("AUTH_PASS")
+        )
         restoreCoreEnv()
       }
     })
@@ -1737,11 +1748,13 @@ describe("rest", () => {
       const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
       mocks.licenses.useEnvironmentVariables()
       try {
-        await config.api.environment.create({
-          name: "TENANT_ID",
-          production: "env-tenant-42",
-          development: "env-tenant-42",
-        })
+        await config.withUser(globalAdmin, () =>
+          config.api.environment.create({
+            name: "TENANT_ID",
+            production: "env-tenant-42",
+            development: "env-tenant-42",
+          })
+        )
 
         const ds = await config.api.datasource.create({
           name: generator.guid(),
@@ -1783,7 +1796,9 @@ describe("rest", () => {
 
         expect(JSON.stringify(res.extra.request)).not.toContain("env-tenant-42")
       } finally {
-        await config.api.environment.destroy("TENANT_ID")
+        await config.withUser(globalAdmin, () =>
+          config.api.environment.destroy("TENANT_ID")
+        )
         restoreCoreEnv()
       }
     })

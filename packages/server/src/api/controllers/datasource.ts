@@ -245,7 +245,6 @@ export async function update(
   const db = context.getWorkspaceDB()
   const datasourceId = ctx.params.datasourceId
   const baseDatasource = await sdk.datasources.get(datasourceId)
-  await invalidateVariables(baseDatasource, ctx.request.body)
 
   const isBudibaseSource =
     baseDatasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
@@ -262,6 +261,13 @@ export async function update(
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
+  if (datasource.source !== baseDatasource.source) {
+    ctx.throw(
+      400,
+      "Cannot change the integration type of an existing datasource"
+    )
+  }
+  await invalidateVariables(baseDatasource, ctx.request.body)
   datasource.projectIds = await resolveUpdatedProjectIds(
     ctx.request.body.projectIds,
     baseDatasource.projectIds

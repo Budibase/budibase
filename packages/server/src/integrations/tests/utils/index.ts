@@ -132,9 +132,6 @@ export type DatasourceDescribeOpts = OnlyOpts | PlusOpts
 // to modify src/tests/filters/index.js to make sure that we're correctly
 // filtering datasource/non-datasource tests in CI.
 export function datasourceDescribe(opts: DatasourceDescribeOpts) {
-  // tests that call this need a lot longer timeouts
-  jest.setTimeout(240000)
-
   if (process.env.DATASOURCE === "none") {
     createDummyTest()
   }
@@ -157,6 +154,10 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
   if (databases.length === 0) {
     createDummyTest()
   }
+
+  jest.setTimeout(
+    databases.includes(DatabaseName.ORACLE) ? oracle.testTimeoutMs : 240000
+  )
 
   const config = new TestConfiguration()
   return databases.map(dbName => ({

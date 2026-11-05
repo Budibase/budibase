@@ -1,12 +1,20 @@
 <script lang="ts">
   import { bb } from "@/stores/bb"
-  import { aiConfigsStore } from "@/stores/portal"
+  import { admin, aiConfigsStore, featureFlags } from "@/stores/portal"
   import { Button, Layout, notifications } from "@budibase/bbui"
-  import { AIConfigType, BUDIBASE_AI_PROVIDER_ID } from "@budibase/types"
+  import {
+    AIConfigType,
+    BUDIBASE_AI_PROVIDER_ID,
+    FeatureFlag,
+  } from "@budibase/types"
   import { onMount } from "svelte"
   import AIConfigList from "./AIConfigList.svelte"
   import { ensureAILicenseStatus } from "../licenseStatus"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+
+  let isCreationDisabled = $derived(
+    $admin.cloud && !$featureFlags[FeatureFlag.CLOUD_CUSTOM_AI_CONFIG_CREATION]
+  )
 
   let completionConfigs = $derived(
     [...$aiConfigsStore.customConfigsPerType.completions]
@@ -60,6 +68,12 @@
       model: "Connect to 100s of text, image, embedding models",
     },
   ])
+  let availableModelProviders = $derived(
+    modelProviders.filter(
+      provider =>
+        !isCreationDisabled || provider.provider === BUDIBASE_AI_PROVIDER_ID
+    )
+  )
 
   function createAIConfig() {
     bb.settings(`/connections/${AIConfigType.COMPLETIONS}/new`)
@@ -75,11 +89,13 @@
 </script>
 
 <Layout noPadding gap="XS">
-  <RouteActions>
-    <Button size="M" cta on:click={() => createAIConfig()}>
-      Connect to a custom provider
-    </Button>
-  </RouteActions>
+  {#if !isCreationDisabled}
+    <RouteActions>
+      <Button size="M" cta on:click={() => createAIConfig()}>
+        Connect to a custom provider
+      </Button>
+    </RouteActions>
+  {/if}
 
   {#if completionConfigs.length}
     <div class="section-header">
@@ -88,17 +104,19 @@
 
     <AIConfigList configs={completionConfigs}></AIConfigList>
   {/if}
-  <div class="section-header new-provider-section">
-    <div class="section-title">Model providers</div>
-  </div>
-  <div class="model-list">
-    <AIConfigList
-      configs={modelProviders.map(provider => ({
-        ...provider,
-        configType: AIConfigType.COMPLETIONS,
-      }))}
-    ></AIConfigList>
-  </div>
+  {#if availableModelProviders.length}
+    <div class="section-header new-provider-section">
+      <div class="section-title">Model providers</div>
+    </div>
+    <div class="model-list">
+      <AIConfigList
+        configs={availableModelProviders.map(provider => ({
+          ...provider,
+          configType: AIConfigType.COMPLETIONS,
+        }))}
+      ></AIConfigList>
+    </div>
+  {/if}
 </Layout>
 
 <style>
