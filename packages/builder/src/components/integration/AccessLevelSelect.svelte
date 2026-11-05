@@ -1,14 +1,17 @@
 <script lang="ts">
   import { Label, notifications } from "@budibase/bbui"
-  import { permissions } from "@/stores/builder"
+  import { datasources, permissions } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
   import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
-  import { PermissionLevel, type Query } from "@budibase/types"
+  import { PermissionLevel, SourceName, type Query } from "@budibase/types"
 
   export let query: Query
   export let label
 
   $: getPermissions(query)
+  $: isMongo =
+    $datasources.list.find(datasource => datasource._id === query?.datasourceId)
+      ?.source === SourceName.MONGODB
 
   let roleId: string, loaded: boolean, fetched: Query | undefined
 
@@ -54,5 +57,13 @@
   {#if label}
     <Label>{label}</Label>
   {/if}
-  <RoleSelect value={roleId} onChange={updateRole} autoWidth />
+  <RoleSelect
+    value={isMongo && roleId === Constants.Roles.PUBLIC ? "" : roleId}
+    onChange={updateRole}
+    allowPublic={!isMongo}
+    placeholder={isMongo && roleId === Constants.Roles.PUBLIC
+      ? "Public (existing)"
+      : undefined}
+    autoWidth
+  />
 {/if}

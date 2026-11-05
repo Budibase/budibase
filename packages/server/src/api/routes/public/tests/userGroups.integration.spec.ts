@@ -1,6 +1,6 @@
 import type { Server } from "http"
 import { cache, context, events, sessions, users } from "@budibase/backend-core"
-import { generator, mocks, structures } from "@budibase/backend-core/tests"
+import { mocks, structures } from "@budibase/backend-core/tests"
 import { constants, db as proDb } from "@budibase/pro"
 import { Feature, type User } from "@budibase/types"
 import environment from "../../../../environment"
@@ -75,7 +75,7 @@ describe("public user memberships through the worker", () => {
     const first = await config.createGroup()
     const second = await config.createGroup()
     const created = await config.api.public.user.create({
-      email: generator.email({ domain: "example.com" }),
+      email: structures.email(),
       password: "password123!",
       roles: {},
       userGroups: [first._id!],
@@ -102,7 +102,7 @@ describe("public user memberships through the worker", () => {
   it("revokes cached group permissions after public API removal", async () => {
     const group = await config.createGroup()
     const user = await config.api.public.user.create({
-      email: generator.email({ domain: "example.com" }),
+      email: structures.email(),
       password: "password123!",
       roles: {},
       userGroups: [group._id!],
@@ -155,18 +155,18 @@ describe("public user memberships through the worker", () => {
       const group = await config.createGroup()
       const replacement = await config.createGroup()
       const existing = await config.api.public.user.create({
-        email: generator.email({ domain: "example.com" }),
+        email: structures.email(),
         password: "password123!",
         roles: {},
         userGroups: [group._id!],
       })
       const ungrouped = await config.api.public.user.create({
-        email: generator.email({ domain: "example.com" }),
+        email: structures.email(),
         password: "password123!",
         roles: {},
         userGroups: [],
       })
-      const rejectedEmail = generator.email({ domain: "example.com" })
+      const rejectedEmail = structures.email()
       mocks.licenses.useLicense(license)
 
       await config.api.public.user.create(
@@ -213,7 +213,7 @@ describe("public user memberships through the worker", () => {
     const first = await config.createGroup()
     const second = await config.createGroup()
     const created = await config.api.public.user.create({
-      email: generator.email({ domain: "example.com" }),
+      email: structures.email(),
       password: "password123!",
       roles: {},
       userGroups: [first._id!, second._id!],

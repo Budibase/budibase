@@ -23,6 +23,18 @@ import { IMPORT_PENDING_LITELLM_MODEL_ID } from "../../backups/constants"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
+const validateSecretInputs = (
+  config: Pick<CustomAIProviderConfig, "credentialsFields" | "webSearchConfig">
+) => {
+  const values = [
+    ...Object.values(config.credentialsFields || {}),
+    config.webSearchConfig?.apiKey,
+  ]
+  if (values.some(value => value?.startsWith(SECRET_ENCODING_PREFIX))) {
+    throw new HTTPError("Encrypted credentials cannot be supplied", 400)
+  }
+}
+
 const normalizeProviderModelId = (
   modelId: string,
   providerId: string
@@ -180,6 +192,7 @@ export async function create(
     | "isDefault"
   >
 ): Promise<CustomAIProviderConfig> {
+  validateSecretInputs(config)
   const db = context.getWorkspaceDB()
 
   const isBBAI = config.provider === BUDIBASE_AI_PROVIDER_ID
@@ -274,6 +287,7 @@ export async function update(
     | "isDefault"
   >
 ): Promise<CustomAIProviderConfig> {
+  validateSecretInputs(config)
   const id = config._id
   if (!id) {
     throw new HTTPError("id cannot be empty", 400)

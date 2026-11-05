@@ -1,4 +1,4 @@
-import { context, events } from "@budibase/backend-core"
+import { db, events } from "@budibase/backend-core"
 import {
   BackupTrigger,
   CreateWorkspaceBackupRequest,
@@ -19,6 +19,23 @@ async function checkWorkspaceId(ctx: UserCtx, workspaceId?: string) {
   }
   if (!(await utils.workspaceExists(workspaceId))) {
     ctx.throw(400, `Provided workspace ID: ${workspaceId} - is invalid.`)
+  }
+}
+
+async function checkBackupWorkspace({
+  ctx,
+  workspaceId,
+  backupId,
+}: {
+  ctx: UserCtx
+  workspaceId: string
+  backupId: string
+}) {
+  const backup = await backups.getWorkspaceBackup(backupId)
+  if (
+    db.getProdWorkspaceID(backup.appId) !== db.getProdWorkspaceID(workspaceId)
+  ) {
+    ctx.throw(404, "Backup not found")
   }
 }
 
@@ -52,6 +69,7 @@ export async function importBackup(
   const workspaceId = ctx.params.appId
   await checkWorkspaceId(ctx, workspaceId)
   const backupId = ctx.params.backupId
+  await checkBackupWorkspace({ ctx, workspaceId, backupId })
   const nameForBackup = ctx.request.body.name
   const response = await backups.triggerWorkspaceRestore(
     workspaceId,
@@ -70,9 +88,10 @@ export async function importBackup(
 }
 
 export async function deleteBackup(ctx: UserCtx) {
-  const workspace = ctx.params.appId
-  await checkWorkspaceId(ctx, workspace)
+  const workspaceId = ctx.params.appId
+  await checkWorkspaceId(ctx, workspaceId)
   const backupId = ctx.params.backupId
+  await checkBackupWorkspace({ ctx, workspaceId, backupId })
   await backups.deleteWorkspaceBackup(backupId)
   ctx.body = {
     message: "Backup deleted successfully.",
@@ -82,7 +101,7 @@ export async function deleteBackup(ctx: UserCtx) {
 export async function deleteBackups(
   ctx: UserCtx<DeleteWorkspaceBackupsRequest, DeleteWorkspaceBackupsResponse>
 ) {
-  const workspaceId = context.getWorkspaceId()
+  const workspaceId = ctx.params.appId
   await checkWorkspaceId(ctx, workspaceId)
   const { backupIds } = ctx.request.body
 
@@ -90,7 +109,19 @@ export async function deleteBackups(
     ctx.throw(400, "backupIds must be a non-empty array")
   }
 
-  const results = await backups.deleteWorkspaceBackups(backupIds)
+  const results = []
+  for (const backupId of backupIds) {
+    try {
+      await checkBackupWorkspace({ ctx, workspaceId, backupId })
+      results.push(...(await backups.deleteWorkspaceBackups([backupId])))
+    } catch (error) {
+      results.push({
+        backupId,
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
+  }
   const successCount = results.filter(r => r.success).length
   const failureCount = results.length - successCount
 
@@ -122,6 +153,7 @@ export async function updateBackup(ctx: UserCtx) {
   const workspaceId = ctx.params.appId
   await checkWorkspaceId(ctx, workspaceId)
   const backupId = ctx.params.backupId
+  await checkBackupWorkspace({ ctx, workspaceId, backupId })
   const body = ctx.request.body as UpdateWorkspaceBackupRequest
   ctx.body = await backups.updateWorkspaceBackup(backupId, body.name)
 }
@@ -130,6 +162,7 @@ export async function downloadBackup(ctx: UserCtx) {
   const workspaceId = ctx.params.appId
   await checkWorkspaceId(ctx, workspaceId)
   const backupId = ctx.params.backupId
+  await checkBackupWorkspace({ ctx, workspaceId, backupId })
   const { metadata, stream } = await backups.getBackupDownloadStream(backupId)
   ctx.attachment(`backup-${metadata.timestamp}.tar.gz`)
   ctx.body = stream

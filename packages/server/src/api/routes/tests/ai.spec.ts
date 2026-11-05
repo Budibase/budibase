@@ -1069,7 +1069,7 @@ describe("BudibaseAI", () => {
       expect(response.usage?.total_tokens).toBeGreaterThan(0)
     })
 
-    it("forwards extra fields (e.g. response_format)", async () => {
+    it("forwards supported OpenAI fields (e.g. response_format)", async () => {
       const format = toResponseFormat(z.object({ value: z.string() }))
       mockAISDKChatGPTResponse(`{"value":"ok"}`, {
         format,
@@ -1150,6 +1150,61 @@ describe("BudibaseAI", () => {
         { status: 400 }
       )
     })
+
+    it("rejects other models with the Budibase prefix", async () => {
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "budibase/tenant-b:target",
+          messages: [{ role: "user", content: "hello" }],
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
+    it.each([
+      {
+        field: "router_settings_override",
+        routingOptions: {
+          router_settings_override: {
+            fallbacks: [
+              {
+                model: "tenant-b:target",
+                api_base: "https://example.com/v1",
+              },
+            ],
+          },
+          mock_testing_fallbacks: true,
+        },
+      },
+      {
+        field: "api_base",
+        routingOptions: { api_base: "https://example.com/v1" },
+      },
+      {
+        field: "fallbacks",
+        routingOptions: { fallbacks: ["tenant-b:target"] },
+      },
+      {
+        field: "extra_body",
+        routingOptions: {
+          extra_body: { api_base: "https://example.com/v1" },
+        },
+      },
+    ])(
+      "rejects LiteLLM routing controls in $field",
+      async ({ routingOptions }) => {
+        await config.api.ai.openaiChatCompletions(
+          {
+            model: "budibase/v1",
+            messages: [{ role: "user", content: "hello" }],
+            ...routingOptions,
+            licenseKey,
+          },
+          { status: 400 }
+        )
+      }
+    )
 
     it("errors when LiteLLM API key is missing", async () => {
       await serverWithEnv({ BBAI_LITELLM_KEY: "" }, async () => {
