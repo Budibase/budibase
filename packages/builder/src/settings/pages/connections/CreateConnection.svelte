@@ -1,5 +1,7 @@
 <script lang="ts">
   import { Button, Layout, Modal, Search, Table } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
+  import { auth } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import RouteActions from "@/settings/components/RouteActions.svelte"
@@ -72,7 +74,10 @@
             on:change={event => (searchValue = event.detail)}
           />
         </div>
-        <Button size="M" cta on:click={importSpec}>Import OpenAPI spec</Button>
+        {#if sdk.users.isAdmin($auth.user)}
+          <Button size="M" cta on:click={importSpec}>Import OpenAPI spec</Button
+          >
+        {/if}
       </div>
     {/if}
   </RouteActions>
