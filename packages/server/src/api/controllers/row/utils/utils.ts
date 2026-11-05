@@ -201,6 +201,7 @@ export function resolveReaderSearchBindings({
           .slice(2, -2)
           .trim()
           .replace(/^\[user\]\./, "user.")
+          .replace(/^user\.\[([a-zA-Z_][a-zA-Z0-9_]*)\]$/, "user.$1")
           .replace(/^\[now\]$/, "now")
         if (!Object.prototype.hasOwnProperty.call(bindings, binding)) {
           throw new BadRequestError("Unsupported search query binding")
