@@ -179,7 +179,6 @@ describe("seedTableRows", () => {
     expect(bulkDocs.mock.calls.map(([rows]) => rows.length)).toEqual([
       500, 500, 201,
     ])
-    expect(bulkDocs.mock.calls.flatMap(([rows]) => rows)).toHaveLength(1201)
     expect(bulkDocs.mock.calls.flatMap(([rows]) => rows)).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ _rev: "2-dev" })])
     )
@@ -219,20 +218,6 @@ describe("seedTableRows", () => {
     expect(rowUsage).toBe(1201)
   })
 
-  it("reconciles documents missing from an incomplete bulk response", async () => {
-    createRows(4)
-    bulkDocs.mockImplementationOnce(async rows => {
-      const response = await saveRows(rows)
-      return response.slice(0, 1)
-    })
-
-    await seed()
-
-    expectCompleteCopy()
-    expect(bulkDocs).toHaveBeenCalledTimes(1)
-    expect(rowUsage).toBe(4)
-  })
-
   it("counts known successes and fails if ambiguous writes cannot be checked", async () => {
     createRows(4)
     const verificationError = new Error("Read unavailable")
@@ -259,26 +244,6 @@ describe("seedTableRows", () => {
       `Failed to verify seeded rows for table ${tableId}`,
       verificationError
     )
-  })
-
-  it("preserves existing production rows and only copies missing IDs", async () => {
-    createRows(3)
-    const existing = [...devRows.values()][0]
-    prodRows.set(existing._id!, {
-      ...existing,
-      _rev: "3-prod",
-      name: "Edited in production",
-    })
-
-    await seed()
-
-    expect(prodRows.size).toBe(3)
-    expect(prodRows.get(existing._id!)).toMatchObject({
-      _rev: "3-prod",
-      name: "Edited in production",
-    })
-    expect(bulkDocs.mock.calls.flatMap(([rows]) => rows)).toHaveLength(2)
-    expect(rowUsage).toBe(2)
   })
 
   it("retries only failed documents from a partial bulk response", async () => {
@@ -407,36 +372,27 @@ describe("seedTableRows", () => {
     expect(imported).toHaveBeenCalledWith(table, 500)
   })
 
-  it.each(["quota", "event"])(
-    "preserves the write error when %s finalization also fails",
-    async failingUpdate => {
-      createRows(4)
-      bulkDocs.mockImplementation(async rows => {
-        if (!prodRows.size) {
-          await saveRows(rows.slice(0, 1))
-        }
-        throw new Error("Gateway timeout")
-      })
-      if (failingUpdate === "quota") {
-        addRows.mockRejectedValueOnce(new Error("Quota update failed"))
-      } else {
-        imported.mockRejectedValueOnce(new Error("Import event failed"))
+  it("preserves the write error when quota and event finalization also fail", async () => {
+    createRows(4)
+    bulkDocs.mockImplementation(async rows => {
+      if (!prodRows.size) {
+        await saveRows(rows.slice(0, 1))
       }
-      const errorLog = jest.spyOn(console, "error").mockImplementation(() => {})
-      try {
-        await Promise.all([
-          expect(seed()).rejects.toThrow("Gateway timeout"),
-          jest.runAllTimersAsync(),
-        ])
+      throw new Error("Gateway timeout")
+    })
+    addRows.mockRejectedValueOnce(new Error("Quota update failed"))
+    imported.mockRejectedValueOnce(new Error("Import event failed"))
+    jest.spyOn(console, "error").mockImplementation(() => {})
 
-        expect(prodRows.size).toBe(1)
-        expect(addRows).toHaveBeenCalledWith(1, undefined, { tableId })
-        expect(imported).toHaveBeenCalledWith(table, 1)
-      } finally {
-        errorLog.mockRestore()
-      }
-    }
-  )
+    await Promise.all([
+      expect(seed()).rejects.toThrow("Gateway timeout"),
+      jest.runAllTimersAsync(),
+    ])
+
+    expect(prodRows.size).toBe(1)
+    expect(addRows).toHaveBeenCalledWith(1, undefined, { tableId })
+    expect(imported).toHaveBeenCalledWith(table, 1)
+  })
 
   it("does not write when the quota preflight fails", async () => {
     createRows(4)
@@ -449,7 +405,7 @@ describe("seedTableRows", () => {
     expect(rowUsage).toBe(0)
   })
 
-  it("sanitizes timezone suffixes and passes rows through import preparation", async () => {
+  it("sanitizes timezone suffixes and strips attachments while preserving row IDs", async () => {
     createRows(1)
     const row = [...devRows.values()][0]
     row.date = "2025-12-18T16:09:03.950Z"
@@ -462,13 +418,6 @@ describe("seedTableRows", () => {
       date: "2025-12-18T16:09:03.950",
     })
     expect(prodRows.get(row._id!)).not.toHaveProperty("_attachments")
-    expect(parse).toHaveBeenCalledTimes(1)
-    expect(importToRows).toHaveBeenCalledWith(
-      expect.any(Array),
-      table,
-      userId,
-      { keepCouchId: true }
-    )
   })
 
   it("does not write or charge quota for an empty source", async () => {

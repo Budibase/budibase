@@ -1763,7 +1763,7 @@ if (descriptions.length) {
             expect(status.tables[table._id!].seedPending).toBeFalsy()
           })
 
-          it("seeds a column recreated with a different type in development since publication", async () => {
+          it("seeds recreated and added columns using the current development schema", async () => {
             const table = await config.api.table.save(
               basicTable(undefined, {
                 schema: {
@@ -1788,40 +1788,6 @@ if (descriptions.length) {
                   name: "value",
                   type: FieldType.STRING,
                 },
-              },
-            })
-            const devRow = await config.api.row.save(table._id!, {
-              value: "ordinary text",
-            })
-
-            await config.api.table.publish(table._id!, {
-              seedProductionTables: true,
-            })
-
-            const prodRows = await config.api.row.fetchProd(table._id!)
-            const prodTable = await config.doInContext(
-              config.getProdWorkspaceId(),
-              () => context.getWorkspaceDB().get<Table>(table._id!)
-            )
-            const status = await config.api.deploy.publishStatus()
-            expect(prodRows).toEqual([
-              expect.objectContaining({
-                _id: devRow._id,
-                value: "ordinary text",
-              }),
-            ])
-            expect(prodTable.schema.value.type).toBe(FieldType.STRING)
-            expect(status.tables[table._id!].published).toBe(true)
-            expect(status.tables[table._id!].seedPending).toBeFalsy()
-          })
-
-          it("seeds values in columns added in development since publication", async () => {
-            const table = await config.api.table.save(basicTable())
-            await config.api.workspace.publish(config.getDevWorkspaceId())
-            await config.api.table.save({
-              ...table,
-              schema: {
-                ...table.schema,
                 added: {
                   name: "added",
                   type: FieldType.STRING,
@@ -1829,7 +1795,7 @@ if (descriptions.length) {
               },
             })
             const devRow = await config.api.row.save(table._id!, {
-              name: "dev-row",
+              value: "ordinary text",
               added: "new column value",
             })
 
@@ -1846,10 +1812,11 @@ if (descriptions.length) {
             expect(prodRows).toEqual([
               expect.objectContaining({
                 _id: devRow._id,
-                name: "dev-row",
+                value: "ordinary text",
                 added: "new column value",
               }),
             ])
+            expect(prodTable.schema.value.type).toBe(FieldType.STRING)
             expect(prodTable.schema.added.type).toBe(FieldType.STRING)
             expect(status.tables[table._id!].published).toBe(true)
             expect(status.tables[table._id!].seedPending).toBeFalsy()
