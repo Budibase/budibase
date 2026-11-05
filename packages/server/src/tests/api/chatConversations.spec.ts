@@ -1668,7 +1668,10 @@ describe("Agent chat tool call tracking", () => {
     })
 
     describe("session outcome", () => {
-      const runWebhook = (userId: string) =>
+      const runWebhook = (
+        userId: string,
+        onAssistantStream?: (stream: AsyncIterable<string>) => Promise<void>
+      ) =>
         webhookChat({
           chat: {
             agentId,
@@ -1687,6 +1690,7 @@ describe("Agent chat tool call tracking", () => {
           },
           user: { _id: userId } as any,
           triggeredBy: { type: "user" },
+          onAssistantStream,
         })
 
       const spyOnLifecycleEvents = () => ({
@@ -1769,6 +1773,96 @@ describe("Agent chat tool call tracking", () => {
         )
 
         expect(failed).toHaveBeenCalledTimes(1)
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("fails the session and its request when the stream errors after a successful tool", async () => {
+        const abortMessage = "CONTROLLED_RUNTIME_ABORT"
+        let modelCalls = 0
+        const model = new MockLanguageModelV4({
+          doStream: async () => {
+            modelCalls++
+            if (modelCalls > 1) {
+              throw new Error(abortMessage)
+            }
+            return {
+              stream: aiActual.simulateReadableStream({
+                chunks: [
+                  {
+                    type: "tool-call" as const,
+                    toolCallId: "call-1",
+                    toolName: "lookup",
+                    input: "{}",
+                  },
+                  {
+                    type: "finish" as const,
+                    finishReason: {
+                      unified: "tool-calls" as const,
+                      raw: undefined,
+                    },
+                    logprobs: undefined,
+                    usage: mockLanguageModelStreamUsage,
+                  },
+                ],
+              }),
+            }
+          },
+        })
+        jest.mocked(streamText).mockImplementation(((options: any) =>
+          aiActual.streamText({
+            model,
+            maxRetries: 0,
+            messages: [{ role: "user", content: "hello" }],
+            stopWhen: aiActual.stepCountIs(5),
+            tools: {
+              lookup: aiActual.tool({
+                inputSchema: aiActual.jsonSchema({ type: "object" }),
+                execute: async () => ({ ok: true }),
+              }),
+            },
+            onStepFinish: options.onStepFinish,
+          })) as unknown as StreamTextMock)
+        ;(
+          sdk.ai.agents.getOrThrow as jest.MockedFunction<
+            typeof sdk.ai.agents.getOrThrow
+          >
+        ).mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+        const delivered: string[] = []
+
+        await features.testutils.withFeatureFlags(
+          config.getTenantId(),
+          { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+          async () => {
+            await context.doInWorkspaceContext(
+              config.getProdWorkspaceId(),
+              async () => {
+                await expect(
+                  runWebhook("user-session-abort", async stream => {
+                    for await (const delta of stream) {
+                      delivered.push(delta)
+                    }
+                  })
+                ).rejects.toThrow(abortMessage)
+
+                const requests =
+                  await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+                const request = requests.find(
+                  r => r.userId === "user-session-abort"
+                )
+                expect(request?.status).toEqual("failed")
+                expect(request?.error).toEqual(abortMessage)
+              }
+            )
+          }
+        )
+
+        expect(modelCalls).toBe(2)
+        expect(delivered).toEqual([])
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(failed).toHaveBeenCalledWith(
+          expect.objectContaining({ errorMessage: abortMessage })
+        )
         expect(executed).not.toHaveBeenCalled()
       })
 

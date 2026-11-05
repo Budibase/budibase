@@ -569,6 +569,7 @@ const runWebhookChat = async ({
   const uiMessageStream = result.toUIMessageStream({
     generateMessageId: v4,
     sendReasoning: true,
+    onError: getErrorMessage,
   })
   let assistantStreamForCapture: ReadableStream<UIMessageChunk> =
     uiMessageStream
@@ -584,6 +585,9 @@ const runWebhookChat = async ({
     for await (const message of readUIMessageStream<
       ChatConversation["messages"][number]
     >({
+      // An error after a completed step doesn't reject result.response or
+      // result.finishReason, so this is the only place that surfaces it.
+      terminateOnError: true,
       stream: assistantStreamForCapture,
     })) {
       assistantMessage = message
