@@ -1,3 +1,4 @@
+import { env as coreEnv } from "@budibase/backend-core"
 import { withEnv } from "../../../../environment"
 import { TestConfiguration } from "../../../../tests"
 
@@ -55,6 +56,22 @@ describe("/api/system/environment", () => {
           },
         })
       })
+    })
+
+    it.each([
+      [undefined, false],
+      ["0", false],
+      ["1", true],
+      ["true", true],
+    ])("reports offline mode %s as %s", async (offlineMode, expected) => {
+      const previousOfflineMode = coreEnv.OFFLINE_MODE
+      coreEnv._set("OFFLINE_MODE", offlineMode)
+      try {
+        const env = await config.api.environment.getEnvironment()
+        expect(env.body.offlineMode).toBe(expected)
+      } finally {
+        coreEnv._set("OFFLINE_MODE", previousOfflineMode)
+      }
     })
   })
 })
