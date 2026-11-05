@@ -105,7 +105,11 @@ const writeRows = async ({
         const missing = await findMissingRows({ db, rows: pending })
         confirmed += pending.length - missing.length
         pending = missing
-      } catch {
+      } catch (error) {
+        console.error(
+          `Failed to verify seeded rows for table ${tableId}`,
+          error
+        )
         throw failure
       }
 

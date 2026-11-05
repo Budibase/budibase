@@ -9,6 +9,7 @@ const userId = "us_seed"
 
 interface PageOptions {
   startkey?: string
+  endkey?: string
   limit?: number
 }
 
@@ -39,9 +40,12 @@ const saveRows = async (rows: Row[]) =>
     return { id, rev: "1-prod" }
   })
 
-const readPage = async ({ startkey = "", limit }: PageOptions) => ({
+const readPage = async ({ startkey = "", endkey, limit }: PageOptions) => ({
   rows: [...devRows.values()]
-    .filter(row => row._id! >= startkey)
+    .filter(
+      row =>
+        row._id! >= startkey && (endkey === undefined || row._id! <= endkey)
+    )
     .sort((first, second) => first._id!.localeCompare(second._id!))
     .slice(0, limit)
     .map(row => ({ id: row._id!, key: row._id!, doc: { ...row } })),
@@ -101,8 +105,9 @@ jest.mock("@budibase/pro", () => ({
 }))
 
 jest.mock("../../../../db/utils", () => ({
-  getRowParams: (_tableId: string, _rowId: null, options: PageOptions) =>
-    options,
+  getRowParams: jest.requireActual<
+    typeof import("@budibase/backend-core/src/docIds/params")
+  >("@budibase/backend-core/src/docIds/params").getRowParams,
 }))
 
 jest.mock("../../../../utilities/schema", () => ({
@@ -141,6 +146,7 @@ const expectCompleteCopy = () => {
 
 describe("seedTableRows", () => {
   beforeEach(() => {
+    jest.useFakeTimers()
     jest.clearAllMocks()
     devRows.clear()
     prodRows.clear()
@@ -152,6 +158,11 @@ describe("seedTableRows", () => {
     updateUsage.mockReset().mockResolvedValue(undefined)
     addRows.mockReset().mockImplementation(incrementRows)
     imported.mockReset().mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    jest.useRealTimers()
   })
 
   it("pages through a large table and copies stable IDs in bounded writes", async () => {
@@ -189,6 +200,25 @@ describe("seedTableRows", () => {
     expect(rowUsage).toBe(1201)
   })
 
+  it("only copies the selected table across multiple pages", async () => {
+    createRows(1201)
+    const expectedIds = [...devRows.keys()]
+    for (const otherTableId of ["ta_before", "ta_z_after"]) {
+      const id = `ro_${otherTableId}_00000`
+      devRows.set(id, {
+        _id: id,
+        tableId: otherTableId,
+        type: "row",
+        name: "Another table's row",
+      })
+    }
+
+    await seed()
+
+    expect([...prodRows.keys()].sort()).toEqual(expectedIds.sort())
+    expect(rowUsage).toBe(1201)
+  })
+
   it("reconciles documents missing from an incomplete bulk response", async () => {
     createRows(4)
     bulkDocs.mockImplementationOnce(async rows => {
@@ -205,9 +235,11 @@ describe("seedTableRows", () => {
 
   it("counts known successes and fails if ambiguous writes cannot be checked", async () => {
     createRows(4)
+    const verificationError = new Error("Read unavailable")
+    const errorLog = jest.spyOn(console, "error").mockImplementation(() => {})
     getMultiple
       .mockResolvedValueOnce([])
-      .mockRejectedValueOnce(new Error("Read unavailable"))
+      .mockRejectedValueOnce(verificationError)
     bulkDocs.mockImplementationOnce(async rows => {
       await saveRows(rows.slice(0, 2))
       return rows.map((row, index) =>
@@ -223,6 +255,10 @@ describe("seedTableRows", () => {
     expect(bulkDocs).toHaveBeenCalledTimes(1)
     expect(rowUsage).toBe(2)
     expect(imported).toHaveBeenCalledWith(table, 2)
+    expect(errorLog).toHaveBeenCalledWith(
+      `Failed to verify seeded rows for table ${tableId}`,
+      verificationError
+    )
   })
 
   it("preserves existing production rows and only copies missing IDs", async () => {
@@ -256,7 +292,10 @@ describe("seedTableRows", () => {
       )
     })
 
-    await seed()
+    await Promise.all([
+      expect(seed()).resolves.toBeUndefined(),
+      jest.runAllTimersAsync(),
+    ])
 
     expectCompleteCopy()
     expect(bulkDocs.mock.calls.map(([rows]) => rows.length)).toEqual([4, 2])
@@ -284,7 +323,10 @@ describe("seedTableRows", () => {
       throw new Error("Gateway timeout")
     })
 
-    await seed()
+    await Promise.all([
+      expect(seed()).resolves.toBeUndefined(),
+      jest.runAllTimersAsync(),
+    ])
 
     expectCompleteCopy()
     expect(bulkDocs.mock.calls.map(([rows]) => rows.length)).toEqual([4, 2])
@@ -293,6 +335,7 @@ describe("seedTableRows", () => {
 
   it("counts confirmed writes and rejects when retries are exhausted", async () => {
     createRows(4)
+    const timeout = jest.spyOn(global, "setTimeout")
     bulkDocs.mockImplementation(async rows => {
       if (!prodRows.size) {
         await saveRows(rows.slice(0, 1))
@@ -304,13 +347,17 @@ describe("seedTableRows", () => {
       }))
     })
 
-    await expect(seed()).rejects.toThrow("Write failed")
+    await Promise.all([
+      expect(seed()).rejects.toThrow("Write failed"),
+      jest.runAllTimersAsync(),
+    ])
 
     expect(prodRows.size).toBe(1)
     expect(bulkDocs).toHaveBeenCalledTimes(3)
     expect(rowUsage).toBe(1)
     expect(imported).toHaveBeenCalledTimes(1)
     expect(imported).toHaveBeenCalledWith(table, 1)
+    expect(timeout.mock.calls.map(([, delay]) => delay)).toEqual([250, 500])
   })
 
   it("resumes a failed invocation without overwriting or charging existing rows", async () => {
@@ -321,7 +368,10 @@ describe("seedTableRows", () => {
       }
       throw new Error("Gateway timeout")
     })
-    await expect(seed()).rejects.toThrow("Gateway timeout")
+    await Promise.all([
+      expect(seed()).rejects.toThrow("Gateway timeout"),
+      jest.runAllTimersAsync(),
+    ])
     bulkDocs.mockImplementation(saveRows)
 
     await seed()
@@ -374,7 +424,10 @@ describe("seedTableRows", () => {
       }
       const errorLog = jest.spyOn(console, "error").mockImplementation(() => {})
       try {
-        await expect(seed()).rejects.toThrow("Gateway timeout")
+        await Promise.all([
+          expect(seed()).rejects.toThrow("Gateway timeout"),
+          jest.runAllTimersAsync(),
+        ])
 
         expect(prodRows.size).toBe(1)
         expect(addRows).toHaveBeenCalledWith(1, undefined, { tableId })

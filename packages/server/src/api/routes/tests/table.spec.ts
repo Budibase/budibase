@@ -1965,6 +1965,10 @@ if (descriptions.length) {
               )
               await config.api.table.publish(table._id!, undefined, {
                 status: 409,
+                body: {
+                  message:
+                    "This table has an incomplete seed. Retry Seed from Dev first.",
+                },
               })
               await config.api.workspace.publish(config.getDevWorkspaceId(), {
                 status: 500,
