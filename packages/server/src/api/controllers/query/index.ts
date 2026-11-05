@@ -296,6 +296,9 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     }
     eventFn = () => events.query.updated(datasource, query)
   }
+  if (existingDatasource.source !== datasource.source) {
+    ctx.throw(400, "Cannot change the integration type of an existing query")
+  }
   const datasourceChanged =
     existingQuery?.datasourceId !== undefined &&
     existingQuery.datasourceId !== datasource._id

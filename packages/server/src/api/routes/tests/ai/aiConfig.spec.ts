@@ -20,6 +20,7 @@ import {
   CreateAIConfigRequest,
   FeatureFlag,
   LiteLLMKeyConfig,
+  type User,
 } from "@budibase/types"
 import environment from "../../../../environment"
 import { licensing } from "@budibase/pro"
@@ -94,6 +95,7 @@ const passwordMatch = (plain: string, encoded: string) => {
 
 describe("BudibaseAI", () => {
   const config = new TestConfiguration()
+  let globalAdmin: User
   beforeAll(async () => {
     mocks.licenses.useEnvironmentVariables()
     await config.init()
@@ -127,6 +129,7 @@ describe("BudibaseAI", () => {
 
     beforeEach(async () => {
       await config.newTenant()
+      globalAdmin = await config.globalUser({ admin: { global: true } })
       nock.cleanAll()
 
       mockLiteLLMProviders()
@@ -325,11 +328,13 @@ describe("BudibaseAI", () => {
     )
 
     it("resolves environment variable credentials before validating and creating a model", async () => {
-      await config.api.environment.create({
-        name: "openai_key",
-        production: "prod-openai-key",
-        development: "dev-openai-key",
-      })
+      await config.withUser(globalAdmin, () =>
+        config.api.environment.create({
+          name: "openai_key",
+          production: "prod-openai-key",
+          development: "dev-openai-key",
+        })
+      )
 
       const liteLLMScope = nock(environment.LITELLM_URL)
         .post("/key/generate")
@@ -510,11 +515,13 @@ describe("BudibaseAI", () => {
       const created = await config.api.ai.createConfig({ ...defaultRequest })
       expect(creationScope.isDone()).toBe(true)
 
-      await config.api.environment.create({
-        name: "updated_openai_key",
-        production: "prod-updated-openai-key",
-        development: "dev-updated-openai-key",
-      })
+      await config.withUser(globalAdmin, () =>
+        config.api.environment.create({
+          name: "updated_openai_key",
+          production: "prod-updated-openai-key",
+          development: "dev-updated-openai-key",
+        })
+      )
 
       const updateScope = nock(environment.LITELLM_URL)
         .post("/health/test_connection", body => {
