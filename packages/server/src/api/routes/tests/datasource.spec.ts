@@ -32,6 +32,7 @@ import {
   datasourceDescribe,
 } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
+import { installHttpMocking, resetHttpMocking } from "../../../tests/jestEnv"
 
 describe("/datasources", () => {
   const config = setup.getConfig()
@@ -221,12 +222,21 @@ describe("/datasources", () => {
   })
 
   describe("dynamic variables", () => {
+    afterEach(async () => {
+      await resetHttpMocking()
+    })
+
     it("should invalidate changed or removed variables", async () => {
-      nock("http://www.example.com")
-        .get("/")
-        .reply(200, [{ value: "test" }])
-        .get("/?test=test")
-        .reply(200, [{ value: 1 }])
+      const mockAgent = installHttpMocking()
+      mockAgent.disableNetConnect()
+      const jsonHeaders = { "content-type": "application/json" }
+      const pool = mockAgent.get("http://www.example.com")
+      pool
+        .intercept({ path: "/", method: "GET" })
+        .reply(200, [{ value: "test" }], { headers: jsonHeaders })
+      pool
+        .intercept({ path: "/", method: "GET", query: { test: "test" } })
+        .reply(200, [{ value: 1 }], { headers: jsonHeaders })
 
       let datasource = await config.api.datasource.create({
         type: "datasource",

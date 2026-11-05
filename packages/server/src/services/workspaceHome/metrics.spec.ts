@@ -98,11 +98,7 @@ describe("workspace home metrics caching", () => {
     expect(res.totalUsers).toEqual(0)
     expect(res.operationsThisMonth).toEqual(0)
     expect(res.budibaseAICreditsThisMonth).toEqual(0)
-    expect(new Date(res.periodStart)).toEqual(
-      new Date("2026-01-01T00:00:00.000Z")
-    )
-    expect(new Date(res.periodEnd)).toEqual(
-      new Date("2026-02-01T00:00:00.000Z")
-    )
+    expect(new Date(res.periodStart)).toEqual(new Date(2026, 0, 1))
+    expect(new Date(res.periodEnd)).toEqual(new Date(2026, 1, 1))
   })
 })
