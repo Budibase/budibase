@@ -346,7 +346,7 @@
     assignProjectModal?.show()
   }
 
-  const goToCreate = (target: "data/new" | "apis/new") => {
+  const goToCreate = (target: "apis/new") => {
     goto(url(`../${target}`))
   }
 
@@ -1194,7 +1194,8 @@
                     onCreateAgent={createAgent}
                     onCreateAutomation={createAutomation}
                     onCreateApp={createApp}
-                    onCreateConnection={() => goToCreate("data/new")}
+                    onCreateConnection={() =>
+                      bb.settings("/connections/api-connections/new")}
                     onCreateTable={openCreateTable}
                     onCreateApi={() => goToCreate("apis/new")}
                   />
@@ -1256,7 +1257,8 @@
             onCreateAgent={createAgent}
             onCreateAutomation={createAutomation}
             onCreateApp={createApp}
-            onCreateConnection={() => goToCreate("data/new")}
+            onCreateConnection={() =>
+              bb.settings("/connections/api-connections/new")}
             onCreateTable={openCreateTable}
             onCreateApi={() => goToCreate("apis/new")}
           />
