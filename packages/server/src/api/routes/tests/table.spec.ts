@@ -204,7 +204,7 @@ if (descriptions.length) {
         )
 
         it("can set primary display", async () => {
-          const columnName = generator.word()
+          const columnName = "display_name"
           const table = await config.api.table.save(
             tableForDatasource(datasource, {
               primaryDisplay: columnName,
