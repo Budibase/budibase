@@ -177,7 +177,10 @@ async function getUserIdentity(
   const globalId = getGlobalIDFromUserMetadataID(userId)
   try {
     await cache.user.getUser({ userId: globalId })
-  } catch {
+  } catch (err: any) {
+    if (err.status !== 404) {
+      throw err
+    }
     return undefined
   }
   return {
@@ -195,7 +198,5 @@ export async function doInUserIdentity<T>({
   task: () => Promise<T>
 }): Promise<T> {
   const identity = userId ? await getUserIdentity(userId) : undefined
-  return identity
-    ? context.identity.doInIdentityContext(identity, task)
-    : task()
+  return identity ? context.doInIdentityContext(identity, task) : task()
 }
