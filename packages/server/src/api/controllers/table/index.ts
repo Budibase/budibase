@@ -6,6 +6,7 @@ import {
   events,
   HTTPError,
 } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
   canBeDisplayColumn,
   helpers,
@@ -18,6 +19,7 @@ import {
   CsvToJsonRequest,
   CsvToJsonResponse,
   DeleteTableResponse,
+  Document,
   EventType,
   FetchTablesResponse,
   FieldType,
@@ -53,7 +55,7 @@ import {
   isSchema,
   validate as validateSchema,
 } from "../../../utilities/schema"
-import { handleDataImport, importInternalTableRows } from "./utils"
+import { importInternalTableRows } from "./utils"
 import {
   projectAssignmentResult,
   mergeProjectAssignmentResults,
@@ -491,14 +493,13 @@ async function publishTableInternal(
   if (seedProductionTables) {
     try {
       const devDb = context.getWorkspaceDB()
-      const devRows = await devDb.allDocs(
+      const devRows = await devDb.allDocs<Row>(
         getRowParams(tableId, null, {
           include_docs: true,
         })
       )
       const importRows = devRows.rows
-        .map(({ doc }: any) => doc)
-        .filter(doc => doc && !doc._deleted)
+        .flatMap(({ doc }) => (doc && !doc._deleted ? [doc] : []))
         .map(doc => {
           const { _rev, _attachments, ...rest } = doc
           return rest
@@ -520,13 +521,30 @@ async function publishTableInternal(
             return
           }
 
-          const prodTable = await sdk.tables.getTable(tableId)
-          const sanitizedRows = stripIgnoreTimezoneSuffix(importRows, prodTable)
-          await handleDataImport(prodTable, {
-            importRows: sanitizedRows,
-            userId: ctx.user._id,
-            identifierFields: ["_id"],
-          })
+          const sanitizedRows = stripIgnoreTimezoneSuffix(importRows, table)
+          await quotas.addRows(
+            sanitizedRows.length,
+            async () => {
+              // Seed stored values without regenerating Auto IDs or other auto columns.
+              const result = await prodDb.bulkDocs(sanitizedRows)
+              if (result.some(row => row.error)) {
+                throw new HTTPError(
+                  `Failed to seed production rows for table ${tableId}`,
+                  500
+                )
+              }
+              const autoColumnState = await prodDb.tryGet<Document>(
+                `${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}${tableId}`
+              )
+              if (autoColumnState) {
+                // Let the allocator initialize its counters from the seeded rows.
+                await prodDb.remove(autoColumnState._id!, autoColumnState._rev!)
+              }
+              return result
+            },
+            { tableId }
+          )
+          await events.rows.imported(table, sanitizedRows.length)
         })
       }
     } catch (error) {
@@ -534,6 +552,7 @@ async function publishTableInternal(
         `Failed to copy dev rows to prod for table ${tableId}`,
         error
       )
+      throw error
     }
   }
   const tableSegment = `${SEPARATOR}${tableId}${SEPARATOR}`
