@@ -3,12 +3,15 @@ import {
   context,
   db as dbCore,
   Duration,
+  locks,
   tenancy,
 } from "@budibase/backend-core"
 import {
   APP_QUOTA_NAMES,
   BREAKDOWN_QUOTA_NAMES,
   MeteredQuotaName,
+  LockName,
+  LockType,
   MonthlyQuotaName,
   MonthlyUsage,
   QuotaTriggers,
@@ -50,7 +53,23 @@ const getDB = () => {
   return new Writethrough(tenancy.getGlobalDB(), DB_WRITE_RATE_MS)
 }
 
-export async function bustCache(retries = 0) {
+const withUsageLock = async <T>(task: () => Promise<T>): Promise<T> => {
+  const db = getDB()
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.UPDATE_QUOTA_USAGE,
+      type: LockType.AUTO_EXTEND,
+      resource: `${db.db.name}:${utils.getQuotaDocId()}`,
+    },
+    task
+  )
+  return result
+}
+
+export const bustCache = (retries = 0) =>
+  withUsageLock(() => removeUsage(retries))
+
+async function removeUsage(retries: number) {
   const maxRetries = 1
   const db = getDB()
   const id = utils.getQuotaDocId()
@@ -59,14 +78,14 @@ export async function bustCache(retries = 0) {
   if (usage && usage._rev) {
     await db.remove(id, usage._rev).catch(async e => {
       if (retries < maxRetries) {
-        return await bustCache(retries + 1)
+        return await removeUsage(retries + 1)
       }
       throw e
     })
   }
 }
 
-export const getQuotaUsage = async (): Promise<QuotaUsage> => {
+const readQuotaUsage = async (): Promise<QuotaUsage> => {
   const db = getDB()
   let usage = await db.tryGet<QuotaUsage>(utils.getQuotaDocId())
   if (!usage) {
@@ -78,6 +97,9 @@ export const getQuotaUsage = async (): Promise<QuotaUsage> => {
   utils.setQuotaReset(usage)
   return clearDeprecated(usage)
 }
+
+export const getQuotaUsage = (): Promise<QuotaUsage> =>
+  withUsageLock(readQuotaUsage)
 
 export const setUsage = async (
   value: number,
@@ -91,28 +113,29 @@ export const setUsagePerApp = async (
   appValues: { [key: string]: number },
   name: MeteredQuotaName,
   type: QuotaUsageType
-) => {
-  const db = getDB()
-  let quotaUsage = await getQuotaUsage()
-  const total = Object.values(appValues).reduce((sum, num) => sum + num, 0)
-  for (let [appId, value] of Object.entries(appValues)) {
-    quotaUsage = coreUsageUpdate(
-      quotaUsage,
-      name,
-      type,
-      {
-        total,
-        app: value,
-      },
-      {
-        appId,
-      }
-    )
-  }
-  const response = await db.put(quotaUsage)
-  quotaUsage._rev = response.rev
-  return quotaUsage
-}
+) =>
+  withUsageLock(async () => {
+    const db = getDB()
+    let quotaUsage = await readQuotaUsage()
+    const total = Object.values(appValues).reduce((sum, num) => sum + num, 0)
+    for (let [appId, value] of Object.entries(appValues)) {
+      quotaUsage = coreUsageUpdate(
+        quotaUsage,
+        name,
+        type,
+        {
+          total,
+          app: value,
+        },
+        {
+          appId,
+        }
+      )
+    }
+    const response = await db.put(quotaUsage)
+    quotaUsage._rev = response.rev
+    return quotaUsage
+  })
 
 const setBreakdown = (
   monthUsage: MonthlyUsage,
@@ -306,24 +329,34 @@ interface SetAllUsageParams {
 }
 
 export const setAllUsage = async (
-  params: SetAllUsageParams | SetAllUsageParams[]
-) => {
-  const actions = Array.isArray(params) ? params : [params]
-  const db = getDB()
-  let quotaUsage = await getQuotaUsage()
-  for (let action of actions) {
-    quotaUsage = coreUsageUpdate(
-      quotaUsage,
-      action.name,
-      action.type,
-      action.values,
-      action.opts
-    )
-  }
-  const response = await db.put(quotaUsage, 0)
-  quotaUsage._rev = response.rev
-  return quotaUsage
-}
+  params:
+    | SetAllUsageParams
+    | SetAllUsageParams[]
+    | ((usage: QuotaUsage) => Promise<SetAllUsageParams[]>)
+) =>
+  withUsageLock(async () => {
+    const db = getDB()
+    let quotaUsage = await readQuotaUsage()
+    // Calculate deltas from the same snapshot that will be persisted, while locked.
+    const updates =
+      typeof params === "function" ? await params(quotaUsage) : params
+    const actions = Array.isArray(updates) ? updates : [updates]
+    if (!actions.length) {
+      return quotaUsage
+    }
+    for (let action of actions) {
+      quotaUsage = coreUsageUpdate(
+        quotaUsage,
+        action.name,
+        action.type,
+        action.values,
+        action.opts
+      )
+    }
+    const response = await db.put(quotaUsage, 0)
+    quotaUsage._rev = response.rev
+    return quotaUsage
+  })
 
 export const getCurrentUsageValues = async (
   type: QuotaUsageType,
@@ -331,6 +364,20 @@ export const getCurrentUsageValues = async (
   id?: string
 ): Promise<UsageValues> => {
   const quotaUsage = await getQuotaUsage()
+  return getUsageValues({ quotaUsage, type, name, id })
+}
+
+export const getUsageValues = ({
+  quotaUsage,
+  type,
+  name,
+  id,
+}: {
+  quotaUsage: QuotaUsage
+  type: QuotaUsageType
+  name: MeteredQuotaName
+  id?: string
+}): UsageValues => {
   let total = 0,
     appValues: { app?: number; breakdown?: number } = {}
   switch (type) {
