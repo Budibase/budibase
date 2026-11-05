@@ -794,7 +794,7 @@ const streamAgentChat = async ({
 
     const pendingToolCalls = new Set<string>()
     const unrecoveredToolFailures = new Set<string>()
-    const streamResult = { toolCallsIncomplete: false }
+    const streamResult = { toolCallsIncomplete: false, errored: false }
     const toolCallTracking = buildToolCallTrackingHandler({
       trackingHandle,
       agentId,
@@ -865,6 +865,12 @@ const streamAgentChat = async ({
         }
       },
       onError: error => {
+        // The SDK calls this twice per error when onFinish is set: when it
+        // converts the error and again when it processes the resulting chunk.
+        if (streamResult.errored) {
+          return getErrorMessage(error)
+        }
+        streamResult.errored = true
         run.sessionLogIndexer.index().catch(indexError => {
           console.error("Failed to index agent session after stream error", {
             agentId,
@@ -897,6 +903,12 @@ const streamAgentChat = async ({
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
         await toolCallTracking.flush()
+
+        // The SDK also calls onFinish when the stream closes after an error,
+        // which onError has already reported as the end of this run.
+        if (streamResult.errored) {
+          return
+        }
 
         const finalAssistantMessage = [...messages]
           .reverse()

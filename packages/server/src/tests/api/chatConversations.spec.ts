@@ -923,6 +923,53 @@ describe("Agent chat tool call tracking", () => {
     { type: "finish", finishReason: "stop" },
   ]
 
+  // Runs the real SDK: the first step executes a tool, the next model call throws
+  const mockStreamTextAbortingAfterTool = (abortMessage: string) => {
+    const model = new MockLanguageModelV4({
+      doStream: async () => {
+        if (model.doStreamCalls.length > 1) {
+          throw new Error(abortMessage)
+        }
+        return {
+          stream: aiActual.simulateReadableStream({
+            chunks: [
+              {
+                type: "tool-call" as const,
+                toolCallId: "call-1",
+                toolName: "lookup",
+                input: "{}",
+              },
+              {
+                type: "finish" as const,
+                finishReason: {
+                  unified: "tool-calls" as const,
+                  raw: undefined,
+                },
+                logprobs: undefined,
+                usage: mockLanguageModelStreamUsage,
+              },
+            ],
+          }),
+        }
+      },
+    })
+    jest.mocked(streamText).mockImplementation(((options: any) =>
+      aiActual.streamText({
+        model,
+        maxRetries: 0,
+        messages: [{ role: "user", content: "hello" }],
+        stopWhen: aiActual.stepCountIs(5),
+        tools: {
+          lookup: aiActual.tool({
+            inputSchema: aiActual.jsonSchema({ type: "object" }),
+            execute: async () => ({ ok: true }),
+          }),
+        },
+        onStepFinish: options.onStepFinish,
+      })) as unknown as StreamTextMock)
+    return model
+  }
+
   function makeWebhookStreamTextMock({
     content = [],
     toolCalls = [],
@@ -1156,6 +1203,42 @@ describe("Agent chat tool call tracking", () => {
         })
 
       expect(failed).toHaveBeenCalledTimes(1)
+      expect(executed).not.toHaveBeenCalled()
+    })
+
+    it("does not overwrite a failed session when the stream closes after an error", async () => {
+      const abortMessage = "CONTROLLED_RUNTIME_ABORT"
+      const model = mockStreamTextAbortingAfterTool(abortMessage)
+      const executed = jest
+        .spyOn(events.action, "aiAgentExecuted")
+        .mockImplementation(() => {})
+      const failed = jest
+        .spyOn(events.action, "aiAgentFailed")
+        .mockImplementation(() => {})
+
+      const headers = await config.defaultHeaders()
+      const res = await config
+        .getRequest()!
+        .post(agentPreviewStreamPath(agentId))
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          isPreview: true,
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+
+      expect(model.doStreamCalls).toHaveLength(2)
+      expect(res.text).toContain(abortMessage)
+      expect(failed).toHaveBeenCalledTimes(1)
+      expect(failed).toHaveBeenCalledWith(
+        expect.objectContaining({ errorMessage: abortMessage })
+      )
       expect(executed).not.toHaveBeenCalled()
     })
 
@@ -1778,50 +1861,7 @@ describe("Agent chat tool call tracking", () => {
 
       it("fails the session and its request when the stream errors after a successful tool", async () => {
         const abortMessage = "CONTROLLED_RUNTIME_ABORT"
-        let modelCalls = 0
-        const model = new MockLanguageModelV4({
-          doStream: async () => {
-            modelCalls++
-            if (modelCalls > 1) {
-              throw new Error(abortMessage)
-            }
-            return {
-              stream: aiActual.simulateReadableStream({
-                chunks: [
-                  {
-                    type: "tool-call" as const,
-                    toolCallId: "call-1",
-                    toolName: "lookup",
-                    input: "{}",
-                  },
-                  {
-                    type: "finish" as const,
-                    finishReason: {
-                      unified: "tool-calls" as const,
-                      raw: undefined,
-                    },
-                    logprobs: undefined,
-                    usage: mockLanguageModelStreamUsage,
-                  },
-                ],
-              }),
-            }
-          },
-        })
-        jest.mocked(streamText).mockImplementation(((options: any) =>
-          aiActual.streamText({
-            model,
-            maxRetries: 0,
-            messages: [{ role: "user", content: "hello" }],
-            stopWhen: aiActual.stepCountIs(5),
-            tools: {
-              lookup: aiActual.tool({
-                inputSchema: aiActual.jsonSchema({ type: "object" }),
-                execute: async () => ({ ok: true }),
-              }),
-            },
-            onStepFinish: options.onStepFinish,
-          })) as unknown as StreamTextMock)
+        const model = mockStreamTextAbortingAfterTool(abortMessage)
         ;(
           sdk.ai.agents.getOrThrow as jest.MockedFunction<
             typeof sdk.ai.agents.getOrThrow
@@ -1857,7 +1897,7 @@ describe("Agent chat tool call tracking", () => {
           }
         )
 
-        expect(modelCalls).toBe(2)
+        expect(model.doStreamCalls).toHaveLength(2)
         expect(delivered).toEqual([])
         expect(failed).toHaveBeenCalledTimes(1)
         expect(failed).toHaveBeenCalledWith(
