@@ -1194,8 +1194,7 @@
                     onCreateAgent={createAgent}
                     onCreateAutomation={createAutomation}
                     onCreateApp={createApp}
-                    onCreateConnection={() =>
-                      bb.settings("/connections/api-connections/new")}
+                    onCreateConnection={() => bb.settings("/connections/apis")}
                     onCreateTable={openCreateTable}
                     onCreateApi={() => goToCreate("apis/new")}
                   />
@@ -1257,8 +1256,7 @@
             onCreateAgent={createAgent}
             onCreateAutomation={createAutomation}
             onCreateApp={createApp}
-            onCreateConnection={() =>
-              bb.settings("/connections/api-connections/new")}
+            onCreateConnection={() => bb.settings("/connections/apis")}
             onCreateTable={openCreateTable}
             onCreateApi={() => goToCreate("apis/new")}
           />
