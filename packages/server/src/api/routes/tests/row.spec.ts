@@ -2793,6 +2793,21 @@ if (descriptions.length) {
             ).toEqual(["A-2", "A-1", "B-1"])
           })
 
+        it("exports only selected column metadata with JSON schema", async () => {
+          const existing = await config.api.row.save(table._id!, {
+            name: "Exported",
+            description: "Hidden",
+          })
+          const exported = await config.api.row.exportRows(
+            table._id!,
+            { rows: [existing._id!], columns: ["name"] },
+            RowExportFormat.JSON_WITH_SCHEMA
+          )
+          const result = JSON.parse(exported)
+          expect(Object.keys(result.schema)).toEqual(["name"])
+          expect(result.rows).toEqual([{ name: "Exported" }])
+        })
+
         it("should allow exporting only certain columns", async () => {
           const existing = await config.api.row.save(table._id!, {
             name: "foo",

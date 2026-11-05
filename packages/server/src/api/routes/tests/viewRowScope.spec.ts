@@ -1,5 +1,11 @@
 import { roles } from "@budibase/backend-core"
-import { BasicOperator, PermissionLevel, Row, Table } from "@budibase/types"
+import {
+  BasicOperator,
+  PermissionLevel,
+  Row,
+  RowExportFormat,
+  Table,
+} from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../../tests/utilities/structures"
 
@@ -115,6 +121,66 @@ describe("view row route scope", () => {
     })
     const row = await config.api.row.get(table._id!, hiddenRow._id!)
     expect(row.name).toEqual("other")
+  })
+
+  it.each([undefined, [], ["name"]])(
+    "exports only visible schema and values with columns %j",
+    async columns => {
+      await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+        const exported = await config.api.row.exportRows(
+          viewId,
+          { rows: [visibleRow._id!], columns },
+          RowExportFormat.JSON_WITH_SCHEMA
+        )
+        expect(JSON.parse(exported)).toEqual({
+          schema: { name: table.schema.name },
+          rows: [{ name: "mine" }],
+        })
+      })
+    }
+  )
+
+  describe("views with no visible columns", () => {
+    let emptyViewId: string
+
+    beforeAll(async () => {
+      const view = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: "No visible columns",
+        schema: {
+          name: { visible: false },
+          description: { visible: false },
+        },
+      })
+      emptyViewId = view.id
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        resourceId: emptyViewId,
+        level: PermissionLevel.READ,
+      })
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        resourceId: emptyViewId,
+        level: PermissionLevel.WRITE,
+      })
+      await config.publish()
+    })
+
+    it.each(Object.values(RowExportFormat))(
+      "rejects %s exports with omitted or empty columns",
+      async format => {
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          for (const columns of [undefined, []]) {
+            await config.api.row.exportRows(
+              emptyViewId,
+              { rows: [visibleRow._id!], columns },
+              format,
+              { status: 400 }
+            )
+          }
+        })
+      }
+    )
   })
 
   describe("current-user-filtered views", () => {

@@ -52,6 +52,9 @@ export const viewRowScopeMiddleware = async (ctx: UserCtx, next: Next) => {
     const visibleFields = Object.entries(view.schema || {})
       .filter(([, field]) => field.visible)
       .map(([name]) => name)
+    if (visibleFields.length === 0) {
+      ctx.throw(400, "Cannot export a view with no visible columns")
+    }
     if (body.columns != null && !Array.isArray(body.columns)) {
       ctx.throw(400, "columns must be a list")
     }
