@@ -64,13 +64,17 @@ export default async function setup() {
   // that only one globalSetup.ts is running at a time.
   lockfile.lockSync(lockPath)
 
-  // Remove any containers that are older than 24 hours. This is to prevent
-  // containers getting full volumes or accruing any other problems from being
-  // left up for very long periods of time.
+  // CouchDB and MinIO keep their data in tmpfs (RAM) and the tests never
+  // delete what they create, so they are recreated on every run. Any other
+  // container older than 24 hours is removed to prevent full volumes.
+  const freshEachRun = ["/couchdb_testcontainer", "/minio_testcontainer"]
   const threshold = new Date(Date.now() - 1000 * 60 * 60 * 24)
   const containers = (await getBudibaseContainers()).filter(container => {
     const created = new Date(container.Created * 1000)
-    return created < threshold
+    return (
+      created < threshold ||
+      container.Names.some(name => freshEachRun.includes(name))
+    )
   })
 
   await killContainers(containers)
@@ -105,6 +109,7 @@ export default async function setup() {
       ])
       .withLabels({ "com.budibase": "true" })
       .withTmpFs({ "/data": "rw" })
+      .withUlimits({ nofile: { soft: 65536, hard: 65536 } })
       .withReuse()
       .withWaitStrategy(
         Wait.forSuccessfulCommand(

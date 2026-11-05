@@ -7,7 +7,8 @@ then
   echo "jest --runInBand --forceExit $*"
   jest --runInBand --forceExit "$@"
 else
-  # --maxWorkers performs better in development
-  echo "jest --coverage --forceExit --detectOpenHandles $*"
-  jest --coverage --forceExit --detectOpenHandles "$@"
+  # Pass --coverage or --detectOpenHandles explicitly if you need them locally;
+  # --detectOpenHandles forces Jest to run in band
+  echo "jest --maxWorkers=${JEST_MAX_WORKERS:-4} --forceExit $*"
+  jest --maxWorkers="${JEST_MAX_WORKERS:-4}" --forceExit "$@"
 fi

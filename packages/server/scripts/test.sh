@@ -6,7 +6,7 @@ then
   export NODE_OPTIONS="--max-old-space-size=4096 --no-node-snapshot $NODE_OPTIONS"
   jest --maxWorkers="${JEST_MAX_WORKERS:-4}" --forceExit --workerIdleMemoryLimit=2000MB --bail "$@"
 else
-  # --maxWorkers performs better in development
+  # Pass --coverage explicitly if you need a coverage report locally
   export NODE_OPTIONS="--no-node-snapshot $NODE_OPTIONS"
-  jest --coverage --maxWorkers=2 --forceExit "$@"
+  jest --maxWorkers="${JEST_MAX_WORKERS:-4}" --forceExit --workerIdleMemoryLimit=2000MB "$@"
 fi
