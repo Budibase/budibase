@@ -117,6 +117,8 @@
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: isDeployed =
     isInternal && id ? $workspaceDeploymentStore.tables[id]?.published : false
+  $: seedPending =
+    isInternal && id ? $workspaceDeploymentStore.tables[id]?.seedPending : false
   $: productionUnavailable =
     isInternal &&
     isProductionMode &&
@@ -281,6 +283,9 @@
       notifications.success("Table published to production")
     } catch (error: any) {
       notifications.error(error?.message || label)
+      await workspaceDeploymentStore.fetch().catch(error => {
+        console.error("Failed to refresh table publish status", error)
+      })
     }
     tablePublishing = false
   }
@@ -376,13 +381,13 @@
           {:else if !isUsersTable}
             <GridImportButton />
             <GridExportButton />
-            {#if productionEmpty}
+            {#if productionEmpty || seedPending}
               <Button
                 secondary
                 disabled={tablePublishing}
                 on:click={() => publishProductionTable(true)}
               >
-                Seed from Dev
+                {seedPending ? "Retry seed" : "Seed from Dev"}
               </Button>
             {/if}
           {/if}
