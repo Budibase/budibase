@@ -439,16 +439,16 @@ describe("PlatformActionPersistProcessor", () => {
     })
 
     it.each([
-      ["completed", {}],
-      ["failed", { finalStatus: "failed" }],
-      ["waiting", { awaitingEscalation: true }],
+      ["completed", Event.ACTION_AI_AGENT_EXECUTED, {}],
+      ["failed", Event.ACTION_AI_AGENT_FAILED, {}],
+      ["waiting", Event.ACTION_AI_AGENT_EXECUTED, { awaitingEscalation: true }],
     ])(
       "keeps a %s session unchanged when tool calls arrive after it",
-      async (expectedStatus, lifecycle) => {
+      async (expectedStatus, lifecycleEvent, lifecycle) => {
         await run(async () => {
           const lifecycleTimestamp = "2026-10-16T10:00:01.000Z"
           await processor.processEvent(
-            Event.ACTION_AI_AGENT_EXECUTED,
+            lifecycleEvent,
             identity,
             {
               ...source,
@@ -556,28 +556,6 @@ describe("PlatformActionPersistProcessor", () => {
         expect.objectContaining({
           incrementsActionCount: true,
           signal: "waiting",
-        })
-      )
-    })
-  })
-
-  it("uses an agent action's final status when its request was judged failed", async () => {
-    await run(async () => {
-      await processor.processEvent(
-        Event.ACTION_AI_AGENT_EXECUTED,
-        identity,
-        {
-          sourceType: "agent_session",
-          sourceId: "session-1",
-          finalStatus: "failed",
-        },
-        undefined
-      )
-
-      expect(mockEnqueue).toHaveBeenCalledWith(
-        expect.objectContaining({
-          incrementsActionCount: true,
-          signal: "failed",
         })
       )
     })

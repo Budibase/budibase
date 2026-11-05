@@ -536,10 +536,7 @@ export async function resumeOperation({
       outcome === "expired"
         ? "This request timed out without a response."
         : "This request was rejected."
-    const hasPending =
-      outcome === "expired" || !doc.requestId
-        ? await hasPendingEscalations()
-        : false
+    const hasPending = await hasPendingEscalations()
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
     if (hasPending) {
@@ -566,8 +563,8 @@ export async function resumeOperation({
       })
       if (judged) {
         await markEscalationRequestResolved(judged)
-        await updatePlatformActionSessionStatus(judged.status)
       }
+      await updatePlatformActionSessionStatus("completed")
     } else {
       // Without a request timeline there's nothing to judge the rejection
       // against, it settles the same way an untracked chat turn does
@@ -829,26 +826,6 @@ export async function resumeOperation({
       })
     })
 
-    events.action.aiAgentExecuted(
-      {
-        agentId: ctx.agentId,
-        sourceType: "agent_session",
-        sourceId: ctx.sessionId,
-        sessionId: ctx.sessionId,
-        requestId: doc.requestId,
-        ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
-      },
-      nextSessionTimestamp()
-    )
-    hasEmittedTerminalAction = true
-
-    const text = assistantMessage ? messageText(assistantMessage) : ""
-    await persistResumeResult(
-      escalationId,
-      assistantMessage ?? textMessage(text)
-    )
-    await deliverOperationResult(ctx, text)
-
     const finishReason = await Promise.resolve(result.finishReason).catch(
       error => {
         console.warn(
@@ -864,6 +841,32 @@ export async function resumeOperation({
     )
     const toolCallsIncomplete =
       pendingToolCalls.size > 0 || finishReason === "tool-calls"
+
+    if (toolCallsIncomplete && !awaitingEscalation) {
+      emitAgentResumeFailure(
+        new Error(sdk.ai.agents.formatIncompleteToolCallError([]))
+      )
+    } else {
+      events.action.aiAgentExecuted(
+        {
+          agentId: ctx.agentId,
+          sourceType: "agent_session",
+          sourceId: ctx.sessionId,
+          sessionId: ctx.sessionId,
+          requestId: doc.requestId,
+          ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
+        },
+        nextSessionTimestamp()
+      )
+      hasEmittedTerminalAction = true
+    }
+
+    const text = assistantMessage ? messageText(assistantMessage) : ""
+    await persistResumeResult(
+      escalationId,
+      assistantMessage ?? textMessage(text)
+    )
+    await deliverOperationResult(ctx, text)
     await toolCallChain
 
     const judged = doc.requestId
@@ -879,7 +882,6 @@ export async function resumeOperation({
       : undefined
     if (judged) {
       await markEscalationRequestResolved(judged)
-      await updatePlatformActionSessionStatus(judged.status)
     } else {
       try {
         if (await hasPendingEscalations()) {
