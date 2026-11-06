@@ -108,8 +108,7 @@ async function createUpdateResponse(ctx: UserCtx, user?: User) {
   }
   ctx = publicApiUserFix(ctx)
 
-  const hasGroupChanges =
-    groupsToRemove.length > 0 || groupsToAdd.length > 0
+  const hasGroupChanges = groupsToRemove.length > 0 || groupsToAdd.length > 0
   let response
   if (user && hasGroupChanges) {
     delete ctx.request.body.userGroups
@@ -122,8 +121,7 @@ async function createUpdateResponse(ctx: UserCtx, user?: User) {
       await sdk.groups.addUsers(groupId, [user._id!])
     }
   } else {
-    const skipDefaultGroup =
-      !user && ctx.request.body.userGroups?.length === 0
+    const skipDefaultGroup = !user && ctx.request.body.userGroups?.length === 0
     response = await saveGlobalUser(
       ctx,
       skipDefaultGroup ? { assignDefaultGroup: false } : undefined

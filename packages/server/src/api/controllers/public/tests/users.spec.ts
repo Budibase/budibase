@@ -211,10 +211,7 @@ describe("public users controller", () => {
       userGroups: ["gr_old"],
     })
     const getBulk = sdk.groups.getBulk as jest.Mock
-    getBulk.mockResolvedValue([
-      { _id: "gr_old" },
-      { _id: "gr_new" },
-    ])
+    getBulk.mockResolvedValue([{ _id: "gr_old" }, { _id: "gr_new" }])
     saveUser.mockRejectedValue(new Error("User update failed"))
     const next = jest
       .fn()
