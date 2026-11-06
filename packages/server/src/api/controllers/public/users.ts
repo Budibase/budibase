@@ -30,13 +30,14 @@ const NO_ROLES_MSG =
   "Roles/admin/builder can only be set on business/enterprise licenses - input ignored."
 
 async function createUpdateResponse(ctx: UserCtx, user?: User) {
+  let groupsToAdd: string[] = []
+  let groupsToRemove: string[] = []
+
   if (ctx.request.body.userGroups !== undefined) {
+    const requestedGroups: string[] = ctx.request.body.userGroups || []
+    const currentGroups: string[] = user?.userGroups || []
     const unchanged =
-      user &&
-      isEqual(
-        [...ctx.request.body.userGroups].sort(),
-        [...(user.userGroups || [])].sort()
-      )
+      user && isEqual([...requestedGroups].sort(), [...currentGroups].sort())
     if (unchanged) {
       delete ctx.request.body.userGroups
     } else {
@@ -47,6 +48,40 @@ async function createUpdateResponse(ctx: UserCtx, user?: User) {
         Feature.EXPANDED_PUBLIC_API,
         Feature.USER_GROUPS,
       ])
+
+      if (user) {
+        groupsToAdd = requestedGroups.filter(id => !currentGroups.includes(id))
+        groupsToRemove = currentGroups.filter(
+          id => !requestedGroups.includes(id)
+        )
+        const changedIds = [...new Set([...groupsToAdd, ...groupsToRemove])]
+
+        if (changedIds.length > 0) {
+          const changedGroups = await sdk.groups.getBulk(changedIds, {
+            enriched: false,
+          })
+          const added = changedGroups.filter(g => groupsToAdd.includes(g._id!))
+          if (
+            changedGroups.length !== changedIds.length ||
+            added.length !== groupsToAdd.length ||
+            changedGroups.some(g => g.scimInfo?.isSync)
+          ) {
+            ctx.throw(404, "Group not found or managed by SCIM")
+          }
+        }
+      } else {
+        if (requestedGroups.length > 0) {
+          const groups = await sdk.groups.getBulk(requestedGroups, {
+            enriched: false,
+          })
+          if (
+            groups.length !== requestedGroups.length ||
+            groups.some(g => g.scimInfo?.isSync)
+          ) {
+            ctx.throw(404, "Group not found or managed by SCIM")
+          }
+        }
+      }
     }
   }
   const base = cloneDeep(ctx.request.body)
@@ -72,7 +107,29 @@ async function createUpdateResponse(ctx: UserCtx, user?: User) {
     ctx.request.body.roles = user.roles || {}
   }
   ctx = publicApiUserFix(ctx)
-  const response = await saveGlobalUser(ctx)
+
+  const hasGroupChanges =
+    groupsToRemove.length > 0 || groupsToAdd.length > 0
+  let response
+  if (user && hasGroupChanges) {
+    delete ctx.request.body.userGroups
+    response = await saveGlobalUser(ctx)
+
+    for (const groupId of groupsToRemove) {
+      await sdk.groups.removeUsers(groupId, [user._id!])
+    }
+    for (const groupId of groupsToAdd) {
+      await sdk.groups.addUsers(groupId, [user._id!])
+    }
+  } else {
+    const skipDefaultGroup =
+      !user && ctx.request.body.userGroups?.length === 0
+    response = await saveGlobalUser(
+      ctx,
+      skipDefaultGroup ? { assignDefaultGroup: false } : undefined
+    )
+  }
+
   ctx.body = await getUser(ctx, response._id)
   if (removed) {
     ctx.extra = { message: NO_ROLES_MSG }

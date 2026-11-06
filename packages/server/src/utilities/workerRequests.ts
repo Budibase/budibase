@@ -159,9 +159,14 @@ export async function allGlobalUsers(ctx: Ctx) {
   return checkResponse(response, "get users", { ctx })
 }
 
-export async function saveGlobalUser(ctx: Ctx) {
+export async function saveGlobalUser(
+  ctx: Ctx,
+  options?: { assignDefaultGroup?: boolean }
+) {
+  const query =
+    options?.assignDefaultGroup === false ? "?assignDefaultGroup=false" : ""
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/users${query}`),
     // we don't want to use API key when getting self
     createRequest({ ctx, method: "POST", body: ctx.request.body })
   )

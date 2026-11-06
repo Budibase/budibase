@@ -1,6 +1,7 @@
 import type { ContextUser, User, UserCtx } from "@budibase/types"
 import type { Next } from "koa"
 import controller from "../users"
+import { sdk } from "@budibase/pro"
 import {
   readGlobalUser,
   saveGlobalUser,
@@ -13,6 +14,14 @@ jest.mock("../../../../utilities/workerRequests", () => ({
 
 jest.mock("@budibase/pro", () => ({
   sdk: {
+    features: {
+      checkFeatures: jest.fn().mockResolvedValue(undefined),
+    },
+    groups: {
+      getBulk: jest.fn().mockResolvedValue([]),
+      addUsers: jest.fn(),
+      removeUsers: jest.fn(),
+    },
     publicApi: {
       users: {
         roleCheck: jest.fn(ctx => ctx),
@@ -36,6 +45,7 @@ type TestContext = {
       _id: string
       email: string
       roles?: User["roles"]
+      userGroups?: string[]
       builder: {
         apps: unknown
       }
@@ -49,11 +59,13 @@ const createCtx = ({
   target,
   builderApps,
   roles,
+  userGroups,
 }: {
   caller: TestUser
   target: TestTarget
   builderApps?: unknown
   roles?: User["roles"]
+  userGroups?: string[]
 }): UserCtx =>
   ({
     user: caller,
@@ -65,6 +77,7 @@ const createCtx = ({
         _id: target._id,
         email: target.email,
         ...(roles === undefined ? {} : { roles }),
+        ...(userGroups === undefined ? {} : { userGroups }),
         builder: {
           apps: builderApps,
         },
@@ -126,6 +139,94 @@ describe("public users controller", () => {
 
     expect(saveUser).toHaveBeenCalledTimes(1)
     expect(next).toHaveBeenCalled()
+  })
+
+  it("disables default-group assignment for an explicitly empty create request", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_admin",
+        email: "admin@example.com",
+        tenantId: "tenant",
+        admin: { global: true },
+      },
+      target: targetUser,
+      userGroups: [],
+    })
+    setExistingTargetUser()
+    saveTargetUser()
+
+    await controller.create(ctx, jest.fn() as jest.MockedFunction<Next>)
+
+    expect(saveUser).toHaveBeenCalledWith(expect.anything(), {
+      assignDefaultGroup: false,
+    })
+  })
+
+  it("rejects a missing existing group before removing any memberships", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_admin",
+        email: "admin@example.com",
+        tenantId: "tenant",
+        admin: { global: true },
+      },
+      target: targetUser,
+      userGroups: [],
+    })
+    readUser.mockResolvedValue({
+      ...targetUser,
+      tenantId: "tenant",
+      roles: {},
+      builder: { apps: [] },
+      userGroups: ["gr_existing", "gr_missing"],
+    })
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await expect(controller.update(ctx, next)).rejects.toMatchObject({
+      status: 404,
+    })
+
+    expect(sdk.groups.removeUsers).not.toHaveBeenCalled()
+    expect(saveUser).not.toHaveBeenCalled()
+  })
+
+  it("does not change memberships when saving the user update fails", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_admin",
+        email: "admin@example.com",
+        tenantId: "tenant",
+        admin: { global: true },
+      },
+      target: targetUser,
+      userGroups: ["gr_new"],
+    })
+    readUser.mockResolvedValue({
+      ...targetUser,
+      tenantId: "tenant",
+      roles: {},
+      builder: { apps: [] },
+      userGroups: ["gr_old"],
+    })
+    const getBulk = sdk.groups.getBulk as jest.Mock
+    getBulk.mockResolvedValue([
+      { _id: "gr_old" },
+      { _id: "gr_new" },
+    ])
+    saveUser.mockRejectedValue(new Error("User update failed"))
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await expect(controller.update(ctx, next)).rejects.toThrow(
+      "User update failed"
+    )
+
+    expect(ctx.request.body.userGroups).toBeUndefined()
+    expect(sdk.groups.removeUsers).not.toHaveBeenCalled()
+    expect(sdk.groups.addUsers).not.toHaveBeenCalled()
   })
 
   it("allows a workspace creator to assign another user to their workspace", async () => {

@@ -387,9 +387,9 @@ export default class TestConfiguration {
     return context.doInTenant(this.tenantId!, async () => {
       const { id, rev } = await pro.sdk.groups.save(group)
       return {
+        ...group,
         _id: id,
         _rev: rev,
-        ...group,
       }
     })
   }

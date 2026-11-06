@@ -95,7 +95,8 @@ const userSchema = object(
       description:
         "The IDs of the user's groups. Find group IDs using GET /workspaces/{workspaceId}/groups or the Copy group ID button in Settings > People > Groups. Requires a global admin and the user groups and expanded public API features. " +
         "On update, replaces memberships; omit to preserve them or provide an empty array to remove all memberships. " +
-        "SCIM-managed memberships cannot be added or removed. New users without group assignments receive the default group, if configured.",
+        "On create, omit this field to receive the default group, if configured, or provide an empty array for no memberships. " +
+        "SCIM-managed memberships cannot be added or removed.",
       type: "array",
       uniqueItems: true,
       items: {

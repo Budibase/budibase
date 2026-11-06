@@ -142,4 +142,6 @@ export function mockWorkerUserAPI(...seedUsers: User[]) {
       return users[id]
     })
     .persist()
+
+  return users
 }

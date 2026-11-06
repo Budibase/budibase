@@ -101,6 +101,9 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
       options: {
         currentUserId,
         skipPasswordRegexValidation: requestUser.forceResetPassword === true,
+        ...(ctx.query.assignDefaultGroup === "false" && {
+          assignDefaultGroup: false,
+        }),
       },
     })
 

@@ -1,6 +1,6 @@
 import type { Server } from "http"
 import { cache, context, events, sessions, users } from "@budibase/backend-core"
-import { mocks, structures } from "@budibase/backend-core/tests"
+import { generator, mocks, structures } from "@budibase/backend-core/tests"
 import { constants, db as proDb } from "@budibase/pro"
 import { Feature, type User } from "@budibase/types"
 import environment from "../../../../environment"
@@ -97,6 +97,100 @@ describe("public user memberships through the worker", () => {
     expect(replaced.userGroups).toEqual([second._id])
     expect(preserved.userGroups).toEqual([second._id])
     expect(saved).toMatchObject({ firstName: "Updated", userGroups: [] })
+  })
+
+  it("uses the default group only when memberships are omitted on creation", async () => {
+    const defaultGroup = await config.createGroup()
+    const updatedDefaultGroup = await config.updateGroup({
+      ...defaultGroup,
+      isDefault: true,
+    })
+
+    try {
+      const defaulted = await config.api.public.user.create({
+        email: structures.email(),
+        password: "password123!",
+        roles: {},
+      })
+      const ungrouped = await config.api.public.user.create({
+        email: structures.email(),
+        password: "password123!",
+        roles: {},
+        userGroups: [],
+      })
+
+      expect(defaulted.userGroups).toEqual([defaultGroup._id])
+      expect(ungrouped.userGroups || []).toEqual([])
+    } finally {
+      await config.updateGroup({
+        ...updatedDefaultGroup,
+        isDefault: false,
+      })
+    }
+  })
+
+  it("rejects a missing existing group before removing any memberships", async () => {
+    const group = await config.createGroup()
+    const user = await config.api.public.user.create({
+      email: structures.email(),
+      password: "password123!",
+      roles: {},
+      userGroups: [group._id!],
+    })
+    const missingGroupId = "gr_missing"
+    await config.doInTenant(async () => {
+      const saved = await users.getById(user._id!)
+      await users.UserDB.save({
+        ...saved,
+        userGroups: [group._id!, missingGroupId],
+      })
+    })
+
+    await config.api.public.user.update(
+      { ...user, userGroups: [] },
+      { status: 404 }
+    )
+
+    const unchanged = await config.doInTenant(() => users.getById(user._id!))
+    expect(unchanged.userGroups).toEqual([group._id, missingGroupId])
+  })
+
+  it("rejects additions to and removals from SCIM-managed groups", async () => {
+    const group = await config.createGroup()
+    const member = await config.api.public.user.create({
+      email: structures.email(),
+      password: "password123!",
+      roles: {},
+      userGroups: [group._id!],
+    })
+    await config.updateGroup({
+      ...group,
+      scimInfo: { externalId: generator.guid(), isSync: true },
+    })
+    const ungrouped = await config.api.public.user.create({
+      email: structures.email(),
+      password: "password123!",
+      roles: {},
+      userGroups: [],
+    })
+
+    await config.api.public.user.update(
+      { ...member, userGroups: [] },
+      { status: 404 }
+    )
+    await config.api.public.user.update(
+      { ...ungrouped, userGroups: [group._id!] },
+      { status: 404 }
+    )
+
+    const savedMember = await config.doInTenant(() =>
+      users.getById(member._id!)
+    )
+    const savedUngrouped = await config.doInTenant(() =>
+      users.getById(ungrouped._id!)
+    )
+    expect(savedMember.userGroups).toEqual([group._id])
+    expect(savedUngrouped.userGroups || []).toEqual([])
   })
 
   it("revokes cached group permissions after public API removal", async () => {

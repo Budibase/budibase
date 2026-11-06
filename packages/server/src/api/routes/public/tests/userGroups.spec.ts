@@ -1,5 +1,22 @@
+jest.mock("@budibase/pro", () => {
+  const actual =
+    jest.requireActual<typeof import("@budibase/pro")>("@budibase/pro")
+  return {
+    ...actual,
+    sdk: {
+      ...actual.sdk,
+      groups: {
+        ...actual.sdk.groups,
+        addUsers: jest.fn(),
+        removeUsers: jest.fn(),
+      },
+    },
+  }
+})
+
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { Feature, type User } from "@budibase/types"
+import { sdk } from "@budibase/pro"
 import nock from "nock"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import * as setup from "../../tests/utilities"
@@ -8,6 +25,7 @@ import { mockWorkerUserAPI } from "./utils"
 describe("public user group memberships", () => {
   const config = new TestConfiguration()
   let admin: User
+  let mockedUsers: Record<string, User>
 
   beforeAll(async () => {
     await config.init()
@@ -25,30 +43,59 @@ describe("public user group memberships", () => {
     })
     config.user = admin
     nock.cleanAll()
-    mockWorkerUserAPI(admin)
+    mockedUsers = mockWorkerUserAPI(admin)
+    jest.mocked(sdk.groups.addUsers).mockReset()
+    jest.mocked(sdk.groups.removeUsers).mockReset()
   })
 
   it("returns memberships on creation and retrieval", async () => {
+    const group = await config.createGroup()
     const user = await config.api.public.user.create({
       email: generator.email({ domain: "example.com" }),
       roles: {},
-      userGroups: ["gr_example"],
+      userGroups: [group._id!],
     })
     const retrieved = await config.api.public.user.find(user._id!)
 
-    expect(user.userGroups).toEqual(["gr_example"])
-    expect(retrieved.userGroups).toEqual(["gr_example"])
+    expect(user.userGroups).toEqual([group._id])
+    expect(retrieved.userGroups).toEqual([group._id])
   })
 
   it("replaces, preserves omitted, and clears memberships", async () => {
+    const original = await config.createGroup()
+    const replacement = await config.createGroup()
+    jest
+      .mocked(sdk.groups.addUsers)
+      .mockImplementation(async (groupId, userIds) => {
+        for (const userId of userIds) {
+          const user = mockedUsers[userId]
+          if (user) {
+            user.userGroups = [...(user.userGroups || []), groupId]
+          }
+        }
+        return []
+      })
+    jest
+      .mocked(sdk.groups.removeUsers)
+      .mockImplementation(async (groupId, userIds) => {
+        for (const userId of userIds) {
+          const user = mockedUsers[userId]
+          if (user) {
+            user.userGroups = (user.userGroups || []).filter(
+              id => id !== groupId
+            )
+          }
+        }
+        return []
+      })
     const user = await config.api.public.user.create({
       email: generator.email({ domain: "example.com" }),
       roles: {},
-      userGroups: ["gr_original"],
+      userGroups: [original._id!],
     })
     const replaced = await config.api.public.user.update({
       ...user,
-      userGroups: ["gr_replacement"],
+      userGroups: [replacement._id!],
     })
     const preserved = await config.api.public.user.update({
       _id: user._id,
@@ -62,8 +109,8 @@ describe("public user group memberships", () => {
       userGroups: [],
     })
 
-    expect(replaced.userGroups).toEqual(["gr_replacement"])
-    expect(preserved.userGroups).toEqual(["gr_replacement"])
+    expect(replaced.userGroups).toEqual([replacement._id])
+    expect(preserved.userGroups).toEqual([replacement._id])
     expect(cleared.userGroups).toEqual([])
   })
 

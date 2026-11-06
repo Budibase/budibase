@@ -11,6 +11,11 @@ const read = [],
  *   post:
  *     operationId: userCreate
  *     summary: Create a user
+ *     description: >
+ *       Creates a new user. The `userGroups` property can be provided with an array of group IDs
+ *       to assign initial group memberships. If `userGroups` is omitted, the default group (if configured)
+ *       is assigned. Providing `userGroups: []` explicitly creates the user without any memberships.
+ *       Setting `userGroups` requires a global admin API key and both the user groups and expanded public API licensed features.
  *     tags:
  *       - users
  *     requestBody:
@@ -42,6 +47,17 @@ write.push(
  *   put:
  *     operationId: userUpdate
  *     summary: Update a user
+ *     description: >
+ *       Updates an existing user. Group memberships can be assigned, updated, or removed using the `userGroups` field:
+ *
+ *       * **Omitted**: existing memberships are preserved.
+ *       * **Empty array `[]`**: removes all group memberships from the user.
+ *       * **Array of group IDs**: reconciles memberships by adding new groups and removing unlisted groups.
+ *
+ *       Modifying group memberships requires a global admin API key and both the user groups and
+ *       expanded public API features. Requests without membership changes do not require global admin privileges.
+ *       Malformed group IDs return a 400 validation error. Missing or SCIM-managed groups return 404
+ *       without altering memberships.
  *     tags:
  *       - users
  *     parameters:
