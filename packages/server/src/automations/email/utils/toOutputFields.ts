@@ -12,6 +12,11 @@ interface BodyLimitResult {
   truncated: boolean
 }
 
+interface EmailBodies {
+  text?: string
+  html?: string
+}
+
 const extractAddresses = (addresses: MessageAddressObject[] = []): string[] =>
   addresses.reduce<string[]>((acc, { address }) => {
     if (address) acc.push(address)
@@ -38,30 +43,33 @@ const applyBodyLimit = (body: string | undefined): BodyLimitResult => {
   }
 }
 
-const getBodyText = async (
-  message: FetchMessageObject
-): Promise<string | undefined> => {
+const getBodies = async (message: FetchMessageObject): Promise<EmailBodies> => {
   if (!message.source) {
-    return undefined
+    return {}
   }
 
   try {
     const parsed = await simpleParser(message.source)
-    const plainText = parsed.text?.trim()
-    if (plainText) return plainText
-    if (parsed.html) return htmlToText(parsed.html)
-    return undefined
+    const plainText = parsed.text?.trim() || undefined
+    const html = parsed.html || undefined
+    const text = plainText ?? (html ? htmlToText(html) : undefined)
+
+    return {
+      text,
+      html,
+    }
   } catch (err) {
     console.log("[email trigger] failed to parse message body", err)
-    return undefined
+    return {}
   }
 }
 
 export const toOutputFields = async (
   message: FetchMessageObject
 ): Promise<EmailTriggerOutputs> => {
-  const text = await getBodyText(message)
+  const { text, html } = await getBodies(message)
   const { body: bodyText, truncated: bodyTextTruncated } = applyBodyLimit(text)
+  const { body: bodyHtml, truncated: bodyHtmlTruncated } = applyBodyLimit(html)
 
   const toAddresses = extractAddresses(message.envelope?.to)
   const cc = extractAddresses(message.envelope?.cc)
@@ -74,5 +82,7 @@ export const toOutputFields = async (
     sentAt: message.envelope?.date?.toISOString(),
     bodyText,
     bodyTextTruncated,
+    bodyHtml,
+    bodyHtmlTruncated,
   }
 }
