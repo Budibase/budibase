@@ -31,6 +31,7 @@
   export let id: string | undefined = undefined
   export let ref: HTMLButtonElement | undefined = undefined
   export let reverse = false
+  export let fullWidth: boolean = false
 
   const dispatch = createEventDispatcher<{ click: undefined }>()
   $: tooltipText = tooltip ?? ""
@@ -56,6 +57,7 @@
     class:new-styles={newStyles}
     class:active
     class:is-disabled={disabled}
+    class:full-width={fullWidth}
     class="spectrum-Button spectrum-Button--size{size}"
     on:click|preventDefault={() => {
       if (!disabled) {
@@ -101,6 +103,9 @@
     font-weight: 500;
     line-height: 20px;
     letter-spacing: -0.02em;
+  }
+  .spectrum-Button.full-width {
+    width: 100%;
   }
   .spectrum-Button--sizeM {
     font-size: 14px;

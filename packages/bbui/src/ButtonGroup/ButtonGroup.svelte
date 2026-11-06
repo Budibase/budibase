@@ -3,6 +3,7 @@
 
   export let vertical: boolean = false
   export let gap: "S" | "M" | "L" = "M"
+  export let fullWidth: boolean = false
 
   $: gapStyle =
     gap === "L"
@@ -25,7 +26,16 @@
   use:group
   class="spectrum-ButtonGroup"
   class:spectrum-ButtonGroup--vertical={vertical}
+  class:spectrum-ButtonGroup--fullWidth={fullWidth}
   style={gapStyle ? `gap: ${gapStyle};` : null}
 >
   <slot />
 </div>
+
+<style>
+  .spectrum-ButtonGroup--fullWidth {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+</style>

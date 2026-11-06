@@ -32,6 +32,7 @@
   export let custom: boolean = false
   export let disableCancelOnConfirm: boolean = false
   export let compact: boolean = false
+  export let fullWidth: boolean = false
 
   const { hide, cancel } = getContext(Context.Modal)
 
@@ -102,6 +103,7 @@
     {#if showCancelButton || showConfirmButton || $$slots.footer}
       <div
         class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter"
+        class:spectrum-ButtonGroup--fullWidth={fullWidth}
       >
         <slot name="footer" />
         {#if showSecondaryButton && secondaryButtonText && secondaryAction}
@@ -216,6 +218,12 @@
 
   .spectrum-Dialog-buttonGroup {
     gap: var(--spectrum-global-dimension-static-size-200);
+  }
+
+  .spectrum-Dialog-buttonGroup.spectrum-ButtonGroup--fullWidth {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
   }
 
   .close-icon {
