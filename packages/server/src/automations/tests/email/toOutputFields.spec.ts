@@ -135,8 +135,12 @@ describe("toOutputFields", () => {
 
     const result = await toOutputFields(message)
 
-    expect(result.bodyHtml).toHaveLength(EMAIL_BODY_CHARACTER_LIMIT)
-    expect(result.bodyHtml).toEndWith(EMAIL_BODY_TRUNCATION_SUFFIX)
+    const expectedHtml = `${html.slice(
+      0,
+      EMAIL_BODY_CHARACTER_LIMIT - EMAIL_BODY_TRUNCATION_SUFFIX.length
+    )}${EMAIL_BODY_TRUNCATION_SUFFIX}`
+
+    expect(result.bodyHtml).toBe(expectedHtml)
     expect(result.bodyHtmlTruncated).toBe(true)
   })
 
