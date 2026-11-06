@@ -325,8 +325,54 @@ describe("operation instructions autosave", () => {
     await typeInstructions("Check stock")
     await vi.advanceTimersByTimeAsync(5000)
     await typeInstructions("{{}}")
+    await vi.advanceTimersByTimeAsync(5000)
 
+    expect(mocks.updateAgentOperation).toHaveBeenCalledTimes(1)
     expect(screen.queryByText("Failed to save")).toBeNull()
+  })
+
+  it("does not save edits that were reverted to the saved instructions", async () => {
+    render(OperationPage)
+
+    await typeInstructions("Check stock")
+    await typeInstructions("{{}}")
+    await vi.advanceTimersByTimeAsync(5000)
+
+    expect(mocks.updateAgentOperation).not.toHaveBeenCalled()
+  })
+
+  it("saves the reverted instructions when reverting during a save", async () => {
+    let resolveSave: (value: { _rev: string }) => void = () => {}
+    mocks.updateAgentOperation.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveSave = resolve
+      })
+    )
+    render(OperationPage)
+
+    await typeInstructions("Check stock")
+    await vi.advanceTimersByTimeAsync(5000)
+    await typeInstructions("{{}}")
+    resolveSave({ _rev: "2" })
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(mocks.updateAgentOperation).toHaveBeenCalledTimes(2)
+    expect(mocks.updateAgentOperation).toHaveBeenLastCalledWith(
+      "agent-1",
+      "operation-1",
+      expect.objectContaining({ promptInstructions: "{{}}" })
+    )
+  })
+
+  it("saves a tool insertion once without a later autosave", async () => {
+    render(OperationPage)
+
+    await fireEvent.click(screen.getByText("Trigger add tool"))
+    await vi.advanceTimersByTimeAsync(0)
+    await fireEvent.click(screen.getByText("Select tool"))
+    await vi.advanceTimersByTimeAsync(5000)
+
+    expect(mocks.updateAgentOperation).toHaveBeenCalledTimes(1)
   })
 
   it("warns before unloading while there are unsaved edits", async () => {

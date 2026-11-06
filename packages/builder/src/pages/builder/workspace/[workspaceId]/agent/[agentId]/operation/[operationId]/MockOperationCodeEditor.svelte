@@ -22,6 +22,7 @@
     insert,
   }: EditorRangeReplacement) => {
     value = value.slice(0, from) + insert + value.slice(to)
+    dispatch("change", value)
     return value
   }
 

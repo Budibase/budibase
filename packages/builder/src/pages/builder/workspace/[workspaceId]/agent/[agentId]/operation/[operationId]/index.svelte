@@ -470,6 +470,10 @@
       instructionsSaveState = "idle"
     }
     if (!hasUnsavedInstructions()) {
+      cancelInstructionsAutosave()
+      if (instructionsSaveState === "saving") {
+        saveOperation()
+      }
       return
     }
     scheduleInstructionsAutosave()
