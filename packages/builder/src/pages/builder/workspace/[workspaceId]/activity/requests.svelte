@@ -255,6 +255,7 @@
   async function hydrateUserNames(requests: AgentRequest[]) {
     const missingUserIds = [...new Set(requests.map(request => request.userId))]
       .filter(Boolean)
+      .filter(userId => userId.startsWith("us_"))
       .filter(userId => !userNames[userId])
 
     if (!missingUserIds.length) {
