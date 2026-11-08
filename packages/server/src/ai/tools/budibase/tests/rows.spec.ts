@@ -189,9 +189,11 @@ describe("AI Tools - Rows", () => {
       throw new Error("search_rows tool not found")
     }
 
-    expect(
-      JSON.stringify(asSchema(searchTool.tool.inputSchema).jsonSchema)
-    ).toContain("Created At")
+    const searchSchemaText = JSON.stringify(
+      asSchema(searchTool.tool.inputSchema).jsonSchema
+    )
+    expect(searchSchemaText).toContain("Created At")
+    expect(searchSchemaText).not.toContain("Field 30")
   })
 
   async function executeTool<T extends BudibaseToolDefinition>(
