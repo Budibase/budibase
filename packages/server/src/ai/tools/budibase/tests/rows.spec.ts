@@ -1,4 +1,6 @@
+import { asSchema } from "@ai-sdk/provider-utils"
 import {
+  AutoFieldSubType,
   FieldType,
   PermissionLevel,
   PermissionType,
@@ -128,6 +130,36 @@ describe("AI Tools - Rows", () => {
       expect(serializedDefinition).not.toContain("Manager")
       expect(serializedDefinition).toContain("Resource metadata is restricted")
     }
+  })
+
+  it("lists automatic columns on search_rows but not on create_row", () => {
+    const tools = createRowTools({
+      tableId: "ta_expenses",
+      tableName: "Expenses",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema: {
+        Notes: { name: "Notes", type: FieldType.STRING },
+        "Created At": {
+          name: "Created At",
+          type: FieldType.DATETIME,
+          autocolumn: true,
+          subtype: AutoFieldSubType.CREATED_AT,
+        },
+      },
+    })
+    const getInputSchemaText = (action: string) => {
+      const rowTool = tools.find(
+        tool => tool.readableName === `Expenses.${action}`
+      )
+      if (!rowTool) {
+        throw new Error(`${action} tool not found`)
+      }
+      return JSON.stringify(asSchema(rowTool.tool.inputSchema).jsonSchema)
+    }
+
+    expect(getInputSchemaText("search_rows")).toContain("Created At")
+    expect(getInputSchemaText("create_row")).toContain("Notes")
+    expect(getInputSchemaText("create_row")).not.toContain("Created At")
   })
 
   async function executeTool<T extends BudibaseToolDefinition>(

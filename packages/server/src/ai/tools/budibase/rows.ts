@@ -26,7 +26,11 @@ import {
 } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
-import { getAgentTableFields, sanitizeAgentRow } from "./tableScope"
+import {
+  getAgentTableFields,
+  getAgentTableSchema,
+  sanitizeAgentRow,
+} from "./tableScope"
 import { validateTimeOnlyField } from "../../../sdk/workspace/rows/validateTimeOnlyField"
 
 const PLAIN_TEXT_WARNING =
@@ -179,6 +183,16 @@ const getWritableFields = (
     .map(([name, schema]) => ({ name, schema }))
 }
 
+const getSearchableFields = (
+  tableSchema: TableSchema,
+  tableSourceType: TableSourceType
+): TableSchemaField[] => {
+  const protectedColumns = getProtectedColumns(tableSourceType)
+  return Object.entries(getAgentTableSchema(tableSchema))
+    .filter(([name]) => !protectedColumns.has(name))
+    .map(([name, schema]) => ({ name, schema }))
+}
+
 const buildSchemaSummary = (fields: TableSchemaField[]) => {
   if (fields.length === 0) {
     return ""
@@ -187,7 +201,7 @@ const buildSchemaSummary = (fields: TableSchemaField[]) => {
   const limited = summaries.slice(0, MAX_SCHEMA_FIELDS)
   const remaining = summaries.length - limited.length
   if (remaining > 0) {
-    limited.push(`... +${remaining} more (use get_table for full schema)`)
+    limited.push(`... +${remaining} more`)
   }
   return limited.join(", ")
 }
@@ -492,7 +506,6 @@ const ROW_TOOL: Record<RowToolAction, RowTool> = {
     description:
       "Search for rows in a table based on criteria. " +
       "IMPORTANT: You can ONLY filter on fields that exist in the table schema. " +
-      "Use get_table or list_tables first to see available field names. " +
       "Searching on non-existent fields will fail.",
     inputSchema: z.object({
       query: z
@@ -616,7 +629,9 @@ export const createRowTools = ({
     true
   )
   const updateDataSchema = buildRowDataSchema(writableFields, schemaSummary)
-  const searchInputSchema = buildSearchInputSchema(schemaSummary)
+  const searchInputSchema = buildSearchInputSchema(
+    buildSchemaSummary(getSearchableFields(tableSchema, tableSourceType))
+  )
   const toolNames = getRowToolNames(tableId)
   const fields = getAgentTableFields(tableSchema)
 
