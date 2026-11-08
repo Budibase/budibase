@@ -190,6 +190,9 @@ const getSearchableFields = (
   const protectedColumns = getProtectedColumns(tableSourceType)
   return Object.entries(getAgentTableSchema(tableSchema))
     .filter(([name]) => !protectedColumns.has(name))
+    .sort(
+      ([, a], [, b]) => Number(isReadOnlyField(b)) - Number(isReadOnlyField(a))
+    )
     .map(([name, schema]) => ({ name, schema }))
 }
 

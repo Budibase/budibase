@@ -162,6 +162,38 @@ describe("AI Tools - Rows", () => {
     expect(getInputSchemaText("create_row")).not.toContain("Created At")
   })
 
+  it("keeps automatic columns on search_rows when the field list is capped", () => {
+    const tableSchema: TableSchema = {}
+    for (let index = 0; index < 31; index++) {
+      tableSchema[`Field ${index}`] = {
+        name: `Field ${index}`,
+        type: FieldType.STRING,
+      }
+    }
+    tableSchema["Created At"] = {
+      name: "Created At",
+      type: FieldType.DATETIME,
+      autocolumn: true,
+      subtype: AutoFieldSubType.CREATED_AT,
+    }
+    const tools = createRowTools({
+      tableId: "ta_wide",
+      tableName: "Wide",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema,
+    })
+    const searchTool = tools.find(
+      tool => tool.readableName === "Wide.search_rows"
+    )
+    if (!searchTool) {
+      throw new Error("search_rows tool not found")
+    }
+
+    expect(
+      JSON.stringify(asSchema(searchTool.tool.inputSchema).jsonSchema)
+    ).toContain("Created At")
+  })
+
   async function executeTool<T extends BudibaseToolDefinition>(
     tool: ToolLike<T>,
     input: ToolInput<T>
