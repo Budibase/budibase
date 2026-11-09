@@ -924,16 +924,35 @@ describe("Agent chat tool call tracking", () => {
   ]
 
   // Runs the real SDK: the first step executes a tool and the next model call
-  // throws, or the first model call throws when afterTool is false
+  // throws, or the first model call throws when afterTool is false. With
+  // pendingToolOnAbort, the next step instead calls a slow tool and the stream
+  // errors before that tool's result arrives.
   const mockStreamTextAborting = ({
     abortMessage,
     afterTool = true,
+    pendingToolOnAbort = false,
   }: {
     abortMessage: string
     afterTool?: boolean
+    pendingToolOnAbort?: boolean
   }) => {
     const model = new MockLanguageModelV4({
       doStream: async () => {
+        if (pendingToolOnAbort && model.doStreamCalls.length === 2) {
+          return {
+            stream: aiActual.simulateReadableStream({
+              chunks: [
+                {
+                  type: "tool-call" as const,
+                  toolCallId: "call-2",
+                  toolName: "slow_lookup",
+                  input: "{}",
+                },
+                { type: "error" as const, error: new Error(abortMessage) },
+              ],
+            }),
+          }
+        }
         if (!afterTool || model.doStreamCalls.length > 1) {
           throw new Error(abortMessage)
         }
@@ -970,6 +989,13 @@ describe("Agent chat tool call tracking", () => {
           lookup: aiActual.tool({
             inputSchema: aiActual.jsonSchema({ type: "object" }),
             execute: async () => ({ ok: true }),
+          }),
+          slow_lookup: aiActual.tool({
+            inputSchema: aiActual.jsonSchema({ type: "object" }),
+            execute: async () => {
+              await new Promise(resolve => setTimeout(resolve, 50))
+              return { ok: true }
+            },
           }),
         },
         onStepFinish: options.onStepFinish,
@@ -1903,6 +1929,7 @@ describe("Agent chat tool call tracking", () => {
                       output: { ok: true },
                     }),
                   ]),
+                  metadata: expect.objectContaining({ error: abortMessage }),
                 })
 
                 const requests =
@@ -1924,6 +1951,36 @@ describe("Agent chat tool call tracking", () => {
           expect.objectContaining({ errorMessage: abortMessage })
         )
         expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("drops tool calls without a result from the persisted partial turn", async () => {
+        const abortMessage = "CONTROLLED_RUNTIME_ABORT"
+        const model = mockStreamTextAborting({
+          abortMessage,
+          pendingToolOnAbort: true,
+        })
+        ;(
+          sdk.ai.agents.getOrThrow as jest.MockedFunction<
+            typeof sdk.ai.agents.getOrThrow
+          >
+        ).mockResolvedValue(buildWebhookTestAgent())
+
+        const result = await context.doInWorkspaceContext(
+          config.getProdWorkspaceId(),
+          () => runWebhook("user-1")
+        )
+
+        expect(model.doStreamCalls).toHaveLength(2)
+        expect(result.failed).toBe(true)
+        const toolParts = result.messages
+          .at(-1)
+          ?.parts.filter(part => part.type.startsWith("tool-"))
+        expect(toolParts).toEqual([
+          expect.objectContaining({
+            type: "tool-lookup",
+            state: "output-available",
+          }),
+        ])
       })
 
       it("throws when the stream errors before any tool has run", async () => {

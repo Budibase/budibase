@@ -11,6 +11,7 @@ import { v4 } from "uuid"
 import {
   ActionFailureReason,
   Agent,
+  AgentMessageMetadata,
   ChatAgentRequest,
   ChatConversation,
   ChatConversationRequest,
@@ -460,6 +461,25 @@ const hasSettledToolCall = <T extends UIMessage>(
       (part.state === "output-available" || part.state === "output-error")
   )
 
+// Mirrors convertToModelMessages' ignoreIncompleteToolCalls filter: a stored
+// tool call without a result makes every later turn fail with
+// MissingToolResultsError.
+const isSettledToolPart = (part: UIMessage["parts"][number]) =>
+  !isToolUIPart(part) ||
+  part.state === "approval-responded" ||
+  (part.state === "output-available" && part.preliminary !== true) ||
+  part.state === "output-error" ||
+  part.state === "output-denied"
+
+const toFailedAssistantMessage = <T extends UIMessage<AgentMessageMetadata>>(
+  message: T,
+  error: string
+): T => ({
+  ...message,
+  parts: message.parts.filter(isSettledToolPart),
+  metadata: { ...message.metadata, error },
+})
+
 const createAssistantTextStream = async function* (
   stream: ReadableStream<UIMessageChunk>
 ): AsyncGenerator<string, void, void> {
@@ -669,9 +689,13 @@ const runWebhookChat = async ({
     // Tools in this turn have already run, so the partial turn must be
     // persisted rather than thrown, or callers would drop or retry it.
     if (hasSettledToolCall(latestAssistantMessage)) {
+      const failedMessage = toFailedAssistantMessage(
+        latestAssistantMessage,
+        getErrorMessage(assistantMessageResult.reason)
+      )
       return {
-        messages: [...chat.messages, latestAssistantMessage],
-        assistantText: getAssistantMessageText(latestAssistantMessage),
+        messages: [...chat.messages, failedMessage],
+        assistantText: getAssistantMessageText(failedMessage),
         title,
         failed: true,
       }

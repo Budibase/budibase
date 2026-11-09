@@ -906,7 +906,7 @@ export const handleChatMessage = async ({
         const message =
           error instanceof HTTPError
             ? error.message
-            : "Sorry, something went wrong while processing your request."
+            : GENERIC_CHAT_ERROR_MESSAGE
         await reply(message)
         return
       }
@@ -976,7 +976,15 @@ export const handleChatMessage = async ({
     })
 
     if (result.failed) {
-      await reply(GENERIC_CHAT_ERROR_MESSAGE)
+      if (streamedAssistantMessage) {
+        await streamedAssistantMessage.edit(
+          [result.assistantText, GENERIC_CHAT_ERROR_MESSAGE]
+            .filter(Boolean)
+            .join("\n\n")
+        )
+      } else {
+        await reply(GENERIC_CHAT_ERROR_MESSAGE)
+      }
       return
     }
 
