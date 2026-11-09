@@ -429,17 +429,27 @@ const executeApprovedToolCall = async ({
   }
 }
 
-export async function resumeOperation({
-  doc,
-  escalationId,
-  resolution,
-  ctx,
-}: {
+interface ResumeOperationParams {
   doc: EscalationContextDoc
   escalationId: string
   resolution: EscalationContextDoc["resolution"]
   ctx: SuspendedOperationContext
-}) {
+}
+
+export async function resumeOperation(params: ResumeOperationParams) {
+  const { sessionId, sessionMetadata } = params.ctx
+  return await context.doInPlatformActionSessionContext(
+    { sourceType: "agent_session", sourceId: sessionId, ...sessionMetadata },
+    () => runResumeOperation(params)
+  )
+}
+
+async function runResumeOperation({
+  doc,
+  escalationId,
+  resolution,
+  ctx,
+}: ResumeOperationParams) {
   const approved = doc.response?.accepted === true
   const expiredUndecided = resolution === "expired" && !doc.response?.actionId
   const outcome = expiredUndecided
@@ -539,16 +549,17 @@ export async function resumeOperation({
     const hasPending = await hasPendingEscalations()
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
+    // No agent ran here, so the session keeps the outcome of its previous run.
     if (hasPending) {
-      await updatePlatformActionSessionStatus("waiting")
-    } else if (outcome === "expired") {
+      return
+    }
+    if (outcome === "expired") {
       // With no approvals pending, expiry without a response is a failure,
       // not a judgment call.
       await markEscalationRequestResolved({
         status: "failed",
         error: "Escalation expired without a response",
       })
-      await updatePlatformActionSessionStatus("failed")
     } else if (doc.requestId) {
       // A rejection is a human decision, not automatically a failure, let
       // the outcome judge weigh it against the request's full timeline.
@@ -564,11 +575,6 @@ export async function resumeOperation({
       if (judged) {
         await markEscalationRequestResolved(judged)
       }
-      await updatePlatformActionSessionStatus("completed")
-    } else {
-      // Without a request timeline there's nothing to judge the rejection
-      // against, it settles the same way an untracked chat turn does
-      await updatePlatformActionSessionStatus("completed")
     }
     return
   }
@@ -637,9 +643,6 @@ export async function resumeOperation({
         await markEscalationRequestResolved({ status: "failed", error: text })
       }
       emitAgentResumeFailure(new Error(text))
-      if (hasPending) {
-        await updatePlatformActionSessionStatus("waiting")
-      }
       return
     }
     if (doc.requestId) {
@@ -682,9 +685,6 @@ export async function resumeOperation({
         })
       }
       emitAgentResumeFailure(new Error(errorMessage))
-      if (hasPending) {
-        await updatePlatformActionSessionStatus("waiting")
-      }
       return
     }
     const approvalInstructions =
@@ -882,22 +882,6 @@ export async function resumeOperation({
       : undefined
     if (judged) {
       await markEscalationRequestResolved(judged)
-    } else {
-      try {
-        if (await hasPendingEscalations()) {
-          await updatePlatformActionSessionStatus("waiting")
-        }
-      } catch (error) {
-        console.error(
-          "Failed to check pending escalations for session status",
-          {
-            escalationId,
-            agentId: ctx.agentId,
-            requestId: doc.requestId,
-            error,
-          }
-        )
-      }
     }
   } catch (error) {
     await toolCallChain
@@ -916,16 +900,8 @@ export async function resumeOperation({
         }
       )
     }
-    // Correct an existing terminal action without double-counting or publishing
-    // an intermediate failed status while another approval is pending.
-    if (hasEmittedTerminalAction) {
-      await updatePlatformActionSessionStatus(hasPending ? "waiting" : "failed")
-    } else {
-      emitAgentResumeFailure(error)
-      if (hasPending) {
-        await updatePlatformActionSessionStatus("waiting")
-      }
-    }
+    // Finalization errors must not overwrite an already emitted run outcome.
+    emitAgentResumeFailure(error)
     if (hasPending === false) {
       await markEscalationRequestResolved({
         status: "failed",

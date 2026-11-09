@@ -673,7 +673,7 @@ describe("resumeOperation", () => {
   })
 
   it.each(["failed", "completed"] as const)(
-    "completes a rejected session independently of its %s request outcome",
+    "leaves a rejected session untouched independently of its %s request outcome",
     async status => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const { requestId } = (await createRequest())!
@@ -692,16 +692,7 @@ describe("resumeOperation", () => {
           const [request] =
             await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
           expect(request.status).toEqual(status)
-          expect(enqueueLifecycleMock.mock.calls).toEqual([
-            [
-              {
-                sourceType: "agent_session",
-                sourceId: "session_1",
-                signal: "completed",
-                timestamp: expect.any(String),
-              },
-            ],
-          ])
+          expect(enqueueLifecycleMock).not.toHaveBeenCalled()
         } finally {
           outcomeSpy.mockRestore()
         }
@@ -709,7 +700,7 @@ describe("resumeOperation", () => {
     }
   )
 
-  it("keeps a rejected tracked session waiting while another approval is pending", async () => {
+  it("leaves a rejected tracked session untouched while another approval is pending", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
       await sdk.ai.agentRequests.updateRequestStatus({
@@ -733,16 +724,37 @@ describe("resumeOperation", () => {
       const [request] =
         await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
       expect(request.status).toEqual("needs_input")
-      expect(enqueueLifecycleMock.mock.calls).toEqual([
-        [
-          {
-            sourceType: "agent_session",
-            sourceId: "session_1",
-            signal: "waiting",
-            timestamp: expect.any(String),
-          },
-        ],
-      ])
+      expect(enqueueLifecycleMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it("restores the session metadata for the actions of a resumed run", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const sessionMetadata = {
+        asset: {
+          type: "agent" as const,
+          id: "agent_1",
+          label: "Support agent",
+        },
+        triggeredBy: { type: "user" as const, label: "Test User" },
+      }
+      mockApprovedRun("Approved and booked.")
+      let emittedMetadata: unknown
+      aiAgentExecutedMock.mockImplementationOnce(async () => {
+        emittedMetadata = context.getPlatformActionSessionMetadata({
+          sourceType: "agent_session",
+          sourceId: "session_1",
+        })
+      })
+
+      await resumeOperation({
+        doc: baseDoc({ response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: { ...baseCtx, sessionMetadata },
+      })
+
+      expect(emittedMetadata).toEqual(sessionMetadata)
     })
   })
 
@@ -812,7 +824,7 @@ describe("resumeOperation", () => {
   })
 
   it.each([true, false])(
-    "keeps pending approvals waiting after a stream failure (request tracking: %s)",
+    "keeps a stream failure failed while another approval is pending (request tracking: %s)",
     async tracking => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const requestId = tracking
@@ -846,12 +858,9 @@ describe("resumeOperation", () => {
 
         expect(aiAgentFailedMock).toHaveBeenCalledTimes(1)
         expect(aiAgentExecutedMock).not.toHaveBeenCalled()
-        expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          signal: "waiting",
-          timestamp: expect.any(String),
-        })
+        expect(
+          enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+        ).toEqual(["active"])
         const requests =
           await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
         expect(requests.map(request => request.status)).toEqual(
@@ -861,38 +870,37 @@ describe("resumeOperation", () => {
     }
   )
 
-  it("timestamps the pending correction after the failure even within one millisecond", async () => {
+  it("preserves completion when request finalization fails within the same millisecond", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
-      await context.getWorkspaceDB().put(
-        baseDoc({
-          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
-        })
-      )
-      getOrThrowMock.mockRejectedValue(new Error("Agent unavailable"))
+      const { requestId } = (await createRequest())!
+      mockApprovedRun("Approved and booked.")
+      const outcomeSpy = jest
+        .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
+        .mockRejectedValueOnce(new Error("DB unavailable"))
       const now = Date.now()
       const clock = jest.spyOn(Date, "now").mockReturnValue(now)
       try {
         await expect(
           resumeOperation({
-            doc: baseDoc({ response: { accepted: true } }),
+            doc: baseDoc({ requestId, response: { accepted: true } }),
             escalationId: "esc_primary",
             resolution: "resolved",
             ctx: baseCtx,
           })
-        ).rejects.toThrow("Agent unavailable")
+        ).rejects.toThrow("DB unavailable")
 
-        expect(aiAgentFailedMock).toHaveBeenCalledWith(
+        expect(aiAgentExecutedMock).toHaveBeenCalledWith(
           expect.objectContaining({ sourceId: "session_1" }),
-          now
+          now + 1
         )
-        expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          signal: "waiting",
-          timestamp: new Date(now + 1).toISOString(),
-        })
+        expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        expect(
+          enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+        ).toEqual(["active"])
       } finally {
         clock.mockRestore()
+        outcomeSpy.mockRestore()
       }
     })
   })
@@ -950,7 +958,7 @@ describe("resumeOperation", () => {
         expect(aiAgentFailedMock).not.toHaveBeenCalled()
         expect(
           enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
-        ).toEqual(["active", "failed"])
+        ).toEqual(["active"])
         const [request] =
           await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("needs_input")
@@ -1028,7 +1036,7 @@ describe("resumeOperation", () => {
   })
 
   it.each([false, true])(
-    "corrects the session without double-counting when finalizing fails (pending approval: %s)",
+    "preserves the completed session when request finalization fails (pending approval: %s)",
     async hasPending => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const { requestId } = (await createRequest())!
@@ -1059,23 +1067,15 @@ describe("resumeOperation", () => {
             })
           ).rejects.toThrow("DB unavailable")
 
-          // The action was already emitted as completed before the failure -
-          // don't emit a second action (it would double-count actionCount),
-          // correct the materialized session status instead.
           expect(aiAgentExecutedMock).toHaveBeenCalledWith(
             expect.objectContaining({ requestId }),
             expect.any(Number)
           )
+          expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
           expect(aiAgentFailedMock).not.toHaveBeenCalled()
           expect(
             enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
-          ).toEqual(["active", hasPending ? "waiting" : "failed"])
-          expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
-            sourceType: "agent_session",
-            sourceId: "session_1",
-            signal: hasPending ? "waiting" : "failed",
-            timestamp: expect.any(String),
-          })
+          ).toEqual(["active"])
           const [request] =
             await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
           expect(request.status).toEqual(hasPending ? "needs_input" : "failed")
@@ -1138,7 +1138,7 @@ describe("resumeOperation", () => {
     })
   })
 
-  it("keeps the session waiting after an approved turn while another escalation is pending", async () => {
+  it("keeps the request in needs_input without overriding the session after an approved turn while another escalation is pending", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
       await sdk.ai.agentRequests.updateRequestStatus({
@@ -1165,54 +1165,9 @@ describe("resumeOperation", () => {
       expect(request.status).toBe("needs_input")
       expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
       expect(aiAgentFailedMock).not.toHaveBeenCalled()
-      expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        signal: "waiting",
-        timestamp: expect.any(String),
-      })
-    })
-  })
-
-  it("preserves the request when the session status escalation lookup fails", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const { requestId } = (await createRequest())!
-      await sdk.ai.agentRequests.updateRequestStatus({
-        requestId,
-        status: "needs_input",
-      })
-      mockApprovedRun("Approved and booked.")
-      const outcomeSpy = jest
-        .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
-        .mockResolvedValueOnce(undefined)
-      listContextDocsMock.mockRejectedValueOnce(new Error("DB unavailable"))
-
-      try {
-        await resumeOperation({
-          doc: baseDoc({ requestId, response: { accepted: true } }),
-          escalationId: "esc_primary",
-          resolution: "resolved",
-          ctx: baseCtx,
-        })
-
-        const [request] =
-          await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
-        expect(request.status).toBe("needs_input")
-        expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
-        expect(aiAgentFailedMock).not.toHaveBeenCalled()
-        expect(enqueueLifecycleMock.mock.calls).toEqual([
-          [
-            {
-              sourceType: "agent_session",
-              sourceId: "session_1",
-              signal: "active",
-              timestamp: expect.any(String),
-            },
-          ],
-        ])
-      } finally {
-        outcomeSpy.mockRestore()
-      }
+      expect(
+        enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+      ).toEqual(["active"])
     })
   })
 
@@ -1250,7 +1205,7 @@ describe("resumeOperation", () => {
       })
     })
 
-    it("keeps the session waiting while another escalation on the session is pending", async () => {
+    it("does not override the session while another escalation on the session is pending", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         await context.getWorkspaceDB().put(
           baseDoc({
@@ -1267,12 +1222,9 @@ describe("resumeOperation", () => {
         })
 
         expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
-        expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          signal: "waiting",
-          timestamp: expect.any(String),
-        })
+        expect(
+          enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+        ).toEqual(["active"])
       })
     })
 
@@ -1402,7 +1354,7 @@ describe("resumeOperation", () => {
       })
     })
 
-    it("completes the session when the escalation is rejected", async () => {
+    it("leaves the session untouched when the escalation is rejected", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         await resumeOperation({
           doc: baseDoc({ response: { accepted: false } }),
@@ -1411,16 +1363,7 @@ describe("resumeOperation", () => {
           ctx: baseCtx,
         })
 
-        expect(enqueueLifecycleMock.mock.calls).toEqual([
-          [
-            {
-              sourceType: "agent_session",
-              sourceId: "session_1",
-              signal: "completed",
-              timestamp: expect.any(String),
-            },
-          ],
-        ])
+        expect(enqueueLifecycleMock).not.toHaveBeenCalled()
       })
     })
 
@@ -1451,7 +1394,7 @@ describe("resumeOperation", () => {
       })
     })
 
-    it("fails the session when the escalation expires without a response", async () => {
+    it("leaves the session untouched when the escalation expires without a response", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         await resumeOperation({
           doc: baseDoc(),
@@ -1460,21 +1403,12 @@ describe("resumeOperation", () => {
           ctx: baseCtx,
         })
 
-        expect(enqueueLifecycleMock.mock.calls).toEqual([
-          [
-            {
-              sourceType: "agent_session",
-              sourceId: "session_1",
-              signal: "failed",
-              timestamp: expect.any(String),
-            },
-          ],
-        ])
+        expect(enqueueLifecycleMock).not.toHaveBeenCalled()
       })
     })
 
     it.each(["expired", "resolved"] as const)(
-      "reconfirms waiting when a non-approved escalation is %s while another is pending",
+      "leaves the session untouched when a non-approved escalation is %s while another is pending",
       async resolution => {
         await config.doInContext(config.getProdWorkspaceId(), async () => {
           await context.getWorkspaceDB().put(
@@ -1490,13 +1424,7 @@ describe("resumeOperation", () => {
             ctx: baseCtx,
           })
 
-          expect(enqueueLifecycleMock).toHaveBeenCalledTimes(1)
-          expect(enqueueLifecycleMock).toHaveBeenCalledWith({
-            sourceType: "agent_session",
-            sourceId: "session_1",
-            signal: "waiting",
-            timestamp: expect.any(String),
-          })
+          expect(enqueueLifecycleMock).not.toHaveBeenCalled()
           expect(aiAgentExecutedMock).not.toHaveBeenCalled()
           expect(aiAgentFailedMock).not.toHaveBeenCalled()
         })
@@ -1527,12 +1455,7 @@ describe("resumeOperation", () => {
         ])
       )
       expect(request.status).toEqual("failed")
-      expect(enqueueLifecycleMock).toHaveBeenCalledWith({
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        signal: "failed",
-        timestamp: expect.any(String),
-      })
+      expect(enqueueLifecycleMock).not.toHaveBeenCalled()
     })
   })
 

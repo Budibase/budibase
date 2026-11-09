@@ -21,7 +21,6 @@ export type PlatformActionEnvironment =
 
 export const PLATFORM_ACTION_SESSION_STATUSES = [
   "active",
-  "waiting",
   "completed",
   "failed",
 ] as const
