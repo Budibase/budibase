@@ -1102,6 +1102,119 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("agentChatStream", () => {
+    it.each([false, true])(
+      "completes after internal tool failures (recovery: %s)",
+      async recover => {
+        const model: MockLanguageModelV4 = new MockLanguageModelV4({
+          doStream: async () => {
+            const step = model.doStreamCalls.length
+            const callCount = recover ? 3 : 1
+            if (step > callCount) {
+              return createChatTestLanguageModel().doStream({
+                prompt: [],
+              })
+            }
+            return {
+              stream: aiActual.simulateReadableStream({
+                chunks: [
+                  {
+                    type: "tool-call" as const,
+                    toolCallId: `call-${step}`,
+                    toolName: step === 3 ? "lookup" : "update",
+                    input: "{}",
+                  },
+                  {
+                    type: "finish" as const,
+                    finishReason: {
+                      unified: "tool-calls" as const,
+                      raw: undefined,
+                    },
+                    usage: mockLanguageModelStreamUsage,
+                  },
+                ],
+              }),
+            }
+          },
+        })
+        const tools: ToolSet = {
+          update: aiActual.tool({
+            inputSchema: aiActual.jsonSchema({ type: "object" }),
+            execute: async (): Promise<{ ok: boolean }> => {
+              throw new Error("CouchDB error: missing")
+            },
+          }),
+          lookup: aiActual.tool({
+            inputSchema: aiActual.jsonSchema({ type: "object" }),
+            execute: async () => ({ ok: true }),
+          }),
+        }
+        jest.mocked(streamText).mockImplementation(options =>
+          aiActual.streamText({
+            model,
+            messages: [{ role: "user", content: "test internal failures" }],
+            stopWhen: aiActual.stepCountIs(5),
+            tools,
+            onStepFinish: options.onStepFinish,
+          })
+        )
+        const executed = jest
+          .spyOn(events.action, "aiAgentExecuted")
+          .mockImplementation(() => {})
+        const failed = jest
+          .spyOn(events.action, "aiAgentFailed")
+          .mockImplementation(() => {})
+        const res = await config
+          .getRequest()!
+          .post(agentPreviewStreamPath(agentId))
+          .set(await config.defaultHeaders())
+          .send({
+            isPreview: true,
+            messages: [
+              {
+                id: "msg-1",
+                role: "user",
+                parts: [{ type: "text", text: "test" }],
+              },
+            ],
+          })
+        expect(res.status).toBe(200)
+        expect(res.text).toContain("CouchDB error: missing")
+        expect(res.text).toContain("hello")
+        expect(executed).toHaveBeenCalledTimes(1)
+        expect(failed).not.toHaveBeenCalled()
+      }
+    )
+
+    it("keeps a real preview runtime abort failed after a successful tool", async () => {
+      mockStreamTextAbortingAfterTool("E2E_PREVIEW_RUNTIME_ABORT")
+      const executed = jest
+        .spyOn(events.action, "aiAgentExecuted")
+        .mockImplementation(() => {})
+      const failed = jest
+        .spyOn(events.action, "aiAgentFailed")
+        .mockImplementation(() => {})
+      const res = await config
+        .getRequest()!
+        .post(agentPreviewStreamPath(agentId))
+        .set(await config.defaultHeaders())
+        .send({
+          isPreview: true,
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "test" }],
+            },
+          ],
+        })
+      expect(res.status).toBe(200)
+      expect(failed).toHaveBeenCalledTimes(1)
+      expect(failed).toHaveBeenCalledWith(
+        expect.objectContaining({ errorMessage: "E2E_PREVIEW_RUNTIME_ABORT" })
+      )
+      expect(executed).not.toHaveBeenCalled()
+    })
+
     it("does not count reported tool results, which are counted when the tool executes", async () => {
       jest.mocked(streamText).mockImplementation(
         mockPipeStreamText({
