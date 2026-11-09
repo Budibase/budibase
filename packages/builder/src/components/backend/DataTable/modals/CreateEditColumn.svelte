@@ -406,6 +406,9 @@
         field: saveColumn as FieldSchema,
         hasPrimaryDisplay,
       })
+      if (operationsWithColumnRules && originalName !== saveColumn.name) {
+        agentsStore.fetchAgents().catch(() => {})
+      }
       dispatch("updatecolumns")
       gridDispatch("close-edit-column")
 
