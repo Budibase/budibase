@@ -17,9 +17,12 @@ import type {
   MSTeamsAgentIntegration,
   Optional,
   Query,
+  RenameColumn,
   SlackAgentIntegration,
+  Table,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
+import { getRowToolNames } from "../../../../ai/tools/budibase/rows"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 import { assertAgentHasValidConfig } from "./utils"
 import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
@@ -453,6 +456,117 @@ const resolveSlackIntegration = ({
 export async function fetch(): Promise<Agent[]> {
   const agents = (await fetchRaw()).map(withAgentDefaults)
   return withCurrentQueryToolReferences(agents)
+}
+
+const renameColumnInAgentRules = ({
+  agent,
+  toolNames,
+  renaming,
+}: {
+  agent: DeprecatedAgent
+  toolNames: Set<string>
+  renaming: RenameColumn
+}) => {
+  let changed = false
+  for (const operation of agent.operations ?? []) {
+    for (const tool of operation.enabledTools ?? []) {
+      if (typeof tool === "string" || !toolNames.has(tool.toolName)) {
+        continue
+      }
+      for (const rule of tool.executionRules ?? []) {
+        for (const condition of rule.conditions ?? []) {
+          if (condition.field === renaming.old) {
+            condition.field = renaming.updated
+            changed = true
+          }
+        }
+        if (rule.reviewParameters?.includes(renaming.old)) {
+          rule.reviewParameters = [
+            ...new Set(
+              rule.reviewParameters.map(parameter =>
+                parameter === renaming.old ? renaming.updated : parameter
+              )
+            ),
+          ]
+          changed = true
+        }
+      }
+    }
+  }
+  return changed
+}
+
+const saveRenamedAgentRules = async ({
+  agents,
+  toolNames,
+  renaming,
+}: {
+  agents: DeprecatedAgent[]
+  toolNames: Set<string>
+  renaming: RenameColumn
+}) => {
+  const now = new Date().toISOString()
+  const changed = agents
+    .filter(agent => renameColumnInAgentRules({ agent, toolNames, renaming }))
+    .map(agent => ({ ...agent, updatedAt: now }))
+  if (!changed.length) {
+    return []
+  }
+  const results = await context.getWorkspaceDB().bulkDocs(changed)
+  return results.filter(result => result.error)
+}
+
+export async function renameColumnInApprovalRules({
+  table,
+  renaming,
+}: {
+  table: Table
+  renaming: RenameColumn
+}) {
+  if (!table._id || renaming.old === renaming.updated) {
+    return
+  }
+  const toolNames = new Set(Object.values(getRowToolNames(table._id)))
+  try {
+    const failures = await saveRenamedAgentRules({
+      agents: await fetchRaw(),
+      toolNames,
+      renaming,
+    })
+    const conflicted = failures
+      .filter(failure => failure.error === "conflict")
+      .map(failure => failure.id)
+    const unresolved = failures.filter(failure => failure.error !== "conflict")
+    if (conflicted.length) {
+      const retried = await context
+        .getWorkspaceDB()
+        .getMultiple<DeprecatedAgent>(conflicted, { allowMissing: true })
+      unresolved.push(
+        ...(await saveRenamedAgentRules({
+          agents: retried,
+          toolNames,
+          renaming,
+        }))
+      )
+    }
+    if (unresolved.length) {
+      console.error("Failed to rename column in agent approval rules", {
+        tableId: table._id,
+        renaming,
+        failures: unresolved.map(({ id, error, reason }) => ({
+          id,
+          error,
+          reason,
+        })),
+      })
+    }
+  } catch (error) {
+    console.error("Failed to rename column in agent approval rules", {
+      tableId: table._id,
+      renaming,
+      error,
+    })
+  }
 }
 
 export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
