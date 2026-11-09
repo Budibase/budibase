@@ -764,6 +764,23 @@ describe("row write defaults", () => {
     )
     expect(mockCreateEscalation).not.toHaveBeenCalled()
   })
+
+  it("refuses without raising an approval when a rule's column no longer exists", async () => {
+    const { category: _deleted, ...schema } = table.schema
+    getTable.mockResolvedValue({ ...table, schema })
+
+    const result = await buildRuntime({
+      action: ToolAction.CREATE_ROW,
+    }).intercept(
+      { data: { name: "Review", category: "RESTRICTED" } },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: ApprovalToolResultStatus.UNAVAILABLE })
+    )
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
+  })
 })
 
 describe("query parameter defaults", () => {

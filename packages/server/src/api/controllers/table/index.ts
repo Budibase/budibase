@@ -225,6 +225,10 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     eventPreviousTable = oldTable
   }
   if (renaming) {
+    await sdk.ai.agents.renameColumnInApprovalRules({
+      table: savedTable,
+      renaming,
+    })
     await sdk.views.renameLinkedViews(savedTable, renaming)
   }
   const projectAssignments = []
