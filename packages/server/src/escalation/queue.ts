@@ -3,6 +3,7 @@ import type { Job } from "bull"
 import {
   ModelMessage,
   readUIMessageStream,
+  TypeValidationError,
   type JSONValue,
   type UIMessage,
 } from "ai"
@@ -36,6 +37,7 @@ import {
   SuspendedOperationContext,
   type AgentExecutionContext,
 } from "@budibase/types"
+import { INVALID_TOOL_INPUT_ERROR } from "../ai/tools"
 import { automationQueue } from "../automations"
 import sdk from "../sdk"
 import { getFullUser } from "../utilities/users"
@@ -57,15 +59,28 @@ export interface EscalationJob {
 
 const DEFAULT_CONCURRENCY = 1
 const DEFAULT_TIMEOUT_MS = 30000
-const GENERIC_APPROVED_ACTION_FAILURE_MESSAGE =
-  "Your request was approved, but I couldn't complete it. Please try again."
+const STALE_APPROVED_ACTION_ERROR =
+  "The data this request writes to changed after it was requested, so it wasn't run."
 
-const approvedActionFailureMessage = (title?: string) => {
+const isInvalidToolInput = (error: unknown) =>
+  TypeValidationError.isInstance(error) ||
+  (error instanceof Error && error.message === INVALID_TOOL_INPUT_ERROR)
+
+const approvedActionFailureMessage = ({
+  title,
+  stale,
+}: {
+  title?: string
+  stale: boolean
+}) => {
+  const outcome = stale
+    ? "but the data it writes to changed after it was requested, so it wasn't run. Please ask again."
+    : "but I couldn't complete it. Please try again."
   if (!title || title.startsWith(APPROVAL_REQUIRED_TITLE_PREFIX)) {
-    return GENERIC_APPROVED_ACTION_FAILURE_MESSAGE
+    return `Your request was approved, ${outcome}`
   }
   const requestTitle = `${title.charAt(0).toLowerCase()}${title.slice(1)}`
-  return `Your ${requestTitle} was approved, but I couldn't complete it. Please try again.`
+  return `Your ${requestTitle} was approved, ${outcome}`
 }
 
 const updateNotificationOutcome = async (
@@ -343,6 +358,7 @@ const executeApprovedToolCall = async ({
       toolName: string
       output: unknown
       failed: boolean
+      stale: boolean
     }
   | undefined
 > => {
@@ -385,6 +401,7 @@ const executeApprovedToolCall = async ({
 
   let output: unknown
   let failed = false
+  let stale = false
   try {
     output = await tool.execute(pending.args, {
       toolCallId: pending.toolCallId,
@@ -393,8 +410,9 @@ const executeApprovedToolCall = async ({
     })
   } catch (error) {
     failed = true
+    stale = isInvalidToolInput(error)
     output = {
-      error: getErrorMessage(error),
+      error: stale ? STALE_APPROVED_ACTION_ERROR : getErrorMessage(error),
     }
   }
 
@@ -402,6 +420,7 @@ const executeApprovedToolCall = async ({
     toolName,
     output,
     failed,
+    stale,
     messages: [
       {
         role: "assistant",
@@ -671,7 +690,10 @@ export async function resumeOperation({
         "error" in executed.output
           ? getErrorMessage(executed.output.error)
           : "Tool execution failed"
-      const failureMessage = approvedActionFailureMessage(doc.title)
+      const failureMessage = approvedActionFailureMessage({
+        title: doc.title,
+        stale: executed.stale,
+      })
       await persistResumeResult(escalationId, textMessage(failureMessage))
       await deliverOperationResult(ctx, failureMessage)
       const hasPending = await hasPendingEscalations()
