@@ -504,7 +504,7 @@ const saveRenamedAgentRules = async ({
   agents: DeprecatedAgent[]
   toolNames: Set<string>
   renaming: RenameColumn
-}): Promise<string[]> => {
+}) => {
   const now = new Date().toISOString()
   const changed = agents
     .filter(agent => renameColumnInAgentRules({ agent, toolNames, renaming }))
@@ -513,9 +513,7 @@ const saveRenamedAgentRules = async ({
     return []
   }
   const results = await context.getWorkspaceDB().bulkDocs(changed)
-  return results
-    .filter(result => result.error === "conflict")
-    .map(result => result.id)
+  return results.filter(result => result.error)
 }
 
 export async function renameColumnInApprovalRules({
@@ -530,27 +528,36 @@ export async function renameColumnInApprovalRules({
   }
   const toolNames = new Set(Object.values(getRowToolNames(table._id)))
   try {
-    const conflicted = await saveRenamedAgentRules({
+    const failures = await saveRenamedAgentRules({
       agents: await fetchRaw(),
       toolNames,
       renaming,
     })
-    if (!conflicted.length) {
-      return
+    const conflicted = failures
+      .filter(failure => failure.error === "conflict")
+      .map(failure => failure.id)
+    const unresolved = failures.filter(failure => failure.error !== "conflict")
+    if (conflicted.length) {
+      const retried = await context
+        .getWorkspaceDB()
+        .getMultiple<DeprecatedAgent>(conflicted, { allowMissing: true })
+      unresolved.push(
+        ...(await saveRenamedAgentRules({
+          agents: retried,
+          toolNames,
+          renaming,
+        }))
+      )
     }
-    const retried = await context
-      .getWorkspaceDB()
-      .getMultiple<DeprecatedAgent>(conflicted, { allowMissing: true })
-    const stillConflicted = await saveRenamedAgentRules({
-      agents: retried,
-      toolNames,
-      renaming,
-    })
-    if (stillConflicted.length) {
+    if (unresolved.length) {
       console.error("Failed to rename column in agent approval rules", {
         tableId: table._id,
         renaming,
-        agentIds: stillConflicted,
+        failures: unresolved.map(({ id, error, reason }) => ({
+          id,
+          error,
+          reason,
+        })),
       })
     }
   } catch (error) {
