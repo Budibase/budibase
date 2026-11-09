@@ -923,11 +923,18 @@ describe("Agent chat tool call tracking", () => {
     { type: "finish", finishReason: "stop" },
   ]
 
-  // Runs the real SDK: the first step executes a tool, the next model call throws
-  const mockStreamTextAbortingAfterTool = (abortMessage: string) => {
+  // Runs the real SDK: the first step executes a tool and the next model call
+  // throws, or the first model call throws when afterTool is false
+  const mockStreamTextAborting = ({
+    abortMessage,
+    afterTool = true,
+  }: {
+    abortMessage: string
+    afterTool?: boolean
+  }) => {
     const model = new MockLanguageModelV4({
       doStream: async () => {
-        if (model.doStreamCalls.length > 1) {
+        if (!afterTool || model.doStreamCalls.length > 1) {
           throw new Error(abortMessage)
         }
         return {
@@ -1208,7 +1215,7 @@ describe("Agent chat tool call tracking", () => {
 
     it("does not overwrite a failed session when the stream closes after an error", async () => {
       const abortMessage = "CONTROLLED_RUNTIME_ABORT"
-      const model = mockStreamTextAbortingAfterTool(abortMessage)
+      const model = mockStreamTextAborting({ abortMessage })
       const executed = jest
         .spyOn(events.action, "aiAgentExecuted")
         .mockImplementation(() => {})
@@ -1859,9 +1866,9 @@ describe("Agent chat tool call tracking", () => {
         expect(executed).not.toHaveBeenCalled()
       })
 
-      it("fails the session and its request when the stream errors after a successful tool", async () => {
+      it("fails the session and its request but returns the partial turn when the stream errors after a successful tool", async () => {
         const abortMessage = "CONTROLLED_RUNTIME_ABORT"
-        const model = mockStreamTextAbortingAfterTool(abortMessage)
+        const model = mockStreamTextAborting({ abortMessage })
         ;(
           sdk.ai.agents.getOrThrow as jest.MockedFunction<
             typeof sdk.ai.agents.getOrThrow
@@ -1877,13 +1884,26 @@ describe("Agent chat tool call tracking", () => {
             await context.doInWorkspaceContext(
               config.getProdWorkspaceId(),
               async () => {
-                await expect(
-                  runWebhook("user-session-abort", async stream => {
+                const result = await runWebhook(
+                  "user-session-abort",
+                  async stream => {
                     for await (const delta of stream) {
                       delivered.push(delta)
                     }
-                  })
-                ).rejects.toThrow(abortMessage)
+                  }
+                )
+
+                expect(result.failed).toBe(true)
+                expect(result.messages.at(-1)).toMatchObject({
+                  role: "assistant",
+                  parts: expect.arrayContaining([
+                    expect.objectContaining({
+                      type: "tool-lookup",
+                      state: "output-available",
+                      output: { ok: true },
+                    }),
+                  ]),
+                })
 
                 const requests =
                   await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
@@ -1903,6 +1923,24 @@ describe("Agent chat tool call tracking", () => {
         expect(failed).toHaveBeenCalledWith(
           expect.objectContaining({ errorMessage: abortMessage })
         )
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("throws when the stream errors before any tool has run", async () => {
+        const abortMessage = "CONTROLLED_RUNTIME_ABORT"
+        mockStreamTextAborting({ abortMessage, afterTool: false })
+        ;(
+          sdk.ai.agents.getOrThrow as jest.MockedFunction<
+            typeof sdk.ai.agents.getOrThrow
+          >
+        ).mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await context.doInWorkspaceContext(config.getProdWorkspaceId(), () =>
+          expect(runWebhook("user-1")).rejects.toThrow(abortMessage)
+        )
+
+        expect(failed).toHaveBeenCalledTimes(1)
         expect(executed).not.toHaveBeenCalled()
       })
 

@@ -23,6 +23,7 @@ import {
 } from "@budibase/types"
 import {
   consumeStream,
+  isToolUIPart,
   readUIMessageStream,
   type LanguageModelUsage,
   type UIMessage,
@@ -450,6 +451,15 @@ const getAssistantMessageText = (assistantMessage?: UIMessage) =>
     ?.flatMap(part => (part.type === "text" ? [part.text] : []))
     .join("") || ""
 
+const hasSettledToolCall = <T extends UIMessage>(
+  assistantMessage?: T
+): assistantMessage is T =>
+  !!assistantMessage?.parts.some(
+    part =>
+      isToolUIPart(part) &&
+      (part.state === "output-available" || part.state === "output-error")
+  )
+
 const createAssistantTextStream = async function* (
   stream: ReadableStream<UIMessageChunk>
 ): AsyncGenerator<string, void, void> {
@@ -580,8 +590,8 @@ const runWebhookChat = async ({
     streamTask = onAssistantStream(createAssistantTextStream(deliveryStream))
   }
 
+  let latestAssistantMessage: ChatConversation["messages"][number] | undefined
   const assistantMessageTask = (async () => {
-    let assistantMessage: ChatConversation["messages"][number] | undefined
     for await (const message of readUIMessageStream<
       ChatConversation["messages"][number]
     >({
@@ -590,9 +600,9 @@ const runWebhookChat = async ({
       terminateOnError: true,
       stream: assistantStreamForCapture,
     })) {
-      assistantMessage = message
+      latestAssistantMessage = message
     }
-    return assistantMessage
+    return latestAssistantMessage
   })()
 
   const [
@@ -656,6 +666,16 @@ const runWebhookChat = async ({
       sessionId,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
+    // Tools in this turn have already run, so the partial turn must be
+    // persisted rather than thrown, or callers would drop or retry it.
+    if (hasSettledToolCall(latestAssistantMessage)) {
+      return {
+        messages: [...chat.messages, latestAssistantMessage],
+        assistantText: getAssistantMessageText(latestAssistantMessage),
+        title,
+        failed: true,
+      }
+    }
     throw assistantMessageResult.reason
   }
   if (responseResult.status === "rejected") {
