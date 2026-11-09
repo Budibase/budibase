@@ -21,7 +21,6 @@ export const IntegrationNames = {
   ELASTICSEARCH: "ElasticSearch",
   SQL_SERVER: "SQL Server",
   AIRTABLE: "Airtable",
-  ARANGODB: "ArangoDB",
   ORACLE: "Oracle",
   GOOGLE_SHEETS: "Google Sheets",
 }
