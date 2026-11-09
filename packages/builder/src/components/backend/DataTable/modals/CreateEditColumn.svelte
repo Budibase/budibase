@@ -1130,7 +1130,7 @@
         <Icon
           size="S"
           name="warning"
-          color="var(--warning-content)"
+          color="var(--spectrum-global-color-yellow-400)"
           weight="fill"
         />
         Used in approval rules in
