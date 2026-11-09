@@ -23,6 +23,7 @@ import {
 } from "@budibase/types"
 import {
   consumeStream,
+  isToolUIPart,
   readUIMessageStream,
   type LanguageModelUsage,
   type UIMessage,
@@ -450,6 +451,49 @@ const getAssistantMessageText = (assistantMessage?: UIMessage) =>
     ?.flatMap(part => (part.type === "text" ? [part.text] : []))
     .join("") || ""
 
+const hasSettledToolCall = <T extends UIMessage>(
+  assistantMessage?: T
+): assistantMessage is T =>
+  !!assistantMessage?.parts.some(
+    part =>
+      isToolUIPart(part) &&
+      (part.state === "output-available" || part.state === "output-error")
+  )
+
+const isSettledToolPart = (part: UIMessage["parts"][number]) =>
+  !isToolUIPart(part) ||
+  part.state === "approval-responded" ||
+  (part.state === "output-available" && part.preliminary !== true) ||
+  part.state === "output-error" ||
+  part.state === "output-denied"
+
+const buildFailedWebhookChatResult = ({
+  chat,
+  assistantMessage,
+  title,
+  error,
+}: {
+  chat: ChatConversationRequest
+  assistantMessage: ChatConversation["messages"][number]
+  title?: string
+  error: unknown
+}): WebhookChatCompleteResult => {
+  const failedMessage = {
+    ...assistantMessage,
+    parts: assistantMessage.parts.filter(isSettledToolPart),
+    metadata: {
+      ...assistantMessage.metadata,
+      error: getErrorMessage(error),
+    },
+  }
+  return {
+    messages: [...chat.messages, failedMessage],
+    assistantText: getAssistantMessageText(failedMessage),
+    title,
+    failed: true,
+  }
+}
+
 const createAssistantTextStream = async function* (
   stream: ReadableStream<UIMessageChunk>
 ): AsyncGenerator<string, void, void> {
@@ -580,8 +624,8 @@ const runWebhookChat = async ({
     streamTask = onAssistantStream(createAssistantTextStream(deliveryStream))
   }
 
+  let latestAssistantMessage: ChatConversation["messages"][number] | undefined
   const assistantMessageTask = (async () => {
-    let assistantMessage: ChatConversation["messages"][number] | undefined
     for await (const message of readUIMessageStream<
       ChatConversation["messages"][number]
     >({
@@ -590,9 +634,9 @@ const runWebhookChat = async ({
       terminateOnError: true,
       stream: assistantStreamForCapture,
     })) {
-      assistantMessage = message
+      latestAssistantMessage = message
     }
-    return assistantMessage
+    return latestAssistantMessage
   })()
 
   const [
@@ -606,6 +650,13 @@ const runWebhookChat = async ({
     streamTask,
     result.finishReason,
   ])
+
+  const requestId =
+    responseResult.status === "fulfilled"
+      ? (responseResult.value.id ?? undefined)
+      : undefined
+  run.sessionLogIndexer.addRequestId(requestId)
+  await run.sessionLogIndexer.index()
 
   if (streamOutcome.status === "rejected") {
     console.error("Chat webhook stream delivery failed", streamOutcome.reason)
@@ -625,14 +676,16 @@ const runWebhookChat = async ({
       sessionId,
       errorMessage: getErrorMessage(streamOutcome.reason),
     })
+    if (hasSettledToolCall(latestAssistantMessage)) {
+      return buildFailedWebhookChatResult({
+        chat,
+        assistantMessage: latestAssistantMessage,
+        title,
+        error: streamOutcome.reason,
+      })
+    }
     throw streamOutcome.reason
   }
-  const requestId =
-    responseResult.status === "fulfilled"
-      ? (responseResult.value.id ?? undefined)
-      : undefined
-  run.sessionLogIndexer.addRequestId(requestId)
-  await run.sessionLogIndexer.index()
 
   if (assistantMessageResult.status === "rejected") {
     console.error("Agent streaming error", {
@@ -656,6 +709,14 @@ const runWebhookChat = async ({
       sessionId,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
+    if (hasSettledToolCall(latestAssistantMessage)) {
+      return buildFailedWebhookChatResult({
+        chat,
+        assistantMessage: latestAssistantMessage,
+        title,
+        error: assistantMessageResult.reason,
+      })
+    }
     throw assistantMessageResult.reason
   }
   if (responseResult.status === "rejected") {

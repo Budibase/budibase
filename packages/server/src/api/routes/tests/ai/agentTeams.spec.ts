@@ -804,6 +804,50 @@ describe("agent teams integration provisioning", () => {
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
     })
 
+    it("appends the error to the streamed reply when the turn fails", async () => {
+      mockedWebhookChat.mockImplementationOnce(
+        async ({ chat, onAssistantStream }) => {
+          async function* partialAnswerStream() {
+            yield "Partial answer"
+          }
+          await onAssistantStream!(partialAnswerStream())
+          return {
+            messages: [
+              ...chat.messages,
+              {
+                id: "assistant-1",
+                role: "assistant",
+                parts: [{ type: "text", text: "Partial answer" }],
+              },
+            ],
+            assistantText: "Partial answer",
+            title: "Mock conversation",
+            failed: true,
+          }
+        }
+      )
+
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-failed-turn",
+          type: "message",
+          text: "hello teams",
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(response.body.messages).toEqual([
+        "Partial answer\n\nSorry, something went wrong while processing your request.",
+      ])
+    })
+
     it.each([false, true])(
       "sends personal reply sources through the activity service URL (streaming: %s)",
       async streaming => {
