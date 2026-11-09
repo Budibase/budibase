@@ -74,7 +74,6 @@
     "@types/xml2js": "^0.4.14",
     "ai": "^7.0.77",
     "airtable": "0.12.2",
-    "arangojs": "7.2.0",
     "archiver": "7.0.1",
     "bcrypt": "6.0.0",
     "bson": "^6.9.0",

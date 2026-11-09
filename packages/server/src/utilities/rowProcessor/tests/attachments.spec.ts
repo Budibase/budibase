@@ -8,9 +8,9 @@ import {
 import { AttachmentCleanup } from "../attachments"
 
 const BUCKET = ObjectStoreBuckets.APPS
-const FILE_NAME = "file/thing.jpg"
 const DEV_WORKSPACEID = "abc_dev_123"
 const PROD_WORKSPACEID = "abc_123"
+const FILE_NAME = `${PROD_WORKSPACEID}/attachments/thing.jpg`
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -88,13 +88,15 @@ const rowGenerators: [
     "row with a single signature column",
     FieldType.SIGNATURE_SINGLE,
     "signature",
-    function rowWithSignature(): Row {
+    function rowWithSignature(
+      fileKey = `${PROD_WORKSPACEID}/attachments/signature.png`
+    ): Row {
       return {
         _id: uuid.v4(),
         signature: {
           size: 1,
           extension: "png",
-          key: `${uuid.v4()}.png`,
+          key: fileKey,
         },
       }
     },
@@ -144,6 +146,16 @@ describe.each(rowGenerators)(
         tryGet: prodTryGetMock,
       } as any)
       mockedDeleteFiles.mockClear()
+    })
+
+    it.each([
+      "other_app/attachments/foreign.jpg",
+      `${PROD_WORKSPACEID}/attachments/%2e%2e`,
+    ])("does not delete an unsafe attachment key: %s", async key => {
+      const row = rowGenerator(key)
+      await AttachmentCleanup.rowDelete(tableGenerator(), [row])
+
+      expect(mockedDeleteFiles).not.toHaveBeenCalled()
     })
 
     it(`${attachmentFieldType} - should not remove files still referenced in a published app`, async () => {
@@ -279,8 +291,8 @@ describe.each(rowGenerators)(
     it(`${attachmentFieldType} - should be able to cleanup a column and not throw when attachments are undefined`, async () => {
       const originalTable = tableGenerator()
       delete originalTable.schema[colKey]
-      const row1 = rowGenerator("file 1")
-      const row2 = rowGenerator("file 2")
+      const row1 = rowGenerator(`${PROD_WORKSPACEID}/attachments/file1`)
+      const row2 = rowGenerator(`${PROD_WORKSPACEID}/attachments/file2`)
       await AttachmentCleanup.tableUpdate(
         originalTable,
         [row1, { [colKey]: undefined }, row2],
