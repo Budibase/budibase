@@ -27,6 +27,7 @@ import {
 } from "@budibase/types"
 import { Knex } from "knex"
 import nock from "nock"
+import { Client } from "pg"
 import {
   DatabaseName,
   datasourceDescribe,
@@ -432,35 +433,58 @@ describe("/datasources", () => {
       }
     )
 
-    it("rejects using a stored database password with a different host", async () => {
-      const stored = await config.api.datasource.create({
-        type: "datasource",
-        name: generator.guid(),
-        source: SourceName.POSTGRES,
-        config: {
-          host: "trusted.example",
-          port: 5432,
-          database: "app",
-          user: "reader",
-          password: "stored-secret",
-          schema: "public",
-        },
-      })
-
-      await config.api.datasource.verify(
-        {
-          datasource: {
-            ...stored,
-            config: {
-              ...stored.config,
-              host: "127.0.0.1",
-              port: 1,
-            },
+    it.each([
+      { endpoint: "verify", status: 400, errorField: "message" },
+      { endpoint: "info", status: 400, errorField: "message" },
+      { endpoint: "views", status: 200, errorField: "error" },
+      { endpoint: "relationships", status: 200, errorField: "error" },
+    ])(
+      "rejects a changed host on $endpoint before connecting with stored credentials",
+      async ({ endpoint, status, errorField }) => {
+        const stored = await config.api.datasource.create({
+          type: "datasource",
+          name: generator.guid(),
+          source: SourceName.POSTGRES,
+          config: {
+            host: "trusted.example.com",
+            port: 5432,
+            database: "app",
+            user: "reader",
+            password: "stored-secret",
+            schema: "public",
           },
-        },
-        { status: 400 }
-      )
-    })
+        })
+        const connect = jest
+          .spyOn(Client.prototype, "connect")
+          .mockImplementation(() => {
+            throw new Error("Unexpected database connection")
+          })
+
+        try {
+          const response = await config
+            .getRequest()!
+            .post(`/api/datasources/${endpoint}`)
+            .set(config.defaultHeaders())
+            .send({
+              datasource: {
+                ...stored,
+                config: {
+                  ...stored.config,
+                  host: "attacker.example.com",
+                },
+              },
+            })
+
+          expect(connect).not.toHaveBeenCalled()
+          expect(response.status).toBe(status)
+          expect(response.body[errorField]).toBe(
+            "Datasource settings cannot change while using stored credentials."
+          )
+        } finally {
+          connect.mockRestore()
+        }
+      }
+    )
 
     it("rejects using a stored database password without its host", async () => {
       const stored = await config.api.datasource.create({
