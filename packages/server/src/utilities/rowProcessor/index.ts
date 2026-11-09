@@ -1,5 +1,6 @@
 import {
   cache,
+  BadRequestError,
   context,
   HTTPError,
   objectStore,
@@ -42,6 +43,7 @@ import {
   UserReferenceMap,
 } from "./bbReferenceProcessor"
 import { allocateAutoColumnValues } from "./autoColumnState"
+import { isWorkspaceAttachmentKey } from "./attachmentKey"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import { fixAutoColumnSubType, processFormulas } from "./utils"
 import { getUserFullName } from "../users"
@@ -257,6 +259,11 @@ export async function inputProcessing(
       const attachments = clonedRow[key]
       if (attachments?.length) {
         attachments.forEach((attachment: RowAttachment) => {
+          if (attachment.key && !isWorkspaceAttachmentKey(attachment.key)) {
+            throw new BadRequestError(
+              "Attachment key is outside this workspace"
+            )
+          }
           delete attachment.url
         })
       }
@@ -265,6 +272,9 @@ export async function inputProcessing(
       field.type === FieldType.SIGNATURE_SINGLE
     ) {
       const attachment = clonedRow[key]
+      if (attachment?.key && !isWorkspaceAttachmentKey(attachment.key)) {
+        throw new BadRequestError("Attachment key is outside this workspace")
+      }
       if (attachment?.url) {
         delete clonedRow[key].url
       }
@@ -406,7 +416,11 @@ export async function coreOutputProcessing(
         }
         const process = async (attachment: RowAttachment) => {
           if (attachment.key) {
-            attachment.url = await objectStore.getAppFileUrl(attachment.key)
+            if (isWorkspaceAttachmentKey(attachment.key)) {
+              attachment.url = await objectStore.getAppFileUrl(attachment.key)
+            } else {
+              delete attachment.url
+            }
           }
           return attachment
         }
