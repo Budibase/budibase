@@ -39,6 +39,7 @@ import {
 import { isExternalTableID } from "../../../integrations/utils"
 import sdk from "../../../sdk"
 import { apiFileReturn } from "../../../utilities/fileSystem"
+import { isWorkspaceAttachmentKey } from "../../../utilities/rowProcessor/attachmentKey"
 import { gridSocket } from "../../../websockets"
 import { fixRow } from "../public/rows"
 import { addRev } from "../public/utils"
@@ -354,6 +355,12 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
       ? await utils.enrichSearchContext(query, { user: userBindings })
       : utils.resolveReaderSearchBindings({ query, user: userBindings })
 
+  const fields = viewId
+    ? Object.entries((await sdk.views.get(viewId)).schema || {})
+        .filter(([, field]) => field.visible)
+        .map(([name]) => name)
+    : undefined
+
   const searchParams: RequiredKeys<RowSearchParams> = {
     query: enrichedQuery,
     tableId,
@@ -367,7 +374,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
     countRows: searchRequest.countRows,
     version: searchRequest.version,
     disableEscaping: searchRequest.disableEscaping,
-    fields: undefined,
+    fields,
     indexer: undefined,
     rows: undefined,
   }
@@ -507,6 +514,14 @@ export async function downloadAttachment(
 
   if (!attachments?.length) {
     ctx.throw(404)
+  }
+
+  if (
+    attachments.some(
+      attachment => attachment.key && !isWorkspaceAttachmentKey(attachment.key)
+    )
+  ) {
+    ctx.throw(404, "Attachment not found")
   }
 
   if (attachments.length === 1) {

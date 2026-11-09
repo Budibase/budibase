@@ -2490,7 +2490,7 @@ if (descriptions.length) {
       describe("attachments and signatures", () => {
         function generateAttachment(value: string) {
           return {
-            key: `${config.getDevWorkspaceId()}/attachments/${value}`,
+            key: `${config.getProdWorkspaceId()}/attachments/${value}`,
           }
         }
         const newCsv = () => `${uuid.v4()}.csv`
@@ -2793,6 +2793,21 @@ if (descriptions.length) {
             ).toEqual(["A-2", "A-1", "B-1"])
           })
 
+        it("exports only selected column metadata with JSON schema", async () => {
+          const existing = await config.api.row.save(table._id!, {
+            name: "Exported",
+            description: "Hidden",
+          })
+          const exported = await config.api.row.exportRows(
+            table._id!,
+            { rows: [existing._id!], columns: ["name"] },
+            RowExportFormat.JSON_WITH_SCHEMA
+          )
+          const result = JSON.parse(exported)
+          expect(Object.keys(result.schema)).toEqual(["name"])
+          expect(result.rows).toEqual([{ name: "Exported" }])
+        })
+
         it("should allow exporting only certain columns", async () => {
           const existing = await config.api.row.save(table._id!, {
             name: "foo",
@@ -2877,6 +2892,12 @@ if (descriptions.length) {
           let tableId: string
           let expectedRowData: Row
 
+          const workspaceAttachment = () => {
+            const attachment = setup.structures.basicAttachment()
+            attachment.key = `${config.getProdWorkspaceId()}/attachments/${attachment.key}.${attachment.extension}`
+            return attachment
+          }
+
           beforeAll(async () => {
             const fullSchema = setup.structures.fullSchemaWithoutLinks({
               allRequired: true,
@@ -2899,15 +2920,15 @@ if (descriptions.length) {
               [FieldType.NUMBER]: generator.natural(),
               [FieldType.BOOLEAN]: generator.bool(),
               [FieldType.DATETIME]: generator.date().toISOString().slice(0, 10),
-              [FieldType.ATTACHMENTS]: [setup.structures.basicAttachment()],
-              [FieldType.ATTACHMENT_SINGLE]: setup.structures.basicAttachment(),
+              [FieldType.ATTACHMENTS]: [workspaceAttachment()],
+              [FieldType.ATTACHMENT_SINGLE]: workspaceAttachment(),
               [FieldType.FORMULA]: undefined, // generated field
               [FieldType.AUTO]: undefined, // generated field
               [FieldType.AI]: "LLM Output",
               [FieldType.JSON]: { name: generator.guid() },
               [FieldType.INTERNAL]: generator.guid(),
               [FieldType.BARCODEQR]: generator.guid(),
-              [FieldType.SIGNATURE_SINGLE]: setup.structures.basicAttachment(),
+              [FieldType.SIGNATURE_SINGLE]: workspaceAttachment(),
               [FieldType.BIGINT]: generator.integer().toString(),
               [FieldType.BB_REFERENCE]: [{ _id: config.getUser()._id }],
               [FieldType.BB_REFERENCE_SINGLE]: { _id: config.getUser()._id },

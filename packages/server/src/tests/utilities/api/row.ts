@@ -148,7 +148,9 @@ export class RowAPI extends TestAPI {
       }
     )
     this._checkResponse(response, expectations)
-    return response.text
+    return Buffer.isBuffer(response.body)
+      ? response.body.toString("utf8")
+      : response.text
   }
 
   bulkImport = async (
