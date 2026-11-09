@@ -15,6 +15,8 @@ import {
   type ToolExecutionPolicy,
 } from "@budibase/types"
 
+export const INVALID_TOOL_INPUT_ERROR = "Tool input is invalid"
+
 export interface ToolAuthorization {
   permissionType: PermissionType
   permissionLevel: PermissionLevel
@@ -194,7 +196,7 @@ const wrapTool = ({
         })
       } catch (error) {
         if (isRequesterRedacted) {
-          throw new Error("Tool input is invalid")
+          throw new Error(INVALID_TOOL_INPUT_ERROR)
         }
         throw error
       }
