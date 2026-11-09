@@ -282,7 +282,10 @@ export class Chat {
 
         if (slashHandler) {
           const messages: string[] = []
-          const channel = createMessageCollector("slack", messages)
+          const channel = {
+            id: `slack:${body?.channel_id}`,
+            ...createMessageCollector("slack", messages),
+          }
           await slashHandler({
             command,
             text: body?.text || "",
@@ -327,7 +330,7 @@ export class Chat {
         }
         const thread = {
           id: `slack:${channelId}:${threadTs}`,
-          channelId,
+          channelId: channel.id,
           ...createMessageCollector("slack", messages),
           channel,
         }
