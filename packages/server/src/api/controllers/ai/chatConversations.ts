@@ -461,9 +461,6 @@ const hasSettledToolCall = <T extends UIMessage>(
       (part.state === "output-available" || part.state === "output-error")
   )
 
-// Mirrors convertToModelMessages' ignoreIncompleteToolCalls filter: a stored
-// tool call without a result makes every later turn fail with
-// MissingToolResultsError.
 const isSettledToolPart = (part: UIMessage["parts"][number]) =>
   !isToolUIPart(part) ||
   part.state === "approval-responded" ||
@@ -686,8 +683,6 @@ const runWebhookChat = async ({
       sessionId,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
-    // Tools in this turn have already run, so the partial turn must be
-    // persisted rather than thrown, or callers would drop or retry it.
     if (hasSettledToolCall(latestAssistantMessage)) {
       const failedMessage = toFailedAssistantMessage(
         latestAssistantMessage,
