@@ -1048,11 +1048,10 @@ export async function processResume(
     )
 
     if (doc.source === EscalationSource.OPERATION) {
-      await resumeOperation({
-        doc,
-        escalationId,
-        resolution,
-        ctx: suspendedContext as SuspendedOperationContext,
+      const ctx = suspendedContext as SuspendedOperationContext
+      await sdk.users.doInUserIdentity({
+        userId: ctx.userId,
+        task: () => resumeOperation({ doc, escalationId, resolution, ctx }),
       })
       return
     }
