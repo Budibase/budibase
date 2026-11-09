@@ -227,7 +227,6 @@ export const DB_TYPE_EXTERNAL = "external"
 
 export const IntegrationTypes = {
   AIRTABLE: "AIRTABLE",
-  ARANGODB: "ARANGODB",
   COUCHDB: "COUCHDB",
   DYNAMODB: "DYNAMODB",
   ELASTICSEARCH: "ELASTICSEARCH",
@@ -256,7 +255,6 @@ export const IntegrationNames = {
   [IntegrationTypes.ELASTICSEARCH]: "ElasticSearch",
   [IntegrationTypes.SQL_SERVER]: "SQL Server",
   [IntegrationTypes.AIRTABLE]: "Airtable",
-  [IntegrationTypes.ARANGODB]: "ArangoDB",
   [IntegrationTypes.ORACLE]: "Oracle",
   [IntegrationTypes.INTERNAL]: "Internal",
   [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",

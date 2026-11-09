@@ -21,9 +21,6 @@
     if (datasource.source === IntegrationTypes.SNOWFLAKE) {
       return `${datasource.config.warehouse}:${datasource.config.database}:${datasource.config.schema}`
     }
-    if (datasource.source === IntegrationTypes.ARANGODB) {
-      return `${datasource.config.url}:${datasource.config.databaseName}`
-    }
     if (datasource.source === IntegrationTypes.COUCHDB) {
       return datasource.config.database
     }
