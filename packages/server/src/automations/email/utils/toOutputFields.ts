@@ -5,6 +5,7 @@ import type { EmailTriggerOutputs } from "@budibase/types"
 import { htmlToText } from "html-to-text"
 export const EMAIL_BODY_CHARACTER_LIMIT = 50_000
 export const EMAIL_HTML_CHARACTER_LIMIT = 500_000
+export const EMAIL_HTML_SOURCE_CHARACTER_LIMIT = 1_000_000
 export const EMAIL_BODY_TRUNCATION_SUFFIX =
   "\n\n[Email body truncated due to size limit]"
 const HTML_BODY_TRUNCATION_SUFFIX = `<p>${EMAIL_BODY_TRUNCATION_SUFFIX.trim()}</p>`
@@ -46,17 +47,27 @@ const applyBodyLimit = (body: string | undefined): BodyLimitResult => {
 }
 
 const applyHtmlBodyLimit = (body: string | undefined): BodyLimitResult => {
-  const sanitizedHtml = sanitizeHtmlString(body)
-  if (!sanitizedHtml) {
+  if (!body) {
     return { body: undefined, truncated: false }
   }
 
-  if (sanitizedHtml.length <= EMAIL_HTML_CHARACTER_LIMIT) {
+  const sourceTruncated = body.length > EMAIL_HTML_SOURCE_CHARACTER_LIMIT
+  const sanitizedHtml = sanitizeHtmlString(
+    body.slice(0, EMAIL_HTML_SOURCE_CHARACTER_LIMIT)
+  )
+  if (!sanitizedHtml) {
+    return sourceTruncated
+      ? { body: HTML_BODY_TRUNCATION_SUFFIX, truncated: true }
+      : { body: undefined, truncated: false }
+  }
+
+  if (!sourceTruncated && sanitizedHtml.length <= EMAIL_HTML_CHARACTER_LIMIT) {
     return { body: sanitizedHtml, truncated: false }
   }
 
   let sliceLength =
-    EMAIL_HTML_CHARACTER_LIMIT - HTML_BODY_TRUNCATION_SUFFIX.length
+    Math.min(sanitizedHtml.length, EMAIL_HTML_CHARACTER_LIMIT) -
+    HTML_BODY_TRUNCATION_SUFFIX.length
 
   while (sliceLength > 0) {
     const result = sanitizeHtmlString(

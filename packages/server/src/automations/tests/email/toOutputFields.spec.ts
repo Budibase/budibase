@@ -4,6 +4,7 @@ import {
   EMAIL_BODY_CHARACTER_LIMIT,
   EMAIL_BODY_TRUNCATION_SUFFIX,
   EMAIL_HTML_CHARACTER_LIMIT,
+  EMAIL_HTML_SOURCE_CHARACTER_LIMIT,
   toOutputFields,
 } from "../../email/utils/toOutputFields"
 
@@ -143,6 +144,19 @@ describe("toOutputFields", () => {
 
     expect(result.bodyHtml).toBe(expectedHtml)
     expect(result.bodyHtml).toHaveLength(EMAIL_HTML_CHARACTER_LIMIT)
+    expect(result.bodyHtmlTruncated).toBe(true)
+  })
+
+  it("bounds HTML before sanitizing it", async () => {
+    const html = `<p>${"a".repeat(EMAIL_HTML_SOURCE_CHARACTER_LIMIT + 10)}</p>`
+    const message = buildMessage(
+      ["Content-Type: text/html; charset=utf-8", "", html].join("\r\n")
+    )
+
+    const result = await toOutputFields(message)
+
+    expect(result.bodyHtml).toHaveLength(EMAIL_HTML_CHARACTER_LIMIT)
+    expect(result.bodyHtml).toContain(EMAIL_BODY_TRUNCATION_SUFFIX.trim())
     expect(result.bodyHtmlTruncated).toBe(true)
   })
 
