@@ -16,58 +16,44 @@
       icon: string
       iconWeight: "regular" | "fill"
       color: string
-      backgroundColor: string
-      textColor: string
     }
   > = {
     active: {
       icon: "spinner",
       iconWeight: "regular",
       color: "var(--spectrum-global-color-blue-500)",
-      backgroundColor:
-        "color-mix(in srgb, var(--spectrum-global-color-blue-500) 18%, transparent)",
-      textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     needs_input: {
       icon: "warning",
       iconWeight: "fill",
       color: "var(--spectrum-global-color-yellow-500)",
-      backgroundColor:
-        "color-mix(in srgb, var(--spectrum-global-color-yellow-500) 18%, transparent)",
-      textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     waiting: {
       icon: "warning",
       iconWeight: "fill",
       color: "var(--spectrum-global-color-yellow-500)",
-      backgroundColor:
-        "color-mix(in srgb, var(--spectrum-global-color-yellow-500) 18%, transparent)",
-      textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     completed: {
       icon: "check-circle",
       iconWeight: "fill",
       color: "var(--spectrum-global-color-green-500)",
-      backgroundColor:
-        "color-mix(in srgb, var(--spectrum-global-color-green-500) 18%, transparent)",
-      textColor: "var(--spectrum-global-color-static-gray-50)",
     },
     failed: {
       icon: "x-circle",
       iconWeight: "fill",
       color: "var(--spectrum-global-color-red-500)",
-      backgroundColor:
-        "color-mix(in srgb, var(--spectrum-global-color-red-500) 18%, transparent)",
-      textColor: "var(--spectrum-global-color-static-gray-50)",
     },
   }
 </script>
 
-<div class="activity-status-badge">
+<div
+  class="activity-status-badge"
+  style:--activity-status-color={statusConfig[status].color}
+>
   <Badge
     size="S"
-    backgroundColor={statusConfig[status].backgroundColor}
-    textColor={statusConfig[status].textColor}
+    backgroundColor={`color-mix(in srgb, ${statusConfig[status].color} 18%, transparent)`}
+    textColor="var(--activity-status-text-color)"
   >
     {label ?? ACTIVITY_STATUS_LABELS[status]}
     <span class="status-icon">
@@ -82,6 +68,15 @@
 </div>
 
 <style>
+  .activity-status-badge {
+    --activity-status-text-color: var(--spectrum-alias-text-color);
+  }
+
+  :global(.spectrum--light) .activity-status-badge,
+  :global(.spectrum--lightest) .activity-status-badge {
+    --activity-status-text-color: var(--activity-status-color);
+  }
+
   .activity-status-badge :global(.spectrum-Label) {
     display: inline-flex;
     align-items: center;
