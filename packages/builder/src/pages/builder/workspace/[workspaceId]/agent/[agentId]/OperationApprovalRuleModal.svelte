@@ -297,7 +297,7 @@
           this rule always applies.
         </Body>
       </div>
-      {#if !fields.length}
+      {#if !fields.length && !conditions.length}
         <Body size="XS" color="var(--spectrum-global-color-gray-600)">
           This tool has no fields that conditions can check, so this rule always
           applies.
@@ -359,11 +359,18 @@
             </Body>
           </div>
         {/if}
-        <div>
-          <Button secondary size="S" icon="plus-circle" on:click={addCondition}>
-            Add condition
-          </Button>
-        </div>
+        {#if fields.length}
+          <div>
+            <Button
+              secondary
+              size="S"
+              icon="plus-circle"
+              on:click={addCondition}
+            >
+              Add condition
+            </Button>
+          </div>
+        {/if}
       {/if}
     </div>
     <div class="configuration-field">
