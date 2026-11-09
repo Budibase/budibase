@@ -382,7 +382,7 @@ describe("upsertPlatformActionSession", () => {
       await upsertPlatformActionSession({
         ...input,
         incrementsActionCount: false,
-        signal: "waiting",
+        signal: "active",
         timestamp: "2026-08-31T00:00:00.000Z",
       })
 
