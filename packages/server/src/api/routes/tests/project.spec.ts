@@ -311,6 +311,32 @@ describe("/projects", () => {
     }
   }
 
+  it("rejects permission metadata for resources outside the package", async () => {
+    await withProjectsEnabled(async () => {
+      const body = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: { containsPermissions: true },
+          extraEntries: {
+            "permissions.json": {
+              resources: [
+                { resourceId: "ta_unrelated", levels: { read: "PUBLIC" } },
+              ],
+            },
+          },
+        })
+      )
+      await config.api.project.import({
+        file: body,
+        expectations: {
+          status: 400,
+          body: { message: "Project package permissions are invalid." },
+        },
+      })
+      const { projects } = await config.api.project.fetch()
+      expect(projects).toEqual([])
+    })
+  })
+
   it("returns 404 when the feature flag is disabled", async () => {
     await features.testutils.withFeatureFlags(
       config.getTenantId(),
@@ -3370,7 +3396,7 @@ describe("/projects", () => {
       const limit = jest.replaceProperty(
         packageLimits,
         "MAX_PROJECT_PACKAGE_ENTRIES",
-        4
+        5
       )
 
       try {
