@@ -116,6 +116,21 @@
     reviewParameters.length <= MAX_REVIEW_PARAMETERS
   )
 
+  const isMissingField = (condition: ConditionDraft) =>
+    !fields.some(field => field.name === condition.field)
+
+  const fieldOptionsFor = (condition: ConditionDraft): ConditionField[] =>
+    isMissingField(condition)
+      ? [
+          {
+            name: condition.field,
+            label: `${condition.field} (deleted column)`,
+            type: condition.type ?? FieldType.STRING,
+          },
+          ...fields,
+        ]
+      : fields
+
   const operatorsFor = (condition: ConditionDraft) => {
     const field = fields.find(candidate => candidate.name === condition.field)
     return dataFilters.getValidOperatorsForType({
@@ -291,12 +306,14 @@
         {#if conditions.length}
           <div class="conditions-list">
             {#each conditions as condition, index (index)}
+              {@const missing = isMissingField(condition)}
               <div class="condition-row">
                 <Select
                   size="M"
                   value={condition.field}
-                  options={fields}
+                  options={fieldOptionsFor(condition)}
                   placeholder={false}
+                  disabled={missing}
                   getOptionLabel={field => field.label}
                   getOptionValue={field => field.name}
                   on:change={event => changeConditionField(index, event.detail)}
@@ -306,13 +323,14 @@
                   value={condition.operator}
                   options={operatorsFor(condition)}
                   placeholder={false}
+                  disabled={missing}
                   getOptionLabel={option => option.label}
                   getOptionValue={option => option.value}
                   on:change={event =>
                     changeConditionOperator(index, event.detail)}
                 />
                 <FilterField
-                  filter={condition}
+                  filter={missing ? { ...condition, noValue: true } : condition}
                   schemaFields={fields}
                   useConditionValueControls
                   on:change={event =>
@@ -326,6 +344,12 @@
                   <Icon name="x" size="XS" />
                 </button>
               </div>
+              {#if missing}
+                <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+                  This column no longer exists. Remove the condition to save the
+                  rule.
+                </Body>
+              {/if}
             {/each}
           </div>
         {:else}

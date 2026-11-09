@@ -226,6 +226,10 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
   if (renaming) {
     await sdk.views.renameLinkedViews(savedTable, renaming)
+    await sdk.ai.agents.renameColumnInApprovalRules({
+      table: savedTable,
+      renaming,
+    })
   }
   const projectAssignments = []
   const newLinkedTableIds = !isExternalTable(savedTable)
