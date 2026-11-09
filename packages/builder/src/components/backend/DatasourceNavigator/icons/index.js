@@ -7,7 +7,6 @@ import S3 from "./S3.svelte"
 import Airtable from "./Airtable.svelte"
 import SqlServer from "./SQLServer.svelte"
 import MySQL from "./MySQL.svelte"
-import ArangoDB from "./ArangoDB.svelte"
 import Rest from "./Rest.svelte"
 import Budibase from "./Budibase.svelte"
 import Oracle from "./Oracle.svelte"
@@ -28,7 +27,6 @@ const ICONS = {
   S3: S3,
   AIRTABLE: Airtable,
   MYSQL: MySQL,
-  ARANGODB: ArangoDB,
   REST: Rest,
   ORACLE: Oracle,
   GOOGLE_SHEETS: GoogleSheets,
