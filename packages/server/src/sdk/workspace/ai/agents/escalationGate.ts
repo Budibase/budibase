@@ -433,6 +433,10 @@ export const createEscalationGateRuntime = ({
         channel: gateContext.channel,
         userId: gateContext.userId,
         requester: gateContext.requester,
+        sessionMetadata: context.getPlatformActionSessionMetadata({
+          sourceType: "agent_session",
+          sourceId: gateContext.sessionId,
+        }),
         messages: frozenMessages,
         pendingToolCall: {
           toolCallId,

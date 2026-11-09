@@ -728,6 +728,36 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("restores the session metadata for the actions of a resumed run", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const sessionMetadata = {
+        asset: {
+          type: "agent" as const,
+          id: "agent_1",
+          label: "Support agent",
+        },
+        triggeredBy: { type: "user" as const, label: "Test User" },
+      }
+      mockApprovedRun("Approved and booked.")
+      let emittedMetadata: unknown
+      aiAgentExecutedMock.mockImplementationOnce(async () => {
+        emittedMetadata = context.getPlatformActionSessionMetadata({
+          sourceType: "agent_session",
+          sourceId: "session_1",
+        })
+      })
+
+      await resumeOperation({
+        doc: baseDoc({ response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: { ...baseCtx, sessionMetadata },
+      })
+
+      expect(emittedMetadata).toEqual(sessionMetadata)
+    })
+  })
+
   it("records escalation_resolved with outcome rejected", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!

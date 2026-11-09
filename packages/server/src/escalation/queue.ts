@@ -429,17 +429,27 @@ const executeApprovedToolCall = async ({
   }
 }
 
-export async function resumeOperation({
-  doc,
-  escalationId,
-  resolution,
-  ctx,
-}: {
+interface ResumeOperationParams {
   doc: EscalationContextDoc
   escalationId: string
   resolution: EscalationContextDoc["resolution"]
   ctx: SuspendedOperationContext
-}) {
+}
+
+export async function resumeOperation(params: ResumeOperationParams) {
+  const { sessionId, sessionMetadata } = params.ctx
+  return await context.doInPlatformActionSessionContext(
+    { sourceType: "agent_session", sourceId: sessionId, ...sessionMetadata },
+    () => runResumeOperation(params)
+  )
+}
+
+async function runResumeOperation({
+  doc,
+  escalationId,
+  resolution,
+  ctx,
+}: ResumeOperationParams) {
   const approved = doc.response?.accepted === true
   const expiredUndecided = resolution === "expired" && !doc.response?.actionId
   const outcome = expiredUndecided
