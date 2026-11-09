@@ -1,4 +1,5 @@
 import type { ReadStream } from "fs"
+import type { LinkInfo, Row } from "../../../documents"
 import { ResourceType, UsedResource } from "./resource"
 
 export interface ProjectResponse {
@@ -6,9 +7,11 @@ export interface ProjectResponse {
   _rev: string
   name: string
   description?: string
+  readme?: string
   color?: string
   createdAt: string
   updatedAt: string
+  importSetup?: ProjectImportSetup
 }
 
 export interface FetchProjectsResponse {
@@ -18,6 +21,7 @@ export interface FetchProjectsResponse {
 export interface CreateProjectRequest {
   name: string
   description?: string
+  readme?: string
   color?: string
 }
 
@@ -30,6 +34,7 @@ export interface UpdateProjectRequest {
   _rev: string
   name: string
   description?: string
+  readme?: string
   color?: string
 }
 
@@ -37,8 +42,49 @@ export interface UpdateProjectResponse {
   project: ProjectResponse
 }
 
+export interface PreviewProjectAssignmentRequest {
+  resourceId: string
+  projectIds: string[]
+}
+
+export interface ProjectAssignmentDependency extends UsedResource {
+  projectIdsToAdd: string[]
+}
+
+export interface PreviewProjectAssignmentResponse {
+  resourceRev: string
+  resourceProjectIds: string[]
+  dependencies: ProjectAssignmentDependency[]
+  dependencyFingerprint: string
+}
+
+export interface UpdateProjectAssignmentRequest {
+  resourceRev: string
+  projectIds: string[]
+  dependencyIds: string[]
+  dependencyFingerprint: string
+}
+
+export interface ProjectAssignmentResult {
+  assignedDependencyIds: string[]
+  failedDependencyIds: string[]
+}
+
+export interface ProjectAssignmentResponse {
+  projectAssignment?: ProjectAssignmentResult
+}
+
+export interface UpdateProjectAssignmentResponse {
+  resourceId: string
+  resourceRev: string
+  projectIds: string[]
+  assignedDependencyIds: string[]
+  failedDependencyIds: string[]
+}
+
 export interface ExportProjectRequest {
   encryptPassword?: string
+  includeRows?: boolean
 }
 
 export type ExportProjectResponse = ReadStream
@@ -48,17 +94,49 @@ export interface ImportProjectRequest {
 }
 
 export interface ProjectImportRequirement {
-  type: "datasource_secrets" | "agent_secrets"
+  type:
+    | "datasource_secrets"
+    | "agent_secrets"
+    | "agent_ai_config"
+    | "automation_credentials"
   resourceId: string
   name: string
   reason: string
 }
 
-export interface ImportProjectResponse {
-  project: ProjectResponse
+export interface ProjectImportSetup {
   resources: Partial<Record<ResourceType, string[]>>
   unsupportedContent: ProjectPackageUnsupportedContent[]
   requirements: ProjectImportRequirement[]
+  dataImport?: ProjectDataImportSummary
+}
+
+export interface ProjectDataImportSummary {
+  tables: number
+  rows: number
+  relationships: number
+  attachments: number
+}
+
+export interface ProjectPackageRelationship {
+  doc1: LinkInfo
+  doc2: LinkInfo
+}
+
+export interface ProjectPackageAttachment {
+  key: string
+  path: string
+  contentType?: string
+}
+
+export interface ProjectPackageData {
+  rows: Row[]
+  relationships: ProjectPackageRelationship[]
+  attachments: ProjectPackageAttachment[]
+}
+
+export interface ImportProjectResponse extends ProjectImportSetup {
+  project: ProjectResponse
 }
 
 export interface ProjectManifestSummary {

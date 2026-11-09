@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ActionMenu, Icon, MenuItem } from "@budibase/bbui"
+  import { ActionMenu, Icon, MenuItem, MenuSeparator } from "@budibase/bbui"
   import type { ProjectResponse } from "@budibase/types"
 
   interface Props {
@@ -11,6 +11,9 @@
     onDeleteProject?: () => void
     onImportProject?: () => void
     onExportProject?: () => void
+    onSetupProject?: () => void
+    showReadProjectNotes?: boolean
+    onReadProjectNotes?: () => void
     exportProjectDisabled?: boolean
   }
 
@@ -23,6 +26,9 @@
     onDeleteProject = () => {},
     onImportProject = () => {},
     onExportProject = () => {},
+    onSetupProject = () => {},
+    showReadProjectNotes = false,
+    onReadProjectNotes = () => {},
     exportProjectDisabled = false,
   }: Props = $props()
 </script>
@@ -41,6 +47,9 @@
 
     {#each projects as project (project._id)}
       {@const selected = selectedProjectId === project._id}
+      {@const remainingSetupItems = new Set(
+        project.importSetup?.requirements.map(({ resourceId }) => resourceId)
+      ).size}
       {#if selected}
         <div class="project-tab project-tab--selected project-tab--with-menu">
           <button
@@ -70,6 +79,20 @@
             >
               <Icon name="dots-three" size="S" hoverable color="inherit" />
             </button>
+
+            {#if project.importSetup}
+              <MenuItem icon="list-checks" on:click={onSetupProject}>
+                Project setup
+                <svelte:fragment slot="right">
+                  {#if remainingSetupItems}
+                    <span class="setup-remaining">
+                      {remainingSetupItems} remaining
+                    </span>
+                  {/if}
+                </svelte:fragment>
+              </MenuItem>
+              <MenuSeparator />
+            {/if}
 
             <MenuItem icon="pencil" on:click={onEditProject}>
               Edit project
@@ -125,10 +148,23 @@
       </MenuItem>
     </ActionMenu>
   </div>
+  {#if selectedProjectId && showReadProjectNotes}
+    <button
+      type="button"
+      class="read-project-notes"
+      onclick={onReadProjectNotes}
+    >
+      <Icon name="book-open" hidden size="S" />
+      Read project notes
+    </button>
+  {/if}
 </nav>
 
 <style>
   .project-tabs {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--spacing-m);
     position: relative;
     z-index: 1;
     width: 100%;
@@ -141,9 +177,50 @@
     align-items: flex-end;
     gap: 4px;
     min-width: 0;
+    flex: 1;
     overflow-x: auto;
     padding: 4px 4px 0 0;
     scrollbar-width: none;
+  }
+
+  .read-project-notes {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    color: var(--spectrum-global-color-gray-800);
+    font: inherit;
+    font-size: var(--font-size-s);
+    cursor: pointer;
+  }
+
+  .read-project-notes:hover {
+    color: var(--spectrum-global-color-gray-900);
+    text-decoration: underline;
+  }
+
+  .read-project-notes:focus-visible {
+    outline: 2px solid var(--spectrum-global-color-blue-400);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 720px) {
+    .project-tabs {
+      flex-wrap: wrap;
+      gap: var(--spacing-xs);
+    }
+
+    .project-tabs__scroll {
+      flex-basis: 100%;
+      order: 1;
+    }
+
+    .read-project-notes {
+      margin-left: auto;
+    }
   }
 
   .project-tabs__scroll::-webkit-scrollbar {
@@ -239,6 +316,12 @@
     height: 7px;
     border-radius: 50%;
     box-shadow: 0 0 0 1px var(--spectrum-global-color-gray-500);
+  }
+
+  .setup-remaining {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
   }
 
   .project-tab__menu-control {

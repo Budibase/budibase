@@ -40,6 +40,7 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash"
 import {
+  breakExternalTableId,
   isExternalTable,
   isExternalTableID,
   isSQL,
@@ -52,15 +53,17 @@ import {
   isSchema,
   validate as validateSchema,
 } from "../../../utilities/schema"
-import { handleDataImport } from "./utils"
+import { handleDataImport, importInternalTableRows } from "./utils"
 import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
+  projectAssignmentResult,
+  mergeProjectAssignmentResults,
+  withoutProjectAssignmentResult,
 } from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
 import { getRowParams } from "../../../db/utils"
+import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -70,6 +73,21 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
     return external
   }
   return internal
+}
+
+const getNewLinkedTableIds = ({
+  previousTable,
+  savedTable,
+}: {
+  previousTable?: Table
+  savedTable: Table
+}) => {
+  const previousIds = new Set(
+    previousTable ? getLinkedTableIDs(previousTable.schema) : []
+  )
+  return Array.from(new Set(getLinkedTableIDs(savedTable.schema))).filter(
+    tableId => tableId !== savedTable._id && !previousIds.has(tableId)
+  )
 }
 
 function checkDefaultFields(table: Table) {
@@ -167,33 +185,34 @@ export async function find(ctx: UserCtx<void, FindTableResponse>) {
   ctx.body = result
 }
 
-export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
-  const appId = ctx.appId
-  const { rows, ...table } = ctx.request.body
-  const isImport = rows
+async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+  const table = ctx.request.body
   const renaming = ctx.request.body._rename
 
   const isCreate = !table._id
+  let previousTable: Table | undefined
 
-  if (isCreate) {
-    table.projectIds = await resolveProjectIds(table.projectIds)
-  } else {
-    const existingTable = await sdk.tables.getTable(table._id!)
-    table.projectIds = await resolveUpdatedProjectIds(
-      table.projectIds,
-      existingTable.projectIds
-    )
-    ctx.request.body.projectIds = table.projectIds
+  if (!isExternalTable(table)) {
+    if (isCreate) {
+      table.projectIds = await sdk.projects.resolveProjectIds(table.projectIds)
+    } else {
+      previousTable = await sdk.tables.getTable(table._id!)
+      table.projectIds = await sdk.projects.resolveUpdatedProjectIds({
+        projectIds: table.projectIds,
+        currentProjectIds: previousTable.projectIds,
+      })
+      ctx.request.body.projectIds = table.projectIds
+    }
   }
 
   await guardTable(table, isCreate)
 
   let savedTable: Table
+  let eventPreviousTable: Table | undefined
   if (isCreate) {
-    savedTable = await sdk.tables.create(table, rows, ctx.user._id)
+    savedTable = await sdk.tables.create(table, undefined, ctx.user._id)
     savedTable = await sdk.tables.enrichViewSchemas(savedTable)
     savedTable = await processTable(savedTable)
-    await events.table.created(savedTable)
   } else {
     const api = pickApi({ table })
     const { table: updatedTable, oldTable } = await api.updateTable(
@@ -203,20 +222,106 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     savedTable = updatedTable
     savedTable = await processTable(savedTable)
 
-    if (oldTable) {
-      await events.table.updated(oldTable, savedTable)
-    }
+    eventPreviousTable = oldTable
   }
   if (renaming) {
     await sdk.views.renameLinkedViews(savedTable, renaming)
   }
-  if (isImport) {
+  const projectAssignments = []
+  const newLinkedTableIds = !isExternalTable(savedTable)
+    ? getNewLinkedTableIds({ previousTable, savedTable })
+    : []
+  const existingProjectIds = new Set(savedTable.projectIds || [])
+  const newLinkedTables = await sdk.tables.getTables(newLinkedTableIds)
+  for (const linkedTable of newLinkedTables) {
+    const assignmentOwner = isExternalTableID(linkedTable._id!)
+      ? await sdk.datasources.get(
+          breakExternalTableId(linkedTable._id!).datasourceId
+        )
+      : linkedTable
+    const reciprocalProjectIds = (assignmentOwner.projectIds || []).filter(
+      projectId => !existingProjectIds.has(projectId)
+    )
+    projectAssignments.push(
+      await projectAssignmentResult(
+        sdk.projects.propagateProjectIdsToDependencySubtrees({
+          blockedResourceIds: [assignmentOwner._id!],
+          dependencyIds: [savedTable._id!],
+          projectIds: reciprocalProjectIds,
+        })
+      )
+    )
+  }
+
+  if (!isExternalTable(savedTable)) {
+    projectAssignments.push(
+      await projectAssignmentResult(
+        sdk.projects.propagateProjectDependencyChanges({
+          rootResourceId: savedTable._id!,
+          currentProjectIds: savedTable.projectIds,
+          previousProjectIds: previousTable?.projectIds || [],
+          previousResource: previousTable,
+          savedResource: savedTable,
+        })
+      )
+    )
+  }
+
+  if (newLinkedTableIds.length) {
+    const persistedTable = await sdk.tables.getTable(savedTable._id!)
+    savedTable._rev = persistedTable._rev
+    savedTable.projectIds = persistedTable.projectIds
+  }
+
+  return {
+    savedTable,
+    eventPreviousTable,
+    projectAssignment: mergeProjectAssignmentResults(projectAssignments),
+  }
+}
+
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+  if (ctx.request.body.rows?.length && !isExternalTable(ctx.request.body)) {
+    // Publishing clears the rename metadata needed by an in-flight row import.
+    // Acquire its guard before either the table definition or rows are written.
+    return await withPublishLock(() => saveTable(ctx))
+  }
+  return await saveTable(ctx)
+}
+
+async function saveTable(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+  const { rows, ...table } = withoutProjectAssignmentResult(ctx.request.body)
+  ctx.request.body = table
+  // Internal schema saves must serialize with import reconciliation even when
+  // Projects is disabled.
+  const withTableSaveLock = isExternalTable(table)
+    ? sdk.projects.doWithProjectAssignmentsLockIfEnabled
+    : sdk.projects.doWithProjectAssignmentsLock
+  const result = await withTableSaveLock(() => saveUnlocked(ctx))
+  let { savedTable } = result
+  if (rows && !isExternalTable(savedTable)) {
+    const importedTable = await importInternalTableRows({
+      table: await context.getWorkspaceDB().get<Table>(savedTable._id!),
+      rows,
+      userId: ctx.user._id,
+    })
+    savedTable = await processTable(
+      await sdk.tables.enrichViewSchemas(importedTable)
+    )
+  }
+  if (!table._id) {
+    await events.table.created(savedTable)
+  } else if (result.eventPreviousTable) {
+    await events.table.updated(result.eventPreviousTable, savedTable)
+  }
+  if (rows) {
     await events.table.imported(savedTable)
   }
   ctx.message = `Table ${table.name} saved successfully.`
-  ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, appId, { ...savedTable })
-
-  ctx.body = savedTable
+  ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, ctx.appId, {
+    ...savedTable,
+  })
+  ctx.body = { ...savedTable, projectAssignment: result.projectAssignment }
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 
@@ -318,7 +423,7 @@ export async function migrate(
   ctx.body = { message: `Column ${oldColumn} migrated.` }
 }
 
-export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
+async function duplicateUnlocked(ctx: UserCtx<void, SaveTableResponse>) {
   const tableId = ctx.params.tableId as string
   const table = await sdk.tables.getTable(tableId)
 
@@ -333,6 +438,12 @@ export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
 
   const processedTable = await processTable(duplicatedTable)
   builderSocket?.emitTableUpdate(ctx, cloneDeep(processedTable))
+}
+
+export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    duplicateUnlocked(ctx)
+  )
 }
 
 export async function publish(
