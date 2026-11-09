@@ -7,7 +7,6 @@ import sqlServer from "./microsoftSqlServer"
 import s3 from "./s3"
 import airtable from "./airtable"
 import mysql from "./mysql"
-import arangodb from "./arangodb"
 import rest from "./rest"
 import googlesheets from "./googlesheets"
 import firebase from "./firebase"
@@ -43,7 +42,6 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.SNOWFLAKE]: snowflake.schema,
   [SourceName.ORACLE]: oracle.schema,
   /* deprecated - not available through UI */
-  [SourceName.ARANGODB]: arangodb.schema,
   [SourceName.AIRTABLE]: airtable.schema,
   /* un-used */
   [SourceName.BUDIBASE]: undefined,
@@ -73,7 +71,6 @@ const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
     [SourceName.SNOWFLAKE]: snowflake.integration,
     [SourceName.ORACLE]: oracle.integration,
     /* deprecated - not available through UI */
-    [SourceName.ARANGODB]: arangodb.integration,
     [SourceName.AIRTABLE]: airtable.integration,
     /* un-used */
     [SourceName.BUDIBASE]: undefined,
