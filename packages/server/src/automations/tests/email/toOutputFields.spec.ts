@@ -3,6 +3,7 @@ import { htmlToText } from "html-to-text"
 import {
   EMAIL_BODY_CHARACTER_LIMIT,
   EMAIL_BODY_TRUNCATION_SUFFIX,
+  EMAIL_HTML_CHARACTER_LIMIT,
   toOutputFields,
 } from "../../email/utils/toOutputFields"
 
@@ -128,20 +129,33 @@ describe("toOutputFields", () => {
   })
 
   it("truncates HTML body when exceeding the limit", async () => {
-    const html = `<p>${"a".repeat(EMAIL_BODY_CHARACTER_LIMIT + 10)}</p>`
+    const html = `<p>${"a".repeat(EMAIL_HTML_CHARACTER_LIMIT + 10)}</p>`
     const message = buildMessage(
       ["Content-Type: text/html; charset=utf-8", "", html].join("\r\n")
     )
 
     const result = await toOutputFields(message)
 
-    const expectedHtml = `${html.slice(
-      0,
-      EMAIL_BODY_CHARACTER_LIMIT - EMAIL_BODY_TRUNCATION_SUFFIX.length
-    )}${EMAIL_BODY_TRUNCATION_SUFFIX}`
+    const suffix = `<p>${EMAIL_BODY_TRUNCATION_SUFFIX.trim()}</p>`
+    const expectedHtml = `<p>${"a".repeat(
+      EMAIL_HTML_CHARACTER_LIMIT - suffix.length - "<p></p>".length
+    )}</p>${suffix}`
 
     expect(result.bodyHtml).toBe(expectedHtml)
+    expect(result.bodyHtml).toHaveLength(EMAIL_HTML_CHARACTER_LIMIT)
     expect(result.bodyHtmlTruncated).toBe(true)
+  })
+
+  it("sanitizes HTML body before returning it", async () => {
+    const html =
+      '<p onclick="alert(1)">Hello</p><script>alert(1)</script><img src="data:image/png;base64,abc" />'
+    const message = buildMessage(
+      ["Content-Type: text/html; charset=utf-8", "", html].join("\r\n")
+    )
+
+    const result = await toOutputFields(message)
+
+    expect(result.bodyHtml).toBe("<p>Hello</p>")
   })
 
   it("returns undefined body without truncation when source is missing", async () => {

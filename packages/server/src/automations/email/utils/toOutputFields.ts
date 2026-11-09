@@ -1,11 +1,13 @@
 import { FetchMessageObject, MessageAddressObject } from "imapflow"
 import { simpleParser } from "mailparser"
+import { sanitizeHtmlString } from "@budibase/shared-core"
 import type { EmailTriggerOutputs } from "@budibase/types"
 import { htmlToText } from "html-to-text"
-
 export const EMAIL_BODY_CHARACTER_LIMIT = 50_000
+export const EMAIL_HTML_CHARACTER_LIMIT = 500_000
 export const EMAIL_BODY_TRUNCATION_SUFFIX =
   "\n\n[Email body truncated due to size limit]"
+const HTML_BODY_TRUNCATION_SUFFIX = `<p>${EMAIL_BODY_TRUNCATION_SUFFIX.trim()}</p>`
 
 interface BodyLimitResult {
   body: string | undefined
@@ -43,6 +45,37 @@ const applyBodyLimit = (body: string | undefined): BodyLimitResult => {
   }
 }
 
+const applyHtmlBodyLimit = (body: string | undefined): BodyLimitResult => {
+  const sanitizedHtml = sanitizeHtmlString(body)
+  if (!sanitizedHtml) {
+    return { body: undefined, truncated: false }
+  }
+
+  if (sanitizedHtml.length <= EMAIL_HTML_CHARACTER_LIMIT) {
+    return { body: sanitizedHtml, truncated: false }
+  }
+
+  let sliceLength =
+    EMAIL_HTML_CHARACTER_LIMIT - HTML_BODY_TRUNCATION_SUFFIX.length
+
+  while (sliceLength > 0) {
+    const result = sanitizeHtmlString(
+      `${sanitizedHtml.slice(0, sliceLength)}${HTML_BODY_TRUNCATION_SUFFIX}`
+    )
+
+    if (result.length <= EMAIL_HTML_CHARACTER_LIMIT) {
+      return { body: result, truncated: true }
+    }
+
+    sliceLength -= result.length - EMAIL_HTML_CHARACTER_LIMIT
+  }
+
+  return {
+    body: HTML_BODY_TRUNCATION_SUFFIX,
+    truncated: true,
+  }
+}
+
 const getBodies = async (message: FetchMessageObject): Promise<EmailBodies> => {
   if (!message.source) {
     return {}
@@ -69,7 +102,8 @@ export const toOutputFields = async (
 ): Promise<EmailTriggerOutputs> => {
   const { text, html } = await getBodies(message)
   const { body: bodyText, truncated: bodyTextTruncated } = applyBodyLimit(text)
-  const { body: bodyHtml, truncated: bodyHtmlTruncated } = applyBodyLimit(html)
+  const { body: bodyHtml, truncated: bodyHtmlTruncated } =
+    applyHtmlBodyLimit(html)
 
   const toAddresses = extractAddresses(message.envelope?.to)
   const cc = extractAddresses(message.envelope?.cc)
