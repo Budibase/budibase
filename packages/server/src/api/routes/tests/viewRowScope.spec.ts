@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../../tests/utilities/structures"
+import sdk from "../../../sdk"
 
 describe("view row route scope", () => {
   const config = new TestConfiguration()
@@ -63,6 +64,24 @@ describe("view row route scope", () => {
   })
 
   afterAll(() => config.end())
+
+  it("rejects a different row even when the search result count matches", async () => {
+    await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+      const search = jest
+        .spyOn(sdk.rows, "search")
+        .mockResolvedValueOnce({ rows: [visibleRow] })
+      try {
+        await config.api.row.exportRows(
+          viewId,
+          { rows: [hiddenRow._id!] },
+          undefined,
+          { status: 404 }
+        )
+      } finally {
+        search.mockRestore()
+      }
+    })
+  })
 
   it("keeps enriched reads and searches within visible view fields", async () => {
     await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
