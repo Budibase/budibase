@@ -900,12 +900,8 @@ async function runResumeOperation({
         }
       )
     }
-    // Correct an existing terminal action without double-counting.
-    if (hasEmittedTerminalAction) {
-      await updatePlatformActionSessionStatus("failed")
-    } else {
-      emitAgentResumeFailure(error)
-    }
+    // Finalization errors must not overwrite an already emitted run outcome.
+    emitAgentResumeFailure(error)
     if (hasPending === false) {
       await markEscalationRequestResolved({
         status: "failed",

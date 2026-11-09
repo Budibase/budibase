@@ -870,7 +870,7 @@ describe("resumeOperation", () => {
     }
   )
 
-  it("timestamps the failed correction after the completed action even within one millisecond", async () => {
+  it("preserves completion when request finalization fails within the same millisecond", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
       mockApprovedRun("Approved and booked.")
@@ -893,12 +893,11 @@ describe("resumeOperation", () => {
           expect.objectContaining({ sourceId: "session_1" }),
           now + 1
         )
-        expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          signal: "failed",
-          timestamp: new Date(now + 2).toISOString(),
-        })
+        expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        expect(
+          enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+        ).toEqual(["active"])
       } finally {
         clock.mockRestore()
         outcomeSpy.mockRestore()
@@ -959,7 +958,7 @@ describe("resumeOperation", () => {
         expect(aiAgentFailedMock).not.toHaveBeenCalled()
         expect(
           enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
-        ).toEqual(["active", "failed"])
+        ).toEqual(["active"])
         const [request] =
           await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("needs_input")
@@ -1037,7 +1036,7 @@ describe("resumeOperation", () => {
   })
 
   it.each([false, true])(
-    "corrects the session without double-counting when finalizing fails (pending approval: %s)",
+    "preserves the completed session when request finalization fails (pending approval: %s)",
     async hasPending => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         const { requestId } = (await createRequest())!
@@ -1068,23 +1067,15 @@ describe("resumeOperation", () => {
             })
           ).rejects.toThrow("DB unavailable")
 
-          // The action was already emitted as completed before the failure -
-          // don't emit a second action (it would double-count actionCount),
-          // correct the materialized session status instead.
           expect(aiAgentExecutedMock).toHaveBeenCalledWith(
             expect.objectContaining({ requestId }),
             expect.any(Number)
           )
+          expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
           expect(aiAgentFailedMock).not.toHaveBeenCalled()
           expect(
             enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
-          ).toEqual(["active", "failed"])
-          expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
-            sourceType: "agent_session",
-            sourceId: "session_1",
-            signal: "failed",
-            timestamp: expect.any(String),
-          })
+          ).toEqual(["active"])
           const [request] =
             await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
           expect(request.status).toEqual(hasPending ? "needs_input" : "failed")

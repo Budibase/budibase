@@ -924,7 +924,13 @@ describe("Agent chat tool call tracking", () => {
   ]
 
   // Runs the real SDK: the first step executes a tool, the next model call throws
-  const mockStreamTextAbortingAfterTool = (abortMessage: string) => {
+  const mockStreamTextAbortingAfterTool = ({
+    abortMessage,
+    toolFails = false,
+  }: {
+    abortMessage: string
+    toolFails?: boolean
+  }) => {
     const model = new MockLanguageModelV4({
       doStream: async () => {
         if (model.doStreamCalls.length > 1) {
@@ -962,7 +968,12 @@ describe("Agent chat tool call tracking", () => {
         tools: {
           lookup: aiActual.tool({
             inputSchema: aiActual.jsonSchema({ type: "object" }),
-            execute: async () => ({ ok: true }),
+            execute: async () => {
+              if (toolFails) {
+                throw new Error("Internal tool failure before abort")
+              }
+              return { ok: true }
+            },
           }),
         },
         onStepFinish: options.onStepFinish,
@@ -1136,16 +1147,18 @@ describe("Agent chat tool call tracking", () => {
             }
           },
         })
+        const update = jest.fn(async (): Promise<{ ok: boolean }> => {
+          throw new Error("CouchDB error: missing")
+        })
+        const lookup = jest.fn(async () => ({ ok: true }))
         const tools: ToolSet = {
           update: aiActual.tool({
             inputSchema: aiActual.jsonSchema({ type: "object" }),
-            execute: async (): Promise<{ ok: boolean }> => {
-              throw new Error("CouchDB error: missing")
-            },
+            execute: update,
           }),
           lookup: aiActual.tool({
             inputSchema: aiActual.jsonSchema({ type: "object" }),
-            execute: async () => ({ ok: true }),
+            execute: lookup,
           }),
         }
         jest.mocked(streamText).mockImplementation(options =>
@@ -1177,6 +1190,8 @@ describe("Agent chat tool call tracking", () => {
               },
             ],
           })
+        expect(update).toHaveBeenCalledTimes(recover ? 2 : 1)
+        expect(lookup).toHaveBeenCalledTimes(recover ? 1 : 0)
         expect(res.status).toBe(200)
         expect(res.text).toContain("CouchDB error: missing")
         expect(res.text).toContain("hello")
@@ -1185,35 +1200,41 @@ describe("Agent chat tool call tracking", () => {
       }
     )
 
-    it("keeps a real preview runtime abort failed after a successful tool", async () => {
-      mockStreamTextAbortingAfterTool("E2E_PREVIEW_RUNTIME_ABORT")
-      const executed = jest
-        .spyOn(events.action, "aiAgentExecuted")
-        .mockImplementation(() => {})
-      const failed = jest
-        .spyOn(events.action, "aiAgentFailed")
-        .mockImplementation(() => {})
-      const res = await config
-        .getRequest()!
-        .post(agentPreviewStreamPath(agentId))
-        .set(await config.defaultHeaders())
-        .send({
-          isPreview: true,
-          messages: [
-            {
-              id: "msg-1",
-              role: "user",
-              parts: [{ type: "text", text: "test" }],
-            },
-          ],
+    it.each([false, true])(
+      "keeps a real preview runtime abort failed (tool fails: %s)",
+      async toolFails => {
+        mockStreamTextAbortingAfterTool({
+          abortMessage: "E2E_PREVIEW_RUNTIME_ABORT",
+          toolFails,
         })
-      expect(res.status).toBe(200)
-      expect(failed).toHaveBeenCalledTimes(1)
-      expect(failed).toHaveBeenCalledWith(
-        expect.objectContaining({ errorMessage: "E2E_PREVIEW_RUNTIME_ABORT" })
-      )
-      expect(executed).not.toHaveBeenCalled()
-    })
+        const executed = jest
+          .spyOn(events.action, "aiAgentExecuted")
+          .mockImplementation(() => {})
+        const failed = jest
+          .spyOn(events.action, "aiAgentFailed")
+          .mockImplementation(() => {})
+        const res = await config
+          .getRequest()!
+          .post(agentPreviewStreamPath(agentId))
+          .set(await config.defaultHeaders())
+          .send({
+            isPreview: true,
+            messages: [
+              {
+                id: "msg-1",
+                role: "user",
+                parts: [{ type: "text", text: "test" }],
+              },
+            ],
+          })
+        expect(res.status).toBe(200)
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(failed).toHaveBeenCalledWith(
+          expect.objectContaining({ errorMessage: "E2E_PREVIEW_RUNTIME_ABORT" })
+        )
+        expect(executed).not.toHaveBeenCalled()
+      }
+    )
 
     it("does not count reported tool results, which are counted when the tool executes", async () => {
       jest.mocked(streamText).mockImplementation(
@@ -1321,7 +1342,7 @@ describe("Agent chat tool call tracking", () => {
 
     it("does not overwrite a failed session when the stream closes after an error", async () => {
       const abortMessage = "CONTROLLED_RUNTIME_ABORT"
-      const model = mockStreamTextAbortingAfterTool(abortMessage)
+      const model = mockStreamTextAbortingAfterTool({ abortMessage })
       const executed = jest
         .spyOn(events.action, "aiAgentExecuted")
         .mockImplementation(() => {})
@@ -1974,7 +1995,7 @@ describe("Agent chat tool call tracking", () => {
 
       it("fails the session and its request when the stream errors after a successful tool", async () => {
         const abortMessage = "CONTROLLED_RUNTIME_ABORT"
-        const model = mockStreamTextAbortingAfterTool(abortMessage)
+        const model = mockStreamTextAbortingAfterTool({ abortMessage })
         ;(
           sdk.ai.agents.getOrThrow as jest.MockedFunction<
             typeof sdk.ai.agents.getOrThrow
