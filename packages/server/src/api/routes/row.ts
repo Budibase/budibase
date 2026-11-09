@@ -4,6 +4,7 @@ import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
 import recaptcha from "../../middleware/recaptcha"
 import { trimViewRowInfoMiddleware } from "../../middleware/trimViewRowInfo"
+import { viewRowScopeMiddleware } from "../../middleware/viewRowScope"
 import { endpointGroupList, publicRoutes } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
@@ -28,7 +29,8 @@ const writeRoutes = endpointGroupList.group(
     ),
     first: false,
   },
-  recaptcha
+  recaptcha,
+  { middleware: viewRowScopeMiddleware, first: false }
 )
 
 readRoutes
