@@ -1135,6 +1135,7 @@ describe("Agent chat tool call tracking", () => {
         typeof convertToModelMessages
       >
     ).mockResolvedValue([])
+    jest.mocked(pruneMessages).mockImplementation(aiActual.pruneMessages)
   })
 
   afterEach(() => {
@@ -2018,6 +2019,39 @@ describe("Agent chat tool call tracking", () => {
           runWebhook("user-1")
         )
 
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("returns the completed tool result when a later model step aborts", async () => {
+        jest.mocked(pruneMessages).mockImplementation(aiActual.pruneMessages)
+        const abortMessage = "REGRESSION_ABORT_AFTER_TOOL"
+        const model = mockStreamTextAborting({ abortMessage })
+        jest
+          .mocked(sdk.ai.agents.getOrThrow)
+          .mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+        const result = await context.doInWorkspaceContext(
+          config.getProdWorkspaceId(),
+          () => runWebhook("user-partial-turn")
+        )
+
+        expect(model.doStreamCalls).toHaveLength(2)
+        expect(result.messages).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ role: "user" }),
+            expect.objectContaining({
+              role: "assistant",
+              parts: expect.arrayContaining([
+                expect.objectContaining({
+                  type: "tool-lookup",
+                  state: "output-available",
+                  output: { ok: true },
+                }),
+              ]),
+            }),
+          ])
+        )
         expect(failed).toHaveBeenCalledTimes(1)
         expect(executed).not.toHaveBeenCalled()
       })

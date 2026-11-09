@@ -11,7 +11,6 @@ import { v4 } from "uuid"
 import {
   ActionFailureReason,
   Agent,
-  AgentMessageMetadata,
   ChatAgentRequest,
   ChatConversation,
   ChatConversationRequest,
@@ -468,15 +467,6 @@ const isSettledToolPart = (part: UIMessage["parts"][number]) =>
   part.state === "output-error" ||
   part.state === "output-denied"
 
-const toFailedAssistantMessage = <T extends UIMessage<AgentMessageMetadata>>(
-  message: T,
-  error: string
-): T => ({
-  ...message,
-  parts: message.parts.filter(isSettledToolPart),
-  metadata: { ...message.metadata, error },
-})
-
 const buildFailedWebhookChatResult = ({
   chat,
   assistantMessage,
@@ -488,10 +478,14 @@ const buildFailedWebhookChatResult = ({
   title?: string
   error: unknown
 }): WebhookChatCompleteResult => {
-  const failedMessage = toFailedAssistantMessage(
-    assistantMessage,
-    getErrorMessage(error)
-  )
+  const failedMessage = {
+    ...assistantMessage,
+    parts: assistantMessage.parts.filter(isSettledToolPart),
+    metadata: {
+      ...assistantMessage.metadata,
+      error: getErrorMessage(error),
+    },
+  }
   return {
     messages: [...chat.messages, failedMessage],
     assistantText: getAssistantMessageText(failedMessage),
