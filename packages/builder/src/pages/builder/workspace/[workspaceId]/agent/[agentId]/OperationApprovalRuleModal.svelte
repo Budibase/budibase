@@ -124,7 +124,7 @@
       ? [
           {
             name: condition.field,
-            label: `${condition.field} (deleted column)`,
+            label: `${condition.field} (unavailable)`,
             type: condition.type ?? FieldType.STRING,
           },
           ...fields,
@@ -346,8 +346,8 @@
               </div>
               {#if missing}
                 <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-                  This column no longer exists. Remove the condition to save the
-                  rule.
+                  This field is no longer available. Remove the condition to
+                  save the rule.
                 </Body>
               {/if}
             {/each}
