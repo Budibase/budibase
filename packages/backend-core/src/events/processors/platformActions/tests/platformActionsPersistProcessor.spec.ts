@@ -121,7 +121,7 @@ describe("PlatformActionPersistProcessor", () => {
     })
   })
 
-  it("keeps waiting when an older failed action is persisted after its lifecycle correction", async () => {
+  it("keeps the newer status when an older failed action is persisted after a lifecycle signal", async () => {
     await run(async () => {
       mockEnqueue.mockImplementation(async job => {
         await upsertPlatformActionSession(job)
@@ -132,7 +132,7 @@ describe("PlatformActionPersistProcessor", () => {
       }
       const environment = context.getPlatformActionEnvironment()
       const failureTimestamp = Date.now()
-      const waitingTimestamp = new Date(failureTimestamp + 1).toISOString()
+      const activeTimestamp = new Date(failureTimestamp + 1).toISOString()
       await processor.processEvent(
         Event.ACTION_AI_AGENT_EXECUTED,
         identity,
@@ -143,8 +143,8 @@ describe("PlatformActionPersistProcessor", () => {
         ...source,
         environment,
         incrementsActionCount: false,
-        signal: "waiting",
-        timestamp: waitingTimestamp,
+        signal: "active",
+        timestamp: activeTimestamp,
       })
       await processor.processEvent(
         Event.ACTION_AI_AGENT_FAILED,
@@ -156,8 +156,8 @@ describe("PlatformActionPersistProcessor", () => {
       const session = await getActionsDB().get<PlatformActionSessionIndexDoc>(
         getPlatformActionSessionId({ ...source, environment })
       )
-      expect(session.status).toBe("waiting")
-      expect(session.statusUpdatedAt).toBe(waitingTimestamp)
+      expect(session.status).toBe("active")
+      expect(session.statusUpdatedAt).toBe(activeTimestamp)
       expect(session.actionCount).toBe(2)
       expect(session.completedAt).toBeUndefined()
     })
@@ -441,7 +441,11 @@ describe("PlatformActionPersistProcessor", () => {
     it.each([
       ["completed", Event.ACTION_AI_AGENT_EXECUTED, {}],
       ["failed", Event.ACTION_AI_AGENT_FAILED, {}],
-      ["waiting", Event.ACTION_AI_AGENT_EXECUTED, { awaitingEscalation: true }],
+      [
+        "completed",
+        Event.ACTION_AI_AGENT_EXECUTED,
+        { awaitingEscalation: true },
+      ],
     ])(
       "keeps a %s session unchanged when tool calls arrive after it",
       async (expectedStatus, lifecycleEvent, lifecycle) => {
@@ -539,7 +543,7 @@ describe("PlatformActionPersistProcessor", () => {
     })
   })
 
-  it("marks an agent action as waiting only when it awaits an escalation", async () => {
+  it("completes an agent action that awaits an escalation", async () => {
     await run(async () => {
       await processor.processEvent(
         Event.ACTION_AI_AGENT_EXECUTED,
@@ -555,7 +559,7 @@ describe("PlatformActionPersistProcessor", () => {
       expect(mockEnqueue).toHaveBeenCalledWith(
         expect.objectContaining({
           incrementsActionCount: true,
-          signal: "waiting",
+          signal: "completed",
         })
       )
     })
