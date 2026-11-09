@@ -7,6 +7,7 @@ import {
   Table,
 } from "@budibase/types"
 import { ObjectStoreBuckets } from "../../constants"
+import { isWorkspaceAttachmentKey } from "./attachmentKey"
 
 export class AttachmentCleanup {
   static async coreCleanup(
@@ -14,6 +15,7 @@ export class AttachmentCleanup {
     opts: { tableId?: string; schema?: Table["schema"]; rowId?: string } = {}
   ): Promise<void> {
     let files = await Promise.resolve(fileListFn())
+    files = files.filter(isWorkspaceAttachmentKey)
     if (files.length === 0) {
       return
     }

@@ -93,6 +93,7 @@ interface CreateGateParams {
 interface ConditionRecordResult {
   record?: Record<string, unknown>
   defaulted: Record<string, unknown>
+  fields?: string[]
 }
 
 export const resolveToolArgsKey = (tool: {
@@ -217,6 +218,7 @@ const rowConditionRecord = async ({
   return {
     record: withDefaults,
     defaulted: changedFields(row, withDefaults),
+    fields: Object.keys(table.schema),
   }
 }
 
@@ -261,6 +263,17 @@ const buildConditionRecord = async ({
     return undefined
   }
 }
+
+const hasMissingConditionField = ({
+  rules,
+  fields,
+}: {
+  rules: ToolExecutionRule[]
+  fields: string[]
+}) =>
+  rules.some(rule =>
+    rule.conditions?.some(condition => !fields.includes(condition.field))
+  )
 
 // First matching rule in array order wins.
 const matchRule = (
@@ -344,7 +357,10 @@ export const createEscalationGateRuntime = ({
     if (!condition) {
       return unresolvedResult(label)
     }
-    const { record, defaulted } = condition
+    const { record, defaulted, fields } = condition
+    if (fields && hasMissingConditionField({ rules, fields })) {
+      return unresolvedResult(label)
+    }
     const rule = matchRule(rules, record)
     if (!rule) {
       return undefined
