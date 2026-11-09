@@ -2001,6 +2001,88 @@ describe("Agent chat tool call tracking", () => {
         expect(executed).not.toHaveBeenCalled()
       })
 
+      it("returns the partial turn when stream delivery fails after a tool completed", async () => {
+        jest.mocked(streamText).mockImplementation(
+          makeWebhookStreamTextMock({
+            chunks: [
+              { type: "start" },
+              {
+                type: "tool-input-available",
+                toolCallId: "call-1",
+                toolName: "lookup",
+                input: {},
+              },
+              {
+                type: "tool-output-available",
+                toolCallId: "call-1",
+                output: { ok: true },
+              },
+              { type: "text-start", id: "text-1" },
+              { type: "text-delta", id: "text-1", delta: "response" },
+              { type: "text-end", id: "text-1" },
+              { type: "finish" },
+            ],
+          })
+        )
+        jest
+          .mocked(sdk.ai.agents.getOrThrow)
+          .mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        const result = await context.doInWorkspaceContext(
+          config.getProdWorkspaceId(),
+          () =>
+            runWebhook("user-1", async stream => {
+              for await (const _delta of stream) {
+                continue
+              }
+              throw new Error("DELIVERY_FAILED")
+            })
+        )
+
+        expect(result.failed).toBe(true)
+        expect(result.messages.at(-1)).toMatchObject({
+          role: "assistant",
+          parts: expect.arrayContaining([
+            expect.objectContaining({
+              type: "tool-lookup",
+              state: "output-available",
+              output: { ok: true },
+            }),
+          ]),
+          metadata: expect.objectContaining({ error: "DELIVERY_FAILED" }),
+        })
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(failed).toHaveBeenCalledWith(
+          expect.objectContaining({ errorMessage: "DELIVERY_FAILED" })
+        )
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("throws when stream delivery fails before any tool has run", async () => {
+        jest
+          .mocked(streamText)
+          .mockImplementation(makeWebhookStreamTextMock({}))
+        jest
+          .mocked(sdk.ai.agents.getOrThrow)
+          .mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await context.doInWorkspaceContext(config.getProdWorkspaceId(), () =>
+          expect(
+            runWebhook("user-1", async stream => {
+              for await (const _delta of stream) {
+                continue
+              }
+              throw new Error("DELIVERY_FAILED")
+            })
+          ).rejects.toThrow("DELIVERY_FAILED")
+        )
+
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(executed).not.toHaveBeenCalled()
+      })
+
       it("keeps the session waiting when the run stops awaiting an approval", async () => {
         jest.mocked(streamText).mockImplementation(
           makeWebhookStreamTextMock({

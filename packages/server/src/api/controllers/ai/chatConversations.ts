@@ -477,6 +477,29 @@ const toFailedAssistantMessage = <T extends UIMessage<AgentMessageMetadata>>(
   metadata: { ...message.metadata, error },
 })
 
+const buildFailedWebhookChatResult = ({
+  chat,
+  assistantMessage,
+  title,
+  error,
+}: {
+  chat: ChatConversationRequest
+  assistantMessage: ChatConversation["messages"][number]
+  title?: string
+  error: unknown
+}): WebhookChatCompleteResult => {
+  const failedMessage = toFailedAssistantMessage(
+    assistantMessage,
+    getErrorMessage(error)
+  )
+  return {
+    messages: [...chat.messages, failedMessage],
+    assistantText: getAssistantMessageText(failedMessage),
+    title,
+    failed: true,
+  }
+}
+
 const createAssistantTextStream = async function* (
   stream: ReadableStream<UIMessageChunk>
 ): AsyncGenerator<string, void, void> {
@@ -652,6 +675,14 @@ const runWebhookChat = async ({
       sessionId,
       errorMessage: getErrorMessage(streamOutcome.reason),
     })
+    if (hasSettledToolCall(latestAssistantMessage)) {
+      return buildFailedWebhookChatResult({
+        chat,
+        assistantMessage: latestAssistantMessage,
+        title,
+        error: streamOutcome.reason,
+      })
+    }
     throw streamOutcome.reason
   }
   const requestId =
@@ -684,16 +715,12 @@ const runWebhookChat = async ({
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
     if (hasSettledToolCall(latestAssistantMessage)) {
-      const failedMessage = toFailedAssistantMessage(
-        latestAssistantMessage,
-        getErrorMessage(assistantMessageResult.reason)
-      )
-      return {
-        messages: [...chat.messages, failedMessage],
-        assistantText: getAssistantMessageText(failedMessage),
+      return buildFailedWebhookChatResult({
+        chat,
+        assistantMessage: latestAssistantMessage,
         title,
-        failed: true,
-      }
+        error: assistantMessageResult.reason,
+      })
     }
     throw assistantMessageResult.reason
   }
