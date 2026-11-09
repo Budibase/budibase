@@ -2052,6 +2052,8 @@ describe("Agent chat tool call tracking", () => {
           ]),
           metadata: expect.objectContaining({ error: "DELIVERY_FAILED" }),
         })
+        expect(sessionLogIndexer.addRequestId).toHaveBeenCalledWith("gen-test")
+        expect(sessionLogIndexer.index).toHaveBeenCalledTimes(1)
         expect(failed).toHaveBeenCalledTimes(1)
         expect(failed).toHaveBeenCalledWith(
           expect.objectContaining({ errorMessage: "DELIVERY_FAILED" })

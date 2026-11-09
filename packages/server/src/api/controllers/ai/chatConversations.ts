@@ -657,6 +657,13 @@ const runWebhookChat = async ({
     result.finishReason,
   ])
 
+  const requestId =
+    responseResult.status === "fulfilled"
+      ? (responseResult.value.id ?? undefined)
+      : undefined
+  run.sessionLogIndexer.addRequestId(requestId)
+  await run.sessionLogIndexer.index()
+
   if (streamOutcome.status === "rejected") {
     console.error("Chat webhook stream delivery failed", streamOutcome.reason)
     events.action.aiAgentFailed({
@@ -685,12 +692,6 @@ const runWebhookChat = async ({
     }
     throw streamOutcome.reason
   }
-  const requestId =
-    responseResult.status === "fulfilled"
-      ? (responseResult.value.id ?? undefined)
-      : undefined
-  run.sessionLogIndexer.addRequestId(requestId)
-  await run.sessionLogIndexer.index()
 
   if (assistantMessageResult.status === "rejected") {
     console.error("Agent streaming error", {
