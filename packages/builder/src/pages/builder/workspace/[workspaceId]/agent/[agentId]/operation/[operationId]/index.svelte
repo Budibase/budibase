@@ -97,6 +97,7 @@
   let lastSavedInstructions = $state("")
   let instructionsSaveState = $state<InstructionsSaveState>("idle")
   let instructionsAutosaveTimer: ReturnType<typeof setTimeout> | undefined
+  let inFlightInstructions: string | undefined
   let syncedAgentRev: string | undefined = $state()
   let toolSearch = $state("")
   let activeTab = $state<RailTab>("tools")
@@ -290,6 +291,11 @@
   const hasUnsavedInstructions = () =>
     operation && (operation.promptInstructions || "") !== lastSavedInstructions
 
+  const hasUnsentInstructions = () =>
+    operation &&
+    (operation.promptInstructions || "") !==
+      (inFlightInstructions ?? lastSavedInstructions)
+
   let instructionsSaveStatusLabel = $derived.by(() => {
     if (instructionsSaveState === "saving") {
       return "Saving…"
@@ -327,7 +333,7 @@
 
   $effect(() => () => {
     cancelInstructionsAutosave()
-    if (hasUnsavedInstructions()) {
+    if (hasUnsentInstructions()) {
       saveOperation()
     }
   })
@@ -382,6 +388,7 @@
       availableTools,
     })
     saving = true
+    inFlightInstructions = snapshot.promptInstructions || ""
     try {
       const updated = await agentsStore.updateAgentOperation(
         agentId,
@@ -417,6 +424,7 @@
       return false
     } finally {
       saving = false
+      inFlightInstructions = undefined
     }
     try {
       await workspaceDeploymentStore.fetch()

@@ -271,6 +271,24 @@ describe("operation instructions autosave", () => {
     )
   })
 
+  it("does not save again when leaving during a save of the same instructions", async () => {
+    let resolveSave: (value: { _rev: string }) => void = () => {}
+    mocks.updateAgentOperation.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveSave = resolve
+      })
+    )
+    const { unmount } = render(OperationPage)
+
+    await typeInstructions("Check stock")
+    await vi.advanceTimersByTimeAsync(5000)
+    unmount()
+    resolveSave({ _rev: "2" })
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(mocks.updateAgentOperation).toHaveBeenCalledTimes(1)
+  })
+
   it("saves immediately on blur without saving again later", async () => {
     render(OperationPage)
 
