@@ -1,4 +1,4 @@
-import { queue } from "@budibase/backend-core"
+import { queue, roles } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
 import { AutomationData, AutomationStatus } from "@budibase/types"
 import { MAX_AUTOMATION_RECURRING_ERRORS } from "../../../constants"
@@ -7,6 +7,7 @@ import {
   captureAutomationMessages,
   captureAutomationRemovals,
   captureAutomationResults,
+  captureRunMetadata,
   triggerCron,
 } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
@@ -69,6 +70,38 @@ describe("cron trigger", () => {
     }
     expect(repeat.cron).toEqual("0 9 * * *")
     expect(repeat.tz).toEqual("Europe/London")
+  })
+
+  it("attributes a real cron run to the schedule and a manual test to the developer", async () => {
+    const runner = await createAutomationBuilder(config)
+      .onCron({ cron: "* * * * *" })
+      .serverLog({ text: "Hello, world!" })
+      .save()
+    const [message] = await captureAutomationMessages(runner.automation, () =>
+      config.api.workspace.publish()
+    )
+
+    const scheduled = await captureRunMetadata(() =>
+      config.withProdApp(() =>
+        captureAutomationResults(runner.automation, async () => {
+          triggerCron(message)
+        })
+      )
+    )
+    const tested = await captureRunMetadata(() =>
+      runner.test({
+        timestamp: Date.now(),
+        previewRoleId: roles.BUILTIN_ROLE_IDS.BASIC,
+      })
+    )
+
+    const { _id, firstName, lastName } = config.getUser()
+    expect(scheduled.map(metadata => metadata?.triggeredBy)).toEqual([
+      { type: "schedule" },
+    ])
+    expect(tested.map(metadata => metadata?.triggeredBy)).toEqual([
+      { type: "user", id: _id, label: `${firstName} ${lastName}` },
+    ])
   })
 
   it("should fail if the cron expression is invalid", async () => {

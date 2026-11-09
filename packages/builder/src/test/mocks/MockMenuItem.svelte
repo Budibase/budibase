@@ -14,4 +14,5 @@
   on:click={() => dispatch("click")}
 >
   <slot />
+  <slot name="right" />
 </button>

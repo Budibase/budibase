@@ -1309,6 +1309,11 @@ describe("agent slack integration provisioning", () => {
 
       expect(response.body.messages).toContain("Mock assistant response")
       expect(mockedWebhookChat).toHaveBeenCalledTimes(2)
+      // Slack falls back to the external user ID when it has no name
+      expect(mockedWebhookChat.mock.calls[0][0].triggeredBy).toEqual({
+        type: "user",
+        label: "user-unlinked (Slack)",
+      })
 
       const conversations = await fetchConversations()
       expect(conversations).toHaveLength(1)
@@ -1351,6 +1356,12 @@ describe("agent slack integration provisioning", () => {
       const conversations = await fetchConversations()
       expect(conversations).toHaveLength(1)
       expect(conversations[0]?.userId).toEqual(config.getUser()._id)
+      const { _id, firstName, lastName } = config.getUser()
+      expect(mockedWebhookChat.mock.calls[0][0].triggeredBy).toEqual({
+        type: "user",
+        id: _id,
+        label: `${firstName} ${lastName}`,
+      })
     })
 
     it("acknowledges when the link prompt falls back to a DM", async () => {
@@ -1449,6 +1460,13 @@ describe("agent slack integration provisioning", () => {
         ConversationAttachmentStatus.PROCESSING,
       ]).toContain(conversations[0]?.attachments?.[0]?.status)
       expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
+      const { _id, firstName, lastName } = config.getUser()
+      expect(
+        conversations[0]?.pendingAttachmentTurns?.map(turn => turn.triggeredBy)
+      ).toEqual([
+        { type: "user", id: _id, label: `${firstName} ${lastName}` },
+        { type: "user", id: _id, label: `${firstName} ${lastName}` },
+      ])
     })
 
     it("renews attachment expiry and preserves file context before invoking the model", async () => {

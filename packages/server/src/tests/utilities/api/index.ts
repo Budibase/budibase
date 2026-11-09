@@ -15,6 +15,7 @@ import { MiscAPI } from "./misc"
 import { NavigationAPI } from "./navigation"
 import { OAuth2API } from "./oauth2"
 import { PermissionAPI } from "./permission"
+import { PlatformActionsAPI } from "./platformActions"
 import { ProjectAPI } from "./project"
 import { PluginAPI } from "./plugin"
 import { RowPublicAPI } from "./public/row"
@@ -30,6 +31,7 @@ import { RowActionAPI } from "./rowAction"
 import { ScreenAPI } from "./screen"
 import { TableAPI } from "./table"
 import { TemplateAPI } from "./template"
+import { AgentRequestAPI } from "./agentRequest"
 import { EscalationAPI } from "./escalation"
 import { UserAPI } from "./user"
 import { ViewV2API } from "./viewV2"
@@ -51,6 +53,7 @@ export default class API {
   misc: MiscAPI
   oauth2: OAuth2API
   permission: PermissionAPI
+  platformActions: PlatformActionsAPI
   project: ProjectAPI
   plugin: PluginAPI
   query: QueryAPI
@@ -60,6 +63,7 @@ export default class API {
   screen: ScreenAPI
   table: TableAPI
   templates: TemplateAPI
+  agentRequest: AgentRequestAPI
   escalation: EscalationAPI
   user: UserAPI
   viewV2: ViewV2API
@@ -94,6 +98,7 @@ export default class API {
     this.misc = new MiscAPI(config)
     this.oauth2 = new OAuth2API(config)
     this.permission = new PermissionAPI(config)
+    this.platformActions = new PlatformActionsAPI(config)
     this.project = new ProjectAPI(config)
     this.plugin = new PluginAPI(config)
     this.query = new QueryAPI(config)
@@ -103,6 +108,7 @@ export default class API {
     this.screen = new ScreenAPI(config)
     this.table = new TableAPI(config)
     this.templates = new TemplateAPI(config)
+    this.agentRequest = new AgentRequestAPI(config)
     this.escalation = new EscalationAPI(config)
     this.user = new UserAPI(config)
     this.viewV2 = new ViewV2API(config)

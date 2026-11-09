@@ -1,13 +1,22 @@
-import { context, docIds, features, roles } from "@budibase/backend-core"
+import {
+  context,
+  docIds,
+  events,
+  features,
+  roles,
+} from "@budibase/backend-core"
 import {
   ActionType,
+  AGENT_REQUEST_TYPE,
   AgentChannelProvider,
   DocumentType,
   FeatureFlag,
 } from "@budibase/types"
 import type {
+  ActionSourceContext,
   Agent,
   AgentOperation,
+  AgentRequest,
   ChatConversation,
   ChatConversationRequest,
   User,
@@ -24,6 +33,12 @@ import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV4 } from "ai/test"
 
 const mockAiConfigsFind = jest.fn()
+const mockOperationRoute = jest.fn().mockReturnValue({
+  action: "select_operation",
+  operationId: "op-1",
+  intent: "execute",
+  reason: "Test operation",
+})
 
 jest.mock("../../sdk/workspace/ai/configs", () => {
   const actual = jest.requireActual("../../sdk/workspace/ai/configs")
@@ -69,12 +84,7 @@ jest.mock("ai", () => {
         this.settings.headers?.["x-litellm-tags"] === "bb-operation-routing"
       ) {
         return {
-          output: Promise.resolve({
-            action: "select_operation",
-            operationId: "op-1",
-            intent: "execute",
-            reason: "Test operation",
-          }),
+          output: Promise.resolve(mockOperationRoute()),
         }
       }
 
@@ -1067,6 +1077,47 @@ describe("Agent chat tool call tracking", () => {
       expect(addActionMock).not.toHaveBeenCalled()
     })
 
+    it("records the agent and the developer as the session's asset and origin", async () => {
+      jest.mocked(streamText).mockImplementation(mockPipeStreamText() as any)
+      const captured: unknown[] = []
+      jest
+        .spyOn(events.action, "aiAgentExecuted")
+        .mockImplementation((source: ActionSourceContext) => {
+          captured.push(context.getPlatformActionSessionMetadata(source))
+        })
+
+      const headers = await config.defaultHeaders()
+      const res = await config
+        .getRequest()!
+        .post(agentPreviewStreamPath(agentId))
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          isPreview: true,
+          previewRoleId: roles.BUILTIN_ROLE_IDS.BASIC,
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+
+      expect(res.status).toBe(200)
+      const { _id, firstName, lastName } = config.getUser()
+      expect(captured).toEqual([
+        {
+          asset: { type: "agent", id: "agent-1", label: "Test Agent" },
+          triggeredBy: {
+            type: "user",
+            id: _id,
+            label: `${firstName} ${lastName}`,
+          },
+        },
+      ])
+    })
+
     it("classifies preview streams as Chat Preview even without a sessionId", async () => {
       jest.mocked(streamText).mockImplementation(mockPipeStreamText() as any)
 
@@ -1365,6 +1416,102 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("webhookChat", () => {
+    it("answers a Slack status query from saved requests without creating or changing requests", async () => {
+      mockOperationRoute.mockReturnValueOnce({
+        action: "request_status",
+        operationId: null,
+        intent: null,
+        reason: "User asks about the status of their requests",
+      })
+      jest.mocked(streamText).mockImplementation(makeWebhookStreamTextMock({}))
+      const user = { ...config.getUser(), globalId: "request_owner" }
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        async () => {
+          await context.doInWorkspaceContext(
+            config.getProdWorkspaceId(),
+            async () => {
+              const db = context.getRequestsDB()
+              const fields = {
+                type: AGENT_REQUEST_TYPE,
+                workspaceId: config.getProdWorkspaceId(),
+                agentId,
+                userId: "request_owner",
+                entries: [],
+                approvers: [],
+                pendingApprovers: [],
+                respondedApprovers: [],
+              } satisfies Partial<AgentRequest>
+              const requests: AgentRequest[] = [
+                {
+                  ...fields,
+                  _id: "req_status_laptop",
+                  title: "Buy a laptop",
+                  status: "needs_input",
+                  statusRank: 0,
+                },
+                {
+                  ...fields,
+                  _id: "req_status_melon",
+                  title: "Buy a melon",
+                  status: "completed",
+                  statusRank: 2,
+                },
+              ]
+              for (const request of requests) {
+                await db.put(request)
+              }
+              const savedRequests =
+                await sdk.ai.agentRequests.fetchRequestsByAgent(agentId)
+
+              await webhookChat({
+                chat: {
+                  agentId,
+                  channel: {
+                    provider: AgentChannelProvider.SLACK,
+                    channelId: "C123",
+                    externalUserId: "slack-user-1",
+                  },
+                  messages: [
+                    {
+                      id: "status-question",
+                      role: "user",
+                      parts: [
+                        { type: "text", text: "How is my request going?" },
+                      ],
+                    },
+                  ],
+                },
+                user,
+                triggeredBy: { type: "user" },
+              })
+
+              expect(
+                await sdk.ai.agentRequests.fetchRequestsByAgent(agentId)
+              ).toEqual(savedRequests)
+              expect(streamText).toHaveBeenCalledWith(
+                expect.objectContaining({
+                  tools: undefined,
+                  system: expect.stringContaining(
+                    '"title":"Buy a laptop","status":"needs_input"'
+                  ),
+                })
+              )
+              expect(streamText).toHaveBeenCalledWith(
+                expect.objectContaining({
+                  system: expect.stringContaining(
+                    '"title":"Buy a melon","status":"completed"'
+                  ),
+                })
+              )
+            }
+          )
+        }
+      )
+    })
+
     it("allows configured channel deployments", async () => {
       jest.mocked(streamText).mockImplementation(makeWebhookStreamTextMock({}))
 
@@ -1387,6 +1534,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
 
           expect(result.assistantText).toBe("response")
@@ -1425,6 +1573,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
         }
       )
@@ -1464,6 +1613,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-1" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1524,6 +1674,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-2" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1598,6 +1749,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-3" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1665,6 +1817,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-status" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1716,6 +1869,7 @@ describe("Agent chat tool call tracking", () => {
                   ],
                 },
                 user: { _id: "user-4" } as any,
+                triggeredBy: { type: "user" },
               })
 
               const requests =
@@ -1800,6 +1954,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
       )
 
@@ -1848,6 +2003,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
             onAssistantStream: async stream => {
               for await (const chunk of stream) {
                 streamedText += chunk
@@ -1883,6 +2039,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
       )
 
@@ -1938,6 +2095,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
 
           expect(result.messages[1]).toMatchObject({
@@ -1984,6 +2142,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
         }
       )
@@ -2039,6 +2198,7 @@ describe("Agent chat tool call tracking", () => {
               ],
             },
             user: { _id: "user-1" } as any,
+            triggeredBy: { type: "user" },
           })
         })
       ).rejects.toThrow("response metadata failed")

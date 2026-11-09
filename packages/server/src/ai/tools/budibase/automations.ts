@@ -10,6 +10,7 @@ import {
   ToolType,
   PermissionLevel,
   PermissionType,
+  type PlatformActionResourceOrigin,
   ToolExecutionPrincipal,
 } from "@budibase/types"
 import * as triggers from "../../../automations/triggers"
@@ -23,6 +24,9 @@ const TRIGGER_AUTOMATION_BASE_DESCRIPTION =
 
 const DEFAULT_FIELDS_DESCRIPTION =
   "Fields map matching the automation trigger schema."
+
+export const getAutomationTriggerToolName = (automationId: string) =>
+  `${automationId.replace(/[^A-Za-z0-9_-]/g, "_")}_trigger`.substring(0, 64)
 
 const getAutomationFieldSchema = (type: AutomationIOType): z.ZodTypeAny => {
   switch (type) {
@@ -96,9 +100,11 @@ const getAutomationFieldsSummary = (automation: Automation) => {
 const triggerAutomationById = async ({
   automationId,
   fields,
+  triggeredBy,
 }: {
   automationId: string
   fields?: Record<string, unknown> | null
+  triggeredBy?: PlatformActionResourceOrigin
 }) => {
   const resolvedFields = fields ?? {}
 
@@ -120,6 +126,7 @@ const triggerAutomationById = async ({
     automation,
     {
       fields: resolvedFields,
+      triggeredBy,
     },
     { getResponses: true }
   )
@@ -204,9 +211,15 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
   },
 ]
 
-const createAutomationTools = (
-  automations: Automation[] = []
-): BudibaseToolDefinition[] => {
+// triggeredBy is the agent the tools are built for, so the runs they start
+// are attributed to it rather than to the principal the tool executes as
+const createAutomationTools = ({
+  automations = [],
+  triggeredBy,
+}: {
+  automations?: Automation[]
+  triggeredBy?: PlatformActionResourceOrigin
+}): BudibaseToolDefinition[] => {
   const automationTriggerTools = automations
     .filter(
       automation =>
@@ -215,11 +228,7 @@ const createAutomationTools = (
     )
     .map((automation): BudibaseToolDefinition => {
       const automationName = automation.name || automation._id!
-      const sanitizedAutomationId = automation._id!.replace(
-        /[^A-Za-z0-9_-]/g,
-        "_"
-      )
-      const toolName = `${sanitizedAutomationId}_trigger`.substring(0, 64)
+      const toolName = getAutomationTriggerToolName(automation._id!)
       const fieldsSummary = getAutomationFieldsSummary(automation)
       const fieldsDescription = fieldsSummary
         ? `${DEFAULT_FIELDS_DESCRIPTION} Available fields: ${fieldsSummary}.`
@@ -232,6 +241,7 @@ const createAutomationTools = (
       return {
         name: toolName,
         readableName: `${automationName}.trigger`,
+        resourceName: automationName,
         sourceId: automation._id,
         sourceType: ToolType.AUTOMATION,
         action: ToolAction.TRIGGER,
@@ -256,6 +266,7 @@ const createAutomationTools = (
             return triggerAutomationById({
               automationId: automation._id!,
               fields,
+              triggeredBy,
             })
           },
         }),

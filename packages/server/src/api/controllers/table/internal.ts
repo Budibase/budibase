@@ -1,5 +1,5 @@
 import { generateTableID } from "../../../db/utils"
-import { handleDataImport } from "./utils"
+import { importInternalTableRows } from "./utils"
 import {
   BulkImportRequest,
   BulkImportResponse,
@@ -11,6 +11,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { withPublishLock } from "../deploy"
 
 export async function updateTable(
   ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
@@ -64,12 +65,13 @@ export async function destroy(ctx: UserCtx) {
 export async function bulkImport(
   ctx: UserCtx<BulkImportRequest, BulkImportResponse>
 ) {
-  const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows, identifierFields } = ctx.request.body
-  await handleDataImport(table, {
-    importRows: rows,
-    identifierFields,
-    userId: ctx.user._id,
-  })
-  return table
+  const importRows = async () =>
+    importInternalTableRows({
+      table: await sdk.tables.getTable(ctx.params.tableId),
+      rows,
+      identifierFields,
+      userId: ctx.user._id,
+    })
+  return rows?.length ? await withPublishLock(importRows) : await importRows()
 }

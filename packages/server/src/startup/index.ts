@@ -28,6 +28,7 @@ import * as redis from "../utilities/redis"
 import { generateApiKey, getChecklist } from "../utilities/workerRequests"
 import { watch } from "../watch"
 import { initialise as initialiseWebsockets } from "../websockets"
+import { queueActionSessionChange } from "../websockets/actionSessionChanges"
 import * as workspaceMigrations from "../workspaceMigrations/queue"
 import { agentRequests, rag, tests as agentTests } from "../sdk/workspace/ai"
 import { processConversationAttachmentJob } from "../api/controllers/webhook/conversationAttachmentProcessor"
@@ -179,6 +180,14 @@ export async function startup(
   queuePromises.push(rag.knowledgeSourceSyncQueue.init())
   queuePromises.push(agentRequests.init())
   queuePromises.push(agentTests.init())
+  queuePromises.push(
+    events.platformActions.init({
+      onSessionIndexed: change => {
+        queueActionSessionChange(change)
+        sdk.platformActions.clearOldHistoryOnSessionEnd(change)
+      },
+    })
+  )
   queuePromises.push(sdk.ai.chatConversations.attachmentCleanupQueue.init())
   queuePromises.push(
     sdk.ai.chatConversations.attachmentIngestionQueue.init(

@@ -1,0 +1,746 @@
+import { LockName, LockType } from "@budibase/types"
+import nock from "nock"
+import type {
+  PlatformActionEnvironment,
+  PlatformActionSessionIndexDoc,
+  PlatformActionSessionMetadata,
+} from "@budibase/types"
+import { generator, mocks } from "../../../../../tests"
+import * as context from "../../../../context"
+import * as db from "../../../../db"
+import { getCouchInfo } from "../../../../db/couch/connections"
+import * as locks from "../../../../redis/redlockImpl"
+import { getActionsDB, getActionsDbName } from "../db"
+import { upsertPlatformActionSession } from "../sessionIndex"
+import { getPlatformActionSessionId } from "../utils"
+import {
+  createWorkspace,
+  destroyWorkspace,
+  runInWorkspace as run,
+} from "./workspace"
+
+async function getSessionDoc(
+  sourceId: string,
+  environment: PlatformActionEnvironment = "prod"
+) {
+  return getActionsDB().get<PlatformActionSessionIndexDoc>(
+    getPlatformActionSessionId({
+      environment,
+      sourceType: "agent_session",
+      sourceId,
+    })
+  )
+}
+
+describe("upsertPlatformActionSession", () => {
+  it("rejects a failed workspace existence check so the job can be retried", async () => {
+    await run(async () => {
+      const workspaceId = context.getWorkspaceId()!
+      nock(getCouchInfo().url, { allowUnmocked: true })
+        .head(`/${db.getDevWorkspaceID(workspaceId)}`)
+        .reply(503)
+
+      await expect(
+        upsertPlatformActionSession({
+          sourceType: "agent_session",
+          sourceId: generator.guid(),
+          environment: "prod",
+          incrementsActionCount: true,
+          signal: "completed",
+          timestamp: "2026-08-31T00:00:00.000Z",
+        })
+      ).rejects.toMatchObject({ status: 503, statusCode: 503 })
+    })
+  })
+
+  it("creates a new session doc on the first event", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+
+      const indexed = await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "prod",
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(indexed).toEqual({ persisted: true })
+      expect(doc.actionCount).toBe(1)
+      expect(doc.status).toBe("completed")
+      expect(doc.startedAt).toBe("2026-08-31T00:00:00.000Z")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:00:00.000Z")
+      expect(doc.updatedAt).toBe(mocks.date.MOCK_DATE.toISOString())
+      expect(doc.completedAt).toBe("2026-08-31T00:00:00.000Z")
+    })
+  })
+
+  it("creates a failed session doc when the first event is a failure", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "prod",
+        incrementsActionCount: true,
+        signal: "failed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("failed")
+    })
+  })
+
+  it("defaults a signal-less first action to active", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "prod",
+        incrementsActionCount: true,
+        signal: undefined,
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("active")
+      expect(doc.actionCount).toBe(1)
+      expect(doc.completedAt).toBeUndefined()
+    })
+  })
+
+  it("leaves the existing status untouched for a signal-less later action", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "prod",
+        incrementsActionCount: true,
+        signal: "active",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      // A step succeeding mid-run must not assert "completed" on its own.
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "prod",
+        incrementsActionCount: true,
+        signal: undefined,
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("active")
+      expect(doc.actionCount).toBe(2)
+    })
+  })
+
+  it("increments actionCount and refreshes updatedAt/completedAt on later events", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.actionCount).toBe(2)
+      expect(doc.startedAt).toBe("2026-08-31T00:00:00.000Z")
+      expect(doc.updatedAt).toBe(mocks.date.MOCK_DATE.toISOString())
+      expect(doc.completedAt).toBe("2026-08-31T00:05:00.000Z")
+    })
+  })
+
+  it("keeps startedAt/completedAt chronologically correct when events are processed out of order", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+
+      // Simulates a later event's job winning the lock/processing race and
+      // being indexed before an earlier event's job (e.g. after a lock
+      // contention retry).
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.actionCount).toBe(2)
+      expect(doc.startedAt).toBe("2026-08-31T00:00:00.000Z")
+      expect(doc.completedAt).toBe("2026-08-31T00:05:00.000Z")
+    })
+  })
+
+  it("uses the latest signal to update the session status", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "failed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("completed")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:05:00.000Z")
+      expect(doc.actionCount).toBe(2)
+    })
+  })
+
+  it.each([
+    ["completed", "failed"],
+    ["failed", "completed"],
+  ] as const)(
+    "keeps failed when %s then %s arrive at the same timestamp",
+    async (firstSignal, secondSignal) => {
+      await run(async () => {
+        const sourceId = generator.guid()
+        const timestamp = "2026-08-31T00:00:00.000Z"
+        const input = {
+          sourceType: "agent_session" as const,
+          sourceId,
+          environment: "prod" as const,
+          incrementsActionCount: true,
+          timestamp,
+        }
+
+        await upsertPlatformActionSession({ ...input, signal: firstSignal })
+        await upsertPlatformActionSession({ ...input, signal: secondSignal })
+
+        const doc = await getSessionDoc(sourceId)
+
+        expect(doc.status).toBe("failed")
+        expect(doc.statusUpdatedAt).toBe(timestamp)
+        expect(doc.actionCount).toBe(2)
+      })
+    }
+  )
+
+  it("adds statusUpdatedAt when updating a legacy session doc", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+
+      await getActionsDB().put({
+        _id: getPlatformActionSessionId(input),
+        ...input,
+        status: "completed",
+        actionCount: 1,
+        startedAt: "2026-08-31T00:00:00.000Z",
+        completedAt: "2026-08-31T00:00:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: false,
+        signal: "active",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("active")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:05:00.000Z")
+      expect(doc.actionCount).toBe(1)
+    })
+  })
+
+  it("throws for a lifecycle signal with no action indexed yet, without creating an orphan session", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+
+      // Bull retries a thrown job instead of silently dropping it - by the
+      // time retries exhaust, the run's first action should have indexed the
+      // session for this signal to apply to. If it never does (no action
+      // ever occurs), the retries are exhausted and no orphan session exists.
+      await expect(
+        upsertPlatformActionSession({
+          ...input,
+          incrementsActionCount: false,
+          signal: "active",
+          timestamp: "2026-08-31T00:00:00.000Z",
+        })
+      ).rejects.toThrow()
+
+      const doc = await getActionsDB().tryGet<PlatformActionSessionIndexDoc>(
+        getPlatformActionSessionId(input)
+      )
+
+      expect(doc).toBeUndefined()
+    })
+  })
+
+  it("reopens an existing session without incrementing actionCount", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: false,
+        signal: "active",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("active")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:05:00.000Z")
+      expect(doc.actionCount).toBe(1)
+      expect(doc.completedAt).toBeUndefined()
+    })
+  })
+
+  it("ignores a lifecycle signal older than the current status", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: false,
+        signal: "waiting",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("completed")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:05:00.000Z")
+      expect(doc.actionCount).toBe(1)
+    })
+  })
+
+  it("does not lose increments when events for the same session arrive concurrently", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+      const eventCount = 5
+
+      // The session lock is TRY_ONCE (no internal retry), relying on the
+      // surrounding Bull job's own retry/backoff to pick a rejected update
+      // back up. Simulate that retry here to prove no increment is lost
+      // under real concurrency, rather than two updates silently racing
+      // through a read-merge-write on the same doc.
+      const sessionId = getPlatformActionSessionId(input)
+      const lockContentionMessage = `Could not acquire lock to index platform action session ${sessionId}`
+      const retryTimeoutMs = 1000
+      const retryIntervalMs = 30
+
+      async function upsertWithRetry(timestamp: string) {
+        const deadline = Date.now() + retryTimeoutMs
+
+        while (true) {
+          try {
+            await upsertPlatformActionSession({
+              ...input,
+              incrementsActionCount: true,
+              signal: "completed",
+              timestamp,
+            })
+            return
+          } catch (err) {
+            // Only lock contention is expected/retryable here - anything
+            // else is a real bug and should fail the test immediately
+            // instead of being masked behind blind retries.
+            if (
+              !(err instanceof Error) ||
+              err.message !== lockContentionMessage
+            ) {
+              throw err
+            }
+            if (Date.now() >= deadline) {
+              throw new Error("Could not upsert session within retry timeout")
+            }
+            await new Promise(resolve => setTimeout(resolve, retryIntervalMs))
+          }
+        }
+      }
+
+      await Promise.all(
+        Array.from({ length: eventCount }, (_, i) =>
+          upsertWithRetry(`2026-08-31T00:0${i}:00.000Z`)
+        )
+      )
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.actionCount).toBe(eventCount)
+    })
+  })
+
+  it("throws instead of racing an update when the session lock is already held", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+      const sessionId = getPlatformActionSessionId(input)
+
+      await expect(
+        locks.doWithLock(
+          {
+            type: LockType.AUTO_EXTEND,
+            name: LockName.PLATFORM_ACTION_SESSION_INDEX,
+            resource: sessionId,
+          },
+          () =>
+            upsertPlatformActionSession({
+              ...input,
+              incrementsActionCount: true,
+              signal: "completed",
+              timestamp: "2026-08-31T00:00:00.000Z",
+            })
+        )
+      ).rejects.toThrow(
+        `Could not acquire lock to index platform action session ${sessionId}`
+      )
+    })
+  })
+
+  it("keeps prod and dev sessions independent for the same sourceType/sourceId", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "prod",
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "dev",
+        incrementsActionCount: true,
+        signal: "failed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const prodDoc = await getSessionDoc(sourceId, "prod")
+      const devDoc = await getSessionDoc(sourceId, "dev")
+
+      expect(prodDoc.status).toBe("completed")
+      expect(prodDoc.actionCount).toBe(1)
+      expect(devDoc.status).toBe("failed")
+      expect(devDoc.actionCount).toBe(1)
+    })
+  })
+
+  describe("session metadata", () => {
+    const agentAsset = {
+      type: "agent" as const,
+      id: "agent-1",
+      label: "HR assistant",
+    }
+    const userOrigin = {
+      type: "user" as const,
+      id: "us_1",
+      label: "John Doe",
+    }
+
+    function upsert({
+      sourceId,
+      timestamp,
+      incrementsActionCount = true,
+      metadata,
+    }: {
+      sourceId: string
+      timestamp: string
+      incrementsActionCount?: boolean
+      metadata?: PlatformActionSessionMetadata
+    }) {
+      return upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "prod",
+        incrementsActionCount,
+        timestamp,
+        metadata,
+      })
+    }
+
+    it("stores the asset and origin of the first indexed action", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:00.000Z",
+          metadata: { asset: agentAsset, triggeredBy: userOrigin },
+        })
+
+        expect(await getSessionDoc(sourceId)).toMatchObject({
+          assetType: "agent",
+          assetId: "agent-1",
+          assetLabel: "HR assistant",
+          triggeredByType: "user",
+          triggeredById: "us_1",
+          triggeredByLabel: "John Doe",
+        })
+      })
+    })
+
+    it("keeps the first snapshot when later jobs carry different or no metadata", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:00.000Z",
+          metadata: { asset: agentAsset, triggeredBy: userOrigin },
+        })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:01.000Z",
+          metadata: {
+            asset: { ...agentAsset, label: "Renamed assistant" },
+            triggeredBy: { type: "schedule" },
+          },
+        })
+        await upsert({ sourceId, timestamp: "2026-08-31T00:00:02.000Z" })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:03.000Z",
+          incrementsActionCount: false,
+        })
+
+        const doc = await getSessionDoc(sourceId)
+        expect(doc).toMatchObject({
+          actionCount: 3,
+          assetLabel: "HR assistant",
+          triggeredByType: "user",
+          triggeredById: "us_1",
+          triggeredByLabel: "John Doe",
+        })
+      })
+    })
+
+    it("restores the earliest captured snapshot when an older job is delivered late", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:05.000Z",
+          metadata: {
+            asset: { ...agentAsset, label: "Renamed assistant" },
+            triggeredBy: userOrigin,
+          },
+        })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:00.000Z",
+          metadata: { asset: agentAsset, triggeredBy: { type: "schedule" } },
+        })
+
+        const doc = await getSessionDoc(sourceId)
+        expect(doc).toMatchObject({
+          actionCount: 2,
+          assetLabel: "HR assistant",
+          assetCapturedAt: "2026-08-31T00:00:00.000Z",
+          triggeredByType: "schedule",
+          triggeredByCapturedAt: "2026-08-31T00:00:00.000Z",
+        })
+        expect(doc.triggeredById).toBeUndefined()
+        expect(doc.triggeredByLabel).toBeUndefined()
+      })
+    })
+
+    it("keeps the indexed snapshot for a job captured at the same time", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+        const timestamp = "2026-08-31T00:00:00.000Z"
+
+        await upsert({ sourceId, timestamp, metadata: { asset: agentAsset } })
+        await upsert({
+          sourceId,
+          timestamp,
+          metadata: { asset: { ...agentAsset, label: "Renamed assistant" } },
+        })
+
+        expect(await getSessionDoc(sourceId)).toMatchObject({
+          assetLabel: "HR assistant",
+        })
+      })
+    })
+
+    it("fills metadata missing from an existing session, including from a lifecycle signal", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await upsert({ sourceId, timestamp: "2026-08-31T00:00:00.000Z" })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:01.000Z",
+          incrementsActionCount: false,
+          metadata: { asset: agentAsset },
+        })
+        await upsert({
+          sourceId,
+          timestamp: "2026-08-31T00:00:02.000Z",
+          incrementsActionCount: false,
+          metadata: {
+            asset: { ...agentAsset, label: "Renamed assistant" },
+            triggeredBy: { type: "system", id: "row_change" },
+          },
+        })
+
+        const doc = await getSessionDoc(sourceId)
+        expect(doc).toMatchObject({
+          actionCount: 1,
+          assetLabel: "HR assistant",
+          triggeredByType: "system",
+          triggeredById: "row_change",
+        })
+        expect(doc.triggeredByLabel).toBeUndefined()
+      })
+    })
+
+    it("does not create a session from a lifecycle signal carrying metadata", async () => {
+      await run(async () => {
+        const sourceId = generator.guid()
+
+        await expect(
+          upsert({
+            sourceId,
+            timestamp: "2026-08-31T00:00:00.000Z",
+            incrementsActionCount: false,
+            metadata: { asset: agentAsset, triggeredBy: userOrigin },
+          })
+        ).rejects.toThrow("not indexed yet")
+
+        const doc = await getActionsDB().tryGet(
+          getPlatformActionSessionId({
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId,
+          })
+        )
+        expect(doc).toBeUndefined()
+      })
+    })
+  })
+
+  describe("workspace deletion", () => {
+    it.each([
+      ["an action", true],
+      ["a lifecycle-only signal", false],
+    ])(
+      "discards %s queued before the workspace was deleted",
+      async (_, incrementsActionCount) => {
+        const workspaceId = await createWorkspace()
+        try {
+          await destroyWorkspace(workspaceId)
+
+          const indexed = await context.doInWorkspaceContext(workspaceId, () =>
+            upsertPlatformActionSession({
+              sourceType: "agent_session",
+              sourceId: generator.guid(),
+              environment: "prod",
+              incrementsActionCount,
+              signal: "completed",
+              timestamp: "2026-08-31T00:00:00.000Z",
+            })
+          )
+
+          expect(indexed).toEqual({ persisted: false })
+          expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+        } finally {
+          await destroyWorkspace(workspaceId)
+        }
+      }
+    )
+  })
+})
