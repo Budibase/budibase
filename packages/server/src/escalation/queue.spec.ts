@@ -1,5 +1,9 @@
 import zlib from "zlib"
-import { readUIMessageStream, type UIMessageChunk } from "ai"
+import {
+  readUIMessageStream,
+  TypeValidationError,
+  type UIMessageChunk,
+} from "ai"
 import { context, events } from "@budibase/backend-core"
 import {
   Agent,
@@ -16,6 +20,7 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import sdk from "../sdk"
+import { INVALID_TOOL_INPUT_ERROR } from "../ai/tools"
 import {
   getQueue,
   processNotify,
@@ -293,6 +298,83 @@ describe("resumeOperation", () => {
       )
     })
   })
+
+  it.each([
+    [
+      "fails schema validation",
+      new TypeValidationError({
+        value: { data: { "Old name": "RESTRICTED" } },
+        cause: new Error("Unrecognized key: Old name"),
+      }),
+    ],
+    ["fails redacted validation", new Error(INVALID_TOOL_INPUT_ERROR)],
+  ])(
+    "tells the requester the data changed when an approved call %s",
+    async (_, error) => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createRequest())!
+        const escalation = baseDoc({
+          requestId,
+          resolution: "resolved",
+          response: { accepted: true },
+          title: "Purchase request for 46 euros",
+        })
+        await context.getWorkspaceDB().put(escalation)
+        getOrThrowMock.mockResolvedValue({
+          _id: "agent_1",
+          operations: [{ id: "op_1" }],
+        } as Agent)
+        buildPromptAndToolsMock.mockResolvedValue({
+          tools: {
+            create_row: { execute: jest.fn().mockRejectedValue(error) },
+          },
+          toolSources: {},
+        })
+
+        await resumeOperation({
+          doc: escalation,
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: {
+            ...baseCtx,
+            pendingToolCall: {
+              toolCallId: "call_1",
+              toolName: "create_row",
+              args: { data: { "Old name": "RESTRICTED" } },
+            },
+          },
+        })
+
+        const [request] =
+          await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("failed")
+        expect(request.error).toEqual(
+          "The data this request writes to changed after it was requested, so it wasn't run."
+        )
+        const storedEscalation = await context
+          .getWorkspaceDB()
+          .get<EscalationContextDoc>(escalation._id!)
+        const resumeResult = JSON.parse(
+          zlib
+            .inflateSync(
+              Uint8Array.from(
+                Buffer.from(storedEscalation.resumeResultCompressed!, "base64")
+              )
+            )
+            .toString()
+        )
+        expect(resumeResult.parts).toEqual([
+          {
+            type: "text",
+            text:
+              "Your purchase request for 46 euros was approved, but the data " +
+              "it writes to changed after it was requested, so it wasn't run. " +
+              "Please ask again.",
+          },
+        ])
+      })
+    }
+  )
 
   it("keeps the request open when another escalation is pending after an approved tool failure", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
