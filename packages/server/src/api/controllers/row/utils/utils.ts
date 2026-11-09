@@ -1,13 +1,15 @@
 import * as utils from "../../../../db/utils"
 
-import { sql } from "@budibase/backend-core"
+import { BadRequestError, sql } from "@budibase/backend-core"
 import {
   Ctx,
   DatasourcePlusQueryResponse,
   FieldType,
   RelationshipsJson,
   Row,
+  SearchFilters,
   Table,
+  UserBindings,
   ViewV2,
 } from "@budibase/types"
 import {
@@ -17,7 +19,7 @@ import {
 import { isKnexRows } from "./sqlUtils"
 import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
-import { processStringSync } from "@budibase/string-templates"
+import { findHBSBlocks, processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
 import { getTableIdFromViewId, helpers, isViewId } from "@budibase/shared-core"
 
@@ -170,6 +172,55 @@ export async function sqlOutputProcessing(
 
 export function isUserMetadataTable(tableId: string) {
   return tableId === utils.InternalTables.USER_METADATA
+}
+
+export function resolveReaderSearchBindings({
+  query,
+  user,
+}: {
+  query: SearchFilters | undefined
+  user: UserBindings
+}): SearchFilters {
+  const bindings: Record<string, string | undefined> = {
+    "user._id": user._id,
+    "user.firstName": user.firstName,
+    "user.lastName": user.lastName,
+    "user.fullName": user.fullName,
+    "user.email": user.email,
+    "user.status": user.status,
+    "user.roleId": user.roleId ?? undefined,
+    "user.globalId": user.globalId,
+    "user.userId": user.userId,
+    now: new Date().toISOString(),
+  }
+
+  const resolve = (value: unknown): unknown => {
+    if (typeof value === "string") {
+      return findHBSBlocks(value).reduce((result, block) => {
+        const binding = block
+          .slice(2, -2)
+          .trim()
+          .replace(/^\[user\]\./, "user.")
+          .replace(/^user\.\[([a-zA-Z_][a-zA-Z0-9_]*)\]$/, "user.$1")
+          .replace(/^\[now\]$/, "now")
+        if (!Object.prototype.hasOwnProperty.call(bindings, binding)) {
+          throw new BadRequestError("Unsupported search query binding")
+        }
+        return result.replace(block, bindings[binding] ?? "")
+      }, value)
+    }
+    if (Array.isArray(value)) {
+      return value.map(resolve)
+    }
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, nested]) => [key, resolve(nested)])
+      )
+    }
+    return value
+  }
+
+  return resolve(query ?? {}) as SearchFilters
 }
 
 export async function enrichArrayContext(

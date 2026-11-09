@@ -453,4 +453,104 @@ describe("buildPromptAndTools", () => {
     )
     expect(canRequesterReadAgentToolResource).toHaveBeenCalledTimes(1)
   })
+
+  it("keeps table definitions on admin tools but still redacts their results", async () => {
+    jest.mocked(canRequesterReadAgentToolResource).mockResolvedValue(false)
+    const inputSchema = z.object({ email: z.string() })
+    const redactedExecute = jest.fn()
+    const restrictedTool = {
+      description: "Create Row on the configured resource",
+      inputSchema: z.object({}),
+      execute: redactedExecute,
+    } as Tool
+    jest.mocked(getBudibaseTools).mockReturnValue([
+      {
+        name: "ta_employees_create_row",
+        readableName: "Employees.create_row",
+        tableId: "ta_employees",
+        description: "Create an Employee with Manager or Apprentice level",
+        sourceType: ToolType.INTERNAL_TABLE,
+        sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
+        authorization: {
+          permissionType: PermissionType.TABLE,
+          permissionLevel: PermissionLevel.WRITE,
+          resourceId: "ta_employees",
+        },
+        tool: {
+          description: "Fields: Email, Employee Level",
+          inputSchema,
+          execute: jest.fn(),
+        } as Tool,
+        requesterRedactedTool: restrictedTool,
+      },
+      {
+        name: "ta_employees_search_rows",
+        readableName: "Employees.search_rows",
+        tableId: "ta_employees",
+        description: "Search Employees by Email",
+        sourceType: ToolType.INTERNAL_TABLE,
+        sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
+        authorization: {
+          permissionType: PermissionType.TABLE,
+          permissionLevel: PermissionLevel.READ,
+          resourceId: "ta_employees",
+        },
+        tool: { description: "Fields: Email" } as Tool,
+        requesterRedactedTool: restrictedTool,
+      },
+    ])
+    const agent = {
+      _id: "agent_employees",
+      name: "Employee Agent",
+      aiconfig: "",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Manage employees",
+          live: true,
+          enabledTools: [
+            {
+              toolName: "ta_employees_create_row",
+              executionPrincipal: ToolExecutionPrincipal.ADMIN,
+            },
+            ...requesterTools("ta_employees_search_rows"),
+          ],
+          knowledgeBases: [],
+          allowKnowledgeSourceDownload: false,
+        },
+      ],
+    } satisfies Agent
+
+    const result = await buildPromptAndTools(agent, agent.operations[0], {
+      executionContext: {
+        tenantId: "tenant_1",
+        workspaceId: "app_1",
+        agentId: agent._id,
+        operationId: "operation_1",
+        conversationId: "conversation_1",
+        requester: {
+          executorRole: "PUBLIC",
+        },
+      },
+    })
+
+    expect(result.tools.ta_employees_create_row).toEqual(
+      expect.objectContaining({
+        description: "Fields: Email, Employee Level",
+        inputSchema,
+        execute: redactedExecute,
+      })
+    )
+    expect(result.tools.ta_employees_search_rows).toEqual(
+      expect.objectContaining(restrictedTool)
+    )
+  })
 })
