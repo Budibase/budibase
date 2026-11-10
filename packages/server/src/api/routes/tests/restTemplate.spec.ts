@@ -117,6 +117,11 @@ describe("/rest-templates", () => {
           .set(config.defaultHeaders())
           .expect(403)
       })
+
+      await request
+        .delete(`/api/rest-templates/${template.id}`)
+        .set(config.defaultHeaders())
+        .expect(200)
     }
   )
 
