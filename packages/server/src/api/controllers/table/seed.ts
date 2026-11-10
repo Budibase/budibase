@@ -1,11 +1,15 @@
 import { chunk } from "lodash"
 import { context, events } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import { FieldType, QuotaUsageType, StaticQuotaName } from "@budibase/types"
-import type { Database, Row, Table } from "@budibase/types"
+import {
+  DocumentType,
+  FieldType,
+  QuotaUsageType,
+  SEPARATOR,
+  StaticQuotaName,
+} from "@budibase/types"
+import type { Database, Document, Row, Table } from "@budibase/types"
 import { getRowParams } from "../../../db/utils"
-import { parse } from "../../../utilities/schema"
-import { importToRows } from "./utils"
 
 const ROW_PAGE_SIZE = 1000
 const ROW_CHUNK_SIZE = 500
@@ -149,11 +153,9 @@ const writeRows = async ({
 export const seedTableRows = async ({
   table,
   prodWorkspaceId,
-  userId,
 }: {
   table: Table
   prodWorkspaceId: string
-  userId?: string
 }) => {
   const tableId = table._id!
   const sourceDb = context.getWorkspaceDB()
@@ -192,20 +194,19 @@ export const seedTableRows = async ({
         }
         const stripped = missing.map(({ _rev, _attachments, ...row }) => row)
         const sanitized = stripIgnoreTimezoneSuffix({ rows: stripped, table })
-        const prepared = await importToRows(
-          parse(sanitized, table),
-          table,
-          userId,
-          {
-            keepCouchId: true,
-          }
-        )
-        await writeRows({ db: destinationDb, rows: prepared, table })
+        await writeRows({ db: destinationDb, rows: sanitized, table })
       }
 
       if (page.length < ROW_PAGE_SIZE) {
         break
       }
+    }
+    const autoColumnState = await destinationDb.tryGet<Document>(
+      `${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}${tableId}`
+    )
+    if (autoColumnState) {
+      // Initialize production counters from the preserved IDs on the next insert.
+      await destinationDb.remove(autoColumnState._id!, autoColumnState._rev!)
     }
   })
 }

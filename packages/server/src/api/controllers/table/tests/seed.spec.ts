@@ -5,7 +5,6 @@ import { seedTableRows } from "../seed"
 const tableId = "ta_seed"
 const devWorkspaceId = "app_dev_seed"
 const prodWorkspaceId = "app_seed"
-const userId = "us_seed"
 
 interface PageOptions {
   startkey?: string
@@ -64,13 +63,13 @@ const incrementRows = async (count: number) => {
 }
 const addRows = jest.fn(incrementRows)
 const imported = jest.fn(async () => {})
-const parse = jest.fn((rows: Row[]) => rows)
-const importToRows = jest.fn(async (rows: Row[]) => rows)
 
 jest.mock("@budibase/backend-core", () => ({
   context: {
     getWorkspaceDB: () =>
-      workspaceId === devWorkspaceId ? { allDocs } : { getMultiple, bulkDocs },
+      workspaceId === devWorkspaceId
+        ? { allDocs }
+        : { getMultiple, bulkDocs, tryGet: async () => undefined },
     doInWorkspaceContext: async (
       destinationId: string,
       task: () => Promise<void>
@@ -110,18 +109,6 @@ jest.mock("../../../../db/utils", () => ({
   >("@budibase/backend-core/src/docIds/params").getRowParams,
 }))
 
-jest.mock("../../../../utilities/schema", () => ({
-  get parse() {
-    return parse
-  },
-}))
-
-jest.mock("../utils", () => ({
-  get importToRows() {
-    return importToRows
-  },
-}))
-
 const createRows = (count: number) => {
   for (let index = 0; index < count; index++) {
     const id = `ro_${tableId}_${index.toString().padStart(5, "0")}`
@@ -135,7 +122,7 @@ const createRows = (count: number) => {
   }
 }
 
-const seed = () => seedTableRows({ table, prodWorkspaceId, userId })
+const seed = () => seedTableRows({ table, prodWorkspaceId })
 
 const expectCompleteCopy = () => {
   expect([...prodRows.keys()].sort()).toEqual([...devRows.keys()].sort())

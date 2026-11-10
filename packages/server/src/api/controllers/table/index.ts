@@ -498,7 +498,6 @@ async function publishTableInternal(
       await seedTableRows({
         table,
         prodWorkspaceId,
-        userId: ctx.user._id,
       })
     }
   }
