@@ -2504,65 +2504,63 @@
   resolved "https://registry.yarnpkg.com/@dagrejs/graphlib/-/graphlib-2.2.4.tgz#d77bfa9ff49e2307c0c6e6b8b26b5dd3c05816c4"
   integrity sha512-mepCf/e9+SKYy1d02/UkvSy6+6MoyXhVxP8lLDfA7BPE1X1d4dR0sZznmbM8/XVJ1GPM+Svnx7Xj6ZweByWUkw==
 
-"@datadog/flagging-core@1.2.1":
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/@datadog/flagging-core/-/flagging-core-1.2.1.tgz#1bb2d1ecfd749033ed2570eccc8fb0697b8adfac"
-  integrity sha512-qeDkki9fFlqyoZBrn7tneT6pZ04EKKvf3xxisYw1a74zbJihvQui/ARUsjXCurRpzpFqGGTJw/oz+HnXaKhcdw==
+"@datadog/libdatadog-extras@^0.21.0":
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/@datadog/libdatadog-extras/-/libdatadog-extras-0.21.0.tgz#4b29af59121015ca9a6bafbb60047d5c92120543"
+  integrity sha512-VgAlNdNtilutWsEoDy6cAtn1iRLVQuj84lppjGlrwfvMwoCJ40B4pIttrZr0R7n01a6H83zv2SNt7SiH3smJRg==
+
+"@datadog/libdatadog-wasm@0.21.0":
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/@datadog/libdatadog-wasm/-/libdatadog-wasm-0.21.0.tgz#cf903154a91c0b1570f63424a86ad1d1aff0b489"
+  integrity sha512-2wg5naOV+X7wyCNBJ/mRxE56fK22iz4ZwehzA/dSzuBO4/daNaVM6UgudRjkgXA9Pp0zEYcxmv4e1tNApQAEng==
+
+"@datadog/libdatadog@^0.21.0":
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/@datadog/libdatadog/-/libdatadog-0.21.0.tgz#2c9669f8f6444dc1cbb22272728ee26f26248872"
+  integrity sha512-6JQVv7LGBYG6uiY2wtno5paqP/G1UFXK1tA4LZEt2Bc9AzbCMtO2yrs1VfYDzMyVaFSj0+6QLdR8Hu5DQUODmw==
   dependencies:
-    spark-md5 "^3.0.2"
+    "@datadog/libdatadog-wasm" "0.21.0"
 
-"@datadog/libdatadog@0.9.4":
-  version "0.9.4"
-  resolved "https://registry.yarnpkg.com/@datadog/libdatadog/-/libdatadog-0.9.4.tgz#3d39c3561fa11a702c0e5e7819c83f4e03c07b78"
-  integrity sha512-55wHHAuhHOOrBGoWV+fRuEDypN6PMJZq4LTOwExnhoDMvVcZKtqYT05xea/toRs0o75+A1IeNAQHsRLbJMf5oA==
-
-"@datadog/native-appsec@11.0.1":
-  version "11.0.1"
-  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-11.0.1.tgz#8b545a9d968131d9cd7b43fd9594228dfcc18f3c"
-  integrity sha512-Y/XfknUmmJcw4hhQVhqzgdQvfjy+EGmXuUBgtVkI1r+/qS00egYu+wD/x7pOvjdbZNqN96znVszAnXvDQAzMDQ==
-  dependencies:
-    node-gyp-build "^3.9.0"
-
-"@datadog/native-iast-taint-tracking@4.2.0":
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/@datadog/native-iast-taint-tracking/-/native-iast-taint-tracking-4.2.0.tgz#ca05a1510af130e14fad7721b539dcf151ee235f"
-  integrity sha512-NpZABJQoNMzF6cU521RT4GQ8/FbfFRoDepOLTcLYKyw0DY2WmSpg3iG+PoQNK4O3jPSXC++K3rg59GiQgA3Mog==
+"@datadog/native-appsec@11.0.3":
+  version "11.0.3"
+  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-11.0.3.tgz#25115f241b79db065e4760c3128364c8f04bd2ae"
+  integrity sha512-IlB4IuL42rWVHmigMrWhtYW38Q7rQd5iH2Yf7HRkL51mP2ODiD52rwdrbTsJl9nt2msMR8/fsoySIs4d02xzEA==
   dependencies:
     node-gyp-build "^3.9.0"
 
-"@datadog/native-metrics@3.1.2":
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/@datadog/native-metrics/-/native-metrics-3.1.2.tgz#9dc269bdbc6f5b5c9a30dc6d99bab44d17dd5a37"
-  integrity sha512-7AEWt0ZLr/ogR/9if1DmFBDTg3y67xM+gdhXUXKs+UQMxK0lnjrOHgN7fkpEmUG1uL+EkX2BDE3ENDlQ23J7OQ==
+"@datadog/native-iast-taint-tracking@4.2.1":
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/@datadog/native-iast-taint-tracking/-/native-iast-taint-tracking-4.2.1.tgz#fe3fb18f0fdb05aa6812b41aba504acf36c6b3d3"
+  integrity sha512-KRLu3aTXvyAusouAZGTw2w1Xo67cRTw93yG4C9vTMpIgN9FXiqhlcvtNHvUzaA/KRrwtNwbaUELubOtk/kxOFg==
+  dependencies:
+    node-gyp-build "^3.9.0"
+
+"@datadog/native-metrics@4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@datadog/native-metrics/-/native-metrics-4.0.0.tgz#74f7d6cabc13d263bf6aeb3c1c5c41bbcc31073a"
+  integrity sha512-rS6Qc8WAbOgbrtDYdqK15gi2xbuIEyfuquUH05g+2DOdiNAswNAGrlIuSdJZQF/qoJzjcFvxb9kCHu8BjiPfQQ==
   dependencies:
     node-addon-api "^6.1.0"
     node-gyp-build "^3.9.0"
 
-"@datadog/openfeature-node-server@2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@datadog/openfeature-node-server/-/openfeature-node-server-2.0.0.tgz#94e787f0bb0b1b0c87e728ad760950c0ea5f3328"
-  integrity sha512-Ummu/Bd7ZJpCCNdFnZUt/JI+L1+8OMK53+MyIXbS7dCt4JXWWwelbpzSGqmC2jWbWQ/mTo4hEfnFw3kYOINbXA==
-  dependencies:
-    "@datadog/flagging-core" "1.2.1"
-
-"@datadog/pprof@5.15.0":
-  version "5.15.0"
-  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-5.15.0.tgz#ac8c6a240a18a9b1db25dc1c492c3c5ff44eebcc"
-  integrity sha512-ODGC3pE+NHo+rz74bWyOyFeC5GgvqA6Xzk0wIBGs8W3v+A14I5Q+Pmc7EC8etk5gE8t0hGYYwA5ymSGCljov+Q==
+"@datadog/pprof@5.19.0":
+  version "5.19.0"
+  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-5.19.0.tgz#dd734725bd4593ffecc4c733bf88182bce7b1a18"
+  integrity sha512-0ACUNjUdZ254ay7ZeAm8A3iO1t+jdPzAV8DuVHzqsuxV72KqygwT6ydq4/tm4LqIq51m1pQXEPT1L+j9myzn6g==
   dependencies:
     node-gyp-build "^4.8.4"
-    pprof-format "^2.2.1"
-    source-map "^0.7.4"
+    pprof-format "^2.3.1"
+    source-map "^0.8.0"
 
-"@datadog/wasm-js-rewriter@5.0.1":
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/@datadog/wasm-js-rewriter/-/wasm-js-rewriter-5.0.1.tgz#f227d2e3eb0f83b8a37f190a9ff8fdbde5955782"
-  integrity sha512-EzbV3Lrdt3udQEsbDOVC5gB1y7yxfpBbrSIk4jaEsGjyj0Dbv2HGj7tZjs+qXzIzNonHc8h5El2bYZOGfC2wwg==
+"@datadog/wasm-js-rewriter@5.0.4":
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/@datadog/wasm-js-rewriter/-/wasm-js-rewriter-5.0.4.tgz#6d0973cefd82ee5bea30c3aa4e3bcfdb35ef169f"
+  integrity sha512-tSjbk51dkNzFMM3P/7y82tyrBj/9CWnPzcVb1JB8TUea/PIholdXSPuGC5F975YvvGB8KDujfmJIacN+EmuXMg==
   dependencies:
-    js-yaml "^4.1.0"
+    js-yaml "^4.3.1"
     lru-cache "^7.14.0"
-    module-details-from-path "^1.0.3"
-    node-gyp-build "^4.5.0"
+    module-details-from-path "^1.0.4"
+    node-gyp-build "^4.8.4"
 
 "@dependents/detective-less@^3.0.1":
   version "3.0.2"
@@ -8202,11 +8200,6 @@ acorn-globals@^7.0.0:
     acorn "^8.1.0"
     acorn-walk "^8.0.2"
 
-acorn-import-attributes@^1.9.5:
-  version "1.9.5"
-  resolved "https://registry.yarnpkg.com/acorn-import-attributes/-/acorn-import-attributes-1.9.5.tgz#7eb1557b1ba05ef18b5ed0ec67591bfab04688ef"
-  integrity sha512-n02Vykv5uA3eHGM/Z2dQrcD56kL8TyDb2p1+0P83PClMnC/nc+anbQRhIOWnSq4Ke/KvDPrY3C9hDtC/A3eHnQ==
-
 acorn-jsx@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"
@@ -10260,22 +10253,22 @@ dc-polyfill@^0.1.11:
   resolved "https://registry.yarnpkg.com/dc-polyfill/-/dc-polyfill-0.1.11.tgz#3efa792147f3b5224b8a9274905b1e98fe82a856"
   integrity sha512-TyyeGcjx0YeThAI9fTFtgsvj5qd4R+aGfVmXiUhevbgzWFDr7IK4tv4YjE6jaGzLHQTchk4h7DHdr5q4WGgaZw==
 
-dd-trace@5.109.0:
-  version "5.109.0"
-  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-5.109.0.tgz#6809c263bdabb4d943df0aca343e485f69687773"
-  integrity sha512-yjhNcegw4xX29YNqBJX3s/90oBmvRiHidifjypwEKktj+n2o1Fg3zqEh1Nl9r/gmgcpxmU1td9kW9zSTYCTfdg==
+dd-trace@5.131.1:
+  version "5.131.1"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-5.131.1.tgz#9726892e9473f7344def9111a4fece6019f7be35"
+  integrity sha512-7Tl2w2Y0xj3TZ8IAFm580SCUCR41HnZatHwfhTpO57o5YLL/mn+EnKeuN3LPd+ga5DRyubMbmXIG4pNYLCjcWw==
   dependencies:
     dc-polyfill "^0.1.11"
-    import-in-the-middle "^3.0.1"
+    import-in-the-middle "3.5.1"
     opentracing ">=0.14.7"
   optionalDependencies:
-    "@datadog/libdatadog" "0.9.4"
-    "@datadog/native-appsec" "11.0.1"
-    "@datadog/native-iast-taint-tracking" "4.2.0"
-    "@datadog/native-metrics" "3.1.2"
-    "@datadog/openfeature-node-server" "2.0.0"
-    "@datadog/pprof" "5.15.0"
-    "@datadog/wasm-js-rewriter" "5.0.1"
+    "@datadog/libdatadog" "^0.21.0"
+    "@datadog/libdatadog-extras" "^0.21.0"
+    "@datadog/native-appsec" "11.0.3"
+    "@datadog/native-iast-taint-tracking" "4.2.1"
+    "@datadog/native-metrics" "4.0.0"
+    "@datadog/pprof" "5.19.0"
+    "@datadog/wasm-js-rewriter" "5.0.4"
     "@opentelemetry/api" ">=1.0.0 <1.10.0"
     "@opentelemetry/api-logs" "<1.0.0"
     oxc-parser "^0.132.0"
@@ -11294,6 +11287,11 @@ es-module-lexer@^2.1.0, es-module-lexer@^2.3.2:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/es-module-lexer/-/es-module-lexer-2.3.2.tgz#311fa4f40168c1975c505477c51b23234d41ad55"
   integrity sha512-poHGpORABojJJucnV9KbOavETW8lBVnphkW77ER5/BQ5Fz7oXSoCNek7IH3vR5nRjdsEz926ibFYX8KtLQmdyw==
+
+es-module-lexer@^3.0.2:
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/es-module-lexer/-/es-module-lexer-3.0.4.tgz#157174100418c206cd1c5d142e5a3be849b845b9"
+  integrity sha512-BldNY5mwkVu+cQ5Ymn3e6hB9Sx8XHx4ZevWbiUyZbfKxJxYO27Hf0wfzkxIaD5CAJMaGl3YspKELj0ff/7nCMA==
 
 es-object-atoms@^1.0.0, es-object-atoms@^1.1.1:
   version "1.1.1"
@@ -13405,14 +13403,13 @@ import-fresh@^3.2.1, import-fresh@^3.3.0:
     parent-module "^1.0.0"
     resolve-from "^4.0.0"
 
-import-in-the-middle@^3.0.1:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/import-in-the-middle/-/import-in-the-middle-3.2.0.tgz#ef596b83cdef975940239b2f04d874585910197a"
-  integrity sha512-vR2B6HKIhaBjcZr2bLpFiJ1VbzOlRQ7aby4/gw5WPIzToLjqpfWw3VJ4sk1uDchoOODEirvO2jyrSPtUSL5CrQ==
+import-in-the-middle@3.5.1:
+  version "3.5.1"
+  resolved "https://registry.yarnpkg.com/import-in-the-middle/-/import-in-the-middle-3.5.1.tgz#74fc490851751005dc2f776a87bc8a075904b474"
+  integrity sha512-mPKuL8bPQzecui2KK6Gb+M8JvJoHnhS1FeYGa22QopBmlevF5F0FE6ued/B5EgHDeIoMTONIpDWWFKUPOG0DBQ==
   dependencies:
-    acorn "^8.15.0"
-    acorn-import-attributes "^1.9.5"
     cjs-module-lexer "^2.2.0"
+    es-module-lexer "^3.0.2"
     module-details-from-path "^1.0.4"
 
 import-lazy@^2.1.0:
@@ -14765,7 +14762,7 @@ js-yaml@^3.13.1:
     argparse "^1.0.7"
     esprima "^4.0.0"
 
-js-yaml@^4.3.2:
+js-yaml@^4.3.1, js-yaml@^4.3.2:
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.3.2.tgz#8e44fb14a2643c59726bb15787b5f1512cb3d3fb"
   integrity sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==
@@ -16719,7 +16716,7 @@ module-definition@^4.1.0:
     ast-module-types "^4.0.0"
     node-source-walk "^5.0.1"
 
-module-details-from-path@^1.0.3, module-details-from-path@^1.0.4:
+module-details-from-path@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/module-details-from-path/-/module-details-from-path-1.0.4.tgz#b662fdcd93f6c83d3f25289da0ce81c8d9685b94"
   integrity sha512-EGWKgxALGMgzvxYF1UyGTy0HXX/2vHLkw6+NvDKW2jypWbHpjQuj4UMcqQWXHERJhVGKikolT06G3bcKe4fi7w==
@@ -16991,7 +16988,7 @@ node-gyp-build@^3.9.0:
   resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-3.9.0.tgz#53a350187dd4d5276750da21605d1cb681d09e25"
   integrity sha512-zLcTg6P4AbcHPq465ZMFNXx7XpKKJh+7kkN699NiQWisR2uWYOWNWqRHAmbnmKiL4e9aLSlmy5U7rEMUXV59+A==
 
-node-gyp-build@^4.3.0, node-gyp-build@^4.5.0, node-gyp-build@^4.8.4:
+node-gyp-build@^4.3.0, node-gyp-build@^4.8.4:
   version "4.8.4"
   resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.8.4.tgz#8a70ee85464ae52327772a90d66c6077a900cfc8"
   integrity sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==
@@ -18800,10 +18797,10 @@ pouchdb@9.0.0:
     uuid "8.3.2"
     vuvuzela "1.0.3"
 
-pprof-format@^2.2.1:
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/pprof-format/-/pprof-format-2.2.2.tgz#cdee9a4c596f859876a7f8b122746f6817652c97"
-  integrity sha512-hd90rHVDhNOhgHTmazVzDSVwTLOBjpZQ26AO/0j46sAFZ9uSWY0DcK2zJcwnuo2R6EzufBbOoWlPazA5nSyHcg==
+pprof-format@^2.3.1:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/pprof-format/-/pprof-format-2.4.0.tgz#e3513f20c9540da5bc6c63bfba132cea4d9ba5d3"
+  integrity sha512-7SDtSvsD996RFtlODgEmCR+GAfC3Dx6zlnef7duB1QNAkOStz+VAV60Ie/OQrkEijmBmcOZlKK0KQ/Oupd1frw==
 
 preact@^10.28.2:
   version "10.28.4"
@@ -20449,6 +20446,11 @@ source-map@^0.7.4:
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.7.6.tgz#a3658ab87e5b6429c8a1f3ba0083d4c61ca3ef02"
   integrity sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==
 
+source-map@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.8.0.tgz#72b9006383bd9fc70d52e435c91c2d73249c60a4"
+  integrity sha512-d8EqvL+k/SOXCreS/SUzg2ciyHqBBLcN/yuRjFsbvVhHTE2pgei7oAhmPM7kWFbkX6OSMQfUq4KbkF3au9lhYQ==
+
 sourcemap-codec@^1.4.8:
   version "1.4.8"
   resolved "https://registry.yarnpkg.com/sourcemap-codec/-/sourcemap-codec-1.4.8.tgz#ea804bd94857402e6992d05a38ef1ae35a9ab4c4"
@@ -20459,7 +20461,7 @@ spark-md5@3.0.1:
   resolved "https://registry.yarnpkg.com/spark-md5/-/spark-md5-3.0.1.tgz#83a0e255734f2ab4e5c466e5a2cfc9ba2aa2124d"
   integrity sha512-0tF3AGSD1ppQeuffsLDIOWlKUd3lS92tFxcsrh5Pe3ZphhnoK+oXIBTzOAThZCiuINZLvpiLH/1VS1/ANEJVig==
 
-spark-md5@3.0.2, spark-md5@^3.0.2:
+spark-md5@3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/spark-md5/-/spark-md5-3.0.2.tgz#7952c4a30784347abcee73268e473b9c0167e3fc"
   integrity sha512-wcFzz9cDfbuqe0FZzfi2or1sgyIrsDwmPwfZC4hiNidPdPINjeUwNfv5kldczoEAcjl9Y1L3SM7Uz2PUEQzxQw==
