@@ -29,6 +29,34 @@ env:
   HUSKY: 0
 
 jobs:
+  node-version-sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Verify Node.js versions are synchronized
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          nvm_version=$(sed 's/^v//' .nvmrc)
+          asdf_version=$(awk '$1 == "nodejs" { print $2 }' .tool-versions)
+
+          if [[ -z "$nvm_version" || -z "$asdf_version" ]]; then
+            echo "Node.js version is missing from .nvmrc or .tool-versions" >&2
+            exit 1
+          fi
+
+          if [[ "$nvm_version" != "$asdf_version" ]]; then
+            echo "Node.js version files are out of sync:" >&2
+            echo "  .nvmrc:         $nvm_version" >&2
+            echo "  .tool-versions: $asdf_version" >&2
+            exit 1
+          fi
+
+          echo "Node.js version files are synchronized at $nvm_version"
+
   install-deps:
     runs-on: ubuntu-24.04
     concurrency:
