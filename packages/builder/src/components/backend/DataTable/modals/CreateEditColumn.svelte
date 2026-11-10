@@ -519,7 +519,7 @@
     tools: $agentsStore.tools,
   })
   $: operationsWithColumnRulesLabel = `${operationsWithColumnRules} ${
-    operationsWithColumnRules === 1 ? "operation" : "operations"
+    operationsWithColumnRules === 1 ? "agent operation" : "agent operations"
   }`
 
   async function deleteColumn() {
@@ -1134,9 +1134,8 @@
           weight="fill"
         />
         Used in approval rules in
-        <strong>{operationsWithColumnRulesLabel}</strong>. Renaming updates them
-        and changing the type can break them. Pending approvals that use this
-        column will fail.
+        <strong>{operationsWithColumnRulesLabel}</strong>. Changing the type can
+        cause breaking changes to pending approvals.
       </Body>
     </div>
   {/if}
