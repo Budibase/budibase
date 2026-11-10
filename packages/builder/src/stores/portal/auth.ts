@@ -182,6 +182,19 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     }
   }
 
+  async updateLastVisitedWorkspace(workspaceId: string) {
+    await API.updateSelf({ lastVisitedWorkspaceId: workspaceId })
+    this.update(store => ({
+      ...store,
+      user: store.user
+        ? {
+            ...store.user,
+            lastVisitedWorkspaceId: workspaceId,
+          }
+        : undefined,
+    }))
+  }
+
   async forgotPassword(email: string) {
     const tenantId = get(this.store).tenantId
     await API.requestForgotPassword(tenantId, email)

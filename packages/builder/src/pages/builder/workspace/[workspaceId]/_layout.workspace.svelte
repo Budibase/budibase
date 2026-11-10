@@ -59,7 +59,7 @@
       await deploymentStore.load()
       if ($auth.user?.lastVisitedWorkspaceId !== appId) {
         auth
-          .updateSelf({ lastVisitedWorkspaceId: appId })
+          .updateLastVisitedWorkspace(appId)
           .catch(error =>
             console.error("Failed to save last visited workspace", error)
           )
