@@ -1272,14 +1272,18 @@ export async function importToWorkspace(
     path,
   }
   try {
-    await sdk.workspaces.updateWithExport(workspaceId, fileAttributes, password)
+    const result = await sdk.workspaces.updateWithExport(
+      workspaceId,
+      fileAttributes,
+      password
+    )
+    ctx.body = { message: "workspace updated", ...result }
   } catch (err: any) {
     ctx.throw(
       500,
       `Unable to perform update, please retry - ${err?.message || err}`
     )
   }
-  ctx.body = { message: "workspace updated" }
 }
 
 /**

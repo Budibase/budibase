@@ -1,10 +1,18 @@
-import { context, docIds, events, locks } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  docIds,
+  events,
+  locks,
+} from "@budibase/backend-core"
 import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
 } from "@budibase/shared-core"
 import {
+  AnyDocument,
   AutoFieldSubType,
+  BasicOperator,
   BBReferenceFieldSubType,
   Datasource,
   FieldType,
@@ -21,6 +29,7 @@ import {
   Table,
   TableSchema,
   TableSourceType,
+  ToolExecutionPrincipal,
   User,
   ValidateTableImportResponse,
   ViewCalculation,
@@ -34,6 +43,7 @@ import { generator } from "@budibase/backend-core/tests"
 import timekeeper from "timekeeper"
 import { datasourceDescribe } from "../../../integrations/tests/utils"
 import { tableForDatasource } from "../../../tests/utilities/structures"
+import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 
 const { basicTable, viewV2: viewV2Structures } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
@@ -398,6 +408,139 @@ if (descriptions.length) {
           const res = await config.api.row.get(testTable._id!, testRow._id!)
           expect(res.updatedName).toEqual("test")
           expect(res.name).toBeUndefined()
+        })
+
+        describe("agent approval rules", () => {
+          const rule = {
+            policyId: "policy_1",
+            conditions: [
+              {
+                field: "name",
+                type: FieldType.STRING,
+                operator: BasicOperator.EQUAL,
+                value: "RESTRICTED",
+              },
+            ],
+            reviewParameters: ["name", "description"],
+          }
+          const renamedRule = {
+            ...rule,
+            conditions: [{ ...rule.conditions[0], field: "updatedName" }],
+            reviewParameters: ["updatedName", "description"],
+          }
+
+          const createRowTool = (table: Table) =>
+            getRowToolNames(table._id!).create_row
+
+          const createRulesAgent = async (tables: Table[]) =>
+            await config.api.agent.createWithOperation(
+              { name: `Rules agent ${uuid.v4()}` },
+              {
+                id: "operation_1",
+                name: "Rows",
+                live: false,
+                enabledTools: tables.map(table => ({
+                  toolName: createRowTool(table),
+                  executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+                  executionRules: [rule],
+                })),
+                approvalPolicies: [
+                  {
+                    id: "policy_1",
+                    name: "Reviewers",
+                    approvers: [config.getUser()._id!],
+                    notifications: { recipients: [] },
+                  },
+                ],
+                allowKnowledgeSourceDownload: true,
+              }
+            )
+
+          const renameNameColumn = async (table: Table) => {
+            const { name, ...otherColumns } = table.schema
+            await config.api.table.save({
+              ...table,
+              _rename: { old: "name", updated: "updatedName" },
+              schema: {
+                ...otherColumns,
+                updatedName: { ...name, name: "updatedName" },
+              },
+            })
+          }
+
+          const getRules = async ({
+            agentId,
+            table,
+          }: {
+            agentId: string
+            table: Table
+          }) => {
+            const { agents } = await config.api.agent.fetch()
+            return agents
+              .find(({ _id }) => _id === agentId)
+              ?.operations?.[0]?.enabledTools?.find(
+                tool => tool.toolName === createRowTool(table)
+              )?.executionRules
+          }
+
+          const saveTestTable = async () =>
+            await config.api.table.save(
+              basicTable(datasource, { name: generator.guid() })
+            )
+
+          it("renames the column in rules for that table only", async () => {
+            const testTable = await saveTestTable()
+            const otherTable = await saveTestTable()
+            const agent = await createRulesAgent([testTable, otherTable])
+
+            await renameNameColumn(testTable)
+
+            expect(
+              await getRules({ agentId: agent._id!, table: testTable })
+            ).toEqual([renamedRule])
+            expect(
+              await getRules({ agentId: agent._id!, table: otherTable })
+            ).toEqual([rule])
+          })
+
+          it("retries the rule update once after a write conflict", async () => {
+            const testTable = await saveTestTable()
+            const agent = await createRulesAgent([testTable])
+            const realBulkDocs = dbCore.DatabaseImpl.prototype.bulkDocs
+            let conflicted = false
+            const bulkDocs = jest
+              .spyOn(dbCore.DatabaseImpl.prototype, "bulkDocs")
+              .mockImplementation(async function (
+                this: dbCore.DatabaseImpl,
+                documents: AnyDocument[]
+              ) {
+                if (
+                  !conflicted &&
+                  documents.some(doc => doc._id === agent._id)
+                ) {
+                  conflicted = true
+                  return [
+                    {
+                      id: agent._id!,
+                      error: "conflict",
+                      reason: "Document update conflict.",
+                    },
+                  ]
+                }
+                return await realBulkDocs.call(this, documents)
+              })
+
+            try {
+              await renameNameColumn(testTable)
+            } finally {
+              bulkDocs.mockRestore()
+            }
+
+            expect(conflicted).toBe(true)
+            expect(
+              await getRules({ agentId: agent._id!, table: testTable })
+            ).toEqual([renamedRule])
+          })
         })
 
         it("re-points primaryDisplay when its column is deleted", async () => {

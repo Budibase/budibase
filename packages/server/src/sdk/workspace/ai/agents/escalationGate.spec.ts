@@ -101,6 +101,33 @@ describe("createEscalationGateRuntime", () => {
       .mockResolvedValue({ escalationId: "esc_1" })
   })
 
+  it("persists the session metadata for a later resume", async () => {
+    const sessionMetadata = {
+      asset: { type: "agent" as const, id: "agent_1", label: "Support agent" },
+      triggeredBy: { type: "user" as const, label: "Test User" },
+    }
+    const runtime = buildRuntime()
+
+    await context.doInPlatformActionSessionContext(
+      {
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        ...sessionMetadata,
+      },
+      () =>
+        runtime.intercept(
+          { workflow_id: "test-release.yml", inputs: {} },
+          { toolCallId: "call_1", messages: [] }
+        )
+    )
+
+    expect(mockCreateEscalation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: expect.objectContaining({ sessionMetadata }),
+      })
+    )
+  })
+
   it("persists self-contained reviewer context for the frozen tool call", async () => {
     const runtime = buildRuntime()
 
@@ -756,6 +783,23 @@ describe("row write defaults", () => {
       action: ToolAction.UPDATE_ROW,
     }).intercept(
       { rowId: "ro_missing", rowRev: "1-test", data: { category: "PUBLIC" } },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: ApprovalToolResultStatus.UNAVAILABLE })
+    )
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
+  })
+
+  it("refuses without raising an approval when a rule's column no longer exists", async () => {
+    const { category: _deleted, ...schema } = table.schema
+    getTable.mockResolvedValue({ ...table, schema })
+
+    const result = await buildRuntime({
+      action: ToolAction.CREATE_ROW,
+    }).intercept(
+      { data: { name: "Review", category: "RESTRICTED" } },
       { toolCallId: "call_1" }
     )
 

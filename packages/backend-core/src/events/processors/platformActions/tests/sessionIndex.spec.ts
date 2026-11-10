@@ -53,6 +53,41 @@ describe("upsertPlatformActionSession", () => {
     })
   })
 
+  it("recreates a deleted session from a resumed run, whatever the delivery order", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
+      const activeSignal = {
+        ...input,
+        incrementsActionCount: false,
+        signal: "active" as const,
+        timestamp: "2026-08-31T00:00:00.000Z",
+      }
+
+      await expect(upsertPlatformActionSession(activeSignal)).rejects.toThrow(
+        "not indexed yet"
+      )
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:01:00.000Z",
+      })
+      await upsertPlatformActionSession(activeSignal)
+
+      expect(await getSessionDoc(sourceId)).toMatchObject({
+        status: "completed",
+        statusUpdatedAt: "2026-08-31T00:01:00.000Z",
+        startedAt: "2026-08-31T00:00:00.000Z",
+        actionCount: 1,
+      })
+    })
+  })
+
   it("creates a new session doc on the first event", async () => {
     await run(async () => {
       const sourceId = generator.guid()
@@ -382,7 +417,7 @@ describe("upsertPlatformActionSession", () => {
       await upsertPlatformActionSession({
         ...input,
         incrementsActionCount: false,
-        signal: "waiting",
+        signal: "active",
         timestamp: "2026-08-31T00:00:00.000Z",
       })
 
