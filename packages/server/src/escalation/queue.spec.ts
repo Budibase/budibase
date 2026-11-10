@@ -660,19 +660,17 @@ describe("resumeOperation", () => {
         })
 
         // With a fixed clock, nextSessionTimestamp() advances by 1 ms per emission:
-        // active at now, executed at now + 1, then completed at now + 2.
-        expect(enqueueLifecycleMock).toHaveBeenCalledWith({
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          signal: "active",
-          timestamp: new Date(now).toISOString(),
-        })
-        expect(enqueueLifecycleMock).toHaveBeenCalledWith({
-          sourceType: "agent_session",
-          sourceId: "session_1",
-          signal: "completed",
-          timestamp: new Date(now + 2).toISOString(),
-        })
+        // active at now, then executed at now + 1.
+        expect(enqueueLifecycleMock.mock.calls).toEqual([
+          [
+            {
+              sourceType: "agent_session",
+              sourceId: "session_1",
+              signal: "active",
+              timestamp: new Date(now).toISOString(),
+            },
+          ],
+        ])
         expect(aiAgentExecutedMock).toHaveBeenCalledWith(
           {
             agentId: "agent_1",
@@ -686,6 +684,147 @@ describe("resumeOperation", () => {
       } finally {
         clock.mockRestore()
       }
+    })
+  })
+
+  it("keeps the session completed when a resumed run ends normally but its request is judged failed", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      mockApprovedRun("I could not complete the booking.")
+      const outcomeSpy = jest
+        .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
+        .mockResolvedValueOnce({ status: "failed", error: "Goal not achieved" })
+
+      try {
+        await resumeOperation({
+          doc: baseDoc({ requestId, response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+
+        const [request] =
+          await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("failed")
+        expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        expect(
+          enqueueLifecycleMock.mock.calls.map(([input]) => input.signal)
+        ).toEqual(["active"])
+      } finally {
+        outcomeSpy.mockRestore()
+      }
+    })
+  })
+
+  it("fails the session when a resumed run stops with tool work pending, whatever its request's outcome", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      prepareAgentChatRunMock.mockResolvedValue({
+        toolDisplayNames: {},
+        sessionLogIndexer: { index: jest.fn().mockResolvedValue(undefined) },
+        stream: jest.fn().mockResolvedValue({
+          finishReason: Promise.resolve("tool-calls"),
+          toUIMessageStream: () =>
+            (async function* () {
+              yield { id: "", role: "assistant", parts: [] }
+            })(),
+        }),
+      })
+      const outcomeSpy = jest
+        .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
+        .mockResolvedValueOnce({ status: "completed" })
+
+      try {
+        await resumeOperation({
+          doc: baseDoc({ requestId, response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+
+        const [request] =
+          await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+        expect(request.status).toEqual("completed")
+        expect(aiAgentFailedMock).toHaveBeenCalledTimes(1)
+        expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+      } finally {
+        outcomeSpy.mockRestore()
+      }
+    })
+  })
+
+  it.each(["failed", "completed"] as const)(
+    "completes a rejected session independently of its %s request outcome",
+    async status => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createRequest())!
+        const outcomeSpy = jest
+          .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
+          .mockResolvedValueOnce({ status })
+
+        try {
+          await resumeOperation({
+            doc: baseDoc({ requestId, response: { accepted: false } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+
+          const [request] =
+            await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+          expect(request.status).toEqual(status)
+          expect(enqueueLifecycleMock.mock.calls).toEqual([
+            [
+              {
+                sourceType: "agent_session",
+                sourceId: "session_1",
+                signal: "completed",
+                timestamp: expect.any(String),
+              },
+            ],
+          ])
+        } finally {
+          outcomeSpy.mockRestore()
+        }
+      })
+    }
+  )
+
+  it("keeps a rejected tracked session waiting while another approval is pending", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      await context.getWorkspaceDB().put(
+        baseDoc({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+          requestId,
+        })
+      )
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: false } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: baseCtx,
+      })
+
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("needs_input")
+      expect(enqueueLifecycleMock.mock.calls).toEqual([
+        [
+          {
+            sourceType: "agent_session",
+            sourceId: "session_1",
+            signal: "waiting",
+            timestamp: expect.any(String),
+          },
+        ],
+      ])
     })
   })
 

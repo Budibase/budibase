@@ -9,6 +9,7 @@ import {
   ActionType,
   AGENT_REQUEST_TYPE,
   AgentChannelProvider,
+  ApprovalToolResultStatus,
   DocumentType,
   FeatureFlag,
 } from "@budibase/types"
@@ -839,7 +840,9 @@ describe("Agent chat tool call tracking", () => {
     onMetadata,
     stepLmUsages,
     finishTotalLmUsage,
+    finishReason = "stop",
   }: {
+    finishReason?: string
     content?: {
       type: string
       toolCallId?: string
@@ -898,7 +901,7 @@ describe("Agent chat tool call tracking", () => {
             finishMetadata: pipeOptions?.messageMetadata?.({
               part: {
                 type: "finish",
-                finishReason: "stop",
+                finishReason,
                 totalUsage: finishTotalLmUsage,
               },
             }),
@@ -920,13 +923,95 @@ describe("Agent chat tool call tracking", () => {
     { type: "finish", finishReason: "stop" },
   ]
 
+  // Runs the real SDK: the first step executes a tool and the next model call
+  // throws, or the first model call throws when afterTool is false. With
+  // pendingToolOnAbort, the next step instead calls a slow tool and the stream
+  // errors before that tool's result arrives.
+  const mockStreamTextAborting = ({
+    abortMessage,
+    afterTool = true,
+    pendingToolOnAbort = false,
+  }: {
+    abortMessage: string
+    afterTool?: boolean
+    pendingToolOnAbort?: boolean
+  }) => {
+    const model = new MockLanguageModelV4({
+      doStream: async () => {
+        if (pendingToolOnAbort && model.doStreamCalls.length === 2) {
+          return {
+            stream: aiActual.simulateReadableStream({
+              chunks: [
+                {
+                  type: "tool-call" as const,
+                  toolCallId: "call-2",
+                  toolName: "slow_lookup",
+                  input: "{}",
+                },
+                { type: "error" as const, error: new Error(abortMessage) },
+              ],
+            }),
+          }
+        }
+        if (!afterTool || model.doStreamCalls.length > 1) {
+          throw new Error(abortMessage)
+        }
+        return {
+          stream: aiActual.simulateReadableStream({
+            chunks: [
+              {
+                type: "tool-call" as const,
+                toolCallId: "call-1",
+                toolName: "lookup",
+                input: "{}",
+              },
+              {
+                type: "finish" as const,
+                finishReason: {
+                  unified: "tool-calls" as const,
+                  raw: undefined,
+                },
+                logprobs: undefined,
+                usage: mockLanguageModelStreamUsage,
+              },
+            ],
+          }),
+        }
+      },
+    })
+    jest.mocked(streamText).mockImplementation(((options: any) =>
+      aiActual.streamText({
+        model,
+        maxRetries: 0,
+        messages: [{ role: "user", content: "hello" }],
+        stopWhen: aiActual.stepCountIs(5),
+        tools: {
+          lookup: aiActual.tool({
+            inputSchema: aiActual.jsonSchema({ type: "object" }),
+            execute: async () => ({ ok: true }),
+          }),
+          slow_lookup: aiActual.tool({
+            inputSchema: aiActual.jsonSchema({ type: "object" }),
+            execute: async () => {
+              await new Promise(resolve => setTimeout(resolve, 50))
+              return { ok: true }
+            },
+          }),
+        },
+        onStepFinish: options.onStepFinish,
+      })) as unknown as StreamTextMock)
+    return model
+  }
+
   function makeWebhookStreamTextMock({
     content = [],
     toolCalls = [],
     toolResults = [],
     text = "response",
     chunks = makeAssistantTextChunks(text),
+    finishReason = "stop",
   }: {
+    finishReason?: string
     content?: {
       type: string
       toolCallId?: string
@@ -979,6 +1064,7 @@ describe("Agent chat tool call tracking", () => {
             }
           ),
         text: Promise.resolve(text),
+        finishReason: Promise.resolve(finishReason),
         response: Promise.resolve({
           id: "gen-test",
           headers: {
@@ -1042,6 +1128,7 @@ describe("Agent chat tool call tracking", () => {
         typeof convertToModelMessages
       >
     ).mockResolvedValue([])
+    jest.mocked(pruneMessages).mockImplementation(aiActual.pruneMessages)
   })
 
   afterEach(() => {
@@ -1116,6 +1203,77 @@ describe("Agent chat tool call tracking", () => {
           },
         },
       ])
+    })
+
+    it("fails the session when the run stops with tool work pending", async () => {
+      jest.mocked(streamText).mockImplementation(
+        mockPipeStreamText({
+          finishReason: "tool-calls",
+          onMetadata: () => {},
+        }) as any
+      )
+      const executed = jest
+        .spyOn(events.action, "aiAgentExecuted")
+        .mockImplementation(() => {})
+      const failed = jest
+        .spyOn(events.action, "aiAgentFailed")
+        .mockImplementation(() => {})
+
+      const headers = await config.defaultHeaders()
+      await config
+        .getRequest()!
+        .post(agentPreviewStreamPath(agentId))
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          isPreview: true,
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+
+      expect(failed).toHaveBeenCalledTimes(1)
+      expect(executed).not.toHaveBeenCalled()
+    })
+
+    it("does not overwrite a failed session when the stream closes after an error", async () => {
+      const abortMessage = "CONTROLLED_RUNTIME_ABORT"
+      const model = mockStreamTextAborting({ abortMessage })
+      const executed = jest
+        .spyOn(events.action, "aiAgentExecuted")
+        .mockImplementation(() => {})
+      const failed = jest
+        .spyOn(events.action, "aiAgentFailed")
+        .mockImplementation(() => {})
+
+      const headers = await config.defaultHeaders()
+      const res = await config
+        .getRequest()!
+        .post(agentPreviewStreamPath(agentId))
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          isPreview: true,
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+
+      expect(model.doStreamCalls).toHaveLength(2)
+      expect(res.text).toContain(abortMessage)
+      expect(failed).toHaveBeenCalledTimes(1)
+      expect(failed).toHaveBeenCalledWith(
+        expect.objectContaining({ errorMessage: abortMessage })
+      )
+      expect(executed).not.toHaveBeenCalled()
     })
 
     it("classifies preview streams as Chat Preview even without a sessionId", async () => {
@@ -1624,6 +1782,370 @@ describe("Agent chat tool call tracking", () => {
           )
         }
       )
+    })
+
+    describe("session outcome", () => {
+      const runWebhook = (
+        userId: string,
+        onAssistantStream?: (stream: AsyncIterable<string>) => Promise<void>
+      ) =>
+        webhookChat({
+          chat: {
+            agentId,
+            channel: {
+              provider: AgentChannelProvider.SLACK,
+              channelId: "C123",
+              externalUserId: "slack-user-1",
+            },
+            messages: [
+              {
+                id: "msg-1",
+                role: "user",
+                parts: [{ type: "text", text: "hello" }],
+              },
+            ],
+          },
+          user: { _id: userId } as any,
+          triggeredBy: { type: "user" },
+          onAssistantStream,
+        })
+
+      const spyOnLifecycleEvents = () => ({
+        executed: jest
+          .spyOn(events.action, "aiAgentExecuted")
+          .mockImplementation(() => {}),
+        failed: jest
+          .spyOn(events.action, "aiAgentFailed")
+          .mockImplementation(() => {}),
+      })
+
+      it("completes the session when the run ends normally but its request fails", async () => {
+        jest.mocked(streamText).mockImplementation(
+          makeWebhookStreamTextMock({
+            content: [
+              {
+                type: "tool-error",
+                toolCallId: "call-1",
+                toolName: "book_meeting",
+                input: {},
+                error: new Error("failed to book meeting"),
+              },
+            ],
+            toolCalls: [{ toolCallId: "call-1", toolName: "book_meeting" }],
+            text: "I could not book the meeting.",
+          })
+        )
+        ;(
+          sdk.ai.agents.getOrThrow as jest.MockedFunction<
+            typeof sdk.ai.agents.getOrThrow
+          >
+        ).mockResolvedValue(
+          buildWebhookTestAgent({
+            enabledTools: requesterTools("book_meeting"),
+          })
+        )
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await features.testutils.withFeatureFlags(
+          config.getTenantId(),
+          { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+          async () => {
+            await context.doInWorkspaceContext(
+              config.getProdWorkspaceId(),
+              async () => {
+                await runWebhook("user-session-outcome")
+
+                const requests =
+                  await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+                const request = requests.find(
+                  r => r.userId === "user-session-outcome"
+                )
+                expect(request?.status).toEqual("failed")
+              }
+            )
+          }
+        )
+
+        expect(executed).toHaveBeenCalledTimes(1)
+        expect(executed).toHaveBeenCalledWith({
+          agentId: "agent-1",
+          sourceType: "agent_session",
+          sourceId: expect.any(String),
+          sessionId: expect.any(String),
+          requestId: expect.any(String),
+        })
+        expect(failed).not.toHaveBeenCalled()
+      })
+
+      it("fails the session when the run stops with tool work pending", async () => {
+        jest
+          .mocked(streamText)
+          .mockImplementation(
+            makeWebhookStreamTextMock({ finishReason: "tool-calls", text: "" })
+          )
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await context.doInWorkspaceContext(config.getProdWorkspaceId(), () =>
+          runWebhook("user-1")
+        )
+
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("returns the completed tool result when a later model step aborts", async () => {
+        jest.mocked(pruneMessages).mockImplementation(aiActual.pruneMessages)
+        const abortMessage = "REGRESSION_ABORT_AFTER_TOOL"
+        const model = mockStreamTextAborting({ abortMessage })
+        jest
+          .mocked(sdk.ai.agents.getOrThrow)
+          .mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+        const result = await context.doInWorkspaceContext(
+          config.getProdWorkspaceId(),
+          () => runWebhook("user-partial-turn")
+        )
+
+        expect(model.doStreamCalls).toHaveLength(2)
+        expect(result.messages).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ role: "user" }),
+            expect.objectContaining({
+              role: "assistant",
+              parts: expect.arrayContaining([
+                expect.objectContaining({
+                  type: "tool-lookup",
+                  state: "output-available",
+                  output: { ok: true },
+                }),
+              ]),
+            }),
+          ])
+        )
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("fails the session and its request but returns the partial turn when the stream errors after a successful tool", async () => {
+        const abortMessage = "CONTROLLED_RUNTIME_ABORT"
+        const model = mockStreamTextAborting({ abortMessage })
+        ;(
+          sdk.ai.agents.getOrThrow as jest.MockedFunction<
+            typeof sdk.ai.agents.getOrThrow
+          >
+        ).mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+        const delivered: string[] = []
+
+        await features.testutils.withFeatureFlags(
+          config.getTenantId(),
+          { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+          async () => {
+            await context.doInWorkspaceContext(
+              config.getProdWorkspaceId(),
+              async () => {
+                const result = await runWebhook(
+                  "user-session-abort",
+                  async stream => {
+                    for await (const delta of stream) {
+                      delivered.push(delta)
+                    }
+                  }
+                )
+
+                expect(result.failed).toBe(true)
+                expect(result.messages.at(-1)).toMatchObject({
+                  role: "assistant",
+                  parts: expect.arrayContaining([
+                    expect.objectContaining({
+                      type: "tool-lookup",
+                      state: "output-available",
+                      output: { ok: true },
+                    }),
+                  ]),
+                  metadata: expect.objectContaining({ error: abortMessage }),
+                })
+
+                const requests =
+                  await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
+                const request = requests.find(
+                  r => r.userId === "user-session-abort"
+                )
+                expect(request?.status).toEqual("failed")
+                expect(request?.error).toEqual(abortMessage)
+              }
+            )
+          }
+        )
+
+        expect(model.doStreamCalls).toHaveLength(2)
+        expect(delivered).toEqual([])
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(failed).toHaveBeenCalledWith(
+          expect.objectContaining({ errorMessage: abortMessage })
+        )
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("drops tool calls without a result from the persisted partial turn", async () => {
+        const abortMessage = "CONTROLLED_RUNTIME_ABORT"
+        const model = mockStreamTextAborting({
+          abortMessage,
+          pendingToolOnAbort: true,
+        })
+        ;(
+          sdk.ai.agents.getOrThrow as jest.MockedFunction<
+            typeof sdk.ai.agents.getOrThrow
+          >
+        ).mockResolvedValue(buildWebhookTestAgent())
+
+        const result = await context.doInWorkspaceContext(
+          config.getProdWorkspaceId(),
+          () => runWebhook("user-1")
+        )
+
+        expect(model.doStreamCalls).toHaveLength(2)
+        expect(result.failed).toBe(true)
+        const toolParts = result.messages
+          .at(-1)
+          ?.parts.filter(part => part.type.startsWith("tool-"))
+        expect(toolParts).toEqual([
+          expect.objectContaining({
+            type: "tool-lookup",
+            state: "output-available",
+          }),
+        ])
+      })
+
+      it("throws when the stream errors before any tool has run", async () => {
+        const abortMessage = "CONTROLLED_RUNTIME_ABORT"
+        mockStreamTextAborting({ abortMessage, afterTool: false })
+        ;(
+          sdk.ai.agents.getOrThrow as jest.MockedFunction<
+            typeof sdk.ai.agents.getOrThrow
+          >
+        ).mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await context.doInWorkspaceContext(config.getProdWorkspaceId(), () =>
+          expect(runWebhook("user-1")).rejects.toThrow(abortMessage)
+        )
+
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("returns the partial turn when stream delivery fails after a tool completed", async () => {
+        jest.mocked(streamText).mockImplementation(
+          makeWebhookStreamTextMock({
+            chunks: [
+              { type: "start" },
+              {
+                type: "tool-input-available",
+                toolCallId: "call-1",
+                toolName: "lookup",
+                input: {},
+              },
+              {
+                type: "tool-output-available",
+                toolCallId: "call-1",
+                output: { ok: true },
+              },
+              { type: "text-start", id: "text-1" },
+              { type: "text-delta", id: "text-1", delta: "response" },
+              { type: "text-end", id: "text-1" },
+              { type: "finish" },
+            ],
+          })
+        )
+        jest
+          .mocked(sdk.ai.agents.getOrThrow)
+          .mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        const result = await context.doInWorkspaceContext(
+          config.getProdWorkspaceId(),
+          () =>
+            runWebhook("user-1", async stream => {
+              for await (const _delta of stream) {
+                continue
+              }
+              throw new Error("DELIVERY_FAILED")
+            })
+        )
+
+        expect(result.failed).toBe(true)
+        expect(result.messages.at(-1)).toMatchObject({
+          role: "assistant",
+          parts: expect.arrayContaining([
+            expect.objectContaining({
+              type: "tool-lookup",
+              state: "output-available",
+              output: { ok: true },
+            }),
+          ]),
+          metadata: expect.objectContaining({ error: "DELIVERY_FAILED" }),
+        })
+        expect(sessionLogIndexer.addRequestId).toHaveBeenCalledWith("gen-test")
+        expect(sessionLogIndexer.index).toHaveBeenCalledTimes(1)
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(failed).toHaveBeenCalledWith(
+          expect.objectContaining({ errorMessage: "DELIVERY_FAILED" })
+        )
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("throws when stream delivery fails before any tool has run", async () => {
+        jest
+          .mocked(streamText)
+          .mockImplementation(makeWebhookStreamTextMock({}))
+        jest
+          .mocked(sdk.ai.agents.getOrThrow)
+          .mockResolvedValue(buildWebhookTestAgent())
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await context.doInWorkspaceContext(config.getProdWorkspaceId(), () =>
+          expect(
+            runWebhook("user-1", async stream => {
+              for await (const _delta of stream) {
+                continue
+              }
+              throw new Error("DELIVERY_FAILED")
+            })
+          ).rejects.toThrow("DELIVERY_FAILED")
+        )
+
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(executed).not.toHaveBeenCalled()
+      })
+
+      it("keeps the session waiting when the run stops awaiting an approval", async () => {
+        jest.mocked(streamText).mockImplementation(
+          makeWebhookStreamTextMock({
+            finishReason: "tool-calls",
+            toolResults: [
+              {
+                toolCallId: "call-1",
+                toolName: "book_meeting",
+                output: {
+                  status: ApprovalToolResultStatus.PENDING_APPROVAL,
+                  escalationId: "esc-1",
+                },
+              },
+            ],
+          })
+        )
+        const { executed, failed } = spyOnLifecycleEvents()
+
+        await context.doInWorkspaceContext(config.getProdWorkspaceId(), () =>
+          runWebhook("user-1")
+        )
+
+        expect(executed).toHaveBeenCalledWith(
+          expect.objectContaining({ awaitingEscalation: true })
+        )
+        expect(failed).not.toHaveBeenCalled()
+      })
     })
 
     it("marks the request as failed when an approval-gated tool call fails", async () => {
