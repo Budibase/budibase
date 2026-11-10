@@ -124,7 +124,7 @@ describe("automationUtils", () => {
       [AutomationStatus.ERROR, "failed"],
       [AutomationStatus.STOPPED_ERROR, "failed"],
       [AutomationStatus.TIMED_OUT, "failed"],
-      [AutomationStatus.SUSPENDED, "waiting"],
+      [AutomationStatus.SUSPENDED, "completed"],
     ])("maps %s to %s", (status, expected) => {
       expect(inferAutomationRunActionStatus(status)).toBe(expected)
     })

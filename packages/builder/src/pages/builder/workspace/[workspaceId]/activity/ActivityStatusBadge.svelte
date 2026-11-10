@@ -28,11 +28,6 @@
       iconWeight: "fill",
       color: "var(--spectrum-global-color-yellow-500)",
     },
-    waiting: {
-      icon: "warning",
-      iconWeight: "fill",
-      color: "var(--spectrum-global-color-yellow-500)",
-    },
     completed: {
       icon: "check-circle",
       iconWeight: "fill",
