@@ -119,10 +119,14 @@ const connectors: ConnectorCase[] = [
         schema: "dbo",
       }),
     numericStrings: true,
-    assertBindings: bindings =>
+    assertBindings: bindings => {
       expect(mssqlInput.mock.calls).toEqual(
         bindings.map((value, index) => [`p${index}`, value])
-      ),
+      )
+      expect(mssqlQuery).toHaveBeenLastCalledWith(
+        "SELECT @p0, @p1, @p2, @p3, @p4, @p5, @p6"
+      )
+    },
   },
   {
     source: SourceName.ORACLE,
