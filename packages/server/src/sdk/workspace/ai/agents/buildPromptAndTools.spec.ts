@@ -67,6 +67,7 @@ jest.mock("../../../../ai/tools", () => ({
   __esModule: true,
   createRestQueryTool: jest.fn(),
   createDatasourceQueryTool: jest.fn(),
+  getToolEventContexts: jest.fn(() => ({})),
   resolveToolExecutionPrincipal: jest.fn(
     (_tool, config) =>
       config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
