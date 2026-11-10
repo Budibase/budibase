@@ -57,6 +57,13 @@
         await initialise(pkg)
       }
       await deploymentStore.load()
+      if ($auth.user?.lastVisitedWorkspaceId !== appId) {
+        auth
+          .updateSelf({ lastVisitedWorkspaceId: appId })
+          .catch(error =>
+            console.error("Failed to save last visited workspace", error)
+          )
+      }
     } catch (error: any) {
       console.error(`Error initialising app: ${error?.message}`)
       sideNav.show()

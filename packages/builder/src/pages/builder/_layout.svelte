@@ -34,6 +34,7 @@
   } from "@budibase/bbui"
   import SettingsModal from "@/components/settings/SettingsModal.svelte"
   import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
+  import { getDefaultWorkspace } from "./defaultWorkspace"
 
   $isActive
   $redirect
@@ -224,8 +225,10 @@
         !isOnWorkspaceRoute &&
         !isOnPortalPage()
       ) {
-        // Find first editable app to redirect to
-        const defaultApp = $enrichedApps.find(app => app.editable)
+        const defaultApp = getDefaultWorkspace(
+          $enrichedApps,
+          $auth.user.lastVisitedWorkspaceId
+        )
         // Only redirect if enriched apps are loaded and app is editable
         if (defaultApp?.devId) {
           return {
