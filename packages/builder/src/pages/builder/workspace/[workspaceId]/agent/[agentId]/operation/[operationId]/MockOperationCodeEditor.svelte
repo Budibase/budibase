@@ -1,9 +1,20 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte"
   import type { BindingCompletion, BindingCompletionOption } from "@/types"
   import type { EditorRangeReplacement } from "@/types"
 
   export let value = ""
   export let completions: BindingCompletion[] = []
+
+  const dispatch = createEventDispatcher<{ change: string; blur: string }>()
+
+  const handleInput = (event: Event) => {
+    if (!(event.currentTarget instanceof HTMLTextAreaElement)) {
+      return
+    }
+    value = event.currentTarget.value
+    dispatch("change", value)
+  }
 
   export const replaceRange = ({
     from = 0,
@@ -11,6 +22,7 @@
     insert,
   }: EditorRangeReplacement) => {
     value = value.slice(0, from) + insert + value.slice(to)
+    dispatch("change", value)
     return value
   }
 
@@ -41,4 +53,10 @@
   }
 </script>
 
+<textarea
+  aria-label="Operation instructions"
+  {value}
+  on:input={handleInput}
+  on:blur={() => dispatch("blur", value)}
+></textarea>
 <button type="button" on:click={triggerAddTool}>Trigger add tool</button>
