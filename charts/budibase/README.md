@@ -13,14 +13,8 @@ Budibase is an open source low-code platform, helping thousands of teams build a
 ## Chart dependencies
 
 CouchDB is bundled as a locally maintained subchart in `charts/couchdb`, based on
-version `4.5.6` of the Apache CouchDB chart. Its templates and default values are
-maintained in this repository; no upstream chart download is required. Keep the
-source directory as the single copy of the CouchDB chart, without a packaged
-archive alongside it.
+version `4.5.6` of the Apache CouchDB chart.
 
-Configure it with the root `couchdb` values, and disable it with
-`services.couchdb.enabled=false` when using an external CouchDB instance. See the
-[local subchart values](charts/couchdb/values.yaml) for all available options.
 
 ## Upgrading
 
@@ -214,7 +208,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.couchdb.backup.interval | string | `""` | Backup interval in seconds |
 | services.couchdb.backup.resources | object | `{}` | The resources to use for CouchDB backup pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.couchdb.backup.target | string | `""` | Target couchDB instance to back up to, either a hostname or an IP address. |
-| services.couchdb.enabled | bool | `true` | Whether or not to spin up a CouchDB instance in your cluster. True by default, and the configuration for the CouchDB instance is under the `couchdb` key at the root of this file. See the locally maintained subchart defaults in `charts/couchdb/values.yaml` for all available options. |
+| services.couchdb.enabled | bool | `true` | Whether or not to spin up a CouchDB instance in your cluster. True by default, and the configuration for the CouchDB instance is under the `couchdb` key at the root of this file.
 | services.couchdb.port | int | `5984` |  |
 | services.dns | string | `"cluster.local"` | The DNS suffix to use for service discovery. You only need to change this if you've configured your cluster to use a different DNS suffix. |
 | services.litellm.bbaiKey | string | `""` | The Budibase AI virtual key (BBAI_LITELLM_KEY) used by agents. When set it is rendered onto both the app service and the automation worker. |

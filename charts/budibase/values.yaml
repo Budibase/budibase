@@ -661,8 +661,6 @@ services:
   couchdb:
     # -- Whether or not to spin up a CouchDB instance in your cluster. True by
     # default, and the configuration for the CouchDB instance is under the
-    # `couchdb` key at the root of this file. See the locally maintained
-    # subchart defaults in `charts/couchdb/values.yaml` for all available options.
     enabled: true
     # url: "" # only change if pointing to existing couch server
     # user: "" # only change if pointing to existing couch server

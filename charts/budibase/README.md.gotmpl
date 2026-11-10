@@ -12,14 +12,10 @@
 ## Chart dependencies
 
 CouchDB is bundled as a locally maintained subchart in `charts/couchdb`, based on
-version `4.5.6` of the Apache CouchDB chart. Its templates and default values are
-maintained in this repository; no upstream chart download is required. Keep the
-source directory as the single copy of the CouchDB chart, without a packaged
-archive alongside it.
+version `4.5.6` of the Apache CouchDB chart.
 
 Configure it with the root `couchdb` values, and disable it with
-`services.couchdb.enabled=false` when using an external CouchDB instance. See the
-[local subchart values](charts/couchdb/values.yaml) for all available options.
+`services.couchdb.enabled=false` when using an external CouchDB instance.
 
 ## Upgrading
 
