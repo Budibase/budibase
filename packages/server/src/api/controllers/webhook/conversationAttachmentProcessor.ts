@@ -15,6 +15,7 @@ import { getGlobalUser } from "../../../utilities/global"
 import { webhookChat } from "../ai/chatConversations"
 import { replyToConversation } from "../../../escalation/notifications/slack"
 import { formatSlackAssistantReply } from "./slack"
+import { GENERIC_CHAT_ERROR_MESSAGE } from "./chatHandler"
 import type { ConversationAttachmentIngestionJob } from "../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue"
 
 const MAX_UPDATE_ATTEMPTS = 5
@@ -461,11 +462,13 @@ const processTurn = async ({
       triggeredBy,
     })
     messages = result.messages
-    responseText = await formatSlackAssistantReply({
-      agentId: current.agentId,
-      result,
-      isDirectMessage: current.channel?.conversationType === "im",
-    })
+    responseText = result.failed
+      ? GENERIC_CHAT_ERROR_MESSAGE
+      : await formatSlackAssistantReply({
+          agentId: current.agentId,
+          result,
+          isDirectMessage: current.channel?.conversationType === "im",
+        })
     if (failed.length) {
       responseText += `\n\n${getAttachmentFailureText(failed)}`
     }

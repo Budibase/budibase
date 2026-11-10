@@ -91,17 +91,14 @@ describe("platformActions retention", () => {
       }
     )
 
-    it.each<PlatformActionSessionStatus>(["active", "waiting"])(
-      "never expires a %s session",
-      status => {
-        expect(
-          isExpiredSession({
-            session: { status, updatedAt: "2020-01-01T00:00:00.000Z" },
-            cutoff,
-          })
-        ).toBe(false)
-      }
-    )
+    it("never expires an active session", () => {
+      expect(
+        isExpiredSession({
+          session: { status: "active", updatedAt: "2020-01-01T00:00:00.000Z" },
+          cutoff,
+        })
+      ).toBe(false)
+    })
 
     it("keeps a terminal session updated exactly at the cutoff", () => {
       expect(

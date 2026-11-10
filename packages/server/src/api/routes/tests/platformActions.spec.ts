@@ -192,7 +192,7 @@ describe("/api/actions", () => {
 
       expect(result).toEqual({
         sessions: [],
-        summary: { total: 0, active: 0, waiting: 0, completed: 0, failed: 0 },
+        summary: { total: 0, active: 0, completed: 0, failed: 0 },
         pagination: { hasNextPage: false, hasPreviousPage: false },
       })
     })
@@ -235,7 +235,6 @@ describe("/api/actions", () => {
       expect(result.summary).toEqual({
         total: 3,
         active: 1,
-        waiting: 0,
         completed: 1,
         failed: 1,
       })
@@ -275,6 +274,7 @@ describe("/api/actions", () => {
     it.each([
       { env: "staging" },
       { status: "paused" },
+      { status: "waiting" },
       { limit: "0" },
       { limit: "101" },
       { limit: "1.5" },
