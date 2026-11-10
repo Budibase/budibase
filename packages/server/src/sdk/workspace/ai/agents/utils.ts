@@ -7,6 +7,7 @@ import {
   WebSearchProvider,
   ApprovalToolResultStatus,
   ToolExecutionPrincipal,
+  type ActionAiAgentToolExecuted,
   type AgentExecutionContext,
   type PlatformActionResourceOrigin,
 } from "@budibase/types"
@@ -27,6 +28,7 @@ import {
   createDatasourceQueryTool,
   resolveToolExecutionPrincipal,
   toToolSet,
+  getToolEventContexts,
   type AiToolDefinition,
   type EscalationGateRuntime,
   type ToolAuthorizationRuntime,
@@ -199,6 +201,7 @@ export async function buildPromptAndTools(
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  toolEventContexts: Record<string, ActionAiAgentToolExecuted>
   toolSources: Record<string, string | undefined>
 }> {
   const {
@@ -334,6 +337,7 @@ export async function buildPromptAndTools(
   return {
     systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools, runtimes, gates),
+    toolEventContexts: getToolEventContexts({ tools: enabledTools, runtimes }),
     toolDisplayNames: getToolDisplayNames(enabledTools),
     toolSources: Object.fromEntries(
       enabledTools.map(tool => [tool.name, tool.sourceId])
