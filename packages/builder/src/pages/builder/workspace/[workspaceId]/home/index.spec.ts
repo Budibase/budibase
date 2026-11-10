@@ -127,6 +127,16 @@ vi.mock("@/stores/portal", () => ({
   }),
 }))
 
+vi.mock("@/stores/builder/functionsAvailability", () => ({
+  functionsAvailable: mocks.createStore(false),
+}))
+
+vi.mock("@/stores/builder/functions", () => ({
+  functionStore: Object.assign(mocks.createStore({ functions: [] }), {
+    fetch: vi.fn(),
+  }),
+}))
+
 vi.mock("@/components/projects/assignments", () => ({
   saveProjectAssignment: mocks.saveAssignment,
 }))
@@ -173,6 +183,10 @@ vi.mock(
 )
 vi.mock(
   "../_components/UpdateAgentModal.svelte",
+  () => import("@/test/mocks/MockSlot.svelte")
+)
+vi.mock(
+  "../function/FunctionNameModal.svelte",
   () => import("@/test/mocks/MockSlot.svelte")
 )
 vi.mock(

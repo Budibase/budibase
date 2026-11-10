@@ -74,6 +74,16 @@ vi.mock("@/stores/bb", () => ({
   bb: mocks.createStore({ settings: { open: false } }),
 }))
 
+vi.mock("@/stores/builder/functionsAvailability", () => ({
+  functionsAvailable: mocks.createStore(false),
+}))
+
+vi.mock("@/stores/builder/functions", () => ({
+  functionStore: Object.assign(mocks.createStore({ functions: [] }), {
+    fetch: vi.fn(),
+  }),
+}))
+
 vi.mock("@budibase/shared-core", async importOriginal => {
   const actual = await importOriginal<typeof import("@budibase/shared-core")>()
   return {
@@ -128,6 +138,10 @@ vi.mock(
 )
 vi.mock(
   "../_components/UpdateAgentModal.svelte",
+  () => import("@/test/mocks/MockSlot.svelte")
+)
+vi.mock(
+  "../function/FunctionNameModal.svelte",
   () => import("@/test/mocks/MockSlot.svelte")
 )
 vi.mock(
