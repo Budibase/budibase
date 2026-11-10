@@ -84,6 +84,41 @@ describe("Snowflake query bindings", () => {
     }
   )
 
+  describe.each(["({{ value }})", "{{ value }}"])(
+    "nullable IN binding %s",
+    valueExpression => {
+      it.each([false, true])(
+        "binds null once with nullDefaultSupport=%s",
+        async nullDefaultSupport => {
+          const query = await config.api.query.save({
+            ...basicQuery(datasource._id!),
+            fields: {
+              sql: `SELECT * FROM users WHERE id IN ${valueExpression} AND category IN ({{ categories }}) AND name IN ({{ text }})`,
+            },
+            parameters: [
+              { name: "value", default: "123" },
+              { name: "categories", default: "" },
+              { name: "text", default: "" },
+            ],
+          })
+          await config.api.query.save({ ...query, nullDefaultSupport })
+
+          await config.api.query.execute(query._id!, {
+            parameters: { value: null, categories: "one, two", text: "null" },
+          })
+
+          expect(execute).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+              sqlText:
+                "SELECT * FROM users WHERE id IN (?) AND category IN (?,?) AND name IN (?)",
+              binds: [null, "one", "two", "null"],
+            })
+          )
+        }
+      )
+    }
+  )
+
   it.each([
     { name: "customData", value: null },
     { name: "customData", value: "null" },
@@ -206,6 +241,10 @@ describe("Snowflake query bindings", () => {
 
   it.each([
     { sql: "SELECT {{ value }} AS value", expected: "SELECT ? AS value" },
+    {
+      sql: "SELECT * FROM users WHERE id IN ({{ value }})",
+      expected: "SELECT * FROM users WHERE id IN (?)",
+    },
     {
       sql: "SELECT '{{ value }}' AS value",
       expected: "SELECT concat('', ?, '') AS value",

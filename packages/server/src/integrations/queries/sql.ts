@@ -39,10 +39,28 @@ export async function interpolateSQL(
     return fields
   }
   const bindings = findHBSBlocks(sql)
-  let variables = [],
-    arrays = []
-  for (let binding of bindings) {
-    // look for array/list operations in the SQL statement, which will need handled later
+  const enrichedBindings = await sdk.queries.enrichArrayContext(
+    bindings,
+    parameters,
+    { escapeNewlines: false }
+  )
+  const resolvedBindings: (string | null)[] = enrichedBindings.map(
+    (value, index) => {
+      const path = bindings[index].replace(/[{}]/g, "").trim()
+      if (
+        get(parameters, path) === null ||
+        (opts.nullDefaultSupport && value === "")
+      ) {
+        return null
+      }
+      return value
+    }
+  )
+  const queryBindings: (string | null)[] = []
+  for (const [index, binding] of bindings.entries()) {
+    const value = resolvedBindings[index]
+    let bindingValues = [value]
+    // Look for list bindings such as IN ({{ ids }}).
     const listRegexMatch = sql.match(
       new RegExp(`(in|IN|In|iN)( )+[(]?${binding}[)]?`)
     )
@@ -68,21 +86,11 @@ export async function interpolateSQL(
     }
     // generate SQL parameterised array
     else if (listRegexMatch) {
-      arrays.push(binding)
-      // determine the length of the array
-      const value = (
-        await sdk.queries.enrichContext([binding], parameters, {
-          escapeNewlines: false,
-        })
-      )[0]
-        .split(",")
-        .map((val: string) => val.trim())
-      // build a string like ($1, $2, $3)
+      bindingValues =
+        value === null ? [null] : value.split(",").map(item => item.trim())
       let replacement = (
         await Promise.all(
-          Array.apply(null, Array(value.length)).map(() =>
-            integration.getBindingIdentifier()
-          )
+          bindingValues.map(() => integration.getBindingIdentifier())
         )
       ).join(",")
       // check if parentheses are needed
@@ -93,42 +101,9 @@ export async function interpolateSQL(
     } else {
       sql = sql.replace(binding, await integration.getBindingIdentifier())
     }
-    variables.push(binding)
+    queryBindings.push(...bindingValues)
   }
-  // replicate the knex structure
   fields.sql = sql
-  fields.bindings = await sdk.queries.enrichArrayContext(
-    variables,
-    parameters,
-    {
-      escapeNewlines: false,
-    }
-  )
-  fields.bindings = fields.bindings.map((value, index) => {
-    const binding = variables[index]
-    const path = binding.replace(/[{}]/g, "").trim()
-    return !arrays.includes(binding) && get(parameters, path) === null
-      ? null
-      : value
-  })
-  if (opts.nullDefaultSupport) {
-    for (let index in fields.bindings) {
-      if (fields.bindings[index] === "") {
-        fields.bindings[index] = null
-      }
-    }
-  }
-  // check for arrays in the data
-  let updated: string[] = []
-  for (let i = 0; i < variables.length; i++) {
-    if (arrays.includes(variables[i])) {
-      updated = updated.concat(
-        fields.bindings[i].split(",").map((val: string) => val.trim())
-      )
-    } else {
-      updated.push(fields.bindings[i])
-    }
-  }
-  fields.bindings = updated
+  fields.bindings = queryBindings
   return fields
 }
