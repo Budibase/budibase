@@ -3,6 +3,10 @@
   import "easymde/dist/easymde.min.css"
   import { onDestroy, onMount, tick } from "svelte"
   import ColorPicker from "../ColorPicker/ColorPicker.svelte"
+  import {
+    getCustomToolbarIconNames,
+    useLocalToolbarIcons,
+  } from "./toolbarIcons"
 
   export let height: string | null = null
   export let scroll: boolean = true
@@ -329,8 +333,10 @@
       maxHeight: scroll ? height : undefined,
       minHeight: scroll ? undefined : height,
       ...easyMDEOptions,
+      autoDownloadFontAwesome: false,
       toolbar: getToolbar(easyMDEOptions),
     })
+    useLocalToolbarIcons(mde, getCustomToolbarIconNames(easyMDEOptions))
     bindCursorListener(mde)
     syncToolbarIconColors(mde)
   })

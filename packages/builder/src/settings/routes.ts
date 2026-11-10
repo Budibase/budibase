@@ -282,7 +282,8 @@ export const workspaceRoutes = (
     {
       section: "APIs",
       title: "APIs",
-      access: () => isCreator,
+      access: () =>
+        isCreator || sdk.users.isBuilder(user, workspaceStore.appId),
       path: "connections",
       icon: "cube",
       routes: [

@@ -29,7 +29,7 @@
   let drawer
   let boundValue
 
-  $: text = getText(value)
+  $: text = getText(sanitisedValue)
   $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: schema = getSchema($selectedScreen, datasource)
   $: options = allowCellEditing
@@ -39,15 +39,9 @@
   $: updateBoundValue(sanitisedValue)
   $: enrichedSchemaFields = getSchemaFields(schema, $tables.list)
 
-  $: {
-    value = (value || []).filter(
-      column => (schema || {})[column.name || column] !== undefined
-    )
-  }
-
   const getText = value => {
     if (!value?.length) {
-      return placeholder
+      return placeholder || "All columns"
     }
     let text = `${value.length} column`
     if (value.length !== 1) {

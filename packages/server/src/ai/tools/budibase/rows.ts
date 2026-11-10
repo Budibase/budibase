@@ -26,7 +26,11 @@ import {
 } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
-import { getAgentTableFields, sanitizeAgentRow } from "./tableScope"
+import {
+  getAgentTableFields,
+  getAgentTableSchema,
+  sanitizeAgentRow,
+} from "./tableScope"
 import { validateTimeOnlyField } from "../../../sdk/workspace/rows/validateTimeOnlyField"
 
 const PLAIN_TEXT_WARNING =
@@ -179,6 +183,19 @@ const getWritableFields = (
     .map(([name, schema]) => ({ name, schema }))
 }
 
+const getSearchableFields = (
+  tableSchema: TableSchema,
+  tableSourceType: TableSourceType
+): TableSchemaField[] => {
+  const protectedColumns = getProtectedColumns(tableSourceType)
+  return Object.entries(getAgentTableSchema(tableSchema))
+    .filter(([name]) => !protectedColumns.has(name))
+    .sort(
+      ([, a], [, b]) => Number(isReadOnlyField(b)) - Number(isReadOnlyField(a))
+    )
+    .map(([name, schema]) => ({ name, schema }))
+}
+
 const buildSchemaSummary = (fields: TableSchemaField[]) => {
   if (fields.length === 0) {
     return ""
@@ -187,7 +204,7 @@ const buildSchemaSummary = (fields: TableSchemaField[]) => {
   const limited = summaries.slice(0, MAX_SCHEMA_FIELDS)
   const remaining = summaries.length - limited.length
   if (remaining > 0) {
-    limited.push(`... +${remaining} more (use get_table for full schema)`)
+    limited.push(`... +${remaining} more`)
   }
   return limited.join(", ")
 }
@@ -492,7 +509,6 @@ const ROW_TOOL: Record<RowToolAction, RowTool> = {
     description:
       "Search for rows in a table based on criteria. " +
       "IMPORTANT: You can ONLY filter on fields that exist in the table schema. " +
-      "Use get_table or list_tables first to see available field names. " +
       "Searching on non-existent fields will fail.",
     inputSchema: z.object({
       query: z
@@ -550,14 +566,36 @@ const getRequesterRedactedDescription = (action: string) =>
   `${formatActionLabel(action)} on the configured resource. Resource metadata is restricted. Do not infer its schema or substitute another resource if this tool is denied.`
 
 const buildCollisionSafeToolName = (tableId: string, action: string) => {
-  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const sanitisedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
   const tableIdHash = createHash("sha256")
     .update(tableId)
     .digest("hex")
     .substring(0, TOOL_NAME_HASH_LENGTH)
   const suffix = `_${tableIdHash}_${action}`
   const tableIdLength = MAX_TOOL_NAME_LENGTH - suffix.length
-  return `${sanitizedTableId.substring(0, tableIdLength)}${suffix}`
+  return `${sanitisedTableId.substring(0, tableIdLength)}${suffix}`
+}
+
+export const getRowToolNames = (tableId: string): Record<string, string> => {
+  const sanitisedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const truncatedToolNames = Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      `${sanitisedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
+    ])
+  )
+  const hasToolNameCollision =
+    new Set(Object.values(truncatedToolNames)).size !==
+    Object.keys(truncatedToolNames).length
+  if (!hasToolNameCollision) {
+    return truncatedToolNames
+  }
+  return Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      buildCollisionSafeToolName(tableId, action),
+    ])
+  )
 }
 
 export const createRowTools = ({
@@ -594,24 +632,16 @@ export const createRowTools = ({
     true
   )
   const updateDataSchema = buildRowDataSchema(writableFields, schemaSummary)
-  const searchInputSchema = buildSearchInputSchema(schemaSummary)
-  const fields = getAgentTableFields(tableSchema)
-  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
-  const truncatedToolNames = new Map(
-    ROW_TOOL_ACTIONS.map(action => [
-      action,
-      `${sanitizedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
-    ])
+  const searchInputSchema = buildSearchInputSchema(
+    buildSchemaSummary(getSearchableFields(tableSchema, tableSourceType))
   )
-  const hasToolNameCollision =
-    new Set(truncatedToolNames.values()).size !== truncatedToolNames.size
+  const toolNames = getRowToolNames(tableId)
+  const fields = getAgentTableFields(tableSchema)
 
   return ROW_TOOL_ACTIONS.map(action => {
     const def = ROW_TOOL[action]
     const description = `${formatActionLabel(action)} in "${tableName}". ${def.description}`
-    const toolName = hasToolNameCollision
-      ? buildCollisionSafeToolName(tableId, action)
-      : truncatedToolNames.get(action)!
+    const toolName = toolNames[action]
     const isWrite =
       action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW
     let inputSchema = def.inputSchema
@@ -640,6 +670,7 @@ export const createRowTools = ({
     return {
       name: toolName,
       readableName: `${tableName}.${action}`,
+      resourceName: tableName,
       tableId,
       sourceId: tableId,
       sourceType: resolvedSourceType,

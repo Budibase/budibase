@@ -212,6 +212,15 @@
               popoverAutoWidth
               on:change={onChange}
             />
+          {:else if filter.type === FieldType.OPTIONS && useConditionValueControls}
+            <Select
+              disabled={filter.noValue}
+              options={getFieldOptions(filter.field)}
+              value={readableValue}
+              popoverAutoWidth
+              wrapText
+              on:change={onChange}
+            />
           {:else if filter.type === FieldType.OPTIONS}
             <Combobox
               disabled={filter.noValue}

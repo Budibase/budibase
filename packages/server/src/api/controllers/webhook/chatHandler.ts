@@ -18,6 +18,7 @@ import type {
   ContextUser,
   ConversationAttachmentTurn,
   EscalationRespondResult,
+  PlatformActionUserOrigin,
   WebhookChatCompleteResult,
 } from "@budibase/types"
 import {
@@ -43,6 +44,8 @@ const DEFAULT_CONVERSATION_CACHE_SIZE = 5000
 const CONVERSATION_SCOPE_CACHE_KEY_PREFIX = "chatConversationScope"
 const REDIS_CACHE_INIT_RETRY_MS = 30 * 1000
 export const NO_ASSISTANT_RESPONSE_MESSAGE = "No response generated."
+export const GENERIC_CHAT_ERROR_MESSAGE =
+  "Sorry, something went wrong while processing your request."
 
 const conversationCache = new Map<string, string>()
 let conversationCacheClient: RedisClient | undefined
@@ -575,6 +578,7 @@ export const handleChatMessage = async ({
     const linkingRequired = requireUserLink !== false
     let chatUser: ContextUser
     let userId: string
+    let triggeredBy: PlatformActionUserOrigin
 
     if (existingLink) {
       try {
@@ -599,6 +603,7 @@ export const handleChatMessage = async ({
         return
       }
       userId = linkedUserId
+      triggeredBy = sdk.platformActions.getUserOrigin(chatUser)
     } else if (linkingRequired) {
       if (provider === AgentChannelProvider.MSTEAMS) {
         const providerScopeKey = channel.tenantId || channel.teamId
@@ -633,6 +638,10 @@ export const handleChatMessage = async ({
       })
       chatUser = createTransientPublicUser({
         userId,
+        displayName: user.displayName,
+      })
+      triggeredBy = sdk.platformActions.getTransientChatUserOrigin({
+        provider,
         displayName: user.displayName,
       })
     }
@@ -780,6 +789,7 @@ export const handleChatMessage = async ({
       const now = new Date().toISOString()
       const turn: ConversationAttachmentTurn = {
         id: v4(),
+        triggeredBy,
         message: userMessage,
         attachmentIds: conversationAttachments
           .filter(
@@ -896,7 +906,7 @@ export const handleChatMessage = async ({
         const message =
           error instanceof HTTPError
             ? error.message
-            : "Sorry, something went wrong while processing your request."
+            : GENERIC_CHAT_ERROR_MESSAGE
         await reply(message)
         return
       }
@@ -923,6 +933,7 @@ export const handleChatMessage = async ({
       result = await webhookChat({
         chat: draftChat,
         user: chatUser,
+        triggeredBy,
         ...(replyWithAssistantStream
           ? {
               onAssistantStream: async stream => {
@@ -934,9 +945,7 @@ export const handleChatMessage = async ({
       })
     } catch (error) {
       const message =
-        error instanceof HTTPError
-          ? error.message
-          : "Sorry, something went wrong while processing your request."
+        error instanceof HTTPError ? error.message : GENERIC_CHAT_ERROR_MESSAGE
       await reply(message)
       return
     }
@@ -965,6 +974,19 @@ export const handleChatMessage = async ({
       chatId,
       idleTimeoutMs,
     })
+
+    if (result.failed) {
+      if (streamedAssistantMessage) {
+        await streamedAssistantMessage.edit(
+          [result.assistantText, GENERIC_CHAT_ERROR_MESSAGE]
+            .filter(Boolean)
+            .join("\n\n")
+        )
+      } else {
+        await reply(GENERIC_CHAT_ERROR_MESSAGE)
+      }
+      return
+    }
 
     const assistantReply = formatAssistantReply
       ? await formatAssistantReply(result)

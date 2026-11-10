@@ -30,6 +30,7 @@
     viewsV2,
   } from "@/stores/builder"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
+  import { getEnabledActivityTabs } from "@/pages/builder/workspace/[workspaceId]/activity/activityTabs"
   import {
     workspacesStore,
     licensing,
@@ -42,7 +43,6 @@
   import { onDestroy, setContext } from "svelte"
   import {
     type Datasource,
-    FeatureFlag,
     type Query,
     type Table,
     type UIAutomation,
@@ -515,7 +515,7 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              {#if $featureFlags[FeatureFlag.AI_AGENT_ACTIVITY]}
+              {#if getEnabledActivityTabs($featureFlags).length > 0}
                 <SideNavLink
                   icon="pulse"
                   text="Activity"

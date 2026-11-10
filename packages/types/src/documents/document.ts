@@ -48,6 +48,7 @@ export enum DocumentType {
   AGENT_LOG_SESSION = "agentlogsession",
   AGENT_LOG_REQUEST = "agentlogrequest",
   AGENT_REQUEST = "agentrequest",
+  REQUEST = "req",
   AGENT_TEST_SUITE = "agenttestsuite",
   AGENT_TEST_RUN = "agenttestrun",
   AGENT_KNOWLEDGE_SOURCE_SYNC_STATE = "agentknowledgesync",
@@ -63,6 +64,8 @@ export enum DocumentType {
   AUTO_COLUMN_STATE = "autocolumn_state",
   ESCALATION_CONTEXT = "escalation_context",
   ESCALATION_NOTIFICATION = "escalation_notification",
+  PLATFORM_ACTION_EVENT = "platform_action",
+  PLATFORM_ACTION_SESSION = "platform_action_session",
 }
 
 // these are the core documents that make up the data, design

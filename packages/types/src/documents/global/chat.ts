@@ -1,4 +1,8 @@
-import { AgentMessageMetadata, Document } from "../../"
+import {
+  AgentMessageMetadata,
+  Document,
+  PlatformActionUserOrigin,
+} from "../../"
 import type { UIMessage } from "ai"
 
 export enum AgentChannelProvider {
@@ -71,6 +75,7 @@ export enum ConversationAttachmentTurnStatus {
 
 export interface ConversationAttachmentTurn {
   id: string
+  triggeredBy?: PlatformActionUserOrigin
   message: UIMessage<AgentMessageMetadata>
   attachmentIds: string[]
   status: ConversationAttachmentTurnStatus
@@ -106,6 +111,7 @@ export interface WebhookChatCompleteResult {
   ragSources?: AgentMessageMetadata["ragSources"]
   allowKnowledgeSourceDownload?: boolean
   title?: string
+  failed?: boolean
 }
 
 export type DraftChatConversation = Omit<ChatConversationRequest, "agentId"> & {

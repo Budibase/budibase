@@ -1,0 +1,226 @@
+import {
+  LockName,
+  LockType,
+  type ActionSourceContext,
+  type PlatformActionSessionStatus,
+  type PlatformActionEnvironment,
+  type PlatformActionSessionIndexDoc,
+  type PlatformActionSessionMetadata,
+} from "@budibase/types"
+import * as locks from "../../../redis/redlockImpl"
+import { doWithExistingActionsWorkspace, getActionsDB } from "./db"
+import {
+  buildPlatformActionSession,
+  getSessionMetadataFields,
+  getPlatformActionSessionId,
+} from "./utils"
+
+const LOCK_TTL_MS = 10000
+const MAX_PUT_CONFLICT_ATTEMPTS = 3
+
+const TERMINAL_STATUSES: ReadonlySet<PlatformActionSessionStatus> = new Set([
+  "completed",
+  "failed",
+])
+
+function isTerminalSignal(
+  signal: PlatformActionSessionStatus | undefined
+): boolean {
+  return signal != null && TERMINAL_STATUSES.has(signal)
+}
+
+export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
+  environment: PlatformActionEnvironment
+  incrementsActionCount: boolean
+  signal?: PlatformActionSessionStatus
+  timestamp: string
+  metadata?: PlatformActionSessionMetadata
+}
+
+function nextStatus(
+  existingStatus: PlatformActionSessionStatus | undefined,
+  existingStatusUpdatedAt: string | undefined,
+  signal: PlatformActionSessionStatus | undefined,
+  timestamp: string
+): {
+  status: PlatformActionSessionStatus
+  statusUpdatedAt: string
+  updated: boolean
+} {
+  if (!existingStatus || !existingStatusUpdatedAt) {
+    // Nothing recorded this session's status yet. A signal-less action (a
+    // step succeeding or failing mid-run isn't the run's terminal state)
+    // still needs a status to be visible at all, default to active, the
+    // same state an explicit start signal would have set.
+    return {
+      status: signal ?? "active",
+      statusUpdatedAt: timestamp,
+      updated: true,
+    }
+  }
+
+  if (!signal) {
+    return {
+      status: existingStatus,
+      statusUpdatedAt: existingStatusUpdatedAt,
+      updated: false,
+    }
+  }
+
+  if (new Date(timestamp) > new Date(existingStatusUpdatedAt)) {
+    return { status: signal, statusUpdatedAt: timestamp, updated: true }
+  }
+  if (
+    new Date(timestamp).getTime() ===
+      new Date(existingStatusUpdatedAt).getTime() &&
+    signal === "failed" &&
+    existingStatus !== "failed"
+  ) {
+    return { status: signal, statusUpdatedAt: timestamp, updated: true }
+  }
+
+  return {
+    status: existingStatus,
+    statusUpdatedAt: existingStatusUpdatedAt,
+    updated: false,
+  }
+}
+
+function earliest(a: string, b: string): string {
+  return new Date(a) < new Date(b) ? a : b
+}
+
+function latest(a: string, b: string): string {
+  return new Date(a) > new Date(b) ? a : b
+}
+
+interface UpsertPlatformActionSessionResult {
+  persisted: boolean
+}
+
+export async function upsertPlatformActionSession(
+  input: UpsertPlatformActionSessionInput
+): Promise<UpsertPlatformActionSessionResult> {
+  const sessionId = getPlatformActionSessionId(input)
+  const isTerminal = isTerminalSignal(input.signal)
+
+  const workspaceExists = await doWithExistingActionsWorkspace(async () => {
+    await indexSessionWithLock({ input, sessionId, isTerminal })
+  })
+  if (!workspaceExists) {
+    // The workspace was deleted after this job was queued - completing
+    // without a write keeps Bull from retrying and recreating the Actions DB
+    console.log("Discarding platform action session update", { sessionId })
+  }
+  return { persisted: workspaceExists }
+}
+
+interface IndexSessionInput {
+  input: UpsertPlatformActionSessionInput
+  sessionId: string
+  isTerminal: boolean
+}
+
+async function indexSessionWithLock({
+  input,
+  sessionId,
+  isTerminal,
+}: IndexSessionInput): Promise<void> {
+  const lockResponse = await locks.doWithLock(
+    {
+      type: LockType.TRY_ONCE,
+      name: LockName.PLATFORM_ACTION_SESSION_INDEX,
+      resource: sessionId,
+      ttl: LOCK_TTL_MS,
+    },
+    async () => {
+      const db = getActionsDB()
+
+      for (let attempt = 0; attempt < MAX_PUT_CONFLICT_ATTEMPTS; attempt++) {
+        const existing =
+          await db.tryGet<PlatformActionSessionIndexDoc>(sessionId)
+        if (!existing && !input.incrementsActionCount) {
+          throw new Error(
+            `Platform action session ${sessionId} not indexed yet for lifecycle-only signal`
+          )
+        }
+        const existingStatusUpdatedAt = existing
+          ? (existing.statusUpdatedAt ??
+            existing.completedAt ??
+            existing.startedAt)
+          : undefined
+        const {
+          status,
+          statusUpdatedAt,
+          updated: updatesStatus,
+        } = nextStatus(
+          existing?.status,
+          existingStatusUpdatedAt,
+          input.signal,
+          input.timestamp
+        )
+        const startedAt = existing
+          ? earliest(existing.startedAt, input.timestamp)
+          : input.timestamp
+        const metadataFields = getSessionMetadataFields({
+          metadata: input.metadata,
+          timestamp: input.timestamp,
+          existing,
+        })
+
+        const doc: Omit<PlatformActionSessionIndexDoc, "updatedAt"> = existing
+          ? {
+              ...existing,
+              ...metadataFields,
+              status,
+              statusUpdatedAt,
+              startedAt,
+              ...(input.incrementsActionCount
+                ? { actionCount: existing.actionCount + 1 }
+                : {}),
+            }
+          : buildPlatformActionSession({
+              sourceType: input.sourceType,
+              sourceId: input.sourceId,
+              environment: input.environment,
+              status,
+              startedAt,
+              statusUpdatedAt,
+              actionCount: input.incrementsActionCount ? 1 : 0,
+              ...metadataFields,
+            })
+
+        if (isTerminal && updatesStatus) {
+          doc.completedAt = existing
+            ? latest(
+                existing.completedAt ?? existing.startedAt,
+                input.timestamp
+              )
+            : input.timestamp
+        } else if (updatesStatus) {
+          delete doc.completedAt
+        }
+
+        try {
+          await db.put(doc)
+          return
+        } catch (err: any) {
+          const isLastAttempt = attempt === MAX_PUT_CONFLICT_ATTEMPTS - 1
+          if (err?.status === 409 && !isLastAttempt) {
+            continue
+          }
+          throw err
+        }
+      }
+    }
+  )
+
+  if (!lockResponse.executed) {
+    // Another job already holds the lock for this session - let Bull's
+    // retry/backoff pick this update back up instead of dropping it, since
+    // every event must be reflected in actionCount.
+    throw new Error(
+      `Could not acquire lock to index platform action session ${sessionId}`
+    )
+  }
+}

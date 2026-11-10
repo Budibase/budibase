@@ -3,6 +3,7 @@ import { mocks } from "@budibase/backend-core/tests"
 import {
   Automation,
   AutomationResults,
+  AutomationIOType,
   AutomationTriggerStepId,
   ConfigType,
   EmailTrigger,
@@ -26,6 +27,10 @@ import {
   TRIGGER_DEFINITIONS,
 } from "../../../automations"
 import * as emailAutomation from "../../../automations/email"
+import {
+  captureAutomationResults,
+  captureRunMetadata,
+} from "../../../automations/tests/utilities"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import sdk from "../../../sdk"
 import { basicTable } from "../../../tests/utilities/structures"
@@ -737,6 +742,65 @@ describe("/automations", () => {
       )
     })
 
+    it.each([
+      { branch: "collect", expected: { success: true, value: "branch value" } },
+      { branch: "log", expected: { success: true } },
+      { branch: "stop", expected: { success: true } },
+      { branch: "error", expected: { success: false } },
+    ])(
+      "returns a response for the $branch branch",
+      async ({ branch, expected }) => {
+        mocks.licenses.useSyncAutomations()
+        const { automation } = await createAutomationBuilder(config)
+          .onAppAction({ fields: { branch: AutomationIOType.STRING } })
+          .branch({
+            collected: {
+              condition: {
+                equal: { "{{ trigger.fields.branch }}": "collect" },
+              },
+              steps: builder => builder.collect({ collection: "branch value" }),
+            },
+            uncollected: {
+              condition: { equal: { "{{ trigger.fields.branch }}": "log" } },
+              steps: builder => builder.serverLog({ text: "Branch completed" }),
+            },
+            stopped: {
+              condition: { equal: { "{{ trigger.fields.branch }}": "stop" } },
+              steps: builder =>
+                builder.filter({
+                  field: 1,
+                  condition: FilterCondition.EQUAL,
+                  value: 2,
+                }),
+            },
+            failed: {
+              condition: { equal: { "{{ trigger.fields.branch }}": "error" } },
+              steps: builder =>
+                builder.executeScript({
+                  code: "throw new Error('Branch failed')",
+                }),
+            },
+          })
+          .save()
+
+        await config.api.automation.trigger(
+          automation._id!,
+          { fields: { branch }, timeout: 10 },
+          {
+            status: 200,
+            body: expected,
+          }
+        )
+
+        const response = await config.doInContext(
+          config.getDevWorkspaceId(),
+          () =>
+            sdk.automations.execution.trigger(automation._id!, { branch }, 10)
+        )
+        expect(response).toEqual(expected)
+      }
+    )
+
     it("triggers a synchronous automation", async () => {
       mocks.licenses.useSyncAutomations()
       const { automation } =
@@ -754,6 +818,42 @@ describe("/automations", () => {
             value: [1, 2, 3],
           },
         }
+      )
+    })
+
+    it("attributes a synchronous trigger to the authenticated user", async () => {
+      mocks.licenses.useSyncAutomations()
+      const { automation } =
+        await config.api.automation.post(collectAutomation())
+
+      const metadata = await captureRunMetadata(() =>
+        config.api.automation.trigger(automation._id!, {
+          fields: {},
+          timeout: 1000,
+        })
+      )
+
+      const { _id, firstName, lastName } = config.getUser()
+      expect(metadata.map(run => run?.triggeredBy)).toEqual([
+        { type: "user", id: _id, label: `${firstName} ${lastName}` },
+      ])
+    })
+
+    it("ignores a client-supplied origin on an asynchronous trigger", async () => {
+      const { automation } = await config.api.automation.post(newAutomation())
+      const request = {
+        fields: {},
+        timeout: 1000,
+        triggeredBy: { type: "schedule" },
+      }
+
+      const results = await captureAutomationResults(automation, () =>
+        config.api.automation.trigger(automation._id!, request)
+      )
+
+      expect(results).toHaveLength(1)
+      expect(results[0].data.event.triggeredBy).toEqual(
+        expect.objectContaining({ type: "user", id: config.getUser()._id })
       )
     })
 

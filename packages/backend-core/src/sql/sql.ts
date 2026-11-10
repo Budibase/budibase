@@ -1438,6 +1438,18 @@ class InternalBuilder {
         const direction =
           value.direction === SortOrder.ASCENDING ? "asc" : "desc"
 
+        if (value.containsValue !== undefined) {
+          if (this.client !== SqlClient.SQL_LITE) {
+            continue
+          }
+          query = query.orderByRaw(`(?? LIKE ?) ??`, [
+            this.rawQuotedIdentifier(`${aliased}.${key}`),
+            `%${JSON.stringify(value.containsValue)}%`,
+            this.knex.raw(direction),
+          ])
+          continue
+        }
+
         // TODO: figure out a way to remove this conditional, not relying on
         // the defaults of each datastore.
         let nulls: "first" | "last" | undefined = undefined
