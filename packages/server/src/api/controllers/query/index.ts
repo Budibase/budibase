@@ -325,7 +325,8 @@ function enrichParameters({
     ) {
       value = parameter.default
     }
-    if (query.nullDefaultSupport && paramNotSet(value)) {
+    // SQL interpolation converts empty values to null after datasource defaults.
+    if (!preserveNullValues && query.nullDefaultSupport && paramNotSet(value)) {
       value = null
     }
     requestParameters[parameter.name] = value

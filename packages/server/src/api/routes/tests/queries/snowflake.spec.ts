@@ -122,24 +122,31 @@ describe("Snowflake query bindings", () => {
         source: SourceName.SNOWFLAKE,
         config: {
           ...datasource.config,
-          staticVariables: { amount: "123", missing: "456" },
+          staticVariables: { amount: "123", missing: "456", empty: "789" },
         },
       })
       const query = await config.api.query.save({
         ...basicQuery(staticDatasource._id!),
-        fields: { sql: "CALL example_procedure({{ amount }}, {{ missing }})" },
-        parameters: [{ name: "amount", default: "default" }],
+        fields: {
+          sql: "CALL example_procedure({{ amount }}, {{ missing }}, {{ empty }}, {{ unset }})",
+        },
+        parameters: [
+          { name: "amount", default: "default" },
+          { name: "missing", default: "" },
+          { name: "empty", default: "" },
+          { name: "unset", default: "" },
+        ],
       })
       await config.api.query.save({ ...query, nullDefaultSupport })
 
       await config.api.query.execute(query._id!, {
-        parameters: { amount: null },
+        parameters: { amount: null, empty: "" },
       })
 
       expect(execute).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          sqlText: "CALL example_procedure(?, ?)",
-          binds: [null, "456"],
+          sqlText: "CALL example_procedure(?, ?, ?, ?)",
+          binds: [null, "456", "789", nullDefaultSupport ? null : ""],
         })
       )
     }
@@ -150,10 +157,13 @@ describe("Snowflake query bindings", () => {
     async nullDefaultSupport => {
       const nestedQuery = await config.api.query.save({
         ...basicQuery(datasource._id!),
-        fields: { sql: "CALL nested_procedure({{ amount }}, {{ missing }})" },
+        fields: {
+          sql: "CALL nested_procedure({{ amount }}, {{ missing }}, {{ empty }})",
+        },
         parameters: [
           { name: "amount", default: "123" },
           { name: "missing", default: "456" },
+          { name: "empty", default: "789" },
         ],
       })
       await config.api.query.save({ ...nestedQuery, nullDefaultSupport })
@@ -174,17 +184,21 @@ describe("Snowflake query bindings", () => {
       const query = await config.api.query.save({
         ...basicQuery(dynamicDatasource._id!),
         fields: { sql: "CALL example_procedure({{ result }})" },
-        parameters: [{ name: "amount", default: "default" }],
+        parameters: [
+          { name: "amount", default: "default" },
+          { name: "missing", default: "" },
+          { name: "empty", default: "" },
+        ],
       })
 
       await config.api.query.execute(query._id!, {
-        parameters: { amount: null },
+        parameters: { amount: null, empty: "" },
       })
 
       expect(execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          sqlText: "CALL nested_procedure(?, ?)",
-          binds: [null, "456"],
+          sqlText: "CALL nested_procedure(?, ?, ?)",
+          binds: [null, "456", "789"],
         })
       )
     }
