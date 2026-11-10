@@ -528,7 +528,7 @@ export async function webhookChat({
   triggeredBy,
   ...params
 }: WebhookChatParams): Promise<WebhookChatCompleteResult> {
-  const { chat } = params
+  const { chat, user } = params
   const agentId = chat.agentId
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -542,12 +542,16 @@ export async function webhookChat({
   const chatId = chat._id ?? docIds.generateChatConversationID()
   const sessionId = `${provider}:${chatId}`
 
-  return await sdk.platformActions.doInAgentSessionScope({
-    sessionId,
-    agentId,
-    agentName: agent.name,
-    triggeredBy,
-    task: () => runWebhookChat({ ...params, agentId, agent, sessionId }),
+  return await sdk.users.doInUserIdentity({
+    userId: user.globalId || user.userId || user._id,
+    task: () =>
+      sdk.platformActions.doInAgentSessionScope({
+        sessionId,
+        agentId,
+        agentName: agent.name,
+        triggeredBy,
+        task: () => runWebhookChat({ ...params, agentId, agent, sessionId }),
+      }),
   })
 }
 
