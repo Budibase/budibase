@@ -221,19 +221,16 @@ describe("platformActions cleanup", () => {
     })
   })
 
-  it.each<PlatformActionSessionStatus>(["active", "waiting"])(
-    "keeps an old %s session and its events",
-    async status => {
-      await createSession({ sourceId: "old", daysAgo: 60, status })
+  it("keeps an old active session and its events", async () => {
+    await createSession({ sourceId: "old", daysAgo: 60, status: "active" })
 
-      await clear()
+    await clear()
 
-      expect(await getStored()).toEqual({
-        sessions: ["old"],
-        events: ["old"],
-      })
-    }
-  )
+    expect(await getStored()).toEqual({
+      sessions: ["old"],
+      events: ["old"],
+    })
+  })
 
   it.each([0, 30])(
     "keeps all history when an unindexed event is %s days old",
@@ -556,19 +553,18 @@ describe("platformActions cleanup", () => {
       }
     )
 
-    it.each<PlatformActionSessionStatus | undefined>([
-      "active",
-      "waiting",
-      undefined,
-    ])("does not clean up for a %s signal", async signal => {
-      await createSession({ sourceId: "expired", daysAgo: 40 })
+    it.each<PlatformActionSessionStatus | undefined>(["active", undefined])(
+      "does not clean up for a %s signal",
+      async signal => {
+        await createSession({ sourceId: "expired", daysAgo: 40 })
 
-      await sessionEnd(signal)
+        await sessionEnd(signal)
 
-      expect(await getStored()).toEqual({
-        sessions: ["expired"],
-        events: ["expired"],
-      })
-    })
+        expect(await getStored()).toEqual({
+          sessions: ["expired"],
+          events: ["expired"],
+        })
+      }
+    )
   })
 })

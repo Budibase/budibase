@@ -5,6 +5,7 @@
   import { builderStore } from "@/stores/builder"
   import { Select, Table } from "@budibase/bbui"
   import { BuilderSocketEvent } from "@budibase/shared-core"
+  import { DocumentType, prefixed } from "@budibase/types"
   import type {
     AgentRequest,
     AgentRequestsSummary,
@@ -255,6 +256,7 @@
   async function hydrateUserNames(requests: AgentRequest[]) {
     const missingUserIds = [...new Set(requests.map(request => request.userId))]
       .filter(Boolean)
+      .filter(userId => userId.startsWith(prefixed(DocumentType.USER)))
       .filter(userId => !userNames[userId])
 
     if (!missingUserIds.length) {

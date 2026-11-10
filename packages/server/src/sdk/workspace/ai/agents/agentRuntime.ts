@@ -1,7 +1,9 @@
-import { cache, context, roles } from "@budibase/backend-core"
+import { cache, context, events, roles } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
+  ActionFailureReason,
+  type ActionAiAgentToolExecuted,
   Agent,
   AgentOperation,
   AgentMessageMetadata,
@@ -14,6 +16,7 @@ import {
   type EscalationReviewParameter,
 } from "@budibase/types"
 import {
+  InvalidToolInputError,
   Output,
   extractReasoningMiddleware,
   generateText,
@@ -30,6 +33,7 @@ import {
 import type { Context } from "@ai-sdk/provider-utils"
 import { z } from "zod"
 import sdk from "../../.."
+import { INVALID_TOOL_INPUT_ERROR } from "../../../../ai/tools"
 import { createSessionLogIndexer } from "../agentLogs"
 import {
   findLatestUserQuestion,
@@ -362,6 +366,7 @@ export interface AgentRunContext {
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  toolEventContexts: Record<string, ActionAiAgentToolExecuted>
   executionContext?: AgentExecutionContext
 }
 
@@ -436,6 +441,7 @@ export const prepareAgentRunContext = async ({
         .join("\n\n"),
       tools: {},
       toolDisplayNames: {},
+      toolEventContexts: {},
     }
   }
   let executionContext: AgentExecutionContext | undefined
@@ -648,6 +654,7 @@ const prepareAgentChatRunInternal = async ({
     operationIntent,
     tools,
     toolDisplayNames,
+    toolEventContexts,
     systemPrompt: baseSystemPrompt,
   } = runContext
   const retrievedKnowledgeSourceById = new Map<
@@ -765,6 +772,21 @@ const prepareAgentChatRunInternal = async ({
                 { type: "tool-error" }
               > => part.type === "tool-error"
             )
+            // SDK validation rejects the call before the tool wrapper can record it.
+            for (const call of toolCalls) {
+              const eventContext = toolEventContexts[call.toolName]
+              if (
+                eventContext &&
+                call.invalid &&
+                InvalidToolInputError.isInstance(call.error)
+              ) {
+                events.action.aiAgentToolFailed({
+                  ...eventContext,
+                  reason: ActionFailureReason.ERROR,
+                  errorMessage: INVALID_TOOL_INPUT_ERROR,
+                })
+              }
+            }
             const erroredToolNames = erroredParts.map(part => part.toolName)
 
             if (onToolCalls && successNames.length) {

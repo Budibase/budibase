@@ -6,7 +6,6 @@ import {
   events,
   HTTPError,
 } from "@budibase/backend-core"
-import { quotas } from "@budibase/pro"
 import {
   canBeDisplayColumn,
   helpers,
@@ -19,7 +18,6 @@ import {
   CsvToJsonRequest,
   CsvToJsonResponse,
   DeleteTableResponse,
-  Document,
   EventType,
   FetchTablesResponse,
   FieldType,
@@ -38,7 +36,6 @@ import {
   ValidateNewTableImportRequest,
   ValidateTableImportRequest,
   ValidateTableImportResponse,
-  Row,
 } from "@budibase/types"
 import { cloneDeep } from "lodash"
 import {
@@ -56,6 +53,7 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { importInternalTableRows } from "./utils"
+import { seedTableRows } from "./seed"
 import {
   projectAssignmentResult,
   mergeProjectAssignmentResults,
@@ -104,30 +102,6 @@ function checkDefaultFields(table: Table) {
       )
     }
   }
-}
-
-function stripIgnoreTimezoneSuffix(rows: Row[], table: Table): Row[] {
-  const columns = Object.entries(table.schema)
-    .filter(
-      ([_, schema]) =>
-        schema.type === FieldType.DATETIME &&
-        schema.ignoreTimezones &&
-        !schema.timeOnly
-    )
-    .map(([name]) => name)
-  if (!columns.length) {
-    return rows
-  }
-  return rows.map(row => {
-    const updates = columns.reduce<Row>((acc, column) => {
-      const value = row[column]
-      if (typeof value === "string" && value.endsWith("Z")) {
-        acc[column] = value.slice(0, -1)
-      }
-      return acc
-    }, {})
-    return Object.keys(updates).length ? { ...row, ...updates } : row
-  })
 }
 
 async function guardTable(table: Table, isCreate: boolean) {
@@ -227,6 +201,10 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     eventPreviousTable = oldTable
   }
   if (renaming) {
+    await sdk.ai.agents.renameColumnInApprovalRules({
+      table: savedTable,
+      renaming,
+    })
     await sdk.views.renameLinkedViews(savedTable, renaming)
   }
   const projectAssignments = []
@@ -490,69 +468,37 @@ async function publishTableInternal(
     )
   }
 
+  const prodMetadata = await sdk.workspaces.metadata.get({ production: true })
+  const seedPending = prodMetadata.pendingTableSeeds?.includes(tableId)
+  if (seedPending && !seedProductionTables) {
+    ctx.throw(
+      409,
+      "This table has an incomplete seed. Retry Seed from Dev first."
+    )
+  }
+
   if (seedProductionTables) {
-    try {
-      const devDb = context.getWorkspaceDB()
-      const devRows = await devDb.allDocs<Row>(
-        getRowParams(tableId, null, {
-          include_docs: true,
-        })
-      )
-      const importRows = devRows.rows
-        .flatMap(({ doc }) => (doc && !doc._deleted ? [doc] : []))
-        .map(doc => {
-          const { _rev, _attachments, ...rest } = doc
-          return rest
-        })
-
-      if (importRows.length) {
-        await context.doInWorkspaceContext(prodWorkspaceId, async () => {
-          const prodDb = context.getWorkspaceDB()
-          const existingProdRows = await prodDb.allDocs(
-            getRowParams(tableId, null, {
-              include_docs: true,
-              limit: 1,
-            })
-          )
-          const hasProdRows = existingProdRows.rows.some(
-            (row: any) => row.doc && !row.doc._deleted
-          )
-          if (hasProdRows) {
-            return
-          }
-
-          const sanitizedRows = stripIgnoreTimezoneSuffix(importRows, table)
-          await quotas.addRows(
-            sanitizedRows.length,
-            async () => {
-              // Seed stored values without regenerating Auto IDs or other auto columns.
-              const result = await prodDb.bulkDocs(sanitizedRows)
-              if (result.some(row => row.error)) {
-                throw new HTTPError(
-                  `Failed to seed production rows for table ${tableId}`,
-                  500
-                )
-              }
-              const autoColumnState = await prodDb.tryGet<Document>(
-                `${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}${tableId}`
-              )
-              if (autoColumnState) {
-                // Let the allocator initialize its counters from the seeded rows.
-                await prodDb.remove(autoColumnState._id!, autoColumnState._rev!)
-              }
-              return result
-            },
-            { tableId }
-          )
-          await events.rows.imported(table, sanitizedRows.length)
-        })
+    const prodDb = context.getProdWorkspaceDB()
+    const existingRows = await prodDb.allDocs(
+      getRowParams(tableId, null, { limit: 1 })
+    )
+    if (seedPending || !existingRows.rows.length) {
+      if (!(await prodDb.tryGet<Table>(tableId))) {
+        const { _rev, ...definition } = table
+        await prodDb.put(definition)
       }
-    } catch (error) {
-      console.warn(
-        `Failed to copy dev rows to prod for table ${tableId}`,
-        error
-      )
-      throw error
+      if (!seedPending) {
+        prodMetadata.pendingTableSeeds = [
+          ...(prodMetadata.pendingTableSeeds || []),
+          tableId,
+        ]
+        await prodDb.put(prodMetadata)
+        await cache.workspace.invalidateWorkspaceMetadata(prodWorkspaceId)
+      }
+      await seedTableRows({
+        table,
+        prodWorkspaceId,
+      })
     }
   }
   const tableSegment = `${SEPARATOR}${tableId}${SEPARATOR}`
@@ -606,6 +552,11 @@ async function publishTableInternal(
     )
   }
 
+  if (metadata.pendingTableSeeds) {
+    metadata.pendingTableSeeds = metadata.pendingTableSeeds.filter(
+      id => id !== tableId
+    )
+  }
   const publishedAt = new Date().toISOString()
   metadata.resourcesPublishedAt = {
     ...metadata.resourcesPublishedAt,

@@ -81,6 +81,7 @@ import {
   PROJECT_EXPORT_FORMAT_VERSION,
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
+  PROJECT_PERMISSIONS_FILE,
 } from "./constants"
 import {
   readProjectPackageFiles,
@@ -88,6 +89,13 @@ import {
   MAX_PROJECT_PATH_SEGMENTS,
 } from "./files"
 import { prepareProjectData, validateProjectData } from "./data"
+import {
+  importProjectPermissions,
+  type ImportedPermissionChanges,
+  type ProjectPackagePermissions,
+  rollbackProjectPermissions,
+  validateProjectPermissions,
+} from "./permissions"
 import { getProjectIds, isProjectAssignableResourceType } from "../utils"
 
 const IMPORT_ORDER: ResourceType[] = [
@@ -149,6 +157,7 @@ interface ExtractedProjectPackage {
   dependencyIndex: ProjectPackageDependencyIndex
   docs: ImportedDoc[]
   data?: ProjectPackageData
+  permissions?: ProjectPackagePermissions
 }
 
 interface InsertedDocRef {
@@ -756,7 +765,9 @@ const validateManifest = (manifest: ProjectPackageManifest) => {
     !isRecord(manifest.resourcesByType) ||
     !Array.isArray(manifest.unsupportedContent) ||
     typeof manifest.containsRows !== "boolean" ||
-    typeof manifest.containsAttachments !== "boolean"
+    typeof manifest.containsAttachments !== "boolean" ||
+    (manifest.containsPermissions !== undefined &&
+      typeof manifest.containsPermissions !== "boolean")
   ) {
     throw new HTTPError("Project package manifest is invalid.", 400)
   }
@@ -1245,6 +1256,7 @@ async function extractProjectPackage(
             PROJECT_DOCS_DIRECTORY,
             PROJECT_DATA_FILE,
             PROJECT_ATTACHMENTS_DIRECTORY,
+            PROJECT_PERMISSIONS_FILE,
           ].includes(entry)
       )
     ) {
@@ -1313,6 +1325,23 @@ async function extractProjectPackage(
     )
 
     validateDependencyIndex(project, dependencyIndex, docs, manifest)
+    if (
+      !!manifest.containsPermissions !==
+      rootEntries.includes(PROJECT_PERMISSIONS_FILE)
+    ) {
+      throw new HTTPError(
+        "Project package permissions do not match its manifest.",
+        400
+      )
+    }
+    const permissions = manifest.containsPermissions
+      ? validateProjectPermissions({
+          value: await readJsonFile<unknown>(
+            join(tmpPath, PROJECT_PERMISSIONS_FILE)
+          ),
+          resources: docs,
+        })
+      : undefined
 
     const attachmentPaths = packageFiles
       .map(filePath => relative(tmpPath, filePath))
@@ -1349,6 +1378,7 @@ async function extractProjectPackage(
       dependencyIndex,
       docs,
       data,
+      permissions,
     }
   } catch (err) {
     await fsp.rm(tmpPath, { recursive: true, force: true })
@@ -1523,6 +1553,10 @@ export async function importProject(
 
     return await doWithProjectAssignmentsLock(async () => {
       const insertedDocs: InsertedDocRef[] = []
+      const permissionChanges: ImportedPermissionChanges = {
+        resourceIds: [],
+        roles: [],
+      }
       let importedProject: Project | undefined
       const persistImport = async (): Promise<ImportProjectResponse> => {
         importedProject = await sdk.projects.create({
@@ -1547,6 +1581,24 @@ export async function importProject(
 
         const resources: Partial<Record<ResourceType, string[]>> = {
           [ResourceType.PROJECT]: [importedProject._id!],
+        }
+
+        const unsupportedContent = [...extracted.manifest.unsupportedContent]
+        if (extracted.permissions) {
+          const restrictedResourceIds = await importProjectPermissions({
+            permissions: extracted.permissions,
+            idMap,
+            sourceWorkspaceId: extracted.manifest.sourceWorkspace.id,
+            changes: permissionChanges,
+          })
+          if (restrictedResourceIds.length) {
+            unsupportedContent.push({
+              type: "custom_role_permissions",
+              count: restrictedResourceIds.length,
+              reason:
+                "Some roles could not be mapped to this workspace. Their access grants are restricted to Admin. Review Access settings before granting access.",
+            })
+          }
         }
 
         for (const resourceType of IMPORT_ORDER) {
@@ -1613,7 +1665,7 @@ export async function importProject(
             ...importedProject,
             importSetup: {
               resources,
-              unsupportedContent: extracted.manifest.unsupportedContent,
+              unsupportedContent,
               requirements,
             },
           },
@@ -1638,7 +1690,7 @@ export async function importProject(
             importSetup: refreshedProject.importSetup,
           },
           resources,
-          unsupportedContent: extracted.manifest.unsupportedContent,
+          unsupportedContent,
           requirements: refreshedProject.importSetup!.requirements,
           ...(preparedData && { dataImport: preparedData.summary }),
         }
@@ -1655,6 +1707,17 @@ export async function importProject(
           insertedDocs,
           importedProject,
         })
+        // Resources left behind by failed cleanup must retain their restrictions.
+        if (canCleanupAttachments) {
+          try {
+            await rollbackProjectPermissions({ changes: permissionChanges })
+          } catch (permissionError) {
+            console.log(
+              "Failed to roll back Project import permissions",
+              permissionError
+            )
+          }
+        }
         throw err
       }
     })

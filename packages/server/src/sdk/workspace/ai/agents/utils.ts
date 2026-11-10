@@ -6,6 +6,8 @@ import {
   SourceName,
   WebSearchProvider,
   ApprovalToolResultStatus,
+  ToolExecutionPrincipal,
+  type ActionAiAgentToolExecuted,
   type AgentExecutionContext,
   type PlatformActionResourceOrigin,
 } from "@budibase/types"
@@ -26,6 +28,7 @@ import {
   createDatasourceQueryTool,
   resolveToolExecutionPrincipal,
   toToolSet,
+  getToolEventContexts,
   type AiToolDefinition,
   type EscalationGateRuntime,
   type ToolAuthorizationRuntime,
@@ -198,6 +201,7 @@ export async function buildPromptAndTools(
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  toolEventContexts: Record<string, ActionAiAgentToolExecuted>
   toolSources: Record<string, string | undefined>
 }> {
   const {
@@ -237,13 +241,19 @@ export async function buildPromptAndTools(
           })
           visibilityByTable.set(tool.tableId, visibility)
         }
+        const config = toolConfigs.find(config => config.toolName === tool.name)
+        const runsAsAdmin =
+          resolveToolExecutionPrincipal(tool, config) ===
+          ToolExecutionPrincipal.ADMIN
         return (await visibility)
           ? tool
           : {
               ...tool,
               authoritativeInputSchema:
                 tool.authoritativeInputSchema ?? tool.tool.inputSchema,
-              tool: tool.requesterRedactedTool,
+              tool: runsAsAdmin
+                ? { ...tool.tool, execute: tool.requesterRedactedTool.execute }
+                : tool.requesterRedactedTool,
             }
       })
     )
@@ -295,6 +305,7 @@ export async function buildPromptAndTools(
           readableName: tool.readableName,
           displayName: getEscalationToolDisplayName(tool),
           sourceId: tool.sourceId,
+          sourceType: tool.sourceType,
           action: tool.action,
           argsKey: resolveToolArgsKey(tool),
           rules: config.executionRules,
@@ -326,6 +337,7 @@ export async function buildPromptAndTools(
   return {
     systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools, runtimes, gates),
+    toolEventContexts: getToolEventContexts({ tools: enabledTools, runtimes }),
     toolDisplayNames: getToolDisplayNames(enabledTools),
     toolSources: Object.fromEntries(
       enabledTools.map(tool => [tool.name, tool.sourceId])
