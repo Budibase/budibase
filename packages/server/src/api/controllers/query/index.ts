@@ -46,6 +46,7 @@ import env from "../../../environment"
 import sdk from "../../../sdk"
 import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
+import { isSQL } from "../../../integrations/utils"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
 import { builderSocket } from "../../../websockets"
@@ -302,17 +303,26 @@ function getAuthConfig(ctx: UserCtx) {
   }
 }
 
-function enrichParameters(
-  query: Query,
-  requestParameters: QueryEventParameters = {}
-): QueryEventParameters {
+function enrichParameters({
+  query,
+  preserveNullValues,
+  requestParameters = {},
+}: {
+  query: Query
+  preserveNullValues: boolean
+  requestParameters?: QueryEventParameters
+}): QueryEventParameters {
   const paramNotSet = (val: unknown) => val === "" || val == undefined
   // first check parameters are all valid
   validateQueryInputs(requestParameters)
   // make sure parameters are fully enriched with defaults
   for (const parameter of query.parameters) {
     let value = requestParameters[parameter.name]
-    if (value == null || value === "") {
+    if (
+      value === undefined ||
+      value === "" ||
+      (value === null && !preserveNullValues)
+    ) {
       value = parameter.default
     }
     if (query.nullDefaultSupport && paramNotSet(value)) {
@@ -457,7 +467,10 @@ export async function preview(
     appId: ctx.appId,
     queryVerb: query.queryVerb,
     fields: query.fields,
-    parameters: enrichParameters(query),
+    parameters: enrichParameters({
+      query,
+      preserveNullValues: isSQL(datasource),
+    }),
     transformer: query.transformer,
     schema: query.schema,
     nullDefaultSupport: query.nullDefaultSupport,
@@ -528,7 +541,11 @@ async function execute(
       queryVerb: query.queryVerb,
       fields: query.fields,
       pagination: ctx.request.body.pagination,
-      parameters: enrichParameters(query, ctx.request.body.parameters),
+      parameters: enrichParameters({
+        query,
+        preserveNullValues: isSQL(datasource),
+        requestParameters: ctx.request.body.parameters,
+      }),
       transformer: query.transformer,
       queryId: ctx.params.queryId,
       // have to pass down to the thread runner - can't put into context now

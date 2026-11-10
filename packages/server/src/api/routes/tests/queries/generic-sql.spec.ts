@@ -966,6 +966,37 @@ if (descriptions.length) {
       describe("query through datasource", () => {
         // this parameter really only impacts SQL queries
         describe("confirm nullDefaultSupport", () => {
+          it.each([false, true])(
+            "preserves explicit null rather than applying a default with nullDefaultSupport=%s",
+            async nullDefaultSupport => {
+              const query = await createQuery({
+                fields: {
+                  sql: client(tableName)
+                    .insert({
+                      name: client.raw("{{ bindingName }}"),
+                      number: client.raw("{{ bindingNumber }}"),
+                    })
+                    .toString(),
+                },
+                parameters: [
+                  { name: "bindingName", default: "default" },
+                  { name: "bindingNumber", default: "123" },
+                ],
+                queryVerb: "create",
+              })
+              await config.api.query.save({ ...query, nullDefaultSupport })
+
+              await config.api.query.execute(query._id!, {
+                parameters: { bindingName: "null", bindingNumber: null },
+              })
+
+              const row = await client(tableName)
+                .where({ name: "null" })
+                .first()
+              expect(row).toMatchObject({ name: "null", number: null })
+            }
+          )
+
           let queryParams: Partial<Query>
           beforeAll(async () => {
             queryParams = {

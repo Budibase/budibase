@@ -10,6 +10,7 @@ import { getEnvironmentVariables } from "../../utils"
 
 export interface EnrichContextOpts {
   escapeNewlines?: boolean
+  preserveNullValues?: boolean
 }
 
 export interface FetchOptions {
@@ -19,6 +20,7 @@ export interface FetchOptions {
 
 const DEFAULT_ENRICH_CONTEXT_OPTS: Required<EnrichContextOpts> = {
   escapeNewlines: true,
+  preserveNullValues: false,
 }
 
 const JSON_TEMPLATE_FIELDS = new Set([
@@ -76,7 +78,10 @@ const enrichJsonValue = (
   const enrichedQuery: Record<string, JSONValue> = {}
   for (const key of Object.keys(value)) {
     const fieldValue = value[key]
-    if (fieldValue == null) {
+    if (
+      fieldValue === undefined ||
+      (fieldValue === null && !options.preserveNullValues)
+    ) {
       continue
     }
     const enrichedKey = processTemplateString(key, parameters, options)
@@ -97,7 +102,10 @@ const enrichContextObject = async (
   const enrichedQuery: Record<string, JSONValue> = {}
   for (const key of Object.keys(fields)) {
     const fieldValue = fields[key]
-    if (fieldValue == null) {
+    if (
+      fieldValue === undefined ||
+      (fieldValue === null && !options.preserveNullValues)
+    ) {
       continue
     }
     const enrichedKey = processTemplateString(key, parameters, options)

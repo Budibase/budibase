@@ -117,7 +117,8 @@ class QueryRunner {
     // 'user' is now a reserved variable key in mapping parameters
     const enrichedParameters = await sdk.queries.enrichContext(
       parameters,
-      this.ctx
+      this.ctx,
+      { preserveNullValues: isSQL(datasourceClone) }
     )
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 

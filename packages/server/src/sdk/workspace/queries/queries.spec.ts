@@ -50,6 +50,22 @@ describe("queries SDK", () => {
   })
 
   describe("enrichContext", () => {
+    it("preserves native null SQL parameters without coercing strings", async () => {
+      const result = await enrichContext(
+        { value: null, text: "null", empty: "", omitted: undefined },
+        {},
+        { preserveNullValues: true }
+      )
+
+      expect(result).toStrictEqual({ value: null, text: "null", empty: "" })
+    })
+
+    it("continues to omit null configuration values by default", async () => {
+      const result = await enrichContext({ value: null, text: "null" })
+
+      expect(result).toStrictEqual({ text: "null" })
+    })
+
     it.each([
       ["false", false],
       ["0", 0],

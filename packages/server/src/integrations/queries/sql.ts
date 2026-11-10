@@ -1,3 +1,4 @@
+import { get } from "lodash"
 import { findHBSBlocks } from "@budibase/string-templates"
 import { SourceName, type SqlDatasource } from "@budibase/types"
 import sdk from "../../sdk"
@@ -103,6 +104,13 @@ export async function interpolateSQL(
       escapeNewlines: false,
     }
   )
+  fields.bindings = fields.bindings.map((value, index) => {
+    const binding = variables[index]
+    const path = binding.replace(/[{}]/g, "").trim()
+    return !arrays.includes(binding) && get(parameters, path) === null
+      ? null
+      : value
+  })
   if (opts.nullDefaultSupport) {
     for (let index in fields.bindings) {
       if (fields.bindings[index] === "") {
