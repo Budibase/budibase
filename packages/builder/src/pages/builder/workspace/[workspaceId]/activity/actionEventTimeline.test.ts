@@ -217,7 +217,7 @@ describe("toActionTimelineItem", () => {
       })
     ).toMatchObject({
       label: "Agent executed: Support agent",
-      detail: "Waiting for approval",
+      detail: "Approval requested",
     })
     expect(
       toItem({

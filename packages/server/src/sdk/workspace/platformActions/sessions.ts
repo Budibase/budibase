@@ -107,9 +107,8 @@ async function getSessionsSummary({
     cutoff,
   })
   return {
-    total: counts.active + counts.waiting + counts.completed + counts.failed,
+    total: counts.active + counts.completed + counts.failed,
     active: counts.active,
-    waiting: counts.waiting,
     completed: counts.completed,
     failed: counts.failed,
   }

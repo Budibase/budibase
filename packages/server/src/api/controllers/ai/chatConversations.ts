@@ -892,6 +892,37 @@ const streamAgentChat = async ({
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
       messageMetadata: ({ part }) => {
+        // UI onError also formats tool failures; only a stream error aborts the run.
+        if (part.type === "error" && !streamResult.errored) {
+          streamResult.errored = true
+          run.sessionLogIndexer.index().catch(indexError => {
+            console.error("Failed to index agent session after stream error", {
+              agentId,
+              sessionId,
+              error: indexError,
+            })
+          })
+          console.error("Agent streaming error", {
+            agentId,
+            sessionId,
+            error: part.error,
+          })
+          events.action.aiAgentFailed({
+            agentId,
+            ...buildAgentSessionActionContext({
+              sessionId,
+              requestId: trackingHandle?.requestId,
+            }),
+            reason: ActionFailureReason.ERROR,
+            errorMessage: getErrorMessage(part.error),
+          })
+          markAgentRequestFailed({
+            trackingHandle,
+            agentId,
+            sessionId,
+            errorMessage: getErrorMessage(part.error),
+          })
+        }
         if (part.type === "start") {
           return {
             ...sharedMetadata,
@@ -929,48 +960,13 @@ const streamAgentChat = async ({
           }
         }
       },
-      onError: error => {
-        // The SDK calls this twice per error when onFinish is set: when it
-        // converts the error and again when it processes the resulting chunk.
-        if (streamResult.errored) {
-          return getErrorMessage(error)
-        }
-        streamResult.errored = true
-        run.sessionLogIndexer.index().catch(indexError => {
-          console.error("Failed to index agent session after stream error", {
-            agentId,
-            sessionId,
-            error: indexError,
-          })
-        })
-        console.error("Agent streaming error", {
-          agentId,
-          sessionId,
-          error,
-        })
-        events.action.aiAgentFailed({
-          agentId,
-          ...buildAgentSessionActionContext({
-            sessionId,
-            requestId: trackingHandle?.requestId,
-          }),
-          reason: ActionFailureReason.ERROR,
-          errorMessage: getErrorMessage(error),
-        })
-        markAgentRequestFailed({
-          trackingHandle,
-          agentId,
-          sessionId,
-          errorMessage: getErrorMessage(error),
-        })
-        return getErrorMessage(error)
-      },
+      onError: getErrorMessage,
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
         await toolCallTracking.flush()
 
         // The SDK also calls onFinish when the stream closes after an error,
-        // which onError has already reported as the end of this run.
+        // which the error stream part has already reported as the end of this run.
         if (streamResult.errored) {
           return
         }
