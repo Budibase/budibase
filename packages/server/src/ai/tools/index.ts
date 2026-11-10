@@ -213,6 +213,13 @@ const wrapTool = ({
           schema,
         })
       } catch (error) {
+        if (runtime) {
+          events.action.aiAgentToolFailed({
+            ...toolEventContext({ toolDef, runtime }),
+            reason: ActionFailureReason.ERROR,
+            errorMessage: INVALID_TOOL_INPUT_ERROR,
+          })
+        }
         if (isRequesterRedacted) {
           throw new Error(INVALID_TOOL_INPUT_ERROR)
         }
