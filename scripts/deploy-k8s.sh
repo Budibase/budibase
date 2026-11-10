@@ -29,7 +29,7 @@ up is the default command. No Docker or kind installation is required.
   --release NAME          Helm release name (default: budibase)
   --app-version TAG       Required for up, e.g. v3.50.0; use on every deployment
   --storage-class NAME    Storage class for CouchDB, MinIO, and Redis
-                         (omitting this uses the cluster's default class)
+                         (saved for upgrades; initially uses the cluster default)
   -f, --values FILE       Additional Helm values; repeatable, later files win
   --state-dir DIR        Private directory for generated values and target identity
                          (default: ~/.local/state/budibase-k8s/<target hash>)
@@ -38,7 +38,7 @@ up is the default command. No Docker or kind installation is required.
 
 Defaults deploy one replica per service, bundled CouchDB/MinIO/Redis with
 persistent storage, and no ingress. Values files override those defaults.
-CLI --app-version and --storage-class override values files. Keep the same
+CLI --app-version and the saved --storage-class override values files. Keep the same
 state directory for upgrades. The chart currently supports one Budibase
 release per namespace because several resource names are fixed.
 
@@ -153,9 +153,18 @@ couchdb:
 EOF
     fi
     if [ -n "$STORAGE_CLASS" ]; then
-      HELM_FLAGS+=(--set-string "couchdb.persistentVolume.storageClass=$STORAGE_CLASS"
-        --set-string "services.redis.storageClass=$STORAGE_CLASS"
-        --set-string "services.objectStore.storageClass=$STORAGE_CLASS")
+      STORAGE_VALUES_TMP=$(mktemp "$STATE_DIR/storage-values.XXXXXX")
+      jq -n --arg storageClass "$STORAGE_CLASS" '{
+        couchdb: {persistentVolume: {storageClass: $storageClass}},
+        services: {
+          redis: {storageClass: $storageClass},
+          objectStore: {storageClass: $storageClass}
+        }
+      }' > "$STORAGE_VALUES_TMP"
+      mv "$STORAGE_VALUES_TMP" "$STATE_DIR/storage-values.json"
+    fi
+    if [ -f "$STATE_DIR/storage-values.json" ]; then
+      HELM_FLAGS+=(-f "$STATE_DIR/storage-values.json")
     fi
     echo "Deploying $RELEASE to context $CONTEXT, namespace $NAMESPACE"
     echo "Retained values: $STATE_DIR/values.yaml"

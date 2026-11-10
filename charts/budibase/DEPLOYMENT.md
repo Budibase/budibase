@@ -22,7 +22,7 @@ bash scripts/deploy-k8s.sh --kubeconfig ./config --app-version v3.50.0 \
   --storage-class standard
 ```
 
-This sets the class for all three stores. The cluster must have a provisioner that supports that class. Configure storage before the initial deployment; changing a class does not migrate existing PVCs or data.
+This sets the class for all three stores and saves it in `storage-values.json` alongside the generated `values.yaml`. Subsequent upgrades reuse that selection when `--storage-class` is omitted. The saved selection overrides values files; passing `--storage-class` again updates it. The cluster must have a provisioner that supports that class. Configure storage before the initial deployment; changing a class does not migrate existing PVCs or data.
 
 Customize the deployment using Helm values files:
 
@@ -31,7 +31,7 @@ bash scripts/deploy-k8s.sh --kubeconfig ./config --app-version v3.50.0 \
   --values ./storage.yaml --values ./ingress.yaml
 ```
 
-Generated values and secrets are stored privately in `~/.local/state/budibase-k8s/<target hash>/` or `--state-dir`. The hash covers the API server, context, namespace, and release; explicit state directories are bound to their original target. Keep the directory and target settings consistent for upgrades. If an existing release's values are missing, restore its saved `values.yaml`; the script won't generate replacement credentials.
+Generated values and secrets are stored privately in `~/.local/state/budibase-k8s/<target hash>/` or `--state-dir`. The hash covers the API server, context, namespace, and release; explicit state directories are bound to their original target. Keep the directory and target settings consistent for upgrades, including `storage-values.json` when present. If an existing release's values are missing, restore its saved `values.yaml`; the script won't generate replacement credentials.
 
 Check status or expose the UI locally using the same target options:
 
