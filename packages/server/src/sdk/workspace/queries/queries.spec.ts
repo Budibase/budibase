@@ -15,6 +15,7 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
+import type { JSONValue } from "@budibase/types"
 import { enrichContext, enrichParameters, fetch } from "./queries"
 
 jest.mock("../../utils", () => ({
@@ -68,6 +69,90 @@ describe("queries SDK", () => {
 
       expect(result).toStrictEqual({ text: "null" })
     })
+
+    it.each<{
+      value: JSONValue
+      expectedRaw: JSONValue
+      expectedText: string
+    }>([
+      { value: null, expectedRaw: null, expectedText: "" },
+      { value: "null", expectedRaw: null, expectedText: "null" },
+      { value: false, expectedRaw: false, expectedText: "false" },
+      { value: "false", expectedRaw: false, expectedText: "false" },
+      { value: 0, expectedRaw: 0, expectedText: "0" },
+      { value: "0", expectedRaw: 0, expectedText: "0" },
+      { value: "", expectedRaw: "", expectedText: "" },
+      {
+        value: "ordinary text",
+        expectedRaw: "ordinary text",
+        expectedText: "ordinary text",
+      },
+    ])(
+      "preserves JSON and text binding semantics for $value",
+      async ({ value, expectedRaw, expectedText }) => {
+        const parameters = await enrichParameters({ parameters: { value } })
+        const result = await enrichContext(
+          {
+            requestBody:
+              '{"raw":{{ value }},"quoted":"{{ value }}","literal":null}',
+            path: "https://example.com/{{ value }}",
+            headers: { "X-Value": "{{ value }}" },
+            formData: { value: "{{ value }}" },
+            key: "{{ value }}",
+          },
+          parameters
+        )
+
+        expect(result).toStrictEqual({
+          requestBody: {
+            raw: expectedRaw,
+            quoted: expectedText,
+            literal: null,
+          },
+          json: { raw: expectedRaw, quoted: expectedText, literal: null },
+          path: `https://example.com/${expectedText}`,
+          headers: { "X-Value": expectedText },
+          formData: { value: expectedText },
+          key: expectedText,
+        })
+      }
+    )
+
+    it.each(["json", "customData", "requestBody", "row", "rows", "delete"])(
+      "preserves null members in the %s JSON field",
+      async field => {
+        const parameters = await enrichParameters({
+          parameters: {
+            value: null,
+            object: { present: null },
+          },
+        })
+        const result = await enrichContext(
+          {
+            [field]:
+              '{"value":{{ value }},"nested":{{ object }},"array":[null],"literal":null}',
+          },
+          parameters
+        )
+
+        const expected = {
+          value: null,
+          nested: { present: null },
+          array: [null],
+          literal: null,
+        }
+        if (field === "customData") {
+          expect(result).toStrictEqual({ json: expected })
+        } else if (field === "requestBody") {
+          expect(result).toStrictEqual({
+            requestBody: expected,
+            json: expected,
+          })
+        } else {
+          expect(result).toStrictEqual({ [field]: expected })
+        }
+      }
+    )
 
     it.each([null, "null", "false", "0", '{"value":1}', "{{ value }}"])(
       "preserves SQL parameter names that match JSON fields with value %s",

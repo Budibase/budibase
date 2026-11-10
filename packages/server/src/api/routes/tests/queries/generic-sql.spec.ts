@@ -966,6 +966,79 @@ if (descriptions.length) {
       describe("query through datasource", () => {
         // this parameter really only impacts SQL queries
         describe("confirm nullDefaultSupport", () => {
+          describe.each([false, true])(
+            "scalar compatibility with nullDefaultSupport=%s",
+            nullDefaultSupport => {
+              interface ScalarCase {
+                name: string
+                parameters: Record<string, string | number | null>
+                expectedName: string | null
+                expectedNumber: number | null
+              }
+
+              it.each<ScalarCase>([
+                {
+                  name: "explicit null",
+                  parameters: { bindingName: null, bindingNumber: null },
+                  expectedName: null,
+                  expectedNumber: null,
+                },
+                {
+                  name: "missing values",
+                  parameters: {},
+                  expectedName: "default",
+                  expectedNumber: 123,
+                },
+                {
+                  name: "empty values",
+                  parameters: { bindingName: "", bindingNumber: "" },
+                  expectedName: "default",
+                  expectedNumber: 123,
+                },
+                {
+                  name: "literal null and numeric zero",
+                  parameters: { bindingName: "null", bindingNumber: 0 },
+                  expectedName: "null",
+                  expectedNumber: 0,
+                },
+                {
+                  name: "numeric text",
+                  parameters: { bindingName: "number", bindingNumber: "42" },
+                  expectedName: "number",
+                  expectedNumber: 42,
+                },
+              ])(
+                "stores $name without changing connector coercion",
+                async ({ parameters, expectedName, expectedNumber }) => {
+                  const query = await createQuery({
+                    fields: {
+                      sql: client(tableName)
+                        .insert({
+                          name: client.raw("{{ bindingName }}"),
+                          number: client.raw("{{ bindingNumber }}"),
+                        })
+                        .toString(),
+                    },
+                    parameters: [
+                      { name: "bindingName", default: "default" },
+                      { name: "bindingNumber", default: "123" },
+                    ],
+                    queryVerb: "create",
+                  })
+                  await config.api.query.save({ ...query, nullDefaultSupport })
+
+                  await config.api.query.execute(query._id!, { parameters })
+
+                  const rows = await client(tableName).select("name", "number")
+                  expect(rows).toContainEqual({
+                    name: expectedName,
+                    number: expectedNumber,
+                  })
+                }
+              )
+            }
+          )
+
           it.each([false, true])(
             "preserves explicit null rather than applying a default with nullDefaultSupport=%s",
             async nullDefaultSupport => {
@@ -998,7 +1071,7 @@ if (descriptions.length) {
           )
 
           let queryParams: Partial<Query>
-          beforeAll(async () => {
+          beforeEach(async () => {
             queryParams = {
               fields: {
                 sql: client(tableName)

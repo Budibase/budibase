@@ -243,6 +243,22 @@ module.exports = { integration: Integration }
       expectChildrenStopped()
     })
 
+    it("preserves SQL null and scalar bindings across the plugin process boundary", async () => {
+      const integration = await load(`
+        module.exports = class {
+          async read(query) { return query.bindings }
+        }
+      `)
+
+      const bindings = [null, "null", "", 0, "0", "42"]
+      const result = await integration.read?.({
+        sql: "SELECT ?, ?, ?, ?, ?, ?",
+        bindings,
+      })
+
+      expect(result).toEqual(bindings)
+    })
+
     it("preserves native IPC values and cycles when normalizing results", async () => {
       const integration = await load(`
         class Identifier { toJSON() { return "record-1" } }

@@ -588,6 +588,97 @@ describe("rest", () => {
     }
   )
 
+  describe.each([true, false])(
+    "REST defaults with nullDefaultSupport=%s",
+    nullDefaultSupport => {
+      it.each<{
+        parameters: QueryEventParameters
+        defaultValue: string
+        expected: string | number | null
+      }>([
+        { parameters: {}, defaultValue: "", expected: "" },
+        { parameters: { value: "" }, defaultValue: "", expected: "" },
+        { parameters: {}, defaultValue: "123", expected: 123 },
+        { parameters: { value: "" }, defaultValue: "123", expected: 123 },
+        { parameters: { value: null }, defaultValue: "123", expected: null },
+        { parameters: { value: 0 }, defaultValue: "123", expected: 0 },
+      ])(
+        "sends $expected for $parameters with default '$defaultValue'",
+        async ({ parameters, defaultValue, expected }) => {
+          const restDatasource = await config.api.datasource.create({
+            name: generator.guid(),
+            type: "test",
+            source: SourceName.REST,
+            config: { method: "POST" },
+          })
+          mockAgent!
+            .get("http://www.example.com")
+            .intercept({ path: "/", method: "POST" })
+            .reply(({ body }) => {
+              expect(JSON.parse(toBodyString(body))).toEqual({
+                value: expected,
+              })
+              return {
+                statusCode: 200,
+                data: {},
+                responseOptions: { headers: jsonHeaders },
+              }
+            })
+          const query = await config.api.query.save({
+            datasourceId: restDatasource._id!,
+            name: generator.guid(),
+            parameters: [{ name: "value", default: defaultValue }],
+            queryVerb: "create",
+            transformer: "",
+            schema: {},
+            readable: true,
+            fields: {
+              path: "www.example.com",
+              bodyType: BodyType.JSON,
+              requestBody: '{"value":{{ value }}}',
+            },
+          })
+          await config.api.query.save({ ...query, nullDefaultSupport })
+          await config.api.query.execute(query._id!, { parameters })
+        }
+      )
+    }
+  )
+
+  it("keeps an empty default as an empty JSON string when previewing a new REST query", async () => {
+    const restDatasource = await config.api.datasource.create({
+      name: generator.guid(),
+      type: "test",
+      source: SourceName.REST,
+      config: { method: "POST" },
+    })
+    mockAgent!
+      .get("http://www.example.com")
+      .intercept({ path: "/", method: "POST" })
+      .reply(({ body }) => {
+        expect(JSON.parse(toBodyString(body))).toEqual({ value: "" })
+        return {
+          statusCode: 200,
+          data: {},
+          responseOptions: { headers: jsonHeaders },
+        }
+      })
+    await config.api.query.preview({
+      datasourceId: restDatasource._id!,
+      name: generator.guid(),
+      parameters: [{ name: "value", default: "" }],
+      queryVerb: "create",
+      transformer: "",
+      schema: {},
+      readable: true,
+      fields: {
+        path: "www.example.com",
+        bodyType: BodyType.JSON,
+        requestBody: '{"value":{{ value }}}',
+      },
+    })
+  })
+
   it("should bind object parameters to unquoted json request body fields", async () => {
     const datasource = await config.api.datasource.create({
       name: generator.guid(),

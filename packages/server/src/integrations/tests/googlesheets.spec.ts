@@ -312,6 +312,51 @@ describe("Google Sheets Integration", () => {
       })
     })
 
+    it("creates an empty cell for a null row member", async () => {
+      const query = await config.api.query.save({
+        name: "Create nullable row",
+        datasourceId: datasource._id!,
+        queryVerb: "create",
+        parameters: [],
+        fields: {
+          sheet: table.name,
+          row: { name: "null row", description: null },
+        },
+        schema: {},
+        transformer: "",
+        readable: true,
+      })
+
+      await config.api.query.execute(query._id!)
+
+      expect([mock.cell("A2"), mock.cell("B2")]).toEqual(["null row", null])
+    })
+
+    it("clears an existing cell for a null row member", async () => {
+      await config.api.row.save(table._id!, {
+        name: "existing row",
+        description: "previous value",
+      })
+      const query = await config.api.query.save({
+        name: "Clear nullable cell",
+        datasourceId: datasource._id!,
+        queryVerb: "update",
+        parameters: [],
+        fields: {
+          sheet: table.name,
+          rowIndex: "2",
+          row: { description: null },
+        },
+        schema: {},
+        transformer: "",
+        readable: true,
+      })
+
+      await config.api.query.execute(query._id!)
+
+      expect([mock.cell("A2"), mock.cell("B2")]).toEqual(["existing row", ""])
+    })
+
     it("should be able to add a new row", async () => {
       const row = await config.api.row.save(table._id!, {
         name: "Test Contact",

@@ -395,6 +395,59 @@ describe("REST Integration", () => {
       expect(Object.keys(output.headers!).length).toEqual(0)
     })
 
+    it("serializes preserved null members as text in encoded forms", async () => {
+      const fields = await config.doInContext(config.getDevWorkspaceId(), () =>
+        sdk.queries.enrichContext({
+          requestBody: { native: null, text: "null", zero: 0, disabled: false },
+        })
+      )
+
+      const output = integration.addBody(
+        BodyType.ENCODED,
+        fields.requestBody,
+        {}
+      )
+
+      expect(output.body?.toString()).toEqual(
+        "native=null&text=null&zero=0&disabled=false"
+      )
+    })
+
+    it("serializes preserved null members as empty multipart form values", async () => {
+      const fields = await config.doInContext(config.getDevWorkspaceId(), () =>
+        sdk.queries.enrichContext({
+          requestBody: { native: null, text: "null", zero: 0, disabled: false },
+        })
+      )
+
+      const output = integration.addBody(
+        BodyType.FORM_DATA,
+        fields.requestBody,
+        {}
+      )
+
+      expect(extractFormEntries(output.body)).toEqual({
+        native: "",
+        text: "null",
+        zero: "0",
+        disabled: "false",
+      })
+    })
+
+    it("keeps preserved null members in serialized JSON bodies", async () => {
+      const fields = await config.doInContext(config.getDevWorkspaceId(), () =>
+        sdk.queries.enrichContext({
+          requestBody: { native: null, text: "null", zero: 0, disabled: false },
+        })
+      )
+
+      const output = integration.addBody(BodyType.JSON, fields.requestBody, {})
+
+      expect(output.body).toEqual(
+        '{"native":null,"text":"null","zero":0,"disabled":false}'
+      )
+    })
+
     it("should allow JSON", () => {
       const output = integration.addBody("json", input, {})
       expect(output.body).toEqual(JSON.stringify(input))

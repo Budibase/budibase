@@ -180,4 +180,21 @@ describe("S3 Integration", () => {
       },
     })
   })
+
+  it("passes null JSON delete members through without converting quoted text", async () => {
+    const query = await enrichContext({
+      bucket: "test",
+      delete: '{"Objects":[{"Key":"null","VersionId":null}],"Quiet":false}',
+    })
+
+    await config.integration.delete(query)
+
+    expect(config.integration.client.deleteObjects).toHaveBeenCalledWith({
+      Bucket: "test",
+      Delete: {
+        Objects: [{ Key: "null", VersionId: null }],
+        Quiet: false,
+      },
+    })
+  })
 })

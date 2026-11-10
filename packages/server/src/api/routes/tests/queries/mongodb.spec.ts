@@ -1,10 +1,11 @@
-import { Datasource, Query } from "@budibase/types"
+import { Datasource, Query, type JSONValue } from "@budibase/types"
 import {
   DatabaseName,
   datasourceDescribe,
 } from "../../../../integrations/tests/utils"
 import { MongoClient, type Collection, BSON, Db } from "mongodb"
 import { generator } from "@budibase/backend-core/tests"
+import type { QueryEventParameters } from "../../../../threads/definitions"
 
 const expectValidId = expect.stringMatching(/^\w{24}$/)
 const expectValidBsonObjectId = expect.any(BSON.ObjectId)
@@ -447,6 +448,106 @@ if (descriptions.length) {
           })
 
           expect(result.data).toEqual([])
+        })
+
+        it.each<{
+          parameters: QueryEventParameters
+          expected: string
+          expectedValue: JSONValue
+        }>([
+          {
+            parameters: { value: null },
+            expected: "native null",
+            expectedValue: null,
+          },
+          {
+            parameters: { value: "null" },
+            expected: "native null",
+            expectedValue: null,
+          },
+          { parameters: {}, expected: "default", expectedValue: "default" },
+          {
+            parameters: { value: "" },
+            expected: "default",
+            expectedValue: "default",
+          },
+          { parameters: { value: 0 }, expected: "zero", expectedValue: 0 },
+        ])(
+          "keeps unquoted JSON coercion and defaults for $parameters",
+          async ({ parameters, expected, expectedValue }) => {
+            await withCollection(collection =>
+              collection.insertMany([
+                { name: "native null", value: null },
+                { name: "text null", value: "null" },
+                { name: "default", value: "default" },
+                { name: "zero", value: 0 },
+                { name: "false", value: false },
+              ])
+            )
+            const query = await createQuery({
+              fields: {
+                json: '{"value":{{ value }},"name":{"$in":["native null","text null","default","zero","false"]}}',
+                extra: { actionType: "find" },
+              },
+              parameters: [{ name: "value", default: "default" }],
+            })
+
+            const result = await config.api.query.execute(query._id!, {
+              parameters,
+            })
+
+            expect(result.data).toEqual([
+              { _id: expectValidId, name: expected, value: expectedValue },
+            ])
+          }
+        )
+
+        it("keeps the string null in quoted JSON bindings", async () => {
+          await withCollection(collection =>
+            collection.insertMany([
+              { name: "native null", value: null },
+              { name: "text null", value: "null" },
+            ])
+          )
+          const query = await createQuery({
+            fields: {
+              json: '{"value":"{{ value }}"}',
+              extra: { actionType: "find" },
+            },
+            parameters: [{ name: "value", default: "default" }],
+          })
+
+          const result = await config.api.query.execute(query._id!, {
+            parameters: { value: "null" },
+          })
+
+          expect(result.data).toEqual([
+            { _id: expectValidId, name: "text null", value: "null" },
+          ])
+        })
+
+        it("keeps literal null predicates in object query fields", async () => {
+          await withCollection(collection =>
+            collection.insertMany([
+              { name: "nullable", value: null },
+              { name: "non-nullable", value: "present" },
+            ])
+          )
+          const query = await createQuery({
+            fields: {
+              json: {
+                name: { $in: ["nullable", "non-nullable"] },
+                value: { $eq: null },
+              },
+              extra: { actionType: "find" },
+            },
+          })
+
+          const result = await config.api.query.execute(query._id!)
+
+          expect(result.data).toEqual([
+            { _id: expectValidId, name: "nullable", value: null },
+          ])
         })
 
         it("a findOne query", async () => {
