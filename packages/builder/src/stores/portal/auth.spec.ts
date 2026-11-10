@@ -57,4 +57,30 @@ describe("AuthStore last visited workspace", () => {
     expect(get(auth).tenantSet).toBe(true)
     expect(mocks.fetchBuilderSelf).not.toHaveBeenCalled()
   })
+
+  it("persists rapid workspace visits in order", async () => {
+    let resolveFirstUpdate: (() => void) | undefined
+    mocks.updateSelf
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>(resolve => {
+            resolveFirstUpdate = resolve
+          })
+      )
+      .mockResolvedValueOnce(undefined)
+
+    const firstUpdate = auth.updateLastVisitedWorkspace("app_dev_workspace_1")
+    await vi.waitFor(() => expect(mocks.updateSelf).toHaveBeenCalledTimes(1))
+
+    const secondUpdate = auth.updateLastVisitedWorkspace("app_dev_workspace_2")
+    expect(mocks.updateSelf).toHaveBeenCalledTimes(1)
+
+    resolveFirstUpdate?.()
+    await Promise.all([firstUpdate, secondUpdate])
+
+    expect(mocks.updateSelf.mock.calls).toEqual([
+      [{ lastVisitedWorkspaceId: "app_dev_workspace_1" }],
+      [{ lastVisitedWorkspaceId: "app_dev_workspace_2" }],
+    ])
+  })
 })
