@@ -55,6 +55,11 @@
     OperatorOptions.NotEmpty.value,
   ])
 
+  const LIST_VALUE_OPERATORS = new Set<string>([
+    OperatorOptions.In.value,
+    OperatorOptions.NotIn.value,
+  ])
+
   let modal: Modal | undefined = $state()
   let policies = $state<AgentOperationApprovalPolicy[]>([])
   let fields = $state<ConditionField[]>([])
@@ -193,12 +198,16 @@
     index: number,
     operator: ToolExecutionOperator
   ) => {
+    const condition = conditions[index]
     const noValue = NO_VALUE_OPERATORS.has(operator)
+    const valueShapeChanged =
+      LIST_VALUE_OPERATORS.has(operator) !==
+      LIST_VALUE_OPERATORS.has(condition.operator)
     conditions[index] = {
-      ...conditions[index],
+      ...condition,
       operator,
       noValue,
-      value: noValue ? undefined : conditions[index].value,
+      value: noValue || valueShapeChanged ? undefined : condition.value,
     }
   }
 
