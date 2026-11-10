@@ -80,19 +80,6 @@ function getSessionSignal(
   if (event.endsWith(":failed")) {
     return "failed"
   }
-  if (
-    event === Event.ACTION_AI_AGENT_EXECUTED &&
-    (properties.finalStatus === "completed" ||
-      properties.finalStatus === "failed")
-  ) {
-    return properties.finalStatus
-  }
-  if (
-    event === Event.ACTION_AI_AGENT_EXECUTED &&
-    properties.awaitingEscalation === true
-  ) {
-    return "waiting"
-  }
   return "completed"
 }
 
