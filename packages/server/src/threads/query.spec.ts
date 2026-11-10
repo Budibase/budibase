@@ -1,3 +1,5 @@
+const mockDbGet = jest.fn()
+
 jest.mock("../integrations", () => ({
   getIntegration: jest.fn(),
 }))
@@ -11,6 +13,7 @@ jest.mock("@budibase/backend-core", () => {
       doInWorkspaceContext: jest.fn((_appId: any, fn: any) => fn()),
       doInEnvironmentContext: jest.fn((_vars: any, fn: any) => fn()),
       getEnvironmentVariables: jest.fn(() => null),
+      getWorkspaceDB: jest.fn(() => ({ get: mockDbGet })),
     },
   }
 })
@@ -31,11 +34,14 @@ jest.mock("../sdk", () => ({
 jest.mock("./utils", () => {
   const actual = jest.requireActual("./utils")
   return {
+    __esModule: true,
     ...actual,
     default: {
       ...actual.default,
       threadSetup: jest.fn(),
       formatResponse: jest.fn((r: any) => r),
+      getCachedVariable: jest.fn(),
+      storeDynamicVariable: jest.fn(),
     },
   }
 })
@@ -50,9 +56,17 @@ jest.mock("../integrations/utils", () => ({
 
 import { context } from "@budibase/backend-core"
 import { getIntegration } from "../integrations"
+import { interpolateSQL } from "../integrations/queries/sql"
+import { isSQL } from "../integrations/utils"
+import sdk from "../sdk"
+import { enrichContext } from "../sdk/workspace/queries/queries"
 import { execute } from "./query"
 import { BodyType, SourceName } from "@budibase/types"
-import type { QueryEvent } from "./definitions"
+import type {
+  QueryEvent,
+  QueryEventParameters,
+  QueryResponse,
+} from "./definitions"
 
 const buildEvent = (overrides: Partial<QueryEvent> = {}): QueryEvent => ({
   appId: "app_test",
@@ -295,4 +309,156 @@ describe("QueryRunner - template datasource URL resolution", () => {
     const path = await runEvent(event)
     expect(path).toBe("https://new.example.com")
   })
+})
+
+describe("QueryRunner - nullable SQL parameters", () => {
+  interface ParameterTest {
+    name: string
+    sql: boolean
+    parameters: QueryEventParameters
+    expected: string | number | null
+  }
+
+  const runQuery = (event: QueryEvent): Promise<QueryResponse> =>
+    new Promise((resolve, reject) => {
+      execute(event, (err, response) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(response)
+        }
+      })
+    })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.mocked(context.getEnvironmentVariables).mockReturnValue({})
+    jest.mocked(isSQL).mockImplementation(datasource => !!datasource.isSQL)
+    jest.mocked(sdk.queries.enrichContext).mockImplementation(enrichContext)
+    jest
+      .mocked(interpolateSQL)
+      .mockImplementation(async (_source, fields, parameters) => ({
+        ...fields,
+        bindings: [parameters.amount],
+      }))
+    jest.mocked(getIntegration).mockResolvedValue(async () => ({
+      read: async (query: {
+        bindings?: (string | number | null)[]
+        json?: { amount: string }
+      }) => [
+        { amount: query.bindings ? query.bindings[0] : query.json?.amount },
+      ],
+    }))
+  })
+
+  it.each<ParameterTest>([
+    {
+      name: "explicit SQL null",
+      sql: true,
+      parameters: { amount: null },
+      expected: null,
+    },
+    { name: "missing SQL value", sql: true, parameters: {}, expected: "17" },
+    {
+      name: "empty SQL value",
+      sql: true,
+      parameters: { amount: "" },
+      expected: "17",
+    },
+    { name: "SQL zero", sql: true, parameters: { amount: 0 }, expected: 0 },
+    {
+      name: "REST null",
+      sql: false,
+      parameters: { amount: null },
+      expected: "17",
+    },
+  ])(
+    "uses static variables appropriately for $name",
+    async ({ sql, parameters, expected }) => {
+      const event = buildEvent({
+        datasource: {
+          ...buildEvent().datasource,
+          source: sql ? SourceName.POSTGRES : SourceName.REST,
+          isSQL: sql,
+          config: { staticVariables: { amount: "17" } },
+        },
+        fields: {
+          sql: "SELECT {{ amount }}",
+          requestBody: '{"amount":"{{ amount }}"}',
+        },
+        parameters,
+      })
+
+      const response = await runQuery(event)
+
+      expect(response.rows).toEqual([{ amount: expected }])
+    }
+  )
+
+  it.each<ParameterTest>([
+    {
+      name: "explicit SQL null",
+      sql: true,
+      parameters: { amount: null },
+      expected: null,
+    },
+    { name: "missing SQL value", sql: true, parameters: {}, expected: "23" },
+    {
+      name: "empty SQL value",
+      sql: true,
+      parameters: { amount: "" },
+      expected: "23",
+    },
+    { name: "SQL zero", sql: true, parameters: { amount: 0 }, expected: "23" },
+    {
+      name: "REST null",
+      sql: false,
+      parameters: { amount: null },
+      expected: "23",
+    },
+  ])(
+    "uses nested query defaults appropriately for $name",
+    async ({ sql, parameters, expected }) => {
+      const event = buildEvent({
+        datasource: {
+          ...buildEvent().datasource,
+          source: SourceName.POSTGRES,
+          isSQL: true,
+          config: {
+            dynamicVariables: [
+              {
+                name: "lookup",
+                queryId: "query_nested",
+                value: "{{ data.0.amount }}",
+              },
+            ],
+          },
+        },
+        fields: { sql: "SELECT {{ amount }}, {{ lookup }}" },
+        parameters,
+      })
+      mockDbGet.mockResolvedValue({
+        datasourceId: "ds_nested",
+        queryVerb: "read",
+        fields: {
+          sql: "SELECT {{ amount }}",
+          requestBody: '{"amount":"{{ amount }}"}',
+        },
+        parameters: [{ name: "amount", default: "23" }],
+        transformer: null,
+        schema: {},
+      })
+      jest.mocked(sdk.datasources.get).mockResolvedValue({
+        ...buildEvent().datasource,
+        _id: "ds_nested",
+        source: sql ? SourceName.POSTGRES : SourceName.REST,
+        isSQL: sql,
+        config: {},
+      })
+
+      const response = await runQuery(event)
+
+      expect(response.rows).toEqual([{ amount: expected }])
+    }
+  )
 })

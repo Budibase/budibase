@@ -118,7 +118,10 @@ class QueryRunner {
     const enrichedParameters = await sdk.queries.enrichContext(
       parameters,
       this.ctx,
-      { preserveNullValues: isSQL(datasourceClone) }
+      {
+        preserveNullValues: isSQL(datasourceClone),
+        normalizeJsonFields: !isSQL(datasourceClone),
+      }
     )
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 
@@ -307,10 +310,13 @@ class QueryRunner {
     return { rows, keys, info, extra, pagination }
   }
 
-  async runAnotherQuery(
-    queryId: string,
+  async runAnotherQuery({
+    queryId,
+    currentParameters,
+  }: {
+    queryId: string
     currentParameters: Record<string, any>
-  ) {
+  }) {
     const db = context.getWorkspaceDB()
     const query = await db.get<Query>(queryId)
     const datasource = await sdk.datasources.get(query.datasourceId, {
@@ -318,8 +324,10 @@ class QueryRunner {
     })
     // enrich parameters with dynamic queries defaults
     const defaultParams = query.parameters || []
+    const preserveNullValues = isSQL(datasource)
     for (let param of defaultParams) {
-      if (!currentParameters[param.name]) {
+      const value = currentParameters[param.name]
+      if (!value && !(value === null && preserveNullValues)) {
         currentParameters[param.name] = param.default
       }
     }
@@ -384,7 +392,10 @@ class QueryRunner {
     if (!value) {
       value = this.queryResponse[queryId]
         ? this.queryResponse[queryId]
-        : await this.runAnotherQuery(queryId, parameters)
+        : await this.runAnotherQuery({
+            queryId,
+            currentParameters: parameters,
+          })
       // store incase this query is to be called again
       this.queryResponse[queryId] = value
       await threadUtils.storeDynamicVariable(queryId, name, value)
@@ -459,6 +470,7 @@ class QueryRunner {
 
     const staticVars = datasource.config.staticVariables || {}
     const dynamicVars = datasource.config.dynamicVariables || []
+    const preserveNullValues = isSQL(datasource)
     for (let [staticBindingKey, staticBindingValue] of Object.entries(
       staticVars
     )) {
@@ -469,7 +481,8 @@ class QueryRunner {
       }
       const namedValue = parameters[staticBindingKey]
       const shouldOverrideNamed =
-        namedValue == null ||
+        namedValue === undefined ||
+        (namedValue === null && !preserveNullValues) ||
         namedValue === "" ||
         this.doesStaticBindingMatchLocal(namedValue, staticBindingKey)
       if (shouldOverrideNamed) {

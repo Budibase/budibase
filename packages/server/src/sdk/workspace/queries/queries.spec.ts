@@ -66,6 +66,34 @@ describe("queries SDK", () => {
       expect(result).toStrictEqual({ text: "null" })
     })
 
+    it.each([null, "null", "false", "0", '{"value":1}', "{{ value }}"])(
+      "preserves SQL parameter names that match JSON fields with value %s",
+      async value => {
+        const result = await enrichContext(
+          {
+            json: value,
+            customData: value,
+            requestBody: value,
+            delete: value,
+            row: value,
+            rows: value,
+          },
+          { value: "bound value" },
+          { preserveNullValues: true, normalizeJsonFields: false }
+        )
+
+        const expected = value === "{{ value }}" ? "bound value" : value
+        expect(result).toStrictEqual({
+          json: expected,
+          customData: expected,
+          requestBody: expected,
+          delete: expected,
+          row: expected,
+          rows: expected,
+        })
+      }
+    )
+
     it.each([
       ["false", false],
       ["0", 0],

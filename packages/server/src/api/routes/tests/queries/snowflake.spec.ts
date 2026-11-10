@@ -34,6 +34,10 @@ describe("Snowflake query bindings", () => {
   const config = new TestConfiguration()
   let datasource: Datasource
 
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   beforeAll(async () => {
     await config.init()
     datasource = await config.api.datasource.create({
@@ -75,6 +79,112 @@ describe("Snowflake query bindings", () => {
         expect.objectContaining({
           sqlText: "CALL example_procedure(?, ?)",
           binds: [null, "null"],
+        })
+      )
+    }
+  )
+
+  it.each([
+    { name: "customData", value: null },
+    { name: "customData", value: "null" },
+    { name: "json", value: null },
+    { name: "json", value: "null" },
+    { name: "requestBody", value: null },
+    { name: "requestBody", value: "null" },
+  ])(
+    "preserves the $name parameter with value $value",
+    async ({ name, value }) => {
+      const query = await config.api.query.save({
+        ...basicQuery(datasource._id!),
+        fields: { sql: `CALL example_procedure({{ ${name} }})` },
+        parameters: [{ name, default: "default" }],
+      })
+      await config.api.query.save({ ...query, nullDefaultSupport: false })
+
+      await config.api.query.execute(query._id!, {
+        parameters: { [name]: value },
+      })
+
+      expect(execute).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          sqlText: "CALL example_procedure(?)",
+          binds: [value],
+        })
+      )
+    }
+  )
+
+  it.each([false, true])(
+    "preserves null over static variables with nullDefaultSupport=%s",
+    async nullDefaultSupport => {
+      const staticDatasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        source: SourceName.SNOWFLAKE,
+        config: {
+          ...datasource.config,
+          staticVariables: { amount: "123", missing: "456" },
+        },
+      })
+      const query = await config.api.query.save({
+        ...basicQuery(staticDatasource._id!),
+        fields: { sql: "CALL example_procedure({{ amount }}, {{ missing }})" },
+        parameters: [{ name: "amount", default: "default" }],
+      })
+      await config.api.query.save({ ...query, nullDefaultSupport })
+
+      await config.api.query.execute(query._id!, {
+        parameters: { amount: null },
+      })
+
+      expect(execute).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          sqlText: "CALL example_procedure(?, ?)",
+          binds: [null, "456"],
+        })
+      )
+    }
+  )
+
+  it.each([false, true])(
+    "forwards null into dynamic SQL queries with nullDefaultSupport=%s",
+    async nullDefaultSupport => {
+      const nestedQuery = await config.api.query.save({
+        ...basicQuery(datasource._id!),
+        fields: { sql: "CALL nested_procedure({{ amount }}, {{ missing }})" },
+        parameters: [
+          { name: "amount", default: "123" },
+          { name: "missing", default: "456" },
+        ],
+      })
+      await config.api.query.save({ ...nestedQuery, nullDefaultSupport })
+      const dynamicDatasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        source: SourceName.SNOWFLAKE,
+        config: {
+          ...datasource.config,
+          dynamicVariables: [
+            {
+              queryId: nestedQuery._id!,
+              name: "result",
+              value: "{{ data[0].id }}",
+            },
+          ],
+        },
+      })
+      const query = await config.api.query.save({
+        ...basicQuery(dynamicDatasource._id!),
+        fields: { sql: "CALL example_procedure({{ result }})" },
+        parameters: [{ name: "amount", default: "default" }],
+      })
+
+      await config.api.query.execute(query._id!, {
+        parameters: { amount: null },
+      })
+
+      expect(execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sqlText: "CALL nested_procedure(?, ?)",
+          binds: [null, "456"],
         })
       )
     }

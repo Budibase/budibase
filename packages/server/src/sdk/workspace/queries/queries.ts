@@ -11,6 +11,7 @@ import { getEnvironmentVariables } from "../../utils"
 export interface EnrichContextOpts {
   escapeNewlines?: boolean
   preserveNullValues?: boolean
+  normalizeJsonFields?: boolean
 }
 
 export interface FetchOptions {
@@ -21,6 +22,7 @@ export interface FetchOptions {
 const DEFAULT_ENRICH_CONTEXT_OPTS: Required<EnrichContextOpts> = {
   escapeNewlines: true,
   preserveNullValues: false,
+  normalizeJsonFields: true,
 }
 
 const JSON_TEMPLATE_FIELDS = new Set([
@@ -110,9 +112,10 @@ const enrichContextObject = async (
     }
     const enrichedKey = processTemplateString(key, parameters, options)
     if (typeof fieldValue === "string") {
-      enrichedQuery[enrichedKey] = JSON_TEMPLATE_FIELDS.has(enrichedKey)
-        ? enrichJsonTemplate(fieldValue, parameters, options)
-        : processTemplateString(fieldValue, parameters, options)
+      enrichedQuery[enrichedKey] =
+        options.normalizeJsonFields && JSON_TEMPLATE_FIELDS.has(enrichedKey)
+          ? enrichJsonTemplate(fieldValue, parameters, options)
+          : processTemplateString(fieldValue, parameters, options)
     } else {
       enrichedQuery[enrichedKey] = enrichJsonValue(
         fieldValue,
@@ -225,6 +228,9 @@ export async function enrichContext(
   const env = await getEnvironmentVariables()
   const parameters = { ...inputs, env }
   const enrichedQuery = await enrichContextObject(fields, parameters, options)
+  if (!options.normalizeJsonFields) {
+    return enrichedQuery
+  }
   for (const key of ["json", "customData", "requestBody"]) {
     if (
       !Object.hasOwn(enrichedQuery, key) ||
