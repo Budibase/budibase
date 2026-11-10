@@ -1,12 +1,20 @@
 import zlib from "zlib"
+import { z } from "zod"
 import {
   readUIMessageStream,
   TypeValidationError,
+  tool,
   type UIMessageChunk,
 } from "ai"
 import { context, events } from "@budibase/backend-core"
 import {
   Agent,
+  ActionFailureReason,
+  PermissionLevel,
+  PermissionType,
+  ToolAction,
+  ToolExecutionPrincipal,
+  ToolType,
   ApprovalToolResultStatus,
   DocumentType,
   EscalationAction,
@@ -20,7 +28,11 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import sdk from "../sdk"
-import { INVALID_TOOL_INPUT_ERROR } from "../ai/tools"
+import {
+  INVALID_TOOL_INPUT_ERROR,
+  toToolSet,
+  type AiToolDefinition,
+} from "../ai/tools"
 import {
   getQueue,
   processNotify,
@@ -261,6 +273,9 @@ describe("resumeOperation", () => {
       })
 
       expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+      expect(aiAgentFailedMock).not.toHaveBeenCalled()
+      expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+      expect(enqueueLifecycleMock).not.toHaveBeenCalled()
       const [request] =
         await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
       expect(request.status).toEqual("failed")
@@ -345,6 +360,10 @@ describe("resumeOperation", () => {
           },
         })
 
+        expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+        expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+        expect(enqueueLifecycleMock).not.toHaveBeenCalled()
         const [request] =
           await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("failed")
@@ -372,6 +391,113 @@ describe("resumeOperation", () => {
               "Please ask again.",
           },
         ])
+      })
+    }
+  )
+
+  it.each([false, true])(
+    "records a tool failure when approved input fails revalidation (redacted: %s)",
+    async redacted => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await createRequest())!
+        const escalation = baseDoc({
+          requestId,
+          resolution: "resolved",
+          response: { accepted: true },
+        })
+        await context.getWorkspaceDB().put(escalation)
+        const execute = jest.fn()
+        const toolFailed = jest
+          .spyOn(events.action, "aiAgentToolFailed")
+          .mockImplementation(() => {})
+        const toolExecuted = jest
+          .spyOn(events.action, "aiAgentToolExecuted")
+          .mockImplementation(() => {})
+        const originalTool = tool({
+          inputSchema: z.object({ data: z.object({ oldField: z.string() }) }),
+          execute,
+        })
+        const definition: AiToolDefinition = {
+          name: "create_row",
+          description: "Create a synthetic row",
+          sourceType: ToolType.INTERNAL_TABLE,
+          action: ToolAction.CREATE_ROW,
+          executionPolicy: {
+            mode: "configurable",
+            defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+          },
+          authorization: {
+            permissionType: PermissionType.TABLE,
+            permissionLevel: PermissionLevel.WRITE,
+            resourceId: "ta_test",
+          },
+          tool: originalTool,
+          authoritativeInputSchema: z.object({
+            data: z.object({ newField: z.string() }),
+          }),
+          ...(redacted ? { requesterRedactedTool: originalTool } : {}),
+        }
+        const tools = toToolSet(
+          [definition],
+          new Map([
+            [
+              "create_row",
+              {
+                executionContext: {
+                  tenantId: config.getTenantId(),
+                  workspaceId: config.getProdWorkspaceId(),
+                  agentId: "agent_1",
+                  operationId: "op_1",
+                  conversationId: "session_1",
+                  requester: { executorRole: "BASIC" },
+                },
+                principal: ToolExecutionPrincipal.REQUESTER,
+                authorize: jest.fn().mockResolvedValue(undefined),
+              },
+            ],
+          ])
+        )
+        buildPromptAndToolsMock.mockResolvedValue({ tools, toolSources: {} })
+
+        await resumeOperation({
+          doc: escalation,
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: {
+            ...baseCtx,
+            pendingToolCall: {
+              toolCallId: "call_1",
+              toolName: "create_row",
+              args: { data: { oldField: "PRIVATE_APPROVED_VALUE" } },
+            },
+          },
+        })
+
+        const [request] =
+          await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+        expect(request.status).toBe("failed")
+        expect(execute).not.toHaveBeenCalled()
+        expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+        expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+        expect(enqueueLifecycleMock).not.toHaveBeenCalled()
+        expect(toolExecuted).not.toHaveBeenCalled()
+        expect(toolFailed).toHaveBeenCalledTimes(1)
+        expect(toolFailed).toHaveBeenCalledWith({
+          agentId: "agent_1",
+          sessionId: "session_1",
+          operationId: "op_1",
+          toolName: "create_row",
+          sourceType: ToolType.INTERNAL_TABLE,
+          action: ToolAction.CREATE_ROW,
+          reason: ActionFailureReason.ERROR,
+          errorMessage: INVALID_TOOL_INPUT_ERROR,
+        })
+        expect(JSON.stringify(toolFailed.mock.calls)).not.toContain(
+          "PRIVATE_APPROVED_VALUE"
+        )
+        toolFailed.mockRestore()
+        toolExecuted.mockRestore()
       })
     }
   )
@@ -420,6 +546,9 @@ describe("resumeOperation", () => {
         await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
       expect(request.status).toEqual("needs_input")
       expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+      expect(aiAgentFailedMock).not.toHaveBeenCalled()
+      expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+      expect(enqueueLifecycleMock).not.toHaveBeenCalled()
     })
   })
 
