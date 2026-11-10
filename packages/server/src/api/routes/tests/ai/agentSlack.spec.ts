@@ -1725,6 +1725,62 @@ describe("agent slack integration provisioning", () => {
       expect(conversations[0]?.messages).toHaveLength(2)
     })
 
+    it("persists a failed turn and replies with an error", async () => {
+      mockedWebhookChat.mockImplementationOnce(async ({ chat }) => ({
+        messages: [
+          ...chat.messages,
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [
+              {
+                type: "tool-lookup",
+                toolCallId: "call-1",
+                state: "output-available",
+                input: {},
+                output: { ok: true },
+              },
+            ],
+          },
+        ],
+        assistantText: "",
+        title: "Mock conversation",
+        failed: true,
+      }))
+
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello slack",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "Sorry, something went wrong while processing your request."
+      )
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.messages.at(-1)?.parts).toEqual([
+        expect.objectContaining({
+          type: "tool-lookup",
+          state: "output-available",
+        }),
+      ])
+    })
+
     it("formats Slack assistant replies using mrkdwn", async () => {
       mockedWebhookChat.mockResolvedValueOnce({
         messages: [
