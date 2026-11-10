@@ -1,7 +1,15 @@
-import { cache, context, roles } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  events,
+  getErrorMessage,
+  roles,
+} from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
+  ActionFailureReason,
+  type ActionAiAgentToolExecuted,
   Agent,
   AgentOperation,
   AgentMessageMetadata,
@@ -14,6 +22,7 @@ import {
   type EscalationReviewParameter,
 } from "@budibase/types"
 import {
+  InvalidToolInputError,
   Output,
   extractReasoningMiddleware,
   generateText,
@@ -362,6 +371,7 @@ export interface AgentRunContext {
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  toolEventContexts: Record<string, ActionAiAgentToolExecuted>
   executionContext?: AgentExecutionContext
 }
 
@@ -436,6 +446,7 @@ export const prepareAgentRunContext = async ({
         .join("\n\n"),
       tools: {},
       toolDisplayNames: {},
+      toolEventContexts: {},
     }
   }
   let executionContext: AgentExecutionContext | undefined
@@ -648,6 +659,7 @@ const prepareAgentChatRunInternal = async ({
     operationIntent,
     tools,
     toolDisplayNames,
+    toolEventContexts,
     systemPrompt: baseSystemPrompt,
   } = runContext
   const retrievedKnowledgeSourceById = new Map<
@@ -765,6 +777,21 @@ const prepareAgentChatRunInternal = async ({
                 { type: "tool-error" }
               > => part.type === "tool-error"
             )
+            // SDK validation rejects the call before the tool wrapper can record it.
+            for (const call of toolCalls) {
+              const eventContext = toolEventContexts[call.toolName]
+              if (
+                eventContext &&
+                call.invalid &&
+                InvalidToolInputError.isInstance(call.error)
+              ) {
+                events.action.aiAgentToolFailed({
+                  ...eventContext,
+                  reason: ActionFailureReason.ERROR,
+                  errorMessage: getErrorMessage(call.error),
+                })
+              }
+            }
             const erroredToolNames = erroredParts.map(part => part.toolName)
 
             if (onToolCalls && successNames.length) {

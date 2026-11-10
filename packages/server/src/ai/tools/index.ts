@@ -10,6 +10,7 @@ import {
   ToolAction,
   ToolExecutionPrincipal,
   ToolType,
+  type ActionAiAgentToolExecuted,
   type AgentExecutionContext,
   type AgentOperationToolConfig,
   type ToolExecutionPolicy,
@@ -146,6 +147,23 @@ const toolEventContext = ({
     sourceType: toolDef.sourceType,
     ...(toolDef.action && { action: toolDef.action }),
   }
+}
+
+export const getToolEventContexts = ({
+  tools,
+  runtimes,
+}: {
+  tools: AiToolDefinition[]
+  runtimes: Map<string, ToolAuthorizationRuntime>
+}): Record<string, ActionAiAgentToolExecuted> => {
+  const contexts: Record<string, ActionAiAgentToolExecuted> = {}
+  for (const toolDef of tools) {
+    const runtime = runtimes.get(toolDef.name)
+    if (runtime) {
+      contexts[toolDef.name] = toolEventContext({ toolDef, runtime })
+    }
+  }
+  return contexts
 }
 
 type RunTool = <T>(execute: () => Promise<T>) => Promise<T>

@@ -12,6 +12,11 @@ import {
   ApprovalToolResultStatus,
   DocumentType,
   FeatureFlag,
+  ToolType,
+  ToolAction,
+  ToolExecutionPrincipal,
+  PermissionType,
+  PermissionLevel,
 } from "@budibase/types"
 import type {
   ActionSourceContext,
@@ -27,11 +32,18 @@ import { convertToModelMessages, pruneMessages, streamText } from "ai"
 import { quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
 import sdk from "../../sdk"
+import {
+  getToolEventContexts,
+  toToolSet,
+  type AiToolDefinition,
+} from "../../ai/tools"
+import * as agentUtils from "../../sdk/workspace/ai/agents/utils"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
 import { requesterTools } from "../../sdk/workspace/ai/tests/utils"
 import type { LanguageModelV4 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV4 } from "ai/test"
+import { z } from "zod"
 
 const mockAiConfigsFind = jest.fn()
 const mockOperationRoute = jest.fn().mockReturnValue({
@@ -104,6 +116,16 @@ jest.mock("ai", () => {
     pruneMessages: jest.fn(),
     streamText: mockStreamText,
     ToolLoopAgent: MockToolLoopAgent,
+  }
+})
+
+jest.mock("../../sdk/workspace/ai/agents/utils", () => {
+  const actual = jest.requireActual<
+    typeof import("../../sdk/workspace/ai/agents/utils")
+  >("../../sdk/workspace/ai/agents/utils")
+  return {
+    ...actual,
+    buildPromptAndTools: jest.fn(actual.buildPromptAndTools),
   }
 })
 
@@ -505,6 +527,7 @@ describe("chat conversation preview stream", () => {
       tools,
       toolDisplayNames: {},
       toolSources: {},
+      toolEventContexts: {},
     })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
@@ -1121,6 +1144,7 @@ describe("Agent chat tool call tracking", () => {
       tools: { tool1: {} as any },
       toolDisplayNames: {},
       toolSources: {},
+      toolEventContexts: {},
     })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
@@ -1143,6 +1167,168 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("agentChatStream", () => {
+    it.each(["stop", "recover", "abort", "execution-error"])(
+      "records one tool failure with the correct agent outcome (%s)",
+      async outcome => {
+        const lookup = jest.fn(async () => {
+          if (outcome === "execution-error") {
+            throw new Error("Lookup failed")
+          }
+          return { rows: [] }
+        })
+        const model: MockLanguageModelV4 = new MockLanguageModelV4({
+          doStream: async () => {
+            const step = model.doStreamCalls.length
+            if (step > 1 && outcome === "abort") {
+              throw new Error("Model execution aborted")
+            }
+            if (step > (outcome === "recover" ? 2 : 1)) {
+              return createChatTestLanguageModel().doStream({ prompt: [] })
+            }
+            return {
+              stream: aiActual.simulateReadableStream({
+                chunks: [
+                  {
+                    type: "tool-call" as const,
+                    toolCallId: `lookup-${step}`,
+                    toolName: "lookup",
+                    input: JSON.stringify({
+                      limit:
+                        step > 1 || outcome === "execution-error"
+                          ? 1
+                          : "not-a-number",
+                    }),
+                  },
+                  {
+                    type: "finish" as const,
+                    finishReason: {
+                      unified: "tool-calls" as const,
+                      raw: undefined,
+                    },
+                    usage: mockLanguageModelStreamUsage,
+                  },
+                ],
+              }),
+            }
+          },
+        })
+        const definition: AiToolDefinition = {
+          name: "lookup",
+          description: "List rows",
+          sourceType: ToolType.INTERNAL_TABLE,
+          action: ToolAction.LIST_ROWS,
+          executionPolicy: {
+            mode: "configurable",
+            defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+          },
+          authorization: {
+            permissionType: PermissionType.TABLE,
+            permissionLevel: PermissionLevel.READ,
+            resourceId: "ta_lookup",
+          },
+          tool: aiActual.tool({
+            inputSchema: z.object({ limit: z.number() }),
+            execute: lookup,
+          }),
+        }
+        const runtimes = new Map([
+          [
+            "lookup",
+            {
+              executionContext: {
+                tenantId: config.getTenantId(),
+                workspaceId: config.getProdWorkspaceId(),
+                agentId,
+                operationId: "op-1",
+                conversationId: "validation-regression",
+                requester: { executorRole: "BASIC" },
+              },
+              principal: ToolExecutionPrincipal.REQUESTER,
+              authorize: jest.fn().mockResolvedValue(undefined),
+            },
+          ],
+        ])
+        const tools = toToolSet([definition], runtimes)
+        jest.mocked(agentUtils.buildPromptAndTools).mockResolvedValueOnce({
+          systemPrompt: "system",
+          tools,
+          toolDisplayNames: {},
+          toolSources: {},
+          toolEventContexts: getToolEventContexts({
+            tools: [definition],
+            runtimes,
+          }),
+        })
+        jest.mocked(streamText).mockImplementation(options =>
+          aiActual.streamText({
+            model,
+            maxRetries: 0,
+            messages: [{ role: "user", content: "test invalid tool input" }],
+            stopWhen: aiActual.stepCountIs(3),
+            tools,
+            onStepFinish: options.onStepFinish,
+          })
+        )
+        const agentExecuted = jest
+          .spyOn(events.action, "aiAgentExecuted")
+          .mockImplementation(() => {})
+        const agentFailed = jest
+          .spyOn(events.action, "aiAgentFailed")
+          .mockImplementation(() => {})
+        const toolFailed = jest
+          .spyOn(events.action, "aiAgentToolFailed")
+          .mockImplementation(() => {})
+        const toolExecuted = jest
+          .spyOn(events.action, "aiAgentToolExecuted")
+          .mockImplementation(() => {})
+
+        const response = await config
+          .getRequest()!
+          .post(agentPreviewStreamPath(agentId))
+          .set(await config.defaultHeaders())
+          .send({
+            isPreview: true,
+            messages: [
+              {
+                id: "validation-regression",
+                role: "user",
+                parts: [{ type: "text", text: "test invalid tool input" }],
+              },
+            ],
+          })
+
+        expect(response.status).toBe(200)
+        expect(response.text).toContain(
+          outcome === "execution-error"
+            ? "Lookup failed"
+            : "Invalid input: expected number, received string"
+        )
+        expect(model.doStreamCalls).toHaveLength(outcome === "recover" ? 3 : 2)
+        expect(lookup).toHaveBeenCalledTimes(
+          outcome === "recover" || outcome === "execution-error" ? 1 : 0
+        )
+        expect(toolExecuted).toHaveBeenCalledTimes(
+          outcome === "recover" ? 1 : 0
+        )
+        expect(agentExecuted).toHaveBeenCalledTimes(outcome === "abort" ? 0 : 1)
+        expect(agentFailed).toHaveBeenCalledTimes(outcome === "abort" ? 1 : 0)
+        expect(toolFailed).toHaveBeenCalledTimes(1)
+        expect(toolFailed).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agentId,
+            toolName: "lookup",
+            sourceType: ToolType.INTERNAL_TABLE,
+            action: ToolAction.LIST_ROWS,
+            errorMessage: expect.stringContaining(
+              outcome === "execution-error"
+                ? "Lookup failed"
+                : "Invalid input: expected number, received string"
+            ),
+          })
+        )
+      }
+    )
+
     it.each([false, true])(
       "completes after internal tool failures (recovery: %s)",
       async recover => {

@@ -706,7 +706,7 @@ async function runResumeOperation({
           error: errorMessage,
         })
       }
-      emitAgentResumeFailure(new Error(errorMessage))
+      // The approved tool failed before an agent run started; preserve its prior outcome.
       return
     }
     const approvalInstructions =
