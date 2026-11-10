@@ -258,7 +258,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.CLOUD_CUSTOM_AI_CONFIG_CREATION]: false,
   [FeatureFlag.AI_TESTS]: false,
   [FeatureFlag.FRONT_COMPANION]: false,
-  [FeatureFlag.PROJECTS]: false,
+  [FeatureFlag.PROJECTS]: env.SELF_HOSTED,
   [FeatureFlag.FEATURE_FLAG_OVERRIDES]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
   [FeatureFlag.AI_AGENT_ACTIVITY]: false,
