@@ -34,6 +34,7 @@ import TestConfiguration from "../utilities/TestConfiguration"
 import sdk from "../../sdk"
 import {
   getToolEventContexts,
+  INVALID_TOOL_INPUT_ERROR,
   toToolSet,
   type AiToolDefinition,
 } from "../../ai/tools"
@@ -1193,6 +1194,7 @@ describe("Agent chat tool call tracking", () => {
                     toolCallId: `lookup-${step}`,
                     toolName: "lookup",
                     input: JSON.stringify({
+                      privateValue: "E2E_PRIVATE_TOOL_INPUT",
                       limit:
                         step > 1 || outcome === "execution-error"
                           ? 1
@@ -1313,17 +1315,19 @@ describe("Agent chat tool call tracking", () => {
         expect(agentExecuted).toHaveBeenCalledTimes(outcome === "abort" ? 0 : 1)
         expect(agentFailed).toHaveBeenCalledTimes(outcome === "abort" ? 1 : 0)
         expect(toolFailed).toHaveBeenCalledTimes(1)
+        expect(JSON.stringify(toolFailed.mock.calls)).not.toContain(
+          "E2E_PRIVATE_TOOL_INPUT"
+        )
         expect(toolFailed).toHaveBeenCalledWith(
           expect.objectContaining({
             agentId,
             toolName: "lookup",
             sourceType: ToolType.INTERNAL_TABLE,
             action: ToolAction.LIST_ROWS,
-            errorMessage: expect.stringContaining(
+            errorMessage:
               outcome === "execution-error"
                 ? "Lookup failed"
-                : "Invalid input: expected number, received string"
-            ),
+                : INVALID_TOOL_INPUT_ERROR,
           })
         )
       }

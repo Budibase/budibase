@@ -1,10 +1,4 @@
-import {
-  cache,
-  context,
-  events,
-  getErrorMessage,
-  roles,
-} from "@budibase/backend-core"
+import { cache, context, events, roles } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
@@ -39,6 +33,7 @@ import {
 import type { Context } from "@ai-sdk/provider-utils"
 import { z } from "zod"
 import sdk from "../../.."
+import { INVALID_TOOL_INPUT_ERROR } from "../../../../ai/tools"
 import { createSessionLogIndexer } from "../agentLogs"
 import {
   findLatestUserQuestion,
@@ -788,7 +783,7 @@ const prepareAgentChatRunInternal = async ({
                 events.action.aiAgentToolFailed({
                   ...eventContext,
                   reason: ActionFailureReason.ERROR,
-                  errorMessage: getErrorMessage(call.error),
+                  errorMessage: INVALID_TOOL_INPUT_ERROR,
                 })
               }
             }
