@@ -15,7 +15,7 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-import { enrichContext, fetch } from "./queries"
+import { enrichContext, enrichParameters, fetch } from "./queries"
 
 jest.mock("../../utils", () => ({
   getEnvironmentVariables: jest.fn(() => ({})),
@@ -51,11 +51,14 @@ describe("queries SDK", () => {
 
   describe("enrichContext", () => {
     it("preserves native null SQL parameters without coercing strings", async () => {
-      const result = await enrichContext(
-        { value: null, text: "null", empty: "", omitted: undefined },
-        {},
-        { preserveNullValues: true }
-      )
+      const result = await enrichParameters({
+        parameters: {
+          value: null,
+          text: "null",
+          empty: "",
+          omitted: undefined,
+        },
+      })
 
       expect(result).toStrictEqual({ value: null, text: "null", empty: "" })
     })
@@ -69,8 +72,8 @@ describe("queries SDK", () => {
     it.each([null, "null", "false", "0", '{"value":1}', "{{ value }}"])(
       "preserves SQL parameter names that match JSON fields with value %s",
       async value => {
-        const result = await enrichContext(
-          {
+        const result = await enrichParameters({
+          parameters: {
             json: value,
             customData: value,
             requestBody: value,
@@ -78,9 +81,8 @@ describe("queries SDK", () => {
             row: value,
             rows: value,
           },
-          { value: "bound value" },
-          { preserveNullValues: true, normalizeJsonFields: false }
-        )
+          inputs: { value: "bound value" },
+        })
 
         const expected = value === "{{ value }}" ? "bound value" : value
         expect(result).toStrictEqual({

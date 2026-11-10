@@ -128,6 +128,16 @@ describe("Test that the object processing works correctly", () => {
 })
 
 describe("Test that JSON string processing works correctly", () => {
+  it("preserves native nulls in unquoted JSON bindings", () => {
+    const output = processJsonStringSync(
+      '{"value":{{ value }},"nested":[{{ value }}],"text":"{{ text }}"}',
+      { value: null, text: "null" },
+      { noEscaping: true, noHelpers: true }
+    )
+
+    expect(output).toEqual({ value: null, nested: [null], text: "null" })
+  })
+
   const options = {
     noEscaping: true,
     noHelpers: true,

@@ -25,6 +25,7 @@ import sdk from "../sdk"
 import {
   QueryEvent,
   QueryEventCtx,
+  QueryEventParameters,
   QueryResponse,
   QueryVariable,
   WorkerCallback,
@@ -115,14 +116,10 @@ class QueryRunner {
 
     // Enrich the parameters with the addition context items.
     // 'user' is now a reserved variable key in mapping parameters
-    const enrichedParameters = await sdk.queries.enrichContext(
+    const enrichedParameters = await sdk.queries.enrichParameters({
       parameters,
-      this.ctx,
-      {
-        preserveNullValues: isSQL(datasourceClone),
-        normalizeJsonFields: !isSQL(datasourceClone),
-      }
-    )
+      inputs: this.ctx,
+    })
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 
     // Parse global headers
@@ -324,10 +321,9 @@ class QueryRunner {
     })
     // enrich parameters with dynamic queries defaults
     const defaultParams = query.parameters || []
-    const preserveNullValues = isSQL(datasource)
     for (let param of defaultParams) {
       const value = currentParameters[param.name]
-      if (!value && !(value === null && preserveNullValues)) {
+      if (value !== null && !value) {
         currentParameters[param.name] = param.default
       }
     }
@@ -408,17 +404,17 @@ class QueryRunner {
   // Builds the display-oriented preview
   async buildPreview(
     fields: RestQueryFields,
-    parameters: Record<string, unknown>
+    parameters: QueryEventParameters
   ): Promise<{ fields: RestQueryFields; config?: RestPreviewConfig }> {
     const envVars = context.getEnvironmentVariables() || {}
     const maskedEnv = Object.fromEntries(
       Object.keys(envVars).map(name => [name, `{{ env.${name} }}`])
     )
     return context.doInEnvironmentContext(maskedEnv, async () => {
-      const previewParameters = await sdk.queries.enrichContext(
+      const previewParameters = await sdk.queries.enrichParameters({
         parameters,
-        this.ctx
-      )
+        inputs: this.ctx,
+      })
       const previewContext = { ...previewParameters, ...this.ctx }
       const config = this.previewConfig
         ? (processObjectSync(
@@ -470,7 +466,6 @@ class QueryRunner {
 
     const staticVars = datasource.config.staticVariables || {}
     const dynamicVars = datasource.config.dynamicVariables || []
-    const preserveNullValues = isSQL(datasource)
     for (let [staticBindingKey, staticBindingValue] of Object.entries(
       staticVars
     )) {
@@ -482,7 +477,6 @@ class QueryRunner {
       const namedValue = parameters[staticBindingKey]
       const shouldOverrideNamed =
         namedValue === undefined ||
-        (namedValue === null && !preserveNullValues) ||
         namedValue === "" ||
         this.doesStaticBindingMatchLocal(namedValue, staticBindingKey)
       if (shouldOverrideNamed) {

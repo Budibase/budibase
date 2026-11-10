@@ -360,7 +360,10 @@ const processJsonTemplateValue = (
   if (typeof value === "string") {
     const binding = bindings.find(binding => binding.token === value)
     if (binding) {
-      const processed = processJsonTemplateString(binding.block, context, opts)
+      const processed = processJsonTemplateString(binding.block, context, {
+        ...opts,
+        stringifyNull: true,
+      })
       return parseRawJsonBinding(processed)
     }
     return processJsonTemplateString(value, context, opts)

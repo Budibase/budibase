@@ -62,6 +62,9 @@ export const HELPERS = [
       if (__opts && __opts.onlyFound && value == null) {
         return __opts.input
       }
+      if (value === null && __opts?.stringifyNull) {
+        return "null"
+      }
       if (value == null || typeof value !== "string") {
         return value == null ? "" : value
       }

@@ -46,7 +46,6 @@ import env from "../../../environment"
 import sdk from "../../../sdk"
 import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
-import { isSQL } from "../../../integrations/utils"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
 import { builderSocket } from "../../../websockets"
@@ -305,29 +304,18 @@ function getAuthConfig(ctx: UserCtx) {
 
 function enrichParameters({
   query,
-  preserveNullValues,
   requestParameters = {},
 }: {
   query: Query
-  preserveNullValues: boolean
   requestParameters?: QueryEventParameters
 }): QueryEventParameters {
-  const paramNotSet = (val: unknown) => val === "" || val == undefined
   // first check parameters are all valid
   validateQueryInputs(requestParameters)
   // make sure parameters are fully enriched with defaults
   for (const parameter of query.parameters) {
     let value = requestParameters[parameter.name]
-    if (
-      value === undefined ||
-      value === "" ||
-      (value === null && !preserveNullValues)
-    ) {
+    if (value === undefined || value === "") {
       value = parameter.default
-    }
-    // SQL interpolation converts empty values to null after datasource defaults.
-    if (!preserveNullValues && query.nullDefaultSupport && paramNotSet(value)) {
-      value = null
     }
     requestParameters[parameter.name] = value
   }
@@ -470,7 +458,6 @@ export async function preview(
     fields: query.fields,
     parameters: enrichParameters({
       query,
-      preserveNullValues: isSQL(datasource),
     }),
     transformer: query.transformer,
     schema: query.schema,
@@ -544,7 +531,6 @@ async function execute(
       pagination: ctx.request.body.pagination,
       parameters: enrichParameters({
         query,
-        preserveNullValues: isSQL(datasource),
         requestParameters: ctx.request.body.parameters,
       }),
       transformer: query.transformer,

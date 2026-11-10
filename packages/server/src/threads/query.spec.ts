@@ -23,7 +23,9 @@ jest.mock("../sdk", () => ({
   default: {
     queries: {
       enrichContext: jest.fn((fields: any) => Promise.resolve(fields)),
-      enrichParameters: jest.fn((params: any) => Promise.resolve(params)),
+      enrichParameters: jest.fn(({ parameters }) =>
+        Promise.resolve(parameters)
+      ),
     },
     datasources: {
       get: jest.fn(),
@@ -59,7 +61,10 @@ import { getIntegration } from "../integrations"
 import { interpolateSQL } from "../integrations/queries/sql"
 import { isSQL } from "../integrations/utils"
 import sdk from "../sdk"
-import { enrichContext } from "../sdk/workspace/queries/queries"
+import {
+  enrichContext,
+  enrichParameters,
+} from "../sdk/workspace/queries/queries"
 import { execute } from "./query"
 import { BodyType, SourceName } from "@budibase/types"
 import type {
@@ -311,7 +316,7 @@ describe("QueryRunner - template datasource URL resolution", () => {
   })
 })
 
-describe("QueryRunner - nullable SQL parameters", () => {
+describe("QueryRunner - nullable parameters", () => {
   interface ParameterTest {
     name: string
     sql: boolean
@@ -336,6 +341,9 @@ describe("QueryRunner - nullable SQL parameters", () => {
     jest.mocked(isSQL).mockImplementation(datasource => !!datasource.isSQL)
     jest.mocked(sdk.queries.enrichContext).mockImplementation(enrichContext)
     jest
+      .mocked(sdk.queries.enrichParameters)
+      .mockImplementation(enrichParameters)
+    jest
       .mocked(interpolateSQL)
       .mockImplementation(async (_source, fields, parameters) => ({
         ...fields,
@@ -344,7 +352,7 @@ describe("QueryRunner - nullable SQL parameters", () => {
     jest.mocked(getIntegration).mockResolvedValue(async () => ({
       read: async (query: {
         bindings?: (string | number | null)[]
-        json?: { amount: string }
+        json?: { amount: string | null }
       }) => [
         { amount: query.bindings ? query.bindings[0] : query.json?.amount },
       ],
@@ -370,7 +378,7 @@ describe("QueryRunner - nullable SQL parameters", () => {
       name: "REST null",
       sql: false,
       parameters: { amount: null },
-      expected: "17",
+      expected: null,
     },
   ])(
     "uses static variables appropriately for $name",
@@ -384,7 +392,7 @@ describe("QueryRunner - nullable SQL parameters", () => {
         },
         fields: {
           sql: "SELECT {{ amount }}",
-          requestBody: '{"amount":"{{ amount }}"}',
+          requestBody: '{"amount":{{ amount }}}',
         },
         parameters,
       })
@@ -414,7 +422,7 @@ describe("QueryRunner - nullable SQL parameters", () => {
       name: "REST null",
       sql: false,
       parameters: { amount: null },
-      expected: "23",
+      expected: null,
     },
   ])(
     "uses nested query defaults appropriately for $name",
@@ -442,7 +450,7 @@ describe("QueryRunner - nullable SQL parameters", () => {
         queryVerb: "read",
         fields: {
           sql: "SELECT {{ amount }}",
-          requestBody: '{"amount":"{{ amount }}"}',
+          requestBody: '{"amount":{{ amount }}}',
         },
         parameters: [{ name: "amount", default: "23" }],
         transformer: null,

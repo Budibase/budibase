@@ -12,6 +12,7 @@ import {
 } from "@budibase/types"
 import nock from "nock"
 import { getCachedVariable } from "../../../../threads/utils"
+import type { QueryEventParameters } from "../../../../threads/definitions"
 import { blacklist, setEnv as setCoreEnv } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import type { MockAgent } from "undici"
@@ -527,6 +528,65 @@ describe("rest", () => {
       },
     })
   })
+
+  it.each<{ parameters: QueryEventParameters; expected: number | null }>([
+    { parameters: { value: null }, expected: null },
+    { parameters: {}, expected: 123 },
+    { parameters: { value: "" }, expected: 123 },
+  ])(
+    "preserves explicit REST nulls and defaults for $parameters",
+    async ({ parameters, expected }) => {
+      const datasource = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "test",
+        source: SourceName.REST,
+        config: {
+          method: "POST",
+          staticVariables: { value: "123", customData: "default" },
+        },
+      })
+
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({ path: "/", method: "POST" })
+        .reply(({ body }) => {
+          expect(JSON.parse(toBodyString(body))).toEqual({
+            value: expected,
+            customData: null,
+            text: "null",
+          })
+          return {
+            statusCode: 200,
+            data: {},
+            responseOptions: { headers: jsonHeaders },
+          }
+        })
+
+      const query = await config.api.query.save({
+        datasourceId: datasource._id!,
+        name: generator.guid(),
+        parameters: [
+          { name: "value", default: "" },
+          { name: "customData", default: "default" },
+          { name: "text", default: "null" },
+        ],
+        queryVerb: "create",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com",
+          bodyType: BodyType.JSON,
+          requestBody:
+            '{"value":{{ value }},"customData":{{ customData }},"text":"{{ text }}"}',
+        },
+      })
+
+      await config.api.query.execute(query._id!, {
+        parameters: { ...parameters, customData: null },
+      })
+    }
+  )
 
   it("should bind object parameters to unquoted json request body fields", async () => {
     const datasource = await config.api.datasource.create({
