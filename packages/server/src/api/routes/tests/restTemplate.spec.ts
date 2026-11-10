@@ -84,8 +84,9 @@ describe("/rest-templates", () => {
   })
 
   it.each(["workspace", "global"])(
-    "allows %s builders to list templates but rejects imports",
+    "allows %s builders to list templates but rejects imports, updates and deletes",
     async scope => {
+      const template = await uploadExampleTemplate(`${scope} builder API`)
       const builder = await config.globalUser({
         builder:
           scope === "global"
@@ -104,6 +105,16 @@ describe("/rest-templates", () => {
           .set(config.defaultHeaders())
           .field("name", "Example API")
           .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
+          .expect(403)
+        await request
+          .put(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
+          .field("name", "Updated Example API")
+          .field("description", "An updated example API")
+          .expect(403)
+        await request
+          .delete(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
           .expect(403)
       })
     }
