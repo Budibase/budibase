@@ -348,6 +348,10 @@ describe("resumeOperation", () => {
           },
         })
 
+        expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+        expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        expect(aiAgentExecutedMock).not.toHaveBeenCalled()
+        expect(enqueueLifecycleMock).not.toHaveBeenCalled()
         const [request] =
           await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("failed")
