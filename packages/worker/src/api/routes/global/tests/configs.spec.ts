@@ -592,6 +592,28 @@ describe("configs", () => {
       delete body._rev
       expect(body).toEqual(expected)
     })
+
+    it("does not expose legacy LiteLLM credentials without authentication", async () => {
+      const legacySettings = settings()
+      await saveConfig({
+        ...legacySettings,
+        config: {
+          ...legacySettings.config,
+          liteLLM: {
+            keyId: "key-id-proof",
+            secretKey: "secret-proof",
+          },
+        },
+      })
+
+      const res = await config.request
+        .get("/api/global/configs/public")
+        .set(config.tenantIdHeaders())
+        .expect(200)
+
+      expect(res.body.config).not.toHaveProperty("liteLLM")
+      expect(JSON.stringify(res.body)).not.toContain("secret-proof")
+    })
   })
 
   describe("POST /api/global/configs/upload/:type/:name", () => {

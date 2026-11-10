@@ -36,7 +36,7 @@ function jobToJobInformation(job: Job): JobInformation {
 export interface TestQueueMessage<T = any>
   extends Pick<
     Job<T>,
-    "id" | "timestamp" | "queue" | "data" | "opts" | "discard"
+    "id" | "timestamp" | "queue" | "data" | "opts" | "discard" | "remove"
   > {
   manualTrigger?: boolean
   _isDiscarded?: boolean
@@ -53,6 +53,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
   _opts?: QueueOptions
   _messages: TestQueueMessage<T>[]
   _queuedJobIds: Set<string>
+  _activeMessages: Set<TestQueueMessage<T>>
   _emitter: NodeJS.EventEmitter<{
     message: [TestQueueMessage<T>]
     completed: [Job<T>, any]
@@ -77,6 +78,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     this._runCount = 0
     this._addCount = 0
     this._queuedJobIds = new Set<string>()
+    this._activeMessages = new Set()
     this._attempts = opts?.defaultJobOptions?.attempts || 1
   }
 
@@ -114,6 +116,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         })
       }
 
+      this._activeMessages.add(message)
       const maxAttempts = this._attempts
 
       async function retryFunc(fnc: any, attempt = 0) {
@@ -143,6 +146,7 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         console.error(e)
         this._emitter.emit("error", message as Job<T>, e)
       }
+      this._activeMessages.delete(message)
 
       this._runCount++
       const jobId = message.opts?.jobId?.toString()
@@ -195,6 +199,19 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
         opts,
         discard: async () => {
           message._isDiscarded = true
+        },
+        remove: async () => {
+          const index = this._messages.indexOf(message)
+          if (index === -1) {
+            return
+          }
+          this._messages.splice(index, 1)
+          if (jobId) {
+            this._queuedJobIds.delete(jobId)
+          }
+          if (!this._activeMessages.has(message)) {
+            this._addCount--
+          }
         },
       }
       this._messages.push(message)
@@ -302,6 +319,31 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
 
   async count() {
     return this._messages.length
+  }
+
+  private waitingMessages() {
+    return this._messages.filter(m => !this._activeMessages.has(m))
+  }
+
+  async getWaitingCount() {
+    return this.waitingMessages().length
+  }
+
+  async getWaiting(start = 0, end = -1) {
+    const stop = end < 0 ? undefined : end + 1
+    return this.waitingMessages().slice(start, stop) as Job[]
+  }
+
+  async empty() {
+    const waiting = this.waitingMessages()
+    for (const message of waiting) {
+      const jobId = message.opts?.jobId?.toString()
+      if (jobId) {
+        this._queuedJobIds.delete(jobId)
+      }
+    }
+    this._addCount -= waiting.length
+    this._messages = this._messages.filter(m => this._activeMessages.has(m))
   }
 
   async getCompletedCount() {

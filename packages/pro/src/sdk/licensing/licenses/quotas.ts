@@ -34,6 +34,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(7),
       ...quotas.appBackupRetentionDays(7),
       ...quotas.escalationDurationDays(7),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.PREMIUM_PLUS]: {
@@ -59,6 +60,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(7),
       ...quotas.appBackupRetentionDays(7),
       ...quotas.escalationDurationDays(7),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.PREMIUM_MAX]: {
@@ -84,6 +86,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(7),
       ...quotas.appBackupRetentionDays(7),
       ...quotas.escalationDurationDays(7),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.PREMIUM_PLUS_TRIAL]: {
@@ -109,6 +112,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(7),
       ...quotas.appBackupRetentionDays(7),
       ...quotas.escalationDurationDays(7),
+      ...quotas.platformActionsRetentionDays(15),
     },
   },
   [PlanType.PRO]: {
@@ -134,6 +138,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(1),
       ...quotas.appBackupRetentionDays(0),
       ...quotas.escalationDurationDays(3),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.PRO_MAX]: {
@@ -159,6 +164,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(1),
       ...quotas.appBackupRetentionDays(0),
       ...quotas.escalationDurationDays(3),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.TEAM]: {
@@ -184,6 +190,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(30),
       ...quotas.appBackupRetentionDays(90),
       ...quotas.escalationDurationDays(30),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.BUSINESS]: {
@@ -209,6 +216,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(30),
       ...quotas.appBackupRetentionDays(UNLIMITED),
       ...quotas.escalationDurationDays(30),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.BUSINESS_PLUS]: undefined,
@@ -235,6 +243,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(UNLIMITED),
       ...quotas.appBackupRetentionDays(UNLIMITED),
       ...quotas.escalationDurationDays(UNLIMITED),
+      ...quotas.platformActionsRetentionDays(365),
     },
   },
   [PlanType.ENTERPRISE_BASIC_TRIAL]: {
@@ -260,6 +269,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(15),
       ...quotas.appBackupRetentionDays(15),
       ...quotas.escalationDurationDays(UNLIMITED),
+      ...quotas.platformActionsRetentionDays(15),
     },
   },
   [PlanType.ENTERPRISE]: {
@@ -285,6 +295,7 @@ const CLOUD_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(UNLIMITED),
       ...quotas.appBackupRetentionDays(UNLIMITED),
       ...quotas.escalationDurationDays(UNLIMITED),
+      ...quotas.platformActionsRetentionDays(365),
     },
   },
 }
@@ -317,6 +328,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(30),
       ...quotas.appBackupRetentionDays(30),
       ...quotas.escalationDurationDays(7),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.PREMIUM_MAX]: {
@@ -342,6 +354,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(30),
       ...quotas.appBackupRetentionDays(30),
       ...quotas.escalationDurationDays(7),
+      ...quotas.platformActionsRetentionDays(1),
     },
   },
   [PlanType.PREMIUM_PLUS_TRIAL]: {
@@ -367,6 +380,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(30),
       ...quotas.appBackupRetentionDays(30),
       ...quotas.escalationDurationDays(7),
+      ...quotas.platformActionsRetentionDays(15),
     },
   },
   [PlanType.PRO]: {
@@ -392,6 +406,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(7),
       ...quotas.appBackupRetentionDays(7),
       ...quotas.escalationDurationDays(3),
+      ...quotas.platformActionsRetentionDays(1),
     },
   },
   [PlanType.PRO_MAX]: {
@@ -417,6 +432,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(7),
       ...quotas.appBackupRetentionDays(7),
       ...quotas.escalationDurationDays(3),
+      ...quotas.platformActionsRetentionDays(1),
     },
   },
   [PlanType.TEAM]: {
@@ -442,6 +458,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(30),
       ...quotas.appBackupRetentionDays(90),
       ...quotas.escalationDurationDays(30),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.BUSINESS]: {
@@ -467,6 +484,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(UNLIMITED),
       ...quotas.appBackupRetentionDays(UNLIMITED),
       ...quotas.escalationDurationDays(30),
+      ...quotas.platformActionsRetentionDays(1),
     },
   },
   [PlanType.BUSINESS_PLUS]: {
@@ -492,6 +510,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(30),
       ...quotas.appBackupRetentionDays(UNLIMITED),
       ...quotas.escalationDurationDays(30),
+      ...quotas.platformActionsRetentionDays(30),
     },
   },
   [PlanType.ENTERPRISE_BASIC]: {
@@ -517,6 +536,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(UNLIMITED),
       ...quotas.appBackupRetentionDays(UNLIMITED),
       ...quotas.escalationDurationDays(UNLIMITED),
+      ...quotas.platformActionsRetentionDays(365),
     },
   },
   [PlanType.ENTERPRISE_BASIC_TRIAL]: {
@@ -542,6 +562,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(15),
       ...quotas.appBackupRetentionDays(15),
       ...quotas.escalationDurationDays(UNLIMITED),
+      ...quotas.platformActionsRetentionDays(15),
     },
   },
   [PlanType.ENTERPRISE]: {
@@ -567,6 +588,7 @@ const SELF_QUOTAS: PlanQuotas = {
       ...quotas.automationLogRetentionDays(UNLIMITED),
       ...quotas.appBackupRetentionDays(UNLIMITED),
       ...quotas.escalationDurationDays(UNLIMITED),
+      ...quotas.platformActionsRetentionDays(365),
     },
   },
 }

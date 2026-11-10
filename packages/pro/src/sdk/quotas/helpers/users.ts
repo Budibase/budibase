@@ -27,7 +27,7 @@ export const addUsers = async <T>(
     },
   ]
 
-  if (changeCreator > 0) {
+  if (changeCreator !== 0) {
     quotasToChange.push({
       change: changeCreator,
       name: StaticQuotaName.CREATORS,

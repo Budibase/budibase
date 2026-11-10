@@ -10,7 +10,8 @@ const validateQueryInputs = (parameters: QueryEventParameters) => {
       )
     }
     if (value !== null && typeof value === "object") {
-      for (const nestedValue of Object.values(value)) {
+      for (const [nestedKey, nestedValue] of Object.entries(value)) {
+        validateValue({ key, value: nestedKey })
         validateValue({ key, value: nestedValue })
       }
     }

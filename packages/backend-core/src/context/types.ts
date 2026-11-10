@@ -1,4 +1,11 @@
-import { IdentityContext, License, Snippet, Table, VM } from "@budibase/types"
+import {
+  IdentityContext,
+  License,
+  PlatformActionSessionMetadataScope,
+  Snippet,
+  Table,
+  VM,
+} from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 
@@ -13,6 +20,7 @@ export type ContextMap = {
   isScim?: boolean
   ip?: string
   automationId?: string
+  platformActionSession?: PlatformActionSessionMetadataScope
   isMigrating?: boolean
   vm?: VM
   cleanup?: (() => void | Promise<void>)[]

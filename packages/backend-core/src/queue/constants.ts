@@ -13,6 +13,7 @@ export enum JobQueue {
   ESCALATION = "escalationQueue",
   AGENT_REQUEST_TRACKING = "agentRequestTrackingQueue",
   AGENT_TEST_RUN = "agentTestRunQueue",
+  PLATFORM_ACTION_SESSION_INDEXING = "platformActionSessionIndexingQueue",
   CONVERSATION_ATTACHMENT_CLEANUP = "conversationAttachmentCleanupQueue",
   CONVERSATION_ATTACHMENT_INGESTION = "conversationAttachmentIngestionQueue",
 }

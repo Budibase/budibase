@@ -5,8 +5,12 @@ import {
   FetchProjectsResponse,
   ImportProjectRequest,
   ImportProjectResponse,
+  PreviewProjectAssignmentRequest,
+  PreviewProjectAssignmentResponse,
   UpdateProjectRequest,
   UpdateProjectResponse,
+  UpdateProjectAssignmentRequest,
+  UpdateProjectAssignmentResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -90,6 +94,33 @@ export class ProjectAPI extends TestAPI {
       `/api/projects/${project._id}`,
       {
         body: project,
+        expectations,
+      }
+    )
+  }
+
+  previewAssignment = async (
+    request: PreviewProjectAssignmentRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._post<PreviewProjectAssignmentResponse>(
+      "/api/projects/assignments/preview",
+      {
+        body: request,
+        expectations,
+      }
+    )
+  }
+
+  updateAssignment = async (
+    resourceId: string,
+    request: UpdateProjectAssignmentRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._put<UpdateProjectAssignmentResponse>(
+      `/api/projects/assignments/${resourceId}`,
+      {
+        body: request,
         expectations,
       }
     )

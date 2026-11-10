@@ -46,6 +46,7 @@ import {
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
 import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
+import { authorizeS3Upload, MAX_S3_KEY_BYTES } from "./s3Upload"
 
 const ACTIVE_CONTENT_EXTENSIONS = new Set([
   "html",
@@ -762,7 +763,7 @@ export const serveServiceWorker = async function (ctx: Ctx) {
 }
 
 export const getSignedUploadURL = async function (
-  ctx: Ctx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
+  ctx: UserCtx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
 ) {
   // Ensure datasource is valid
   let datasource
@@ -776,19 +777,39 @@ export const getSignedUploadURL = async function (
     ctx.throw(400, "The specified datasource could not be found")
   }
 
+  const { bucket, componentId, key, screenId } = ctx.request.body || {}
+  if (
+    typeof bucket !== "string" ||
+    !bucket ||
+    typeof key !== "string" ||
+    !key
+  ) {
+    ctx.throw(400, "bucket and key values are required")
+  }
+  if (
+    [componentId, screenId].some(value => typeof value !== "string" || !value)
+  ) {
+    ctx.throw(400, "componentId and screenId values are required")
+  }
+
+  if (Buffer.byteLength(key, "utf8") > MAX_S3_KEY_BYTES) {
+    ctx.throw(400, "S3 object keys cannot exceed 1024 bytes")
+  }
+
+  await authorizeS3Upload({
+    ctx,
+    datasourceId: ctx.params.datasourceId,
+    bucket,
+    componentId,
+    key,
+    screenId,
+  })
+
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
   const awsRegion = (datasource?.config?.region || "eu-west-1") as string
   if (datasource?.source === "S3") {
-    const { bucket, key } = ctx.request.body || {}
-    if (!bucket || !key) {
-      ctx.throw(400, "bucket and key values are required")
-    }
-    const datasourceBucket = datasource?.config?.bucket
-    if (datasourceBucket && datasourceBucket !== bucket) {
-      ctx.throw(400, "bucket must match the datasource configuration")
-    }
     try {
       let endpoint = datasource?.config?.endpoint
       if (endpoint && !utils.urlHasProtocol(endpoint)) {
@@ -797,6 +818,7 @@ export const getSignedUploadURL = async function (
       const s3 = new S3({
         region: awsRegion,
         endpoint: endpoint,
+        requestChecksumCalculation: "WHEN_REQUIRED",
         credentials: {
           accessKeyId: datasource?.config?.accessKeyId as string,
           secretAccessKey: datasource?.config?.secretAccessKey as string,
@@ -804,10 +826,11 @@ export const getSignedUploadURL = async function (
       })
       const params = { Bucket: bucket, Key: key }
       signedUrl = await getSignedUrl(s3, new PutObjectCommand(params))
+      const encodedKey = key.split("/").map(encodeURIComponent).join("/")
       if (endpoint) {
-        publicUrl = `${endpoint}/${bucket}/${key}`
+        publicUrl = `${endpoint}/${bucket}/${encodedKey}`
       } else {
-        publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+        publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${encodedKey}`
       }
     } catch (error: any) {
       ctx.throw(400, error)

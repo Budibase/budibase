@@ -16,15 +16,24 @@
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
   import { onMount } from "svelte"
+  import { goto, params } from "@roxi/routify"
+  import { getProjectSetupRequest } from "@/helpers/workspaceHomeNavigation"
+  import ProjectSetupBackButton from "@/components/projects/ProjectSetupBackButton.svelte"
 
   export let workspaceId: string
 
   let promise = getPackage(workspaceId)
   let sideNav: SideNav
   let showInviteUsersModal = false
+  $: projectSetupReturn = getProjectSetupRequest({
+    workspaceId,
+    homeUrl: $params.returnTo,
+  })
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
   $: canManageConnections =
-    $auth.user != null && sdk.users.canCreateApps($auth.user)
+    $auth.user != null &&
+    (sdk.users.canCreateApps($auth.user) ||
+      sdk.users.isBuilder($auth.user, workspaceId))
   $: if ($bb.settings.open && showInviteUsersModal) {
     showInviteUsersModal = false
   }
@@ -80,6 +89,15 @@
     <div class="loading"></div>
   {:then _}
     <div class="body">
+      {#if projectSetupReturn}
+        <ProjectSetupBackButton
+          onReturn={() => {
+            if (projectSetupReturn) {
+              $goto(projectSetupReturn.url)
+            }
+          }}
+        />
+      {/if}
       <slot />
     </div>
   {:catch error}

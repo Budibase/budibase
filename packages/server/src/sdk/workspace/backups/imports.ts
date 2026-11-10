@@ -17,6 +17,8 @@ import {
   LiteLLMKeyConfig,
   Row,
   RowAttachment,
+  RowValue,
+  RuntimeDocumentTypes,
   WebhookTriggerInputs,
 } from "@budibase/types"
 import fs from "fs"
@@ -156,7 +158,11 @@ export async function untarFile(file: { path: string }) {
   return tmpPath
 }
 
-export async function decryptFiles(path: string, password: string) {
+export async function decryptFiles(
+  path: string,
+  password: string,
+  { maxOutputBytes = Infinity }: { maxOutputBytes?: number } = {}
+) {
   try {
     const processDirectory = async (dirPath: string) => {
       for (let file of await fsp.readdir(dirPath)) {
@@ -165,7 +171,10 @@ export async function decryptFiles(path: string, password: string) {
           const stats = await fsp.lstat(inputPath)
           if (stats.isFile() && inputPath.endsWith(".enc")) {
             const outputPath = inputPath.replace(/\.enc$/, "")
-            await encryption.decryptFile(inputPath, outputPath, password)
+            await encryption.decryptFile(inputPath, outputPath, password, {
+              maxOutputBytes,
+            })
+            maxOutputBytes -= (await fsp.stat(outputPath)).size
             await fsp.rm(inputPath)
           } else if (stats.isDirectory()) {
             await processDirectory(inputPath)
@@ -242,6 +251,22 @@ async function sanitizeLiteLLMImportData(db: Database) {
         c.liteLLMModelId !== IMPORT_PENDING_LITELLM_MODEL_ID
     ).length,
   })
+}
+
+// exports made before these were filtered out can still contain them
+async function removeRuntimeDocuments(db: Database) {
+  const responses = await Promise.all(
+    RuntimeDocumentTypes.map(type => db.allDocs(docIds.getDocParams(type)))
+  )
+  const refs = responses.flatMap(response =>
+    response.rows.map(row => ({
+      _id: row.id,
+      _rev: (row.value as RowValue).rev,
+    }))
+  )
+  if (refs.length) {
+    await db.bulkRemove(refs)
+  }
 }
 
 export const importApp: ImportWorkspaceFn = async (
@@ -354,6 +379,7 @@ export const importApp: ImportWorkspaceFn = async (
   if (!ok) {
     throw "Error loading database dump from template."
   }
+  await removeRuntimeDocuments(db)
   if (importOpts.updateAttachmentColumns) {
     await updateAttachmentColumns(prodAppId, db)
   }

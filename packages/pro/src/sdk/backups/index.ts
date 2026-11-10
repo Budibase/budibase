@@ -16,5 +16,6 @@ export default {
   ...backups,
   processing,
   init,
+  initQueue: queueInit,
   getBackupQueue,
 }

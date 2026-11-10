@@ -1,5 +1,12 @@
+import { readUIMessageStream, type UIMessage } from "ai"
+import { context as backendContext, events } from "@budibase/backend-core"
 import { automations } from "@budibase/shared-core"
-import { ToolExecutionPrincipal } from "@budibase/types"
+import {
+  ActionFailureReason,
+  type ActionSourceContext,
+  ToolExecutionPrincipal,
+  ToolType,
+} from "@budibase/types"
 import { run } from "../../automations/steps/ai/agent"
 import sdk from "../../sdk"
 
@@ -27,8 +34,13 @@ jest.mock("../../sdk", () => ({
         prepareAgentChatRun: jest.fn(),
       },
     },
+    platformActions: jest.requireActual(
+      "../../sdk/workspace/platformActions/metadata"
+    ),
   },
 }))
+
+let mockAssistantParts: unknown[] = []
 
 jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
@@ -43,7 +55,7 @@ jest.mock("ai", () => {
               done = true
               return {
                 done: false,
-                value: { role: "assistant", parts: [] },
+                value: { role: "assistant", parts: mockAssistantParts },
               }
             }
             return { done: true, value: undefined }
@@ -89,7 +101,10 @@ const mockAgentRun = ({
   const index = jest.fn().mockResolvedValue(undefined)
   prepareAgentChatRunMock.mockResolvedValue({
     isSuspended: () => suspended,
-    sessionLogIndexer: { index },
+    sessionLogIndexer: {
+      index,
+      getRequestIds: jest.fn().mockReturnValue(["response-id"]),
+    },
     stream: jest.fn().mockResolvedValue({
       toUIMessageStream: jest.fn().mockReturnValue({}),
       response: responseError
@@ -113,6 +128,7 @@ describe("automation agent step", () => {
   beforeEach(() => {
     prepareAgentChatRunMock.mockReset()
     mockAgentRun()
+    mockAssistantParts = []
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {})
   })
 
@@ -255,6 +271,264 @@ describe("automation agent step", () => {
       })
     )
     expect(index).toHaveBeenCalledTimes(1)
+  })
+
+  it("marks the agent session as awaiting escalation when the run is suspended", async () => {
+    const aiAgentExecutedSpy = jest
+      .spyOn(events.action, "aiAgentExecuted")
+      .mockImplementation(() => {})
+    mockAgentRun({ suspended: true })
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Create the row" },
+      appId: "test",
+      automationId: "automation-id",
+      stepId: "agent-step",
+      context: { _stepResults: [], state: {} },
+      emitter,
+    })
+
+    expect(aiAgentExecutedSpy).toHaveBeenCalledWith({
+      agentId: "agent-id",
+      sourceType: "agent_session",
+      sourceId: result.sessionId,
+      sessionId: result.sessionId,
+      requestId: "response-id",
+      awaitingEscalation: true,
+    })
+  })
+
+  describe("session metadata", () => {
+    const captureSessionMetadata = () => {
+      const captured: unknown[] = []
+      const capture = (source: ActionSourceContext) => {
+        captured.push(backendContext.getPlatformActionSessionMetadata(source))
+      }
+      jest.spyOn(events.action, "aiAgentExecuted").mockImplementation(capture)
+      jest.spyOn(events.action, "aiAgentFailed").mockImplementation(capture)
+      return captured
+    }
+
+    it("records the agent and the parent automation as the session's origin", async () => {
+      const captured = captureSessionMetadata()
+
+      await run({
+        inputs: { agentId: "agent-id", prompt: "Create the row" },
+        appId: "test",
+        automationId: "automation-id",
+        automationName: "Ticket triage",
+        stepId: "agent-step",
+        // The inherited requester is not the direct origin
+        context: {
+          _stepResults: [],
+          state: {},
+          user: { _id: "us_1", firstName: "John", lastName: "Doe" },
+        },
+        emitter,
+      })
+
+      expect(captured).toEqual([
+        {
+          asset: { type: "agent", id: "agent-id", label: "Test Agent" },
+          triggeredBy: {
+            type: "automation",
+            id: "automation-id",
+            label: "Ticket triage",
+          },
+        },
+      ])
+    })
+
+    it("runs the agent inside the session scope so its tool calls share the session's origin", async () => {
+      const toolMetadata: unknown[] = []
+      const toolExecuted = jest
+        .spyOn(events.action, "aiAgentToolExecuted")
+        .mockImplementation(event => {
+          toolMetadata.push(
+            backendContext.getPlatformActionSessionMetadata({
+              sourceType: "agent_session",
+              sourceId: event.sessionId,
+            })
+          )
+        })
+      const prepare = prepareAgentChatRunMock.getMockImplementation()!
+      prepareAgentChatRunMock.mockImplementationOnce(async params => {
+        jest.mocked(readUIMessageStream).mockImplementationOnce(() =>
+          Object.assign(new ReadableStream<UIMessage>(), {
+            async *[Symbol.asyncIterator](): AsyncGenerator<UIMessage> {
+              await Promise.resolve()
+              events.action.aiAgentToolExecuted({
+                agentId: "agent-id",
+                sessionId: params.sessionId,
+                operationId: "operation-id",
+                toolName: "create_row",
+                sourceType: ToolType.INTERNAL_TABLE,
+              })
+              yield { id: "message-id", role: "assistant", parts: [] }
+            },
+          })
+        )
+        return prepare(params)
+      })
+
+      const result = await run({
+        inputs: { agentId: "agent-id", prompt: "Create the row" },
+        appId: "test",
+        automationId: "automation-id",
+        automationName: "Ticket triage",
+        stepId: "agent-step",
+        context: { _stepResults: [], state: {} },
+        emitter,
+      })
+
+      expect(toolExecuted).toHaveBeenCalledTimes(1)
+      expect(toolExecuted).toHaveBeenCalledWith({
+        agentId: "agent-id",
+        sessionId: result.sessionId,
+        operationId: "operation-id",
+        toolName: "create_row",
+        sourceType: ToolType.INTERNAL_TABLE,
+      })
+      expect(toolMetadata).toEqual([
+        {
+          asset: { type: "agent", id: "agent-id", label: "Test Agent" },
+          triggeredBy: {
+            type: "automation",
+            id: "automation-id",
+            label: "Ticket triage",
+          },
+        },
+      ])
+    })
+
+    it("keeps the agent snapshot when the run fails after loading the agent", async () => {
+      const captured = captureSessionMetadata()
+      prepareAgentChatRunMock.mockRejectedValueOnce(new Error("boom"))
+
+      await run({
+        inputs: { agentId: "agent-id", prompt: "Create the row" },
+        appId: "test",
+        automationId: "automation-id",
+        automationName: "Ticket triage",
+        stepId: "agent-step",
+        context: { _stepResults: [], state: {} },
+        emitter,
+      })
+
+      expect(captured).toEqual([
+        expect.objectContaining({
+          asset: { type: "agent", id: "agent-id", label: "Test Agent" },
+        }),
+      ])
+    })
+
+    it("records no agent snapshot when the agent cannot be loaded", async () => {
+      const captured = captureSessionMetadata()
+      jest
+        .mocked(sdk.ai.agents.getOrThrow)
+        .mockRejectedValueOnce(new Error("Agent not found"))
+
+      await run({
+        inputs: { agentId: "agent-id", prompt: "Create the row" },
+        appId: "test",
+        automationId: "automation-id",
+        automationName: "Ticket triage",
+        stepId: "agent-step",
+        context: { _stepResults: [], state: {} },
+        emitter,
+      })
+
+      expect(captured).toEqual([
+        {
+          asset: undefined,
+          triggeredBy: {
+            type: "automation",
+            id: "automation-id",
+            label: "Ticket triage",
+          },
+        },
+      ])
+    })
+  })
+
+  it.each([
+    [
+      "a tool call is left incomplete",
+      () => {
+        mockAssistantParts = [
+          {
+            type: "tool-list_rows",
+            toolCallId: "call-1",
+            state: "input-available",
+            input: {},
+          },
+        ]
+      },
+    ],
+    [
+      "the run produces no output",
+      () => mockAgentRun({ textError: makeNoOutputError() }),
+    ],
+    [
+      "usage fails without a response",
+      () =>
+        mockAgentRun({
+          text: "",
+          usageError: new Error("Usage metadata unavailable"),
+        }),
+    ],
+  ])(
+    "records the agent session as failed when %s",
+    async (_scenario, setup) => {
+      const aiAgentFailedSpy = jest
+        .spyOn(events.action, "aiAgentFailed")
+        .mockImplementation(() => {})
+      setup()
+
+      const result = await run({
+        inputs: { agentId: "agent-id", prompt: "Create the row" },
+        appId: "test",
+        automationId: "automation-id",
+        stepId: "agent-step",
+        context: { _stepResults: [], state: {} },
+        emitter,
+      })
+
+      expect(result.success).toBe(false)
+      expect(aiAgentFailedSpy).toHaveBeenCalledTimes(1)
+      expect(aiAgentFailedSpy).toHaveBeenCalledWith({
+        agentId: "agent-id",
+        sourceType: "agent_session",
+        sourceId: result.sessionId,
+        sessionId: result.sessionId,
+        requestId: "response-id",
+        reason: ActionFailureReason.ERROR,
+        errorMessage: result.response,
+      })
+    }
+  )
+
+  it("does not mark a completed agent run as awaiting escalation", async () => {
+    const aiAgentExecutedSpy = jest
+      .spyOn(events.action, "aiAgentExecuted")
+      .mockImplementation(() => {})
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Create the row" },
+      appId: "test",
+      automationId: "automation-id",
+      stepId: "agent-step",
+      context: { _stepResults: [], state: {} },
+      emitter,
+    })
+
+    expect(aiAgentExecutedSpy).toHaveBeenCalledWith({
+      agentId: "agent-id",
+      sourceType: "agent_session",
+      sourceId: result.sessionId,
+      sessionId: result.sessionId,
+      requestId: "response-id",
+    })
   })
 
   it("passes structured output configuration through the shared runner", async () => {

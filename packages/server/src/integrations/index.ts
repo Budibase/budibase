@@ -7,7 +7,6 @@ import sqlServer from "./microsoftSqlServer"
 import s3 from "./s3"
 import airtable from "./airtable"
 import mysql from "./mysql"
-import arangodb from "./arangodb"
 import rest from "./rest"
 import googlesheets from "./googlesheets"
 import firebase from "./firebase"
@@ -21,6 +20,7 @@ import {
   IntegrationBase,
   DatasourcePlus,
 } from "@budibase/types"
+import type { IntegrationFactory } from "../utilities/pluginRunner"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
 import cloneDeep from "lodash/cloneDeep"
@@ -42,19 +42,16 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.SNOWFLAKE]: snowflake.schema,
   [SourceName.ORACLE]: oracle.schema,
   /* deprecated - not available through UI */
-  [SourceName.ARANGODB]: arangodb.schema,
   [SourceName.AIRTABLE]: airtable.schema,
   /* un-used */
   [SourceName.BUDIBASE]: undefined,
 }
 
 type IntegrationBaseConstructor = new (...args: any[]) => IntegrationBase
-type DatasourcePlusConstructor = new (...args: any[]) => DatasourcePlus
-
-export function isDatasourcePlusConstructor(
-  integration: IntegrationBaseConstructor
-): integration is DatasourcePlusConstructor {
-  return !!integration.prototype.query
+export function isDatasourcePlus(
+  integration: IntegrationBase
+): integration is DatasourcePlus {
+  return "query" in integration && typeof integration.query === "function"
 }
 
 const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
@@ -74,7 +71,6 @@ const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
     [SourceName.SNOWFLAKE]: snowflake.integration,
     [SourceName.ORACLE]: oracle.integration,
     /* deprecated - not available through UI */
-    [SourceName.ARANGODB]: arangodb.integration,
     [SourceName.AIRTABLE]: airtable.integration,
     /* un-used */
     [SourceName.BUDIBASE]: undefined,
@@ -116,21 +112,16 @@ export async function getDefinitions() {
 
 export async function getIntegration(
   integration: SourceName
-): Promise<IntegrationBaseConstructor> {
+): Promise<IntegrationFactory> {
   if (INTEGRATIONS[integration]) {
-    return INTEGRATIONS[integration]
+    const Integration = INTEGRATIONS[integration]
+    return async config => new Integration(config)
   }
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.DATASOURCE)
     for (let plugin of plugins) {
       if (plugin.name === integration) {
-        // need to use commonJS require due to its dynamic runtime nature
-        const retrieved = await getDatasourcePlugin(plugin)
-        if (retrieved.integration) {
-          return retrieved.integration
-        } else {
-          return retrieved
-        }
+        return await getDatasourcePlugin(plugin)
       }
     }
   }

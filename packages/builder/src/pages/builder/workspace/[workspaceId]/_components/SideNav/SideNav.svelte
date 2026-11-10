@@ -32,6 +32,7 @@
   } from "@/stores/builder"
   import { functionStore } from "@/stores/builder/functions"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
+  import { getEnabledActivityTabs } from "@/pages/builder/workspace/[workspaceId]/activity/activityTabs"
   import {
     workspacesStore,
     licensing,
@@ -46,7 +47,6 @@
   import {
     type Datasource,
     type FunctionSummary,
-    FeatureFlag,
     type Query,
     type Table,
     type UIAutomation,
@@ -550,7 +550,7 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              {#if $featureFlags[FeatureFlag.AI_AGENT_ACTIVITY]}
+              {#if getEnabledActivityTabs($featureFlags).length > 0}
                 <SideNavLink
                   icon="pulse"
                   text="Activity"

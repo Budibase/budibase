@@ -48,6 +48,7 @@ export enum DocumentType {
   AGENT_LOG_SESSION = "agentlogsession",
   AGENT_LOG_REQUEST = "agentlogrequest",
   AGENT_REQUEST = "agentrequest",
+  REQUEST = "req",
   AGENT_TEST_SUITE = "agenttestsuite",
   AGENT_TEST_RUN = "agenttestrun",
   AGENT_KNOWLEDGE_SOURCE_SYNC_STATE = "agentknowledgesync",
@@ -65,6 +66,8 @@ export enum DocumentType {
   ESCALATION_NOTIFICATION = "escalation_notification",
   FUNCTION = "fn",
   FUNCTION_RUN_LOG = "log_fn",
+  PLATFORM_ACTION_EVENT = "platform_action",
+  PLATFORM_ACTION_SESSION = "platform_action_session",
 }
 
 // these are the core documents that make up the data, design
@@ -91,6 +94,14 @@ export const DocumentTypesToImport: DocumentType[] = [
   // Deprecated but still copied
   DocumentType.INSTANCE,
   DocumentType.LAYOUT,
+]
+
+// runtime records that belong to the workspace DB (dev or prod) that created
+// them - never replicated between dev and prod, or included in exports
+export const RuntimeDocumentTypes: DocumentType[] = [
+  DocumentType.AGENT_REQUEST,
+  DocumentType.ESCALATION_CONTEXT,
+  DocumentType.ESCALATION_NOTIFICATION,
 ]
 
 export enum InternalTable {

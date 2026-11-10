@@ -5,12 +5,32 @@ import { describe, expect, it } from "vitest"
 
 import {
   bindingsToCompletions,
+  buildSectionHeader,
   EditorModes,
   hbAutocomplete,
   hbInsert,
   htmlInsert,
   jsInsert,
 } from ".."
+
+describe("buildSectionHeader", () => {
+  it("renders the section name as text rather than HTML", () => {
+    const sectionName = '<img src="x" onerror="alert(1)">'
+
+    const header = buildSectionHeader(null, sectionName, "Database", 1).header()
+
+    expect(header.querySelector("img")).toBeNull()
+    expect(header.querySelector("span")?.textContent).toBe(sectionName)
+  })
+
+  it("supports icon values containing whitespace", () => {
+    const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'"
+
+    const header = buildSectionHeader(null, "Tools", icon, 1).header()
+
+    expect(header.querySelector("span")?.textContent).toBe("Tools")
+  })
+})
 
 describe("hbAutocomplete", () => {
   it("finds bindings by their datasource category", () => {

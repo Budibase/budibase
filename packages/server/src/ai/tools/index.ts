@@ -1,15 +1,22 @@
-import { getErrorMessage } from "@budibase/backend-core"
+import { validateTypes } from "@ai-sdk/provider-utils"
+import { type ModelMessage, type Tool, type ToolSet } from "ai"
+import { events, getErrorMessage } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
+  ActionFailureReason,
+  ActionType,
   PermissionLevel,
   PermissionType,
   ToolAction,
   ToolExecutionPrincipal,
   ToolType,
+  type ActionAiAgentToolExecuted,
   type AgentExecutionContext,
   type AgentOperationToolConfig,
   type ToolExecutionPolicy,
 } from "@budibase/types"
-import { type ModelMessage, type Tool, type ToolSet } from "ai"
+
+export const INVALID_TOOL_INPUT_ERROR = "Tool input is invalid"
 
 export interface ToolAuthorization {
   permissionType: PermissionType
@@ -21,6 +28,7 @@ export interface ToolAuthorization {
 export interface AiToolDefinition {
   name: string
   readableName?: string
+  resourceName?: string
   tableId?: string
   sourceId?: string
   description: string
@@ -31,6 +39,7 @@ export interface AiToolDefinition {
   action?: ToolAction
   executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
+  authoritativeInputSchema?: Tool["inputSchema"]
   requesterRedactedTool?: Tool
   filterResult?: (
     result: unknown,
@@ -68,17 +77,29 @@ export const resolveToolExecutionPrincipal = (
     ? ToolExecutionPrincipal.ADMIN
     : (config?.executionPrincipal ?? tool.executionPolicy.defaultPrincipal)
 
-const getToolFailure = (result: unknown): string | undefined => {
-  if (!result || typeof result !== "object" || !("error" in result)) {
+const getToolFailure = ({
+  result,
+  toolDef,
+}: {
+  result: unknown
+  toolDef: AiToolDefinition
+}): string | undefined => {
+  if (!result || typeof result !== "object") {
     return
   }
 
-  const { error } = result
-  if (error == null || error === false) {
-    return
+  if ("error" in result && result.error != null && result.error !== false) {
+    return getErrorMessage(result.error) || "Tool execution failed"
   }
 
-  return getErrorMessage(error) || "Tool execution failed"
+  if (
+    toolDef.sourceType === ToolType.AUTOMATION &&
+    toolDef.action === ToolAction.TRIGGER &&
+    "success" in result &&
+    result.success === false
+  ) {
+    return "Automation execution failed"
+  }
 }
 
 const logToolExecution = (
@@ -98,11 +119,66 @@ const logToolExecution = (
     ...(error !== undefined && { error: getErrorMessage(error) }),
   })
 
-const wrapTool = (
-  toolDef: AiToolDefinition,
-  runtime?: ToolAuthorizationRuntime,
+const getToolLabel = (toolDef: AiToolDefinition) => {
+  if (toolDef.resourceName && toolDef.action) {
+    const action =
+      toolDef.action === ToolAction.TRIGGER
+        ? "Run workflow"
+        : toolDef.action.replace(/_/g, " ")
+    return `${action.charAt(0).toUpperCase()}${action.slice(1)} - ${toolDef.resourceName}`
+  }
+  return toolDef.readableName
+}
+
+const toolEventContext = ({
+  toolDef,
+  runtime: { executionContext },
+}: {
+  toolDef: AiToolDefinition
+  runtime: ToolAuthorizationRuntime
+}) => {
+  const toolLabel = getToolLabel(toolDef)
+  return {
+    agentId: executionContext.agentId,
+    sessionId: executionContext.conversationId,
+    operationId: executionContext.operationId,
+    toolName: toolDef.name,
+    ...(toolLabel && { toolLabel }),
+    sourceType: toolDef.sourceType,
+    ...(toolDef.action && { action: toolDef.action }),
+  }
+}
+
+export const getToolEventContexts = ({
+  tools,
+  runtimes,
+}: {
+  tools: AiToolDefinition[]
+  runtimes: Map<string, ToolAuthorizationRuntime>
+}): Record<string, ActionAiAgentToolExecuted> => {
+  const contexts: Record<string, ActionAiAgentToolExecuted> = {}
+  for (const toolDef of tools) {
+    const runtime = runtimes.get(toolDef.name)
+    if (runtime) {
+      contexts[toolDef.name] = toolEventContext({ toolDef, runtime })
+    }
+  }
+  return contexts
+}
+
+type RunTool = <T>(execute: () => Promise<T>) => Promise<T>
+
+const wrapTool = ({
+  toolDef,
+  runtime,
+  gate,
+  runTool,
+}: {
+  toolDef: AiToolDefinition
+  runtime?: ToolAuthorizationRuntime
   gate?: EscalationGateRuntime
-): Tool => {
+  runTool: RunTool
+}): Tool => {
   const execute = toolDef.tool.execute
   if (!execute) {
     return toolDef.tool
@@ -123,8 +199,35 @@ const wrapTool = (
         principal: runtime.principal,
       })
     }
+    const isMutating =
+      toolDef.authorization?.permissionLevel === PermissionLevel.WRITE ||
+      toolDef.authorization?.permissionLevel === PermissionLevel.EXECUTE
+    const isRequesterRedacted = toolDef.requesterRedactedTool === toolDef.tool
+    let validatedInput = input
+    if (isMutating) {
+      const schema =
+        toolDef.authoritativeInputSchema ?? toolDef.tool.inputSchema
+      try {
+        validatedInput = await validateTypes({
+          value: input,
+          schema,
+        })
+      } catch (error) {
+        if (runtime) {
+          events.action.aiAgentToolFailed({
+            ...toolEventContext({ toolDef, runtime }),
+            reason: ActionFailureReason.ERROR,
+            errorMessage: INVALID_TOOL_INPUT_ERROR,
+          })
+        }
+        if (isRequesterRedacted) {
+          throw new Error(INVALID_TOOL_INPUT_ERROR)
+        }
+        throw error
+      }
+    }
     if (gate) {
-      const gateResult = await gate.intercept(input, {
+      const gateResult = await gate.intercept(validatedInput, {
         toolCallId: options?.toolCallId ?? "",
         messages: options?.messages,
       })
@@ -132,26 +235,42 @@ const wrapTool = (
         return gateResult
       }
     }
-    try {
-      const result = await execute(input, options)
-      const failureMessage = getToolFailure(result)
-      if (failureMessage) {
-        throw new Error(failureMessage)
+    const executeTool = async () => {
+      try {
+        const result = await execute(validatedInput, options)
+        const failureMessage = getToolFailure({ result, toolDef })
+        if (failureMessage) {
+          throw new Error(failureMessage)
+        }
+        const authorizedResult =
+          runtime && toolDef.filterResult
+            ? await toolDef.filterResult(result, runtime)
+            : result
+        if (runtime) {
+          logToolExecution("success", toolDef, runtime)
+          events.action.aiAgentToolExecuted(
+            toolEventContext({ toolDef, runtime })
+          )
+        }
+        return authorizedResult
+      } catch (error) {
+        if (runtime) {
+          logToolExecution("error", toolDef, runtime, error)
+          events.action.aiAgentToolFailed({
+            ...toolEventContext({ toolDef, runtime }),
+            reason: ActionFailureReason.ERROR,
+            errorMessage: getErrorMessage(error),
+          })
+        }
+        throw error
       }
-      const authorizedResult =
-        runtime && toolDef.filterResult
-          ? await toolDef.filterResult(result, runtime)
-          : result
-      if (runtime) {
-        logToolExecution("success", toolDef, runtime)
-      }
-      return authorizedResult
-    } catch (error) {
-      if (runtime) {
-        logToolExecution("error", toolDef, runtime, error)
-      }
-      throw error
     }
+    // Automation triggers are already metered as automation steps.
+    return await runTool(async () =>
+      toolDef.action === ToolAction.TRIGGER
+        ? await executeTool()
+        : await quotas.addAction(ActionType.AI_AGENT, executeTool)
+    )
   }
 
   return {
@@ -165,10 +284,23 @@ export const toToolSet = (
   runtimes: Map<string, ToolAuthorizationRuntime> = new Map(),
   gates: Map<string, EscalationGateRuntime> = new Map()
 ): ToolSet => {
+  // Quota checks and increments are not atomic. Keep each execution and its
+  // accounting together, including triggers that update the same quota.
+  let pending: Promise<unknown> = Promise.resolve()
+  const runTool: RunTool = execute => {
+    const result = pending.then(execute)
+    pending = result.catch(() => undefined)
+    return result
+  }
   return Object.fromEntries(
     tools.map(toolDef => [
       toolDef.name,
-      wrapTool(toolDef, runtimes.get(toolDef.name), gates.get(toolDef.name)),
+      wrapTool({
+        toolDef,
+        runtime: runtimes.get(toolDef.name),
+        gate: gates.get(toolDef.name),
+        runTool,
+      }),
     ])
   )
 }

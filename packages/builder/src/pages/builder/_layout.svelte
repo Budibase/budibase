@@ -88,6 +88,10 @@
     return $isActive("./auth") || $isActive("./invite") || $isActive("./admin")
   }
 
+  const isOnPortalPage = () => {
+    return $isActive("/apps") || $isActive("/requests")
+  }
+
   // Determine if the user is on a trial and show the banner.
   const updateBannerVisibility = () => {
     if (!$auth.user && $licensing.showTrialBanner) {
@@ -195,7 +199,7 @@
       if (
         isBuilder &&
         ($workspacesStore.apps.length === 0 || !hasEditableWorkspaces) &&
-        !$isActive("./apps") &&
+        !isOnPortalPage() &&
         !$isActive("./onboarding") &&
         !$isActive("./get-started")
       ) {
@@ -206,7 +210,7 @@
       }
 
       // Redirect non-builders to apps unless they're already there
-      if (!isBuilder && !$isActive("./apps")) {
+      if (!isBuilder && !isOnPortalPage()) {
         return { type: "redirect", path: "/apps" }
       }
 
@@ -218,7 +222,7 @@
         isBuilder &&
         $workspacesStore.apps.length &&
         !isOnWorkspaceRoute &&
-        !$isActive("./apps")
+        !isOnPortalPage()
       ) {
         // Find first editable app to redirect to
         const defaultApp = $enrichedApps.find(app => app.editable)

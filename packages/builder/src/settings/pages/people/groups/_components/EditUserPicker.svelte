@@ -1,11 +1,10 @@
 <script lang="ts">
   import { Button, Popover, notifications } from "@budibase/bbui"
   import UserGroupPicker from "@/components/settings/UserGroupPicker.svelte"
-  import { createPaginationStore } from "@/helpers/pagination"
+  import { API } from "@/api"
   import { groups } from "@/stores/portal/groups"
-  import { users } from "@/stores/portal/users"
+  import type { StrippedUser, User } from "@budibase/types"
   import { untrack } from "svelte"
-  import { derived } from "svelte/store"
 
   interface Props {
     groupId: string
@@ -17,44 +16,69 @@
   let popoverAnchor = $state<HTMLDivElement>()
   let popover = $state<Popover>()
   let searchTerm = $state("")
-  let prevSearch = $state<string | undefined>()
-  const pageInfo = createPaginationStore()
-  const currentPage = derived(pageInfo, value => value.page)
+  let userList = $state<(User | StrippedUser)[]>([])
+  let nextPage = $state<string | undefined>()
+  let hasNextPage = $state(false)
+  let loading = $state(false)
+  let pageLoadFailed = $state(false)
+  // the page to request again when retrying a failed load
+  let failedBookmark: string | undefined
+  // used to discard responses from outdated searches
+  let searchId = 0
 
   const group = $derived($groups.find(x => x._id === groupId))
 
-  const searchUsers = async ({
-    page,
+  const fetchUsers = async ({
     search,
+    bookmark,
   }: {
-    page?: string | null
     search: string
+    bookmark?: string
   }) => {
-    if ($pageInfo.loading) {
-      return
-    }
-    // need to remove the page if they've started searching
-    if (search && !prevSearch) {
-      pageInfo.reset()
-      page = undefined
-    }
-    prevSearch = search
+    const id = bookmark ? searchId : ++searchId
+    loading = true
+    pageLoadFailed = false
     try {
-      pageInfo.loading()
-      await users.search({
-        bookmark: page || undefined,
+      const response = await API.searchUsers({
+        bookmark,
         query: { string: { email: search } },
       })
-      pageInfo.fetched(!!$users.hasNextPage, $users.nextPage || "")
+      if (id !== searchId) {
+        return
+      }
+      userList = bookmark ? [...userList, ...response.data] : response.data
+      hasNextPage = !!response.hasNextPage
+      nextPage = response.nextPage || undefined
     } catch (error) {
-      notifications.error("Error getting user list")
+      if (id === searchId) {
+        pageLoadFailed = true
+        failedBookmark = bookmark
+        notifications.error("Error getting user list")
+      }
+    } finally {
+      if (id === searchId) {
+        loading = false
+      }
     }
   }
 
+  const loadMore = () => {
+    if (loading || pageLoadFailed || !hasNextPage || !nextPage) {
+      return
+    }
+    fetchUsers({ search: searchTerm, bookmark: nextPage })
+  }
+
+  const retry = () => {
+    if (loading) {
+      return
+    }
+    fetchUsers({ search: searchTerm, bookmark: failedBookmark })
+  }
+
   $effect(() => {
-    const page = $currentPage
-    const search = searchTerm || ""
-    untrack(() => searchUsers({ page, search }))
+    const search = searchTerm
+    untrack(() => fetchUsers({ search }))
   })
 </script>
 
@@ -66,7 +90,13 @@
     bind:searchTerm
     labelKey="email"
     selected={group?.users?.map(user => user._id)}
-    list={$users.data}
+    list={userList}
+    hasMore={hasNextPage && !pageLoadFailed}
+    {loading}
+    onLoadMore={loadMore}
+    preserveOrder
+    loadFailed={pageLoadFailed}
+    onRetry={retry}
     on:select={async e => {
       await groups.addUser(groupId, e.detail)
       onUsersUpdated()

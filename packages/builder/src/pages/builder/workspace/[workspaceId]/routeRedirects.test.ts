@@ -1,12 +1,24 @@
 import { render, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import ActivityIndex from "./activity/index.svelte"
 import AgentIndex from "./agent/index.svelte"
 import AutomationIndex from "./automation/index.svelte"
 import DesignIndex from "./design/index.svelte"
 import WorkspaceIndex from "./index.svelte"
 
-const mocks = vi.hoisted(() => ({
-  redirect: vi.fn(),
+const mocks = vi.hoisted(() => {
+  const { writable } = require("svelte/store")
+  return {
+    redirect: vi.fn(),
+    featureFlags: writable({
+      AI_AGENT_ACTIVITY: true,
+      PLATFORM_ACTIONS: false,
+    }),
+  }
+})
+
+vi.mock("@/stores/portal", () => ({
+  featureFlags: mocks.featureFlags,
 }))
 
 vi.mock("@roxi/routify", async () => {
@@ -20,6 +32,7 @@ vi.mock("@roxi/routify", async () => {
 describe("workspace route redirects", () => {
   beforeEach(() => {
     mocks.redirect.mockReset()
+    mocks.featureFlags.set({ AI_AGENT_ACTIVITY: true, PLATFORM_ACTIONS: false })
     window.history.replaceState({}, "", "/")
   })
 
@@ -57,5 +70,11 @@ describe("workspace route redirects", () => {
     render(AgentIndex)
 
     expect(mocks.redirect).toHaveBeenCalledWith("../home?type=agent")
+  })
+
+  it("redirects the activity landing page to the requests tab", () => {
+    render(ActivityIndex)
+
+    expect(mocks.redirect).toHaveBeenCalledWith("./requests")
   })
 })

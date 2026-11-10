@@ -8,6 +8,7 @@ describe("query parameter enrichment", () => {
     '"{{ user.email }}"',
     '{"nested":"{{ user.email }}"}',
     '["safe", "{{ user.email }}"]',
+    '{"{{ user.email }}":"safe"}',
     '{"nested":[{"value":"{{ user.email }}"}]}',
   ])("rejects runtime bindings in %s", value => {
     const requestParameters: QueryEventParameters = JSON.parse(

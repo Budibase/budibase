@@ -1,10 +1,11 @@
 <script lang="ts">
-  import type { AgentRequestStatus } from "@budibase/types"
   import ActivityStatusBadge from "./ActivityStatusBadge.svelte"
+  import type { ActivityStatus } from "./activityStatus"
 
   export let row: {
-    status: AgentRequestStatus
+    status: ActivityStatus
+    statusLabel: string
   }
 </script>
 
-<ActivityStatusBadge status={row.status} />
+<ActivityStatusBadge status={row.status} label={row.statusLabel} />

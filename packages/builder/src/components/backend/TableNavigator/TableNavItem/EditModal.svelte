@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { cloneDeep } from "lodash/fp"
   import { get } from "svelte/store"
   import { tables, datasources } from "@/stores/builder"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
-  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import type { Table } from "@budibase/types"
 
   interface ModalHandle {
@@ -30,19 +28,11 @@
 
   let originalName = $state("")
   let updatedName = $state("")
-  let originalProjectIds: string[] = $state([])
-  let projectIds: string[] = $state([])
-  const hasChanges = $derived(
-    updatedName !== originalName ||
-      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)
-  )
+  const hasChanges = $derived(updatedName !== originalName)
 
   async function save() {
-    const updatedTable = cloneDeep(table)
-    updatedTable.name = updatedName
-    if (JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)) {
-      updatedTable.projectIds = projectIds
-    }
+    const { projectIds: _projectIds, ...tableWithoutProjectIds } = table
+    const updatedTable = { ...tableWithoutProjectIds, name: updatedName }
     await tables.save(updatedTable)
     await datasources.fetch()
     notifications.success("Table updated successfully")
@@ -61,8 +51,6 @@
     error = ""
     originalName = table.name + ""
     updatedName = table.name + ""
-    originalProjectIds = table.projectIds || []
-    projectIds = [...originalProjectIds]
   }
 
   const confirmEditTableName = (event: SubmitEvent) => {
@@ -86,7 +74,6 @@
         on:input={checkValid}
         {error}
       />
-      <ProjectSelect bind:value={projectIds} />
     </form>
   </ModalContent>
 </Modal>

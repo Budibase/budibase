@@ -804,6 +804,50 @@ describe("agent teams integration provisioning", () => {
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
     })
 
+    it("appends the error to the streamed reply when the turn fails", async () => {
+      mockedWebhookChat.mockImplementationOnce(
+        async ({ chat, onAssistantStream }) => {
+          async function* partialAnswerStream() {
+            yield "Partial answer"
+          }
+          await onAssistantStream!(partialAnswerStream())
+          return {
+            messages: [
+              ...chat.messages,
+              {
+                id: "assistant-1",
+                role: "assistant",
+                parts: [{ type: "text", text: "Partial answer" }],
+              },
+            ],
+            assistantText: "Partial answer",
+            title: "Mock conversation",
+            failed: true,
+          }
+        }
+      )
+
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-failed-turn",
+          type: "message",
+          text: "hello teams",
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(response.body.messages).toEqual([
+        "Partial answer\n\nSorry, something went wrong while processing your request.",
+      ])
+    })
+
     it.each([false, true])(
       "sends personal reply sources through the activity service URL (streaming: %s)",
       async streaming => {
@@ -893,7 +937,7 @@ describe("agent teams integration provisioning", () => {
             role: "assistant",
             parts: [{ type: "text", text: "Answer with private sources" }],
           },
-        ] as any,
+        ],
         assistantText: "Answer with private sources",
         ragSources: [
           {
@@ -928,13 +972,12 @@ describe("agent teams integration provisioning", () => {
         },
       })
 
-      expect(response.body.messages).toContain("Answer with private sources")
-      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(response.body.messages).toEqual(["Answer with private sources"])
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
 
-    it("does not append Teams RAG source links when downloads are disabled", async () => {
+    it("shows personal reply source names without links when downloads are disabled", async () => {
       mockedWebhookChat.mockResolvedValueOnce({
         messages: [
           {
@@ -942,7 +985,7 @@ describe("agent teams integration provisioning", () => {
             role: "assistant",
             parts: [{ type: "text", text: "Answer without links" }],
           },
-        ] as any,
+        ],
         assistantText: "Answer without links",
         allowKnowledgeSourceDownload: false,
         ragSources: [
@@ -973,10 +1016,83 @@ describe("agent teams integration provisioning", () => {
         },
       })
 
-      expect(response.body.messages).toContain("Answer without links")
-      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(response.body.messages).toEqual([
+        "Answer without links",
+        JSON.stringify({
+          type: "card",
+          title: "Sources",
+          children: [{ type: "text", text: "Source.pdf" }],
+        }),
+      ])
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
+    })
+
+    it("keeps personal reply source names when a download link cannot be generated", async () => {
+      mockedGetFileUrlForAgent
+        .mockRejectedValueOnce(new Error("Source file is unavailable"))
+        .mockResolvedValueOnce("https://example.com/source.pdf")
+      mockedWebhookChat.mockResolvedValueOnce({
+        messages: [
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Answer with sources" }],
+          },
+        ],
+        assistantText: "Answer with sources",
+        allowKnowledgeSourceDownload: true,
+        ragSources: [
+          {
+            sourceId: "source-1",
+            fileId: "file-1",
+            filename: "Unavailable [Source]\n@Draft.pdf",
+          },
+          {
+            sourceId: "source-2",
+            fileId: "file-2",
+            filename: "Available source.pdf",
+          },
+        ],
+        title: "Mock conversation",
+      })
+
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-rag-unavailable",
+          type: "message",
+          text: "hello teams",
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(response.body.messages).toEqual([
+        "Answer with sources",
+        JSON.stringify({
+          type: "card",
+          title: "Sources",
+          children: [
+            { type: "text", text: "Unavailable Source Draft.pdf" },
+            {
+              type: "actions",
+              children: [
+                {
+                  type: "link_button",
+                  label: "Available source.pdf",
+                  url: "https://example.com/source.pdf",
+                },
+              ],
+            },
+          ],
+        }),
+      ])
     })
 
     it("replaces the channel working indicator with the assistant reply in team channels", async () => {

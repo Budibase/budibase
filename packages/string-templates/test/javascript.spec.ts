@@ -24,6 +24,15 @@ describe("Javascript", () => {
       expect(output).toBe(3)
     })
 
+    it("does not execute a block JavaScript helper when helpers are disabled", () => {
+      const code = Buffer.from('return "executed"').toString("base64")
+      const template = `{{#js "${code}"}}{{/js}}`
+
+      expect(processStringSync(template, {}, { noHelpers: true })).toBe(
+        template
+      )
+    })
+
     it("should be able to use primitive bindings", () => {
       const output = processJS(`return $("foo")`, {
         foo: "bar",
