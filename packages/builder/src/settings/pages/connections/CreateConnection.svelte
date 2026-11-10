@@ -22,13 +22,6 @@
     ...customRenderers,
     { column: "more", component: RestTemplateActionsRenderer },
   ]
-  const importedSchema = {
-    icon: { width: "40px" },
-    name: { width: "200px" },
-    description: { width: "1fr" },
-    connect: { width: "100px", align: "Right" },
-    more: { width: "40px", align: "Right" },
-  }
   const prebuiltSchema = {
     icon: { width: "40px" },
     name: { width: "200px" },
@@ -37,6 +30,10 @@
   }
 
   $: locked = $bb.settings.locked
+  $: isAdmin = sdk.users.isAdmin($auth.user)
+  $: importedSchema = isAdmin
+    ? { ...prebuiltSchema, more: { width: "40px", align: "Right" } }
+    : prebuiltSchema
 
   $: importedTemplates = $restTemplates.templates
     .filter(template => template.custom)
@@ -74,7 +71,7 @@
             on:change={event => (searchValue = event.detail)}
           />
         </div>
-        {#if sdk.users.isAdmin($auth.user)}
+        {#if isAdmin}
           <Button size="M" cta on:click={importSpec}>Import OpenAPI spec</Button
           >
         {/if}
