@@ -12,11 +12,13 @@ import {
   getScreenDocId,
 } from "./fixtures"
 import { API } from "@/api"
+import { initialise } from "@/stores/builder"
 
 vi.mock("@/api", () => {
   return {
     API: {
       fetchAppRoutes: vi.fn(),
+      fetchAppPackage: vi.fn(),
     },
   }
 })
@@ -28,16 +30,30 @@ vi.mock("@/stores/builder", async () => {
   const workspaceAppStore = {}
 
   return {
+    initialise: vi.fn(),
     navigationStore,
     workspaceAppStore,
   }
 })
+
+const defer = () => {
+  let resolve
+  const promise = new Promise(res => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
 
 describe("Workspace Meta Store", () => {
   beforeEach(async ctx => {
     vi.clearAllMocks()
 
     const workspaceStore = new WorkspaceMetaStore()
+    API.fetchAppPackage.mockReset()
+    initialise.mockReset()
+    initialise.mockImplementation(pkg =>
+      workspaceStore.syncWorkspacePackage(pkg)
+    )
     ctx.test = {
       get store() {
         return get(workspaceStore)
@@ -159,5 +175,139 @@ describe("Workspace Meta Store", () => {
       ...INITIAL_WORKSPACE_META_STATE,
       ...fakeMetadata,
     })
+  })
+
+  it("refreshes the current workspace package", async ctx => {
+    const original = generateAppPackage({ name: "Original workspace" })
+    const refreshed = {
+      ...original,
+      application: { ...original.application, name: "Refreshed workspace" },
+    }
+    ctx.test.workspaceStore.syncWorkspacePackage(original)
+    API.fetchAppPackage.mockResolvedValueOnce(refreshed)
+
+    const applied = await ctx.test.workspaceStore.refresh()
+
+    expect(applied).toBe(true)
+    expect(ctx.test.store.name).toBe("Refreshed workspace")
+    expect(initialise).toHaveBeenCalledExactlyOnceWith(refreshed)
+  })
+
+  it("keeps the next workspace when an earlier refresh finishes", async ctx => {
+    const original = generateAppPackage({ name: "Original workspace" })
+    const destination = generateAppPackage({ name: "Destination workspace" })
+    const pending = defer()
+    ctx.test.workspaceStore.syncWorkspacePackage(original)
+    API.fetchAppPackage.mockReturnValueOnce(pending.promise)
+    const refreshing = ctx.test.workspaceStore.refresh()
+
+    ctx.test.workspaceStore.reset()
+    ctx.test.workspaceStore.syncWorkspacePackage(destination)
+    pending.resolve(original)
+    const applied = await refreshing
+
+    expect(applied).toBe(false)
+    expect(ctx.test.store.appId).toBe(destination.application.appId)
+    expect(ctx.test.store.name).toBe("Destination workspace")
+    expect(initialise).not.toHaveBeenCalled()
+  })
+
+  it("ignores a refresh from an earlier visit to the same workspace", async ctx => {
+    const original = generateAppPackage({ name: "Before navigation" })
+    const destination = generateAppPackage({ name: "Destination workspace" })
+    const revisited = {
+      ...original,
+      application: { ...original.application, name: "After returning" },
+    }
+    const pending = defer()
+    ctx.test.workspaceStore.syncWorkspacePackage(original)
+    API.fetchAppPackage.mockReturnValueOnce(pending.promise)
+    const refreshing = ctx.test.workspaceStore.refresh()
+
+    ctx.test.workspaceStore.reset()
+    ctx.test.workspaceStore.syncWorkspacePackage(destination)
+    ctx.test.workspaceStore.reset()
+    ctx.test.workspaceStore.syncWorkspacePackage(revisited)
+    pending.resolve(original)
+    const applied = await refreshing
+
+    expect(applied).toBe(false)
+    expect(ctx.test.store.appId).toBe(original.application.appId)
+    expect(ctx.test.store.name).toBe("After returning")
+    expect(initialise).not.toHaveBeenCalled()
+  })
+
+  it("keeps the latest package when overlapping refreshes finish out of order", async ctx => {
+    const original = generateAppPackage({ name: "Original workspace" })
+    const refreshed = {
+      ...original,
+      application: { ...original.application, name: "Latest workspace" },
+    }
+    const older = defer()
+    const newer = defer()
+    ctx.test.workspaceStore.syncWorkspacePackage(original)
+    API.fetchAppPackage
+      .mockReturnValueOnce(older.promise)
+      .mockReturnValueOnce(newer.promise)
+    const olderRefresh = ctx.test.workspaceStore.refresh()
+    const newerRefresh = ctx.test.workspaceStore.refresh()
+
+    newer.resolve(refreshed)
+    const newerApplied = await newerRefresh
+    older.resolve(original)
+    const olderApplied = await olderRefresh
+
+    expect(newerApplied).toBe(true)
+    expect(olderApplied).toBe(false)
+    expect(ctx.test.store.name).toBe("Latest workspace")
+    expect(initialise).toHaveBeenCalledExactlyOnceWith(refreshed)
+  })
+
+  it("keeps reset metadata when a pending refresh finishes", async ctx => {
+    const original = generateAppPackage({})
+    const pending = defer()
+    ctx.test.workspaceStore.syncWorkspacePackage(original)
+    API.fetchAppPackage.mockReturnValueOnce(pending.promise)
+    const refreshing = ctx.test.workspaceStore.refresh()
+
+    ctx.test.workspaceStore.reset()
+    pending.resolve(original)
+    const applied = await refreshing
+
+    expect(applied).toBe(false)
+    expect(ctx.test.store).toStrictEqual(INITIAL_WORKSPACE_META_STATE)
+    expect(initialise).not.toHaveBeenCalled()
+  })
+
+  it("preserves a newer package loaded for the current workspace", async ctx => {
+    const original = generateAppPackage({ name: "Original workspace" })
+    const replacement = {
+      ...original,
+      application: { ...original.application, name: "Replacement workspace" },
+    }
+    const pending = defer()
+    ctx.test.workspaceStore.syncWorkspacePackage(original)
+    API.fetchAppPackage.mockReturnValueOnce(pending.promise)
+    const refreshing = ctx.test.workspaceStore.refresh()
+
+    ctx.test.workspaceStore.syncWorkspacePackage(replacement)
+    pending.resolve(original)
+    const applied = await refreshing
+
+    expect(applied).toBe(false)
+    expect(ctx.test.store.name).toBe("Replacement workspace")
+    expect(initialise).not.toHaveBeenCalled()
+  })
+
+  it("propagates a failed refresh request", async ctx => {
+    const original = generateAppPackage({})
+    ctx.test.workspaceStore.syncWorkspacePackage(original)
+    API.fetchAppPackage.mockRejectedValueOnce(new Error("Refresh unavailable"))
+
+    await expect(ctx.test.workspaceStore.refresh()).rejects.toThrow(
+      "Refresh unavailable"
+    )
+    expect(ctx.test.store.appId).toBe(original.application.appId)
+    expect(initialise).not.toHaveBeenCalled()
   })
 })
