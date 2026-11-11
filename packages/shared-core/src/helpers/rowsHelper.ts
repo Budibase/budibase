@@ -80,10 +80,7 @@ export function convertDataToExportFormat(
   )
 
   const getHeader = (key: string) => {
-    const customHeader = Object.prototype.hasOwnProperty.call(
-      customHeaders,
-      key
-    )
+    const customHeader = Object.hasOwn(customHeaders, key)
       ? customHeaders[key]
       : undefined
     return customHeader || key
