@@ -11,7 +11,9 @@ export function convertRowsToCsv(
   delimiter = ",",
   headers = columns
 ): string {
-  const headerLine = headers.join(delimiter)
+  const headerLine = headers
+    .map(header => escapeCsvValue(header, delimiter))
+    .join(delimiter)
   const dataLines = rows.map(row =>
     columns.map(h => escapeCsvValue(row[h], delimiter)).join(delimiter)
   )
@@ -77,6 +79,20 @@ export function convertDataToExportFormat(
     }, {})
   )
 
+  const exportHeaders: { [key: string]: string } = {}
+  const usedHeaders = new Set<string>()
+  for (const key of schemaKeys) {
+    const header = customHeaders[key] || key
+    let uniqueHeader = header
+    let suffix = 2
+    while (usedHeaders.has(uniqueHeader)) {
+      uniqueHeader = `${header} (${suffix})`
+      suffix++
+    }
+    exportHeaders[key] = uniqueHeader
+    usedHeaders.add(uniqueHeader)
+  }
+
   switch (format) {
     case "csv":
       return convertRowsToCsv(
@@ -89,7 +105,12 @@ export function convertDataToExportFormat(
       return convertRowsToJson(
         filteredRows.map(row =>
           Object.entries(row).reduce((renamedRow: Row, [key, value]) => {
-            renamedRow[customHeaders[key] || key] = value
+            Object.defineProperty(renamedRow, exportHeaders[key], {
+              value,
+              enumerable: true,
+              writable: true,
+              configurable: true,
+            })
             return renamedRow
           }, {})
         )
