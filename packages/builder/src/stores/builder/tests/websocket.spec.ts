@@ -33,10 +33,16 @@ const mocks = vi.hoisted(() => ({
   notifySuccess: vi.fn(),
 }))
 
+const builder = vi.hoisted(() => {
+  const store: { websocket?: object } = {}
+  return store
+})
+
 vi.mock("@budibase/frontend-core", () => ({
   createWebsocket: () => mocks.socket,
 }))
 vi.mock("@/stores/builder", () => ({
+  builderStore: builder,
   userStore: { init: mocks.initUsers },
   deploymentStore: { load: mocks.loadDeployments },
   workspaceDeploymentStore: { fetch: mocks.fetchPublishStatus },
@@ -53,6 +59,7 @@ describe("builder publication events", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.socket.connected = true
+    builder.websocket = mocks.socket
     mocks.loadWorkspaces.mockResolvedValue()
   })
 
@@ -84,6 +91,41 @@ describe("builder publication events", () => {
     )
     const pending = publish()
     mocks.socket.connected = false
+    builder.websocket = undefined
+    finishLoading()
+    await pending
+
+    expect(mocks.loadDeployments).not.toHaveBeenCalled()
+    expect(mocks.fetchPublishStatus).not.toHaveBeenCalled()
+    expect(mocks.notifySuccess).not.toHaveBeenCalled()
+  })
+
+  it("refreshes deployments during a temporary disconnection while the builder remains active", async () => {
+    let finishLoading = () => {}
+    mocks.loadWorkspaces.mockReturnValue(
+      new Promise<void>(resolve => {
+        finishLoading = resolve
+      })
+    )
+    const pending = publish()
+    mocks.socket.connected = false
+    finishLoading()
+    await pending
+
+    expect(mocks.loadDeployments).toHaveBeenCalledOnce()
+    expect(mocks.fetchPublishStatus).toHaveBeenCalledOnce()
+    expect(mocks.notifySuccess).toHaveBeenCalledOnce()
+  })
+
+  it("ignores a pending publication from a replaced builder socket", async () => {
+    let finishLoading = () => {}
+    mocks.loadWorkspaces.mockReturnValue(
+      new Promise<void>(resolve => {
+        finishLoading = resolve
+      })
+    )
+    const pending = publish()
+    builder.websocket = {}
     finishLoading()
     await pending
 

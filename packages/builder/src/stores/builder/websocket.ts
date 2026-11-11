@@ -1,6 +1,7 @@
 import { createWebsocket } from "@budibase/frontend-core"
 import { notifyWorkspaceReady } from "./workspaceReady"
 import {
+  builderStore,
   automationStore,
   userStore,
   workspaceStore,
@@ -124,7 +125,7 @@ export const createBuilderWebsocket = (appId: string) => {
     BuilderSocketEvent.AppPublishChange,
     async ({ user, published }: { user: UIUser; published: boolean }) => {
       await workspacesStore.load()
-      if (!socket.connected) {
+      if (builderStore.websocket !== socket) {
         return
       }
       if (published) {
