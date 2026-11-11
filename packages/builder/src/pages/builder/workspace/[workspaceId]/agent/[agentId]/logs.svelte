@@ -13,6 +13,7 @@
   import LogsSessionList from "./LogComponents/LogsSessionList.svelte"
   import { formatLogDateForApi, formatTime } from "./LogComponents/utils"
   import { notifications } from "@budibase/bbui"
+  import download from "downloadjs"
 
   const AGENT_LOG_SESSION_LIMIT = 75
 
@@ -22,6 +23,7 @@
   let expandedStepId = $state<string | null>(null)
   let expandedStepDetail = $state<AgentLogRequestDetail | null>(null)
   let expandedStepLoading = $state(false)
+  let downloadingSession = $state(false)
   let hasMore = $state(false)
   let nextBookmark = $state<string | undefined>(undefined)
 
@@ -238,6 +240,32 @@
     await loadStepDetail(entry)
   }
 
+  async function downloadSession(session: AgentLogSession) {
+    const agentId = $selectedAgent?._id
+    if (!agentId || downloadingSession) return
+
+    downloadingSession = true
+    try {
+      const actions = await Promise.all(
+        session.entries.map(async entry => ({
+          entry,
+          detail: await API.fetchAgentLogDetail(agentId, entry.requestId),
+        }))
+      )
+      const data = JSON.stringify({ session, actions }, null, 2)
+      download(
+        new Blob([data], { type: "application/json" }),
+        `agent-session-${session.sessionId}.json`,
+        "application/json"
+      )
+    } catch (error) {
+      console.error("Failed to download session logs", error)
+      notifications.error("Failed to download session logs")
+    } finally {
+      downloadingSession = false
+    }
+  }
+
   $effect(() => {
     statusFilter
     dateRange
@@ -275,7 +303,9 @@
         {expandedStepId}
         {expandedStepDetail}
         {expandedStepLoading}
+        {downloadingSession}
         onToggleStep={toggleStep}
+        onDownloadSession={downloadSession}
       />
     </div>
   </div>
