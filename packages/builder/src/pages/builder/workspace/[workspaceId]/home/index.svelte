@@ -153,7 +153,6 @@
   let highlightedRowId: string | null = null
 
   let hasMounted = false
-  let projectsRequestedForWorkspace = ""
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
@@ -885,18 +884,6 @@
     }
   }
 
-  const loadProjects = async (workspaceId: string) => {
-    try {
-      projectsRequestedForWorkspace = workspaceId
-      await projectsStore.ensureFetched(workspaceId)
-    } catch (error) {
-      projectsRequestedForWorkspace = ""
-      if ($workspaceStore.appId === workspaceId && projectsEnabled) {
-        notifications.error(getErrorMessage(error) || "Unable to load projects")
-      }
-    }
-  }
-
   $: if (
     setupSettingsContext &&
     !$bb.settings.open &&
@@ -990,15 +977,6 @@
   $: showBudibaseAIMetric =
     budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
-  $: if (
-    hasMounted &&
-    projectsEnabled &&
-    $workspaceStore.appId &&
-    projectsRequestedForWorkspace !== $workspaceStore.appId
-  ) {
-    loadProjects($workspaceStore.appId)
-  }
-
   $: if (hasMounted) {
     writeUrlState({
       searchTerm,
@@ -1084,7 +1062,7 @@
     })
 
     await agentsStore.fetchAgents()
-    if (setupRequest && projectsEnabled) {
+    if (setupRequest && projectsEnabled && projectsStore.hasFetched()) {
       await openProjectSetup({ refresh: false })
     }
   })

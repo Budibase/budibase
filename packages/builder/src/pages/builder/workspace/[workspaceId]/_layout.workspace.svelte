@@ -31,6 +31,8 @@
 
   export let workspaceId: string
 
+  let workspaceReady = false
+  let projectsRequested = false
   let promise = getPackage(workspaceId)
   let sideNav: SideNav
   let showInviteUsersModal = false
@@ -48,6 +50,22 @@
   }
   $: if (!canInviteUsers && showInviteUsersModal) {
     showInviteUsersModal = false
+  }
+  $: if (
+    workspaceReady &&
+    $featureFlags[FeatureFlag.PROJECTS] &&
+    !projectsRequested
+  ) {
+    loadProjects(workspaceId)
+  }
+
+  const loadProjects = async (appId: string) => {
+    projectsRequested = true
+    try {
+      await projectsStore.fetch(appId)
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Unable to load projects")
+    }
   }
 
   async function getPackage(appId: string) {
@@ -67,14 +85,9 @@
       }
       await deploymentStore.load()
       if ($featureFlags[FeatureFlag.PROJECTS]) {
-        try {
-          await projectsStore.fetch(appId)
-        } catch (error) {
-          notifications.error(
-            getErrorMessage(error) || "Unable to load projects"
-          )
-        }
+        await loadProjects(appId)
       }
+      workspaceReady = true
     } catch (error: any) {
       console.error(`Error initialising app: ${error?.message}`)
       sideNav.show()

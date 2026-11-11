@@ -54,7 +54,9 @@ const mocks = vi.hoisted(() => {
     projects: createStore<ProjectResponse[]>([]),
     workspaceApps: createStore({ workspaceApps: apps }),
     ensureFetched: vi.fn().mockResolvedValue(undefined),
+    hasFetched: vi.fn(),
     fetchProjects: vi.fn(),
+    notificationError: vi.fn(),
     fetchAgents: vi.fn().mockResolvedValue(undefined),
     refreshWorkspace: vi.fn().mockResolvedValue(undefined),
     previewAssignment:
@@ -89,7 +91,11 @@ vi.mock("@budibase/bbui", () => ({
   Helpers: { getDateDisplayValue: () => "", uuid: () => "test-api-session" },
   Notification: MockSlot,
   keepOpen: Symbol("keepOpen"),
-  notifications: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
+  notifications: {
+    success: vi.fn(),
+    warning: vi.fn(),
+    error: mocks.notificationError,
+  },
 }))
 
 vi.mock("@roxi/routify", () => ({
@@ -122,7 +128,7 @@ vi.mock("@/stores/portal", () => ({
   projectsStore: Object.assign(mocks.projects, {
     fetch: mocks.fetchProjects,
     ensureFetched: mocks.ensureFetched,
-    hasFetched: () => true,
+    hasFetched: mocks.hasFetched,
     previewAssignment: mocks.previewAssignment,
   }),
 }))
@@ -260,6 +266,7 @@ describe("workspace home project assignments", () => {
     )
     mocks.fetchProjects.mockImplementation(async () => get(mocks.projects))
     mocks.ensureFetched.mockImplementation(async () => get(mocks.projects))
+    mocks.hasFetched.mockReturnValue(true)
     mocks.saveAssignment.mockResolvedValue(undefined)
     mocks.previewAssignment.mockImplementation(async request => {
       const app = mocks.apps.find(app => app._id === request.resourceId)!
@@ -316,6 +323,25 @@ describe("workspace home project assignments", () => {
     })
     expect(mocks.ensureFetched).toHaveBeenCalledWith("app_dev_test")
     expect(window.location.search).toBe("?project=project_operations")
+  })
+
+  it("does not retry a failed initial project load for a setup deep link", async () => {
+    mocks.projects.set([])
+    mocks.hasFetched.mockReturnValue(false)
+    mocks.ensureFetched.mockRejectedValue(new Error("Unable to load projects"))
+    history.replaceState(
+      {},
+      "",
+      "/builder/workspace/app_dev_test/home?project=project_operations&setup=project_operations"
+    )
+
+    render(WorkspaceHome)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(mocks.ensureFetched).not.toHaveBeenCalled()
+    expect(mocks.fetchProjects).not.toHaveBeenCalled()
+    expect(mocks.notificationError).not.toHaveBeenCalled()
+    expect(screen.queryByText("Project setup")).not.toBeInTheDocument()
   })
 
   it("keeps the open assignment and its save target when another row's context menu opens", async () => {
