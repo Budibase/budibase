@@ -575,20 +575,23 @@ describe("workspace home project assignments", () => {
       name: "Operations portal",
       confirmText: "Delete App",
       successMessage: "App 'Operations portal' deleted successfully",
+      expectedArguments: ["workspace_app_operations", "1-operations"],
     },
     {
       name: "Operations workflow",
       confirmText: "Delete Automation",
       successMessage: "Automation deleted successfully",
+      expectedArguments: [get(mocks.automations).automations[0]],
     },
     {
       name: "Operations assistant",
       confirmText: "Delete Agent",
       successMessage: "Agent deleted successfully",
+      expectedArguments: ["agent_operations"],
     },
   ])(
     "allows permanent deletion of $name from the project view",
-    async ({ name, confirmText, successMessage }) => {
+    async ({ name, confirmText, successMessage, expectedArguments }) => {
       history.replaceState(
         {},
         "",
@@ -603,7 +606,9 @@ describe("workspace home project assignments", () => {
       await fireEvent.click(screen.getByRole("button", { name: confirmText }))
 
       expect(items.some(item => item.name === "Remove from project")).toBe(true)
-      expect(mocks.deleteResource).toHaveBeenCalledOnce()
+      expect(mocks.deleteResource).toHaveBeenCalledExactlyOnceWith(
+        ...expectedArguments
+      )
       expect(mocks.updateAssignment).not.toHaveBeenCalled()
       expect(mocks.notifications.success).toHaveBeenCalledWith(successMessage)
     }
