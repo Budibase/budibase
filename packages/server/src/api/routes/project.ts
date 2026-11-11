@@ -1,4 +1,5 @@
 import { middleware } from "@budibase/backend-core"
+import { PROJECT_TEMPLATE_KEY_PATTERN } from "@budibase/shared-core"
 import {
   MAX_PROJECT_NAME_LENGTH,
   MAX_PROJECT_README_LENGTH,
@@ -34,7 +35,7 @@ builderRoutes
     middleware.joiValidator.body(
       Joi.object({
         templateKey: Joi.string()
-          .pattern(/^project\/[a-z0-9]+(?:-[a-z0-9]+)*$/)
+          .pattern(PROJECT_TEMPLATE_KEY_PATTERN)
           .max(200)
           .required(),
       }),

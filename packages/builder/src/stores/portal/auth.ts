@@ -8,14 +8,15 @@ import { userPreferences } from "@/stores/preferences"
 import { CookieUtils, Constants } from "@budibase/frontend-core"
 import {
   GetGlobalSelfResponse,
+  GetInitInfoResponse,
   isSSOUser,
-  SetInitInfoRequest,
+  ProjectTemplateIntent,
   UpdateSelfRequest,
 } from "@budibase/types"
 
 interface PortalAuthStore {
   user?: GetGlobalSelfResponse
-  initInfo?: Record<string, any>
+  initInfo?: GetInitInfoResponse
   accountPortalAccess: boolean
   loaded: boolean
   isSSO: boolean
@@ -38,6 +39,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
 
   setUser(user?: GetGlobalSelfResponse, sessionTerminated = false) {
     this.set({
+      initInfo: get(this.store).initInfo,
       loaded: true,
       user: user,
       accountPortalAccess: !!user?.accountPortalAccess,
@@ -66,6 +68,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
   clearSession() {
     // sessionTerminated true prevents saving return URL for invalid URLs
     this.setUser(undefined, true)
+    this.clearInitInfoState()
   }
 
   async setOrganisation(tenantId = "default") {
@@ -81,13 +84,30 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     }
   }
 
-  async setInitInfo(info: SetInitInfoRequest) {
+  async setInitInfo(info: GetInitInfoResponse) {
     await API.setInitInfo(info)
     auth.update(store => {
       store.initInfo = info
       return store
     })
     return info
+  }
+
+  async clearProjectTemplateIntent({ templateKey }: ProjectTemplateIntent) {
+    await API.setInitInfo({ clearProjectTemplate: { templateKey } })
+    auth.update(store => {
+      if (store.initInfo?.projectTemplate?.templateKey === templateKey) {
+        store.initInfo = {}
+      }
+      return store
+    })
+  }
+
+  clearInitInfoState() {
+    auth.update(store => {
+      store.initInfo = {}
+      return store
+    })
   }
 
   setPostLogout() {
@@ -160,6 +180,7 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     await API.logOut()
     this.setPostLogout()
     this.setUser()
+    this.clearInitInfoState()
     try {
       await this.setInitInfo({})
     } catch (error) {
