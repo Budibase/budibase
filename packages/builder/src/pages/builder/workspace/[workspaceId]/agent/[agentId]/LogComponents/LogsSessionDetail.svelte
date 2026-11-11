@@ -40,7 +40,8 @@
       <h3 class="detail-title">Session</h3>
       <div class="detail-header-actions">
         <div class="detail-header-stats">
-          <span class="header-stat">{selectedSession.entries.length} steps</span>
+          <span class="header-stat">{selectedSession.entries.length} steps</span
+          >
           <span class="header-stat">{summary.latency}</span>
         </div>
         <ActionButton
