@@ -1,7 +1,6 @@
-import { events, features } from "@budibase/backend-core"
+import { events } from "@budibase/backend-core"
 import {
   CreateRowActionRequest,
-  FeatureFlag,
   Ctx,
   RowActionPermissions,
   RowActionPermissionsResponse,
@@ -62,15 +61,12 @@ async function createUnlocked(
     name: ctx.request.body.name,
   })
 
-  let projectAssignment
-  if (await features.isEnabled(FeatureFlag.PROJECTS)) {
-    projectAssignment = await projectAssignmentResult(
-      sdk.projects.propagateProjectIdsToDependencyIds({
-        dependencyIds: [createdAction.automationId],
-        projectIds: table.projectIds || [],
-      })
-    )
-  }
+  const projectAssignment = await projectAssignmentResult(
+    sdk.projects.propagateProjectIdsToDependencyIds({
+      dependencyIds: [createdAction.automationId],
+      projectIds: table.projectIds || [],
+    })
+  )
 
   await events.rowAction.created(createdAction)
 
@@ -88,9 +84,7 @@ async function createUnlocked(
 export async function create(
   ctx: Ctx<CreateRowActionRequest, RowActionResponse>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    createUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => createUnlocked(ctx))
 }
 
 export async function remove(ctx: Ctx<void, void>) {

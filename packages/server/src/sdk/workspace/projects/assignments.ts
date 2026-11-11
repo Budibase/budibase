@@ -1,9 +1,5 @@
-import { context, features, HTTPError } from "@budibase/backend-core"
-import {
-  type AnyDocument,
-  FeatureFlag,
-  type WithDocMetadata,
-} from "@budibase/types"
+import { context, HTTPError } from "@budibase/backend-core"
+import type { AnyDocument, WithDocMetadata } from "@budibase/types"
 import {
   getResourceType,
   isAllowedProjectAssignmentResourceId,
@@ -50,10 +46,6 @@ export const updateResourceProjectAssignmentUnlocked = async ({
 }: UpdateResourceProjectAssignmentInput): Promise<
   WithDocMetadata<AnyDocument & ProjectAssignable>
 > => {
-  if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-    throw new HTTPError("Projects feature is not enabled.", 404)
-  }
-
   const db = context.getWorkspaceDB()
   const uniqueProjectIds = Array.from(new Set(projectIds))
   const projects = await Promise.all(uniqueProjectIds.map(getProject))

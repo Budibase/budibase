@@ -33,7 +33,6 @@
     agentsStore,
     workspacesStore,
     auth,
-    featureFlags,
     licensing,
     projectsStore,
   } from "@/stores/portal"
@@ -50,7 +49,6 @@
     notifications,
   } from "@budibase/bbui"
   import {
-    FeatureFlag,
     type UpdateProjectAssignmentRequest,
     type UIAutomation,
     type UIWorkspaceApp,
@@ -158,7 +156,6 @@
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
   $: canEditProjectNotes = sdk.users.hasBuilderPermissions($auth.user)
-  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: selectedProjectResource = projectAssignmentRow
     ? {
@@ -169,7 +166,6 @@
         projectIds: projectAssignmentRow.projectIds,
       }
     : null
-  $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
   $: readingProjectNotes =
     !!notesProjectId && notesProjectId === selectedProjectId
   $: if (notesProjectId && notesProjectId !== selectedProjectId) {
@@ -272,11 +268,11 @@
     if (!hasMounted || typeof window === "undefined") {
       return
     }
-    const next = buildHomeUrl(
-      window.location.pathname,
-      window.location.search,
-      state
-    )
+    const next = buildHomeUrl({
+      pathname: window.location.pathname,
+      search: window.location.search,
+      state,
+    })
     history.replaceState({}, "", next)
   }
 
@@ -465,7 +461,7 @@
   }
 
   const assignProject = async (selection: UpdateProjectAssignmentRequest) => {
-    if (!projectsEnabled || !projectAssignmentRow) {
+    if (!projectAssignmentRow) {
       return keepOpen
     }
 
@@ -695,7 +691,7 @@
         {
           icon: "stack",
           name: "Assign project",
-          visible: projectsEnabled,
+          visible: true,
           callback: openAssignProjectModal,
         },
         {
@@ -749,7 +745,7 @@
         {
           icon: "stack",
           name: "Assign project",
-          visible: projectsEnabled,
+          visible: true,
           callback: openAssignProjectModal,
         },
         {
@@ -784,7 +780,7 @@
         {
           icon: "stack",
           name: "Assign project",
-          visible: projectsEnabled,
+          visible: true,
           callback: openAssignProjectModal,
         },
         {
@@ -814,7 +810,7 @@
         {
           icon: "stack",
           name: "Assign project",
-          visible: projectsEnabled,
+          visible: true,
           callback: openAssignProjectModal,
         },
       ]
@@ -890,7 +886,7 @@
       await projectsStore.fetch(workspaceId)
     } catch (error) {
       projectsRequestedForWorkspace = ""
-      if ($workspaceStore.appId === workspaceId && projectsEnabled) {
+      if ($workspaceStore.appId === workspaceId) {
         notifications.error(getErrorMessage(error) || "Unable to load projects")
       }
     }
@@ -904,7 +900,6 @@
     const { workspaceId, projectId } = setupSettingsContext
     setupSettingsContext = undefined
     if (
-      projectsEnabled &&
       $workspaceStore.appId === workspaceId &&
       selectedProjectId === projectId
     ) {
@@ -926,12 +921,8 @@
   $: selectedProjectExportDisabled =
     !!selectedProjectId && !projectIdsWithResources.includes(selectedProjectId)
 
-  $: projectLookup = (
-    projectsEnabled
-      ? Object.fromEntries(
-          $projectsStore.map(project => [project._id, project])
-        )
-      : {}
+  $: projectLookup = Object.fromEntries(
+    $projectsStore.map(project => [project._id, project])
   ) as Record<string, ProjectResponse>
   $: selectedProjectName = selectedProjectId
     ? projectLookup[selectedProjectId]?.name || ""
@@ -940,7 +931,6 @@
     ? projectLookup[selectedProjectId]
     : undefined
   $: if (
-    projectsEnabled &&
     selectedProjectId &&
     projectsStore.hasFetched() &&
     !projectLookup[selectedProjectId]
@@ -958,10 +948,7 @@
     typeFilter,
     searchTerm,
   }).filter(
-    row =>
-      !projectsEnabled ||
-      !selectedProjectId ||
-      row.projectIds?.includes(selectedProjectId)
+    row => !selectedProjectId || row.projectIds?.includes(selectedProjectId)
   )
   $: targetApp = $workspacesStore.apps.find(
     app => app.devId === $workspaceStore.appId
@@ -991,7 +978,6 @@
 
   $: if (
     hasMounted &&
-    projectsEnabled &&
     $workspaceStore.appId &&
     projectsRequestedForWorkspace !== $workspaceStore.appId
   ) {
@@ -1005,7 +991,6 @@
       selectedProjectId,
       sortColumn,
       sortOrder,
-      projectsEnabled,
     })
   }
 
@@ -1062,13 +1047,12 @@
     if (project) {
       selectedProjectId = project
     }
-    const sortAllowed = sort && (projectsEnabled || sort !== "projects")
-    if (sortAllowed) {
+    if (sort) {
       sortColumn = sort
     } else {
       sortColumn = "updated"
     }
-    if (order && sortAllowed) {
+    if (order && sort) {
       sortOrder = order
     }
 
@@ -1079,18 +1063,17 @@
       selectedProjectId,
       sortColumn,
       sortOrder,
-      projectsEnabled,
     })
 
     await agentsStore.fetchAgents()
-    if (setupRequest && projectsEnabled) {
+    if (setupRequest) {
       await openProjectSetup({ refresh: false })
     }
   })
 </script>
 
 <div class="workspace-home" bind:this={workspaceHome}>
-  <div class="content" class:content--projects={projectsEnabled}>
+  <div class="content">
     <div class="header">
       <div class="title">
         <Body
@@ -1151,211 +1134,158 @@
       <HomeMetrics {showBudibaseAIMetric} />
     {/if}
 
-    {#if projectsEnabled}
-      <div class="project-resources">
-        <HomeProjectTabs
-          projects={$projectsStore}
-          {selectedProjectId}
-          onSelect={projectId => (selectedProjectId = projectId)}
-          onCreateProject={createProject}
-          onEditProject={editProject}
-          onDeleteProject={() => confirmDeleteProjectDialog?.show()}
-          onImportProject={importProject}
-          onExportProject={exportProject}
-          onSetupProject={openProjectSetup}
-          showReadProjectNotes={!readingProjectNotes &&
-            !!selectedProject &&
-            (!!selectedProject.readme?.trim() || canEditProjectNotes)}
-          onReadProjectNotes={readProjectNotes}
-          exportProjectDisabled={selectedProjectExportDisabled}
-        />
+    <div class="project-resources">
+      <HomeProjectTabs
+        projects={$projectsStore}
+        {selectedProjectId}
+        onSelect={projectId => (selectedProjectId = projectId)}
+        onCreateProject={createProject}
+        onEditProject={editProject}
+        onDeleteProject={() => confirmDeleteProjectDialog?.show()}
+        onImportProject={importProject}
+        onExportProject={exportProject}
+        onSetupProject={openProjectSetup}
+        showReadProjectNotes={!readingProjectNotes &&
+          !!selectedProject &&
+          (!!selectedProject.readme?.trim() || canEditProjectNotes)}
+        onReadProjectNotes={readProjectNotes}
+        exportProjectDisabled={selectedProjectExportDisabled}
+      />
 
-        {#if !readingProjectNotes}
-          <HomeResourcePanel>
-            {#snippet toolbar()}
-              <div class="panel-toolbar">
-                <HomeControls
-                  {typeFilter}
-                  variant="panel"
-                  onTypeChange={setTypeFilter}
-                />
-                <div class="panel-toolbar__right">
-                  <div class="search-wrapper">
-                    <Icon name="magnifying-glass" size="S" />
-                    <input
-                      class="search-input"
-                      type="text"
-                      placeholder="Search"
-                      bind:value={searchTerm}
-                    />
-                  </div>
-                  <HomeCreateMenu
-                    variant="pill"
-                    onCreateAgent={createAgent}
-                    onCreateAutomation={createAutomation}
-                    onCreateApp={createApp}
-                    onCreateConnection={() => bb.settings("/connections/apis")}
-                    onCreateTable={openCreateTable}
-                    onCreateApi={() => goToCreate("apis/new")}
+      {#if !readingProjectNotes}
+        <HomeResourcePanel>
+          {#snippet toolbar()}
+            <div class="panel-toolbar">
+              <HomeControls
+                {typeFilter}
+                variant="panel"
+                onTypeChange={setTypeFilter}
+              />
+              <div class="panel-toolbar__right">
+                <div class="search-wrapper">
+                  <Icon name="magnifying-glass" size="S" />
+                  <input
+                    class="search-input"
+                    type="text"
+                    placeholder="Search"
+                    bind:value={searchTerm}
                   />
                 </div>
+                <HomeCreateMenu
+                  variant="pill"
+                  onCreateAgent={createAgent}
+                  onCreateAutomation={createAutomation}
+                  onCreateApp={createApp}
+                  onCreateConnection={() => bb.settings("/connections/apis")}
+                  onCreateTable={openCreateTable}
+                  onCreateApi={() => goToCreate("apis/new")}
+                />
               </div>
-            {/snippet}
+            </div>
+          {/snippet}
 
-            <HomeTable
-              rows={filteredRows}
-              allRowsCount={allRows.length}
-              {typeFilter}
-              {searchTerm}
-              {projectsEnabled}
-              {selectedProjectName}
-              {sortColumn}
-              {sortOrder}
-              {highlightedRowId}
-              variant="panel"
-              onOpenRow={openRow}
-              onOpenContextMenu={openHomeContextMenu}
-              onClearSearch={() => (searchTerm = "")}
-              onResetFilters={() => {
-                typeFilter = "all"
-                selectedProjectId = ""
-              }}
-              onSortChange={setSort}
-              onCreateAgent={createAgent}
-              onCreateAutomation={createAutomation}
-              onCreateApp={createApp}
-            />
-          </HomeResourcePanel>
-        {/if}
-
-        <ProjectReadme
-          project={selectedProject}
-          canEdit={canEditProjectNotes}
-          focused={readingProjectNotes}
-          onBack={backToResources}
-          onSave={saveProjectNotes}
-          onReload={reloadProjectNotes}
-        />
-      </div>
-    {:else}
-      <div class="controls-row">
-        <HomeControls {typeFilter} onTypeChange={setTypeFilter} />
-        <div class="controls-right">
-          <div class="search-wrapper">
-            <Icon name="magnifying-glass" size="S" />
-            <input
-              class="search-input"
-              type="text"
-              placeholder="Search"
-              bind:value={searchTerm}
-            />
-          </div>
-          <div class="create-popover-container"></div>
-          <HomeCreateMenu
-            portalTarget=".workspace-home .create-popover-container"
+          <HomeTable
+            rows={filteredRows}
+            allRowsCount={allRows.length}
+            {typeFilter}
+            {searchTerm}
+            {selectedProjectName}
+            {sortColumn}
+            {sortOrder}
+            {highlightedRowId}
+            variant="panel"
+            onOpenRow={openRow}
+            onOpenContextMenu={openHomeContextMenu}
+            onClearSearch={() => (searchTerm = "")}
+            onResetFilters={() => {
+              typeFilter = "all"
+              selectedProjectId = ""
+            }}
+            onSortChange={setSort}
             onCreateAgent={createAgent}
             onCreateAutomation={createAutomation}
             onCreateApp={createApp}
-            onCreateConnection={() => bb.settings("/connections/apis")}
-            onCreateTable={openCreateTable}
-            onCreateApi={() => goToCreate("apis/new")}
           />
-        </div>
-      </div>
+        </HomeResourcePanel>
+      {/if}
 
-      <HomeTable
-        rows={filteredRows}
-        allRowsCount={allRows.length}
-        {typeFilter}
-        {searchTerm}
-        {projectsEnabled}
-        {selectedProjectName}
-        {sortColumn}
-        {sortOrder}
-        {highlightedRowId}
-        onOpenRow={openRow}
-        onOpenContextMenu={openHomeContextMenu}
-        onClearSearch={() => (searchTerm = "")}
-        onResetFilters={() => {
-          typeFilter = "all"
-          selectedProjectId = ""
-        }}
-        onSortChange={setSort}
-        onCreateAgent={createAgent}
-        onCreateAutomation={createAutomation}
-        onCreateApp={createApp}
+      <ProjectReadme
+        project={selectedProject}
+        canEdit={canEditProjectNotes}
+        focused={readingProjectNotes}
+        onBack={backToResources}
+        onSave={saveProjectNotes}
+        onReload={reloadProjectNotes}
       />
-    {/if}
+    </div>
   </div>
 </div>
 
-{#if projectsEnabled}
-  <Modal bind:this={createProjectModal}>
-    {#key createProjectModalKey}
-      <CreateProjectModal onConfirm={handleCreateProject} />
-    {/key}
-  </Modal>
+<Modal bind:this={createProjectModal}>
+  {#key createProjectModalKey}
+    <CreateProjectModal onConfirm={handleCreateProject} />
+  {/key}
+</Modal>
 
-  <Modal bind:this={assignProjectModal}>
-    {#key assignProjectModalKey}
-      {#if selectedProjectResource}
-        <AssignProjectModal
-          resource={selectedProjectResource}
-          onPreview={projectsStore.previewAssignment}
-          onConfirm={assignProject}
-        />
-      {/if}
-    {/key}
-  </Modal>
-
-  <Modal bind:this={editProjectModal}>
-    {#key editProjectModalKey}
-      <CreateProjectModal
-        project={selectedProject}
-        onConfirm={handleUpdateProject}
-      />
-    {/key}
-  </Modal>
-
-  {#if selectedProject}
-    <ConfirmDialog
-      bind:this={confirmDeleteProjectDialog}
-      okText="Delete Project"
-      onOk={deleteProject}
-      title="Confirm Deletion"
-    >
-      Deleting <b>{selectedProject.name}</b> will clear its resource assignments.
-      The resources themselves will not be deleted. Are you sure?
-    </ConfirmDialog>
-  {/if}
-
-  <Modal bind:this={exportProjectModal}>
-    {#key exportProjectModalKey}
-      <ExportProjectModal
-        projects={$projectsStore}
-        {selectedProjectId}
-        {projectIdsWithResources}
-        onConfirm={handleExportProject}
-      />
-    {/key}
-  </Modal>
-
-  <Modal bind:this={importProjectModal}>
-    {#key importProjectModalKey}
-      <ImportProjectModal onConfirm={handleImportProject} />
-    {/key}
-  </Modal>
-
-  <Modal bind:this={importProjectResultModal}>
-    {#if importResult}
-      <ImportProjectResultModal
-        response={importResult}
-        {isSetupReview}
-        onOpenResource={openImportedResource}
+<Modal bind:this={assignProjectModal}>
+  {#key assignProjectModalKey}
+    {#if selectedProjectResource}
+      <AssignProjectModal
+        resource={selectedProjectResource}
+        onPreview={projectsStore.previewAssignment}
+        onConfirm={assignProject}
       />
     {/if}
-  </Modal>
+  {/key}
+</Modal>
+
+<Modal bind:this={editProjectModal}>
+  {#key editProjectModalKey}
+    <CreateProjectModal
+      project={selectedProject}
+      onConfirm={handleUpdateProject}
+    />
+  {/key}
+</Modal>
+
+{#if selectedProject}
+  <ConfirmDialog
+    bind:this={confirmDeleteProjectDialog}
+    okText="Delete Project"
+    onOk={deleteProject}
+    title="Confirm Deletion"
+  >
+    Deleting <b>{selectedProject.name}</b> will clear its resource assignments. The
+    resources themselves will not be deleted. Are you sure?
+  </ConfirmDialog>
 {/if}
+
+<Modal bind:this={exportProjectModal}>
+  {#key exportProjectModalKey}
+    <ExportProjectModal
+      projects={$projectsStore}
+      {selectedProjectId}
+      {projectIdsWithResources}
+      onConfirm={handleExportProject}
+    />
+  {/key}
+</Modal>
+
+<Modal bind:this={importProjectModal}>
+  {#key importProjectModalKey}
+    <ImportProjectModal onConfirm={handleImportProject} />
+  {/key}
+</Modal>
+
+<Modal bind:this={importProjectResultModal}>
+  {#if importResult}
+    <ImportProjectResultModal
+      response={importResult}
+      {isSetupReview}
+      onOpenResource={openImportedResource}
+    />
+  {/if}
+</Modal>
 
 <WorkspaceAppModal
   bind:this={workspaceAppModal}
@@ -1453,10 +1383,6 @@
     padding: var(--spacing-xl) 0;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
-  }
-
-  .content--projects {
     gap: 20px;
   }
 
@@ -1526,90 +1452,5 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-l);
-  }
-
-  .controls-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-m) var(--spacing-l);
-    flex-wrap: wrap;
-    position: relative;
-  }
-
-  .controls-row .controls-right {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-m);
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    max-width: 100%;
-  }
-
-  .controls-row .search-wrapper {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: var(--border-radius-s);
-    padding: var(--spacing-xs) var(--spacing-s);
-    min-width: 140px;
-    height: 32px;
-    box-sizing: border-box;
-    flex: 1 1 160px;
-    max-width: 240px;
-  }
-
-  .controls-row .search-input {
-    background: transparent;
-    border: none;
-    outline: none;
-    flex: 1;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-s);
-    color: var(--spectrum-global-color-gray-900);
-  }
-
-  .controls-row .search-input::placeholder {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .create-popover-container {
-    position: absolute;
-  }
-
-  .create-popover-container :global(.spectrum-Popover) {
-    min-width: 240px;
-    border-radius: var(--border-radius-s);
-    background: var(--background);
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    padding: var(--spacing-xs);
-    margin-top: var(--spacing-xs);
-  }
-
-  .create-popover-container :global(.spectrum-Menu) {
-    background: transparent;
-    padding: 0;
-  }
-
-  .create-popover-container :global(.spectrum-Menu-item) {
-    border-radius: var(--border-radius-s);
-    margin: 0;
-  }
-
-  .create-popover-container :global(.spectrum-Menu-item:hover) {
-    background: var(--spectrum-global-color-gray-200);
-  }
-
-  .create-popover-container
-    :global(.spectrum-Menu-item)
-    :global(.spectrum-Menu-itemLabel) {
-    font-size: var(--font-size-s);
-    color: var(--spectrum-global-color-gray-800);
-  }
-
-  .create-popover-container :global(.spectrum-Menu-divider) {
-    margin: var(--spacing-xs) 0;
-    background: var(--spectrum-global-color-gray-200);
   }
 </style>

@@ -2,7 +2,6 @@ import {
   context,
   db as dbCore,
   encryption,
-  features,
   ViewName,
 } from "@budibase/backend-core"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
@@ -11,7 +10,6 @@ import {
   AutomationTriggerStepId,
   DesignDocument,
   EmailTriggerAuthType,
-  FeatureFlag,
   INTERNAL_TABLE_SOURCE_ID,
   isEmailTrigger,
   isWebhookTrigger,
@@ -100,14 +98,6 @@ describe("/projects", () => {
     config.end()
   })
 
-  const withProjectsEnabled = async <T>(f: () => Promise<T>) => {
-    return await features.testutils.withFeatureFlags(
-      config.getTenantId(),
-      { [FeatureFlag.PROJECTS]: true },
-      f
-    )
-  }
-
   const createAssignedProject = async () => {
     const { project } = await config.api.project.create({
       name: "Operations",
@@ -144,48 +134,44 @@ describe("/projects", () => {
   })
 
   it("removes both uploaded files when import rejects multiple files", async () => {
-    await withProjectsEnabled(async () => {
-      const remove = jest.spyOn(fsp, "rm")
-      try {
-        await config
-          .request!.post("/api/projects/import")
-          .set(config.defaultHeaders())
-          .attach("file", Buffer.from("first"), "first.tar.gz")
-          .attach("file", Buffer.from("second"), "second.tar.gz")
-          .expect(400)
+    const remove = jest.spyOn(fsp, "rm")
+    try {
+      await config
+        .request!.post("/api/projects/import")
+        .set(config.defaultHeaders())
+        .attach("file", Buffer.from("first"), "first.tar.gz")
+        .attach("file", Buffer.from("second"), "second.tar.gz")
+        .expect(400)
 
-        expect(remove).toHaveBeenCalledTimes(2)
-        const [[firstPath], [secondPath]] = remove.mock.calls
-        await expect(fsp.access(firstPath)).rejects.toMatchObject({
-          code: "ENOENT",
-        })
-        await expect(fsp.access(secondPath)).rejects.toMatchObject({
-          code: "ENOENT",
-        })
-      } finally {
-        remove.mockRestore()
-      }
-    })
+      expect(remove).toHaveBeenCalledTimes(2)
+      const [[firstPath], [secondPath]] = remove.mock.calls
+      await expect(fsp.access(firstPath)).rejects.toMatchObject({
+        code: "ENOENT",
+      })
+      await expect(fsp.access(secondPath)).rejects.toMatchObject({
+        code: "ENOENT",
+      })
+    } finally {
+      remove.mockRestore()
+    }
   })
 
   it("removes the uploaded file when import rejects an invalid password field", async () => {
-    await withProjectsEnabled(async () => {
-      const remove = jest.spyOn(fsp, "rm")
-      try {
-        await config
-          .request!.post("/api/projects/import")
-          .set(config.defaultHeaders())
-          .attach("file", Buffer.from("first"), "first.tar.gz")
-          .field("encryptPassword", "x".repeat(1025))
-          .expect(400)
+    const remove = jest.spyOn(fsp, "rm")
+    try {
+      await config
+        .request!.post("/api/projects/import")
+        .set(config.defaultHeaders())
+        .attach("file", Buffer.from("first"), "first.tar.gz")
+        .field("encryptPassword", "x".repeat(1025))
+        .expect(400)
 
-        expect(remove).toHaveBeenCalledTimes(1)
-        const [[path]] = remove.mock.calls
-        await expect(fsp.access(path)).rejects.toMatchObject({ code: "ENOENT" })
-      } finally {
-        remove.mockRestore()
-      }
-    })
+      expect(remove).toHaveBeenCalledTimes(1)
+      const [[path]] = remove.mock.calls
+      await expect(fsp.access(path)).rejects.toMatchObject({ code: "ENOENT" })
+    } finally {
+      remove.mockRestore()
+    }
   })
 
   const readTarEntries = async (buffer: Buffer) => {
@@ -312,164 +298,103 @@ describe("/projects", () => {
   }
 
   it("rejects permission metadata for resources outside the package", async () => {
-    await withProjectsEnabled(async () => {
-      const body = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: { containsPermissions: true },
-          extraEntries: {
-            "permissions.json": {
-              resources: [
-                { resourceId: "ta_unrelated", levels: { read: "PUBLIC" } },
-              ],
-            },
+    const body = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: { containsPermissions: true },
+        extraEntries: {
+          "permissions.json": {
+            resources: [
+              { resourceId: "ta_unrelated", levels: { read: "PUBLIC" } },
+            ],
           },
-        })
-      )
-      await config.api.project.import({
-        file: body,
-        expectations: {
-          status: 400,
-          body: { message: "Project package permissions are invalid." },
         },
       })
-      const { projects } = await config.api.project.fetch()
-      expect(projects).toEqual([])
-    })
-  })
-
-  it("returns 404 when the feature flag is disabled", async () => {
-    await features.testutils.withFeatureFlags(
-      config.getTenantId(),
-      { [FeatureFlag.PROJECTS]: false },
-      async () => {
-        await config.api.project.fetch({ status: 404 })
-        await config.api.project.previewAssignment(
-          { resourceId: "workspace_app_test", projectIds: [] },
-          { status: 404 }
-        )
-        await config.api.project.updateAssignment(
-          "workspace_app_test",
-          {
-            resourceRev: "1-test",
-            projectIds: [],
-            dependencyIds: [],
-            dependencyFingerprint: "unavailable-while-feature-disabled",
-          },
-          { status: 404 }
-        )
-      }
     )
-  })
-
-  it("preserves dormant project assignments on omitted updates when the feature flag is disabled", async () => {
-    const workspaceApp = await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      return await createAssignedWorkspaceApp(project._id)
+    await config.api.project.import({
+      file: body,
+      expectations: {
+        status: 400,
+        body: { message: "Project package permissions are invalid." },
+      },
     })
-
-    await features.testutils.withFeatureFlags(
-      config.getTenantId(),
-      { [FeatureFlag.PROJECTS]: false },
-      async () => {
-        await config.api.workspaceApp.update({
-          _id: workspaceApp._id,
-          _rev: workspaceApp._rev,
-          name: workspaceApp.name,
-          url: workspaceApp.url,
-          navigation: workspaceApp.navigation,
-          theme: workspaceApp.theme,
-          customTheme: workspaceApp.customTheme,
-          disabled: workspaceApp.disabled,
-        })
-
-        const fetchedWorkspaceApp = await config.api.workspaceApp.find(
-          workspaceApp._id!
-        )
-        expect(fetchedWorkspaceApp.projectIds).toEqual(workspaceApp.projectIds)
-      }
-    )
+    const { projects } = await config.api.project.fetch()
+    expect(projects).toEqual([])
   })
 
   it("creates, fetches, and updates projects", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-        description: "Operational workflows",
-        readme:
-          "# Operations\n\nBuild together.\n\n- [Setup](https://example.com/setup)",
-        color: "#8CA171",
-      })
-
-      expect(project._id).toBeDefined()
-      expect(project.name).toBe("Operations")
-      expect(project.description).toBe("Operational workflows")
-      expect(project.readme).toBe(
-        "# Operations\n\nBuild together.\n\n- [Setup](https://example.com/setup)"
-      )
-      expect(project.color).toBe("#8CA171")
-      expect(project.createdAt).toBeDefined()
-      expect(project.updatedAt).toBeDefined()
-
-      const { projects } = await config.api.project.fetch()
-      expect(projects.map(existing => existing._id)).toContain(project._id)
-
-      const updated = await config.api.project.update({
-        _id: project._id,
-        _rev: project._rev,
-        name: "Operations revised",
-        description: "Updated",
-        readme: "# Updated operations\n\nStart here.",
-        color: " #7E8F68 ",
-      })
-
-      expect(updated.project.name).toBe("Operations revised")
-      expect(updated.project.description).toBe("Updated")
-      expect(updated.project.readme).toBe("# Updated operations\n\nStart here.")
-      expect(updated.project.color).toBe("#7E8F68")
-      expect(updated.project.createdAt).toBe(project.createdAt)
+    const { project } = await config.api.project.create({
+      name: "Operations",
+      description: "Operational workflows",
+      readme:
+        "# Operations\n\nBuild together.\n\n- [Setup](https://example.com/setup)",
+      color: "#8CA171",
     })
+
+    expect(project._id).toBeDefined()
+    expect(project.name).toBe("Operations")
+    expect(project.description).toBe("Operational workflows")
+    expect(project.readme).toBe(
+      "# Operations\n\nBuild together.\n\n- [Setup](https://example.com/setup)"
+    )
+    expect(project.color).toBe("#8CA171")
+    expect(project.createdAt).toBeDefined()
+    expect(project.updatedAt).toBeDefined()
+
+    const { projects } = await config.api.project.fetch()
+    expect(projects.map(existing => existing._id)).toContain(project._id)
+
+    const updated = await config.api.project.update({
+      _id: project._id,
+      _rev: project._rev,
+      name: "Operations revised",
+      description: "Updated",
+      readme: "# Updated operations\n\nStart here.",
+      color: " #7E8F68 ",
+    })
+
+    expect(updated.project.name).toBe("Operations revised")
+    expect(updated.project.description).toBe("Updated")
+    expect(updated.project.readme).toBe("# Updated operations\n\nStart here.")
+    expect(updated.project.color).toBe("#7E8F68")
+    expect(updated.project.createdAt).toBe(project.createdAt)
   })
 
   it("preserves the README when project metadata updates omit it", async () => {
-    await withProjectsEnabled(async () => {
-      const readme = "# Operations\n\nShared build notes."
-      const { project } = await config.api.project.create({
-        name: "Operations",
-        readme,
-      })
-
-      await config.api.project.update({
-        _id: project._id,
-        _rev: project._rev,
-        name: "Renamed operations",
-      })
-
-      const { projects } = await config.api.project.fetch()
-      expect(projects.find(existing => existing._id === project._id)).toEqual(
-        expect.objectContaining({ name: "Renamed operations", readme })
-      )
+    const readme = "# Operations\n\nShared build notes."
+    const { project } = await config.api.project.create({
+      name: "Operations",
+      readme,
     })
+
+    await config.api.project.update({
+      _id: project._id,
+      _rev: project._rev,
+      name: "Renamed operations",
+    })
+
+    const { projects } = await config.api.project.fetch()
+    expect(projects.find(existing => existing._id === project._id)).toEqual(
+      expect.objectContaining({ name: "Renamed operations", readme })
+    )
   })
 
   it("clears the README when an update supplies an empty string", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-        readme: "# Operations\n\nShared build notes.",
-      })
-
-      await config.api.project.update({
-        _id: project._id,
-        _rev: project._rev,
-        name: project.name,
-        readme: "",
-      })
-
-      const { projects } = await config.api.project.fetch()
-      expect(
-        projects.find(existing => existing._id === project._id)?.readme
-      ).toBe("")
+    const { project } = await config.api.project.create({
+      name: "Operations",
+      readme: "# Operations\n\nShared build notes.",
     })
+
+    await config.api.project.update({
+      _id: project._id,
+      _rev: project._rev,
+      name: project.name,
+      readme: "",
+    })
+
+    const { projects } = await config.api.project.fetch()
+    expect(
+      projects.find(existing => existing._id === project._id)?.readme
+    ).toBe("")
   })
 
   it.each([
@@ -478,80 +403,72 @@ describe("/projects", () => {
     { name: "object", readme: { content: "# Operations" } },
     { name: "oversized", readme: "x".repeat(MAX_PROJECT_README_LENGTH + 1) },
   ])("rejects $name READMEs on create and update", async ({ readme }) => {
-    await withProjectsEnabled(async () => {
-      await config
-        .request!.post("/api/projects")
-        .set(config.defaultHeaders())
-        .send({ name: "Invalid README", readme })
-        .expect(400)
+    await config
+      .request!.post("/api/projects")
+      .set(config.defaultHeaders())
+      .send({ name: "Invalid README", readme })
+      .expect(400)
 
-      const { project } = await config.api.project.create({
-        name: "Operations",
-        readme: "# Shared notes",
-      })
-      await config
-        .request!.put(`/api/projects/${project._id}`)
-        .set(config.defaultHeaders())
-        .send({
-          _id: project._id,
-          _rev: project._rev,
-          name: project.name,
-          readme,
-        })
-        .expect(400)
-
-      const { projects } = await config.api.project.fetch()
-      expect(projects).toEqual([project])
+    const { project } = await config.api.project.create({
+      name: "Operations",
+      readme: "# Shared notes",
     })
+    await config
+      .request!.put(`/api/projects/${project._id}`)
+      .set(config.defaultHeaders())
+      .send({
+        _id: project._id,
+        _rev: project._rev,
+        name: project.name,
+        readme,
+      })
+      .expect(400)
+
+    const { projects } = await config.api.project.fetch()
+    expect(projects).toEqual([project])
   })
 
   it.each([
     "red; background-image: url(https://example.com/tracker)",
     "url(https://example.com/tracker)",
   ])("rejects unsafe project color '%s'", async color => {
-    await withProjectsEnabled(async () => {
-      await config.api.project.create(
-        {
-          name: "Unsafe color",
-          color,
+    await config.api.project.create(
+      {
+        name: "Unsafe color",
+        color,
+      },
+      {
+        status: 400,
+        body: {
+          message: "Project color is invalid.",
         },
-        {
-          status: 400,
-          body: {
-            message: "Project color is invalid.",
-          },
-        }
-      )
-    })
+      }
+    )
   })
 
   it("accepts project names at the maximum length on create and update", async () => {
-    await withProjectsEnabled(async () => {
-      const name = "a".repeat(MAX_PROJECT_NAME_LENGTH)
-      const { project } = await config.api.project.create({ name })
-      const updatedName = "b".repeat(MAX_PROJECT_NAME_LENGTH)
-      await config.api.project.update({ ...project, name: updatedName })
+    const name = "a".repeat(MAX_PROJECT_NAME_LENGTH)
+    const { project } = await config.api.project.create({ name })
+    const updatedName = "b".repeat(MAX_PROJECT_NAME_LENGTH)
+    await config.api.project.update({ ...project, name: updatedName })
 
-      expect((await config.api.project.fetch()).projects).toEqual([
-        expect.objectContaining({ _id: project._id, name: updatedName }),
-      ])
-      expect(project.name).toBe(name)
-    })
+    expect((await config.api.project.fetch()).projects).toEqual([
+      expect.objectContaining({ _id: project._id, name: updatedName }),
+    ])
+    expect(project.name).toBe(name)
   })
 
   it.each([MAX_PROJECT_NAME_LENGTH + 1, 1001])(
     "rejects project names of %s characters on create and update",
     async length => {
-      await withProjectsEnabled(async () => {
-        const name = "a".repeat(length)
-        await config.api.project.create({ name }, { status: 400 })
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        await config.api.project.update({ ...project, name }, { status: 400 })
-
-        expect((await config.api.project.fetch()).projects).toEqual([project])
+      const name = "a".repeat(length)
+      await config.api.project.create({ name }, { status: 400 })
+      const { project } = await config.api.project.create({
+        name: "Operations",
       })
+      await config.api.project.update({ ...project, name }, { status: 400 })
+
+      expect((await config.api.project.fetch()).projects).toEqual([project])
     }
   )
 
@@ -577,508 +494,468 @@ describe("/projects", () => {
   })
 
   it("rejects unusable project names on create", async () => {
-    await withProjectsEnabled(async () => {
-      await config.api.project.create(
-        {
-          name: "   ",
+    await config.api.project.create(
+      {
+        name: "   ",
+      },
+      {
+        status: 400,
+        body: {
+          message: "Project name is required.",
         },
-        {
-          status: 400,
-          body: {
-            message: "Project name is required.",
-          },
-        }
-      )
-    })
+      }
+    )
   })
 
   it("rejects unusable project names on update", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-
-      await config.api.project.update(
-        {
-          ...project,
-          name: "   ",
-        },
-        {
-          status: 400,
-          body: {
-            message: "Project name is required.",
-          },
-        }
-      )
+    const { project } = await config.api.project.create({
+      name: "Operations",
     })
+
+    await config.api.project.update(
+      {
+        ...project,
+        name: "   ",
+      },
+      {
+        status: 400,
+        body: {
+          message: "Project name is required.",
+        },
+      }
+    )
   })
 
   it("rejects stale revisions on update", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-        readme: "# Initial notes",
-      })
+    const { project } = await config.api.project.create({
+      name: "Operations",
+      readme: "# Initial notes",
+    })
 
-      await config.api.project.update({
+    await config.api.project.update({
+      ...project,
+      name: "Updated operations",
+      readme: "# Latest notes",
+    })
+
+    await config.api.project.update(
+      {
         ...project,
+        name: "Stale operations",
+        readme: "# Stale notes",
+      },
+      {
+        status: 409,
+      }
+    )
+
+    const { projects } = await config.api.project.fetch()
+    expect(projects.find(existing => existing._id === project._id)).toEqual(
+      expect.objectContaining({
         name: "Updated operations",
         readme: "# Latest notes",
       })
-
-      await config.api.project.update(
-        {
-          ...project,
-          name: "Stale operations",
-          readme: "# Stale notes",
-        },
-        {
-          status: 409,
-        }
-      )
-
-      const { projects } = await config.api.project.fetch()
-      expect(projects.find(existing => existing._id === project._id)).toEqual(
-        expect.objectContaining({
-          name: "Updated operations",
-          readme: "# Latest notes",
-        })
-      )
-    })
+    )
   })
 
   it("does not update non-project documents through project routes", async () => {
-    await withProjectsEnabled(async () => {
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
+    const datasource = await config.api.datasource.create(
+      basicDatasource().datasource
+    )
 
-      await config.api.project.update(
-        {
-          _id: datasource._id!,
-          _rev: datasource._rev!,
-          name: "Not a project",
+    await config.api.project.update(
+      {
+        _id: datasource._id!,
+        _rev: datasource._rev!,
+        name: "Not a project",
+      },
+      {
+        status: 404,
+        body: {
+          message: `Project with id '${datasource._id}' not found.`,
         },
-        {
-          status: 404,
-          body: {
-            message: `Project with id '${datasource._id}' not found.`,
-          },
-        }
-      )
+      }
+    )
 
-      const fetched = await config.api.datasource.get(datasource._id!)
-      expect(fetched.name).toBe(datasource.name)
-    })
+    const fetched = await config.api.datasource.get(datasource._id!)
+    expect(fetched.name).toBe(datasource.name)
   })
 
   it("does not delete non-project documents through project routes", async () => {
-    await withProjectsEnabled(async () => {
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
+    const datasource = await config.api.datasource.create(
+      basicDatasource().datasource
+    )
 
-      await config.api.project.delete(datasource._id!, datasource._rev!, {
-        status: 404,
-      })
-
-      const fetched = await config.api.datasource.get(datasource._id!)
-      expect(fetched._id).toBe(datasource._id)
+    await config.api.project.delete(datasource._id!, datasource._rev!, {
+      status: 404,
     })
+
+    const fetched = await config.api.datasource.get(datasource._id!)
+    expect(fetched._id).toBe(datasource._id)
   })
 
   it("rejects unknown direct project ids", async () => {
-    await withProjectsEnabled(async () => {
-      await config.api.workspaceApp.create(
-        structures.workspaceApps.createRequest({
-          name: "Ops app",
-          url: "/ops-app",
-          projectIds: ["project_missing"],
-        }),
-        {
-          status: 404,
-          body: {
-            message: "Project 'project_missing' not found.",
-          },
-        }
-      )
-    })
+    await config.api.workspaceApp.create(
+      structures.workspaceApps.createRequest({
+        name: "Ops app",
+        url: "/ops-app",
+        projectIds: ["project_missing"],
+      }),
+      {
+        status: 404,
+        body: {
+          message: "Project 'project_missing' not found.",
+        },
+      }
+    )
   })
 
   it("clears workspace app and internal table assignments when deleting a project", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      const workspaceApp = await createAssignedWorkspaceApp(project._id)
-      const table = await createAssignedInternalTable(project._id)
+    const project = await createAssignedProject()
+    const workspaceApp = await createAssignedWorkspaceApp(project._id)
+    const table = await createAssignedInternalTable(project._id)
 
-      await config.api.project.delete(project._id, project._rev)
+    await config.api.project.delete(project._id, project._rev)
 
-      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
-        workspaceApp._id!
-      )
-      expect(fetchedWorkspaceApp.projectIds).toBeUndefined()
+    const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+      workspaceApp._id!
+    )
+    expect(fetchedWorkspaceApp.projectIds).toBeUndefined()
 
-      const fetchedTable = await config.api.table.get(table._id!)
-      expect(fetchedTable.projectIds).toBeUndefined()
-    })
+    const fetchedTable = await config.api.table.get(table._id!)
+    expect(fetchedTable.projectIds).toBeUndefined()
   })
 
   it("clears external datasource assignments when deleting a project", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      const datasource = await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        projectIds: [project._id],
-      })
-
-      await config.api.project.delete(project._id, project._rev)
-
-      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
-      expect(fetchedDatasource.projectIds).toBeUndefined()
+    const project = await createAssignedProject()
+    const datasource = await config.api.datasource.create({
+      ...basicDatasource().datasource,
+      projectIds: [project._id],
     })
+
+    await config.api.project.delete(project._id, project._rev)
+
+    const fetchedDatasource = await config.api.datasource.get(datasource._id!)
+    expect(fetchedDatasource.projectIds).toBeUndefined()
   })
 
   it("clears datasource_plus assignments when deleting a project", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      const datasourcePlus = await config.api.datasource.create({
-        ...basicDatasourcePlus().datasource,
-        projectIds: [project._id],
-      })
-
-      await config.api.project.delete(project._id, project._rev)
-
-      const fetchedDatasourcePlus = await config.api.datasource.get(
-        datasourcePlus._id!
-      )
-      expect(fetchedDatasourcePlus.projectIds).toBeUndefined()
+    const project = await createAssignedProject()
+    const datasourcePlus = await config.api.datasource.create({
+      ...basicDatasourcePlus().datasource,
+      projectIds: [project._id],
     })
+
+    await config.api.project.delete(project._id, project._rev)
+
+    const fetchedDatasourcePlus = await config.api.datasource.get(
+      datasourcePlus._id!
+    )
+    expect(fetchedDatasourcePlus.projectIds).toBeUndefined()
   })
 
   it("removes only the deleted project from multi-project assignments", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const { project: retainedProject } = await config.api.project.create({
-        name: "Support",
-      })
-      const projectIds = [project._id, retainedProject._id]
-
-      const { workspaceApp } = await config.api.workspaceApp.create(
-        structures.workspaceApps.createRequest({
-          name: "Ops app",
-          url: "/ops-app",
-          projectIds,
-        })
-      )
-      const automation = await config.createAutomation()
-      const { automation: updatedAutomation } =
-        await config.api.automation.update({
-          ...automation,
-          projectIds,
-        })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        projectIds,
-      })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds,
-      })
-      const datasource = await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        projectIds,
-      })
-
-      await config.api.project.delete(project._id, project._rev)
-
-      const expectedProjectIds = [retainedProject._id]
-      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
-        workspaceApp._id!
-      )
-      const fetchedAutomation = await config.api.automation.get(
-        updatedAutomation._id!
-      )
-      const { agents } = await config.api.agent.fetch()
-      const fetchedAgent = agents.find(existing => existing._id === agent._id)
-      const fetchedTable = await config.api.table.get(table._id!)
-      const fetchedDatasource = await config.api.datasource.get(datasource._id!)
-
-      expect(fetchedWorkspaceApp.projectIds).toEqual(expectedProjectIds)
-      expect(fetchedAutomation.projectIds).toEqual(expectedProjectIds)
-      expect(fetchedAgent?.projectIds).toEqual(expectedProjectIds)
-      expect(fetchedTable.projectIds).toEqual(expectedProjectIds)
-      expect(fetchedDatasource.projectIds).toEqual(expectedProjectIds)
+    const { project } = await config.api.project.create({
+      name: "Operations",
     })
+    const { project: retainedProject } = await config.api.project.create({
+      name: "Support",
+    })
+    const projectIds = [project._id, retainedProject._id]
+
+    const { workspaceApp } = await config.api.workspaceApp.create(
+      structures.workspaceApps.createRequest({
+        name: "Ops app",
+        url: "/ops-app",
+        projectIds,
+      })
+    )
+    const automation = await config.createAutomation()
+    const { automation: updatedAutomation } =
+      await config.api.automation.update({
+        ...automation,
+        projectIds,
+      })
+    const agent = await config.api.agent.create({
+      name: "Ops agent",
+      aiconfig: "default",
+      projectIds,
+    })
+    const table = await config.api.table.save({
+      ...basicTable(),
+      projectIds,
+    })
+    const datasource = await config.api.datasource.create({
+      ...basicDatasource().datasource,
+      projectIds,
+    })
+
+    await config.api.project.delete(project._id, project._rev)
+
+    const expectedProjectIds = [retainedProject._id]
+    const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+      workspaceApp._id!
+    )
+    const fetchedAutomation = await config.api.automation.get(
+      updatedAutomation._id!
+    )
+    const { agents } = await config.api.agent.fetch()
+    const fetchedAgent = agents.find(existing => existing._id === agent._id)
+    const fetchedTable = await config.api.table.get(table._id!)
+    const fetchedDatasource = await config.api.datasource.get(datasource._id!)
+
+    expect(fetchedWorkspaceApp.projectIds).toEqual(expectedProjectIds)
+    expect(fetchedAutomation.projectIds).toEqual(expectedProjectIds)
+    expect(fetchedAgent?.projectIds).toEqual(expectedProjectIds)
+    expect(fetchedTable.projectIds).toEqual(expectedProjectIds)
+    expect(fetchedDatasource.projectIds).toEqual(expectedProjectIds)
   })
 
   it("recreates the project members view when deleting project assignments", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+    const project = await createAssignedProject()
+    const workspaceApp = await createAssignedWorkspaceApp(project._id)
 
-      await config.doInContext(config.getDevWorkspaceId(), async () => {
-        const db = context.getWorkspaceDB()
-        const designDoc = await db.get<DesignDocument>("_design/database")
-        delete designDoc.views?.[ViewName.PROJECT_MEMBERS]
-        await db.put(designDoc)
-      })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const designDoc = await db.get<DesignDocument>("_design/database")
+      delete designDoc.views?.[ViewName.PROJECT_MEMBERS]
+      await db.put(designDoc)
+    })
 
-      await config.api.project.delete(project._id, project._rev)
+    await config.api.project.delete(project._id, project._rev)
 
-      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
-        workspaceApp._id!
-      )
-      expect(fetchedWorkspaceApp.projectIds).toBeUndefined()
+    const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+      workspaceApp._id!
+    )
+    expect(fetchedWorkspaceApp.projectIds).toBeUndefined()
 
-      await config.doInContext(config.getDevWorkspaceId(), async () => {
-        const designDoc = await context
-          .getWorkspaceDB()
-          .get<DesignDocument>("_design/database")
-        expect(designDoc.views?.[ViewName.PROJECT_MEMBERS]).toBeDefined()
-      })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const designDoc = await context
+        .getWorkspaceDB()
+        .get<DesignDocument>("_design/database")
+      expect(designDoc.views?.[ViewName.PROJECT_MEMBERS]).toBeDefined()
     })
   })
 
   it("preserves stored automation email passwords when deleting a project", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      const password = "imap-secret"
-      const trigger: EmailTrigger = {
-        ...automationTrigger(TRIGGER_DEFINITIONS.EMAIL),
-        stepId: AutomationTriggerStepId.EMAIL,
-        inputs: {
-          host: "imap.example.com",
-          port: 993,
-          secure: true,
-          username: "ops@example.com",
-          password,
-          mailbox: "INBOX",
-        } satisfies EmailTriggerInputs,
-      }
-      const { automation } = await config.api.automation.post({
-        ...newAutomation({ trigger, steps: [] }),
-        projectIds: [project._id],
-      })
-
-      await config.api.project.delete(project._id, project._rev)
-
-      const stored = await config.doInContext(
-        config.getDevWorkspaceId(),
-        async () =>
-          await context.getWorkspaceDB().get<Automation>(automation._id!)
-      )
-
-      expect(stored.projectIds).toBeUndefined()
-      if (!isEmailTrigger(stored.definition.trigger)) {
-        throw new Error("Expected stored automation to have an email trigger")
-      }
-      expect(stored.definition.trigger.inputs.password).toBe(password)
+    const project = await createAssignedProject()
+    const password = "imap-secret"
+    const trigger: EmailTrigger = {
+      ...automationTrigger(TRIGGER_DEFINITIONS.EMAIL),
+      stepId: AutomationTriggerStepId.EMAIL,
+      inputs: {
+        host: "imap.example.com",
+        port: 993,
+        secure: true,
+        username: "ops@example.com",
+        password,
+        mailbox: "INBOX",
+      } satisfies EmailTriggerInputs,
+    }
+    const { automation } = await config.api.automation.post({
+      ...newAutomation({ trigger, steps: [] }),
+      projectIds: [project._id],
     })
+
+    await config.api.project.delete(project._id, project._rev)
+
+    const stored = await config.doInContext(
+      config.getDevWorkspaceId(),
+      async () =>
+        await context.getWorkspaceDB().get<Automation>(automation._id!)
+    )
+
+    expect(stored.projectIds).toBeUndefined()
+    if (!isEmailTrigger(stored.definition.trigger)) {
+      throw new Error("Expected stored automation to have an email trigger")
+    }
+    expect(stored.definition.trigger.inputs.password).toBe(password)
   })
 
   it("does not clear assignments when deleting with a stale rev", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const { workspaceApp } = await config.api.workspaceApp.create(
-        structures.workspaceApps.createRequest({
-          name: "Ops app",
-          url: "/ops-app",
-          projectIds: [project._id],
-        })
-      )
-
-      await config.api.project.delete(project._id, "1-stale", {
-        status: 409,
-      })
-
-      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
-        workspaceApp._id!
-      )
-      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
+    const { project } = await config.api.project.create({
+      name: "Operations",
     })
+    const { workspaceApp } = await config.api.workspaceApp.create(
+      structures.workspaceApps.createRequest({
+        name: "Ops app",
+        url: "/ops-app",
+        projectIds: [project._id],
+      })
+    )
+
+    await config.api.project.delete(project._id, "1-stale", {
+      status: 409,
+    })
+
+    const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+      workspaceApp._id!
+    )
+    expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
   })
 
   describe("preserves assignments when updates omit project ids", () => {
     it("preserves workspace app assignments", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const workspaceApp = await createAssignedWorkspaceApp(project._id)
-
-        const updatedWorkspaceApp = await config.doInContext(
-          config.getDevWorkspaceId(),
-          async () =>
-            await sdk.workspaceApps.update({
-              _id: workspaceApp._id,
-              _rev: workspaceApp._rev,
-              name: "Ops app updated",
-              url: workspaceApp.url,
-              navigation: workspaceApp.navigation,
-              theme: workspaceApp.theme,
-              customTheme: workspaceApp.customTheme,
-              disabled: workspaceApp.disabled,
-            })
-        )
-
-        expect(updatedWorkspaceApp.projectIds).toEqual([project._id])
+      const { project } = await config.api.project.create({
+        name: "Operations",
       })
+      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+
+      const updatedWorkspaceApp = await config.doInContext(
+        config.getDevWorkspaceId(),
+        async () =>
+          await sdk.workspaceApps.update({
+            _id: workspaceApp._id,
+            _rev: workspaceApp._rev,
+            name: "Ops app updated",
+            url: workspaceApp.url,
+            navigation: workspaceApp.navigation,
+            theme: workspaceApp.theme,
+            customTheme: workspaceApp.customTheme,
+            disabled: workspaceApp.disabled,
+          })
+      )
+
+      expect(updatedWorkspaceApp.projectIds).toEqual([project._id])
     })
 
     it("preserves automation assignments", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const automation = await config.createAutomation()
-        const { automation: assignedAutomation } =
-          await config.api.automation.update({
-            ...automation,
-            projectIds: [project._id],
-          })
-
-        const { projectIds: _automationProjectIds, ...automationUpdate } =
-          assignedAutomation
-        const { automation: updatedAutomation } =
-          await config.api.automation.update({
-            ...automationUpdate,
-            name: "Ops automation updated",
-          })
-
-        expect(updatedAutomation.projectIds).toEqual([project._id])
+      const { project } = await config.api.project.create({
+        name: "Operations",
       })
+      const automation = await config.createAutomation()
+      const { automation: assignedAutomation } =
+        await config.api.automation.update({
+          ...automation,
+          projectIds: [project._id],
+        })
+
+      const { projectIds: _automationProjectIds, ...automationUpdate } =
+        assignedAutomation
+      const { automation: updatedAutomation } =
+        await config.api.automation.update({
+          ...automationUpdate,
+          name: "Ops automation updated",
+        })
+
+      expect(updatedAutomation.projectIds).toEqual([project._id])
     })
 
     it("preserves agent assignments", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const agent = await config.api.agent.create({
-          name: "Ops agent",
-          aiconfig: "default",
-          projectIds: [project._id],
-        })
-
-        const { projectIds: _agentProjectIds, ...agentUpdate } = agent
-        const updatedAgent = await config.api.agent.update({
-          ...agentUpdate,
-          name: "Ops agent updated",
-        })
-
-        expect(updatedAgent.projectIds).toEqual([project._id])
+      const { project } = await config.api.project.create({
+        name: "Operations",
       })
+      const agent = await config.api.agent.create({
+        name: "Ops agent",
+        aiconfig: "default",
+        projectIds: [project._id],
+      })
+
+      const { projectIds: _agentProjectIds, ...agentUpdate } = agent
+      const updatedAgent = await config.api.agent.update({
+        ...agentUpdate,
+        name: "Ops agent updated",
+      })
+
+      expect(updatedAgent.projectIds).toEqual([project._id])
     })
 
     it("preserves internal table assignments", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const table = await createAssignedInternalTable(project._id)
-
-        const { projectIds: _tableProjectIds, ...tableUpdate } = table
-        const updatedTable = await config.api.table.save({
-          ...tableUpdate,
-          name: "Ops table updated",
-        })
-
-        expect(updatedTable.projectIds).toEqual([project._id])
+      const { project } = await config.api.project.create({
+        name: "Operations",
       })
+      const table = await createAssignedInternalTable(project._id)
+
+      const { projectIds: _tableProjectIds, ...tableUpdate } = table
+      const updatedTable = await config.api.table.save({
+        ...tableUpdate,
+        name: "Ops table updated",
+      })
+
+      expect(updatedTable.projectIds).toEqual([project._id])
     })
 
     it("preserves datasource assignments", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const datasource = await config.api.datasource.create({
-          ...basicDatasource().datasource,
-          projectIds: [project._id],
-        })
-
-        const { projectIds: _datasourceProjectIds, ...datasourceUpdate } =
-          datasource
-        const updatedDatasource = await config.api.datasource.update({
-          ...datasourceUpdate,
-          name: "Ops datasource updated",
-        })
-
-        expect(updatedDatasource.projectIds).toEqual([project._id])
+      const { project } = await config.api.project.create({
+        name: "Operations",
       })
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        projectIds: [project._id],
+      })
+
+      const { projectIds: _datasourceProjectIds, ...datasourceUpdate } =
+        datasource
+      const updatedDatasource = await config.api.datasource.update({
+        ...datasourceUpdate,
+        name: "Ops datasource updated",
+      })
+
+      expect(updatedDatasource.projectIds).toEqual([project._id])
     })
   })
 
   it("restores assignments when project cleanup fails after partial cleanup", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      const workspaceApp = await createAssignedWorkspaceApp(project._id)
-      await createAssignedInternalTable(project._id)
+    const project = await createAssignedProject()
+    const workspaceApp = await createAssignedWorkspaceApp(project._id)
+    await createAssignedInternalTable(project._id)
 
-      await config.doInContext(undefined, async () => {
-        const bulkDocs = jest
-          .spyOn(DatabaseImpl.prototype, "bulkDocs")
-          .mockImplementationOnce(async docs => {
-            const results = []
-            for (const doc of docs) {
-              if (doc._id === workspaceApp._id) {
-                results.push(await context.getWorkspaceDB().put(doc))
-              } else {
-                results.push({
-                  id: doc._id!,
-                  error: "conflict",
-                  reason: "cleanup failed",
-                })
-              }
+    await config.doInContext(undefined, async () => {
+      const bulkDocs = jest
+        .spyOn(DatabaseImpl.prototype, "bulkDocs")
+        .mockImplementationOnce(async docs => {
+          const results = []
+          for (const doc of docs) {
+            if (doc._id === workspaceApp._id) {
+              results.push(await context.getWorkspaceDB().put(doc))
+            } else {
+              results.push({
+                id: doc._id!,
+                error: "conflict",
+                reason: "cleanup failed",
+              })
             }
-            return results
-          })
+          }
+          return results
+        })
 
-        try {
-          await expect(
-            projects.remove(project._id, project._rev)
-          ).rejects.toThrow("Failed to clear project assignments.")
-        } finally {
-          bulkDocs.mockRestore()
-        }
-      })
-
-      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
-        workspaceApp._id!
-      )
-      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
+      try {
+        await expect(
+          projects.remove(project._id, project._rev)
+        ).rejects.toThrow("Failed to clear project assignments.")
+      } finally {
+        bulkDocs.mockRestore()
+      }
     })
+
+    const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+      workspaceApp._id!
+    )
+    expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
   })
 
   it("restores assignments when deleting the project fails", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+    const project = await createAssignedProject()
+    const workspaceApp = await createAssignedWorkspaceApp(project._id)
 
-      await config.doInContext(undefined, async () => {
-        const remove = jest
-          .spyOn(DatabaseImpl.prototype, "remove")
-          .mockRejectedValueOnce(new Error("Project deletion failed"))
+    await config.doInContext(undefined, async () => {
+      const remove = jest
+        .spyOn(DatabaseImpl.prototype, "remove")
+        .mockRejectedValueOnce(new Error("Project deletion failed"))
 
-        try {
-          await expect(
-            projects.remove(project._id, project._rev)
-          ).rejects.toThrow("Project deletion failed")
-        } finally {
-          remove.mockRestore()
-        }
-      })
-
-      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
-        workspaceApp._id!
-      )
-      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
+      try {
+        await expect(
+          projects.remove(project._id, project._rev)
+        ).rejects.toThrow("Project deletion failed")
+      } finally {
+        remove.mockRestore()
+      }
     })
+
+    const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+      workspaceApp._id!
+    )
+    expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
   })
 
   const createProjectExportFixture = async () => {
@@ -1203,177 +1080,165 @@ describe("/projects", () => {
     }
 
     it("persists the import checklist and returns it on a fresh project fetch", async () => {
-      await withProjectsEnabled(async () => {
-        const imported = await importSetupProject()
-        const { projects } = await config.api.project.fetch()
-        const project = projects.find(
-          project => project._id === imported.project._id
-        )
-        const stored = await config.doInContext(undefined, () =>
-          context.getWorkspaceDB().get<Project>(imported.project._id)
-        )
+      const imported = await importSetupProject()
+      const { projects } = await config.api.project.fetch()
+      const project = projects.find(
+        project => project._id === imported.project._id
+      )
+      const stored = await config.doInContext(undefined, () =>
+        context.getWorkspaceDB().get<Project>(imported.project._id)
+      )
 
-        expect(project?.importSetup).toEqual({
-          resources: imported.resources,
-          unsupportedContent: imported.unsupportedContent,
-          requirements: imported.requirements,
-        })
-        expect(stored.importSetup).toEqual(project?.importSetup)
-        expect(project?.importSetup?.requirements).toHaveLength(2)
-        expect(JSON.stringify(project)).not.toContain("exported-secret")
+      expect(project?.importSetup).toEqual({
+        resources: imported.resources,
+        unsupportedContent: imported.unsupportedContent,
+        requirements: imported.requirements,
       })
+      expect(stored.importSetup).toEqual(project?.importSetup)
+      expect(project?.importSetup?.requirements).toHaveLength(2)
+      expect(JSON.stringify(project)).not.toContain("exported-secret")
     })
 
     it("keeps masked credentials pending after saving unrelated connection changes", async () => {
-      await withProjectsEnabled(async () => {
-        const imported = await importSetupProject()
-        const datasource = await config.api.datasource.get(
-          imported.resources.datasource![0]
-        )
-        await config.api.datasource.update({
-          ...datasource,
-          name: "Renamed API connection",
-        })
-        const { projects } = await config.api.project.fetch()
-        const project = projects.find(
-          project => project._id === imported.project._id
-        )
-
-        expect(project?.importSetup?.requirements).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              type: "datasource_secrets",
-              name: "Renamed API connection",
-            }),
-            expect.objectContaining({ type: "agent_ai_config" }),
-          ])
-        )
-        expect(project?.importSetup?.requirements).toHaveLength(2)
+      const imported = await importSetupProject()
+      const datasource = await config.api.datasource.get(
+        imported.resources.datasource![0]
+      )
+      await config.api.datasource.update({
+        ...datasource,
+        name: "Renamed API connection",
       })
+      const { projects } = await config.api.project.fetch()
+      const project = projects.find(
+        project => project._id === imported.project._id
+      )
+
+      expect(project?.importSetup?.requirements).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "datasource_secrets",
+            name: "Renamed API connection",
+          }),
+          expect.objectContaining({ type: "agent_ai_config" }),
+        ])
+      )
+      expect(project?.importSetup?.requirements).toHaveLength(2)
     })
 
     it("clears completed setup after real configuration saves and keeps the import report", async () => {
-      await withProjectsEnabled(async () => {
-        const imported = await importSetupProject()
-        const datasource = await config.api.datasource.get(
-          imported.resources.datasource![0]
-        )
-        await config.api.datasource.update({
-          ...datasource,
-          config: {
-            ...datasource.config,
-            authConfigs: [
-              {
-                _id: "auth_import_setup",
-                name: "API credentials",
-                type: RestAuthType.BASIC,
-                config: { username: "demo", password: "saved-secret" },
-              },
-            ],
-          },
-        })
-        const { agents } = await config.api.agent.fetch()
-        const agent = agents.find(
-          agent => agent._id === imported.resources.agent![0]
-        )!
-        await config.api.agent.update({ ...agent, aiconfig: "default" })
-        const { projects } = await config.api.project.fetch()
-        const project = projects.find(
-          project => project._id === imported.project._id
-        )
-        const exported = await readTarEntries(
-          await config.api.project.export(imported.project._id)
-        )
-
-        expect(project?.importSetup).toEqual({
-          resources: imported.resources,
-          unsupportedContent: imported.unsupportedContent,
-          requirements: [],
-        })
-        expect(JSON.stringify(project)).not.toContain("saved-secret")
-        expect(
-          JSON.parse(exported.get("project.json")!.toString())
-        ).not.toHaveProperty("importSetup")
+      const imported = await importSetupProject()
+      const datasource = await config.api.datasource.get(
+        imported.resources.datasource![0]
+      )
+      await config.api.datasource.update({
+        ...datasource,
+        config: {
+          ...datasource.config,
+          authConfigs: [
+            {
+              _id: "auth_import_setup",
+              name: "API credentials",
+              type: RestAuthType.BASIC,
+              config: { username: "demo", password: "saved-secret" },
+            },
+          ],
+        },
       })
+      const { agents } = await config.api.agent.fetch()
+      const agent = agents.find(
+        agent => agent._id === imported.resources.agent![0]
+      )!
+      await config.api.agent.update({ ...agent, aiconfig: "default" })
+      const { projects } = await config.api.project.fetch()
+      const project = projects.find(
+        project => project._id === imported.project._id
+      )
+      const exported = await readTarEntries(
+        await config.api.project.export(imported.project._id)
+      )
+
+      expect(project?.importSetup).toEqual({
+        resources: imported.resources,
+        unsupportedContent: imported.unsupportedContent,
+        requirements: [],
+      })
+      expect(JSON.stringify(project)).not.toContain("saved-secret")
+      expect(
+        JSON.parse(exported.get("project.json")!.toString())
+      ).not.toHaveProperty("importSetup")
     })
 
     it("does not require credentials for an unauthenticated REST connection", async () => {
-      await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
-        await config.api.datasource.create({
-          ...basicDatasource().datasource,
-          source: SourceName.REST,
-          projectIds: [project._id],
-          config: { url: "https://example.com" },
-        })
-        const imported = await config.api.project.import(
-          await config.api.project.export(project._id)
-        )
-        const { projects } = await config.api.project.fetch()
-
-        expect(imported.requirements).toEqual([])
-        expect(
-          projects.find(project => project._id === imported.project._id)
-            ?.importSetup?.requirements
-        ).toEqual([])
+      const project = await createAssignedProject()
+      await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        source: SourceName.REST,
+        projectIds: [project._id],
+        config: { url: "https://example.com" },
       })
+      const imported = await config.api.project.import(
+        await config.api.project.export(project._id)
+      )
+      const { projects } = await config.api.project.fetch()
+
+      expect(imported.requirements).toEqual([])
+      expect(
+        projects.find(project => project._id === imported.project._id)
+          ?.importSetup?.requirements
+      ).toEqual([])
     })
 
     it("keeps a preserved credential binding pending when its environment variable is missing", async () => {
-      await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
-        await config.api.datasource.create({
-          ...basicDatasource().datasource,
-          source: SourceName.REST,
-          projectIds: [project._id],
-          config: {
-            url: "https://example.com",
-            authConfigs: [
-              {
-                _id: "auth_environment",
-                name: "Environment credentials",
-                type: RestAuthType.BEARER,
-                config: { token: "{{ env.IMPORT_SETUP_TOKEN }}" },
-              },
-            ],
-          },
-        })
-        const imported = await config.api.project.import(
-          await config.api.project.export(project._id)
-        )
-        const { projects } = await config.api.project.fetch()
-
-        expect(
-          projects.find(project => project._id === imported.project._id)
-            ?.importSetup?.requirements
-        ).toEqual([
-          expect.objectContaining({
-            type: "datasource_secrets",
-            resourceId: imported.resources.datasource![0],
-          }),
-        ])
+      const project = await createAssignedProject()
+      await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        source: SourceName.REST,
+        projectIds: [project._id],
+        config: {
+          url: "https://example.com",
+          authConfigs: [
+            {
+              _id: "auth_environment",
+              name: "Environment credentials",
+              type: RestAuthType.BEARER,
+              config: { token: "{{ env.IMPORT_SETUP_TOKEN }}" },
+            },
+          ],
+        },
       })
+      const imported = await config.api.project.import(
+        await config.api.project.export(project._id)
+      )
+      const { projects } = await config.api.project.fetch()
+
+      expect(
+        projects.find(project => project._id === imported.project._id)
+          ?.importSetup?.requirements
+      ).toEqual([
+        expect.objectContaining({
+          type: "datasource_secrets",
+          resourceId: imported.resources.datasource![0],
+        }),
+      ])
     })
 
     it("removes deleted and unassigned resources from the pending checklist", async () => {
-      await withProjectsEnabled(async () => {
-        const imported = await importSetupProject()
-        const datasource = await config.api.datasource.get(
-          imported.resources.datasource![0]
-        )
-        await config.api.datasource.delete(datasource)
-        const { agents } = await config.api.agent.fetch()
-        const agent = agents.find(
-          agent => agent._id === imported.resources.agent![0]
-        )!
-        await config.api.agent.update({ ...agent, projectIds: [] })
-        const { projects } = await config.api.project.fetch()
+      const imported = await importSetupProject()
+      const datasource = await config.api.datasource.get(
+        imported.resources.datasource![0]
+      )
+      await config.api.datasource.delete(datasource)
+      const { agents } = await config.api.agent.fetch()
+      const agent = agents.find(
+        agent => agent._id === imported.resources.agent![0]
+      )!
+      await config.api.agent.update({ ...agent, projectIds: [] })
+      const { projects } = await config.api.project.fetch()
 
-        expect(
-          projects.find(project => project._id === imported.project._id)
-            ?.importSetup?.requirements
-        ).toEqual([])
-      })
+      expect(
+        projects.find(project => project._id === imported.project._id)
+          ?.importSetup?.requirements
+      ).toEqual([])
     })
   })
 
@@ -1472,528 +1337,494 @@ describe("/projects", () => {
     }
 
     it("removes email passwords on export and import while preserving mailbox settings", async () => {
-      await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
-        const result = await exportThenImportUnsanitisedEmailAutomation({
-          projectId: project._id,
-          credentials: { password: "mailbox-secret" },
-        })
-
-        expect(result.exportedInputs).toEqual(emailSettings)
-        expect(result.importedInputs).toEqual(emailSettings)
-        expect(result.requirements).toEqual([
-          {
-            type: "automation_credentials",
-            resourceId: result.imported.resources.automation![0],
-          },
-        ])
+      const project = await createAssignedProject()
+      const result = await exportThenImportUnsanitisedEmailAutomation({
+        projectId: project._id,
+        credentials: { password: "mailbox-secret" },
       })
+
+      expect(result.exportedInputs).toEqual(emailSettings)
+      expect(result.importedInputs).toEqual(emailSettings)
+      expect(result.requirements).toEqual([
+        {
+          type: "automation_credentials",
+          resourceId: result.imported.resources.automation![0],
+        },
+      ])
     })
 
     it("requires email credentials when the OAuth2 datasource is excluded from the package", async () => {
-      await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
-        const datasource = await createEmailOAuthConnection([])
-        const result = await exportThenImportUnsanitisedEmailAutomation({
-          projectId: project._id,
-          credentials: {
-            authType: EmailTriggerAuthType.OAUTH2,
-            datasourceId: datasource._id,
-            authConfigId: "auth_source",
-          },
-          beforeExport: async () => {
-            const assignedDatasource = await config.api.datasource.get(
-              datasource._id!
-            )
-            const preview = await config.api.project.previewAssignment({
-              resourceId: assignedDatasource._id!,
-              projectIds: [],
-            })
-            await config.api.project.updateAssignment(assignedDatasource._id!, {
-              dependencyFingerprint: preview.dependencyFingerprint,
-              resourceRev: assignedDatasource._rev!,
-              projectIds: [],
-              dependencyIds: [],
-            })
-          },
-        })
-
-        expect(result.exportedInputs).toEqual({
-          ...emailSettings,
+      const project = await createAssignedProject()
+      const datasource = await createEmailOAuthConnection([])
+      const result = await exportThenImportUnsanitisedEmailAutomation({
+        projectId: project._id,
+        credentials: {
           authType: EmailTriggerAuthType.OAUTH2,
           datasourceId: datasource._id,
           authConfigId: "auth_source",
-        })
-        expect(result.importedInputs).toEqual({
-          ...emailSettings,
-          authType: EmailTriggerAuthType.OAUTH2,
-        })
-        expect(result.requirements).toEqual([
-          {
-            type: "automation_credentials",
-            resourceId: result.imported.resources.automation![0],
-          },
-        ])
+        },
+        beforeExport: async () => {
+          const assignedDatasource = await config.api.datasource.get(
+            datasource._id!
+          )
+          const preview = await config.api.project.previewAssignment({
+            resourceId: assignedDatasource._id!,
+            projectIds: [],
+          })
+          await config.api.project.updateAssignment(assignedDatasource._id!, {
+            dependencyFingerprint: preview.dependencyFingerprint,
+            resourceRev: assignedDatasource._rev!,
+            projectIds: [],
+            dependencyIds: [],
+          })
+        },
       })
+
+      expect(result.exportedInputs).toEqual({
+        ...emailSettings,
+        authType: EmailTriggerAuthType.OAUTH2,
+        datasourceId: datasource._id,
+        authConfigId: "auth_source",
+      })
+      expect(result.importedInputs).toEqual({
+        ...emailSettings,
+        authType: EmailTriggerAuthType.OAUTH2,
+      })
+      expect(result.requirements).toEqual([
+        {
+          type: "automation_credentials",
+          resourceId: result.imported.resources.automation![0],
+        },
+      ])
     })
 
     it("remaps an included email OAuth2 connection and requires its datasource secrets", async () => {
-      await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
-        const datasource = await createEmailOAuthConnection([project._id])
-        const result = await exportThenImportUnsanitisedEmailAutomation({
-          projectId: project._id,
-          credentials: {
-            authType: EmailTriggerAuthType.OAUTH2,
-            datasourceId: datasource._id,
-            authConfigId: "auth_source",
-          },
-        })
-
-        expect(result.exportedInputs).toEqual({
-          ...emailSettings,
+      const project = await createAssignedProject()
+      const datasource = await createEmailOAuthConnection([project._id])
+      const result = await exportThenImportUnsanitisedEmailAutomation({
+        projectId: project._id,
+        credentials: {
           authType: EmailTriggerAuthType.OAUTH2,
           datasourceId: datasource._id,
           authConfigId: "auth_source",
-        })
-        expect(result.importedInputs).toEqual({
-          ...emailSettings,
-          authType: EmailTriggerAuthType.OAUTH2,
-          datasourceId: result.imported.resources.datasource![0],
-          authConfigId: "auth_source",
-        })
-        expect(result.requirements).toEqual([
-          {
-            type: "datasource_secrets",
-            resourceId: result.imported.resources.datasource![0],
-          },
-        ])
+        },
       })
+
+      expect(result.exportedInputs).toEqual({
+        ...emailSettings,
+        authType: EmailTriggerAuthType.OAUTH2,
+        datasourceId: datasource._id,
+        authConfigId: "auth_source",
+      })
+      expect(result.importedInputs).toEqual({
+        ...emailSettings,
+        authType: EmailTriggerAuthType.OAUTH2,
+        datasourceId: result.imported.resources.datasource![0],
+        authConfigId: "auth_source",
+      })
+      expect(result.requirements).toEqual([
+        {
+          type: "datasource_secrets",
+          resourceId: result.imported.resources.datasource![0],
+        },
+      ])
     })
 
     it("requires email credentials when an included OAuth2 datasource has no matching auth config", async () => {
-      await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
-        const datasource = await createEmailOAuthConnection([project._id])
-        const result = await exportThenImportUnsanitisedEmailAutomation({
-          projectId: project._id,
-          credentials: {
-            authType: EmailTriggerAuthType.OAUTH2,
-            datasourceId: datasource._id,
-            authConfigId: "auth_missing",
-          },
-        })
-
-        expect(result.exportedInputs).toEqual({
-          ...emailSettings,
+      const project = await createAssignedProject()
+      const datasource = await createEmailOAuthConnection([project._id])
+      const result = await exportThenImportUnsanitisedEmailAutomation({
+        projectId: project._id,
+        credentials: {
           authType: EmailTriggerAuthType.OAUTH2,
           datasourceId: datasource._id,
           authConfigId: "auth_missing",
-        })
-        expect(result.importedInputs).toEqual({
-          ...emailSettings,
-          authType: EmailTriggerAuthType.OAUTH2,
-        })
-        expect(result.requirements).toEqual([
-          {
-            type: "automation_credentials",
-            resourceId: result.imported.resources.automation![0],
-          },
-          {
-            type: "datasource_secrets",
-            resourceId: result.imported.resources.datasource![0],
-          },
-        ])
+        },
       })
+
+      expect(result.exportedInputs).toEqual({
+        ...emailSettings,
+        authType: EmailTriggerAuthType.OAUTH2,
+        datasourceId: datasource._id,
+        authConfigId: "auth_missing",
+      })
+      expect(result.importedInputs).toEqual({
+        ...emailSettings,
+        authType: EmailTriggerAuthType.OAUTH2,
+      })
+      expect(result.requirements).toEqual([
+        {
+          type: "automation_credentials",
+          resourceId: result.imported.resources.automation![0],
+        },
+        {
+          type: "datasource_secrets",
+          resourceId: result.imported.resources.datasource![0],
+        },
+      ])
     })
 
     it("removes legacy email OAuth2 credentials on export and import", async () => {
-      await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
-        const result = await exportThenImportUnsanitisedEmailAutomation({
-          projectId: project._id,
-          credentials: {
-            authType: EmailTriggerAuthType.OAUTH2,
-            oauth2ConfigId: "oauth2_source",
-          },
-        })
-
-        expect(result.exportedInputs).toEqual({
-          ...emailSettings,
+      const project = await createAssignedProject()
+      const result = await exportThenImportUnsanitisedEmailAutomation({
+        projectId: project._id,
+        credentials: {
           authType: EmailTriggerAuthType.OAUTH2,
-        })
-        expect(result.importedInputs).toEqual({
-          ...emailSettings,
-          authType: EmailTriggerAuthType.OAUTH2,
-        })
-        expect(result.requirements).toEqual([
-          {
-            type: "automation_credentials",
-            resourceId: result.imported.resources.automation![0],
-          },
-        ])
+          oauth2ConfigId: "oauth2_source",
+        },
       })
+
+      expect(result.exportedInputs).toEqual({
+        ...emailSettings,
+        authType: EmailTriggerAuthType.OAUTH2,
+      })
+      expect(result.importedInputs).toEqual({
+        ...emailSettings,
+        authType: EmailTriggerAuthType.OAUTH2,
+      })
+      expect(result.requirements).toEqual([
+        {
+          type: "automation_credentials",
+          resourceId: result.imported.resources.automation![0],
+        },
+      ])
     })
 
     it("clears email setup after selecting a configured standalone OAuth2 connection", async () => {
-      await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
-        const { imported } = await exportThenImportUnsanitisedEmailAutomation({
-          projectId: project._id,
-          credentials: { password: "mailbox-secret" },
+      const project = await createAssignedProject()
+      const { imported } = await exportThenImportUnsanitisedEmailAutomation({
+        projectId: project._id,
+        credentials: { password: "mailbox-secret" },
+      })
+      const oauth = await config.doInContext(undefined, () =>
+        sdk.oauth2.create({
+          name: "Mailbox OAuth2 connection",
+          url: "https://example.com/oauth/token",
+          clientId: "mailbox-client",
+          clientSecret: "saved-mailbox-secret",
+          method: OAuth2CredentialsMethod.BODY,
+          grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
         })
-        const oauth = await config.doInContext(undefined, () =>
-          sdk.oauth2.create({
-            name: "Mailbox OAuth2 connection",
-            url: "https://example.com/oauth/token",
-            clientId: "mailbox-client",
-            clientSecret: "saved-mailbox-secret",
-            method: OAuth2CredentialsMethod.BODY,
-            grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-          })
-        )
-        const automation = await config.api.automation.get(
-          imported.resources.automation![0]
-        )
-        const trigger = automation.definition.trigger
-        if (!isEmailTrigger(trigger)) {
-          throw new Error(
-            "Expected imported automation to have an email trigger"
-          )
-        }
-        await config.api.automation.update({
-          ...automation,
-          definition: {
-            ...automation.definition,
-            trigger: {
-              ...trigger,
-              inputs: {
-                ...emailSettings,
-                authType: EmailTriggerAuthType.OAUTH2,
-                datasourceId: oauth._id,
-                authConfigId: oauth._id,
-              },
+      )
+      const automation = await config.api.automation.get(
+        imported.resources.automation![0]
+      )
+      const trigger = automation.definition.trigger
+      if (!isEmailTrigger(trigger)) {
+        throw new Error("Expected imported automation to have an email trigger")
+      }
+      await config.api.automation.update({
+        ...automation,
+        definition: {
+          ...automation.definition,
+          trigger: {
+            ...trigger,
+            inputs: {
+              ...emailSettings,
+              authType: EmailTriggerAuthType.OAUTH2,
+              datasourceId: oauth._id,
+              authConfigId: oauth._id,
             },
           },
-        })
-        const { projects } = await config.api.project.fetch()
-
-        expect(
-          projects.find(project => project._id === imported.project._id)
-            ?.importSetup?.requirements
-        ).toEqual([])
+        },
       })
+      const { projects } = await config.api.project.fetch()
+
+      expect(
+        projects.find(project => project._id === imported.project._id)
+          ?.importSetup?.requirements
+      ).toEqual([])
     })
 
     it("includes expected docs and manifest metadata", async () => {
-      await withProjectsEnabled(async () => {
-        const {
-          project,
-          datasource,
-          query,
-          table,
-          automation,
-          agent,
-          workspaceApp,
-          screen,
-          files,
-        } = await createProjectExportFixture()
+      const {
+        project,
+        datasource,
+        query,
+        table,
+        automation,
+        agent,
+        workspaceApp,
+        screen,
+        files,
+      } = await createProjectExportFixture()
 
-        expect(Array.from(files.keys())).toEqual(
-          expect.arrayContaining([
-            "manifest.json",
-            "project.json",
-            "dependency-index.json",
-            `docs/datasource/${datasource._id}.json`,
-            `docs/query/${query._id}.json`,
-            `docs/table/${table._id}.json`,
-            `docs/automation/${automation._id}.json`,
-            `docs/agent/${agent._id}.json`,
-            `docs/workspace_app/${workspaceApp._id}.json`,
-            `docs/screen/${screen._id}.json`,
-          ])
-        )
+      expect(Array.from(files.keys())).toEqual(
+        expect.arrayContaining([
+          "manifest.json",
+          "project.json",
+          "dependency-index.json",
+          `docs/datasource/${datasource._id}.json`,
+          `docs/query/${query._id}.json`,
+          `docs/table/${table._id}.json`,
+          `docs/automation/${automation._id}.json`,
+          `docs/agent/${agent._id}.json`,
+          `docs/workspace_app/${workspaceApp._id}.json`,
+          `docs/screen/${screen._id}.json`,
+        ])
+      )
 
-        const manifest = JSON.parse(files.get("manifest.json")!.toString())
-        expect(manifest).toMatchObject({
-          artifactType: "project",
-          formatVersion: 1,
-          containsRows: false,
-          containsAttachments: false,
-          requiresSecrets: true,
-          project: {
-            _id: project._id,
-            name: project.name,
-            description: project.description,
-            color: project.color,
+      const manifest = JSON.parse(files.get("manifest.json")!.toString())
+      expect(manifest).toMatchObject({
+        artifactType: "project",
+        formatVersion: 1,
+        containsRows: false,
+        containsAttachments: false,
+        requiresSecrets: true,
+        project: {
+          _id: project._id,
+          name: project.name,
+          description: project.description,
+          color: project.color,
+        },
+        resourcesByType: {
+          project: 1,
+          datasource: 1,
+          query: 1,
+          table: 1,
+          automation: 1,
+          agent: 1,
+          workspace_app: 1,
+          screen: 1,
+        },
+        unsupportedContent: [
+          {
+            type: "agent_linked_content",
+            count: 1,
           },
-          resourcesByType: {
-            project: 1,
-            datasource: 1,
-            query: 1,
-            table: 1,
-            automation: 1,
-            agent: 1,
-            workspace_app: 1,
-            screen: 1,
-          },
-          unsupportedContent: [
-            {
-              type: "agent_linked_content",
-              count: 1,
-            },
-          ],
-        })
-
-        const exportedProject = JSON.parse(
-          files.get("project.json")!.toString()
-        )
-        expect(exportedProject._id).toBe(project._id)
-        expect(exportedProject._rev).toBeUndefined()
-        expect(manifest.project.createdAt).not.toBe("invalid")
-        expect(manifest.project.createdAt).toBe(manifest.project.updatedAt)
-        expect(exportedProject.createdAt).toBe(manifest.project.createdAt)
-        expect(exportedProject.updatedAt).toBe(manifest.project.updatedAt)
+        ],
       })
+
+      const exportedProject = JSON.parse(files.get("project.json")!.toString())
+      expect(exportedProject._id).toBe(project._id)
+      expect(exportedProject._rev).toBeUndefined()
+      expect(manifest.project.createdAt).not.toBe("invalid")
+      expect(manifest.project.createdAt).toBe(manifest.project.updatedAt)
+      expect(exportedProject.createdAt).toBe(manifest.project.createdAt)
+      expect(exportedProject.updatedAt).toBe(manifest.project.updatedAt)
     })
 
     it("sanitises exported secrets and agent integrations", async () => {
-      await withProjectsEnabled(async () => {
-        const { datasource, query, agent, screen, files } =
-          await createProjectExportFixture()
+      const { datasource, query, agent, screen, files } =
+        await createProjectExportFixture()
 
-        const exportedDatasource = JSON.parse(
-          files.get(`docs/datasource/${datasource._id}.json`)!.toString()
-        )
-        expect(exportedDatasource.config.password).toBe(PASSWORD_REPLACEMENT)
+      const exportedDatasource = JSON.parse(
+        files.get(`docs/datasource/${datasource._id}.json`)!.toString()
+      )
+      expect(exportedDatasource.config.password).toBe(PASSWORD_REPLACEMENT)
 
-        const exportedQuery = JSON.parse(
-          files.get(`docs/query/${query._id}.json`)!.toString()
-        )
-        expect(exportedQuery.projectIds).toBeUndefined()
+      const exportedQuery = JSON.parse(
+        files.get(`docs/query/${query._id}.json`)!.toString()
+      )
+      expect(exportedQuery.projectIds).toBeUndefined()
 
-        const exportedScreen = JSON.parse(
-          files.get(`docs/screen/${screen._id}.json`)!.toString()
-        )
-        expect(exportedScreen.projectIds).toBeUndefined()
+      const exportedScreen = JSON.parse(
+        files.get(`docs/screen/${screen._id}.json`)!.toString()
+      )
+      expect(exportedScreen.projectIds).toBeUndefined()
 
-        const exportedAgent = JSON.parse(
-          files.get(`docs/agent/${agent._id}.json`)!.toString()
-        )
-        expect(exportedAgent.aiconfig).toBe("")
-        expect(exportedAgent.live).toBe(false)
-        expect(exportedAgent.publishedAt).toBeUndefined()
-        expect(exportedAgent.slackIntegration).toEqual({
-          idleTimeoutMinutes: 20,
-          requireUserLink: true,
-          teamId: "T123",
-        })
+      const exportedAgent = JSON.parse(
+        files.get(`docs/agent/${agent._id}.json`)!.toString()
+      )
+      expect(exportedAgent.aiconfig).toBe("")
+      expect(exportedAgent.live).toBe(false)
+      expect(exportedAgent.publishedAt).toBeUndefined()
+      expect(exportedAgent.slackIntegration).toEqual({
+        idleTimeoutMinutes: 20,
+        requireUserLink: true,
+        teamId: "T123",
       })
     })
 
     it("preserves pure environment expressions in exported secrets", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Environment bindings",
-        })
-        const password = "{{ env.PASSWORD_PREFIX }}{{ env.PASSWORD_SUFFIX }}"
-        const datasource = await config.api.datasource.create({
-          type: "datasource",
-          name: "Environment datasource",
-          source: SourceName.REST,
-          config: {
-            authConfigs: [
-              {
-                _id: generator.guid(),
-                name: "Environment auth",
-                type: RestAuthType.BASIC,
-                config: {
-                  username: "{{ env.USERNAME }}",
-                  password,
-                },
-              },
-            ],
-          },
-          projectIds: [project._id],
-        })
-
-        const files = await readTarEntries(
-          await config.api.project.export(project._id)
-        )
-        const exportedDatasource = JSON.parse(
-          files.get(`docs/datasource/${datasource._id}.json`)!.toString()
-        )
-        expect(exportedDatasource.config.authConfigs[0].config.password).toBe(
-          password
-        )
+      const { project } = await config.api.project.create({
+        name: "Environment bindings",
       })
+      const password = "{{ env.PASSWORD_PREFIX }}{{ env.PASSWORD_SUFFIX }}"
+      const datasource = await config.api.datasource.create({
+        type: "datasource",
+        name: "Environment datasource",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Environment auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "{{ env.USERNAME }}",
+                password,
+              },
+            },
+          ],
+        },
+        projectIds: [project._id],
+      })
+
+      const files = await readTarEntries(
+        await config.api.project.export(project._id)
+      )
+      const exportedDatasource = JSON.parse(
+        files.get(`docs/datasource/${datasource._id}.json`)!.toString()
+      )
+      expect(exportedDatasource.config.authConfigs[0].config.password).toBe(
+        password
+      )
     })
 
     it("includes a dependency index for exported project members", async () => {
-      await withProjectsEnabled(async () => {
-        const {
-          project,
-          datasource,
-          query,
-          table,
-          automation,
-          agent,
-          workspaceApp,
-          files,
-        } = await createProjectExportFixture()
+      const {
+        project,
+        datasource,
+        query,
+        table,
+        automation,
+        agent,
+        workspaceApp,
+        files,
+      } = await createProjectExportFixture()
 
-        const dependencyIndex = JSON.parse(
-          files.get("dependency-index.json")!.toString()
-        ) as ProjectPackageDependencyIndex
-        expect(dependencyIndex.rootProjectId).toBe(project._id)
-        expect(
-          dependencyIndex.directMembers.map(resource => resource.id).sort()
-        ).toEqual(
-          [
-            datasource._id,
-            table._id,
-            automation._id,
-            agent._id,
-            workspaceApp._id,
-          ].sort()
+      const dependencyIndex = JSON.parse(
+        files.get("dependency-index.json")!.toString()
+      ) as ProjectPackageDependencyIndex
+      expect(dependencyIndex.rootProjectId).toBe(project._id)
+      expect(
+        dependencyIndex.directMembers.map(resource => resource.id).sort()
+      ).toEqual(
+        [
+          datasource._id,
+          table._id,
+          automation._id,
+          agent._id,
+          workspaceApp._id,
+        ].sort()
+      )
+      expect(
+        dependencyIndex.resources[datasource._id!]!.dependencies.map(
+          resource => resource.id
         )
-        expect(
-          dependencyIndex.resources[datasource._id!]!.dependencies.map(
-            resource => resource.id
-          )
-        ).toContain(query._id)
-      })
+      ).toContain(query._id)
     })
 
     it("does not treat an agent id in a query name as a dependency or report it as excluded", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const datasource = await config.api.datasource.create({
-          ...basicDatasource().datasource,
-        })
-        const unrelatedAgent = await config.api.agent.create({
-          name: "Unrelated agent",
-          aiconfig: "default",
-        })
-        const queryNamedAfterAgent = await config.api.query.save({
-          ...basicQuery(datasource._id!),
-          name: `Docs for ${unrelatedAgent._id}.json`,
-        })
-        const preview = await config.api.project.previewAssignment({
-          resourceId: datasource._id!,
-          projectIds: [project._id],
-        })
-        await config.api.project.updateAssignment(datasource._id!, {
-          dependencyFingerprint: preview.dependencyFingerprint,
-          resourceRev: preview.resourceRev,
-          projectIds: [project._id],
-          dependencyIds: [],
-        })
-
-        const files = await readTarEntries(
-          await config.api.project.export(project._id)
-        )
-        const manifest = JSON.parse(files.get("manifest.json")!.toString())
-        const dependencyIndex = JSON.parse(
-          files.get("dependency-index.json")!.toString()
-        ) as ProjectPackageDependencyIndex
-
-        const exportedQuery = JSON.parse(
-          files.get(`docs/query/${queryNamedAfterAgent._id}.json`)!.toString()
-        )
-
-        expect(exportedQuery.name).toBe(queryNamedAfterAgent.name)
-        expect(files.has(`docs/agent/${unrelatedAgent._id}.json`)).toBe(false)
-        expect(
-          Object.values(dependencyIndex.resources).flatMap(resource =>
-            resource.dependencies.map(dependency => dependency.id)
-          )
-        ).not.toContain(unrelatedAgent._id)
-        expect(manifest.unsupportedContent).not.toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({ type: "excluded_dependency" }),
-          ])
-        )
-      })
-    })
-  })
-
-  it("returns 404 when exporting an unknown project", async () => {
-    await withProjectsEnabled(async () => {
-      await config.api.project.export("project_missing", undefined, {
-        status: 404,
-        body: {
-          message: "Project with id 'project_missing' not found.",
-        },
-      })
-    })
-  })
-
-  it("exports encrypted project tarballs when requested", async () => {
-    await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "Operations",
       })
-
-      const body = await config.api.project.export(project._id, {
-        encryptPassword: "abcde",
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
       })
-      const files = await readTarEntries(body)
+      const unrelatedAgent = await config.api.agent.create({
+        name: "Unrelated agent",
+        aiconfig: "default",
+      })
+      const queryNamedAfterAgent = await config.api.query.save({
+        ...basicQuery(datasource._id!),
+        name: `Docs for ${unrelatedAgent._id}.json`,
+      })
+      const preview = await config.api.project.previewAssignment({
+        resourceId: datasource._id!,
+        projectIds: [project._id],
+      })
+      await config.api.project.updateAssignment(datasource._id!, {
+        dependencyFingerprint: preview.dependencyFingerprint,
+        resourceRev: preview.resourceRev,
+        projectIds: [project._id],
+        dependencyIds: [],
+      })
 
-      expect(Array.from(files.keys())).toEqual(
+      const files = await readTarEntries(
+        await config.api.project.export(project._id)
+      )
+      const manifest = JSON.parse(files.get("manifest.json")!.toString())
+      const dependencyIndex = JSON.parse(
+        files.get("dependency-index.json")!.toString()
+      ) as ProjectPackageDependencyIndex
+
+      const exportedQuery = JSON.parse(
+        files.get(`docs/query/${queryNamedAfterAgent._id}.json`)!.toString()
+      )
+
+      expect(exportedQuery.name).toBe(queryNamedAfterAgent.name)
+      expect(files.has(`docs/agent/${unrelatedAgent._id}.json`)).toBe(false)
+      expect(
+        Object.values(dependencyIndex.resources).flatMap(resource =>
+          resource.dependencies.map(dependency => dependency.id)
+        )
+      ).not.toContain(unrelatedAgent._id)
+      expect(manifest.unsupportedContent).not.toEqual(
         expect.arrayContaining([
-          "manifest.json.enc",
-          "project.json.enc",
-          "dependency-index.json.enc",
+          expect.objectContaining({ type: "excluded_dependency" }),
         ])
       )
     })
   })
 
-  it("rejects project imports into production workspaces", async () => {
-    await withProjectsEnabled(async () => {
-      const body = await createTarPackage(createMinimalPackageEntries())
-      await config.publish()
-
-      await config.withHeaders(
-        { [Header.WORKSPACE_ID]: config.getProdWorkspaceId() },
-        async () => {
-          await config.api.project.import(body, undefined, {
-            status: 400,
-            body: {
-              message: "Only apps in development support this endpoint",
-            },
-          })
-
-          expect((await config.api.project.fetch()).projects).toEqual([])
-        }
-      )
+  it("returns 404 when exporting an unknown project", async () => {
+    await config.api.project.export("project_missing", undefined, {
+      status: 404,
+      body: {
+        message: "Project with id 'project_missing' not found.",
+      },
     })
   })
 
-  it("imports empty projects without requiring docs", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-
-      const body = await config.api.project.export(project._id)
-      const destinationWorkspace = await config.api.workspace.create({
-        name: "Imported workspace",
-      })
-
-      await config.withHeaders(
-        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
-        async () => {
-          const imported = await config.api.project.import(body)
-          expect(imported.resources).toEqual({
-            project: [imported.project._id],
-          })
-        }
-      )
+  it("exports encrypted project tarballs when requested", async () => {
+    const { project } = await config.api.project.create({
+      name: "Operations",
     })
+
+    const body = await config.api.project.export(project._id, {
+      encryptPassword: "abcde",
+    })
+    const files = await readTarEntries(body)
+
+    expect(Array.from(files.keys())).toEqual(
+      expect.arrayContaining([
+        "manifest.json.enc",
+        "project.json.enc",
+        "dependency-index.json.enc",
+      ])
+    )
+  })
+
+  it("rejects project imports into production workspaces", async () => {
+    const body = await createTarPackage(createMinimalPackageEntries())
+    await config.publish()
+
+    await config.withHeaders(
+      { [Header.WORKSPACE_ID]: config.getProdWorkspaceId() },
+      async () => {
+        await config.api.project.import(body, undefined, {
+          status: 400,
+          body: {
+            message: "Only apps in development support this endpoint",
+          },
+        })
+
+        expect((await config.api.project.fetch()).projects).toEqual([])
+      }
+    )
+  })
+
+  it("imports empty projects without requiring docs", async () => {
+    const { project } = await config.api.project.create({
+      name: "Operations",
+    })
+
+    const body = await config.api.project.export(project._id)
+    const destinationWorkspace = await config.api.workspace.create({
+      name: "Imported workspace",
+    })
+
+    await config.withHeaders(
+      { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
+      async () => {
+        const imported = await config.api.project.import(body)
+        expect(imported.resources).toEqual({
+          project: [imported.project._id],
+        })
+      }
+    )
   })
 
   it.each([
@@ -2007,209 +1838,15 @@ describe("/projects", () => {
   ])(
     "preserves a $name README through project export and import",
     async ({ readme }) => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-          readme,
-        })
-        const packageBuffer = await config.api.project.export(project._id)
-        const entries = await readTarEntries(packageBuffer)
-        const exported: Project = JSON.parse(
-          entries.get("project.json")!.toString()
-        )
-        const destinationWorkspace = await config.api.workspace.create({
-          name: "Imported workspace",
-        })
-
-        await config.withHeaders(
-          { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
-          async () => {
-            const imported = await config.api.project.import(packageBuffer)
-            const { projects } = await config.api.project.fetch()
-
-            expect(exported.readme).toBe(readme)
-            expect(imported.project.readme).toBe(readme)
-            expect(imported.project._id).not.toBe(project._id)
-            expect(
-              projects.find(existing => existing._id === imported.project._id)
-                ?.readme
-            ).toBe(readme)
-          }
-        )
-      })
-    }
-  )
-
-  it("exports and remaps external tables through their assigned datasource", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "External data",
-      })
-      const datasource = await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        projectIds: [project._id],
-      })
-      const externalTableId = buildExternalTableId(datasource._id!, "TestTable")
-      const externalTable = basicTable(datasource, {
-        _id: externalTableId,
-        name: "TestTable",
-        primaryDisplay: `{{ ${externalTableId}.name }}`,
-      })
-      await config.api.datasource.update({
-        ...datasource,
-        entities: {
-          [externalTable.name]: externalTable,
-        },
-      })
-      const view = await config.api.viewV2.create({
-        tableId: externalTableId,
-        name: "External view",
-      })
-      await config.doInContext(config.getDevWorkspaceId(), async () => {
-        const db = context.getWorkspaceDB()
-        const storedDatasource = await db.get<Datasource>(datasource._id!)
-        storedDatasource.entities![externalTable.name].projectIds = [
-          project._id,
-        ]
-        await db.put(storedDatasource)
-      })
-
-      const body = await config.api.project.export(project._id)
-      const files = await readTarEntries(body)
-      const dependencyIndex = JSON.parse(
-        files.get("dependency-index.json")!.toString()
-      ) as ProjectPackageDependencyIndex
-      expect(dependencyIndex.directMembers.map(member => member.id)).toEqual([
-        datasource._id,
-      ])
-
-      const destinationWorkspace = await config.api.workspace.create({
-        name: "Imported external data",
-      })
-      await config.withHeaders(
-        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
-        async () => {
-          const imported = await config.api.project.import(body)
-          const importedDatasourceId = imported.resources.datasource?.[0]!
-          const importedDatasource =
-            await config.api.datasource.get(importedDatasourceId)
-          const importedExternalTable =
-            importedDatasource.entities![externalTable.name]
-          const importedExternalTableId = buildExternalTableId(
-            importedDatasourceId,
-            "TestTable"
-          )
-
-          expect(importedDatasource.projectIds).toEqual([imported.project._id])
-          expect(importedExternalTable._id).toBe(importedExternalTableId)
-          expect(importedExternalTable.projectIds).toBeUndefined()
-          expect(importedExternalTable.primaryDisplay).toBe(
-            `{{ ${importedExternalTableId}.name }}`
-          )
-          const importedView = Object.values(
-            importedExternalTable.views!
-          ).filter(helpers.views.isV2)[0]
-          expect(importedView.id).not.toBe(view.id)
-          expect((await config.api.viewV2.get(importedView.id)).tableId).toBe(
-            importedExternalTableId
-          )
-        }
-      )
-    })
-  })
-
-  it("adds the datasource to the project when an assigned agent gains an external table tool", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "External data agent",
-      })
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
-      const externalTableId = buildExternalTableId(datasource._id!, "Orders")
-      await config.api.datasource.update({
-        ...datasource,
-        entities: {
-          Orders: basicTable(datasource, {
-            _id: externalTableId,
-            name: "Orders",
-          }),
-        },
-      })
-      const agent = await config.api.agent.create({
-        name: "External data agent",
-        aiconfig: "default",
-        projectIds: [project._id],
-      })
-      await config.api.agent.createOperation(agent._id!, {
-        id: "operation_1",
-        name: "Create orders",
-        live: false,
-        enabledTools: [
-          {
-            toolName: getRowToolNames(externalTableId).create_row,
-            executionPrincipal: ToolExecutionPrincipal.ADMIN,
-          },
-        ],
-        allowKnowledgeSourceDownload: true,
-      })
-
-      const resourceGraph = await config.api.resource.getResourceDependencies()
-      const agentDependencyIds = resourceGraph.body.resources[
-        agent._id!
-      ].dependencies.map(dependency => dependency.id)
-      const projectMemberIds = resourceGraph.body.resources[
-        project._id
-      ].dependencies.map(dependency => dependency.id)
-
-      expect(agentDependencyIds).toContain(datasource._id)
-      expect(new Set(projectMemberIds)).toEqual(
-        new Set([agent._id, datasource._id])
-      )
-      expect(
-        (await config.api.datasource.get(datasource._id!)).projectIds
-      ).toEqual([project._id])
-    })
-  })
-
-  it("exports and imports app screens that need workspace app repair", async () => {
-    await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "Operations",
+        readme,
       })
-      const defaultWorkspaceApp = await config.api.workspaceApp.find(
-        config.getDefaultWorkspaceAppId()
+      const packageBuffer = await config.api.project.export(project._id)
+      const entries = await readTarEntries(packageBuffer)
+      const exported: Project = JSON.parse(
+        entries.get("project.json")!.toString()
       )
-      const { workspaceApp } = await config.api.workspaceApp.update({
-        _id: defaultWorkspaceApp._id,
-        _rev: defaultWorkspaceApp._rev,
-        name: defaultWorkspaceApp.name,
-        url: defaultWorkspaceApp.url,
-        disabled: defaultWorkspaceApp.disabled,
-        navigation: defaultWorkspaceApp.navigation,
-        projectIds: [project._id],
-      })
-      const screen = await config.api.screen.save({
-        ...basicScreen("/operations"),
-        workspaceAppId: workspaceApp._id,
-      })
-
-      await config.doInContext(config.getDevWorkspaceId(), async () => {
-        const db = context.getWorkspaceDB()
-        await db.put({
-          ...screen,
-          workspaceAppId: undefined,
-        })
-      })
-
-      const body = await config.api.project.export(project._id)
-      const files = await readTarEntries(body)
-      const exportedScreen = JSON.parse(
-        files.get(`docs/screen/${screen._id}.json`)!.toString()
-      )
-
-      expect(exportedScreen.workspaceAppId).toBe(workspaceApp._id)
-
       const destinationWorkspace = await config.api.workspace.create({
         name: "Imported workspace",
       })
@@ -2217,20 +1854,204 @@ describe("/projects", () => {
       await config.withHeaders(
         { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
-          const imported = await config.api.project.import(body)
-          const importedScreens = await config.api.screen.list()
-          const importedScreen = importedScreens.find(
-            existing => existing._id === imported.resources.screen?.[0]
-          )
+          const imported = await config.api.project.import(packageBuffer)
+          const { projects } = await config.api.project.fetch()
 
-          expect(imported.resources.workspace_app).toHaveLength(1)
-          expect(imported.resources.screen).toHaveLength(1)
-          expect(importedScreen?.workspaceAppId).toBe(
-            imported.resources.workspace_app?.[0]
-          )
+          expect(exported.readme).toBe(readme)
+          expect(imported.project.readme).toBe(readme)
+          expect(imported.project._id).not.toBe(project._id)
+          expect(
+            projects.find(existing => existing._id === imported.project._id)
+              ?.readme
+          ).toBe(readme)
         }
       )
+    }
+  )
+
+  it("exports and remaps external tables through their assigned datasource", async () => {
+    const { project } = await config.api.project.create({
+      name: "External data",
     })
+    const datasource = await config.api.datasource.create({
+      ...basicDatasource().datasource,
+      projectIds: [project._id],
+    })
+    const externalTableId = buildExternalTableId(datasource._id!, "TestTable")
+    const externalTable = basicTable(datasource, {
+      _id: externalTableId,
+      name: "TestTable",
+      primaryDisplay: `{{ ${externalTableId}.name }}`,
+    })
+    await config.api.datasource.update({
+      ...datasource,
+      entities: {
+        [externalTable.name]: externalTable,
+      },
+    })
+    const view = await config.api.viewV2.create({
+      tableId: externalTableId,
+      name: "External view",
+    })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const storedDatasource = await db.get<Datasource>(datasource._id!)
+      storedDatasource.entities![externalTable.name].projectIds = [project._id]
+      await db.put(storedDatasource)
+    })
+
+    const body = await config.api.project.export(project._id)
+    const files = await readTarEntries(body)
+    const dependencyIndex = JSON.parse(
+      files.get("dependency-index.json")!.toString()
+    ) as ProjectPackageDependencyIndex
+    expect(dependencyIndex.directMembers.map(member => member.id)).toEqual([
+      datasource._id,
+    ])
+
+    const destinationWorkspace = await config.api.workspace.create({
+      name: "Imported external data",
+    })
+    await config.withHeaders(
+      { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
+      async () => {
+        const imported = await config.api.project.import(body)
+        const importedDatasourceId = imported.resources.datasource?.[0]!
+        const importedDatasource =
+          await config.api.datasource.get(importedDatasourceId)
+        const importedExternalTable =
+          importedDatasource.entities![externalTable.name]
+        const importedExternalTableId = buildExternalTableId(
+          importedDatasourceId,
+          "TestTable"
+        )
+
+        expect(importedDatasource.projectIds).toEqual([imported.project._id])
+        expect(importedExternalTable._id).toBe(importedExternalTableId)
+        expect(importedExternalTable.projectIds).toBeUndefined()
+        expect(importedExternalTable.primaryDisplay).toBe(
+          `{{ ${importedExternalTableId}.name }}`
+        )
+        const importedView = Object.values(importedExternalTable.views!).filter(
+          helpers.views.isV2
+        )[0]
+        expect(importedView.id).not.toBe(view.id)
+        expect((await config.api.viewV2.get(importedView.id)).tableId).toBe(
+          importedExternalTableId
+        )
+      }
+    )
+  })
+
+  it("adds the datasource to the project when an assigned agent gains an external table tool", async () => {
+    const { project } = await config.api.project.create({
+      name: "External data agent",
+    })
+    const datasource = await config.api.datasource.create(
+      basicDatasource().datasource
+    )
+    const externalTableId = buildExternalTableId(datasource._id!, "Orders")
+    await config.api.datasource.update({
+      ...datasource,
+      entities: {
+        Orders: basicTable(datasource, {
+          _id: externalTableId,
+          name: "Orders",
+        }),
+      },
+    })
+    const agent = await config.api.agent.create({
+      name: "External data agent",
+      aiconfig: "default",
+      projectIds: [project._id],
+    })
+    await config.api.agent.createOperation(agent._id!, {
+      id: "operation_1",
+      name: "Create orders",
+      live: false,
+      enabledTools: [
+        {
+          toolName: getRowToolNames(externalTableId).create_row,
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+      ],
+      allowKnowledgeSourceDownload: true,
+    })
+
+    const resourceGraph = await config.api.resource.getResourceDependencies()
+    const agentDependencyIds = resourceGraph.body.resources[
+      agent._id!
+    ].dependencies.map(dependency => dependency.id)
+    const projectMemberIds = resourceGraph.body.resources[
+      project._id
+    ].dependencies.map(dependency => dependency.id)
+
+    expect(agentDependencyIds).toContain(datasource._id)
+    expect(new Set(projectMemberIds)).toEqual(
+      new Set([agent._id, datasource._id])
+    )
+    expect(
+      (await config.api.datasource.get(datasource._id!)).projectIds
+    ).toEqual([project._id])
+  })
+
+  it("exports and imports app screens that need workspace app repair", async () => {
+    const { project } = await config.api.project.create({
+      name: "Operations",
+    })
+    const defaultWorkspaceApp = await config.api.workspaceApp.find(
+      config.getDefaultWorkspaceAppId()
+    )
+    const { workspaceApp } = await config.api.workspaceApp.update({
+      _id: defaultWorkspaceApp._id,
+      _rev: defaultWorkspaceApp._rev,
+      name: defaultWorkspaceApp.name,
+      url: defaultWorkspaceApp.url,
+      disabled: defaultWorkspaceApp.disabled,
+      navigation: defaultWorkspaceApp.navigation,
+      projectIds: [project._id],
+    })
+    const screen = await config.api.screen.save({
+      ...basicScreen("/operations"),
+      workspaceAppId: workspaceApp._id,
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      await db.put({
+        ...screen,
+        workspaceAppId: undefined,
+      })
+    })
+
+    const body = await config.api.project.export(project._id)
+    const files = await readTarEntries(body)
+    const exportedScreen = JSON.parse(
+      files.get(`docs/screen/${screen._id}.json`)!.toString()
+    )
+
+    expect(exportedScreen.workspaceAppId).toBe(workspaceApp._id)
+
+    const destinationWorkspace = await config.api.workspace.create({
+      name: "Imported workspace",
+    })
+
+    await config.withHeaders(
+      { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
+      async () => {
+        const imported = await config.api.project.import(body)
+        const importedScreens = await config.api.screen.list()
+        const importedScreen = importedScreens.find(
+          existing => existing._id === imported.resources.screen?.[0]
+        )
+
+        expect(imported.resources.workspace_app).toHaveLength(1)
+        expect(imported.resources.screen).toHaveLength(1)
+        expect(importedScreen?.workspaceAppId).toBe(
+          imported.resources.workspace_app?.[0]
+        )
+      }
+    )
   })
 
   describe("importing a project containing a table, a view and a row action", () => {
@@ -2301,22 +2122,20 @@ describe("/projects", () => {
         source: Awaited<ReturnType<typeof createViewAndRowActionPackage>>
       ) => Promise<void>
     ) => {
-      await withProjectsEnabled(async () => {
-        const source = await createViewAndRowActionPackage()
-        const destinationWorkspaceId =
-          destination === "source workspace"
-            ? config.getDevWorkspaceId()
-            : (
-                await config.api.workspace.create({
-                  name: "Imported workspace",
-                })
-              ).appId
+      const source = await createViewAndRowActionPackage()
+      const destinationWorkspaceId =
+        destination === "source workspace"
+          ? config.getDevWorkspaceId()
+          : (
+              await config.api.workspace.create({
+                name: "Imported workspace",
+              })
+            ).appId
 
-        await config.withHeaders(
-          { [Header.WORKSPACE_ID]: destinationWorkspaceId },
-          () => test(source)
-        )
-      })
+      await config.withHeaders(
+        { [Header.WORKSPACE_ID]: destinationWorkspaceId },
+        () => test(source)
+      )
     }
 
     const expectIndependentResourceIds = (
@@ -2387,364 +2206,353 @@ describe("/projects", () => {
   })
 
   it("imports exported projects additively into another workspace", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-        description: "Operational workflows",
-      })
-      const datasource = await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        config: {
-          password: "super-secret",
-        },
-        projectIds: [project._id],
-      })
-      const query = await config.api.query.save({
-        ...basicQuery(datasource._id!),
-        name: `Lookup ${datasource._id!} records`,
-        projectIds: [project._id],
-      })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
-      const { workspaceApp } = await config.api.workspaceApp.create({
-        name: "Operations app",
-        url: "/operations-app",
-        projectIds: [project._id],
-      })
-      const queryScreen = createQueryScreen(datasource._id!, query)
-      queryScreen.props._children!.push({
-        _id: generator.guid(),
-        _component: "@budibase/standard-components/heading",
-        _instanceName: "Heading",
-        _styles: {},
-        text: `{{!-- {{ ${query._id}.rows }} --}} Value: {{ ${query._id}.rows }}`,
-      })
-      await config.api.screen.save({
-        ...queryScreen,
-        workspaceAppId: workspaceApp._id,
-      })
-      const automation = await config.createAutomation()
-      const { automation: webhookAutomation } =
-        await config.api.automation.update({
-          ...automation,
-          definition: {
-            ...automation.definition,
-            trigger: automationTrigger(TRIGGER_DEFINITIONS.WEBHOOK),
-          },
-        })
-      const { automation: assignedAutomation } =
-        await config.api.automation.update({
-          ...webhookAutomation,
-          projectIds: [project._id],
-        })
-      if (!isWebhookTrigger(assignedAutomation.definition.trigger)) {
-        throw new Error("Expected source automation to use a webhook trigger")
-      }
-      const sourceWebhookId = assignedAutomation.definition.trigger.webhookId
-      const createdToolAutomation = await config.createAutomation()
-      const { automation: toolAutomation } = await config.api.automation.update(
-        {
-          ...createdToolAutomation,
-          projectIds: [project._id],
-        }
-      )
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        live: true,
-        slackIntegration: {
-          botToken: "secret-token",
-          signingSecret: "secret-signing-key",
-        },
-        projectIds: [project._id],
-      })
-      await config.api.agent.createOperation(agent._id!, {
-        id: "operation_1",
-        name: "Use project resources",
-        live: false,
-        enabledTools: [
-          {
-            toolName: getAutomationTriggerToolName(toolAutomation._id!),
-            executionPrincipal: ToolExecutionPrincipal.ADMIN,
-          },
-          {
-            toolName: getRowToolNames(table._id!).create_row,
-            executionPrincipal: ToolExecutionPrincipal.ADMIN,
-          },
-          {
-            toolName: getQueryToolBindingsForResource({ datasource, query })
-              .runtimeBinding,
-            executionPrincipal: ToolExecutionPrincipal.ADMIN,
-          },
-        ],
-        allowKnowledgeSourceDownload: true,
-      })
-
-      const body = await config.api.project.export(project._id)
-      const destinationWorkspace = await config.api.workspace.create({
-        name: "Imported workspace",
-      })
-
-      await config.withHeaders(
-        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
-        async () => {
-          await config.api.workspaceApp.create({
-            name: "Existing app",
-            url: "/existing-app",
-          })
-
-          const imported = await config.api.project.import(body)
-          expect(imported.project._id).not.toBe(project._id)
-          expect(imported.resources.project).toEqual([imported.project._id])
-          expect(imported.resources.datasource).toHaveLength(1)
-          expect(imported.resources.query).toHaveLength(1)
-          expect(imported.resources.table).toHaveLength(1)
-          expect(imported.resources.automation).toHaveLength(2)
-          expect(imported.resources.agent).toHaveLength(1)
-          expect(imported.resources.workspace_app).toHaveLength(1)
-          expect(imported.resources.screen).toHaveLength(1)
-          expect(imported.requirements).toHaveLength(3)
-          expect(imported.requirements).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                type: "datasource_secrets",
-                resourceId: imported.resources.datasource?.[0],
-              }),
-              expect.objectContaining({
-                type: "agent_secrets",
-                resourceId: imported.resources.agent?.[0],
-              }),
-              expect.objectContaining({
-                type: "agent_ai_config",
-                resourceId: imported.resources.agent?.[0],
-              }),
-            ])
-          )
-
-          const { projects } = await config.api.project.fetch()
-          expect(projects.map(existing => existing._id)).toContain(
-            imported.project._id
-          )
-
-          const importedWorkspaceApps = await config.api.workspaceApp.fetch()
-          expect(
-            importedWorkspaceApps.workspaceApps.map(app => app.name)
-          ).toEqual(expect.arrayContaining(["Existing app", "Operations app"]))
-
-          const importedScreens = await config.api.screen.list()
-          const importedScreen = importedScreens.find(
-            screen => screen._id === imported.resources.screen?.[0]
-          )
-          expect(importedScreen).toBeDefined()
-          expect(importedScreen!.workspaceAppId).toBe(
-            imported.resources.workspace_app?.[0]
-          )
-          expect(importedScreen!.props._children?.[0].table._id).toBe(
-            imported.resources.query?.[0]
-          )
-          expect(importedScreen!.props._children?.[0].table.datasourceId).toBe(
-            imported.resources.datasource?.[0]
-          )
-          expect(importedScreen!.props._children?.[1].text).toBe(
-            `{{!-- {{ ${query._id}.rows }} --}} Value: {{ ${imported.resources.query?.[0]}.rows }}`
-          )
-          const importedQuery = await config.api.query.get(
-            imported.resources.query?.[0]!
-          )
-          expect(importedQuery.datasourceId).toBe(
-            imported.resources.datasource?.[0]
-          )
-          expect(importedQuery.name).toBe(`Lookup ${datasource._id!} records`)
-          expect(importedQuery.projectIds).toBeUndefined()
-
-          const importedTable = await config.api.table.get(
-            imported.resources.table?.[0]!
-          )
-          expect(importedTable.projectIds).toEqual([imported.project._id])
-
-          const importedAutomations = await Promise.all(
-            imported.resources.automation!.map(id =>
-              config.api.automation.get(id)
-            )
-          )
-          const importedAutomation = importedAutomations.find(automation =>
-            isWebhookTrigger(automation.definition.trigger)
-          )!
-          expect(importedAutomation.projectIds).toEqual([imported.project._id])
-          expect(importedAutomation.appId).toBe(destinationWorkspace.appId)
-          expect(importedAutomation.disabled).toBe(true)
-          if (!isWebhookTrigger(importedAutomation.definition.trigger)) {
-            throw new Error(
-              "Expected imported automation to use a webhook trigger"
-            )
-          }
-          const importedTrigger = importedAutomation.definition.trigger
-          expect(importedTrigger.webhookId).toBeDefined()
-          expect(importedTrigger.webhookId).not.toBe(sourceWebhookId)
-          expect(importedTrigger.inputs.schemaUrl).toContain(
-            destinationWorkspace.appId
-          )
-          expect(importedTrigger.inputs.triggerUrl).toContain(
-            dbCore.getProdWorkspaceID(destinationWorkspace.appId)
-          )
-          expect(importedTrigger.inputs.schemaUrl).not.toContain(
-            config.getDevWorkspaceId()
-          )
-          const importedWebhook = await config.doInContext(
-            destinationWorkspace.appId,
-            async () =>
-              await context
-                .getWorkspaceDB()
-                .get<Webhook>(importedTrigger.webhookId!)
-          )
-          expect(importedWebhook.action.target).toBe(importedAutomation._id)
-
-          const importedToolAutomation = importedAutomations.find(
-            automation =>
-              automation.definition.trigger.stepId ===
-              AutomationTriggerStepId.APP
-          )!
-          expect(importedToolAutomation).toBeDefined()
-          expect(importedToolAutomation.projectIds).toEqual([
-            imported.project._id,
-          ])
-
-          const importedDatasource = await config.doInContext(
-            destinationWorkspace.appId,
-            () =>
-              context
-                .getWorkspaceDB()
-                .get<Datasource>(imported.resources.datasource![0])
-          )
-          expect(importedDatasource.projectIds).toEqual([imported.project._id])
-          expect(importedDatasource.config?.password).toBe(PASSWORD_REPLACEMENT)
-
-          const { agents } = await config.api.agent.fetch()
-          const importedAgent = agents.find(
-            existing => existing._id === imported.resources.agent?.[0]
-          )
-          expect(importedAgent).toBeDefined()
-          expect(importedAgent?.projectIds).toEqual([imported.project._id])
-          expect(importedAgent?.live).toBe(false)
-          expect(importedAgent?.aiconfig).toBe("")
-          expect(
-            importedAgent?.operations?.[0].enabledTools?.map(
-              tool => tool.toolName
-            )
-          ).toEqual([
-            getAutomationTriggerToolName(importedToolAutomation._id!),
-            getRowToolNames(importedTable._id!).create_row,
-            getQueryToolBindingsForResource({
-              datasource: importedDatasource,
-              query: importedQuery,
-            }).runtimeBinding,
-          ])
-
-          const resourceGraph =
-            await config.api.resource.getResourceDependencies()
-          expect(
-            resourceGraph.body.resources[imported.project._id].dependencies.map(
-              resource => resource.id
-            )
-          ).toEqual(
-            expect.arrayContaining([
-              imported.resources.datasource?.[0],
-              imported.resources.query?.[0],
-              imported.resources.table?.[0],
-              ...imported.resources.automation!,
-              imported.resources.agent?.[0],
-              imported.resources.workspace_app?.[0],
-              imported.resources.screen?.[0],
-            ])
-          )
-
-          const secondImport = await config.api.project.import(body)
-          const importedAppsAfterSecondImport =
-            await config.api.workspaceApp.fetch()
-          const secondImportedApp =
-            importedAppsAfterSecondImport.workspaceApps.find(
-              app => app._id === secondImport.resources.workspace_app?.[0]
-            )
-          expect(secondImportedApp?.name).toBe("Operations app 1")
-          expect(secondImportedApp?.url).toBe("/operations%20app%201")
-        }
-      )
+    const { project } = await config.api.project.create({
+      name: "Operations",
+      description: "Operational workflows",
     })
+    const datasource = await config.api.datasource.create({
+      ...basicDatasource().datasource,
+      config: {
+        password: "super-secret",
+      },
+      projectIds: [project._id],
+    })
+    const query = await config.api.query.save({
+      ...basicQuery(datasource._id!),
+      name: `Lookup ${datasource._id!} records`,
+      projectIds: [project._id],
+    })
+    const table = await config.api.table.save({
+      ...basicTable(),
+      projectIds: [project._id],
+    })
+    const { workspaceApp } = await config.api.workspaceApp.create({
+      name: "Operations app",
+      url: "/operations-app",
+      projectIds: [project._id],
+    })
+    const queryScreen = createQueryScreen(datasource._id!, query)
+    queryScreen.props._children!.push({
+      _id: generator.guid(),
+      _component: "@budibase/standard-components/heading",
+      _instanceName: "Heading",
+      _styles: {},
+      text: `{{!-- {{ ${query._id}.rows }} --}} Value: {{ ${query._id}.rows }}`,
+    })
+    await config.api.screen.save({
+      ...queryScreen,
+      workspaceAppId: workspaceApp._id,
+    })
+    const automation = await config.createAutomation()
+    const { automation: webhookAutomation } =
+      await config.api.automation.update({
+        ...automation,
+        definition: {
+          ...automation.definition,
+          trigger: automationTrigger(TRIGGER_DEFINITIONS.WEBHOOK),
+        },
+      })
+    const { automation: assignedAutomation } =
+      await config.api.automation.update({
+        ...webhookAutomation,
+        projectIds: [project._id],
+      })
+    if (!isWebhookTrigger(assignedAutomation.definition.trigger)) {
+      throw new Error("Expected source automation to use a webhook trigger")
+    }
+    const sourceWebhookId = assignedAutomation.definition.trigger.webhookId
+    const createdToolAutomation = await config.createAutomation()
+    const { automation: toolAutomation } = await config.api.automation.update({
+      ...createdToolAutomation,
+      projectIds: [project._id],
+    })
+    const agent = await config.api.agent.create({
+      name: "Ops agent",
+      aiconfig: "default",
+      live: true,
+      slackIntegration: {
+        botToken: "secret-token",
+        signingSecret: "secret-signing-key",
+      },
+      projectIds: [project._id],
+    })
+    await config.api.agent.createOperation(agent._id!, {
+      id: "operation_1",
+      name: "Use project resources",
+      live: false,
+      enabledTools: [
+        {
+          toolName: getAutomationTriggerToolName(toolAutomation._id!),
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+        {
+          toolName: getRowToolNames(table._id!).create_row,
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+        {
+          toolName: getQueryToolBindingsForResource({ datasource, query })
+            .runtimeBinding,
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+      ],
+      allowKnowledgeSourceDownload: true,
+    })
+
+    const body = await config.api.project.export(project._id)
+    const destinationWorkspace = await config.api.workspace.create({
+      name: "Imported workspace",
+    })
+
+    await config.withHeaders(
+      { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
+      async () => {
+        await config.api.workspaceApp.create({
+          name: "Existing app",
+          url: "/existing-app",
+        })
+
+        const imported = await config.api.project.import(body)
+        expect(imported.project._id).not.toBe(project._id)
+        expect(imported.resources.project).toEqual([imported.project._id])
+        expect(imported.resources.datasource).toHaveLength(1)
+        expect(imported.resources.query).toHaveLength(1)
+        expect(imported.resources.table).toHaveLength(1)
+        expect(imported.resources.automation).toHaveLength(2)
+        expect(imported.resources.agent).toHaveLength(1)
+        expect(imported.resources.workspace_app).toHaveLength(1)
+        expect(imported.resources.screen).toHaveLength(1)
+        expect(imported.requirements).toHaveLength(3)
+        expect(imported.requirements).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: "datasource_secrets",
+              resourceId: imported.resources.datasource?.[0],
+            }),
+            expect.objectContaining({
+              type: "agent_secrets",
+              resourceId: imported.resources.agent?.[0],
+            }),
+            expect.objectContaining({
+              type: "agent_ai_config",
+              resourceId: imported.resources.agent?.[0],
+            }),
+          ])
+        )
+
+        const { projects } = await config.api.project.fetch()
+        expect(projects.map(existing => existing._id)).toContain(
+          imported.project._id
+        )
+
+        const importedWorkspaceApps = await config.api.workspaceApp.fetch()
+        expect(
+          importedWorkspaceApps.workspaceApps.map(app => app.name)
+        ).toEqual(expect.arrayContaining(["Existing app", "Operations app"]))
+
+        const importedScreens = await config.api.screen.list()
+        const importedScreen = importedScreens.find(
+          screen => screen._id === imported.resources.screen?.[0]
+        )
+        expect(importedScreen).toBeDefined()
+        expect(importedScreen!.workspaceAppId).toBe(
+          imported.resources.workspace_app?.[0]
+        )
+        expect(importedScreen!.props._children?.[0].table._id).toBe(
+          imported.resources.query?.[0]
+        )
+        expect(importedScreen!.props._children?.[0].table.datasourceId).toBe(
+          imported.resources.datasource?.[0]
+        )
+        expect(importedScreen!.props._children?.[1].text).toBe(
+          `{{!-- {{ ${query._id}.rows }} --}} Value: {{ ${imported.resources.query?.[0]}.rows }}`
+        )
+        const importedQuery = await config.api.query.get(
+          imported.resources.query?.[0]!
+        )
+        expect(importedQuery.datasourceId).toBe(
+          imported.resources.datasource?.[0]
+        )
+        expect(importedQuery.name).toBe(`Lookup ${datasource._id!} records`)
+        expect(importedQuery.projectIds).toBeUndefined()
+
+        const importedTable = await config.api.table.get(
+          imported.resources.table?.[0]!
+        )
+        expect(importedTable.projectIds).toEqual([imported.project._id])
+
+        const importedAutomations = await Promise.all(
+          imported.resources.automation!.map(id =>
+            config.api.automation.get(id)
+          )
+        )
+        const importedAutomation = importedAutomations.find(automation =>
+          isWebhookTrigger(automation.definition.trigger)
+        )!
+        expect(importedAutomation.projectIds).toEqual([imported.project._id])
+        expect(importedAutomation.appId).toBe(destinationWorkspace.appId)
+        expect(importedAutomation.disabled).toBe(true)
+        if (!isWebhookTrigger(importedAutomation.definition.trigger)) {
+          throw new Error(
+            "Expected imported automation to use a webhook trigger"
+          )
+        }
+        const importedTrigger = importedAutomation.definition.trigger
+        expect(importedTrigger.webhookId).toBeDefined()
+        expect(importedTrigger.webhookId).not.toBe(sourceWebhookId)
+        expect(importedTrigger.inputs.schemaUrl).toContain(
+          destinationWorkspace.appId
+        )
+        expect(importedTrigger.inputs.triggerUrl).toContain(
+          dbCore.getProdWorkspaceID(destinationWorkspace.appId)
+        )
+        expect(importedTrigger.inputs.schemaUrl).not.toContain(
+          config.getDevWorkspaceId()
+        )
+        const importedWebhook = await config.doInContext(
+          destinationWorkspace.appId,
+          async () =>
+            await context
+              .getWorkspaceDB()
+              .get<Webhook>(importedTrigger.webhookId!)
+        )
+        expect(importedWebhook.action.target).toBe(importedAutomation._id)
+
+        const importedToolAutomation = importedAutomations.find(
+          automation =>
+            automation.definition.trigger.stepId === AutomationTriggerStepId.APP
+        )!
+        expect(importedToolAutomation).toBeDefined()
+        expect(importedToolAutomation.projectIds).toEqual([
+          imported.project._id,
+        ])
+
+        const importedDatasource = await config.doInContext(
+          destinationWorkspace.appId,
+          () =>
+            context
+              .getWorkspaceDB()
+              .get<Datasource>(imported.resources.datasource![0])
+        )
+        expect(importedDatasource.projectIds).toEqual([imported.project._id])
+        expect(importedDatasource.config?.password).toBe(PASSWORD_REPLACEMENT)
+
+        const { agents } = await config.api.agent.fetch()
+        const importedAgent = agents.find(
+          existing => existing._id === imported.resources.agent?.[0]
+        )
+        expect(importedAgent).toBeDefined()
+        expect(importedAgent?.projectIds).toEqual([imported.project._id])
+        expect(importedAgent?.live).toBe(false)
+        expect(importedAgent?.aiconfig).toBe("")
+        expect(
+          importedAgent?.operations?.[0].enabledTools?.map(
+            tool => tool.toolName
+          )
+        ).toEqual([
+          getAutomationTriggerToolName(importedToolAutomation._id!),
+          getRowToolNames(importedTable._id!).create_row,
+          getQueryToolBindingsForResource({
+            datasource: importedDatasource,
+            query: importedQuery,
+          }).runtimeBinding,
+        ])
+
+        const resourceGraph =
+          await config.api.resource.getResourceDependencies()
+        expect(
+          resourceGraph.body.resources[imported.project._id].dependencies.map(
+            resource => resource.id
+          )
+        ).toEqual(
+          expect.arrayContaining([
+            imported.resources.datasource?.[0],
+            imported.resources.query?.[0],
+            imported.resources.table?.[0],
+            ...imported.resources.automation!,
+            imported.resources.agent?.[0],
+            imported.resources.workspace_app?.[0],
+            imported.resources.screen?.[0],
+          ])
+        )
+
+        const secondImport = await config.api.project.import(body)
+        const importedAppsAfterSecondImport =
+          await config.api.workspaceApp.fetch()
+        const secondImportedApp =
+          importedAppsAfterSecondImport.workspaceApps.find(
+            app => app._id === secondImport.resources.workspace_app?.[0]
+          )
+        expect(secondImportedApp?.name).toBe("Operations app 1")
+        expect(secondImportedApp?.url).toBe("/operations%20app%201")
+      }
+    )
   })
 
   it("imports shared datasources with only the imported project assignment", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const { project: otherProject } = await config.api.project.create({
-        name: "Other project",
-      })
-      await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        projectIds: [project._id, otherProject._id],
-      })
-
-      const body = await config.api.project.export(project._id)
-      const destinationWorkspace = await config.api.workspace.create({
-        name: "Imported workspace",
-      })
-
-      await config.withHeaders(
-        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
-        async () => {
-          const imported = await config.api.project.import(body)
-          const importedDatasource = await config.api.datasource.get(
-            imported.resources.datasource?.[0]!
-          )
-
-          expect(importedDatasource.projectIds).toEqual([imported.project._id])
-        }
-      )
+    const { project } = await config.api.project.create({
+      name: "Operations",
     })
+    const { project: otherProject } = await config.api.project.create({
+      name: "Other project",
+    })
+    await config.api.datasource.create({
+      ...basicDatasource().datasource,
+      projectIds: [project._id, otherProject._id],
+    })
+
+    const body = await config.api.project.export(project._id)
+    const destinationWorkspace = await config.api.workspace.create({
+      name: "Imported workspace",
+    })
+
+    await config.withHeaders(
+      { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
+      async () => {
+        const imported = await config.api.project.import(body)
+        const importedDatasource = await config.api.datasource.get(
+          imported.resources.datasource?.[0]!
+        )
+
+        expect(importedDatasource.projectIds).toEqual([imported.project._id])
+      }
+    )
   })
 
   it("rejects encrypted project imports without a password", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
+    const { project } = await config.api.project.create({
+      name: "Operations",
+    })
 
-      const body = await config.api.project.export(project._id, {
-        encryptPassword: "abcde",
-      })
+    const body = await config.api.project.export(project._id, {
+      encryptPassword: "abcde",
+    })
 
-      await config.api.project.import(body, undefined, {
-        status: 400,
-        body: {
-          message: "Files are encrypted but no password has been supplied.",
-        },
-      })
+    await config.api.project.import(body, undefined, {
+      status: 400,
+      body: {
+        message: "Files are encrypted but no password has been supplied.",
+      },
     })
   })
 
   it("rejects encrypted project imports with an incorrect password", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const body = await config.api.project.export(project._id, {
-        encryptPassword: "correct-password",
-      })
-
-      await config.api.project.import(
-        body,
-        { encryptPassword: "incorrect-password" },
-        {
-          status: 400,
-          body: {
-            message: "Project package could not be decrypted.",
-          },
-        }
-      )
+    const { project } = await config.api.project.create({
+      name: "Operations",
     })
+    const body = await config.api.project.export(project._id, {
+      encryptPassword: "correct-password",
+    })
+
+    await config.api.project.import(
+      body,
+      { encryptPassword: "incorrect-password" },
+      {
+        status: 400,
+        body: {
+          message: "Project package could not be decrypted.",
+        },
+      }
+    )
   })
 
   it.each([
@@ -2764,16 +2572,14 @@ describe("/projects", () => {
   ])(
     "rejects an invalid %s shape",
     async (_label, fileName, value, message) => {
-      await withProjectsEnabled(async () => {
-        const packageBuffer = await createTarPackage({
-          ...createMinimalPackageEntries(),
-          [fileName]: value,
-        })
+      const packageBuffer = await createTarPackage({
+        ...createMinimalPackageEntries(),
+        [fileName]: value,
+      })
 
-        await config.api.project.import(packageBuffer, undefined, {
-          status: 400,
-          body: { message },
-        })
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: { message },
       })
     }
   )
@@ -2784,168 +2590,154 @@ describe("/projects", () => {
     { name: "object", readme: { content: "# Operations" } },
     { name: "oversized", readme: "x".repeat(MAX_PROJECT_README_LENGTH + 1) },
   ])("rejects packages with a $name README", async ({ readme }) => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({ project: { readme } })
-      )
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({ project: { readme } })
+    )
 
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: { message: "Project package project.json is invalid." },
-      })
-      expect((await config.api.project.fetch()).projects).toEqual([])
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: { message: "Project package project.json is invalid." },
     })
+    expect((await config.api.project.fetch()).projects).toEqual([])
   })
 
   it("rejects packages with an invalid source project id", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          project: { _id: "invalid" },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: { message: "Project package project.json is invalid." },
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        project: { _id: "invalid" },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: { message: "Project package project.json is invalid." },
     })
   })
 
   it("rejects packages with an invalid source workspace id", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: { sourceWorkspace: { id: "invalid" } },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: { message: "Project package manifest is invalid." },
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: { sourceWorkspace: { id: "invalid" } },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: { message: "Project package manifest is invalid." },
     })
   })
 
   it("rejects packages with docs that are not declared in the dependency index", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: {
-            resourcesByType: {
-              project: 1,
-              automation: 1,
-            },
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: {
+          resourcesByType: {
+            project: 1,
+            automation: 1,
           },
-          docs: {
-            "docs/automation/au_extra.json": {
-              _id: "au_extra",
-              name: "Unexpected automation",
-              definition: {
-                trigger: {
-                  id: "trigger",
-                  inputs: {},
-                },
-                steps: [],
+        },
+        docs: {
+          "docs/automation/au_extra.json": {
+            _id: "au_extra",
+            name: "Unexpected automation",
+            definition: {
+              trigger: {
+                id: "trigger",
+                inputs: {},
               },
+              steps: [],
             },
           },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: {
-          message:
-            "Project package contains docs not listed in dependency-index.json.",
         },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message:
+          "Project package contains docs not listed in dependency-index.json.",
+      },
     })
   })
 
   it("rejects packages that reference missing docs", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: {
-            resourcesByType: {
-              project: 1,
-              automation: 1,
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: {
+          resourcesByType: {
+            project: 1,
+            automation: 1,
+          },
+        },
+        dependencyIndex: {
+          resources: {
+            project_source: {
+              dependencies: [
+                {
+                  id: "au_missing",
+                  name: "Missing automation",
+                  type: "automation",
+                },
+              ],
+            },
+            au_missing: {
+              dependencies: [],
             },
           },
-          dependencyIndex: {
-            resources: {
-              project_source: {
-                dependencies: [
-                  {
-                    id: "au_missing",
-                    name: "Missing automation",
-                    type: "automation",
-                  },
-                ],
-              },
-              au_missing: {
-                dependencies: [],
-              },
-            },
-          },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: {
-          message: "Project package dependency index references missing docs.",
         },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message: "Project package dependency index references missing docs.",
+      },
     })
   })
 
   it("rejects a missing dependency resource", async () => {
-    await withProjectsEnabled(async () => {
-      const missing = {
-        id: "au_missing",
-        name: "Missing automation",
-        type: "automation",
-      }
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          dependencyIndex: {
-            resources: {
-              project_source: { dependencies: [missing] },
-            },
+    const missing = {
+      id: "au_missing",
+      name: "Missing automation",
+      type: "automation",
+    }
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        dependencyIndex: {
+          resources: {
+            project_source: { dependencies: [missing] },
           },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: {
-          message: "Project package dependency index references missing docs.",
         },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message: "Project package dependency index references missing docs.",
+      },
     })
   })
 
   it("rejects a missing direct member resource", async () => {
-    await withProjectsEnabled(async () => {
-      const missing = {
-        id: "au_missing",
-        name: "Missing automation",
-        type: "automation",
-      }
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          dependencyIndex: { directMembers: [missing] },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: {
-          message: "Project package dependency index references missing docs.",
-        },
+    const missing = {
+      id: "au_missing",
+      name: "Missing automation",
+      type: "automation",
+    }
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        dependencyIndex: { directMembers: [missing] },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message: "Project package dependency index references missing docs.",
+      },
     })
   })
 
@@ -2978,479 +2770,453 @@ describe("/projects", () => {
     }
 
     it("rejects a dependency that identifies a table as an automation", async () => {
-      await withProjectsEnabled(async () => {
-        const packageBuffer = await createTablePackage({
-          resources: {
-            project_source: { dependencies: [tableClaimingToBeAutomation] },
-            [table.id]: { dependencies: [] },
-          },
-        })
+      const packageBuffer = await createTablePackage({
+        resources: {
+          project_source: { dependencies: [tableClaimingToBeAutomation] },
+          [table.id]: { dependencies: [] },
+        },
+      })
 
-        await config.api.project.import(packageBuffer, undefined, {
-          status: 400,
-          body: {
-            message:
-              "Project package dependency index resource types do not match package docs.",
-          },
-        })
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message:
+            "Project package dependency index resource types do not match package docs.",
+        },
       })
     })
 
     it("rejects a direct member that identifies a table as an automation", async () => {
-      await withProjectsEnabled(async () => {
-        const packageBuffer = await createTablePackage({
-          directMembers: [tableClaimingToBeAutomation],
-          resources: {
-            project_source: { dependencies: [table] },
-            [table.id]: { dependencies: [] },
-          },
-        })
+      const packageBuffer = await createTablePackage({
+        directMembers: [tableClaimingToBeAutomation],
+        resources: {
+          project_source: { dependencies: [table] },
+          [table.id]: { dependencies: [] },
+        },
+      })
 
-        await config.api.project.import(packageBuffer, undefined, {
-          status: 400,
-          body: {
-            message:
-              "Project package dependency index resource types do not match package docs.",
-          },
-        })
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message:
+            "Project package dependency index resource types do not match package docs.",
+        },
       })
     })
   })
 
   it("rejects packages with docs that are not reachable from the project", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: {
-            resourcesByType: {
-              project: 1,
-              automation: 1,
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: {
+          resourcesByType: {
+            project: 1,
+            automation: 1,
+          },
+        },
+        dependencyIndex: {
+          resources: {
+            project_source: {
+              dependencies: [],
+            },
+            au_orphan: {
+              dependencies: [],
             },
           },
-          dependencyIndex: {
-            resources: {
-              project_source: {
-                dependencies: [],
+        },
+        docs: {
+          "docs/automation/au_orphan.json": {
+            _id: "au_orphan",
+            name: "Orphan automation",
+            definition: {
+              trigger: {
+                id: "trigger",
+                inputs: {},
               },
-              au_orphan: {
-                dependencies: [],
-              },
+              steps: [],
             },
           },
-          docs: {
-            "docs/automation/au_orphan.json": {
-              _id: "au_orphan",
-              name: "Orphan automation",
-              definition: {
-                trigger: {
-                  id: "trigger",
-                  inputs: {},
-                },
-                steps: [],
-              },
-            },
-          },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: {
-          message:
-            "Project package contains docs that are not reachable from the root project.",
         },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message:
+          "Project package contains docs that are not reachable from the root project.",
+      },
     })
   })
 
   it("rejects packages when doc paths do not match resource types", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: {
-            resourcesByType: {
-              project: 1,
-              automation: 1,
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: {
+          resourcesByType: {
+            project: 1,
+            automation: 1,
+          },
+        },
+        dependencyIndex: {
+          resources: {
+            project_source: {
+              dependencies: [
+                {
+                  id: "ta_wrong",
+                  name: "Wrongly typed table",
+                  type: "automation",
+                },
+              ],
+            },
+            ta_wrong: {
+              dependencies: [],
             },
           },
-          dependencyIndex: {
-            resources: {
-              project_source: {
-                dependencies: [
-                  {
-                    id: "ta_wrong",
-                    name: "Wrongly typed table",
-                    type: "automation",
-                  },
-                ],
-              },
-              ta_wrong: {
-                dependencies: [],
-              },
-            },
+        },
+        docs: {
+          "docs/automation/ta_wrong.json": {
+            _id: "ta_wrong",
+            name: "Wrongly typed table",
           },
-          docs: {
-            "docs/automation/ta_wrong.json": {
-              _id: "ta_wrong",
-              name: "Wrongly typed table",
-            },
-          },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: {
-          message:
-            "Project package doc 'ta_wrong' does not match resource type 'automation'.",
         },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message:
+          "Project package doc 'ta_wrong' does not match resource type 'automation'.",
+      },
     })
   })
 
   it("rejects packages with unsupported root files", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          extraEntries: {
-            "readme.txt": "unexpected",
-          },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: {
-          message: "Project package contains unsupported files.",
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        extraEntries: {
+          "readme.txt": "unexpected",
         },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message: "Project package contains unsupported files.",
+      },
     })
   })
 
   it("rejects workspace exports", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          extraEntries: {
-            "db.txt": "workspace export marker",
-          },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: {
-          message: "Workspace exports cannot be imported as Project packages.",
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        extraEntries: {
+          "db.txt": "workspace export marker",
         },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message: "Workspace exports cannot be imported as Project packages.",
+      },
     })
   })
 
   it("rejects malformed project import archives", async () => {
-    await withProjectsEnabled(async () => {
-      await config.api.project.import({
-        file: Buffer.from("not a project archive"),
-        body: undefined,
-        expectations: {
-          status: 400,
-          body: {
-            message: "Project package is invalid.",
-          },
+    await config.api.project.import({
+      file: Buffer.from("not a project archive"),
+      body: undefined,
+      expectations: {
+        status: 400,
+        body: {
+          message: "Project package is invalid.",
         },
-      })
+      },
     })
   })
 
   it("rejects project packages with malformed datasource entities", async () => {
-    await withProjectsEnabled(async () => {
-      const datasourceId = "datasource_malformed"
-      const dependency = {
-        id: datasourceId,
-        name: "Malformed datasource",
-        type: "datasource",
-      }
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: {
-            resourcesByType: {
-              project: 1,
-              datasource: 1,
+    const datasourceId = "datasource_malformed"
+    const dependency = {
+      id: datasourceId,
+      name: "Malformed datasource",
+      type: "datasource",
+    }
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: {
+          resourcesByType: {
+            project: 1,
+            datasource: 1,
+          },
+        },
+        dependencyIndex: {
+          directMembers: [dependency],
+          resources: {
+            project_source: {
+              dependencies: [dependency],
+            },
+            [datasourceId]: {
+              dependencies: [],
             },
           },
-          dependencyIndex: {
-            directMembers: [dependency],
-            resources: {
-              project_source: {
-                dependencies: [dependency],
-              },
-              [datasourceId]: {
-                dependencies: [],
-              },
+        },
+        docs: {
+          [`docs/datasource/${datasourceId}.json`]: {
+            ...basicDatasource().datasource,
+            _id: datasourceId,
+            name: "Malformed datasource",
+            projectIds: ["project_source"],
+            entities: {
+              Broken: "not an entity",
             },
-          },
-          docs: {
-            [`docs/datasource/${datasourceId}.json`]: {
-              ...basicDatasource().datasource,
-              _id: datasourceId,
-              name: "Malformed datasource",
-              projectIds: ["project_source"],
-              entities: {
-                Broken: "not an entity",
-              },
-            },
-          },
-        })
-      )
-
-      await config.api.project.import({
-        file: packageBuffer,
-        expectations: {
-          status: 400,
-          body: {
-            message: "Project package contains invalid datasource entities.",
           },
         },
       })
+    )
+
+    await config.api.project.import({
+      file: packageBuffer,
+      expectations: {
+        status: 400,
+        body: {
+          message: "Project package contains invalid datasource entities.",
+        },
+      },
     })
   })
 
   it("sanitises crafted import packages before saving resources", async () => {
-    await withProjectsEnabled(async () => {
-      const datasourceId = "datasource_secret"
-      const agentId = "agent_secret"
-      const datasourceDependency = {
-        id: datasourceId,
-        name: "Secret datasource",
-        type: "datasource",
-      }
-      const agentDependency = {
-        id: agentId,
-        name: "Secret agent",
-        type: "agent",
-      }
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: {
-            resourcesByType: {
-              project: 1,
-              datasource: 1,
-              agent: 1,
-            },
-            requiresSecrets: true,
+    const datasourceId = "datasource_secret"
+    const agentId = "agent_secret"
+    const datasourceDependency = {
+      id: datasourceId,
+      name: "Secret datasource",
+      type: "datasource",
+    }
+    const agentDependency = {
+      id: agentId,
+      name: "Secret agent",
+      type: "agent",
+    }
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: {
+          resourcesByType: {
+            project: 1,
+            datasource: 1,
+            agent: 1,
           },
-          dependencyIndex: {
-            directMembers: [datasourceDependency, agentDependency],
-            resources: {
-              project_source: {
-                dependencies: [datasourceDependency, agentDependency],
-              },
-              [datasourceId]: {
-                dependencies: [],
-              },
-              [agentId]: {
-                dependencies: [],
-              },
+          requiresSecrets: true,
+        },
+        dependencyIndex: {
+          directMembers: [datasourceDependency, agentDependency],
+          resources: {
+            project_source: {
+              dependencies: [datasourceDependency, agentDependency],
+            },
+            [datasourceId]: {
+              dependencies: [],
+            },
+            [agentId]: {
+              dependencies: [],
             },
           },
-          docs: {
-            [`docs/datasource/${datasourceId}.json`]: {
-              ...basicDatasource().datasource,
-              _id: datasourceId,
-              name: "Secret datasource",
-              projectIds: ["project_source"],
-              config: {
-                password: "crafted-secret",
-              },
-            },
-            [`docs/agent/${agentId}.json`]: {
-              _id: agentId,
-              name: "Secret agent",
-              aiconfig: "default",
-              live: true,
-              publishedAt: new Date().toISOString(),
-              projectIds: ["project_source"],
-              slackIntegration: {
-                botToken: "crafted-token",
-                signingSecret: "crafted-signing-secret",
-                idleTimeoutMinutes: 20,
-              },
+        },
+        docs: {
+          [`docs/datasource/${datasourceId}.json`]: {
+            ...basicDatasource().datasource,
+            _id: datasourceId,
+            name: "Secret datasource",
+            projectIds: ["project_source"],
+            config: {
+              password: "crafted-secret",
             },
           },
-        })
-      )
-
-      const imported = await config.api.project.import(packageBuffer)
-      const importedDatasource = await config.doInContext(
-        config.getDevWorkspaceId(),
-        () =>
-          context
-            .getWorkspaceDB()
-            .get<Datasource>(imported.resources.datasource![0])
-      )
-      const { agents } = await config.api.agent.fetch()
-      const importedAgent = agents.find(
-        agent => agent._id === imported.resources.agent?.[0]
-      )
-
-      expect(importedDatasource.config?.password).toBe(PASSWORD_REPLACEMENT)
-      expect(importedAgent?.live).toBe(false)
-      expect(importedAgent?.aiconfig).toBe("")
-      expect(importedAgent?.publishedAt).toBeUndefined()
-      expect(importedAgent?.slackIntegration).toEqual({
-        idleTimeoutMinutes: 20,
+          [`docs/agent/${agentId}.json`]: {
+            _id: agentId,
+            name: "Secret agent",
+            aiconfig: "default",
+            live: true,
+            publishedAt: new Date().toISOString(),
+            projectIds: ["project_source"],
+            slackIntegration: {
+              botToken: "crafted-token",
+              signingSecret: "crafted-signing-secret",
+              idleTimeoutMinutes: 20,
+            },
+          },
+        },
       })
+    )
+
+    const imported = await config.api.project.import(packageBuffer)
+    const importedDatasource = await config.doInContext(
+      config.getDevWorkspaceId(),
+      () =>
+        context
+          .getWorkspaceDB()
+          .get<Datasource>(imported.resources.datasource![0])
+    )
+    const { agents } = await config.api.agent.fetch()
+    const importedAgent = agents.find(
+      agent => agent._id === imported.resources.agent?.[0]
+    )
+
+    expect(importedDatasource.config?.password).toBe(PASSWORD_REPLACEMENT)
+    expect(importedAgent?.live).toBe(false)
+    expect(importedAgent?.aiconfig).toBe("")
+    expect(importedAgent?.publishedAt).toBeUndefined()
+    expect(importedAgent?.slackIntegration).toEqual({
+      idleTimeoutMinutes: 20,
     })
   })
 
   it("rolls back imported resources when project import partially fails", async () => {
-    await withProjectsEnabled(async () => {
-      const firstDatasourceId = "datasource_first"
-      const secondDatasourceId = "datasource_second"
-      const dependencies = [
-        {
-          id: firstDatasourceId,
-          name: "First datasource",
-          type: "datasource",
+    const firstDatasourceId = "datasource_first"
+    const secondDatasourceId = "datasource_second"
+    const dependencies = [
+      {
+        id: firstDatasourceId,
+        name: "First datasource",
+        type: "datasource",
+      },
+      {
+        id: secondDatasourceId,
+        name: "Second datasource",
+        type: "datasource",
+      },
+    ]
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: {
+          resourcesByType: {
+            project: 1,
+            datasource: 2,
+          },
         },
-        {
-          id: secondDatasourceId,
-          name: "Second datasource",
-          type: "datasource",
+        dependencyIndex: {
+          directMembers: dependencies,
+          resources: {
+            project_source: {
+              dependencies,
+            },
+            [firstDatasourceId]: {
+              dependencies: [],
+            },
+            [secondDatasourceId]: {
+              dependencies: [],
+            },
+          },
         },
-      ]
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: {
-            resourcesByType: {
-              project: 1,
-              datasource: 2,
-            },
+        docs: {
+          [`docs/datasource/${firstDatasourceId}.json`]: {
+            ...basicDatasource().datasource,
+            _id: firstDatasourceId,
+            name: "First datasource",
+            projectIds: ["project_source"],
           },
-          dependencyIndex: {
-            directMembers: dependencies,
-            resources: {
-              project_source: {
-                dependencies,
-              },
-              [firstDatasourceId]: {
-                dependencies: [],
-              },
-              [secondDatasourceId]: {
-                dependencies: [],
-              },
-            },
+          [`docs/datasource/${secondDatasourceId}.json`]: {
+            ...basicDatasource().datasource,
+            _id: secondDatasourceId,
+            name: "Second datasource",
+            projectIds: ["project_source"],
           },
-          docs: {
-            [`docs/datasource/${firstDatasourceId}.json`]: {
-              ...basicDatasource().datasource,
-              _id: firstDatasourceId,
-              name: "First datasource",
-              projectIds: ["project_source"],
-            },
-            [`docs/datasource/${secondDatasourceId}.json`]: {
-              ...basicDatasource().datasource,
-              _id: secondDatasourceId,
-              name: "Second datasource",
-              projectIds: ["project_source"],
-            },
-          },
-        })
-      )
+        },
+      })
+    )
 
-      const bulkDocs = jest
-        .spyOn(DatabaseImpl.prototype, "bulkDocs")
-        .mockImplementationOnce(async docs => {
-          const saved = await context.getWorkspaceDB().put(docs[0])
-          return [
-            { id: saved.id, rev: saved.rev },
-            { id: docs[1]._id!, error: "conflict", reason: "import failed" },
-          ]
-        })
+    const bulkDocs = jest
+      .spyOn(DatabaseImpl.prototype, "bulkDocs")
+      .mockImplementationOnce(async docs => {
+        const saved = await context.getWorkspaceDB().put(docs[0])
+        return [
+          { id: saved.id, rev: saved.rev },
+          { id: docs[1]._id!, error: "conflict", reason: "import failed" },
+        ]
+      })
 
-      try {
-        await config.api.project.import(packageBuffer, undefined, {
-          status: 400,
-          body: {
-            message: expect.stringContaining(
-              "Project import failed while saving"
-            ),
-          },
-        })
-      } finally {
-        bulkDocs.mockRestore()
-      }
-
-      const { projects } = await config.api.project.fetch()
-      expect(projects).toHaveLength(0)
-      expect(
-        (await config.api.datasource.fetch()).filter(
-          datasource => datasource._id !== INTERNAL_TABLE_SOURCE_ID
-        )
-      ).toHaveLength(0)
-    })
-  })
-
-  it("accepts a package at the total entry limit", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      const limit = jest.replaceProperty(
-        packageLimits,
-        "MAX_PROJECT_PACKAGE_ENTRIES",
-        5
-      )
-
-      try {
-        const packageBuffer = await config.api.project.export(project._id!)
-        const { project: importedProject } =
-          await config.api.project.import(packageBuffer)
-
-        expect(importedProject.name).toBe(project.name)
-        expect((await config.api.project.fetch()).projects).toHaveLength(2)
-      } finally {
-        limit.restore()
-      }
-    })
-  })
-
-  it("counts directories towards the entry limit on export and before extraction", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      const packageBuffer = await config.api.project.export(project._id!)
-      const limit = jest.replaceProperty(
-        packageLimits,
-        "MAX_PROJECT_PACKAGE_ENTRIES",
-        3
-      )
-      const extract = jest.spyOn(workspaceBackups, "untarFile")
-      const expectations = {
-        status: 400,
-        body: { message: "Project package contains too many entries." },
-      }
-
-      try {
-        await config.api.project.export(project._id!, undefined, expectations)
-        await config.api.project.import(packageBuffer, undefined, expectations)
-
-        expect(extract).not.toHaveBeenCalled()
-        expect((await config.api.project.fetch()).projects).toHaveLength(1)
-      } finally {
-        extract.mockRestore()
-        limit.restore()
-      }
-    })
-  })
-
-  it("rejects packages that exceed the extracted size limit before extraction", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createOversizedTarPackage()
-
-      expect(packageBuffer.length).toBeLessThan(50 * 1024 * 1024)
+    try {
       await config.api.project.import(packageBuffer, undefined, {
         status: 400,
         body: {
-          message: "Project package is too large.",
+          message: expect.stringContaining(
+            "Project import failed while saving"
+          ),
         },
       })
+    } finally {
+      bulkDocs.mockRestore()
+    }
+
+    const { projects } = await config.api.project.fetch()
+    expect(projects).toHaveLength(0)
+    expect(
+      (await config.api.datasource.fetch()).filter(
+        datasource => datasource._id !== INTERNAL_TABLE_SOURCE_ID
+      )
+    ).toHaveLength(0)
+  })
+
+  it("accepts a package at the total entry limit", async () => {
+    const project = await createAssignedProject()
+    const limit = jest.replaceProperty(
+      packageLimits,
+      "MAX_PROJECT_PACKAGE_ENTRIES",
+      5
+    )
+
+    try {
+      const packageBuffer = await config.api.project.export(project._id!)
+      const { project: importedProject } =
+        await config.api.project.import(packageBuffer)
+
+      expect(importedProject.name).toBe(project.name)
+      expect((await config.api.project.fetch()).projects).toHaveLength(2)
+    } finally {
+      limit.restore()
+    }
+  })
+
+  it("counts directories towards the entry limit on export and before extraction", async () => {
+    const project = await createAssignedProject()
+    const packageBuffer = await config.api.project.export(project._id!)
+    const limit = jest.replaceProperty(
+      packageLimits,
+      "MAX_PROJECT_PACKAGE_ENTRIES",
+      3
+    )
+    const extract = jest.spyOn(workspaceBackups, "untarFile")
+    const expectations = {
+      status: 400,
+      body: { message: "Project package contains too many entries." },
+    }
+
+    try {
+      await config.api.project.export(project._id!, undefined, expectations)
+      await config.api.project.import(packageBuffer, undefined, expectations)
+
+      expect(extract).not.toHaveBeenCalled()
+      expect((await config.api.project.fetch()).projects).toHaveLength(1)
+    } finally {
+      extract.mockRestore()
+      limit.restore()
+    }
+  })
+
+  it("rejects packages that exceed the extracted size limit before extraction", async () => {
+    const packageBuffer = await createOversizedTarPackage()
+
+    expect(packageBuffer.length).toBeLessThan(50 * 1024 * 1024)
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message: "Project package is too large.",
+      },
     })
   })
 
@@ -3482,97 +3248,91 @@ describe("/projects", () => {
     }
 
     it("rejects encrypted files whose combined decrypted size exceeds the package limit", async () => {
-      await withProjectsEnabled(async () => {
-        const packageBuffer = await createTarPackage(
-          {
-            "project.json.enc": null,
-            "manifest.json.enc": null,
-          },
-          async dir => {
-            await createLargeEncryptedFile({ dir, filename: "project.json" })
-            await createLargeEncryptedFile({ dir, filename: "manifest.json" })
-          }
-        )
+      const packageBuffer = await createTarPackage(
+        {
+          "project.json.enc": null,
+          "manifest.json.enc": null,
+        },
+        async dir => {
+          await createLargeEncryptedFile({ dir, filename: "project.json" })
+          await createLargeEncryptedFile({ dir, filename: "manifest.json" })
+        }
+      )
 
-        await config.api.project.import(
-          packageBuffer,
-          { encryptPassword: password },
-          {
-            status: 400,
-            body: { message: "Project package is too large." },
-          }
-        )
-        expect((await config.api.project.fetch()).projects).toEqual([])
-      })
+      await config.api.project.import(
+        packageBuffer,
+        { encryptPassword: password },
+        {
+          status: 400,
+          body: { message: "Project package is too large." },
+        }
+      )
+      expect((await config.api.project.fetch()).projects).toEqual([])
     })
 
     it("counts plaintext files towards the package limit when decrypting another file", async () => {
-      await withProjectsEnabled(async () => {
-        const packageBuffer = await createTarPackage(
-          {
-            "project.json.enc": null,
-            "manifest.json": null,
-          },
-          async dir => {
-            await createLargeEncryptedFile({ dir, filename: "project.json" })
-            await createLargePlaintextFile({ dir, filename: "manifest.json" })
-          }
-        )
+      const packageBuffer = await createTarPackage(
+        {
+          "project.json.enc": null,
+          "manifest.json": null,
+        },
+        async dir => {
+          await createLargeEncryptedFile({ dir, filename: "project.json" })
+          await createLargePlaintextFile({ dir, filename: "manifest.json" })
+        }
+      )
 
-        await config.api.project.import(
-          packageBuffer,
-          { encryptPassword: password },
-          {
-            status: 400,
-            body: { message: "Project package is too large." },
-          }
-        )
-        expect((await config.api.project.fetch()).projects).toEqual([])
-      })
+      await config.api.project.import(
+        packageBuffer,
+        { encryptPassword: password },
+        {
+          status: 400,
+          body: { message: "Project package is too large." },
+        }
+      )
+      expect((await config.api.project.fetch()).projects).toEqual([])
     })
   })
 
   it("rejects packages with paths that are too deep", async () => {
-    await withProjectsEnabled(async () => {
-      const packageBuffer = await createTarPackage(
-        createMinimalPackageEntries({
-          manifest: {
-            resourcesByType: {
-              project: 1,
-              automation: 1,
+    const packageBuffer = await createTarPackage(
+      createMinimalPackageEntries({
+        manifest: {
+          resourcesByType: {
+            project: 1,
+            automation: 1,
+          },
+        },
+        dependencyIndex: {
+          resources: {
+            project_source: {
+              dependencies: [
+                {
+                  id: "au_deep",
+                  name: "Deep automation",
+                  type: "automation",
+                },
+              ],
+            },
+            au_deep: {
+              dependencies: [],
             },
           },
-          dependencyIndex: {
-            resources: {
-              project_source: {
-                dependencies: [
-                  {
-                    id: "au_deep",
-                    name: "Deep automation",
-                    type: "automation",
-                  },
-                ],
-              },
-              au_deep: {
-                dependencies: [],
-              },
-            },
+        },
+        docs: {
+          "docs/automation/nested/deeper/au_deep.json": {
+            _id: "au_deep",
+            name: "Deep automation",
           },
-          docs: {
-            "docs/automation/nested/deeper/au_deep.json": {
-              _id: "au_deep",
-              name: "Deep automation",
-            },
-          },
-        })
-      )
-
-      await config.api.project.import(packageBuffer, undefined, {
-        status: 400,
-        body: {
-          message: "Project package contains paths that are too deep.",
         },
       })
+    )
+
+    await config.api.project.import(packageBuffer, undefined, {
+      status: 400,
+      body: {
+        message: "Project package contains paths that are too deep.",
+      },
     })
   })
 })

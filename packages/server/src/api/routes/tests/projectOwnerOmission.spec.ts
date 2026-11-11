@@ -1,5 +1,4 @@
-import { context, features } from "@budibase/backend-core"
-import { FeatureFlag } from "@budibase/types"
+import { context } from "@budibase/backend-core"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import {
   basicDatasource,
@@ -66,43 +65,31 @@ describe("Project package ownership", () => {
   }
 
   it("imports the app without its excluded query datasource and reports the missing dependency", async () => {
-    await features.testutils.withFeatureFlags(
-      config.getTenantId(),
-      { [FeatureFlag.PROJECTS]: true },
-      async () => {
-        const project = await createProjectAppWithUnassignedQueryDatasource()
+    const project = await createProjectAppWithUnassignedQueryDatasource()
 
-        const archive = await config.api.project.export(project._id)
-        const imported = await config.api.project.import(archive)
+    const archive = await config.api.project.export(project._id)
+    const imported = await config.api.project.import(archive)
 
-        expect(imported.resources.workspace_app).toHaveLength(1)
-        expect(imported.resources.query).toBeUndefined()
-        expect(imported.resources.datasource).toBeUndefined()
-        expect(imported.unsupportedContent).toContainEqual(
-          expect.objectContaining({ type: "excluded_dependency" })
-        )
-      }
+    expect(imported.resources.workspace_app).toHaveLength(1)
+    expect(imported.resources.query).toBeUndefined()
+    expect(imported.resources.datasource).toBeUndefined()
+    expect(imported.unsupportedContent).toContainEqual(
+      expect.objectContaining({ type: "excluded_dependency" })
     )
   })
 
   it("imports the app without its excluded row action table and reports the missing dependency", async () => {
-    await features.testutils.withFeatureFlags(
-      config.getTenantId(),
-      { [FeatureFlag.PROJECTS]: true },
-      async () => {
-        const project = await createProjectAppWithUnassignedRowActionTable()
+    const project = await createProjectAppWithUnassignedRowActionTable()
 
-        const archive = await config.api.project.export(project._id)
-        const imported = await config.api.project.import(archive)
+    const archive = await config.api.project.export(project._id)
+    const imported = await config.api.project.import(archive)
 
-        expect(imported.resources.workspace_app).toHaveLength(1)
-        expect(imported.resources.row_action).toBeUndefined()
-        expect(imported.resources.table).toBeUndefined()
-        expect(imported.resources.automation).toBeUndefined()
-        expect(imported.unsupportedContent).toContainEqual(
-          expect.objectContaining({ type: "excluded_dependency" })
-        )
-      }
+    expect(imported.resources.workspace_app).toHaveLength(1)
+    expect(imported.resources.row_action).toBeUndefined()
+    expect(imported.resources.table).toBeUndefined()
+    expect(imported.resources.automation).toBeUndefined()
+    expect(imported.unsupportedContent).toContainEqual(
+      expect.objectContaining({ type: "excluded_dependency" })
     )
   })
 })

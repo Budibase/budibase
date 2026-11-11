@@ -15,14 +15,13 @@
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
-    FeatureFlag,
     WorkspaceResource,
     type Table,
     type UpdateProjectAssignmentRequest,
   } from "@budibase/types"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
   import { saveProjectAssignment } from "@/components/projects/assignments"
-  import { auth, featureFlags, projectsStore } from "@/stores/portal"
+  import { auth, projectsStore } from "@/stores/portal"
   import { getErrorMessage } from "@/helpers/errors"
   import type { MenuItem } from "@/types"
 
@@ -45,11 +44,8 @@
   let assignProjectModalKey = 0
 
   $: favourite = tableId ? $favourites[tableId] : undefined
-  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: canAssignProject =
-    projectsEnabled &&
-    tableId !== TableNames.USERS &&
-    table?.sourceType !== DB_TYPE_EXTERNAL
+    tableId !== TableNames.USERS && table?.sourceType !== DB_TYPE_EXTERNAL
   $: projectAssignmentResource = {
     id: tableId,
     revision: table._rev || "",

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Multiselect, type LabelPosition } from "@budibase/bbui"
-  import { FeatureFlag } from "@budibase/types"
-  import { featureFlags, projectsStore } from "@/stores/portal"
+  import { projectsStore } from "@/stores/portal"
   import { workspaceStore } from "@/stores/builder"
 
   interface ProjectOption {
@@ -26,7 +25,6 @@
 
   let fetchError: string | undefined = $state()
 
-  const projectsEnabled = $derived($featureFlags[FeatureFlag.PROJECTS])
   const workspaceId = $derived($workspaceStore.appId)
   const options: ProjectOption[] = $derived(
     $projectsStore.map(project => ({
@@ -37,7 +35,7 @@
   )
 
   $effect(() => {
-    if (!projectsEnabled || !workspaceId) {
+    if (!workspaceId) {
       return
     }
     const requestWorkspaceId = workspaceId
@@ -50,16 +48,14 @@
   })
 </script>
 
-{#if projectsEnabled}
-  <Multiselect
-    {label}
-    {labelPosition}
-    placeholder="No projects"
-    bind:value
-    {options}
-    {autoWidth}
-    getOptionLabel={option => option.label}
-    getOptionValue={option => option.value}
-    error={fetchError}
-  />
-{/if}
+<Multiselect
+  {label}
+  {labelPosition}
+  placeholder="No projects"
+  bind:value
+  {options}
+  {autoWidth}
+  getOptionLabel={option => option.label}
+  getOptionValue={option => option.value}
+  error={fetchError}
+/>

@@ -1,7 +1,6 @@
-import { context, features } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import {
   AnyDocument,
-  FeatureFlag,
   ResourceType,
   type Document,
   type Project,
@@ -68,10 +67,7 @@ export const unionProjectIds = (
 export const getValidProjectIdsForDuplication = async (
   projectIds?: string[]
 ) => {
-  if (
-    !projectIds?.length ||
-    !(await features.isEnabled(FeatureFlag.PROJECTS))
-  ) {
+  if (!projectIds?.length) {
     return undefined
   }
 

@@ -176,17 +176,13 @@ async function updateUnlocked(
 export async function create(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    createUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => createUnlocked(ctx))
 }
 
 export async function update(
   ctx: UserCtx<UpdateAutomationRequest, UpdateAutomationResponse>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    updateUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => updateUnlocked(ctx))
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {

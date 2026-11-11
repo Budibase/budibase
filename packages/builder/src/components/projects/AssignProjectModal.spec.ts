@@ -1,6 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/svelte"
 import {
-  FeatureFlag,
   type PreviewProjectAssignmentResponse,
   ResourceType,
 } from "@budibase/types"
@@ -51,7 +50,6 @@ vi.mock("@budibase/bbui", () => ({
 vi.mock("@/stores/portal", async () => {
   const { readable } = await import("svelte/store")
   return {
-    featureFlags: readable({ [FeatureFlag.PROJECTS]: true }),
     projectsStore: Object.assign(readable(projectFixtures), {
       ensureFetched: vi.fn().mockResolvedValue(undefined),
     }),

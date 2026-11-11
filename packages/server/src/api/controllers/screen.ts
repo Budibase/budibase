@@ -112,9 +112,7 @@ async function saveUnlocked(
 export async function save(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    saveUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => saveUnlocked(ctx))
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {

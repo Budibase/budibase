@@ -60,9 +60,7 @@ async function duplicateUnlocked(
 export async function duplicate(
   ctx: Ctx<void, InsertWorkspaceAppResponse, { id: string }>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    duplicateUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => duplicateUnlocked(ctx))
 }
 
 export async function find(
@@ -113,9 +111,7 @@ async function createUnlocked(
 export async function create(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    createUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => createUnlocked(ctx))
 }
 
 async function editUnlocked(
@@ -169,9 +165,7 @@ async function editUnlocked(
 export async function edit(
   ctx: Ctx<UpdateWorkspaceAppRequest, UpdateWorkspaceAppResponse>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    editUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => editUnlocked(ctx))
 }
 
 export async function remove(ctx: Ctx<void, void>) {
