@@ -66,6 +66,22 @@ describe("convertDataToExportFormat", () => {
     )
   })
 
+  it("uses constructor as the original CSV header", () => {
+    expect(
+      convertDataToExportFormat([{ constructor: "value" }], "csv", [
+        { name: "constructor" },
+      ])
+    ).toBe("constructor\nvalue")
+  })
+
+  it("uses constructor as the original JSON key", () => {
+    expect(
+      convertDataToExportFormat([{ constructor: "value" }], "json", [
+        { name: "constructor" },
+      ])
+    ).toBe(JSON.stringify([{ constructor: "value" }], null, 2))
+  })
+
   it("preserves a custom JSON header named __proto__", () => {
     expect(
       convertDataToExportFormat(

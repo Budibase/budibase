@@ -79,10 +79,20 @@ export function convertDataToExportFormat(
     }, {})
   )
 
+  const getHeader = (key: string) => {
+    const customHeader = Object.prototype.hasOwnProperty.call(
+      customHeaders,
+      key
+    )
+      ? customHeaders[key]
+      : undefined
+    return customHeader || key
+  }
+
   const exportHeaders: { [key: string]: string } = {}
   const usedHeaders = new Set<string>()
   for (const key of schemaKeys) {
-    const header = customHeaders[key] || key
+    const header = getHeader(key)
     let uniqueHeader = header
     let suffix = 2
     while (usedHeaders.has(uniqueHeader)) {
@@ -99,7 +109,7 @@ export function convertDataToExportFormat(
         filteredRows,
         schemaKeys,
         delimiter,
-        schemaKeys.map(key => customHeaders[key] || key)
+        schemaKeys.map(getHeader)
       )
     case "json":
       return convertRowsToJson(
