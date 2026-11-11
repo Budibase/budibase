@@ -1,8 +1,10 @@
-import { context, roles as rolesCore } from "@budibase/backend-core"
+import { cache, context, roles as rolesCore } from "@budibase/backend-core"
 import {
   ContextUser,
   ContextUserMetadata,
   Database,
+  IdentityContext,
+  IdentityType,
   isSSOUser,
   UserBindings,
   UserMetadata,
@@ -167,4 +169,34 @@ export function getUserContextBindings(user: ContextUser): UserBindings {
   }
 
   return bindings
+}
+
+async function getUserIdentity(
+  userId: string
+): Promise<IdentityContext | undefined> {
+  const globalId = getGlobalIDFromUserMetadataID(userId)
+  try {
+    await cache.user.getUser({ userId: globalId })
+  } catch (err: any) {
+    if (err.status !== 404) {
+      throw err
+    }
+    return undefined
+  }
+  return {
+    _id: globalId,
+    type: IdentityType.USER,
+    tenantId: context.getTenantId(),
+  }
+}
+
+export async function doInUserIdentity<T>({
+  userId,
+  task,
+}: {
+  userId?: string
+  task: () => Promise<T>
+}): Promise<T> {
+  const identity = userId ? await getUserIdentity(userId) : undefined
+  return identity ? context.doInIdentityContext(identity, task) : task()
 }

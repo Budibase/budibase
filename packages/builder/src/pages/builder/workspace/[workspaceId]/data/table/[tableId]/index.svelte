@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Banner, Button, notifications } from "@budibase/bbui"
+  import { Banner, Button, ProgressCircle, notifications } from "@budibase/bbui"
   import {
     datasources,
     tables,
@@ -117,6 +117,8 @@
     $dataEnvironmentStore.mode === DataEnvironmentMode.PRODUCTION
   $: isDeployed =
     isInternal && id ? $workspaceDeploymentStore.tables[id]?.published : false
+  $: seedPending =
+    isInternal && id ? $workspaceDeploymentStore.tables[id]?.seedPending : false
   $: productionUnavailable =
     isInternal &&
     isProductionMode &&
@@ -281,8 +283,17 @@
       notifications.success("Table published to production")
     } catch (error: any) {
       notifications.error(error?.message || label)
+      await workspaceDeploymentStore.fetch().catch(error => {
+        console.error("Failed to refresh table publish status", error)
+      })
+      if (isProductionMode && gridContext?.rows?.actions?.refreshData) {
+        await gridContext.rows.actions.refreshData().catch(error => {
+          console.error("Failed to refresh production rows", error)
+        })
+      }
+    } finally {
+      tablePublishing = false
     }
-    tablePublishing = false
   }
 
   const checkProductionRowPresence = async () => {
@@ -376,14 +387,23 @@
           {:else if !isUsersTable}
             <GridImportButton />
             <GridExportButton />
-            {#if productionEmpty}
+            {#if productionEmpty || seedPending}
               <Button
                 secondary
                 disabled={tablePublishing}
                 on:click={() => publishProductionTable(true)}
               >
-                Seed from Dev
+                {seedPending ? "Retry seed" : "Seed from Dev"}
               </Button>
+              {#if tablePublishing}
+                <div
+                  class="seed-progress"
+                  role="progressbar"
+                  aria-label="Seeding and publishing table"
+                >
+                  <ProgressCircle size="S" />
+                </div>
+              {/if}
             {/if}
           {/if}
         </svelte:fragment>
@@ -424,6 +444,10 @@
 {/if}
 
 <style>
+  .seed-progress {
+    display: flex;
+    margin-inline-start: var(--spacing-s);
+  }
   .grid-blank-wrapper {
     position: relative;
     display: flex;

@@ -94,7 +94,7 @@ const response: FetchActionSessionsResponse = {
       updatedAt: "2026-10-05T11:55:00.000Z",
     },
   ],
-  summary: { total: 15, active: 1, waiting: 2, completed: 5, failed: 7 },
+  summary: { total: 13, active: 1, completed: 5, failed: 7 },
   pagination: { hasNextPage: false, hasPreviousPage: false },
 }
 
@@ -160,7 +160,7 @@ describe("Activity actions page", () => {
     expect(table().getByText("Unknown")).toBeInTheDocument()
     expect(table().getByText("Completed")).toBeInTheDocument()
     expect(table().getByText("4")).toBeInTheDocument()
-    for (const value of ["15", "1", "2", "5", "7"]) {
+    for (const value of ["13", "1", "5", "7"]) {
       expect(screen.getByText(value)).toBeInTheDocument()
     }
   })
@@ -192,7 +192,7 @@ describe("Activity actions page", () => {
       .mockResolvedValueOnce(response)
       .mockReturnValueOnce(pending.promise)
     renderPage()
-    await screen.findByText("15")
+    await screen.findByText("13")
 
     await fireEvent.change(screen.getByDisplayValue("All environments"), {
       target: { value: "prod" },
@@ -201,11 +201,11 @@ describe("Activity actions page", () => {
     expect(
       screen.getByRole("status", { name: "Loading All sessions" })
     ).toBeInTheDocument()
-    expect(screen.queryByText("15")).not.toBeInTheDocument()
+    expect(screen.queryByText("13")).not.toBeInTheDocument()
 
     pending.resolve({
       ...response,
-      summary: { total: 8, completed: 8, active: 0, waiting: 0, failed: 0 },
+      summary: { total: 8, completed: 8, active: 0, failed: 0 },
     })
 
     await waitFor(() => {
@@ -649,7 +649,7 @@ describe("Activity actions page", () => {
     renderPage()
 
     await fireEvent.change(screen.getByDisplayValue("All statuses"), {
-      target: { value: "waiting" },
+      target: { value: "active" },
     })
 
     await waitFor(() => {
@@ -667,7 +667,7 @@ describe("Activity actions page", () => {
         .mockResolvedValueOnce({
           ...response,
           sessions: [],
-          summary: { total: 0, active: 0, waiting: 0, completed: 0, failed: 0 },
+          summary: { total: 0, active: 0, completed: 0, failed: 0 },
         })
 
       const { findInTable } = renderPage()
@@ -692,7 +692,7 @@ describe("Activity actions page", () => {
     renderPage()
 
     await screen.findByRole("button", { name: "Try again" })
-    expect(screen.getAllByText("Unavailable")).toHaveLength(5)
+    expect(screen.getAllByText("Unavailable")).toHaveLength(4)
     for (const placeholder of screen.getAllByText("-")) {
       expect(placeholder).toHaveAttribute("aria-hidden", "true")
     }
@@ -703,13 +703,13 @@ describe("Activity actions page", () => {
     mocks.fetchActionSessions.mockResolvedValueOnce({
       ...response,
       sessions: [],
-      summary: { total: 0, active: 0, waiting: 0, completed: 0, failed: 0 },
+      summary: { total: 0, active: 0, completed: 0, failed: 0 },
     })
 
     renderPage()
 
     await screen.findByText("No actions tracked yet.")
-    expect(screen.getAllByText("0")).toHaveLength(5)
+    expect(screen.getAllByText("0")).toHaveLength(4)
     expect(screen.queryByText("Unavailable")).not.toBeInTheDocument()
   })
 
@@ -729,7 +729,7 @@ describe("Activity actions page", () => {
     })
     expect(mocks.fetchActionSessions).toHaveBeenCalledTimes(2)
     expect(screen.queryByText("Unavailable")).not.toBeInTheDocument()
-    for (const value of ["15", "1", "2", "5", "7"]) {
+    for (const value of ["13", "1", "5", "7"]) {
       expect(screen.getByText(value)).toBeInTheDocument()
     }
   })
@@ -787,7 +787,6 @@ describe("Activity actions page", () => {
           summary: {
             total: 22,
             active: 1,
-            waiting: 2,
             completed: 5,
             failed: 8,
           },
@@ -992,17 +991,24 @@ describe("Activity actions page", () => {
           })
         )
 
-      const { findInTable } = renderPage()
+      const { findInTable, table } = renderPage()
       await findInTable("Support agent")
 
-      notify()
-      notify()
-      notify()
-      notify()
-      refresh.resolve(response)
+      vi.useFakeTimers()
+      try {
+        notify()
+        notify()
+        notify()
+        notify()
+        refresh.resolve(response)
+        await vi.advanceTimersByTimeAsync(1000)
+        await tick()
 
-      await findInTable("Final refresh")
-      expect(queries()).toHaveLength(3)
+        expect(table().getByText("Final refresh")).toBeVisible()
+        expect(queries()).toHaveLength(3)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it("refreshes again after a filter load that was in flight when a change arrived", async () => {
@@ -1015,19 +1021,26 @@ describe("Activity actions page", () => {
           sessions: [{ ...response.sessions[0], assetLabel: "Refreshed" }],
         })
 
-      const { findInTable } = renderPage()
+      const { findInTable, table } = renderPage()
       await findInTable("Support agent")
       await fireEvent.change(screen.getByDisplayValue("All statuses"), {
         target: { value: "failed" },
       })
 
-      notify()
-      filtered.resolve(response)
+      vi.useFakeTimers()
+      try {
+        notify()
+        filtered.resolve(response)
+        await vi.advanceTimersByTimeAsync(1000)
+        await tick()
 
-      await findInTable("Refreshed")
-      expect(queries().at(-1)).toEqual(
-        expect.objectContaining({ status: "failed" })
-      )
+        expect(table().getByText("Refreshed")).toBeVisible()
+        expect(queries().at(-1)).toEqual(
+          expect.objectContaining({ status: "failed" })
+        )
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it("discards a background response superseded by a filter change", async () => {
