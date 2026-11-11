@@ -10,10 +10,13 @@ import {
   ToolAction,
   ToolExecutionPrincipal,
   ToolType,
+  type ActionAiAgentToolExecuted,
   type AgentExecutionContext,
   type AgentOperationToolConfig,
   type ToolExecutionPolicy,
 } from "@budibase/types"
+
+export const INVALID_TOOL_INPUT_ERROR = "Tool input is invalid"
 
 export interface ToolAuthorization {
   permissionType: PermissionType
@@ -146,6 +149,23 @@ const toolEventContext = ({
   }
 }
 
+export const getToolEventContexts = ({
+  tools,
+  runtimes,
+}: {
+  tools: AiToolDefinition[]
+  runtimes: Map<string, ToolAuthorizationRuntime>
+}): Record<string, ActionAiAgentToolExecuted> => {
+  const contexts: Record<string, ActionAiAgentToolExecuted> = {}
+  for (const toolDef of tools) {
+    const runtime = runtimes.get(toolDef.name)
+    if (runtime) {
+      contexts[toolDef.name] = toolEventContext({ toolDef, runtime })
+    }
+  }
+  return contexts
+}
+
 type RunTool = <T>(execute: () => Promise<T>) => Promise<T>
 
 const wrapTool = ({
@@ -193,8 +213,15 @@ const wrapTool = ({
           schema,
         })
       } catch (error) {
+        if (runtime) {
+          events.action.aiAgentToolFailed({
+            ...toolEventContext({ toolDef, runtime }),
+            reason: ActionFailureReason.ERROR,
+            errorMessage: INVALID_TOOL_INPUT_ERROR,
+          })
+        }
         if (isRequesterRedacted) {
-          throw new Error("Tool input is invalid")
+          throw new Error(INVALID_TOOL_INPUT_ERROR)
         }
         throw error
       }

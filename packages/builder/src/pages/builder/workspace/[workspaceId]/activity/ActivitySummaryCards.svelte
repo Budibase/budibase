@@ -17,7 +17,11 @@
   } = $props()
 </script>
 
-<div class="metrics-grid" aria-busy={loading}>
+<div
+  class="metrics-grid"
+  aria-busy={loading}
+  style:--metric-count={metrics.length}
+>
   {#each metrics as metric}
     <section class="metric-card">
       <Body size="XL" weight="600">
@@ -54,7 +58,7 @@
 
   .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--metric-count), minmax(0, 1fr));
     gap: var(--spacing-m);
   }
 

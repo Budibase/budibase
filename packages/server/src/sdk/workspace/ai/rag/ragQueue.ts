@@ -241,11 +241,15 @@ export async function enqueueRagFileIngestion(job: RagIngestionJob) {
 
 export async function removeRagFileIngestionJob(fileId: string): Promise<void> {
   const existing = await getQueue().getBullQueue().getJob(fileId)
-  if (existing) {
-    await existing.remove().catch(() => {
-      // Job may have moved to active state between getJob and remove - safe to ignore
-    })
+  if (!existing) {
+    return
   }
+  if (await existing.isActive()) {
+    // A failed file can be retried before its worker releases the job lock.
+    await existing.finished().catch(() => {})
+  }
+  const settled = await getQueue().getBullQueue().getJob(fileId)
+  await settled?.remove()
 }
 
 const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {

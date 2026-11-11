@@ -63,6 +63,7 @@ describe("/rest-templates", () => {
 
   beforeAll(async () => {
     await config.init()
+    config.user = await config.globalUser({ admin: { global: true } })
   })
 
   afterAll(cleanup)
@@ -81,6 +82,48 @@ describe("/rest-templates", () => {
       $metadata: {},
     }))
   })
+
+  it.each(["workspace", "global"])(
+    "allows %s builders to list templates but rejects imports, updates and deletes",
+    async scope => {
+      const template = await uploadExampleTemplate(`${scope} builder API`)
+      const builder = await config.globalUser({
+        builder:
+          scope === "global"
+            ? { global: true }
+            : { apps: [config.getProdWorkspaceId()] },
+        admin: { global: false },
+      })
+
+      await config.withUser(builder, async () => {
+        await request
+          .get("/api/rest-templates")
+          .set(config.defaultHeaders())
+          .expect(200)
+        await request
+          .post("/api/rest-templates")
+          .set(config.defaultHeaders())
+          .field("name", "Example API")
+          .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
+          .expect(403)
+        await request
+          .put(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
+          .field("name", "Updated Example API")
+          .field("description", "An updated example API")
+          .expect(403)
+        await request
+          .delete(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
+          .expect(403)
+      })
+
+      await request
+        .delete(`/api/rest-templates/${template.id}`)
+        .set(config.defaultHeaders())
+        .expect(200)
+    }
+  )
 
   const uploadExampleTemplate = async (
     name = "Example API"

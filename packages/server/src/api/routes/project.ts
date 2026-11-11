@@ -1,5 +1,8 @@
 import { middleware } from "@budibase/backend-core"
-import { MAX_PROJECT_README_LENGTH } from "@budibase/types"
+import {
+  MAX_PROJECT_NAME_LENGTH,
+  MAX_PROJECT_README_LENGTH,
+} from "@budibase/types"
 import Joi from "joi"
 import { projectsEnabled } from "../../middleware/projectsEnabled"
 import { projectTemplatesEnabled } from "../../middleware/projectTemplatesEnabled"
@@ -11,7 +14,7 @@ import * as controller from "../controllers/project"
 import { builderRoutes } from "./endpointGroups"
 
 const baseSchema = {
-  name: Joi.string().required(),
+  name: Joi.string().max(MAX_PROJECT_NAME_LENGTH).required(),
   description: Joi.string().optional().allow(""),
   readme: Joi.string().max(MAX_PROJECT_README_LENGTH).optional().allow(""),
   color: Joi.string().optional().allow(""),
