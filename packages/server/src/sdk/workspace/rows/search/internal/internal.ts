@@ -1,3 +1,4 @@
+import pick from "lodash/pick"
 import { context, HTTPError } from "@budibase/backend-core"
 import {
   Database,
@@ -90,6 +91,7 @@ export async function exportRows(
         rows[i][column] = result[i][column]
       }
     }
+    schema = pick(schema, columns)
     headers = columns
   } else {
     rows = result
