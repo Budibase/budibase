@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { BuilderSocketEvent } from "@budibase/shared-core"
+import type { AgentRequest } from "@budibase/types"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockButton from "@/test/mocks/MockButton.svelte"
 import MockComponent from "@/test/mocks/MockComponent.svelte"
@@ -11,6 +13,23 @@ const mocks = vi.hoisted(() => {
   return {
     fetchAgentRequests: vi.fn(),
     agentsStore: writable({ agents: [{ _id: "agent-1", name: "Support" }] }),
+  }
+})
+
+const socket = vi.hoisted(() => {
+  type Handler = (request: AgentRequest) => Promise<void>
+  const handlers = new Map<string, Handler>()
+  return {
+    on: (event: string, handler: Handler) => handlers.set(event, handler),
+    off: (event: string) => handlers.delete(event),
+    trigger: async ({
+      event,
+      request,
+    }: {
+      event: string
+      request: AgentRequest
+    }) => handlers.get(event)?.(request),
+    reset: () => handlers.clear(),
   }
 })
 
@@ -36,13 +55,14 @@ vi.mock("@/stores/portal/users", () => ({
 }))
 
 vi.mock("@/stores/builder", () => ({
-  builderStore: { websocket: undefined },
+  builderStore: { websocket: socket },
 }))
 
 vi.mock("./ActivitySidePanel.svelte", () => ({ default: MockComponent }))
 
 describe("Activity requests page", () => {
   beforeEach(() => {
+    socket.reset()
     mocks.fetchAgentRequests.mockReset()
     mocks.fetchAgentRequests.mockResolvedValue({
       requests: [],
@@ -56,6 +76,41 @@ describe("Activity requests page", () => {
     })
   })
 
+  it("refreshes the summary when a new request arrives over the websocket", async () => {
+    render(ActivityRequests)
+    await screen.findByText("7")
+    mocks.fetchAgentRequests.mockResolvedValue({
+      requests: [],
+      summary: {
+        total: 8,
+        active: 2,
+        needs_input: 2,
+        completed: 3,
+        failed: 1,
+      },
+    })
+
+    await socket.trigger({
+      event: BuilderSocketEvent.AgentRequestChange,
+      request: {
+        _id: "request-new",
+        type: "agentRequest",
+        workspaceId: "app_test",
+        agentId: "agent-1",
+        userId: "user-1",
+        status: "active",
+        statusRank: 0,
+        entries: [],
+        approvers: [],
+        pendingApprovers: [],
+        respondedApprovers: [],
+      },
+    })
+
+    expect(await screen.findByText("8")).toBeInTheDocument()
+    expect(screen.queryByText("7")).not.toBeInTheDocument()
+  })
+
   it("loads the first page of requests and renders the summary", async () => {
     render(ActivityRequests)
 
@@ -67,6 +122,43 @@ describe("Activity requests page", () => {
       bookmark: undefined,
       status: undefined,
     })
+  })
+
+  it("updates status counters when an existing request completes over the websocket", async () => {
+    const request: AgentRequest = {
+      _id: "request-existing",
+      type: "agentRequest",
+      workspaceId: "app_test",
+      agentId: "agent-1",
+      userId: "user-1",
+      status: "active",
+      statusRank: 0,
+      entries: [],
+      approvers: [],
+      pendingApprovers: [],
+      respondedApprovers: [],
+    }
+    mocks.fetchAgentRequests.mockResolvedValue({
+      requests: [request],
+      summary: { total: 1, active: 1, needs_input: 0, completed: 0, failed: 0 },
+    })
+    render(ActivityRequests)
+    await screen.findByText("Showing 1–1 of 1 items")
+
+    await socket.trigger({
+      event: BuilderSocketEvent.AgentRequestChange,
+      request: { ...request, status: "completed" },
+    })
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Completed", { selector: "div" }).closest("section")
+      ).toHaveTextContent("1")
+      expect(
+        screen.getByText("Processing", { selector: "div" }).closest("section")
+      ).toHaveTextContent("0")
+    })
+    expect(mocks.fetchAgentRequests).toHaveBeenCalledOnce()
   })
 
   it("shows unavailable counters and a persistent error when loading fails", async () => {

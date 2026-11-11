@@ -124,6 +124,9 @@ export const createBuilderWebsocket = (appId: string) => {
     BuilderSocketEvent.AppPublishChange,
     async ({ user, published }: { user: UIUser; published: boolean }) => {
       await workspacesStore.load()
+      if (!socket.connected) {
+        return
+      }
       if (published) {
         await Promise.all([
           deploymentStore.load(),

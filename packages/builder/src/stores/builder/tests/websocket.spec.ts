@@ -6,8 +6,18 @@ import { onWorkspaceReady } from "../workspaceReady"
 
 const mocks = vi.hoisted(() => ({
   socket: {
+    connected: true,
     on: vi.fn<(event: string, callback: () => void) => void>(),
-    onOther: vi.fn(),
+    onOther:
+      vi.fn<
+        (
+          event: string,
+          callback: (data: {
+            user: UIUser
+            published: boolean
+          }) => Promise<void>
+        ) => void
+      >(),
     emit: vi.fn<
       (
         event: string,
@@ -17,6 +27,10 @@ const mocks = vi.hoisted(() => ({
     >(),
   },
   initUsers: vi.fn(),
+  loadWorkspaces: vi.fn<() => Promise<void>>(),
+  loadDeployments: vi.fn(),
+  fetchPublishStatus: vi.fn(),
+  notifySuccess: vi.fn(),
 }))
 
 vi.mock("@budibase/frontend-core", () => ({
@@ -24,10 +38,60 @@ vi.mock("@budibase/frontend-core", () => ({
 }))
 vi.mock("@/stores/builder", () => ({
   userStore: { init: mocks.initUsers },
+  deploymentStore: { load: mocks.loadDeployments },
+  workspaceDeploymentStore: { fetch: mocks.fetchPublishStatus },
 }))
-vi.mock("@/stores/portal", () => ({}))
+vi.mock("@/stores/portal", () => ({
+  workspacesStore: { load: mocks.loadWorkspaces },
+}))
 vi.mock("../screens", () => ({}))
-vi.mock("@budibase/bbui", () => ({}))
+vi.mock("@budibase/bbui", () => ({
+  notifications: { success: mocks.notifySuccess },
+}))
+
+describe("builder publication events", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.socket.connected = true
+    mocks.loadWorkspaces.mockResolvedValue()
+  })
+
+  const publish = () => {
+    createBuilderWebsocket("app_test")
+    const handler = mocks.socket.onOther.mock.calls.find(
+      ([event]) => event === BuilderSocketEvent.AppPublishChange
+    )![1]
+    return handler({
+      user: { email: "builder@example.com" } as UIUser,
+      published: true,
+    })
+  }
+
+  it("refreshes deployments when the builder is still connected", async () => {
+    await publish()
+
+    expect(mocks.loadDeployments).toHaveBeenCalledOnce()
+    expect(mocks.fetchPublishStatus).toHaveBeenCalledOnce()
+    expect(mocks.notifySuccess).toHaveBeenCalledOnce()
+  })
+
+  it("does not refresh deployments after leaving the builder during a publication event", async () => {
+    let finishLoading = () => {}
+    mocks.loadWorkspaces.mockReturnValue(
+      new Promise<void>(resolve => {
+        finishLoading = resolve
+      })
+    )
+    const pending = publish()
+    mocks.socket.connected = false
+    finishLoading()
+    await pending
+
+    expect(mocks.loadDeployments).not.toHaveBeenCalled()
+    expect(mocks.fetchPublishStatus).not.toHaveBeenCalled()
+    expect(mocks.notifySuccess).not.toHaveBeenCalled()
+  })
+})
 
 describe("builder workspace readiness", () => {
   beforeEach(() => vi.clearAllMocks())
