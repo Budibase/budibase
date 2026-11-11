@@ -8,9 +8,10 @@ import { Row } from "@budibase/types"
 export function convertRowsToCsv(
   rows: Row[],
   columns: string[],
-  delimiter = ","
+  delimiter = ",",
+  headers = columns
 ): string {
-  const headerLine = columns.join(delimiter)
+  const headerLine = headers.join(delimiter)
   const dataLines = rows.map(row =>
     columns.map(h => escapeCsvValue(row[h], delimiter)).join(delimiter)
   )
@@ -61,7 +62,8 @@ export function convertDataToExportFormat(
   rows: Row[],
   format: "csv" | "json",
   columns?: { name: string }[],
-  delimiter = ","
+  delimiter = ",",
+  customHeaders: { [key: string]: string } = {}
 ): string {
   const schemaKeys = columns?.length
     ? columns.map(c => c.name)
@@ -77,9 +79,21 @@ export function convertDataToExportFormat(
 
   switch (format) {
     case "csv":
-      return convertRowsToCsv(filteredRows, schemaKeys, delimiter)
+      return convertRowsToCsv(
+        filteredRows,
+        schemaKeys,
+        delimiter,
+        schemaKeys.map(key => customHeaders[key] || key)
+      )
     case "json":
-      return convertRowsToJson(filteredRows)
+      return convertRowsToJson(
+        filteredRows.map(row =>
+          Object.entries(row).reduce((renamedRow: Row, [key, value]) => {
+            renamedRow[customHeaders[key] || key] = value
+            return renamedRow
+          }, {})
+        )
+      )
     default:
       throw new Error(`Unsupported format: ${format}`)
   }
