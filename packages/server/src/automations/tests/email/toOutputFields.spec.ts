@@ -169,7 +169,7 @@ describe("toOutputFields", () => {
 
     const result = await toOutputFields(message)
 
-    expect(result.bodyHtml).toBe("<p>Hello</p>")
+    expect(result.bodyHtml).toBe("<p>Hello</p><img />")
   })
 
   it("returns undefined body without truncation when source is missing", async () => {
