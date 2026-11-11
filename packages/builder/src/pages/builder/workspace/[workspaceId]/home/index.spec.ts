@@ -280,7 +280,7 @@ const openContextMenu = async ({ name }: { name: string }) => {
 }
 const chooseAssignProject = async () => {
   const [, items] = mocks.openContextMenu.mock.lastCall!
-  items.find(item => item.name === "Assign project")!.callback()
+  items.find(item => item.name === "Assign projects")!.callback()
   await tick()
   await advancePreview()
 }
@@ -400,7 +400,7 @@ describe("workspace home project assignments", () => {
     { name: "Reporting portal", id: "reporting", revision: "2-reporting" },
     { name: "Operations portal", id: "operations", revision: "1-operations" },
   ])(
-    "starts a fresh assignment when Assign project is chosen again for $name",
+    "starts a fresh assignment when Assign projects is chosen again for $name",
     async ({ name, id, revision }) => {
       render(WorkspaceHome)
       await openContextMenu({ name: "Operations portal" })
@@ -486,7 +486,7 @@ describe("workspace home project assignments", () => {
       await tick()
       await openContextMenu({ name })
       const [, items] = mocks.openContextMenu.mock.lastCall!
-      const remove = items.find(item => item.name === "Remove")!
+      const remove = items.find(item => item.name === "Remove from project")!
       remove.callback()
       await tick()
 
@@ -557,7 +557,7 @@ describe("workspace home project assignments", () => {
 
       expect(mocks.openContextMenu).toHaveBeenCalledOnce()
       const [, items] = mocks.openContextMenu.mock.lastCall!
-      expect(items.some(item => item.name === "Remove")).toBe(true)
+      expect(items.some(item => item.name === "Remove from project")).toBe(true)
       expect(items.some(item => item.name === "Delete")).toBe(false)
       expect(mocks.deleteResource).not.toHaveBeenCalled()
     }
@@ -569,7 +569,7 @@ describe("workspace home project assignments", () => {
 
     const [, items] = mocks.openContextMenu.mock.lastCall!
     expect(items.find(item => item.name === "Delete")?.icon).toBe("trash")
-    expect(items.some(item => item.name === "Remove")).toBe(false)
+    expect(items.some(item => item.name === "Remove from project")).toBe(false)
   })
 
   it("keeps the resource when removing its last project assignment", async () => {
@@ -582,7 +582,7 @@ describe("workspace home project assignments", () => {
     await tick()
     await openContextMenu({ name: "Operations portal" })
     const [, items] = mocks.openContextMenu.mock.lastCall!
-    items.find(item => item.name === "Remove")!.callback()
+    items.find(item => item.name === "Remove from project")!.callback()
     await tick()
     await fireEvent.click(screen.getByRole("button", { name: "Remove" }))
 
@@ -614,7 +614,7 @@ describe("workspace home project assignments", () => {
     await tick()
     await openContextMenu({ name: "Operations portal" })
     const [, items] = mocks.openContextMenu.mock.lastCall!
-    items.find(item => item.name === "Remove")!.callback()
+    items.find(item => item.name === "Remove from project")!.callback()
     await tick()
     await fireEvent.click(screen.getByRole("button", { name: "Remove" }))
 

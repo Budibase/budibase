@@ -707,7 +707,7 @@
     const project = selectedProject
     const removeFromProject = {
       icon: "stack-minus",
-      name: "Remove",
+      name: "Remove from project",
       visible: true,
       callback: () => {
         if (!project) {
@@ -746,10 +746,11 @@
         },
         {
           icon: "stack",
-          name: "Assign project",
+          name: "Assign projects",
           visible: projectsEnabled,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
         {
           icon: "globe-simple",
           name: "View live app",
@@ -757,14 +758,16 @@
           callback: () => openLiveWorkspaceApp(liveUrl),
         },
         pause,
-        project
-          ? removeFromProject
-          : {
-              icon: "trash",
-              name: "Delete",
-              visible: true,
-              callback: () => confirmDeleteWorkspaceAppDialog.show(),
-            },
+        ...(!project
+          ? [
+              {
+                icon: "trash",
+                name: "Delete",
+                visible: true,
+                callback: () => confirmDeleteWorkspaceAppDialog.show(),
+              },
+            ]
+          : []),
         {
           icon: "copy",
           name: "Duplicate",
@@ -802,10 +805,11 @@
         edit,
         {
           icon: "stack",
-          name: "Assign project",
+          name: "Assign projects",
           visible: projectsEnabled,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
         {
           icon: "copy",
           name: "Duplicate",
@@ -817,15 +821,17 @@
               : undefined,
         },
         pause,
-        project
-          ? removeFromProject
-          : {
-              icon: "trash",
-              name: "Delete",
-              visible: true,
-              disabled: false,
-              callback: () => confirmDeleteAutomationDialog.show(),
-            },
+        ...(!project
+          ? [
+              {
+                icon: "trash",
+                name: "Delete",
+                visible: true,
+                disabled: false,
+                callback: () => confirmDeleteAutomationDialog.show(),
+              },
+            ]
+          : []),
       ]
     }
 
@@ -839,25 +845,28 @@
         },
         {
           icon: "stack",
-          name: "Assign project",
+          name: "Assign projects",
           visible: projectsEnabled,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
         {
           icon: "copy",
           name: "Duplicate",
           visible: true,
           callback: duplicateAgent,
         },
-        project
-          ? removeFromProject
-          : {
-              icon: "trash",
-              name: "Delete",
-              visible: true,
-              disabled: false,
-              callback: () => confirmDeleteAgentDialog.show(),
-            },
+        ...(!project
+          ? [
+              {
+                icon: "trash",
+                name: "Delete",
+                visible: true,
+                disabled: false,
+                callback: () => confirmDeleteAgentDialog.show(),
+              },
+            ]
+          : []),
       ]
     }
 
@@ -871,7 +880,7 @@
         },
         {
           icon: "stack",
-          name: "Assign project",
+          name: "Assign projects",
           visible: projectsEnabled,
           callback: openAssignProjectModal,
         },
