@@ -83,6 +83,7 @@ jest.mock("../../../escalation/notifications/slack", () => ({
 
 jest.mock("./slack", () => ({
   formatSlackAssistantReply: (args: object) => mockFormatReply(args),
+  getSlackKnowledgeSourcesCard: async () => undefined,
 }))
 
 import {
@@ -179,7 +180,7 @@ describe("conversation attachment processor", () => {
       ],
       assistantText: "The report says content.",
     })
-    mockFormatReply.mockResolvedValue("The report says content.")
+    mockFormatReply.mockReturnValue("The report says content.")
     mockReply.mockResolvedValue(undefined)
   })
 

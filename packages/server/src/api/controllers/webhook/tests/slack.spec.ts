@@ -81,36 +81,28 @@ describe("slack webhook helpers", () => {
     )
   })
 
-  it("formats assistant replies before returning them to Slack", async () => {
+  it("formats assistant replies before returning them to Slack", () => {
     const result: WebhookChatCompleteResult = {
       messages: [],
       assistantText: "## Next steps\nUse **bold** text.",
       title: "Mock conversation",
     }
 
-    await expect(
-      formatSlackAssistantReply({
-        agentId: "agent-1",
-        result,
-        isDirectMessage: false,
-      })
-    ).resolves.toEqual("*Next steps*\nUse *bold* text.")
+    expect(formatSlackAssistantReply({ result })).toEqual(
+      "*Next steps*\nUse *bold* text."
+    )
   })
 
-  it("returns a fallback instead of an empty Slack reply", async () => {
+  it("returns a fallback instead of an empty Slack reply", () => {
     const result: WebhookChatCompleteResult = {
       messages: [],
       assistantText: " \n ",
       title: "Mock conversation",
     }
 
-    await expect(
-      formatSlackAssistantReply({
-        agentId: "agent-1",
-        result,
-        isDirectMessage: false,
-      })
-    ).resolves.toEqual("No response generated.")
+    expect(formatSlackAssistantReply({ result })).toEqual(
+      "No response generated."
+    )
   })
 
   it.each([

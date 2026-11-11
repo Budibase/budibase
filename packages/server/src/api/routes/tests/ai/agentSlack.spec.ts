@@ -56,8 +56,20 @@ interface SlackManifest {
   }
 }
 
+const mockSlackPostMessage = jest.fn()
+
 jest.mock("@chat-adapter/slack", () => ({
-  createSlackAdapter: jest.fn(() => ({})),
+  createSlackAdapter: jest.fn(() => ({
+    decodeThreadId: (threadId: string) => {
+      const [, channel, threadTs = ""] = threadId.split(":")
+      return { channel, threadTs }
+    },
+    webClient: {
+      chat: {
+        postMessage: (args: object) => mockSlackPostMessage(args),
+      },
+    },
+  })),
 }))
 
 // Agent create/update resolves the Slack workspace via auth.test - without
@@ -253,6 +265,7 @@ describe("agent slack integration provisioning", () => {
     )
     resetWebhookChatMock()
     mockedGetFileUrlForAgent.mockReset()
+    mockSlackPostMessage.mockReset()
     mockedIsGeminiFileSearchConfigured.mockReset()
     mockedIsGeminiFileSearchConfigured.mockImplementation(
       actualGeminiFileStore.isGeminiFileSearchConfigured
@@ -1825,7 +1838,7 @@ describe("agent slack integration provisioning", () => {
       )
     })
 
-    it("appends downloadable RAG source links to Slack assistant replies", async () => {
+    it("posts knowledge source links as rich text link elements in Slack DMs", async () => {
       mockedGetFileUrlForAgent.mockResolvedValue(
         "/files/signed/prod-budi-app-assets/source.pdf"
       )
@@ -1868,14 +1881,41 @@ describe("agent slack integration provisioning", () => {
         },
       })
 
-      expect(response.body.messages).toContain(
-        [
-          "Answer with sources",
-          "",
-          "Sources:",
-          "- <http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf|Source One Draft.pdf>",
-        ].join("\n")
-      )
+      expect(response.body.messages).toEqual(["Answer with sources"])
+      expect(mockSlackPostMessage).toHaveBeenCalledWith({
+        channel: "D123",
+        thread_ts: undefined,
+        text: "Sources",
+        blocks: [
+          {
+            type: "rich_text",
+            elements: [
+              {
+                type: "rich_text_section",
+                elements: [
+                  { type: "text", text: "Sources", style: { bold: true } },
+                ],
+              },
+              {
+                type: "rich_text_list",
+                style: "bullet",
+                elements: [
+                  {
+                    type: "rich_text_section",
+                    elements: [
+                      {
+                        type: "link",
+                        url: "http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf",
+                        text: "Source <One>|Draft.pdf",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      })
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).toHaveBeenCalledWith(agent._id, "file-1")
     })
@@ -1921,7 +1961,7 @@ describe("agent slack integration provisioning", () => {
       })
 
       expect(response.body.messages).toContain("Answer with private sources")
-      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(mockSlackPostMessage).not.toHaveBeenCalled()
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
@@ -2080,7 +2120,7 @@ describe("agent slack integration provisioning", () => {
       })
 
       expect(response.body.messages).toContain("Answer without links")
-      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(mockSlackPostMessage).not.toHaveBeenCalled()
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
@@ -2125,7 +2165,7 @@ describe("agent slack integration provisioning", () => {
       })
 
       expect(response.body.messages).toContain("Answer without source ids")
-      expect(response.body.messages.join("\n")).not.toContain("Sources:")
+      expect(mockSlackPostMessage).not.toHaveBeenCalled()
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
