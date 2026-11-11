@@ -55,6 +55,7 @@ const mocks = vi.hoisted(() => {
     workspaceApps: createStore({ workspaceApps: apps }),
     ensureFetched: vi.fn().mockResolvedValue(undefined),
     fetchProjects: vi.fn(),
+    hasFetchedProjects: vi.fn().mockReturnValue(true),
     fetchAgents: vi.fn().mockResolvedValue(undefined),
     refreshWorkspace: vi.fn().mockResolvedValue(undefined),
     previewAssignment:
@@ -174,7 +175,7 @@ vi.mock("@/stores/portal", () => ({
   projectsStore: Object.assign(mocks.projects, {
     fetch: mocks.fetchProjects,
     ensureFetched: mocks.ensureFetched,
-    hasFetched: () => true,
+    hasFetched: mocks.hasFetchedProjects,
     previewAssignment: mocks.previewAssignment,
     updateAssignment: mocks.updateAssignment,
   }),
@@ -308,6 +309,7 @@ describe("workspace home project assignments", () => {
       }))
     )
     mocks.fetchProjects.mockImplementation(async () => get(mocks.projects))
+    mocks.hasFetchedProjects.mockReturnValue(true)
     mocks.ensureFetched.mockImplementation(async () => get(mocks.projects))
     mocks.saveAssignment.mockResolvedValue(undefined)
     mocks.updateAssignment.mockResolvedValue(undefined)
@@ -472,12 +474,9 @@ describe("workspace home project assignments", () => {
           projectIds: [...app.projectIds, "project_finance"],
         })),
       })
-      mocks.previewAssignment.mockResolvedValueOnce({
-        resourceRev: revision,
-        resourceProjectIds: ["project_operations", "project_finance"],
-        dependencies: [],
-        dependencyFingerprint: "removal-preview",
-      })
+      mocks.previewAssignment.mockRejectedValue(
+        new Error("Unable to build dependency graph")
+      )
       history.replaceState(
         {},
         "",
@@ -511,11 +510,56 @@ describe("workspace home project assignments", () => {
           resourceRev: revision,
           projectIds: ["project_finance"],
           dependencyIds: [],
-          dependencyFingerprint: "removal-preview",
+          dependencyFingerprint: "",
         },
       })
       expect(mocks.deleteResource).not.toHaveBeenCalled()
+      expect(mocks.previewAssignment).not.toHaveBeenCalled()
+      expect(mocks.notifications.success).toHaveBeenCalledWith(
+        `Removed '${name}' from 'Operations'`
+      )
       expect(mocks.refreshWorkspace).toHaveBeenCalledOnce()
+    }
+  )
+
+  it.each([
+    "Operations portal",
+    "Operations workflow",
+    "Operations assistant",
+    "Operations connection",
+    "Operations records",
+  ])(
+    "waits for the URL-selected project before opening the menu for %s",
+    async name => {
+      const projects = get(mocks.projects)
+      const fetchProjects = Promise.withResolvers<ProjectResponse[]>()
+      mocks.projects.set([])
+      mocks.hasFetchedProjects.mockReturnValue(false)
+      mocks.fetchProjects.mockImplementationOnce(async () => {
+        const projects = await fetchProjects.promise
+        mocks.hasFetchedProjects.mockReturnValue(true)
+        mocks.projects.set(projects)
+        return projects
+      })
+      history.replaceState(
+        {},
+        "",
+        "/builder/workspace/app_dev_test/home?project=project_operations"
+      )
+      render(WorkspaceHome)
+      await tick()
+
+      await openContextMenu({ name })
+
+      fetchProjects.resolve(projects)
+      await tick()
+      await openContextMenu({ name })
+
+      expect(mocks.openContextMenu).toHaveBeenCalledOnce()
+      const [, items] = mocks.openContextMenu.mock.lastCall!
+      expect(items.some(item => item.name === "Remove")).toBe(true)
+      expect(items.some(item => item.name === "Delete")).toBe(false)
+      expect(mocks.deleteResource).not.toHaveBeenCalled()
     }
   )
 
@@ -548,7 +592,7 @@ describe("workspace home project assignments", () => {
         resourceRev: "1-operations",
         projectIds: [],
         dependencyIds: [],
-        dependencyFingerprint: "preview-workspace_app_operations",
+        dependencyFingerprint: "",
       },
     })
     expect(mocks.deleteResource).not.toHaveBeenCalled()

@@ -496,17 +496,13 @@
     const { row, project } = projectRemoval
     const projectIds = (row.projectIds || []).filter(id => id !== project._id)
     try {
-      const preview = await projectsStore.previewAssignment({
-        resourceId: row.id,
-        projectIds,
-      })
       await projectsStore.updateAssignment({
         resourceId: row.id,
         request: {
           resourceRev,
           projectIds,
           dependencyIds: [],
-          dependencyFingerprint: preview.dependencyFingerprint,
+          dependencyFingerprint: "",
         },
       })
       notifications.success(`Removed '${row.name}' from '${project.name}'`)
@@ -895,6 +891,10 @@
     x: number
     y: number
   }) => {
+    if (selectedProjectId && !selectedProject) {
+      return
+    }
+
     selectedWorkspaceApp = undefined
     selectedAutomation = undefined
     selectedAgent = undefined
