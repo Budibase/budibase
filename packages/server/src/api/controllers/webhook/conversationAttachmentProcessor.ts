@@ -1,4 +1,5 @@
 import { ErrorCode, WebClient, type WebAPIPlatformError } from "@slack/web-api"
+import type { CardElement } from "chat"
 import { context, HTTPError, locks, roles } from "@budibase/backend-core"
 import {
   type ChatConversation,
@@ -14,7 +15,10 @@ import sdk from "../../../sdk"
 import { getGlobalUser } from "../../../utilities/global"
 import { webhookChat } from "../ai/chatConversations"
 import { replyToConversation } from "../../../escalation/notifications/slack"
-import { formatSlackAssistantReply } from "./slack"
+import {
+  formatSlackAssistantReply,
+  getSlackKnowledgeSourcesCard,
+} from "./slack"
 import { GENERIC_CHAT_ERROR_MESSAGE } from "./chatHandler"
 import type { ConversationAttachmentIngestionJob } from "../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue"
 
@@ -430,6 +434,7 @@ const processTurn = async ({
     .trim()
 
   let responseText: string
+  let sourcesCard: CardElement | undefined
   let messages = current.messages
   if (!question) {
     messages = [...messages, turn.message]
@@ -462,13 +467,16 @@ const processTurn = async ({
       triggeredBy,
     })
     messages = result.messages
-    responseText = result.failed
-      ? GENERIC_CHAT_ERROR_MESSAGE
-      : await formatSlackAssistantReply({
-          agentId: current.agentId,
-          result,
-          isDirectMessage: current.channel?.conversationType === "im",
-        })
+    if (result.failed) {
+      responseText = GENERIC_CHAT_ERROR_MESSAGE
+    } else {
+      responseText = formatSlackAssistantReply({ result })
+      sourcesCard = await getSlackKnowledgeSourcesCard({
+        agentId: current.agentId,
+        result,
+        isDirectMessage: current.channel?.conversationType === "im",
+      })
+    }
     if (failed.length) {
       responseText += `\n\n${getAttachmentFailureText(failed)}`
     }
@@ -494,6 +502,7 @@ const processTurn = async ({
     agentId: saved.agentId,
     channel: saved.channel!,
     text: responseText,
+    card: sourcesCard,
   })
   await updateConversation(saved._id!, latest => ({
     ...latest,
