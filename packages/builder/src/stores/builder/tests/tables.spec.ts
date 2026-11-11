@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { get } from "svelte/store"
 import { FieldType, RelationshipType, TableSourceType } from "@budibase/types"
-import type { Table } from "@budibase/types"
+import type { FindTableResponse } from "@budibase/types"
 import { API } from "@/api"
 import { TableStore } from "../tables"
 
@@ -14,7 +14,7 @@ vi.mock("@/api", () => ({
   },
 }))
 
-const target: Table = {
+const target: FindTableResponse = {
   _id: "ta_target",
   _rev: "1-target",
   type: "table",
@@ -23,7 +23,7 @@ const target: Table = {
   sourceType: TableSourceType.INTERNAL,
   schema: {},
 }
-const source: Table = {
+const source: FindTableResponse = {
   ...target,
   _id: "ta_source",
   name: "Source",
@@ -37,7 +37,7 @@ const source: Table = {
     },
   },
 }
-const savedSource: Table = { ...source, schema: {} }
+const savedSource: FindTableResponse = { ...source, schema: {} }
 
 describe("table relationship cleanup", () => {
   let store: TableStore
