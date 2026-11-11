@@ -1,5 +1,6 @@
 <script lang="ts">
   import { sdk } from "@budibase/shared-core"
+  import { FeatureFlag } from "@budibase/types"
   import {
     initialise,
     reset,
@@ -8,9 +9,16 @@
     deploymentStore,
     workspaceStore,
   } from "@/stores/builder"
-  import { workspacesStore, admin, aiConfigsStore, auth } from "@/stores/portal"
+  import {
+    workspacesStore,
+    admin,
+    aiConfigsStore,
+    auth,
+    featureFlags,
+    projectsStore,
+  } from "@/stores/portal"
   import { bb } from "@/stores/bb"
-  import { Heading, Layout, Body } from "@budibase/bbui"
+  import { Heading, Layout, Body, notifications } from "@budibase/bbui"
   import { API } from "@/api"
   import InviteUsersModal from "./_components/InviteUsersModal.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
@@ -18,6 +26,7 @@
   import { onMount } from "svelte"
   import { goto, params } from "@roxi/routify"
   import { getProjectSetupRequest } from "@/helpers/workspaceHomeNavigation"
+  import { getErrorMessage } from "@/helpers/errors"
   import ProjectSetupBackButton from "@/components/projects/ProjectSetupBackButton.svelte"
 
   export let workspaceId: string
@@ -57,6 +66,15 @@
         await initialise(pkg)
       }
       await deploymentStore.load()
+      if ($featureFlags[FeatureFlag.PROJECTS]) {
+        try {
+          await projectsStore.fetch(appId)
+        } catch (error) {
+          notifications.error(
+            getErrorMessage(error) || "Unable to load projects"
+          )
+        }
+      }
     } catch (error: any) {
       console.error(`Error initialising app: ${error?.message}`)
       sideNav.show()

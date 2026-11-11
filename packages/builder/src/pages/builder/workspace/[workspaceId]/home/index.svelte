@@ -159,6 +159,7 @@
   $: currentUserId = $auth.user?._id || ""
   $: canEditProjectNotes = sdk.users.hasBuilderPermissions($auth.user)
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: canAssignProject = projectsEnabled && $projectsStore.length > 0
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: selectedProjectResource = projectAssignmentRow
     ? {
@@ -695,7 +696,7 @@
         {
           icon: "stack",
           name: "Assign project",
-          visible: projectsEnabled,
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
         {
@@ -749,7 +750,7 @@
         {
           icon: "stack",
           name: "Assign project",
-          visible: projectsEnabled,
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
         {
@@ -784,7 +785,7 @@
         {
           icon: "stack",
           name: "Assign project",
-          visible: projectsEnabled,
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
         {
@@ -814,7 +815,7 @@
         {
           icon: "stack",
           name: "Assign project",
-          visible: projectsEnabled,
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
       ]
@@ -887,7 +888,7 @@
   const loadProjects = async (workspaceId: string) => {
     try {
       projectsRequestedForWorkspace = workspaceId
-      await projectsStore.fetch(workspaceId)
+      await projectsStore.ensureFetched(workspaceId)
     } catch (error) {
       projectsRequestedForWorkspace = ""
       if ($workspaceStore.appId === workspaceId && projectsEnabled) {
