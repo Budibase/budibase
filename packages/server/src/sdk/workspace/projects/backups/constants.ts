@@ -5,6 +5,7 @@ export const PROJECT_DEPENDENCY_INDEX_FILE = "dependency-index.json"
 export const PROJECT_DOCS_DIRECTORY = "docs"
 export const PROJECT_ATTACHMENTS_DIRECTORY = "attachments"
 export const PROJECT_DATA_FILE = "data.json"
+export const PROJECT_PERMISSIONS_FILE = "permissions.json"
 export const MAX_PROJECT_ARCHIVE_SIZE_BYTES = 50 * 1024 * 1024
 export const MAX_PROJECT_EXTRACTED_SIZE_BYTES = 100 * 1024 * 1024
 export const MAX_PROJECT_PACKAGE_ENTRIES = 2000

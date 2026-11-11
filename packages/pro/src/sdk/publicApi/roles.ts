@@ -28,11 +28,13 @@ export async function assign(userIds: string[], opts: AssignmentOpts) {
       const prodWorkspaceId = dbCore.getProdWorkspaceID(opts.appBuilder.appId)
       const existing = user.builder?.apps || []
       user.builder = {
+        ...user.builder,
         apps: existing.concat([prodWorkspaceId]),
       }
     }
     if (opts.builder) {
       user.builder = {
+        ...user.builder,
         global: true,
       }
     }
