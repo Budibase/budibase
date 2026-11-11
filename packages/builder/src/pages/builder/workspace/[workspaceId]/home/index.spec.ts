@@ -491,7 +491,6 @@ describe("workspace home project assignments", () => {
       await tick()
 
       expect(remove.icon).toBe("stack-minus")
-      expect(items.some(item => item.name === "Delete")).toBe(false)
       expect(
         screen.getByRole("heading", { name: "Remove from project" })
       ).toBeInTheDocument()
@@ -558,7 +557,6 @@ describe("workspace home project assignments", () => {
       expect(mocks.openContextMenu).toHaveBeenCalledOnce()
       const [, items] = mocks.openContextMenu.mock.lastCall!
       expect(items.some(item => item.name === "Remove from project")).toBe(true)
-      expect(items.some(item => item.name === "Delete")).toBe(false)
       expect(mocks.deleteResource).not.toHaveBeenCalled()
     }
   )
@@ -571,6 +569,45 @@ describe("workspace home project assignments", () => {
     expect(items.find(item => item.name === "Delete")?.icon).toBe("trash")
     expect(items.some(item => item.name === "Remove from project")).toBe(false)
   })
+
+  it.each([
+    {
+      name: "Operations portal",
+      confirmText: "Delete App",
+      successMessage: "App 'Operations portal' deleted successfully",
+    },
+    {
+      name: "Operations workflow",
+      confirmText: "Delete Automation",
+      successMessage: "Automation deleted successfully",
+    },
+    {
+      name: "Operations assistant",
+      confirmText: "Delete Agent",
+      successMessage: "Agent deleted successfully",
+    },
+  ])(
+    "allows permanent deletion of $name from the project view",
+    async ({ name, confirmText, successMessage }) => {
+      history.replaceState(
+        {},
+        "",
+        "/builder/workspace/app_dev_test/home?project=project_operations"
+      )
+      render(WorkspaceHome)
+      await tick()
+      await openContextMenu({ name })
+      const [, items] = mocks.openContextMenu.mock.lastCall!
+      items.find(item => item.name === "Delete")!.callback()
+      await tick()
+      await fireEvent.click(screen.getByRole("button", { name: confirmText }))
+
+      expect(items.some(item => item.name === "Remove from project")).toBe(true)
+      expect(mocks.deleteResource).toHaveBeenCalledOnce()
+      expect(mocks.updateAssignment).not.toHaveBeenCalled()
+      expect(mocks.notifications.success).toHaveBeenCalledWith(successMessage)
+    }
+  )
 
   it("keeps the resource when removing its last project assignment", async () => {
     history.replaceState(

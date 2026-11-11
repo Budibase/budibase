@@ -758,16 +758,12 @@
           callback: () => openLiveWorkspaceApp(liveUrl),
         },
         pause,
-        ...(!project
-          ? [
-              {
-                icon: "trash",
-                name: "Delete",
-                visible: true,
-                callback: () => confirmDeleteWorkspaceAppDialog.show(),
-              },
-            ]
-          : []),
+        {
+          icon: "trash",
+          name: "Delete",
+          visible: true,
+          callback: () => confirmDeleteWorkspaceAppDialog.show(),
+        },
         {
           icon: "copy",
           name: "Duplicate",
@@ -821,17 +817,13 @@
               : undefined,
         },
         pause,
-        ...(!project
-          ? [
-              {
-                icon: "trash",
-                name: "Delete",
-                visible: true,
-                disabled: false,
-                callback: () => confirmDeleteAutomationDialog.show(),
-              },
-            ]
-          : []),
+        {
+          icon: "trash",
+          name: "Delete",
+          visible: true,
+          disabled: false,
+          callback: () => confirmDeleteAutomationDialog.show(),
+        },
       ]
     }
 
@@ -856,17 +848,13 @@
           visible: true,
           callback: duplicateAgent,
         },
-        ...(!project
-          ? [
-              {
-                icon: "trash",
-                name: "Delete",
-                visible: true,
-                disabled: false,
-                callback: () => confirmDeleteAgentDialog.show(),
-              },
-            ]
-          : []),
+        {
+          icon: "trash",
+          name: "Delete",
+          visible: true,
+          disabled: false,
+          callback: () => confirmDeleteAgentDialog.show(),
+        },
       ]
     }
 
