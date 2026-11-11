@@ -20,6 +20,7 @@ import type {
   RenameColumn,
   SlackAgentIntegration,
   Table,
+  ToolExecutionRule,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import { getRowToolNames } from "../../../../ai/tools/budibase/rows"
@@ -458,6 +459,58 @@ export async function fetch(): Promise<Agent[]> {
   return withCurrentQueryToolReferences(agents)
 }
 
+const tableRules = ({
+  agent,
+  toolNames,
+}: {
+  agent: DeprecatedAgent
+  toolNames: Set<string>
+}) => {
+  const rules: ToolExecutionRule[] = []
+  for (const operation of agent.operations ?? []) {
+    for (const tool of operation.enabledTools ?? []) {
+      if (typeof tool !== "string" && toolNames.has(tool.toolName)) {
+        rules.push(...(tool.executionRules ?? []))
+      }
+    }
+  }
+  return rules
+}
+
+const ruleUsesColumn = ({
+  rule,
+  column,
+}: {
+  rule: ToolExecutionRule
+  column: string
+}) =>
+  rule.conditions?.some(condition => condition.field === column) ||
+  rule.reviewParameters?.includes(column) ||
+  false
+
+const renameColumnInRule = ({
+  rule,
+  renaming,
+}: {
+  rule: ToolExecutionRule
+  renaming: RenameColumn
+}) => {
+  for (const condition of rule.conditions ?? []) {
+    if (condition.field === renaming.old) {
+      condition.field = renaming.updated
+    }
+  }
+  if (rule.reviewParameters?.includes(renaming.old)) {
+    rule.reviewParameters = [
+      ...new Set(
+        rule.reviewParameters.map(parameter =>
+          parameter === renaming.old ? renaming.updated : parameter
+        )
+      ),
+    ]
+  }
+}
+
 const renameColumnInAgentRules = ({
   agent,
   toolNames,
@@ -467,33 +520,13 @@ const renameColumnInAgentRules = ({
   toolNames: Set<string>
   renaming: RenameColumn
 }) => {
-  let changed = false
-  for (const operation of agent.operations ?? []) {
-    for (const tool of operation.enabledTools ?? []) {
-      if (typeof tool === "string" || !toolNames.has(tool.toolName)) {
-        continue
-      }
-      for (const rule of tool.executionRules ?? []) {
-        for (const condition of rule.conditions ?? []) {
-          if (condition.field === renaming.old) {
-            condition.field = renaming.updated
-            changed = true
-          }
-        }
-        if (rule.reviewParameters?.includes(renaming.old)) {
-          rule.reviewParameters = [
-            ...new Set(
-              rule.reviewParameters.map(parameter =>
-                parameter === renaming.old ? renaming.updated : parameter
-              )
-            ),
-          ]
-          changed = true
-        }
-      }
-    }
+  const rules = tableRules({ agent, toolNames }).filter(rule =>
+    ruleUsesColumn({ rule, column: renaming.old })
+  )
+  for (const rule of rules) {
+    renameColumnInRule({ rule, renaming })
   }
-  return changed
+  return rules.length > 0
 }
 
 const saveRenamedAgentRules = async ({
