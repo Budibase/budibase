@@ -272,12 +272,9 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 async function saveTable(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const { rows, ...table } = withoutProjectAssignmentResult(ctx.request.body)
   ctx.request.body = table
-  // Internal schema saves must serialize with import reconciliation even when
-  // Projects is disabled.
-  const withTableSaveLock = isExternalTable(table)
-    ? sdk.projects.doWithProjectAssignmentsLockIfEnabled
-    : sdk.projects.doWithProjectAssignmentsLock
-  const result = await withTableSaveLock(() => saveUnlocked(ctx))
+  const result = await sdk.projects.doWithProjectAssignmentsLock(() =>
+    saveUnlocked(ctx)
+  )
   let { savedTable } = result
   if (rows && !isExternalTable(savedTable)) {
     const importedTable = await importInternalTableRows({
@@ -421,9 +418,7 @@ async function duplicateUnlocked(ctx: UserCtx<void, SaveTableResponse>) {
 }
 
 export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    duplicateUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => duplicateUnlocked(ctx))
 }
 
 export async function publish(

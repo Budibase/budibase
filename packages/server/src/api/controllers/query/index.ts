@@ -155,7 +155,7 @@ const _import = async (
     datasourceId = body.datasourceId
   }
 
-  const importResult = await sdk.projects.doWithProjectAssignmentsLockIfEnabled(
+  const importResult = await sdk.projects.doWithProjectAssignmentsLock(
     async () => {
       const importQueries = async (
         staticVariables?: Record<string, string>
@@ -357,9 +357,7 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
 }
 
 export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    saveUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => saveUnlocked(ctx))
 }
 
 export async function find(ctx: UserCtx<void, FindQueryResponse>) {

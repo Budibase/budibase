@@ -6,7 +6,6 @@ import {
   logging,
   locks,
   objectStore,
-  features,
 } from "@budibase/backend-core"
 import chunk from "lodash/chunk"
 import {
@@ -20,7 +19,6 @@ import {
   InternalTable,
   FieldType,
   DatabaseQueryOpts,
-  FeatureFlag,
   LockName,
   LockType,
   Project,
@@ -142,9 +140,7 @@ export async function analyseResourceDependencies({
 }: GetResourcesInfoOptions = {}): Promise<ResourceDependencyAnalysis> {
   const automations = await sdk.automations.fetch()
   const agents = await sdk.ai.agents.fetch()
-  const projectsEnabled =
-    includeProjects && (await features.isEnabled(FeatureFlag.PROJECTS))
-  const projects = projectsEnabled ? await sdk.projects.fetch() : []
+  const projects = includeProjects ? await sdk.projects.fetch() : []
   const workspaceApps = await sdk.workspaceApps.fetch()
 
   const dependencies: Record<string, { dependencies: UsedResource[] }> = {}
@@ -1000,12 +996,6 @@ async function duplicateResourceDocuments({
 }) {
   resources = Array.from(new Set(resources).keys())
   const resourceIds = new Set(resources)
-  const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
-  if (!projectsEnabled) {
-    resources = resources.filter(
-      id => getResourceType(id) !== ResourceType.PROJECT
-    )
-  }
 
   const destinationDb = await getDestinationDb(toWorkspace)
 
@@ -1034,7 +1024,7 @@ async function duplicateResourceDocuments({
     )
   )
   const destinationProjectIds = new Set(
-    projectsEnabled && referencedProjectIds.length
+    referencedProjectIds.length
       ? (
           await destinationDb.getMultiple<AnyDocument>(referencedProjectIds, {
             allowMissing: true,
@@ -1053,8 +1043,7 @@ async function duplicateResourceDocuments({
   }
 
   const hasAvailableProject = (projectId: string) =>
-    projectsEnabled &&
-    (resourceIds.has(projectId) || destinationProjectIds.has(projectId))
+    resourceIds.has(projectId) || destinationProjectIds.has(projectId)
 
   const sanitiseProjectAssignment = <T extends ProjectAssignable>(doc: T) => {
     return withProjectIds(

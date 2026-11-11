@@ -1,7 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/svelte"
-import { FeatureFlag, SourceName } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 import { describe, expect, it, vi } from "vitest"
-import { featureFlags } from "@/stores/portal"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockModalContent from "@/test/mocks/MockModalContent.svelte"
 import MockSlot from "@/test/mocks/MockSlot.svelte"
@@ -41,12 +40,13 @@ vi.mock("./stores/validatedName", async () => {
   }
 })
 
-vi.mock("@/stores/portal", async () => {
-  const { writable } = await import("svelte/store")
-  return { featureFlags: writable({ [FeatureFlag.PROJECTS]: false }) }
-})
-
-const renderEditor = (onSubmit: () => void) =>
+const renderEditor = ({
+  onSubmit,
+  projectIds = ["project_1"],
+}: {
+  onSubmit: () => void
+  projectIds?: string[]
+}) =>
   render(ConfigEditor, {
     integration: {
       name: SourceName.REST,
@@ -56,16 +56,15 @@ const renderEditor = (onSubmit: () => void) =>
       query: {},
     },
     config: {},
-    projectIdsValue: ["project_1"],
+    projectIdsValue: projectIds,
     showProjectField: true,
     onSubmit,
   })
 
 describe("datasource creation project selection", () => {
-  it("submits selected projects when the flag is enabled", async () => {
-    featureFlags.update(flags => ({ ...flags, [FeatureFlag.PROJECTS]: true }))
+  it("submits selected projects", async () => {
     const onSubmit = vi.fn()
-    renderEditor(onSubmit)
+    renderEditor({ onSubmit })
 
     await fireEvent.click(screen.getByText("Save and continue to query"))
 
@@ -76,10 +75,9 @@ describe("datasource creation project selection", () => {
     })
   })
 
-  it("omits preset projects when the flag is explicitly disabled", async () => {
-    featureFlags.update(flags => ({ ...flags, [FeatureFlag.PROJECTS]: false }))
+  it("omits projects when none are selected", async () => {
     const onSubmit = vi.fn()
-    renderEditor(onSubmit)
+    renderEditor({ onSubmit, projectIds: [] })
 
     await fireEvent.click(screen.getByText("Save and continue to query"))
 

@@ -1,5 +1,5 @@
-import { features, HTTPError } from "@budibase/backend-core"
-import { DocumentType, FeatureFlag, prefixed } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
+import { DocumentType, prefixed } from "@budibase/types"
 import { get as getProject } from "./crud"
 
 const validateProjectIds = (projectIds?: string[] | null) => {
@@ -29,10 +29,6 @@ export const resolveProjectIds = async (projectIds?: string[] | null) => {
   }
 
   const ids = Array.from(new Set(validated))
-
-  if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-    throw new HTTPError("Projects feature is not enabled.", 404)
-  }
 
   await Promise.all(
     ids.map(async projectId => {

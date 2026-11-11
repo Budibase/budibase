@@ -10,18 +10,21 @@ const defaultState: HomeUrlState = {
   selectedProjectId: "",
   sortColumn: "updated",
   sortOrder: "desc",
-  projectsEnabled: true,
 }
 
 describe("buildHomeUrl", () => {
   it("writes project, type, search, and sort state", () => {
-    const result = buildHomeUrl("/builder/workspace/home", "?existing=value", {
-      ...defaultState,
-      searchTerm: "  invoice  ",
-      typeFilter: "app",
-      selectedProjectId: "project_1",
-      sortColumn: "name",
-      sortOrder: "asc",
+    const result = buildHomeUrl({
+      pathname: "/builder/workspace/home",
+      search: "?existing=value",
+      state: {
+        ...defaultState,
+        searchTerm: "  invoice  ",
+        typeFilter: "app",
+        selectedProjectId: "project_1",
+        sortColumn: "name",
+        sortOrder: "asc",
+      },
     })
 
     expect(result).toBe(
@@ -29,12 +32,15 @@ describe("buildHomeUrl", () => {
     )
   })
 
-  it("omits default updated sort when projects are enabled", () => {
-    const result = buildHomeUrl("/builder/workspace/home", "", {
-      ...defaultState,
-      sortColumn: "updated",
-      sortOrder: "desc",
-      projectsEnabled: true,
+  it("omits default updated sort", () => {
+    const result = buildHomeUrl({
+      pathname: "/builder/workspace/home",
+      search: "",
+      state: {
+        ...defaultState,
+        sortColumn: "updated",
+        sortOrder: "desc",
+      },
     })
 
     expect(result).toBe("/builder/workspace/home")
@@ -44,35 +50,41 @@ describe("buildHomeUrl", () => {
     expect(normaliseHomeSortColumn("created")).toBeNull()
   })
 
-  it("removes project state when projects are disabled", () => {
-    const result = buildHomeUrl(
-      "/builder/workspace/home",
-      "?project=project_1&create=app",
-      {
+  it("removes project state when no project is selected", () => {
+    const result = buildHomeUrl({
+      pathname: "/builder/workspace/home",
+      search: "?project=project_1&create=app",
+      state: {
         ...defaultState,
-        selectedProjectId: "project_1",
-        projectsEnabled: false,
-      }
-    )
-
-    expect(result).toBe("/builder/workspace/home")
-  })
-
-  it("removes project-only sort state when projects are disabled", () => {
-    const result = buildHomeUrl("/builder/workspace/home", "?sort=projects", {
-      ...defaultState,
-      sortColumn: "projects",
-      sortOrder: "asc",
-      projectsEnabled: false,
+        selectedProjectId: "",
+      },
     })
 
     expect(result).toBe("/builder/workspace/home")
   })
 
+  it("retains project sorting", () => {
+    const result = buildHomeUrl({
+      pathname: "/builder/workspace/home",
+      search: "?sort=projects",
+      state: {
+        ...defaultState,
+        sortColumn: "projects",
+        sortOrder: "asc",
+      },
+    })
+
+    expect(result).toBe("/builder/workspace/home?sort=projects&order=asc")
+  })
+
   it("writes the data type filter", () => {
-    const result = buildHomeUrl("/builder/workspace/home", "", {
-      ...defaultState,
-      typeFilter: "data",
+    const result = buildHomeUrl({
+      pathname: "/builder/workspace/home",
+      search: "",
+      state: {
+        ...defaultState,
+        typeFilter: "data",
+      },
     })
 
     expect(result).toBe("/builder/workspace/home?type=data")

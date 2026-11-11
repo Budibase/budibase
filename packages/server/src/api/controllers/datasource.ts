@@ -352,9 +352,7 @@ async function updateUnlocked(
 export async function update(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    updateUnlocked(ctx)
-  )
+  await sdk.projects.doWithProjectAssignmentsLock(() => updateUnlocked(ctx))
 }
 
 export async function save(
@@ -366,8 +364,8 @@ export async function save(
     ctx.request.body
   )
 
-  const projectAssignment =
-    await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
+  const projectAssignment = await sdk.projects.doWithProjectAssignmentsLock(
+    async () => {
       datasource.projectIds = await sdk.projects.resolveProjectIds(
         datasource.projectIds
       )
@@ -395,7 +393,8 @@ export async function save(
           savedResource: datasource,
         })
       )
-    })
+    }
+  )
 
   ctx.body = {
     projectAssignment,

@@ -27,7 +27,6 @@
     allRowsCount?: number
     typeFilter?: HomeType
     searchTerm?: string
-    projectsEnabled?: boolean
     selectedProjectName?: string
     sortColumn: HomeSortColumn
     sortOrder: HomeSortOrder
@@ -49,7 +48,6 @@
     allRowsCount = 0,
     typeFilter = "all",
     searchTerm = "",
-    projectsEnabled = false,
     selectedProjectName = "",
     sortColumn,
     sortOrder,
@@ -104,21 +102,10 @@
     event.stopPropagation()
     onOpenContextMenu({ row, x: event.clientX, y: event.clientY })
   }
-
-  const gridColumns = $derived(
-    projectsEnabled
-      ? "minmax(200px, 1fr) 140px 140px 140px 140px 60px"
-      : "minmax(200px, 1fr) 140px 140px 140px 60px"
-  )
 </script>
 
 <div class="table-wrapper" class:table-wrapper--panel={variant === "panel"}>
-  <div
-    class="table"
-    class:table--loading={loading}
-    class:table--projects={projectsEnabled}
-    style="--grid-columns: {gridColumns}"
-  >
+  <div class="table" class:table--loading={loading}>
     {#if allRowsCount > 0}
       <div class="table-header" role="row">
         <button
@@ -159,27 +146,25 @@
           </span>
         </button>
 
-        {#if projectsEnabled}
-          <button
-            type="button"
-            class="header-cell"
-            onclick={() => headerClick("projects")}
+        <button
+          type="button"
+          class="header-cell"
+          onclick={() => headerClick("projects")}
+        >
+          <span>Projects</span>
+          <span
+            class="sort-indicator"
+            class:sort-indicator--active={isSorted("projects")}
+            class:sort-indicator--up={isSorted("projects") &&
+              sortOrder === "desc"}
           >
-            <span>Projects</span>
-            <span
-              class="sort-indicator"
-              class:sort-indicator--active={isSorted("projects")}
-              class:sort-indicator--up={isSorted("projects") &&
-                sortOrder === "desc"}
-            >
-              <Icon
-                name="caret-down"
-                size="S"
-                color="var(--spectrum-global-color-gray-700)"
-              />
-            </span>
-          </button>
-        {/if}
+            <Icon
+              name="caret-down"
+              size="S"
+              color="var(--spectrum-global-color-gray-700)"
+            />
+          </span>
+        </button>
 
         <button
           type="button"
@@ -255,13 +240,11 @@
             </Body>
           </div>
 
-          {#if projectsEnabled}
-            <div class="cell">
-              <Body size="S" color="var(--spectrum-global-color-gray-700)">
-                {getProjectCount(row)}
-              </Body>
-            </div>
-          {/if}
+          <div class="cell">
+            <Body size="S" color="var(--spectrum-global-color-gray-700)">
+              {getProjectCount(row)}
+            </Body>
+          </div>
 
           <div class="cell">
             <Body size="S" color={getStatusColor(getRowStatusLabel(row))}>
@@ -340,10 +323,6 @@
     border-radius: var(--border-radius-s);
     overflow: hidden;
     background: transparent;
-    min-width: 704px;
-  }
-
-  .table--projects {
     /* Keep the name track readable alongside the fixed columns and padding. */
     min-width: 844px;
   }
@@ -355,7 +334,7 @@
   .table-header,
   .row {
     display: grid;
-    grid-template-columns: var(--grid-columns);
+    grid-template-columns: minmax(200px, 1fr) 140px 140px 140px 140px 60px;
     border-bottom: var(--border);
     align-items: center;
   }

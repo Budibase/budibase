@@ -358,7 +358,7 @@ async function createAgentUnlocked(
 export async function createAgent(
   ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
     createAgentUnlocked(ctx)
   )
 }
@@ -413,7 +413,7 @@ async function updateAgentUnlocked(
 export async function updateAgent(
   ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
     updateAgentUnlocked(ctx)
   )
 }
@@ -755,7 +755,7 @@ async function duplicateAgentUnlocked(
 export async function duplicateAgent(
   ctx: UserCtx<void, CreateAgentResponse, { agentId: string }>
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
     duplicateAgentUnlocked(ctx)
   )
 }

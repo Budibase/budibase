@@ -1,8 +1,7 @@
-import { context, events, features } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import {
   type BulkImportResponse,
-  FeatureFlag,
   FieldType,
   JsonFieldSubType,
   Row,
@@ -22,9 +21,6 @@ jest.mock("../../../sdk/workspace/projects/lock", () => {
   return {
     ...actual,
     doWithProjectAssignmentsLock: jest.fn(actual.doWithProjectAssignmentsLock),
-    doWithProjectAssignmentsLockIfEnabled: jest.fn(
-      actual.doWithProjectAssignmentsLockIfEnabled
-    ),
   }
 })
 
@@ -67,13 +63,6 @@ describe("internal table row imports", () => {
     }
     return await config.api.table.import(table._id!, { rows })
   }
-
-  const withProjectsEnabled = async (fn: () => Promise<void>) =>
-    await features.testutils.withFeatureFlags(
-      config.getTenantId(),
-      { [FeatureFlag.PROJECTS]: true },
-      fn
-    )
 
   const withPausedImport = async (
     route: "save" | "bulk",
@@ -154,51 +143,43 @@ describe("internal table row imports", () => {
   it.each(["save", "bulk"] as const)(
     "%s preserves concurrent project and schema edits when adding imported options",
     async route => {
-      await features.testutils.withFeatureFlags(
-        config.getTenantId(),
-        { [FeatureFlag.PROJECTS]: true },
-        async () => {
-          const table = await createTable()
-          const { project } = await config.api.project.create({
-            name: "Import project",
-          })
-          jest.mocked(events.rows.imported).mockImplementationOnce(async () => {
-            const db = context.getWorkspaceDB()
-            const currentTable = await db.get<Table>(table._id!)
-            await db.put({
-              ...currentTable,
-              name: "Renamed during import",
-              projectIds: [project._id],
-              schema: {
-                ...currentTable.schema,
-                status: {
-                  ...currentTable.schema.status,
-                  constraints: { inclusion: ["Concurrent"] },
-                },
-              },
-            })
-          })
-          await importRows(route, table, [
-            { name: "Imported", status: "Review" },
-          ])
+      const table = await createTable()
+      const { project } = await config.api.project.create({
+        name: "Import project",
+      })
+      jest.mocked(events.rows.imported).mockImplementationOnce(async () => {
+        const db = context.getWorkspaceDB()
+        const currentTable = await db.get<Table>(table._id!)
+        await db.put({
+          ...currentTable,
+          name: "Renamed during import",
+          projectIds: [project._id],
+          schema: {
+            ...currentTable.schema,
+            status: {
+              ...currentTable.schema.status,
+              constraints: { inclusion: ["Concurrent"] },
+            },
+          },
+        })
+      })
+      await importRows(route, table, [{ name: "Imported", status: "Review" }])
 
-          const savedTable = await config.api.table.get(table._id!)
-          const { rows } = await config.api.row.search(table._id!)
-          expect(savedTable).toEqual(
-            expect.objectContaining({
-              name: "Renamed during import",
-              projectIds: [project._id],
-            })
-          )
-          expect(savedTable.schema.status.constraints?.inclusion).toEqual([
-            "Concurrent",
-            "Review",
-          ])
-          expect(rows).toEqual([
-            expect.objectContaining({ name: "Imported", status: "Review" }),
-          ])
-        }
+      const savedTable = await config.api.table.get(table._id!)
+      const { rows } = await config.api.row.search(table._id!)
+      expect(savedTable).toEqual(
+        expect.objectContaining({
+          name: "Renamed during import",
+          projectIds: [project._id],
+        })
       )
+      expect(savedTable.schema.status.constraints?.inclusion).toEqual([
+        "Concurrent",
+        "Review",
+      ])
+      expect(rows).toEqual([
+        expect.objectContaining({ name: "Imported", status: "Review" }),
+      ])
     }
   )
 
@@ -224,187 +205,143 @@ describe("internal table row imports", () => {
     it.each(["rename", "delete"] as const)(
       "reconciles imported rows after a concurrent column %s",
       async change => {
-        await withProjectsEnabled(async () => {
-          const table = await createTable()
-          const importedRowId = await withPausedImport(
-            route,
-            table,
-            async () => {
-              const current = await config.api.table.get(table._id!)
-              const { status, ...schema } = current.schema
-              if (status.type !== FieldType.OPTIONS) {
-                throw new Error("expected options field")
-              }
-              await config.api.table.save({
-                ...current,
-                ...(change === "rename"
-                  ? { _rename: { old: "status", updated: "state" } }
-                  : {}),
-                schema: {
-                  ...schema,
-                  ...(change === "rename"
-                    ? {
-                        state: {
-                          ...status,
-                          name: "State",
-                          constraints: { inclusion: ["Concurrent"] },
-                        },
-                      }
-                    : {}),
-                },
-              })
-            }
-          )
-
-          const savedTable = await config.api.table.get(table._id!)
-          expect(savedTable.schema.status).toBeUndefined()
-          if (change === "rename") {
-            expect(savedTable.schema.state.constraints?.inclusion).toEqual([
-              "Concurrent",
-              "Review",
-            ])
+        const table = await createTable()
+        const importedRowId = await withPausedImport(route, table, async () => {
+          const current = await config.api.table.get(table._id!)
+          const { status, ...schema } = current.schema
+          if (status.type !== FieldType.OPTIONS) {
+            throw new Error("expected options field")
           }
-          await config.doInContext(config.getDevWorkspaceId(), async () => {
-            // Read the stored document because API responses hide deleted columns.
-            const row = await context.getWorkspaceDB().get<Row>(importedRowId)
-            expect(row.status).toBeUndefined()
-            expect(row.state).toBe(change === "rename" ? "Review" : undefined)
+          await config.api.table.save({
+            ...current,
+            ...(change === "rename"
+              ? { _rename: { old: "status", updated: "state" } }
+              : {}),
+            schema: {
+              ...schema,
+              ...(change === "rename"
+                ? {
+                    state: {
+                      ...status,
+                      name: "State",
+                      constraints: { inclusion: ["Concurrent"] },
+                    },
+                  }
+                : {}),
+            },
           })
+        })
+
+        const savedTable = await config.api.table.get(table._id!)
+        expect(savedTable.schema.status).toBeUndefined()
+        if (change === "rename") {
+          expect(savedTable.schema.state.constraints?.inclusion).toEqual([
+            "Concurrent",
+            "Review",
+          ])
+        }
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          // Read the stored document because API responses hide deleted columns.
+          const row = await context.getWorkspaceDB().get<Row>(importedRowId)
+          expect(row.status).toBeUndefined()
+          expect(row.state).toBe(change === "rename" ? "Review" : undefined)
         })
       }
     )
   })
 
-  describe.each([false, true])(
-    "imports during schema saves with Projects enabled: %s",
-    projectsEnabled => {
-      it.each(["rename", "delete"] as const)(
-        "reconciles rows inserted after the column %s snapshots existing rows",
-        async change => {
-          await features.testutils.withFeatureFlags(
-            config.getTenantId(),
-            { [FeatureFlag.PROJECTS]: projectsEnabled },
-            async () => {
-              const table = await createTable()
-              const { status, ...schema } = table.schema
-              let snapshotTaken!: () => void
-              let releaseSave!: () => void
-              let reconciliationWaiting!: () => void
-              const ready = new Promise<void>(
-                resolve => (snapshotTaken = resolve)
-              )
-              const pending = new Promise<void>(
-                resolve => (releaseSave = resolve)
-              )
-              const waiting = new Promise<void>(
-                resolve => (reconciliationWaiting = resolve)
-              )
-              let paused = false
-              let rowsInserted = false
-              const originalAllDocs = DatabaseImpl.prototype.allDocs
-              const allDocs = jest
-                .spyOn(DatabaseImpl.prototype, "allDocs")
-                .mockImplementation(async function (
-                  this: DatabaseImpl,
-                  params
-                ) {
-                  const result = await originalAllDocs.call(this, params)
-                  if (
-                    !paused &&
-                    params.startkey === getRowParams(table._id).startkey
-                  ) {
-                    paused = true
-                    snapshotTaken()
-                    await pending
-                  }
-                  return result
-                })
-              const actual = jest.requireActual<typeof projectLocks>(
-                "../../../sdk/workspace/projects/lock"
-              )
-              jest
-                .mocked(projectLocks.doWithProjectAssignmentsLock)
-                .mockImplementation(async task => {
-                  if (rowsInserted) {
-                    reconciliationWaiting()
-                  }
-                  return await actual.doWithProjectAssignmentsLock(task)
-                })
-              jest
-                .mocked(projectLocks.doWithProjectAssignmentsLockIfEnabled)
-                .mockImplementation(async task => {
-                  if (rowsInserted && projectsEnabled) {
-                    reconciliationWaiting()
-                  }
-                  return await actual.doWithProjectAssignmentsLockIfEnabled(
-                    task
-                  )
-                })
-              jest
-                .mocked(events.rows.imported)
-                .mockImplementationOnce(async () => {
-                  rowsInserted = true
-                })
-
-              const saving = config.api.table.save({
-                ...table,
-                ...(change === "rename"
-                  ? { _rename: { old: "status", updated: "state" } }
-                  : {}),
-                schema: {
-                  ...schema,
-                  ...(change === "rename"
-                    ? { state: { ...status, name: "State" } }
-                    : {}),
-                },
-              })
-              let importing: Promise<BulkImportResponse> | undefined
-              try {
-                await helpers.withTimeout(5000, () => ready)
-                importing = config.api.table.import(table._id!, {
-                  rows: [{ name: "Imported", status: "Done" }],
-                })
-                // Let an unprotected import finish against the old schema, or
-                // release the save once reconciliation is waiting for its lock.
-                await helpers.withTimeout(5000, () =>
-                  Promise.race([importing!, waiting])
-                )
-              } finally {
-                releaseSave()
-                try {
-                  await Promise.all([saving, importing])
-                } finally {
-                  allDocs.mockRestore()
-                  jest
-                    .mocked(projectLocks.doWithProjectAssignmentsLock)
-                    .mockImplementation(actual.doWithProjectAssignmentsLock)
-                  jest
-                    .mocked(projectLocks.doWithProjectAssignmentsLockIfEnabled)
-                    .mockImplementation(
-                      actual.doWithProjectAssignmentsLockIfEnabled
-                    )
-                }
-              }
-
-              const savedTable = await config.api.table.get(table._id!)
-              expect(savedTable.schema.status).toBeUndefined()
-              await config.doInContext(config.getDevWorkspaceId(), async () => {
-                const result = await context
-                  .getWorkspaceDB()
-                  .allDocs<Row>(
-                    getRowParams(table._id, null, { include_docs: true })
-                  )
-                expect(result.rows).toHaveLength(1)
-                const row = result.rows[0].doc!
-                expect(row.status).toBeUndefined()
-                expect(row.state).toBe(change === "rename" ? "Done" : undefined)
-              })
+  describe("imports during schema saves", () => {
+    it.each(["rename", "delete"] as const)(
+      "reconciles rows inserted after the column %s snapshots existing rows",
+      async change => {
+        const table = await createTable()
+        const { status, ...schema } = table.schema
+        let snapshotTaken!: () => void
+        let releaseSave!: () => void
+        let reconciliationWaiting!: () => void
+        const ready = new Promise<void>(resolve => (snapshotTaken = resolve))
+        const pending = new Promise<void>(resolve => (releaseSave = resolve))
+        const waiting = new Promise<void>(
+          resolve => (reconciliationWaiting = resolve)
+        )
+        let paused = false
+        let rowsInserted = false
+        const originalAllDocs = DatabaseImpl.prototype.allDocs
+        const allDocs = jest
+          .spyOn(DatabaseImpl.prototype, "allDocs")
+          .mockImplementation(async function (this: DatabaseImpl, params) {
+            const result = await originalAllDocs.call(this, params)
+            if (
+              !paused &&
+              params.startkey === getRowParams(table._id).startkey
+            ) {
+              paused = true
+              snapshotTaken()
+              await pending
             }
-          )
+            return result
+          })
+        const actual = jest.requireActual<typeof projectLocks>(
+          "../../../sdk/workspace/projects/lock"
+        )
+        jest
+          .mocked(projectLocks.doWithProjectAssignmentsLock)
+          .mockImplementation(async task => {
+            if (rowsInserted) {
+              reconciliationWaiting()
+            }
+            return await actual.doWithProjectAssignmentsLock(task)
+          })
+        jest.mocked(events.rows.imported).mockImplementationOnce(async () => {
+          rowsInserted = true
+        })
+
+        const saving = config.api.table.save({
+          ...table,
+          ...(change === "rename"
+            ? { _rename: { old: "status", updated: "state" } }
+            : {}),
+          schema: {
+            ...schema,
+            ...(change === "rename"
+              ? { state: { ...status, name: "State" } }
+              : {}),
+          },
+        })
+        let importing: Promise<BulkImportResponse> | undefined
+        try {
+          await helpers.withTimeout(5000, () => ready)
+          importing = config.api.table.import(table._id!, {
+            rows: [{ name: "Imported", status: "Done" }],
+          })
+          // Release the save once reconciliation is waiting for its lock.
+          await helpers.withTimeout(5000, () => waiting)
+        } finally {
+          releaseSave()
+          try {
+            await Promise.all([saving, importing])
+          } finally {
+            allDocs.mockRestore()
+            jest
+              .mocked(projectLocks.doWithProjectAssignmentsLock)
+              .mockImplementation(actual.doWithProjectAssignmentsLock)
+          }
         }
-      )
-    }
-  )
+
+        const savedTable = await config.api.table.get(table._id!)
+        expect(savedTable.schema.status).toBeUndefined()
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const result = await context
+            .getWorkspaceDB()
+            .allDocs<Row>(getRowParams(table._id, null, { include_docs: true }))
+          expect(result.rows).toHaveLength(1)
+          const row = result.rows[0].doc!
+          expect(row.status).toBeUndefined()
+          expect(row.state).toBe(change === "rename" ? "Done" : undefined)
+        })
+      }
+    )
+  })
 
   it.each(["name", "_id"])(
     "updates matching rows when bulk import identifies them by %s",
@@ -449,55 +386,51 @@ describe("internal table row imports", () => {
   )
 
   it("rejects nonempty bulk imports while publishing holds its lock and allows empty imports", async () => {
-    await withProjectsEnabled(async () => {
-      const table = await createTable()
-      await config.doInContext(config.getDevWorkspaceId(), () =>
-        withPublishLock(async () => {
-          await config.api.table.import(
-            table._id!,
-            { rows: [{ name: "Should not import", status: "Review" }] },
-            { status: 429 }
-          )
-          await config.api.table.import(table._id!, { rows: [] })
-        })
-      )
-      expect(await config.api.row.fetch(table._id!)).toEqual([])
-      expect((await config.api.table.get(table._id!))._rev).toBe(table._rev)
-    })
+    const table = await createTable()
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      withPublishLock(async () => {
+        await config.api.table.import(
+          table._id!,
+          { rows: [{ name: "Should not import", status: "Review" }] },
+          { status: 429 }
+        )
+        await config.api.table.import(table._id!, { rows: [] })
+      })
+    )
+    expect(await config.api.row.fetch(table._id!)).toEqual([])
+    expect((await config.api.table.get(table._id!))._rev).toBe(table._rev)
   })
 
   it("blocks publishing until a bulk import reconciles a concurrent rename", async () => {
-    await withProjectsEnabled(async () => {
-      const table = await createTable()
-      const importedRowId = await withPausedImport("bulk", table, async () => {
-        const current = await config.api.table.get(table._id!)
-        const { status, ...schema } = current.schema
-        await config.api.table.save({
-          ...current,
-          _rename: { old: "status", updated: "state" },
-          schema: { ...schema, state: { ...status, name: "State" } },
-        })
-        await config.api.workspace.publish(config.getDevWorkspaceId(), {
-          status: 429,
-        })
-        expect(
-          (await config.api.table.get(table._id!)).pendingColumnRenames
-        ).toHaveLength(1)
+    const table = await createTable()
+    const importedRowId = await withPausedImport("bulk", table, async () => {
+      const current = await config.api.table.get(table._id!)
+      const { status, ...schema } = current.schema
+      await config.api.table.save({
+        ...current,
+        _rename: { old: "status", updated: "state" },
+        schema: { ...schema, state: { ...status, name: "State" } },
       })
-
-      await config.doInContext(config.getDevWorkspaceId(), async () => {
-        const row = await context.getWorkspaceDB().get<Row>(importedRowId)
-        expect(row.state).toBe("Review")
-        expect(row.status).toBeUndefined()
+      await config.api.workspace.publish(config.getDevWorkspaceId(), {
+        status: 429,
       })
-      expect(
-        (await config.api.table.get(table._id!)).schema.state.constraints
-          ?.inclusion
-      ).toEqual(["Done", "Review"])
-      await config.api.workspace.publish(config.getDevWorkspaceId())
       expect(
         (await config.api.table.get(table._id!)).pendingColumnRenames
-      ).toEqual([])
+      ).toHaveLength(1)
     })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const row = await context.getWorkspaceDB().get<Row>(importedRowId)
+      expect(row.state).toBe("Review")
+      expect(row.status).toBeUndefined()
+    })
+    expect(
+      (await config.api.table.get(table._id!)).schema.state.constraints
+        ?.inclusion
+    ).toEqual(["Done", "Review"])
+    await config.api.workspace.publish(config.getDevWorkspaceId())
+    expect(
+      (await config.api.table.get(table._id!)).pendingColumnRenames
+    ).toEqual([])
   })
 })

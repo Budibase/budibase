@@ -1,11 +1,10 @@
 import { createHash } from "crypto"
-import { context, features } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import {
   type Agent,
   type AnyDocument,
   type Datasource,
   type Query,
-  FeatureFlag,
   type PreviewProjectAssignmentResponse,
   type ProjectAssignmentDependency,
   ResourceType,
@@ -385,9 +384,6 @@ export const propagateProjectIdsToDependencySubtrees = async ({
   }
 
   try {
-    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-      return { status: "complete" }
-    }
     const { graph } = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
       includeDatasourceQueries: true,
@@ -416,9 +412,6 @@ export const propagateCreatedResourceDependencies = async ({
   }
 
   try {
-    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-      return { status: "complete" }
-    }
     const analysis = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
       includeDatasourceQueries: true,
@@ -498,9 +491,6 @@ export const propagateProjectDependencyChanges = async ({
 
   let analysis: ResourceDependencyAnalysis
   try {
-    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-      return { status: "complete" }
-    }
     analysis = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
       includeDatasourceQueries: true,
@@ -575,9 +565,6 @@ export const propagateMovedQueryDependencies = async ({
   }
   let analysis: ResourceDependencyAnalysis
   try {
-    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-      return { status: "complete" }
-    }
     analysis = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
       includeDatasourceQueries: true,

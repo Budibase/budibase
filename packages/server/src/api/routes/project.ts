@@ -4,7 +4,6 @@ import {
   MAX_PROJECT_README_LENGTH,
 } from "@budibase/types"
 import Joi from "joi"
-import { projectsEnabled } from "../../middleware/projectsEnabled"
 import {
   AppType,
   middleware as appInfoMiddleware,
@@ -20,10 +19,9 @@ const baseSchema = {
 }
 
 builderRoutes
-  .get("/api/projects", projectsEnabled, controller.fetch)
+  .get("/api/projects", controller.fetch)
   .post(
     "/api/projects/assignments/preview",
-    projectsEnabled,
     middleware.joiValidator.body(
       Joi.object({
         resourceId: Joi.string().required(),
@@ -35,7 +33,6 @@ builderRoutes
   )
   .put(
     "/api/projects/assignments/:resourceId",
-    projectsEnabled,
     middleware.joiValidator.body(
       Joi.object({
         resourceRev: Joi.string().required(),
@@ -50,7 +47,6 @@ builderRoutes
   .post(
     "/api/projects/import",
     controller.cleanupImportFiles,
-    projectsEnabled,
     appInfoMiddleware({ appType: AppType.DEV }),
     middleware.joiValidator.body(
       Joi.object({
@@ -64,7 +60,6 @@ builderRoutes
   )
   .post(
     "/api/projects/:id/export",
-    projectsEnabled,
     middleware.joiValidator.body(
       Joi.object({
         encryptPassword: Joi.string().max(1024).optional().allow(""),
@@ -78,7 +73,6 @@ builderRoutes
   )
   .post(
     "/api/projects",
-    projectsEnabled,
     middleware.joiValidator.body(Joi.object(baseSchema), {
       allowUnknown: false,
     }),
@@ -86,7 +80,6 @@ builderRoutes
   )
   .put(
     "/api/projects/:id",
-    projectsEnabled,
     middleware.joiValidator.body(
       Joi.object({
         _id: Joi.string().required(),
@@ -99,4 +92,4 @@ builderRoutes
     ),
     controller.update
   )
-  .delete("/api/projects/:id/:rev", projectsEnabled, controller.remove)
+  .delete("/api/projects/:id/:rev", controller.remove)

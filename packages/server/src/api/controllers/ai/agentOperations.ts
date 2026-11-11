@@ -50,7 +50,7 @@ export async function createAgentOperation(
     { agentId: string }
   >
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
     createAgentOperationUnlocked(ctx)
   )
 }
@@ -92,7 +92,7 @@ export async function updateAgentOperation(
     { agentId: string; operationId: string }
   >
 ) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
     updateAgentOperationUnlocked(ctx)
   )
 }

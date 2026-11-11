@@ -14,7 +14,6 @@
   import NavItem from "@/components/common/NavItem.svelte"
   import type { MenuItem } from "@/types"
   import {
-    FeatureFlag,
     type UpdateProjectAssignmentRequest,
     type Datasource,
     type UIInternalDatasource,
@@ -32,7 +31,7 @@
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
   import { saveProjectAssignment } from "@/components/projects/assignments"
-  import { featureFlags, projectsStore } from "@/stores/portal"
+  import { projectsStore } from "@/stores/portal"
 
   $goto
   $params
@@ -63,11 +62,10 @@
   let assignProjectModal!: ModalAPI
   let assignProjectModalKey = 0
 
-  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: assignableDatasource = isAssignableDatasource(datasource)
     ? datasource
     : undefined
-  $: canAssignProject = projectsEnabled && !!assignableDatasource
+  $: canAssignProject = !!assignableDatasource
   $: projectAssignmentResource = {
     id: assignableDatasource?._id || "",
     revision: assignableDatasource?._rev || "",
