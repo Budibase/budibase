@@ -1,4 +1,4 @@
-import { context, features, objectStore } from "@budibase/backend-core"
+import { context, db, features, objectStore } from "@budibase/backend-core"
 import {
   FeatureFlag,
   SourceName,
@@ -251,6 +251,55 @@ describe("Project custom REST templates", () => {
       await config.api.project.import(file, undefined, { status: 500 })
       expect(await fetchTemplates()).toEqual([
         expect.objectContaining({ id: templateId }),
+      ])
+    })
+  })
+
+  it("cleans up unused specs when removing the imported project fails", async () => {
+    await withProjectsEnabled(async () => {
+      const { file } = await createPackage()
+      await config.createWorkspace()
+      const actualBulkDocs = db.DatabaseImpl.prototype.bulkDocs
+      jest
+        .spyOn(db.DatabaseImpl.prototype, "bulkDocs")
+        .mockImplementationOnce(actualBulkDocs)
+        .mockRejectedValueOnce(new Error("Query import failed"))
+      jest
+        .spyOn(db.DatabaseImpl.prototype, "remove")
+        .mockRejectedValueOnce(new Error("Project cleanup failed"))
+
+      await config.api.project.import(file, undefined, { status: 500 })
+
+      expect(
+        (await config.api.datasource.fetch()).filter(
+          datasource => datasource.source === SourceName.REST
+        )
+      ).toEqual([])
+      expect(await fetchTemplates()).toEqual([])
+    })
+  })
+
+  it("retains specs referenced by datasources that survive import cleanup", async () => {
+    await withProjectsEnabled(async () => {
+      const { file } = await createPackage()
+      await config.createWorkspace()
+      const actualBulkDocs = db.DatabaseImpl.prototype.bulkDocs
+      jest
+        .spyOn(db.DatabaseImpl.prototype, "bulkDocs")
+        .mockImplementationOnce(actualBulkDocs)
+        .mockRejectedValueOnce(new Error("Query import failed"))
+      jest
+        .spyOn(db.DatabaseImpl.prototype, "bulkRemove")
+        .mockRejectedValueOnce(new Error("Datasource cleanup failed"))
+
+      await config.api.project.import(file, undefined, { status: 500 })
+
+      const datasources = (await config.api.datasource.fetch()).filter(
+        datasource => datasource.source === SourceName.REST
+      )
+      expect(datasources).toHaveLength(1)
+      expect(await fetchTemplates()).toEqual([
+        expect.objectContaining({ id: datasources[0].restTemplateId }),
       ])
     })
   })
