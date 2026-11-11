@@ -1,8 +1,7 @@
 import { context, isHTTPError } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
-import type { SlackAdapter, SlackEvent } from "@chat-adapter/slack"
+import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
-import type { RichTextBlock } from "@slack/types"
 import {
   AgentChannelProvider,
   type ChatConversation,
@@ -13,12 +12,8 @@ import {
   type WebhookChatCompleteResult,
 } from "@budibase/types"
 import {
-  Actions,
-  Card,
   Chat,
-  LinkButton,
   type ActionEvent,
-  type CardElement,
   type Message,
   type SlashCommandEvent,
   type Thread,
@@ -46,97 +41,27 @@ import {
 const SLACK_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
 
-const SLACK_BUTTON_LABEL_MAX_LENGTH = 75
+const escapeMarkdownLinkLabel = (value: string) =>
+  value.replace(/[\\[\]]/g, "\\$&")
 
-const preserveSlackLiteralSegments = (
-  text: string,
-  formatter: (text: string) => string
-) => {
-  const literals: string[] = []
-  const placeholderPrefix = "\u0000SLACK_LITERAL_"
-  const placeholderSuffix = "\u0000"
-  const protectedText = text.replace(
-    /```[\s\S]*?```|`[^`\n]*`|\[[^\]\n]+\]\([^\n)]+\)/g,
-    literal => {
-      const index = literals.push(literal) - 1
-      return `${placeholderPrefix}${index}${placeholderSuffix}`
-    }
-  )
-
-  return formatter(protectedText).replace(
-    new RegExp(`${placeholderPrefix}(\\d+)${placeholderSuffix}`, "g"),
-    (_placeholder, index) => literals[Number(index)] || ""
-  )
-}
-
-const markdownStrike = /~~(?=\S)([^\n]*?\S)~~/g
-const markdownItalicAsterisk = /(^|[^*])\*(?![\s*])([^*\n]*?\S)\*(?!\*)/g
-const markdownBoldAsterisk = /\*\*(?=\S)([^\n]*?\S)\*\*/g
-const markdownBoldUnderscore = /__(?=\S)([^\n]*?\S)__/g
-
-const formatSlackInlineMrkdwn = (text: string) =>
-  text
-    .replace(markdownStrike, "~$1~")
-    .replace(markdownItalicAsterisk, "$1_$2_")
-    .replace(markdownBoldAsterisk, "*$1*")
-    .replace(markdownBoldUnderscore, "*$1*")
-
-const formatSlackLineMrkdwn = (line: string) => {
-  const heading = line.match(/^#{1,6}\s+(.+?)\s*#*\s*$/)
-  if (!heading) {
-    const bullet = line.match(/^(\s*)[-*+]\s+(.+)$/)
-    if (bullet) {
-      return `${bullet[1]}• ${formatSlackInlineMrkdwn(bullet[2])}`
-    }
-    return formatSlackInlineMrkdwn(line)
-  }
-
-  const formattedHeading = formatSlackInlineMrkdwn(heading[1].trim())
-  if (!formattedHeading) {
-    return ""
-  }
-
-  if (formattedHeading.startsWith("*") && formattedHeading.endsWith("*")) {
-    return formattedHeading
-  }
-  return `*${formattedHeading}*`
-}
-
-export const formatSlackMrkdwn = (text: string) =>
-  preserveSlackLiteralSegments(text, value =>
-    value.split("\n").map(formatSlackLineMrkdwn).join("\n")
-  )
-
-export const formatSlackAssistantReply = ({
-  result,
-}: {
-  result: WebhookChatCompleteResult
-}) =>
-  formatSlackMrkdwn(result.assistantText || "").trim() ||
-  NO_ASSISTANT_RESPONSE_MESSAGE
-
-interface SlackKnowledgeSourceLink {
-  label: string
-  url: string
-}
-
-interface SlackKnowledgeSourcesParams {
-  agentId: string
-  result: WebhookChatCompleteResult
-  isDirectMessage?: boolean
-}
-
-const getSlackKnowledgeSourceLinks = async ({
+export const formatSlackAssistantReply = async ({
   agentId,
   result,
   isDirectMessage,
-}: SlackKnowledgeSourcesParams): Promise<SlackKnowledgeSourceLink[]> => {
+}: {
+  agentId: string
+  result: WebhookChatCompleteResult
+  isDirectMessage?: boolean
+}) => {
+  const assistantText =
+    (result.assistantText || "").trim() || NO_ASSISTANT_RESPONSE_MESSAGE
   if (result.allowKnowledgeSourceDownload === false || !isDirectMessage) {
-    return []
+    return assistantText
   }
 
-  const links: SlackKnowledgeSourceLink[] = []
-  for (const source of result.ragSources || []) {
+  const sources = result.ragSources || []
+  const sourceLinks: string[] = []
+  for (const source of sources) {
     if (!source.fileId) {
       continue
     }
@@ -146,56 +71,22 @@ const getSlackKnowledgeSourceLinks = async ({
         agentId,
         source.fileId
       )
-      links.push({
-        label: source.filename?.trim() || "Knowledge source",
-        url: await toAbsoluteUrl(signedUrl),
-      })
+      const absoluteUrl = await toAbsoluteUrl(signedUrl)
+      const label = escapeMarkdownLinkLabel(
+        source.filename?.trim() || "Knowledge source"
+      )
+      sourceLinks.push(`- [${label}](${absoluteUrl})`)
     } catch (error) {
       console.error("Failed to generate Slack RAG source link", error)
     }
   }
-  return links
-}
 
-export const getSlackKnowledgeSourcesCard = async (
-  params: SlackKnowledgeSourcesParams
-): Promise<CardElement | undefined> => {
-  const links = await getSlackKnowledgeSourceLinks(params)
-  if (!links.length) {
-    return
+  if (!sourceLinks.length) {
+    return assistantText
   }
-  return Card({
-    title: "Sources",
-    children: links.map(link =>
-      Actions([
-        LinkButton({
-          label: link.label.slice(0, SLACK_BUTTON_LABEL_MAX_LENGTH),
-          url: link.url,
-        }),
-      ])
-    ),
-  })
-}
 
-const toSlackSourcesBlock = (
-  links: SlackKnowledgeSourceLink[]
-): RichTextBlock => ({
-  type: "rich_text",
-  elements: [
-    {
-      type: "rich_text_section",
-      elements: [{ type: "text", text: "Sources", style: { bold: true } }],
-    },
-    {
-      type: "rich_text_list",
-      style: "bullet",
-      elements: links.map(link => ({
-        type: "rich_text_section",
-        elements: [{ type: "link", url: link.url, text: link.label }],
-      })),
-    },
-  ],
-})
+  return `${assistantText}\n\nSources:\n${sourceLinks.join("\n")}`
+}
 
 export const isSlackDirectMessage = (event?: SlackEvent) =>
   event?.channel_type === "im" || !!event?.channel?.startsWith("D")
@@ -242,7 +133,7 @@ export const pickSlackConversation = ({
     nowMs,
   })
 
-type SlackReplyTarget = PrivatePostTarget
+type SlackReplyTarget = PrivatePostTarget & Pick<Thread, "post">
 
 type SlackCommand =
   | typeof ChatCommands.ASK
@@ -271,9 +162,7 @@ const createSlackInputHandler = ({
   idleTimeoutMinutes,
   requireUserLink,
   allowConversationAttachments,
-  slackAdapter,
 }: {
-  slackAdapter: SlackAdapter
   workspaceId: string
   agentId: string
   channelEnabled: boolean
@@ -316,7 +205,7 @@ const createSlackInputHandler = ({
     try {
       await handleChatMessage({
         reply: async text => {
-          await target.post(text)
+          await target.post({ markdown: text })
         },
         replyLinkPrompt: async prompt => {
           const delivery = await postLinkPromptPrivately({
@@ -335,30 +224,12 @@ const createSlackInputHandler = ({
             )
           }
         },
-        formatAssistantReply: result => formatSlackAssistantReply({ result }),
-        afterAssistantReply: async result => {
-          const links = await getSlackKnowledgeSourceLinks({
+        formatAssistantReply: async result =>
+          await formatSlackAssistantReply({
             agentId,
             result,
             isDirectMessage,
-          })
-          if (!links.length) {
-            return
-          }
-          try {
-            const { channel, threadTs } = slackAdapter.decodeThreadId(
-              threadId || channelId
-            )
-            await slackAdapter.webClient.chat.postMessage({
-              channel,
-              thread_ts: threadTs || undefined,
-              text: "Sources",
-              blocks: [toSlackSourcesBlock(links)],
-            })
-          } catch (error) {
-            console.error("Failed to post Slack knowledge sources", error)
-          }
-        },
+          }),
         workspaceId,
         agentId,
         provider: AgentChannelProvider.SLACK,
@@ -468,20 +339,20 @@ export async function slackWebhook(
       }
 
       const logger = createChatLogger()
-      const slackAdapter = createSlackAdapter({
-        botToken: integration.botToken,
-        signingSecret: integration.signingSecret,
-        logger: logger.child("slack"),
-      })
       const chat = new Chat({
         userName: "Budibase",
-        adapters: { slack: slackAdapter },
+        adapters: {
+          slack: createSlackAdapter({
+            botToken: integration.botToken,
+            signingSecret: integration.signingSecret,
+            logger: logger.child("slack"),
+          }),
+        },
         state,
         logger,
       })
 
       const handleSlackInput = createSlackInputHandler({
-        slackAdapter,
         workspaceId,
         agentId,
         channelEnabled,

@@ -1,7 +1,6 @@
 import type { Block, KnownBlock } from "@slack/types"
 import { WebClient } from "@slack/web-api"
 import { createSlackAdapter } from "@chat-adapter/slack"
-import type { CardElement } from "chat"
 import { tenancy } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
@@ -325,13 +324,11 @@ export async function replyToConversation({
   agentId,
   channel,
   text,
-  card,
 }: {
   appId: string
   agentId?: string
   channel: ChatConversationChannel
   text: string
-  card?: CardElement
 }): Promise<void> {
   if (!channel.channelId) {
     console.warn("replyToConversation: no channelId", { appId })
@@ -357,12 +354,4 @@ export async function replyToConversation({
       : text
 
   await adapter.postMessage(threadId, { markdown: body })
-  if (!card) {
-    return
-  }
-  try {
-    await adapter.postMessage(threadId, card)
-  } catch (error) {
-    console.error("replyToConversation: failed to post card", error)
-  }
 }

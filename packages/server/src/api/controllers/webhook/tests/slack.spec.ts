@@ -7,7 +7,6 @@ import {
 import {
   extractSlackMessageContent,
   formatSlackAssistantReply,
-  formatSlackMrkdwn,
   isSlackDirectMessage,
   matchesSlackConversationScope,
   pickSlackConversation,
@@ -33,76 +32,36 @@ const makeChat = (
 })
 
 describe("slack webhook helpers", () => {
-  it("formats markdown emphasis and headings for Slack mrkdwn", () => {
-    const input = [
-      "# Summary",
-      "This is **bold** and __also bold__.",
-      "This is *italic* and ~~removed~~.",
-      "- **First** item",
-      "  * second item",
-      "+ third item",
-    ].join("\n")
-
-    expect(formatSlackMrkdwn(input)).toEqual(
-      [
-        "*Summary*",
-        "This is *bold* and *also bold*.",
-        "This is _italic_ and ~removed~.",
-        "• *First* item",
-        "  • second item",
-        "• third item",
-      ].join("\n")
-    )
-  })
-
-  it("leaves markdown links and code untouched when formatting Slack mrkdwn", () => {
-    const input = [
-      "Use **bold** outside links.",
-      "Leave [**docs**](https://example.com/docs) alone.",
-      "Keep `**inline code**` alone.",
-      "```",
-      "# code heading",
-      "**code bold**",
-      "- code bullet",
-      "```",
-    ].join("\n")
-
-    expect(formatSlackMrkdwn(input)).toEqual(
-      [
-        "Use *bold* outside links.",
-        "Leave [**docs**](https://example.com/docs) alone.",
-        "Keep `**inline code**` alone.",
-        "```",
-        "# code heading",
-        "**code bold**",
-        "- code bullet",
-        "```",
-      ].join("\n")
-    )
-  })
-
-  it("formats assistant replies before returning them to Slack", () => {
+  it("returns assistant markdown unconverted for Slack", async () => {
     const result: WebhookChatCompleteResult = {
       messages: [],
       assistantText: "## Next steps\nUse **bold** text.",
       title: "Mock conversation",
     }
 
-    expect(formatSlackAssistantReply({ result })).toEqual(
-      "*Next steps*\nUse *bold* text."
-    )
+    await expect(
+      formatSlackAssistantReply({
+        agentId: "agent-1",
+        result,
+        isDirectMessage: false,
+      })
+    ).resolves.toEqual("## Next steps\nUse **bold** text.")
   })
 
-  it("returns a fallback instead of an empty Slack reply", () => {
+  it("returns a fallback instead of an empty Slack reply", async () => {
     const result: WebhookChatCompleteResult = {
       messages: [],
       assistantText: " \n ",
       title: "Mock conversation",
     }
 
-    expect(formatSlackAssistantReply({ result })).toEqual(
-      "No response generated."
-    )
+    await expect(
+      formatSlackAssistantReply({
+        agentId: "agent-1",
+        result,
+        isDirectMessage: false,
+      })
+    ).resolves.toEqual("No response generated.")
   })
 
   it.each([
