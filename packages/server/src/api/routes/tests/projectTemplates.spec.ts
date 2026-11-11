@@ -103,7 +103,7 @@ describe("Project template catalogue API", () => {
     ])
   })
 
-  it("imports an approved artifact and clears its matching template intent", async () => {
+  it("imports an approved artifact without clearing the request's template intent", async () => {
     await withProjectTemplatesEnabled(async () => {
       const { project } = await config.api.project.create({ name: "Support" })
       const artifact = await config.api.project.export(project._id)
@@ -122,7 +122,7 @@ describe("Project template catalogue API", () => {
             config.api.project.importTemplate({
               templateKey: template.key,
               expectations: {
-                headers: { "set-cookie": /budibase:init=;/i },
+                headersNotPresent: ["set-cookie"],
               },
             })
           )

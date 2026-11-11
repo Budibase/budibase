@@ -106,15 +106,19 @@ export const INITIAL_WORKSPACE_META_STATE: WorkspaceMetaState = {
 }
 
 export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
+  private refreshGeneration = 0
+
   constructor() {
     super(INITIAL_WORKSPACE_META_STATE)
   }
 
   reset() {
+    this.refreshGeneration++
     this.store.set({ ...INITIAL_WORKSPACE_META_STATE })
   }
 
   syncWorkspace(workspace: Workspace) {
+    this.refreshGeneration++
     this.update(state => ({
       ...state,
       name: workspace.name,
@@ -210,8 +214,16 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
 
   async refresh() {
     const { appId } = get(this.store)
+    const refreshGeneration = ++this.refreshGeneration
     const appPackage = await API.fetchAppPackage(appId)
+    if (
+      refreshGeneration !== this.refreshGeneration ||
+      get(this.store).appId !== appId
+    ) {
+      return false
+    }
     await initialise(appPackage)
+    return true
   }
 
   async refreshWorkspaceAppNavigation() {

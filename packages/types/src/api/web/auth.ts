@@ -19,12 +19,15 @@ export interface ProjectTemplateIntent {
 
 export interface SetInitInfoRequest {
   projectTemplate?: ProjectTemplateIntent
+  clearProjectTemplate?: ProjectTemplateIntent
 }
 export interface SetInitInfoResponse {
   message: string
 }
 
-export interface GetInitInfoResponse extends SetInitInfoRequest {}
+export interface GetInitInfoResponse {
+  projectTemplate?: ProjectTemplateIntent
+}
 
 export interface PasswordResetRequest {
   email: string

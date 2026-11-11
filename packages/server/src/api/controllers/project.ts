@@ -15,17 +15,12 @@ import {
   PreviewProjectAssignmentResponse,
   Project,
   ProjectResponse,
-  SetInitInfoRequest,
   UpdateProjectAssignmentRequest,
   UpdateProjectAssignmentResponse,
   UpdateProjectRequest,
   UpdateProjectResponse,
 } from "@budibase/types"
-import {
-  constants,
-  HTTPError,
-  utils as backendCoreUtils,
-} from "@budibase/backend-core"
+import { HTTPError } from "@budibase/backend-core"
 import fsp from "fs/promises"
 import type { Next } from "koa"
 import sdk from "../../sdk"
@@ -303,17 +298,6 @@ export async function importTemplate(
         packageVersion: downloaded.template.packageVersion,
         catalogueVersion: downloaded.template.catalogueVersion,
       },
-    }
-    try {
-      const initInfo = backendCoreUtils.getCookie<SetInitInfoRequest>(
-        ctx,
-        constants.Cookie.Init
-      )
-      if (initInfo?.projectTemplate?.templateKey === downloaded.template.key) {
-        backendCoreUtils.clearCookie(ctx, constants.Cookie.Init)
-      }
-    } catch {
-      // An invalid init cookie must not fail an import that already succeeded.
     }
   } finally {
     await fsp.rm(downloaded.path, { force: true }).catch(error => {

@@ -1,6 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { tick } from "svelte"
-import { ResourceType, type SetInitInfoRequest } from "@budibase/types"
+import {
+  ResourceType,
+  type GetInitInfoResponse,
+  type ProjectTemplateIntent,
+} from "@budibase/types"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => {
@@ -27,7 +31,7 @@ const mocks = vi.hoisted(() => {
   }
 
   const authState = createStore<{
-    initInfo: SetInitInfoRequest
+    initInfo: GetInitInfoResponse
     user: { _id: string }
   }>({
     initInfo: {
@@ -36,15 +40,22 @@ const mocks = vi.hoisted(() => {
     user: { _id: "us_test" },
   })
   const featureFlags = createStore({ PROJECTS: true, TEMPLATES: true })
-  const setInitInfo = vi.fn(async (info: SetInitInfoRequest) => {
-    authState.update(state => ({ ...state, initInfo: info }))
-    return info
-  })
+  const clearProjectTemplateIntent = vi.fn(
+    async ({ templateKey }: ProjectTemplateIntent) => {
+      authState.update(state => ({
+        ...state,
+        initInfo:
+          state.initInfo.projectTemplate?.templateKey === templateKey
+            ? {}
+            : state.initInfo,
+      }))
+    }
+  )
 
   return {
     authState,
     featureFlags,
-    setInitInfo,
+    clearProjectTemplateIntent,
     clearInitInfoState: vi.fn(() => {
       authState.update(state => ({ ...state, initInfo: {} }))
     }),
@@ -65,7 +76,7 @@ vi.mock("@/api", () => ({
 
 vi.mock("@/stores/portal", () => ({
   auth: Object.assign(mocks.authState, {
-    setInitInfo: mocks.setInitInfo,
+    clearProjectTemplateIntent: mocks.clearProjectTemplateIntent,
     clearInitInfoState: mocks.clearInitInfoState,
     getSelf: mocks.getSelf,
   }),
@@ -91,6 +102,7 @@ vi.mock("@budibase/shared-core", async importOriginal => {
 import ProjectTemplateFlow from "./ProjectTemplateFlow.svelte"
 import HomeProjectTabs from "./HomeProjectTabs.svelte"
 import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+import { notifications } from "@budibase/bbui"
 
 const template = {
   key: "project/support",
@@ -166,6 +178,7 @@ describe("ProjectTemplateFlow", () => {
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     document.querySelectorAll(".modal-container").forEach(node => node.remove())
   })
 
@@ -188,7 +201,10 @@ describe("ProjectTemplateFlow", () => {
       response: importResponse,
       workspaceId: "app_dev_current",
     })
-    expect(mocks.clearInitInfoState).toHaveBeenCalled()
+    expect(mocks.clearProjectTemplateIntent).toHaveBeenCalledWith({
+      templateKey: template.key,
+    })
+    expect(mocks.authState.get().initInfo).toEqual({})
   })
 
   it("imports into another workspace using the native destination control", async () => {
@@ -210,6 +226,57 @@ describe("ProjectTemplateFlow", () => {
     expect(mocks.importTemplate).toHaveBeenCalledWith({
       templateKey: template.key,
       workspaceId: "app_dev_other",
+    })
+  })
+
+  it("reports a successful import when its intent cannot be cleared", async () => {
+    mocks.clearProjectTemplateIntent.mockRejectedValueOnce(
+      new Error("unavailable")
+    )
+    const warning = vi.spyOn(notifications, "warning")
+    const onImported = vi.fn()
+    renderFlow({ onImported })
+    await screen.findByRole("heading", { name: "Use Support Template" })
+
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Import project" })
+    )
+
+    await waitFor(() =>
+      expect(onImported).toHaveBeenCalledWith({
+        response: importResponse,
+        workspaceId: "app_dev_current",
+      })
+    )
+    expect(mocks.importTemplate).toHaveBeenCalledOnce()
+    expect(mocks.authState.get().initInfo).toEqual({})
+    expect(warning).toHaveBeenCalledWith(
+      "Project imported. The template link could not be cleared, so dismiss the prompt if it reappears."
+    )
+    expect(
+      screen.queryByRole("heading", { name: "Use Support Template" })
+    ).not.toBeInTheDocument()
+  })
+
+  it("retains the template intent when its import fails", async () => {
+    mocks.importTemplate.mockRejectedValueOnce(new Error("import failed"))
+    const onImported = vi.fn()
+    renderFlow({ onImported })
+    await screen.findByRole("heading", { name: "Use Support Template" })
+
+    await fireEvent.click(
+      screen.getByRole("button", { name: "Import project" })
+    )
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Import project" })
+      ).toBeEnabled()
+    )
+    expect(onImported).not.toHaveBeenCalled()
+    expect(mocks.clearProjectTemplateIntent).not.toHaveBeenCalled()
+    expect(mocks.authState.get().initInfo).toEqual({
+      projectTemplate: { templateKey: template.key },
     })
   })
 
@@ -287,7 +354,11 @@ describe("ProjectTemplateFlow", () => {
     mocks.featureFlags.set({ PROJECTS: true, TEMPLATES: false })
     renderFlow()
 
-    await waitFor(() => expect(mocks.setInitInfo).toHaveBeenCalledWith({}))
+    await waitFor(() =>
+      expect(mocks.clearProjectTemplateIntent).toHaveBeenCalledWith({
+        templateKey: template.key,
+      })
+    )
     expect(mocks.fetchTemplates).not.toHaveBeenCalled()
     expect(
       screen.queryByRole("heading", { name: "Use Support Template" })
@@ -299,7 +370,7 @@ describe("ProjectTemplateFlow", () => {
     renderFlow()
 
     await waitFor(() => expect(mocks.fetchTemplates).toHaveBeenCalled())
-    expect(mocks.setInitInfo).not.toHaveBeenCalled()
+    expect(mocks.clearProjectTemplateIntent).not.toHaveBeenCalled()
     expect(mocks.authState.get().initInfo).toEqual({
       projectTemplate: { templateKey: template.key },
     })
@@ -352,12 +423,36 @@ describe("ProjectTemplateFlow", () => {
 
     await fireEvent.keyDown(document, { key: "Escape" })
 
-    await waitFor(() => expect(mocks.setInitInfo).toHaveBeenCalledWith({}))
+    await waitFor(() =>
+      expect(mocks.clearProjectTemplateIntent).toHaveBeenCalledWith({
+        templateKey: template.key,
+      })
+    )
     await waitFor(() =>
       expect(
         screen.queryByRole("heading", { name: "Use Support Template" })
       ).not.toBeInTheDocument()
     )
+  })
+
+  it("keeps the prompt recoverable when dismissing its intent fails", async () => {
+    mocks.clearProjectTemplateIntent.mockRejectedValueOnce(
+      new Error("unavailable")
+    )
+    renderFlow()
+    await screen.findByRole("heading", { name: "Use Support Template" })
+
+    await fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled()
+    )
+    expect(
+      screen.getByRole("heading", { name: "Use Support Template" })
+    ).toBeInTheDocument()
+    expect(mocks.authState.get().initInfo).toEqual({
+      projectTemplate: { templateKey: template.key },
+    })
   })
 
   it("resets the destination when a template intent is reopened", async () => {

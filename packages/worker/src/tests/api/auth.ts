@@ -13,6 +13,7 @@ export class AuthAPI extends TestAPI {
   }) => {
     const response = await this.request
       .post("/api/global/auth/init")
+      .set("Cookie", this.initCookie)
       .send(body)
       .expect("Content-Type", /json/)
       .expect(opts?.status ? opts.status : 200)

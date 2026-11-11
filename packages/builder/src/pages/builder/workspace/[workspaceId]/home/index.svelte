@@ -81,7 +81,7 @@
   import { sdk } from "@budibase/shared-core"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import { goto as gotoStore, url as urlStore } from "@roxi/routify"
-  import { onMount, tick } from "svelte"
+  import { onDestroy, onMount, tick } from "svelte"
   import {
     buildHomeRows,
     filterHomeRows,
@@ -162,6 +162,7 @@
   let highlightedRowId: string | null = null
 
   let hasMounted = false
+  let isDestroyed = false
   let projectsRequestedForWorkspace = ""
 
   const favourites = workspaceFavouriteStore.lookup
@@ -645,6 +646,10 @@
   }
 
   const completeProjectImport = async (response: ImportProjectResponse) => {
+    const workspaceId = $workspaceStore.appId
+    if (isDestroyed || !workspaceId) {
+      return
+    }
     const showImportResult =
       response.requirements.length > 0 ||
       response.unsupportedContent.length > 0 ||
@@ -658,12 +663,21 @@
     importResult = response
     isSetupReview = false
     try {
-      await workspaceStore.refresh()
+      const refreshed = await workspaceStore.refresh()
+      if (!refreshed) {
+        return
+      }
     } catch (error) {
+      if (isDestroyed || workspaceId !== $workspaceStore.appId) {
+        return
+      }
       console.error(error)
       notifications.warning(
         "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
       )
+    }
+    if (isDestroyed || workspaceId !== $workspaceStore.appId) {
+      return
     }
     if (showImportResult) {
       importProjectResultModal?.show()
@@ -986,6 +1000,7 @@
   $: if (
     projectsEnabled &&
     selectedProjectId &&
+    projectsRequestedForWorkspace === $workspaceStore.appId &&
     projectsStore.hasFetched() &&
     !projectLookup[selectedProjectId]
   ) {
@@ -1082,6 +1097,10 @@
     const name = automationName || "Automation"
     return `${name} - Automation stopped`
   }
+
+  onDestroy(() => {
+    isDestroyed = true
+  })
 
   onMount(async () => {
     const workspaceId = $workspaceStore.appId

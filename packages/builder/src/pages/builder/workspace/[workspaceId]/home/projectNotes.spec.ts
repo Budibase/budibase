@@ -57,6 +57,7 @@ vi.mock("@/stores/builder", () => ({
 
 vi.mock("@/stores/portal", () => ({
   auth: mocks.createStore({ user: { _id: "user_builder" } }),
+  enrichedApps: mocks.createStore([]),
   featureFlags: mocks.createStore({ PROJECTS: true }),
   licensing: mocks.createStore({ isEnterprisePlan: true, isFreePlan: false }),
   agentsStore: Object.assign(mocks.createStore({ agents: [] }), {

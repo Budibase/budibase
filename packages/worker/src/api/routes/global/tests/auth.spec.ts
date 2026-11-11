@@ -127,6 +127,69 @@ describe("/api/global/auth", () => {
       )
     })
 
+    it("clears the matching Project template intent after import", async () => {
+      await config.api.auth.setInitInfo({
+        body: {
+          projectTemplate: { templateKey: "project/expense-approval" },
+        },
+      })
+
+      const clearResponse = await config.api.auth.setInitInfo({
+        body: {
+          clearProjectTemplate: { templateKey: "project/expense-approval" },
+        },
+      })
+
+      const response = await config.api.auth.getInitInfo()
+      expect(response.body).toEqual({})
+      expect(clearResponse.headers["set-cookie"]?.[0]).toMatch(
+        /budibase:init=;/i
+      )
+    })
+
+    it("preserves a newer cookie when an earlier import clears its intent", async () => {
+      await config.api.auth.setInitInfo({
+        body: {
+          projectTemplate: { templateKey: "project/expense-approval" },
+        },
+      })
+      await config.api.auth.setInitInfo({
+        body: {
+          projectTemplate: { templateKey: "project/support" },
+        },
+      })
+
+      const clearResponse = await config.api.auth.setInitInfo({
+        body: {
+          clearProjectTemplate: { templateKey: "project/expense-approval" },
+        },
+      })
+
+      const response = await config.api.auth.getInitInfo()
+      expect(response.body).toEqual({
+        projectTemplate: { templateKey: "project/support" },
+      })
+      expect(clearResponse.headers["set-cookie"]).toBeUndefined()
+    })
+
+    it.each([
+      {
+        clearProjectTemplate: { templateKey: "../project/expense-approval" },
+      },
+      {
+        clearProjectTemplate: { templateKey: "https://example.com/template" },
+      },
+      {
+        projectTemplate: { templateKey: "project/support" },
+        clearProjectTemplate: { templateKey: "project/expense-approval" },
+      },
+    ])("rejects an invalid conditional intent clear: %j", async body => {
+      await config.api.auth.setRawInitInfo({
+        body,
+        opts: { status: 400 },
+      })
+    })
+
     it("rejects arbitrary URLs and malformed template keys", async () => {
       await config.api.auth.setInitInfo({
         body: {

@@ -29,17 +29,19 @@ function buildResetUpdateValidation() {
 }
 
 function buildInitInfoValidation() {
+  const projectTemplate = Joi.object({
+    templateKey: Joi.string()
+      .pattern(PROJECT_TEMPLATE_KEY_PATTERN)
+      .max(200)
+      .required(),
+  }).unknown(false)
+
   return auth.joiValidator.body(
     Joi.object({
-      projectTemplate: Joi.object({
-        templateKey: Joi.string()
-          .pattern(PROJECT_TEMPLATE_KEY_PATTERN)
-          .max(200)
-          .required(),
-      })
-        .unknown(false)
-        .optional(),
+      projectTemplate: projectTemplate.optional(),
+      clearProjectTemplate: projectTemplate.optional(),
     })
+      .oxor("projectTemplate", "clearProjectTemplate")
       .required()
       .unknown(false)
   )

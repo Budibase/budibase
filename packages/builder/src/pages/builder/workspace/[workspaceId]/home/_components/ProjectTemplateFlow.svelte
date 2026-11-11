@@ -15,6 +15,7 @@
     FeatureFlag,
     type CreateWorkspaceResponse,
     type ImportProjectTemplateResponse,
+    type ProjectTemplateIntent,
     type ProjectTemplateMetadata,
   } from "@budibase/types"
   import { onDestroy, onMount, tick } from "svelte"
@@ -65,15 +66,15 @@
     $featureFlags[FeatureFlag.PROJECTS] && $featureFlags[FeatureFlag.TEMPLATES]
   )
 
-  const clearIntent = async () => {
-    await auth.setInitInfo({})
+  const clearIntent = async (intent: ProjectTemplateIntent) => {
+    await auth.clearProjectTemplateIntent(intent)
     handledTemplateKey = ""
     template = undefined
   }
 
   const dismissIntent = async () => {
     try {
-      await clearIntent()
+      await clearIntent({ templateKey: handledTemplateKey })
       return true
     } catch (error) {
       console.error("Unable to dismiss Project template intent", error)
@@ -94,7 +95,7 @@
     isResolvingIntent = true
     try {
       if (!templatesEnabled) {
-        await clearIntent()
+        await clearIntent(intent)
         return
       }
 
@@ -103,7 +104,7 @@
         candidate => candidate.key === intent.templateKey
       )
       if (!resolvedTemplate) {
-        await clearIntent()
+        await clearIntent(intent)
         notifications.error("This Project template is no longer available.")
         return
       }
@@ -166,6 +167,22 @@
     }
   }
 
+  const clearImportedIntent = async ({
+    templateKey,
+  }: ProjectTemplateIntent) => {
+    try {
+      await auth.clearProjectTemplateIntent({ templateKey })
+    } catch (error) {
+      console.error("Unable to clear imported Project template intent", error)
+      if ($auth.initInfo?.projectTemplate?.templateKey === templateKey) {
+        auth.clearInitInfoState()
+      }
+      notifications.warning(
+        "Project imported. The template link could not be cleared, so dismiss the prompt if it reappears."
+      )
+    }
+  }
+
   const importTemplate = async ({
     templateKey,
     workspaceId,
@@ -192,9 +209,7 @@
         templateKey,
         workspaceId: destinationWorkspaceId,
       })
-      if ($auth.initInfo?.projectTemplate?.templateKey === templateKey) {
-        auth.clearInitInfoState()
-      }
+      await clearImportedIntent({ templateKey })
       if (isDestroyed || originWorkspaceId !== currentWorkspaceId) {
         return
       }
@@ -236,10 +251,10 @@
         templateKey: selectedTemplate.key,
         workspaceId,
       })
+      await clearImportedIntent({ templateKey: selectedTemplate.key })
       if (isDestroyed || workspaceId !== currentWorkspaceId) {
         return
       }
-      auth.clearInitInfoState()
       galleryModal?.hide()
       onGalleryClose()
       await completeImport({ response, workspaceId })

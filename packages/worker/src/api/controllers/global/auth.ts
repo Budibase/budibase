@@ -168,11 +168,23 @@ export const logout = async (ctx: UserCtx<void, LogoutResponse>) => {
 export const setInitInfo = (
   ctx: UserCtx<SetInitInfoRequest, SetInitInfoResponse>
 ) => {
-  const initInfo = ctx.request.body
-  if (!initInfo.projectTemplate) {
+  const { projectTemplate, clearProjectTemplate } = ctx.request.body
+  if (clearProjectTemplate) {
+    try {
+      const initInfo = getCookie<GetInitInfoResponse>(ctx, Cookie.Init)
+      if (
+        initInfo?.projectTemplate?.templateKey ===
+        clearProjectTemplate.templateKey
+      ) {
+        clearCookie(ctx, Cookie.Init)
+      }
+    } catch {
+      clearCookie(ctx, Cookie.Init)
+    }
+  } else if (!projectTemplate) {
     clearCookie(ctx, Cookie.Init)
   } else {
-    setCookie(ctx, initInfo, Cookie.Init, {
+    setCookie(ctx, { projectTemplate }, Cookie.Init, {
       sign: true,
       httpOnly: true,
       sameSite: "lax",
@@ -186,7 +198,7 @@ export const setInitInfo = (
 
 export const getInitInfo = (ctx: UserCtx<void, GetInitInfoResponse>) => {
   try {
-    const initInfo = getCookie<SetInitInfoRequest>(ctx, Cookie.Init)
+    const initInfo = getCookie<GetInitInfoResponse>(ctx, Cookie.Init)
     ctx.body = initInfo?.projectTemplate
       ? {
           projectTemplate: initInfo.projectTemplate,

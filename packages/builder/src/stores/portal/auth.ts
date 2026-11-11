@@ -10,7 +10,7 @@ import {
   GetGlobalSelfResponse,
   GetInitInfoResponse,
   isSSOUser,
-  SetInitInfoRequest,
+  ProjectTemplateIntent,
   UpdateSelfRequest,
 } from "@budibase/types"
 
@@ -84,13 +84,23 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     }
   }
 
-  async setInitInfo(info: SetInitInfoRequest) {
+  async setInitInfo(info: GetInitInfoResponse) {
     await API.setInitInfo(info)
     auth.update(store => {
       store.initInfo = info
       return store
     })
     return info
+  }
+
+  async clearProjectTemplateIntent({ templateKey }: ProjectTemplateIntent) {
+    await API.setInitInfo({ clearProjectTemplate: { templateKey } })
+    auth.update(store => {
+      if (store.initInfo?.projectTemplate?.templateKey === templateKey) {
+        store.initInfo = {}
+      }
+      return store
+    })
   }
 
   clearInitInfoState() {
