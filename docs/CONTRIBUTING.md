@@ -16,24 +16,17 @@ If you do plan to raise a pull request, please take a look at the guide below.
 
 ## Table of contents
 
-- [Vouching](#vouching)
 - [External PR Ticket Check](#external-pr-ticket-check)
 - [Where to start](#not-sure-where-to-start)
 - [Contributor Licence Agreement](#contributor-license-agreement-cla)
 - [Glossary of Terms](#glossary-of-terms)
 - [Contributing to Budibase](#contributing-to-budibase)
 
-## Vouching
-
-We use [Vouch](https://github.com/mitchellh/vouch) to prevent explicitly denounced users from contributing pull requests.
-
-You do not need to be vouched for before opening or merging a pull request. Pull requests from users who have been explicitly denounced will be closed automatically.
+## External PR Ticket Check
 
 Each contributor may have only one open pull request at a time.
 
 All pull requests remain subject to our normal review and contribution requirements.
-
-## External PR Ticket Check
 
 Pull requests whose branches come from outside this repository must reference an
 existing issue in this repository. The issue must:
