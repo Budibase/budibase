@@ -1754,12 +1754,12 @@ export async function importProject(
     }
     if (canCleanupAttachments) {
       await cleanupProjectAttachments(uploadedKeys)
-      for (const templateId of createdTemplateIds) {
-        try {
-          await sdk.restTemplates.removeIfUnused(templateId)
-        } catch (error) {
-          console.log("Failed to clean up Project REST template", error)
-        }
+    }
+    for (const templateId of createdTemplateIds) {
+      try {
+        await sdk.restTemplates.removeIfUnused(templateId)
+      } catch (error) {
+        console.log("Failed to clean up Project REST template", error)
       }
     }
     if (err instanceof UsageLimitWarning) {
