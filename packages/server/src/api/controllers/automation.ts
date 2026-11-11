@@ -132,7 +132,7 @@ async function createUnlocked(
     automation: createdAutomation,
     projectAssignment,
   }
-  builderSocket?.emitAutomationUpdate(ctx, automation)
+  builderSocket?.emitAutomationUpdate(ctx, createdAutomation)
 }
 
 async function updateUnlocked(
@@ -170,7 +170,7 @@ async function updateUnlocked(
     automation: updatedAutomation,
     projectAssignment,
   }
-  builderSocket?.emitAutomationUpdate(ctx, automation)
+  builderSocket?.emitAutomationUpdate(ctx, updatedAutomation)
 }
 
 export async function create(

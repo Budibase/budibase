@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
     "rootDir": "src/",
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": ["es2022"]
   },
   "include": ["src/**/*.ts"],
   "exclude": [
