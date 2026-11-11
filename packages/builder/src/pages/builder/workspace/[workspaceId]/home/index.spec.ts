@@ -314,7 +314,7 @@ describe("workspace home project assignments", () => {
         screen.getByRole("button", { name: "Configure Support agent" })
       ).toBeInTheDocument()
     })
-    expect(mocks.fetchProjects).not.toHaveBeenCalled()
+    expect(mocks.ensureFetched).toHaveBeenCalledWith("app_dev_test")
     expect(window.location.search).toBe("?project=project_operations")
   })
 
