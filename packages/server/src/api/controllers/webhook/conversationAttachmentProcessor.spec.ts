@@ -8,6 +8,7 @@ const mockDeleteVectorStore = jest.fn()
 const mockWebhookChat = jest.fn()
 const mockReply = jest.fn()
 const mockFormatReply = jest.fn()
+const mockSourcesCard = jest.fn()
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -83,7 +84,7 @@ jest.mock("../../../escalation/notifications/slack", () => ({
 
 jest.mock("./slack", () => ({
   formatSlackAssistantReply: (args: object) => mockFormatReply(args),
-  getSlackKnowledgeSourcesCard: async () => undefined,
+  getSlackKnowledgeSourcesCard: (args: object) => mockSourcesCard(args),
 }))
 
 import {
@@ -181,6 +182,7 @@ describe("conversation attachment processor", () => {
       assistantText: "The report says content.",
     })
     mockFormatReply.mockReturnValue("The report says content.")
+    mockSourcesCard.mockResolvedValue(undefined)
     mockReply.mockResolvedValue(undefined)
   })
 
@@ -219,6 +221,24 @@ describe("conversation attachment processor", () => {
       expect.objectContaining({
         triggeredBy: { type: "user", label: "John Doe (Slack)" },
       })
+    )
+  })
+
+  it("replies with the knowledge sources card", async () => {
+    const card = { type: "card", title: "Sources", children: [] }
+    mockSourcesCard.mockResolvedValue(card)
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(mockSourcesCard).toHaveBeenCalledWith(
+      expect.objectContaining({ agentId: "agent_1", isDirectMessage: true })
+    )
+    expect(mockReply).toHaveBeenCalledWith(
+      expect.objectContaining({ text: "The report says content.", card })
     )
   })
 
