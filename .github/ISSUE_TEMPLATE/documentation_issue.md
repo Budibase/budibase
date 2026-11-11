@@ -1,11 +1,12 @@
 ---
 name: Documentation Issue
 about: Report missing, incorrect, or outdated documentation
-title: '[Docs]: '
-labels: documentation, docs-needed, needs-triage
+title: "[Docs]: "
+labels: docs-needed, documentation, needs-triage
 assignees: ''
 
 ---
+
 **Checklist**
 
 Please select all that apply:
