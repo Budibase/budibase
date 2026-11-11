@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     AbsTooltip,
+    Body,
     Button,
     DatePicker,
     Icon,
@@ -29,6 +30,7 @@
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { datasources, tables } from "@/stores/builder"
+  import { agentsStore } from "@/stores/portal"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "@/constants"
   import {
     DB_TYPE_EXTERNAL,
@@ -54,7 +56,9 @@
   import OptionsEditor from "./OptionsEditor.svelte"
   import { getUserBindings } from "@/dataBinding"
   import type {
+    Agent,
     Table,
+    ToolMetadata,
     Datasource,
     FieldSchema,
     UIField,
@@ -402,6 +406,9 @@
         field: saveColumn as FieldSchema,
         hasPrimaryDisplay,
       })
+      if (operationsWithColumnRules && originalName !== saveColumn.name) {
+        agentsStore.fetchAgents().catch(() => {})
+      }
       dispatch("updatecolumns")
       gridDispatch("close-edit-column")
 
@@ -474,6 +481,47 @@
     $tables.selected,
     originalName
   )
+
+  // TODO: Can reuse this fr a top level display on the grid.
+  const countOperationsWithColumnRules = ({
+    tableId,
+    column,
+    agents,
+    tools,
+  }: {
+    tableId: string | undefined
+    column: string | undefined
+    agents: Agent[]
+    tools: ToolMetadata[]
+  }): number => {
+    if (!tableId || !column) {
+      return 0
+    }
+    const toolNames = new Set(
+      tools.filter(tool => tool.sourceId === tableId).map(tool => tool.name)
+    )
+    return agents
+      .flatMap(agent => agent.operations ?? [])
+      .filter(operation =>
+        (operation.enabledTools ?? []).some(
+          tool =>
+            toolNames.has(tool.toolName) &&
+            tool.executionRules?.some(rule =>
+              rule.conditions?.some(condition => condition.field === column)
+            )
+        )
+      ).length
+  }
+
+  $: operationsWithColumnRules = countOperationsWithColumnRules({
+    tableId: $tables.selected?._id,
+    column: originalName,
+    agents: $agentsStore.agents,
+    tools: $agentsStore.tools,
+  })
+  $: operationsWithColumnRulesLabel = `${operationsWithColumnRules} ${
+    operationsWithColumnRules === 1 ? "operation" : "operations"
+  }`
 
   async function deleteColumn() {
     try {
@@ -750,6 +798,13 @@
 
   onMount(() => {
     mounted = true
+    if (
+      originalName &&
+      !$agentsStore.toolsLoaded &&
+      !$agentsStore.toolsLoading
+    ) {
+      agentsStore.fetchTools()
+    }
   })
 
   // Helper: checks if it's the first column being added
@@ -1070,6 +1125,17 @@
       allowJS
     />
   {/if}
+  {#if operationsWithColumnRules}
+    <div class="approval-rules-note">
+      <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+        <Icon size="S" name="sparkle" color="#4b75ff" weight="fill" />
+        Used in approval rules in
+        <strong>{operationsWithColumnRulesLabel}</strong>. Renaming updates them
+        and changing the type can break them. Pending approvals that use this
+        column will fail.
+      </Body>
+    </div>
+  {/if}
 </Layout>
 
 <div class="action-buttons">
@@ -1131,6 +1197,14 @@
       show no data until their filters are updated.
     </p>
   {/if}
+  {#if operationsWithColumnRules}
+    <p>
+      This column is used in approval rules in
+      <strong>{operationsWithColumnRulesLabel}</strong>. Those tools will refuse
+      calls until the rules are updated, and pending approvals that use this
+      column will fail.
+    </p>
+  {/if}
   <Input bind:value={deleteColName} placeholder={originalName} />
 </ConfirmDialog>
 
@@ -1171,5 +1245,15 @@
   .save-loading {
     display: flex;
     justify-content: center;
+  }
+  .approval-rules-note :global(i) {
+    display: inline-block;
+    vertical-align: text-bottom;
+    margin-right: var(--spacing-xs);
+  }
+  .approval-rules-note {
+    padding: var(--spacing-m);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 4px;
   }
 </style>

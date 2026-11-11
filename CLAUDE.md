@@ -36,6 +36,8 @@
 - Do not add backwards compatibility paths or broad "handle every scenario" logic unless explicitly instructed to do so for the task.
 - Testing: Jest framework, use describe/it structure, mock external services
   using `nock`.
+- Prefer separate tests for distinct scenarios over conditional branches in tests.
+  Use `it.each` for variations within a scenario and avoid `if` statements where possible.
 - Only comment when it's really necessary to explain an unclear behaviour.
 - Never use console.log in tests, the output will not be visible in STDOUT
   when you run the tests. It is a waste of time.
@@ -82,6 +84,9 @@ For example, if I command `git add, commit, push` go ahead and do that once. Any
 
 - Always respect the format of pull_request_template.md. Some sections may not
   be required, you are free to ignore them. Don't add new sections, though.
+- Do not include validation sections or paragraphs in PR descriptions, including
+  summaries of tests, lint, formatting checks, or browser verification, unless
+  explicitly requested by the user.
 - When you open a pull request, always open it as a draft so that it can be
   reviewed by a human.
 - Before opening a pull request, always make sure that the branch you're pushing

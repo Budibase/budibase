@@ -478,7 +478,6 @@ export const querySessionsStatusCounts = async ({
 }): Promise<SessionsStatusCounts> => {
   const counts: SessionsStatusCounts = {
     active: 0,
-    waiting: 0,
     completed: 0,
     failed: 0,
   }

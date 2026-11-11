@@ -31,7 +31,9 @@
   })
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
   $: canManageConnections =
-    $auth.user != null && sdk.users.canCreateApps($auth.user)
+    $auth.user != null &&
+    (sdk.users.canCreateApps($auth.user) ||
+      sdk.users.isBuilder($auth.user, workspaceId))
   $: if ($bb.settings.open && showInviteUsersModal) {
     showInviteUsersModal = false
   }

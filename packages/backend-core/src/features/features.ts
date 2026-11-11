@@ -256,13 +256,13 @@ export class FlagSet<T extends { [name: string]: boolean }> {
 
 const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.CLOUD_CUSTOM_AI_CONFIG_CREATION]: false,
-  [FeatureFlag.AI_TESTS]: false,
+  [FeatureFlag.AI_TESTS]: env.SELF_HOSTED,
   [FeatureFlag.FRONT_COMPANION]: false,
-  [FeatureFlag.PROJECTS]: false,
+  [FeatureFlag.PROJECTS]: env.SELF_HOSTED,
   [FeatureFlag.FEATURE_FLAG_OVERRIDES]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
-  [FeatureFlag.AI_AGENT_ACTIVITY]: false,
-  [FeatureFlag.PLATFORM_ACTIONS]: false,
+  [FeatureFlag.AI_AGENT_ACTIVITY]: env.SELF_HOSTED,
+  [FeatureFlag.PLATFORM_ACTIONS]: env.SELF_HOSTED,
 }
 export const flags = new FlagSet(featureFlagDefaults)
 
