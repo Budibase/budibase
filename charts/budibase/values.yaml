@@ -659,11 +659,6 @@ services:
     #    emptyDir: {}
 
   couchdb:
-    # -- Whether or not to spin up a CouchDB instance in your cluster. True by
-    # default, and the configuration for the CouchDB instance is under the
-    # `couchdb` key at the root of this file. You can see what options are
-    # available to you by looking at the official CouchDB Helm chart:
-    # <https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
     enabled: true
     # url: "" # only change if pointing to existing couch server
     # user: "" # only change if pointing to existing couch server
@@ -865,15 +860,9 @@ services:
     #  - name: my-volume
     #    emptyDir: {}
 
-# Override values in couchDB subchart. We're only specifying the values we're changing.
-# If you want to see all of the available values, see:
-#   https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb
-# Warning: The upstream Helm chart does not set a persistent password for the admin user by default.
-#
-# To have a specific password persist, you can set the adminPassword value.
-# See: https://github.com/apache/couchdb-helm/blob/couchdb-4.3.0/couchdb/values.yaml#L41
-#
-# adminPassword: ""
+# Override values in the locally maintained CouchDB subchart.
+# See charts/couchdb/values.yaml for all available values.
+# To supply an explicit admin password, set couchdb.adminPassword.
 
 couchdb:
   # -- The number of replicas to run in the CouchDB cluster. We set this to
