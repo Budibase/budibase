@@ -90,6 +90,8 @@ persistentVolumeClaimRetentionPolicy:
 image:
   repository: couchdb
   tag: 3.3.3
+  # -- Image digest, taking precedence over tag when set.
+  digest: ""
   pullPolicy: IfNotPresent
 
 ## Experimental integration with Lucene-powered fulltext search
@@ -104,6 +106,8 @@ enableSearch: false
 initImage:
   repository: busybox
   tag: latest
+  # -- Image digest, taking precedence over tag when set.
+  digest: ""
   pullPolicy: Always
 
 ## CouchDB is happy to spin up cluster nodes in parallel, but if you encounter

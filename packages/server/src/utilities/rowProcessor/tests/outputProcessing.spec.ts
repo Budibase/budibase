@@ -170,20 +170,20 @@ describe("rowProcessor - outputProcessing", () => {
             size: 10,
             name: "test",
             extension: "jpg",
-            key: "test.jpg",
+            key: `${config.getProdWorkspaceId()}/attachments/test.jpg`,
           },
         ],
       }
 
       const output = await outputProcessing(table, row, { squash: false })
       expect(output.attach[0].url?.split("?")[0]).toBe(
-        "/files/signed/prod-budi-app-assets/test.jpg"
+        `/files/signed/prod-budi-app-assets/${config.getProdWorkspaceId()}/attachments/test.jpg`
       )
 
       row.attach[0].url = ""
       const output2 = await outputProcessing(table, row, { squash: false })
       expect(output2.attach[0].url?.split("?")[0]).toBe(
-        "/files/signed/prod-budi-app-assets/test.jpg"
+        `/files/signed/prod-budi-app-assets/${config.getProdWorkspaceId()}/attachments/test.jpg`
       )
 
       delete row.attach[0].key
@@ -215,19 +215,19 @@ describe("rowProcessor - outputProcessing", () => {
           size: 10,
           name: "test",
           extension: "jpg",
-          key: "test.jpg",
+          key: `${config.getProdWorkspaceId()}/attachments/test.jpg`,
         },
       }
 
       const output = await outputProcessing(table, row, { squash: false })
       expect(output.attach.url?.split("?")[0]).toBe(
-        "/files/signed/prod-budi-app-assets/test.jpg"
+        `/files/signed/prod-budi-app-assets/${config.getProdWorkspaceId()}/attachments/test.jpg`
       )
 
       row.attach.url = ""
       const output2 = await outputProcessing(table, row, { squash: false })
       expect(output2.attach?.url?.split("?")[0]).toBe(
-        "/files/signed/prod-budi-app-assets/test.jpg"
+        `/files/signed/prod-budi-app-assets/${config.getProdWorkspaceId()}/attachments/test.jpg`
       )
 
       delete row.attach.key
