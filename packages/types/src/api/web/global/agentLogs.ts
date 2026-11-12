@@ -74,7 +74,7 @@ export interface AgentLogRequestDetail {
 }
 
 export interface AgentLogSessionExport {
-  session: AgentLogSession
+  session: Omit<AgentLogSession, "entries">
   actions: Array<{
     entry: AgentLogEntry
     detail: AgentLogRequestDetail

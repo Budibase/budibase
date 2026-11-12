@@ -164,13 +164,12 @@ export async function exportAgentLogSession(
     return
   }
 
-  const actions: AgentLogSessionExport["actions"] = new Array(
-    session.entries.length
-  )
+  const { entries, ...sessionMetadata } = session
+  const actions: AgentLogSessionExport["actions"] = new Array(entries.length)
   const toolDisplayNames =
     await sdk.ai.agentLogs.fetchAgentToolDisplayNames(agentId)
   await utils.parallelForeach(
-    session.entries.entries(),
+    entries.entries(),
     async ([index, entry]) => {
       actions[index] = {
         entry,
@@ -184,7 +183,7 @@ export async function exportAgentLogSession(
     },
     EXPORT_CONCURRENCY
   )
-  ctx.body = { session, actions }
+  ctx.body = { session: sessionMetadata, actions }
 }
 
 export async function fetchAgentLogDetail(
