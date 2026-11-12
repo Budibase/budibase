@@ -35,6 +35,7 @@
     getFunctionDatasourceCompletions,
     getFunctionInputCompletions,
     getFunctionQueryCompletions,
+    getFunctionReferenceCompletions,
   } from "./functionCompletions"
   import { getFunctionEditorTheme } from "./functionEditorTheme"
 
@@ -128,6 +129,21 @@
           label,
           type: "property",
         })),
+      }
+    }
+
+    const referenceMatch = context.matchBefore(/[A-Za-z_$][\w$]*$/)
+    const referenceNode = referenceMatch
+      ? syntaxTree(context.state).resolveInner(referenceMatch.from, 1)
+      : undefined
+    if (
+      referenceMatch &&
+      referenceNode?.name === "VariableName" &&
+      referenceNode.from === referenceMatch.from
+    ) {
+      return {
+        from: referenceMatch.from,
+        options: getFunctionReferenceCompletions({ inputSchema, capabilities }),
       }
     }
 
