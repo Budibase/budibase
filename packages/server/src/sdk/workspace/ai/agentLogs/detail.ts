@@ -76,14 +76,23 @@ export async function fetchSessionDetail(
   }
 }
 
+export async function fetchAgentToolDisplayNames(
+  agentId: string
+): Promise<Record<string, string>> {
+  const agent = await getOrThrow(agentId)
+  return getToolDisplayNames(await getAvailableTools(agent.aiconfig))
+}
+
 export async function fetchRequestDetail({
   agentId,
   sessionId,
   requestId,
+  toolDisplayNames,
 }: {
   agentId: string
   sessionId: string
   requestId: string
+  toolDisplayNames?: Record<string, string>
 }): Promise<AgentLogRequestDetail> {
   const data = await fetchLiteLLMRequestRaw(agentId, requestId)
   if (data.session_id !== sessionId) {
@@ -91,10 +100,8 @@ export async function fetchRequestDetail({
   }
   const requestMessages = data.proxy_server_request?.messages || []
   const responseMessage = data.response?.choices?.[0]?.message
-  const agent = await getOrThrow(agentId)
-  const toolDisplayNames = getToolDisplayNames(
-    await getAvailableTools(agent.aiconfig)
-  )
+  const resolvedToolDisplayNames =
+    toolDisplayNames || (await fetchAgentToolDisplayNames(agentId))
 
   const messages = requestMessages.map(message => ({
     role: message.role,
@@ -113,7 +120,7 @@ export async function fetchRequestDetail({
     return message.tool_calls.map(toolCall => ({
       id: toolCall.id,
       name: toolCall.function?.name || "unknown",
-      displayName: toolDisplayNames[toolCall.function?.name || ""],
+      displayName: resolvedToolDisplayNames[toolCall.function?.name || ""],
       arguments: toolCall.function?.arguments || "{}",
     }))
   })
@@ -122,7 +129,7 @@ export async function fetchRequestDetail({
     responseMessage?.tool_calls?.map(toolCall => ({
       id: toolCall.id,
       name: toolCall.function?.name || "unknown",
-      displayName: toolDisplayNames[toolCall.function?.name || ""],
+      displayName: resolvedToolDisplayNames[toolCall.function?.name || ""],
       arguments: toolCall.function?.arguments || "{}",
     })) || []
 
@@ -144,7 +151,9 @@ export async function fetchRequestDetail({
           ? toolNameById.get(message.tool_call_id) || "tool"
           : "tool",
         displayName: message.tool_call_id
-          ? toolDisplayNames[toolNameById.get(message.tool_call_id) || ""]
+          ? resolvedToolDisplayNames[
+              toolNameById.get(message.tool_call_id) || ""
+            ]
           : undefined,
         content: toContentString(message.content),
       },

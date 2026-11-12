@@ -15,4 +15,8 @@ export {
   initLogIndexQueue,
 } from "./indexQueue"
 export { fetchSessions } from "./sessions"
-export { fetchRequestDetail, fetchSessionDetail } from "./detail"
+export {
+  fetchAgentToolDisplayNames,
+  fetchRequestDetail,
+  fetchSessionDetail,
+} from "./detail"
