@@ -18,9 +18,11 @@
   },
   "dependencies": {
     "@budibase/types": "*",
-    "cron-validate": "1.4.5"
+    "cron-validate": "1.4.5",
+    "sanitize-html": "2.17.5"
   },
   "devDependencies": {
+    "@types/sanitize-html": "^2.13.0",
     "rimraf": "3.0.2"
   },
   "nx": {
