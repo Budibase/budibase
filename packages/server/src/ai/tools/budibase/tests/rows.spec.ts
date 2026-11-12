@@ -1,12 +1,14 @@
 import { asSchema } from "@ai-sdk/provider-utils"
 import {
   AutoFieldSubType,
+  BasicOperator,
   FieldType,
   PermissionLevel,
   PermissionType,
   RelationshipType,
   TableSourceType,
   type TableSchema,
+  type BasicViewFieldMetadata,
 } from "@budibase/types"
 import { type BudibaseToolDefinition, getBudibaseTools } from ".."
 import { createRowTools } from "../rows"
@@ -228,6 +230,257 @@ describe("AI Tools - Rows", () => {
       return result as NonIterable<ToolOutput<T>>
     })
   }
+
+  describe("table views", () => {
+    const setupView = async ({
+      nameField = { visible: true },
+    }: { nameField?: BasicViewFieldMetadata } = {}) => {
+      const table = await config.api.table.save(
+        basicTable(undefined, {
+          schema: {
+            name: { name: "name", type: FieldType.STRING },
+            status: { name: "status", type: FieldType.STRING },
+            secret: { name: "secret", type: FieldType.STRING },
+            internalNote: { name: "internalNote", type: FieldType.STRING },
+          },
+        })
+      )
+      const visibleRow = await config.api.row.save(table._id!, {
+        name: "Visible",
+        status: "Open",
+        secret: "Private value",
+        internalNote: "Not in the view",
+      })
+      const hiddenRow = await config.api.row.save(table._id!, {
+        name: "Hidden",
+        status: "Closed",
+        secret: "Other private value",
+      })
+      const view = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: "Open records",
+        schema: {
+          name: nameField,
+          status: { visible: true, readonly: true },
+          secret: { visible: false },
+        },
+        query: [
+          { field: "status", operator: BasicOperator.EQUAL, value: "Open" },
+        ],
+      })
+      const tools = getBudibaseTools([
+        { ...table, views: { [view.name]: view } },
+      ])
+      const getTool = (action: string) =>
+        tools.find(tool => tool.sourceId === view.id && tool.action === action)!
+      return { table, view, visibleRow, hiddenRow, getTool }
+    }
+
+    it.each(["list_rows", "search_rows"])(
+      "restricts %s to the view rows and columns",
+      async action => {
+        const { getTool } = await setupView()
+        const result = await executeTool(getTool(action), {})
+        expect(result.rows).toEqual([
+          {
+            _id: expect.any(String),
+            _rev: expect.any(String),
+            name: "Visible",
+            status: "Open",
+          },
+        ])
+      }
+    )
+
+    it("searches fields with omitted visibility in the view", async () => {
+      const { getTool, visibleRow } = await setupView({ nameField: {} })
+      const result = await executeTool(getTool("search_rows"), {
+        query: { equal: { name: "Visible" } },
+      })
+      expect(result.rows).toEqual([
+        {
+          _id: visibleRow._id,
+          _rev: visibleRow._rev,
+          name: "Visible",
+          status: "Open",
+        },
+      ])
+    })
+
+    it("updates fields with omitted visibility in the view", async () => {
+      const { table, getTool, visibleRow } = await setupView({ nameField: {} })
+      const tool = getTool("update_row")
+      const result = await executeTool(tool, {
+        rowId: visibleRow._id!,
+        rowRev: visibleRow._rev!,
+        data: { name: "Updated" },
+      })
+      expect(result.row).toEqual({
+        _id: visibleRow._id,
+        _rev: expect.any(String),
+        name: "Updated",
+        status: "Open",
+      })
+      expect(
+        await config.api.row.get(table._id!, visibleRow._id!)
+      ).toMatchObject({
+        name: "Updated",
+        secret: "Private value",
+        internalNote: "Not in the view",
+      })
+      expect(await asSchema(tool.tool.inputSchema).jsonSchema).toMatchObject({
+        properties: {
+          data: {
+            properties: { name: expect.any(Object) },
+          },
+        },
+      })
+    })
+
+    it.each(["get_row", "update_row"])(
+      "prevents %s outside the view",
+      async action => {
+        const { getTool, hiddenRow } = await setupView()
+        await expect(
+          executeTool(getTool(action), {
+            rowId: hiddenRow._id!,
+            rowRev: hiddenRow._rev!,
+            data: { name: "Changed" },
+          })
+        ).rejects.toThrow("Row not found")
+      }
+    )
+
+    it.each(["secret", "status", "internalNote"])(
+      "rejects writes to restricted column %s",
+      async field => {
+        const { table, getTool, visibleRow } = await setupView()
+        await expect(
+          executeTool(getTool("update_row"), {
+            rowId: visibleRow._id!,
+            rowRev: visibleRow._rev!,
+            data: { name: "Should not be saved", [field]: "Changed" },
+          })
+        ).rejects.toThrow(`Field "${field}" is not writable in this view`)
+        expect(
+          await config.api.row.get(table._id!, visibleRow._id!)
+        ).toMatchObject({
+          name: "Visible",
+          status: "Open",
+          secret: "Private value",
+          internalNote: "Not in the view",
+          _rev: visibleRow._rev,
+        })
+      }
+    )
+
+    it("cannot override the saved view filter", async () => {
+      const { getTool } = await setupView()
+      const result = await executeTool(getTool("search_rows"), {
+        query: { equal: { status: "Closed" } },
+      })
+      expect(result.rows).toEqual([])
+    })
+
+    it("rejects searching hidden columns", async () => {
+      const { getTool } = await setupView()
+      await expect(
+        executeTool(getTool("search_rows"), {
+          query: { equal: { secret: "Private value" } },
+        })
+      ).rejects.toThrow("Invalid filter field: secret")
+    })
+
+    it("rejects sorting hidden columns", async () => {
+      const { getTool } = await setupView()
+      await expect(
+        executeTool(getTool("search_rows"), {
+          sort: { column: "secret", order: "ascending" },
+        })
+      ).rejects.toThrow("Sort column is not visible in this view")
+    })
+
+    it("restricts a single row to visible columns", async () => {
+      const { getTool, visibleRow } = await setupView()
+      const result = await executeTool(getTool("get_row"), {
+        rowId: visibleRow._id!,
+      })
+      expect(result.row).toEqual({
+        _id: visibleRow._id,
+        _rev: visibleRow._rev,
+        name: "Visible",
+        status: "Open",
+      })
+    })
+
+    it("creates rows using visible writable fields", async () => {
+      const { table, getTool } = await setupView()
+      const result = await executeTool(getTool("create_row"), {
+        data: { name: "New ticket" },
+      })
+      expect(
+        await config.api.row.get(table._id!, result.row._id!)
+      ).toMatchObject({ name: "New ticket" })
+      expect(result.row).toEqual({
+        _id: expect.any(String),
+        _rev: expect.any(String),
+        name: "New ticket",
+      })
+    })
+
+    it("protects columns when executing a redacted tool", async () => {
+      const { getTool } = await setupView()
+      const execute = getTool("create_row").requesterRedactedTool!.execute!
+      await expect(
+        runInContext(() =>
+          execute(
+            { data: { secret: "Changed" } },
+            {
+              toolCallId: "view-redacted-test",
+              messages: [],
+              context: undefined,
+            }
+          )
+        )
+      ).rejects.toThrow('Field "secret" is not writable in this view')
+    })
+
+    it("updates visible fields while preserving hidden fields", async () => {
+      const { table, getTool, visibleRow } = await setupView()
+      const result = await executeTool(getTool("update_row"), {
+        rowId: visibleRow._id!,
+        rowRev: visibleRow._rev!,
+        data: { name: "Updated" },
+      })
+      expect(result.row).toEqual({
+        _id: visibleRow._id,
+        _rev: expect.any(String),
+        name: "Updated",
+        status: "Open",
+      })
+      expect(
+        await config.api.row.get(table._id!, visibleRow._id!)
+      ).toMatchObject({
+        name: "Updated",
+        status: "Open",
+        secret: "Private value",
+        internalNote: "Not in the view",
+      })
+    })
+
+    it("authorizes the view resource and hides restricted columns from write schemas", async () => {
+      const { view, getTool } = await setupView()
+      const tool = getTool("update_row")
+      expect(tool.authorization).toMatchObject({ resourceId: view.id })
+      const schema = JSON.stringify(
+        await asSchema(tool.tool.inputSchema).jsonSchema
+      )
+      expect(schema).toContain("name")
+      expect(schema).not.toContain("internalNote")
+      expect(schema).not.toContain("secret")
+      expect(schema).not.toContain('"status"')
+    })
+  })
 
   it("should update a row using full data and preserve unspecified fields", async () => {
     const table = await config.api.table.save(basicTable())

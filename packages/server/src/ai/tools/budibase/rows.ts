@@ -10,6 +10,7 @@ import {
   ToolAction,
   ToolType,
   type RowToolAction,
+  type ViewV2,
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
@@ -22,6 +23,8 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
   helpers,
+  isViewId,
+  getTableIdFromViewId,
   utils,
 } from "@budibase/shared-core"
 import sdk from "../../../sdk"
@@ -451,7 +454,8 @@ const ROW_TOOL: Record<RowToolAction, RowTool> = {
     }),
     execute: async (tableId, { limit, bookmark }, fields) => {
       const searchParams: RowSearchParams = {
-        tableId,
+        tableId: isViewId(tableId) ? getTableIdFromViewId(tableId) : tableId,
+        viewId: isViewId(tableId) ? tableId : undefined,
         query: {},
         limit: limit ?? undefined,
         bookmark: bookmark ?? undefined,
@@ -499,7 +503,11 @@ const ROW_TOOL: Record<RowToolAction, RowTool> = {
         ),
     }),
     execute: async (tableId, { rowId, rowRev, data }) => {
-      const existingRow = await sdk.rows.find(tableId, rowId)
+      let existingRow = await sdk.rows.find(tableId, rowId)
+      if (isViewId(tableId)) {
+        // Check view membership before loading fields needed to preserve the row.
+        existingRow = await sdk.rows.find(getTableIdFromViewId(tableId), rowId)
+      }
       const rowData = { ...existingRow, ...data, _id: rowId, _rev: rowRev }
       const { row } = await sdk.rows.save(tableId, rowData, undefined)
       return { row }
@@ -534,7 +542,8 @@ const ROW_TOOL: Record<RowToolAction, RowTool> = {
         }
       }
       const searchParams: RowSearchParams = {
-        tableId,
+        tableId: isViewId(tableId) ? getTableIdFromViewId(tableId) : tableId,
+        viewId: isViewId(tableId) ? tableId : undefined,
         query: (resolvedQuery as Record<string, any>) || {},
         limit: limit ?? undefined,
         fields,
@@ -606,6 +615,7 @@ export const createRowTools = ({
   primaryDisplay,
   sourceLabel,
   sourceIconType,
+  view,
 }: {
   tableId: string
   tableName: string
@@ -614,6 +624,7 @@ export const createRowTools = ({
   primaryDisplay?: string
   sourceLabel?: string
   sourceIconType?: string
+  view?: ViewV2
 }): BudibaseToolDefinition[] => {
   const isExternal = tableSourceType === TableSourceType.EXTERNAL
   const resolvedSourceType = isExternal
@@ -622,7 +633,14 @@ export const createRowTools = ({
   const resolvedSourceLabel =
     sourceLabel || (isExternal ? "External" : "Budibase")
 
-  const writableFields = getWritableFields(tableSchema, tableSourceType).map(
+  const writableSchema = view
+    ? Object.fromEntries(
+        Object.entries(tableSchema).filter(
+          ([name]) => !view.schema?.[name]?.readonly
+        )
+      )
+    : tableSchema
+  const writableFields = getWritableFields(writableSchema, tableSourceType).map(
     field => ({ ...field, isPrimaryDisplay: field.name === primaryDisplay })
   )
   const schemaSummary = buildSchemaSummary(writableFields)
@@ -656,11 +674,38 @@ export const createRowTools = ({
     } else if (action === ToolAction.SEARCH_ROWS) {
       inputSchema = searchInputSchema
     }
-    const execute = async (input: Parameters<typeof def.execute>[1]) =>
-      sanitizeRowToolResult(
+    const execute = async (input: Parameters<typeof def.execute>[1]) => {
+      if (view && isWrite) {
+        const allowedFields = new Set(writableFields.map(field => field.name))
+        for (const name of Object.keys(input.data || {})) {
+          if (!allowedFields.has(name)) {
+            throw new Error(`Field "${name}" is not writable in this view`)
+          }
+        }
+      }
+      if (view && input.sort && !fields.includes(input.sort.column)) {
+        throw new Error("Sort column is not visible in this view")
+      }
+      const result = sanitizeRowToolResult(
         await def.execute(tableId, input, fields),
         tableSchema
       )
+      if (!view) {
+        return result
+      }
+      const allowedFields = new Set([...fields, "_id", "_rev"])
+      const restrictRow = (row: Row): Row =>
+        Object.fromEntries(
+          Object.entries(row).filter(([name]) => allowedFields.has(name))
+        )
+      if ("row" in result) {
+        return { ...result, row: restrictRow(result.row) }
+      }
+      if ("rows" in result) {
+        return { ...result, rows: result.rows.map(restrictRow) }
+      }
+      return result
+    }
     const executeRequesterRedacted = async (
       input: Parameters<typeof def.execute>[1]
     ): Promise<RowToolResult | RedactedWriteResult> => {
