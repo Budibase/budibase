@@ -177,9 +177,6 @@
       {:else}
         <Heading size="M">Logs</Heading>
       {/if}
-      <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        Sanitized development and published execution history.
-      </Body>
     </div>
     <Button
       secondary

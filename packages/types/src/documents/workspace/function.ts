@@ -1,6 +1,18 @@
 import type { FunctionArtifact, FunctionErrorCode } from "../../sdk/functions"
 import type { Document } from "../document"
 
+export type FunctionInputType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "object"
+  | "array"
+
+export interface FunctionInputDefinition {
+  name: string
+  type: FunctionInputType
+}
+
 export interface FunctionQueryCapability {
   readonly capabilityId: string
   readonly queryId: string
@@ -30,6 +42,7 @@ export interface FunctionDocument extends Document {
   appId: string
   projectIds?: string[]
   source: string
+  inputSchema?: FunctionInputDefinition[]
   capabilities: FunctionQueryCapability[]
   artifact?: FunctionArtifact
   lastBuild?: FunctionBuildAttempt

@@ -1,3 +1,4 @@
+import type { JSONValue } from "@budibase/types"
 import {
   processObject,
   processString,
@@ -9,6 +10,7 @@ import {
   disableEscaping,
   findHBSBlocks,
   processJsonStringSync,
+  processStringSync,
 } from "../src/index"
 
 describe("Test that the string processing works correctly", () => {
@@ -46,6 +48,47 @@ describe("Test that the string processing works correctly", () => {
 })
 
 describe("Test that the object processing works correctly", () => {
+  it.each([
+    { items: [], expected: "[]" },
+    { items: [1, null], expected: "[1,null]" },
+    { items: ["a", "b"], expected: '["a","b"]' },
+  ])(
+    "serializes bound arrays as JSON when requested: $items",
+    async ({ items, expected }: { items: JSONValue[]; expected: string }) => {
+      const output = await processObject(
+        { value: "{{ items }}" },
+        { items },
+        { arrayHandling: "stringify" }
+      )
+      expect(output.value).toBe(expected)
+    }
+  )
+
+  it("preserves bound array values when requested", async () => {
+    const output = await processObject(
+      { value: "{{ items }}", helper: '{{ split text "," }}' },
+      { items: [1, null], text: "Ada,Grace" },
+      { arrayHandling: "preserve" }
+    )
+    expect(output).toEqual({ value: [1, null], helper: ["Ada", "Grace"] })
+  })
+
+  it.each([
+    { items: ["}}"] },
+    { items: ["{{ value }}", "}}", "%7D%7D", "🦄"] },
+    { items: [{ value: "}}" }, ["}}"]] },
+  ])(
+    "preserves array values containing binding delimiters: $items",
+    ({ items }: { items: JSONValue[] }) => {
+      const output = processStringSync(
+        "{{ items }}",
+        { items },
+        { arrayHandling: "preserve", noThrow: false }
+      )
+      expect(output).toEqual(items)
+    }
+  )
+
   it("should be able to process an object with some template strings", async () => {
     const output = await processObject(
       {

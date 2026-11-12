@@ -7,12 +7,15 @@ import {
   type ExecuteFunctionStepInputs,
   type ExecuteFunctionStepOutputs,
   type FunctionDocument,
+  type FunctionInputDefinition,
   type FunctionError,
   type FunctionReadiness,
   type FunctionRunResult,
   type FunctionRunLimits,
   type JSONValue,
 } from "@budibase/types"
+import { getFunctionInputError } from "@budibase/shared-core"
+import { processFunctionBindings } from "../functionBindings"
 import env from "../../environment"
 import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
 import {
@@ -47,8 +50,11 @@ const ERROR_MESSAGES = {
 } satisfies Record<FunctionErrorCode, string>
 
 class FunctionActionError extends Error {
-  constructor(readonly code: FunctionErrorCode) {
-    super(ERROR_MESSAGES[code])
+  constructor(
+    readonly code: FunctionErrorCode,
+    message: string = ERROR_MESSAGES[code]
+  ) {
+    super(message)
   }
 }
 
@@ -99,13 +105,26 @@ const actionFailure = (code: FunctionErrorCode) =>
 const parseInputs = ({
   inputs,
   limits,
+  inputSchema = [],
 }: {
   inputs: Record<string, JSONValue>
   limits: FunctionRunLimits
+  inputSchema?: FunctionInputDefinition[]
 }): Record<string, JSONValue> => {
   const parsed = jsonRecordSchema.safeParse(inputs)
   if (!parsed.success) {
     throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
+  }
+  for (const input of inputSchema) {
+    const value = parsed.data[input.name]
+    // Parse string values if the type is not declared as String
+    if (input.type !== "string" && typeof value === "string") {
+      try {
+        parsed.data[input.name] = JSON.parse(value)
+      } catch {
+        // Type validation reports invalid values after binding resolution.
+      }
+    }
   }
   try {
     validateJSONLimits(parsed.data, {
@@ -171,17 +190,49 @@ export const executeFunction = async (
       )
     }
     const limits = env.FUNCTIONS_LIMITS.run
-    const functionInputs = parseInputs({ inputs: inputs.inputs, limits })
     const fn = await dependencies.getFunction(inputs.functionId)
     if (!fn) {
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_BUILD_REQUIRED)
     }
+    const unresolvedInputs = jsonRecordSchema.safeParse(inputs.inputs)
+    if (!unresolvedInputs.success) {
+      throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
+    }
+    let resolvedInputs: Record<string, JSONValue>
+    try {
+      resolvedInputs = processFunctionBindings({
+        inputs: unresolvedInputs.data,
+        inputSchema: fn.inputSchema ?? [],
+        context,
+      })
+    } catch {
+      throw new FunctionActionError(
+        FunctionErrorCode.FUNCTION_INPUT_INVALID,
+        "Function input bindings could not be resolved"
+      )
+    }
+    const functionInputs = parseInputs({
+      inputs: resolvedInputs,
+      limits,
+      inputSchema: fn.inputSchema,
+    })
     const readiness = await dependencies.getReadiness(fn)
     if (readiness === "build_failed") {
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_BUILD_FAILED)
     }
     if (readiness !== "ready" || !fn.artifact) {
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_BUILD_REQUIRED)
+    }
+
+    const inputError = getFunctionInputError({
+      inputSchema: fn.inputSchema,
+      inputs: functionInputs,
+    })
+    if (inputError) {
+      throw new FunctionActionError(
+        FunctionErrorCode.FUNCTION_INPUT_INVALID,
+        inputError
+      )
     }
 
     const runId = dependencies.createRunId()
@@ -210,7 +261,7 @@ export const executeFunction = async (
     return resultToOutputs(result)
   } catch (error) {
     return error instanceof FunctionActionError
-      ? actionFailure(error.code)
+      ? failure({ code: error.code, message: error.message })
       : actionFailure(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
   }
 }

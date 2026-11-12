@@ -27,6 +27,12 @@ const makeFunction = (
   appId: "app_dev_test",
   name: "Lookup customer",
   source: "export default async function () { return { output: {} } }",
+  inputSchema: [
+    {
+      name: "customerId",
+      type: "string",
+    },
+  ],
   capabilities: [
     {
       capabilityId: "cap_one",
@@ -139,6 +145,7 @@ describe("FunctionStore", () => {
     await store.create({
       name: fn.name,
       source: fn.source,
+      inputSchema: fn.inputSchema,
       capabilities: [],
     })
     await store.rename(fn, "Renamed Function")
@@ -147,6 +154,7 @@ describe("FunctionStore", () => {
       _rev: "3-three",
       name: "Renamed Function",
       source: fn.source,
+      inputSchema: fn.inputSchema,
       capabilities: [
         {
           queryId: "query_one",
@@ -268,6 +276,7 @@ describe("FunctionStore", () => {
     expect(API.createFunction).toHaveBeenCalledWith({
       name: "Lookup customer 1",
       source: fn.source,
+      inputSchema: fn.inputSchema,
       capabilities: [
         {
           queryId: "query_one",

@@ -88,6 +88,136 @@ export default async function (): Promise<FunctionResult> {
       queryAlias: capability.queryAlias,
     }))
 
+  it("persists typed inputs and invalidates builds when their schema changes", async () => {
+    await withFunctionsEnabled(async () => {
+      const source = `import { inputs } from "@budibase/functions"
+export default async function () { return { output: { text: inputs.value?.toUpperCase() } } }`
+      const { function: created } = await config.api.function.create({
+        name: "Typed inputs",
+        source,
+        capabilities: [],
+        inputSchema: [
+          {
+            name: "value",
+            type: "string",
+          },
+        ],
+      })
+      await config.api.function.build(created._id, { _rev: created._rev! })
+      const { function: built } = await config.api.function.find(created._id)
+      const { function: updated } = await config.api.function.update(
+        built._id,
+        {
+          _rev: built._rev!,
+          name: built.name,
+          source,
+          capabilities: [],
+          inputSchema: [
+            {
+              name: "value",
+              type: "number",
+            },
+          ],
+        }
+      )
+      await config.api.function.build(updated._id, { _rev: updated._rev! })
+      const { function: failed } = await config.api.function.find(updated._id)
+      const { functions } = await config.api.function.fetch()
+      expect(functions.find(fn => fn._id === failed._id)?.inputSchema).toEqual([
+        { name: "value", type: "number" },
+      ])
+      expect(updated.readiness).toBe("build_required")
+      expect(failed.readiness).toBe("build_failed")
+      expect(failed.inputSchema).toEqual([{ name: "value", type: "number" }])
+      expect(failed.lastBuild?.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining("toUpperCase"),
+          }),
+        ])
+      )
+    })
+  })
+
+  it.each([
+    {
+      updateSchema: undefined,
+      expectedSchema: [{ name: "value", type: "string" }],
+    },
+    { updateSchema: [], expectedSchema: [] },
+  ])(
+    "preserves omitted input schemas and allows explicit clearing: $updateSchema",
+    async ({ updateSchema, expectedSchema }) => {
+      await withFunctionsEnabled(async () => {
+        const { function: created } = await config.api.function.create({
+          name: "Typed inputs",
+          source: validSource,
+          capabilities: [],
+          inputSchema: [{ name: "value", type: "string" }],
+        })
+        await config.api.function.update(created._id, {
+          _rev: created._rev!,
+          name: created.name,
+          source: created.source,
+          capabilities: [],
+          ...(updateSchema === undefined ? {} : { inputSchema: updateSchema }),
+        })
+        const { function: updated } = await config.api.function.find(
+          created._id
+        )
+        expect(updated.inputSchema).toEqual(expectedSchema)
+      })
+    }
+  )
+
+  it("rejects invalid input definitions with actionable errors", async () => {
+    await withFunctionsEnabled(async () => {
+      await config.api.function.create(
+        {
+          name: "Invalid inputs",
+          source: validSource,
+          capabilities: [],
+          inputSchema: [{ name: "not a name", type: "string" }],
+        },
+        {
+          status: 400,
+          body: {
+            message: "Input 1: use a valid identifier of up to 128 characters.",
+          },
+        }
+      )
+      await config.api.function.create(
+        {
+          name: "Duplicate inputs",
+          source: validSource,
+          capabilities: [],
+          inputSchema: [
+            { name: "value", type: "string" },
+            { name: "value", type: "number" },
+          ],
+        },
+        {
+          status: 400,
+          body: { message: "Input 2: input names must be unique." },
+        }
+      )
+      await config.api.function.create(
+        {
+          name: "Reserved input",
+          source: validSource,
+          capabilities: [],
+          inputSchema: [{ name: "__proto__", type: "object" }],
+        },
+        {
+          status: 400,
+          body: {
+            message: "Input 1: __proto__ cannot be used as an input name.",
+          },
+        }
+      )
+    })
+  })
+
   it("allows Functions to be favourited", async () => {
     await withFunctionsEnabled(async () => {
       const { function: fn } = await config.api.function.create({
@@ -1078,6 +1208,7 @@ export default async function (): Promise<FunctionResult> {
       const { function: created } = await config.api.function.create({
         name: "Published lookup",
         source: validSource,
+        inputSchema: [{ name: "customerId", type: "string" }],
         capabilities: [
           {
             queryId: query._id!,
@@ -1147,6 +1278,7 @@ export default async function (): Promise<FunctionResult> {
         _rev: rebuilt._rev!,
         name: rebuilt.name,
         source: `${rebuilt.source}\n// development edit`,
+        inputSchema: [{ name: "customerId", type: "number" }],
         capabilities: toCapabilityInputs(rebuilt),
       })
 
@@ -1155,6 +1287,9 @@ export default async function (): Promise<FunctionResult> {
         async () => await sdk.functions.get(rebuilt._id)
       )
       expect(unchangedPublished?.source).toBe(rebuilt.source)
+      expect(unchangedPublished?.inputSchema).toEqual([
+        { name: "customerId", type: "string" },
+      ])
 
       const status = await config.api.deploy.publishStatus()
       expect(status.functions[rebuilt._id]).toEqual(

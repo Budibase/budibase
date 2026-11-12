@@ -2,8 +2,11 @@ import {
   FunctionErrorCode,
   type ExecuteFunctionStepInputs,
   type FunctionDocument,
+  type FunctionInputType,
+  type JSONValue,
   type FunctionRunResult,
 } from "@budibase/types"
+import { encodeJSBinding } from "@budibase/string-templates"
 import env, { withEnv } from "../../../environment"
 import {
   executeFunction,
@@ -76,6 +79,7 @@ const run = (
     automationId?: string
     stepId?: string
     signal?: AbortSignal
+    context?: object
   } = {}
 ) =>
   executeFunction(
@@ -85,6 +89,7 @@ const run = (
       automationId: options.automationId ?? "automation-1",
       stepId: options.stepId ?? "step-1",
       context: {
+        ...options.context,
         user: { _id: "user-1" },
       },
       signal: options.signal,
@@ -93,6 +98,313 @@ const run = (
   )
 
 describe("Run Function automation action", () => {
+  const typedInputs: { type: FunctionInputType; value: JSONValue }[] = [
+    { type: "string", value: "Ada" },
+    { type: "number", value: 0 },
+    { type: "boolean", value: false },
+    { type: "object", value: { nested: true } },
+    { type: "array", value: [1, null] },
+  ]
+  it.each(typedInputs)(
+    "dispatches JavaScript $type bindings with their declared type",
+    async ({ type, value }) => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type }],
+        }),
+      })
+      await run(deps, {
+        functionId: fn._id,
+        inputs: { value: encodeJSBinding(`return ${JSON.stringify(value)}`) },
+      })
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({ inputs: { value } })
+      )
+    }
+  )
+
+  it.each(typedInputs)(
+    "dispatches bound $type inputs with their declared type",
+    async ({ type, value }) => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type }],
+        }),
+      })
+      await run(
+        deps,
+        { functionId: fn._id, inputs: { value: "{{ value }}" } },
+        { context: { value } }
+      )
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({ inputs: { value } })
+      )
+    }
+  )
+
+  it.each<{
+    name: string
+    type: FunctionInputType
+    wrap: (binding: string) => JSONValue
+  }>([
+    { name: "standalone", type: "string", wrap: binding => binding },
+    {
+      name: "interpolated",
+      type: "string",
+      wrap: binding => `Hello ${binding}`,
+    },
+    { name: "nested", type: "object", wrap: binding => ({ value: binding }) },
+    { name: "array", type: "array", wrap: binding => [binding] },
+  ])(
+    "rejects throwing $name JavaScript input bindings",
+    async ({ type, wrap }) => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type }],
+        }),
+      })
+      await expect(
+        run(deps, {
+          functionId: fn._id,
+          inputs: {
+            value: wrap(encodeJSBinding('throw new Error("Invalid input")')),
+          },
+        })
+      ).resolves.toEqual({
+        success: false,
+        status: "error",
+        error: {
+          code: FunctionErrorCode.FUNCTION_INPUT_INVALID,
+          message: "Function input bindings could not be resolved",
+        },
+      })
+      expect(deps.orchestrate).not.toHaveBeenCalled()
+    }
+  )
+
+  it.each<{ type: FunctionInputType; expected: JSONValue }>([
+    { type: "string", expected: "[1,null]" },
+    { type: "array", expected: [1, null] },
+  ])(
+    "resolves the same array bindings for declared $type inputs",
+    async ({ type, expected }) => {
+      const names = ["handlebars", "javascript", "literal", "whitespace"]
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: names.map(name => ({ name, type })),
+        }),
+      })
+      await run(
+        deps,
+        {
+          functionId: fn._id,
+          inputs: {
+            handlebars: "{{ items }}",
+            javascript: encodeJSBinding("return [1, null]"),
+            literal: "{{ literal items }}",
+            whitespace: " \n{{ items }} \t",
+          },
+        },
+        { context: { items: [1, null] } }
+      )
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputs: Object.fromEntries(names.map(name => [name, expected])),
+        })
+      )
+    }
+  )
+
+  it.each([{ value: [] }, { value: [1, null] }, { value: ["Ada", "Grace"] }])(
+    "preserves arrays in declared inputs and keeps JSON-looking strings as strings: %j",
+    async ({ value }) => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [
+            { name: "value", type: "array" },
+            { name: "javascript", type: "array" },
+            { name: "nested", type: "object" },
+            { name: "literal", type: "string" },
+            { name: "boundString", type: "string" },
+            { name: "mixed", type: "string" },
+          ],
+        }),
+      })
+      await run(
+        deps,
+        {
+          functionId: fn._id,
+          inputs: {
+            value: "{{ value }}",
+            javascript: encodeJSBinding(`return ${JSON.stringify(value)}`),
+            nested: { value: "{{ value }}" },
+            literal: "[1,null]",
+            boundString: "{{ string }}",
+            mixed: "Values: {{ value }}",
+          },
+        },
+        { context: { value, string: "[1,null]" } }
+      )
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputs: {
+            value,
+            javascript: value,
+            nested: { value },
+            literal: "[1,null]",
+            boundString: "[1,null]",
+            mixed: `Values: ${JSON.stringify(value)}`,
+          },
+        })
+      )
+    }
+  )
+
+  it("preserves standalone helpers and explicit literal bindings", async () => {
+    const deps = dependencies({
+      getFunction: jest.fn().mockResolvedValue({
+        ...fn,
+        inputSchema: [
+          { name: "id", type: "string" },
+          { name: "literal", type: "array" },
+          { name: "helper", type: "array" },
+        ],
+      }),
+    })
+    await run(
+      deps,
+      {
+        functionId: fn._id,
+        inputs: {
+          id: "{{ uuid }}",
+          literal: "{{ literal value }}",
+          helper: '{{ split text "," }}',
+        },
+      },
+      { context: { value: [1, null], text: "Ada,Grace" } }
+    )
+    expect(deps.orchestrate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inputs: {
+          id: expect.stringMatching(
+            /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/
+          ),
+          literal: [1, null],
+          helper: ["Ada", "Grace"],
+        },
+      })
+    )
+  })
+
+  it("preserves context values that overlap helper names", async () => {
+    const deps = dependencies({
+      getFunction: jest.fn().mockResolvedValue({
+        ...fn,
+        inputSchema: [{ name: "value", type: "array" }],
+      }),
+    })
+    await run(
+      deps,
+      { functionId: fn._id, inputs: { value: "{{ uuid }}" } },
+      { context: { uuid: [1, null] } }
+    )
+    expect(deps.orchestrate).toHaveBeenCalledWith(
+      expect.objectContaining({ inputs: { value: [1, null] } })
+    )
+  })
+
+  it.each(typedInputs)(
+    "dispatches valid $type inputs",
+    async ({ type, value }) => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type }],
+        }),
+      })
+      await expect(
+        run(deps, { functionId: fn._id, inputs: { value } })
+      ).resolves.toMatchObject({ success: true })
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({ inputs: { value } })
+      )
+    }
+  )
+
+  it.each(typedInputs)(
+    "accepts null and omitted $type inputs before dispatch",
+    async ({ type }) => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type }],
+        }),
+      })
+      await expect(
+        run(deps, { functionId: fn._id, inputs: { value: null } })
+      ).resolves.toMatchObject({ success: true })
+      await expect(
+        run(deps, { functionId: fn._id, inputs: {} })
+      ).resolves.toMatchObject({ success: true })
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({ inputs: { value: null } })
+      )
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({ inputs: {} })
+      )
+    }
+  )
+
+  it("rejects supplied inputs with the wrong type before dispatch", async () => {
+    const deps = dependencies({
+      getFunction: jest.fn().mockResolvedValue({
+        ...fn,
+        inputSchema: [{ name: "value", type: "number" }],
+      }),
+    })
+    await expect(
+      run(deps, { functionId: fn._id, inputs: { value: "invalid" } })
+    ).resolves.toMatchObject({
+      error: {
+        code: FunctionErrorCode.FUNCTION_INPUT_INVALID,
+        message: 'Input "value" must be of type number.',
+      },
+    })
+    expect(deps.orchestrate).not.toHaveBeenCalled()
+  })
+
+  it("preserves supplied Object.prototype input names during validation", async () => {
+    const deps = dependencies({
+      getFunction: jest.fn().mockResolvedValue({
+        ...fn,
+        inputSchema: [
+          { name: "constructor", type: "string" },
+          { name: "toString", type: "string" },
+        ],
+      }),
+    })
+    await run(deps, {
+      functionId: fn._id,
+      inputs: Object.fromEntries([
+        ["constructor", "constructor-value"],
+        ["toString", "string-value"],
+      ]),
+    })
+    expect(deps.orchestrate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inputs: Object.fromEntries([
+          ["constructor", "constructor-value"],
+          ["toString", "string-value"],
+        ]),
+      })
+    )
+  })
+
   it("uses configured limits for execution and capabilities", async () => {
     const limits = {
       ...env.FUNCTIONS_LIMITS.run,
