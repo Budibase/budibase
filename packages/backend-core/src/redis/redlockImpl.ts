@@ -147,9 +147,10 @@ export async function doWithLock<T>(
                 ttl,
                 () => opts.onExtend && opts.onExtend()
               )
-            } catch {
-              // swallow - a transient extend failure shouldn't stop future
-              // extend attempts, the final unlock will surface a real loss of the lock
+            } catch (err) {
+              // a transient extend failure shouldn't stop future extend
+              // attempts, the final unlock will surface a real loss of the lock
+              console.warn(`Failed to extend lock "${name}"`, err)
             }
           })()
           await inflightExtend
