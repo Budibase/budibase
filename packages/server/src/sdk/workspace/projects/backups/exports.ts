@@ -123,44 +123,6 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
   )
 }
 
-async function getExcludedDependencies({
-  projectId,
-  directMembers,
-  graph,
-}: {
-  projectId: string
-  directMembers: UsedResource[]
-  graph: Awaited<ReturnType<typeof sdk.resources.getResourcesInfo>>
-}): Promise<UsedResource[]> {
-  const dependenciesById = new Map(
-    directMembers
-      .flatMap(member =>
-        collectTransitiveResourceDependencies(graph, member.id)
-      )
-      .filter(
-        dependency =>
-          isProjectAssignableResourceType(dependency.type) &&
-          isAllowedProjectAssignmentResourceId(dependency.id)
-      )
-      .map(dependency => [dependency.id, dependency])
-  )
-  if (!dependenciesById.size) {
-    return []
-  }
-
-  const docs = await context
-    .getWorkspaceDB()
-    .getMultiple<AnyDocument>(Array.from(dependenciesById.keys()), {
-      allowMissing: true,
-    })
-  return sortResources(
-    docs.flatMap(doc => {
-      const dependency = doc._id ? dependenciesById.get(doc._id) : undefined
-      return dependency && !hasProject(doc, projectId) ? [dependency] : []
-    })
-  )
-}
-
 async function getUnsupportedContent(
   projectId: string,
   agents: Agent[],
@@ -373,19 +335,19 @@ export async function exportProject(
     }
 
     const graph = await sdk.resources.getResourcesInfo({
+      includeProjects: false,
       includeDatasourceQueries: true,
     })
-    const projectDependencies = graph[projectId]?.dependencies || []
     const [agents, workspaceApps, directMembers] = await Promise.all([
       sdk.ai.agents.fetch(),
       sdk.workspaceApps.fetch(),
       getDirectMembers(projectId),
     ])
-    const excludedDependencies = await getExcludedDependencies({
-      projectId,
-      directMembers,
-      graph,
-    })
+    graph[projectId] = { dependencies: directMembers }
+    const projectDependencies = sortResources(
+      collectTransitiveResourceDependencies(graph, projectId)
+    )
+    graph[projectId].dependencies = projectDependencies
     const typeByResourceId = new Map(
       projectDependencies.map(resource => [resource.id, resource.type])
     )
@@ -406,7 +368,6 @@ export async function exportProject(
       agents,
       directMembers,
       docsToExport,
-      excludedDependencies,
       exportedDocs,
       graph,
       project,
@@ -420,7 +381,6 @@ export async function exportProject(
     agents,
     directMembers,
     docsToExport,
-    excludedDependencies,
     exportedDocs,
     graph,
     project,
@@ -440,15 +400,6 @@ export async function exportProject(
     workspaceApps,
     exportedAgentIds
   )
-  if (excludedDependencies.length) {
-    unsupportedContent.push({
-      type: "excluded_dependency",
-      count: excludedDependencies.length,
-      reason:
-        "Referenced dependencies were excluded from the Project assignment and export.",
-    })
-  }
-
   const exportedResourceIds = new Set(docsToExport)
   const getExportedDependencies = (resourceId: string) =>
     sortResources(

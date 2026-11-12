@@ -1,4 +1,5 @@
 import { context, features } from "@budibase/backend-core"
+import { Header } from "@budibase/shared-core"
 import { FeatureFlag } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import {
@@ -65,7 +66,7 @@ describe("Project package ownership", () => {
     return project
   }
 
-  it("imports the app without its excluded query datasource and reports the missing dependency", async () => {
+  it("imports the app with its query and unassigned datasource into another workspace", async () => {
     await features.testutils.withFeatureFlags(
       config.getTenantId(),
       { [FeatureFlag.PROJECTS]: true },
@@ -73,19 +74,33 @@ describe("Project package ownership", () => {
         const project = await createProjectAppWithUnassignedQueryDatasource()
 
         const archive = await config.api.project.export(project._id)
-        const imported = await config.api.project.import(archive)
+        const destination = await config.api.workspace.create({
+          name: "Imported workspace",
+        })
+        await config.withHeaders(
+          { [Header.WORKSPACE_ID]: destination.appId },
+          async () => {
+            const imported = await config.api.project.import(archive)
+            const datasource = await config.api.datasource.get(
+              imported.resources.datasource![0]
+            )
+            const query = await config.api.query.get(
+              imported.resources.query![0]
+            )
 
-        expect(imported.resources.workspace_app).toHaveLength(1)
-        expect(imported.resources.query).toBeUndefined()
-        expect(imported.resources.datasource).toBeUndefined()
-        expect(imported.unsupportedContent).toContainEqual(
-          expect.objectContaining({ type: "excluded_dependency" })
+            expect(imported.resources.workspace_app).toHaveLength(1)
+            expect(imported.resources.query).toHaveLength(1)
+            expect(imported.resources.datasource).toHaveLength(1)
+            expect(datasource.projectIds).toEqual([imported.project._id])
+            expect(query.datasourceId).toBe(datasource._id)
+            expect(imported.unsupportedContent).toEqual([])
+          }
         )
       }
     )
   })
 
-  it("imports the app without its excluded row action table and reports the missing dependency", async () => {
+  it("imports the app with its unassigned row action table and automation into another workspace", async () => {
     await features.testutils.withFeatureFlags(
       config.getTenantId(),
       { [FeatureFlag.PROJECTS]: true },
@@ -93,14 +108,28 @@ describe("Project package ownership", () => {
         const project = await createProjectAppWithUnassignedRowActionTable()
 
         const archive = await config.api.project.export(project._id)
-        const imported = await config.api.project.import(archive)
+        const destination = await config.api.workspace.create({
+          name: "Imported workspace",
+        })
+        await config.withHeaders(
+          { [Header.WORKSPACE_ID]: destination.appId },
+          async () => {
+            const imported = await config.api.project.import(archive)
+            const table = await config.api.table.get(
+              imported.resources.table![0]
+            )
+            const automation = await config.api.automation.get(
+              imported.resources.automation![0]
+            )
 
-        expect(imported.resources.workspace_app).toHaveLength(1)
-        expect(imported.resources.row_action).toBeUndefined()
-        expect(imported.resources.table).toBeUndefined()
-        expect(imported.resources.automation).toBeUndefined()
-        expect(imported.unsupportedContent).toContainEqual(
-          expect.objectContaining({ type: "excluded_dependency" })
+            expect(imported.resources.workspace_app).toHaveLength(1)
+            expect(imported.resources.row_action).toHaveLength(1)
+            expect(imported.resources.table).toHaveLength(1)
+            expect(imported.resources.automation).toHaveLength(1)
+            expect(table.projectIds).toEqual([imported.project._id])
+            expect(automation.projectIds).toEqual([imported.project._id])
+            expect(imported.unsupportedContent).toEqual([])
+          }
         )
       }
     )

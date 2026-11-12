@@ -96,7 +96,7 @@ import {
   rollbackProjectPermissions,
   validateProjectPermissions,
 } from "./permissions"
-import { getProjectIds, isProjectAssignableResourceType } from "../utils"
+import { isProjectAssignableResourceType } from "../utils"
 
 const IMPORT_ORDER: ResourceType[] = [
   ResourceType.AGENT,
@@ -533,11 +533,7 @@ const sanitiseImportedProjectAssignments = (
     return
   }
 
-  if (getProjectIds(doc).includes(importedProjectId)) {
-    doc.projectIds = [importedProjectId]
-  } else {
-    delete doc.projectIds
-  }
+  doc.projectIds = [importedProjectId]
 
   if (resourceType !== ResourceType.DATASOURCE) {
     return

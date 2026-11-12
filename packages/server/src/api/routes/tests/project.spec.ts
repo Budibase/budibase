@@ -1490,7 +1490,7 @@ describe("/projects", () => {
       })
     })
 
-    it("requires email credentials when the OAuth2 datasource is excluded from the package", async () => {
+    it("includes an unassigned OAuth2 datasource required by an email automation", async () => {
       await withProjectsEnabled(async () => {
         const project = await createAssignedProject()
         const datasource = await createEmailOAuthConnection([])
@@ -1527,11 +1527,13 @@ describe("/projects", () => {
         expect(result.importedInputs).toEqual({
           ...emailSettings,
           authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: result.imported.resources.datasource![0],
+          authConfigId: "auth_source",
         })
         expect(result.requirements).toEqual([
           {
-            type: "automation_credentials",
-            resourceId: result.imported.resources.automation![0],
+            type: "datasource_secrets",
+            resourceId: result.imported.resources.datasource![0],
           },
         ])
       })
@@ -1695,7 +1697,7 @@ describe("/projects", () => {
         assignedConnection: true,
       },
     ])(
-      "includes the request and destination in the project export after moving to $destinationName",
+      "exports and imports a referenced request after its connection becomes $destinationName",
       async ({ assignedConnection }) => {
         await withProjectsEnabled(async () => {
           const project = await createAssignedProject()
@@ -1718,7 +1720,7 @@ describe("/projects", () => {
           const { automation } = await config.api.automation.post({
             ...createAutomationBuilder(config)
               .onAppAction({})
-              .executeQuery({ query: { queryId: query._id! } })
+              .apiRequest({ query: { queryId: query._id! } })
               .build(),
             projectIds: [project._id],
           })
@@ -1728,9 +1730,24 @@ describe("/projects", () => {
             datasourceId: destination._id!,
           })
 
-          const files = await readTarEntries(
-            await config.api.project.export(project._id)
-          )
+          const preview = await config.api.project.previewAssignment({
+            resourceId: destination._id!,
+            projectIds: assignedConnection ? [otherProject._id] : [],
+          })
+          await config.api.project.updateAssignment(destination._id!, {
+            resourceRev: preview.resourceRev,
+            dependencyFingerprint: preview.dependencyFingerprint,
+            projectIds: assignedConnection ? [otherProject._id] : [],
+            dependencyIds: [],
+          })
+          const unrelated = await config.api.datasource.create({
+            ...basicDatasource().datasource,
+            name: "Unrelated connection",
+            projectIds: [otherProject._id],
+          })
+
+          const packageBuffer = await config.api.project.export(project._id)
+          const files = await readTarEntries(packageBuffer)
           expect(Array.from(files.keys())).toEqual(
             expect.arrayContaining([
               `docs/automation/${automation._id}.json`,
@@ -1742,6 +1759,42 @@ describe("/projects", () => {
             files.get(`docs/query/${query._id}.json`)!.toString()
           )
           expect(exportedQuery.datasourceId).toBe(destination._id)
+          expect(files.has(`docs/datasource/${unrelated._id}.json`)).toBe(false)
+          expect(
+            (await config.api.datasource.get(destination._id!)).projectIds || []
+          ).not.toContain(project._id)
+
+          const destinationWorkspace = await config.api.workspace.create({
+            name: "Imported workspace",
+          })
+          await config.withHeaders(
+            { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
+            async () => {
+              const imported = await config.api.project.import(packageBuffer)
+              const importedDestination = (
+                await config.api.datasource.fetch()
+              ).find(datasource => datasource.name === destination.name)!
+              const importedQuery = await config.api.query.get(
+                imported.resources.query![0]
+              )
+              const importedAutomation = await config.api.automation.get(
+                imported.resources.automation![0]
+              )
+
+              expect(importedDestination.projectIds).toEqual([
+                imported.project._id,
+              ])
+              expect(importedQuery.datasourceId).toBe(importedDestination._id)
+              expect(importedAutomation.projectIds).toEqual([
+                imported.project._id,
+              ])
+              expect(
+                importedAutomation.definition.steps[0].inputs
+              ).toMatchObject({
+                query: { queryId: importedQuery._id },
+              })
+            }
+          )
         })
       }
     )

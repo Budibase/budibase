@@ -282,7 +282,7 @@ describe("Project data export and import", () => {
     }
   )
 
-  it("omits relationships to data outside the Project and reports the omission", async () => {
+  it("includes referenced tables and their rows regardless of project assignment", async () => {
     await withProjectsEnabled(async () => {
       const source = await createDataProject()
       const preview = await config.api.project.previewAssignment({
@@ -306,28 +306,27 @@ describe("Project data export and import", () => {
         { [Header.WORKSPACE_ID]: destination.appId },
         async () => {
           const imported = await config.api.project.import(archive)
-          const tasks = await config.api.table.get(imported.resources.table![0])
-          const rows = await config.api.row.fetch(tasks._id!)
+          const { categories, rows, categoryRows } =
+            await readImportedData(imported)
 
-          expect(imported.resources.table).toHaveLength(1)
-          expect(tasks.name).toBe("Tasks")
+          expect(imported.resources.table).toHaveLength(2)
+          expect(categories.projectIds).toEqual([imported.project._id])
           expect(rows).toHaveLength(1)
-          expect(rows[0]).not.toHaveProperty("category")
+          expect(rows[0].category).toEqual([
+            expect.objectContaining({
+              _id: categoryRows.find(row => row.name === "Open")!._id,
+            }),
+          ])
           expect(await readAttachmentContent(rows[0].attachment)).toEqual(
             attachmentContent
           )
           expect(imported.dataImport).toEqual({
-            tables: 1,
-            rows: 1,
-            relationships: 0,
+            tables: 2,
+            rows: 3,
+            relationships: 1,
             attachments: 1,
           })
-          expect(imported.unsupportedContent).toContainEqual({
-            type: "excluded_row_relationship",
-            count: 1,
-            reason:
-              "Row relationships to data outside this Project were omitted.",
-          })
+          expect(imported.unsupportedContent).toEqual([])
         }
       )
     })

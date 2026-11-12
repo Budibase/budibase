@@ -1,6 +1,7 @@
 import { createHash } from "crypto"
 import { context, features } from "@budibase/backend-core"
 import {
+  type Agent,
   type AnyDocument,
   type Datasource,
   type Query,
@@ -543,6 +544,7 @@ export interface MovedQueryDependencyPropagationInput {
   datasource: Datasource
   existingQuery: Query
   query: Query
+  referencingAgents: Agent[]
 }
 
 export const propagateMovedQueryDependencies = async ({
@@ -550,6 +552,7 @@ export const propagateMovedQueryDependencies = async ({
   datasource,
   existingQuery,
   query,
+  referencingAgents,
 }: MovedQueryDependencyPropagationInput): Promise<ProjectPropagationOutcome> => {
   const outcomes: ProjectPropagationOutcome[] = []
   const sourceProjectIds = new Set(existingDatasource.projectIds || [])
@@ -561,11 +564,16 @@ export const propagateMovedQueryDependencies = async ({
     projectId => !sourceProjectIds.has(projectId)
   )
 
-  if (!destinationProjectIds.size && !sourceProjectIds.size) {
+  const newAgentProjectIds = Array.from(
+    new Set(referencingAgents.flatMap(agent => agent.projectIds || []))
+  ).filter(
+    projectId =>
+      sourceProjectIds.has(projectId) && !destinationProjectIds.has(projectId)
+  )
+  if (!destinationProjectIds.size && !newAgentProjectIds.length) {
     return { status: "complete" }
   }
   let analysis: ResourceDependencyAnalysis
-  let referencingProjectIds: string[]
   try {
     if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
       return { status: "complete" }
@@ -574,29 +582,6 @@ export const propagateMovedQueryDependencies = async ({
       includeProjects: false,
       includeDatasourceQueries: true,
     })
-    const referencingResourceIds = Object.entries(analysis.graph).flatMap(
-      ([id, resource]) => {
-        const type = getResourceType(id)
-        return type &&
-          isAssignableDependency({ id, type }) &&
-          resource.dependencies.some(dependency => dependency.id === query._id)
-          ? [id]
-          : []
-      }
-    )
-    const referencingResources = referencingResourceIds.length
-      ? await context
-          .getWorkspaceDB()
-          .getMultiple<AnyDocument>(referencingResourceIds, {
-            allowMissing: true,
-          })
-      : []
-    referencingProjectIds = Array.from(
-      new Set(referencingResources.flatMap(getProjectIds))
-    ).filter(
-      projectId =>
-        sourceProjectIds.has(projectId) && !destinationProjectIds.has(projectId)
-    )
   } catch (error) {
     return incompletePropagation({ resourceIds: [datasource._id!], error })
   }
@@ -623,13 +608,13 @@ export const propagateMovedQueryDependencies = async ({
     await propagateNewResourceDependencies({
       analysis,
       rootResourceId: datasource._id!,
-      projectIds: referencingProjectIds,
+      projectIds: newAgentProjectIds,
       previousResource: existingQuery,
       savedResource: query,
     })
   )
 
-  if (referencingProjectIds.length) {
+  if (newAgentProjectIds.length) {
     outcomes.push(
       await propagateProjectIdsToDependencyIds({
         dependencyIds: collectAssignableDependencyIds({
@@ -638,7 +623,7 @@ export const propagateMovedQueryDependencies = async ({
           includeRoots: true,
           resourceIds: [datasource._id!],
         }),
-        projectIds: referencingProjectIds,
+        projectIds: newAgentProjectIds,
       })
     )
   }

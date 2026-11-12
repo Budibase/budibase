@@ -11,6 +11,7 @@ import { findHBSBlocks } from "@budibase/string-templates"
 import {
   ActionFailureReason,
   ActionType,
+  Agent,
   ContextUser,
   CreateDatasourceRequest,
   Datasource,
@@ -313,11 +314,12 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const datasourceChanged =
     existingQuery?.datasourceId !== undefined &&
     existingQuery.datasourceId !== datasource._id
+  let referencingAgents: Agent[] = []
   if (
     existingQuery &&
     (datasourceChanged || existingQuery.name !== query.name)
   ) {
-    await sdk.ai.agents.migrateQueryToolReferences({
+    referencingAgents = await sdk.ai.agents.migrateQueryToolReferences({
       existingDatasource,
       updatedDatasource: datasource,
       existingQuery,
@@ -346,6 +348,7 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
         datasource,
         existingQuery,
         query,
+        referencingAgents,
       })
     )
   }
