@@ -17,6 +17,7 @@ import {
   Automation,
   AutomationTriggerStepId,
   Datasource,
+  type CustomRestTemplateId,
   DocumentType,
   EmailTriggerAuthType,
   ImportProjectResponse,
@@ -82,7 +83,13 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
   PROJECT_PERMISSIONS_FILE,
+  PROJECT_REST_TEMPLATES_FILE,
 } from "./constants"
+import {
+  importProjectRestTemplates,
+  validateProjectRestTemplates,
+  type ProjectRestTemplate,
+} from "./restTemplates"
 import {
   readProjectPackageFiles,
   isSafeArchivePath,
@@ -157,6 +164,7 @@ interface ExtractedProjectPackage {
   project: Project
   dependencyIndex: ProjectPackageDependencyIndex
   docs: ImportedDoc[]
+  restTemplates: ProjectRestTemplate[]
   data?: ProjectPackageData
   permissions?: ProjectPackagePermissions
 }
@@ -1264,6 +1272,7 @@ async function extractProjectPackage(
             PROJECT_DATA_FILE,
             PROJECT_ATTACHMENTS_DIRECTORY,
             PROJECT_PERMISSIONS_FILE,
+            PROJECT_REST_TEMPLATES_FILE,
           ].includes(entry)
       )
     ) {
@@ -1332,6 +1341,16 @@ async function extractProjectPackage(
     )
 
     validateDependencyIndex(project, dependencyIndex, docs, manifest)
+    const restTemplates = await validateProjectRestTemplates({
+      value: rootEntries.includes(PROJECT_REST_TEMPLATES_FILE)
+        ? await readJsonFile<unknown>(
+            join(tmpPath, PROJECT_REST_TEMPLATES_FILE)
+          )
+        : [],
+      datasources: docs
+        .filter(({ resourceType }) => resourceType === ResourceType.DATASOURCE)
+        .map(({ doc }) => doc as Datasource),
+    })
     if (
       !!manifest.containsPermissions !==
       rootEntries.includes(PROJECT_PERMISSIONS_FILE)
@@ -1386,6 +1405,7 @@ async function extractProjectPackage(
       docs,
       data,
       permissions,
+      restTemplates,
     }
   } catch (err) {
     await fsp.rm(tmpPath, { recursive: true, force: true })
@@ -1525,6 +1545,7 @@ export async function importProject(
 
   const extracted = await extractProjectPackage(file, opts?.encryptPassword)
   const uploadedKeys: string[] = []
+  const createdTemplateIds: CustomRestTemplateId[] = []
   let completedImport: ImportProjectResponse | undefined
   let canCleanupAttachments = true
   try {
@@ -1574,6 +1595,11 @@ export async function importProject(
         })
         const importedProjectId = importedProject._id!
         idMap.set(extracted.project._id!, importedProjectId)
+        await importProjectRestTemplates({
+          templates: extracted.restTemplates,
+          idMap,
+          createdTemplateIds,
+        })
         const datasourcesById = new Map(
           extracted.docs
             .filter(doc => doc.resourceType === ResourceType.DATASOURCE)
@@ -1735,6 +1761,13 @@ export async function importProject(
     }
     if (canCleanupAttachments) {
       await cleanupProjectAttachments(uploadedKeys)
+    }
+    for (const templateId of createdTemplateIds) {
+      try {
+        await sdk.restTemplates.removeIfUnused(templateId)
+      } catch (error) {
+        console.log("Failed to clean up Project REST template", error)
+      }
     }
     if (err instanceof UsageLimitWarning) {
       throw new HTTPError(err.message, 400)

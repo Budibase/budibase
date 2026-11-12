@@ -87,7 +87,7 @@
     "csvtojson": "2.0.13",
     "curlconverter": "3.21.0",
     "dayjs": "^1.10.8",
-    "dd-trace": "5.109.0",
+    "dd-trace": "5.131.1",
     "dotenv": "8.2.0",
     "esbuild": "^0.28.1",
     "execa": "^5.1.1",

@@ -46,6 +46,8 @@ export interface Workspace extends Document {
   // stores a list of IDs (automations, workspace apps, anything that can be published)
   // and when they were last published (timestamp)
   resourcesPublishedAt?: Record<string, string>
+  // Only these tables may resume seeding into a non-empty production table.
+  pendingTableSeeds?: string[]
   // stores a list of IDs (resources that were published while enabled/live)
   // and when they were last deployed live (timestamp)
   resourcesDeployedAt?: Record<string, string>
