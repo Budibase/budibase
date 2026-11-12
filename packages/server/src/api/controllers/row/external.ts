@@ -70,7 +70,8 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   dataToUpdate = await inputProcessing(
     ctx.user?._id,
     cloneDeep(source),
-    dataToUpdate
+    dataToUpdate,
+    { existingRow: beforeRow }
   )
 
   const validateResult = await sdk.rows.utils.validate({

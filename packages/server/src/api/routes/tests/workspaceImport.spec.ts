@@ -1,7 +1,7 @@
 import path from "path"
 import { join } from "path"
 import { cache, db, objectStore } from "@budibase/backend-core"
-import type { Row } from "@budibase/types"
+import { FieldType, type Row } from "@budibase/types"
 import sdk from "../../../sdk"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
@@ -230,6 +230,52 @@ describe("/applications/:appId/import", () => {
     expect(screens.length).toBe(2)
     expect(screens[0].routing.route).toBe("/derp")
     expect(screens[1].routing.route).toBe("/blank")
+  })
+
+  it("rewrites imported attachment keys into the destination workspace", async () => {
+    const sourceId = config.getDevWorkspaceId()
+    const sourceKey = `${config.getProdWorkspaceId()}/attachments/imported.txt`
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: sourceKey,
+      body: Buffer.from("attachment content"),
+      type: "text/plain",
+    })
+    const table = await config.api.table.save(
+      basicTable(undefined, {
+        schema: { file: { name: "file", type: FieldType.ATTACHMENT_SINGLE } },
+      })
+    )
+    const row = await config.api.row.save(table._id!, {
+      file: {
+        key: sourceKey,
+        name: "imported.txt",
+        extension: "txt",
+        size: 18,
+      },
+    })
+    const exportPath = await sdk.backups.exportWorkspace(sourceId, {
+      tar: true,
+    })
+    await config.createWorkspace()
+    const targetId = config.getDevWorkspaceId()
+    await request
+      .post(`/api/applications/${targetId}/import`)
+      .attach("appExport", exportPath)
+      .set(config.defaultHeaders())
+      .expect(200)
+    const imported = await config.api.row.get(table._id!, row._id!)
+    expect(imported.file.key).toBe(
+      `${config.getProdWorkspaceId()}/attachments/imported.txt`
+    )
+    expect(imported.file.url).toBeTruthy()
+    const updated = await config.api.row.patch(table._id!, {
+      _id: row._id!,
+      _rev: imported._rev!,
+      tableId: table._id!,
+      file: imported.file,
+    })
+    expect(updated.file.key).toBe(imported.file.key)
   })
 
   it("should preserve existing attachment files when importing an export that does not include attachments", async () => {
