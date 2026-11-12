@@ -59,10 +59,10 @@
     loadProjects(workspaceId)
   }
 
-  const loadProjects = async (appId: string) => {
+  const loadProjects = async (workspaceId: string) => {
     projectsRequested = true
     try {
-      await projectsStore.fetch(appId)
+      await projectsStore.fetch(workspaceId)
     } catch (error) {
       notifications.error(getErrorMessage(error) || "Unable to load projects")
     }
@@ -88,6 +88,13 @@
         await loadProjects(appId)
       }
       workspaceReady = true
+      if ($auth.user?.lastVisitedWorkspaceId !== appId) {
+        auth
+          .updateLastVisitedWorkspace(appId)
+          .catch(error =>
+            console.error("Failed to save last visited workspace", error)
+          )
+      }
     } catch (error: any) {
       console.error(`Error initialising app: ${error?.message}`)
       sideNav.show()
