@@ -684,7 +684,11 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     allowConversationAttachments: source.allowConversationAttachments,
-    operations: source.operations,
+    operations: source.operations?.map(operation => ({
+      ...operation,
+      knowledgeBases: [],
+      knowledgeSources: [],
+    })),
   })
 }
 
