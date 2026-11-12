@@ -45,6 +45,21 @@ describe("/api/global/self", () => {
       expect(events.user.passwordUpdated).toHaveBeenCalledTimes(1)
       expect(events.user.passwordUpdated).toHaveBeenCalledWith(dbUser)
     })
+
+    it("should update the last visited workspace", async () => {
+      const user = await config.createUser()
+      await config.createSession(user)
+
+      await config.api.self
+        .updateSelf(user, {
+          lastVisitedWorkspaceId: "app_dev_workspace_1",
+        })
+        .expect(200)
+
+      const dbUser = (await config.getUser(user.email))!
+
+      expect(dbUser.lastVisitedWorkspaceId).toBe("app_dev_workspace_1")
+    })
   })
 
   it("should update free trial confirmation date", async () => {
