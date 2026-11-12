@@ -229,6 +229,138 @@ describe("FunctionCodeEditor", () => {
   )
 
   it.each([
+    { prefix: "inp", reference: "inputs", detail: "Function inputs" },
+    { prefix: "que", reference: "queries", detail: "Linked queries" },
+    { prefix: "cust", reference: "inputs.customerId", detail: "string" },
+    {
+      prefix: "find",
+      reference: "queries.crm.findCustomer",
+      detail: "customerId",
+    },
+    { prefix: "cr", reference: "queries.crm", detail: "queries.crm" },
+  ])(
+    "inserts $reference when typing $prefix",
+    async ({ prefix, reference, detail }) => {
+      const view = render(FunctionCodeEditor, {
+        value: `const result = ${prefix}`,
+        inputSchema: [{ name: "customerId", type: "string" }],
+        capabilities: [
+          {
+            capabilityId: "cap_customer",
+            queryId: "query_customer",
+            datasourceAlias: "crm",
+            queryAlias: "findCustomer",
+            parameterNames: ["customerId"],
+          },
+        ],
+      })
+      const editor = EditorView.findFromDOM(
+        view.container.querySelector<HTMLElement>(".cm-editor")!
+      )!
+      editor.dispatch({ selection: { anchor: editor.state.doc.length } })
+      startCompletion(editor)
+      await waitFor(() =>
+        expect(
+          screen.getByRole("option", {
+            name: name => name.replace(/\s/g, "").startsWith(reference),
+          })
+        ).toBeInTheDocument()
+      )
+      expect(
+        screen.getByRole("option", {
+          name: name => name.replace(/\s/g, "").startsWith(reference),
+        })
+      ).toHaveTextContent(detail)
+      await waitFor(() => expect(acceptCompletion(editor)).toBe(true))
+      expect(editor.state.doc.toString()).toBe(`const result = ${reference}`)
+    }
+  )
+
+  it.each([
+    { prefix: "inp", namespace: "inputs" },
+    { prefix: "que", namespace: "queries" },
+  ])(
+    "suggests $namespace without configured fields or queries",
+    async ({ prefix, namespace }) => {
+      const view = render(FunctionCodeEditor)
+      const editor = EditorView.findFromDOM(
+        view.container.querySelector<HTMLElement>(".cm-editor")!
+      )!
+      editor.focus()
+      editor.dispatch({
+        changes: { from: 0, insert: prefix },
+        selection: { anchor: prefix.length },
+        userEvent: "input.type",
+      })
+      await waitFor(() =>
+        expect(screen.getByRole("option")).toHaveTextContent(namespace)
+      )
+      await waitFor(() => expect(acceptCompletion(editor)).toBe(true))
+      expect(editor.state.doc.toString()).toBe(namespace)
+    }
+  )
+
+  it("distinguishes query names shared by linked datasources", async () => {
+    const view = render(FunctionCodeEditor, {
+      value: "find",
+      capabilities: ["crm", "billing"].map(datasourceAlias => ({
+        capabilityId: `cap_${datasourceAlias}`,
+        queryId: `query_${datasourceAlias}`,
+        datasourceAlias,
+        queryAlias: "findCustomer",
+        parameterNames: [],
+      })),
+    })
+    const editor = EditorView.findFromDOM(
+      view.container.querySelector<HTMLElement>(".cm-editor")!
+    )!
+    editor.dispatch({ selection: { anchor: editor.state.doc.length } })
+    startCompletion(editor)
+    await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(2))
+    expect(screen.getByRole("listbox")).toHaveTextContent(
+      "queries.crm.findCustomer"
+    )
+    expect(screen.getByRole("listbox")).toHaveTextContent(
+      "queries.billing.findCustomer"
+    )
+  })
+
+  it.each([
+    '"cust',
+    '"inp',
+    "// find",
+    "// que",
+    "user.cust",
+    "user.inp",
+    "user?.find",
+    "user?.que",
+    "const cust",
+  ])("does not suggest qualified references in %s", async value => {
+    const view = render(FunctionCodeEditor, {
+      value,
+      inputSchema: [{ name: "customerId", type: "string" }],
+      capabilities: [
+        {
+          capabilityId: "cap_customer",
+          queryId: "query_customer",
+          datasourceAlias: "crm",
+          queryAlias: "findCustomer",
+          parameterNames: [],
+        },
+      ],
+    })
+    const editor = EditorView.findFromDOM(
+      view.container.querySelector<HTMLElement>(".cm-editor")!
+    )!
+    editor.dispatch({ selection: { anchor: editor.state.doc.length } })
+    startCompletion(editor)
+    await waitFor(() =>
+      expect(completionStatus(editor.state)).not.toBe("pending")
+    )
+    expect(screen.queryByRole("option")).not.toBeInTheDocument()
+  })
+
+  it.each([
     "user.inputs.",
     "user . inputs.",
     "user?.inputs.",
