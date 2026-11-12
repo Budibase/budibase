@@ -1,0 +1,36 @@
+name: Sync Ops project issues
+
+on:
+  push:
+    branches: [automation/ops-project-intake]
+    paths:
+      - .github/scripts/sync-ops-project.py
+      - .github/workflows/sync-ops-project.yml
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-ops-project
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'Budibase/budibase'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add open issues matching Ops view labels
+        env:
+          # Existing credential verified for org issue reading and project writing.
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "PERSONAL_ACCESS_TOKEN is unavailable."
+            exit 1
+          fi
+          python3 .github/scripts/sync-ops-project.py --apply
