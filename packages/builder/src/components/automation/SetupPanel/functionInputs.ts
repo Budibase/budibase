@@ -14,7 +14,7 @@ export const parseFunctionInputValue = ({
   input: FunctionInputDefinition
   text?: string
 }): ParsedFunctionInput => {
-  if (text === undefined || text === "") {
+  if (!text) {
     return {}
   }
   if (input.type === "string" || findHBSBlocks(text).length) {
