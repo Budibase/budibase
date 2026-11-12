@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 """Add open, Ops-labeled organization issues to the Ops project.
-
-Requires gh authentication (GH_TOKEN in Actions). Defaults to a dry run.
-Labels are read from the project's views so intake follows board configuration.
-Existing project items, including archived items, are never modified or removed.
 """
 
 import argparse
