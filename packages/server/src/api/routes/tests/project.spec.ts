@@ -1685,6 +1685,67 @@ describe("/projects", () => {
       })
     })
 
+    it.each([
+      {
+        destinationName: "an unassigned connection",
+        assignedConnection: false,
+      },
+      {
+        destinationName: "a connection assigned to another project",
+        assignedConnection: true,
+      },
+    ])(
+      "includes the request and destination in the project export after moving to $destinationName",
+      async ({ assignedConnection }) => {
+        await withProjectsEnabled(async () => {
+          const project = await createAssignedProject()
+          const { project: otherProject } = await config.api.project.create({
+            name: "Other project",
+          })
+          const source = await config.api.datasource.create({
+            ...basicDatasource().datasource,
+            source: SourceName.REST,
+            name: "Source connection",
+            projectIds: [project._id],
+          })
+          const destination = await config.api.datasource.create({
+            ...basicDatasource().datasource,
+            source: SourceName.REST,
+            name: "Destination connection",
+            projectIds: assignedConnection ? [otherProject._id] : [],
+          })
+          const query = await config.api.query.save(basicQuery(source._id!))
+          const { automation } = await config.api.automation.post({
+            ...createAutomationBuilder(config)
+              .onAppAction({})
+              .executeQuery({ query: { queryId: query._id! } })
+              .build(),
+            projectIds: [project._id],
+          })
+
+          await config.api.query.save({
+            ...query,
+            datasourceId: destination._id!,
+          })
+
+          const files = await readTarEntries(
+            await config.api.project.export(project._id)
+          )
+          expect(Array.from(files.keys())).toEqual(
+            expect.arrayContaining([
+              `docs/automation/${automation._id}.json`,
+              `docs/query/${query._id}.json`,
+              `docs/datasource/${destination._id}.json`,
+            ])
+          )
+          const exportedQuery: Query = JSON.parse(
+            files.get(`docs/query/${query._id}.json`)!.toString()
+          )
+          expect(exportedQuery.datasourceId).toBe(destination._id)
+        })
+      }
+    )
+
     it("includes expected docs and manifest metadata", async () => {
       await withProjectsEnabled(async () => {
         const {

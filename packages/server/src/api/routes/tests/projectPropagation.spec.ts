@@ -1231,6 +1231,66 @@ describe("project dependency propagation", () => {
       })
     })
 
+    it("keeps a moved query's destination assigned to the project of a referencing screen", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create({
+          name: "Operations app",
+          url: "/operations-app",
+          projectIds: [project._id],
+        })
+        const source = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const destination = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          name: "Destination",
+        })
+        const query = await config.api.query.save(basicQuery(source._id!))
+        await config.api.screen.save({
+          ...createQueryScreen(source._id!, query),
+          workspaceAppId: workspaceApp._id,
+        })
+
+        await config.api.query.save({
+          ...query,
+          datasourceId: destination._id!,
+        })
+
+        expect(
+          (await config.api.datasource.get(destination._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("does not assign the destination to a source project without a resource referencing the moved query", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const source = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
+        const destination = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          name: "Destination",
+        })
+        const query = await config.api.query.save(basicQuery(source._id!))
+
+        await config.api.query.save({
+          ...query,
+          datasourceId: destination._id!,
+        })
+
+        expect(
+          (await config.api.datasource.get(destination._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
     it("propagates reciprocal table dependencies without crossing excluded cycles", async () => {
       await withProjectsEnabled(async () => {
         const { project: sourceProject } = await config.api.project.create({
