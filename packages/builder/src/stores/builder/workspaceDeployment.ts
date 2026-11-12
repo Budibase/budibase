@@ -6,7 +6,13 @@ interface WorkspaceDeploymentStoreState extends PublishStatusResponse {}
 
 export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStoreState> {
   constructor() {
-    super({ automations: {}, workspaceApps: {}, tables: {}, agents: {} })
+    super({
+      automations: {},
+      workspaceApps: {},
+      tables: {},
+      agents: {},
+      functions: {},
+    })
 
     this.fetch = this.fetch.bind(this)
     this.reset = this.reset.bind(this)
@@ -15,13 +21,14 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
   }
 
   async fetch() {
-    const { automations, workspaceApps, tables, agents } =
+    const { automations, workspaceApps, tables, agents, functions } =
       await API.deployment.getPublishStatus()
     this.store.update(state => {
       state.automations = automations
       state.workspaceApps = workspaceApps
       state.tables = tables
       state.agents = agents
+      state.functions = functions
       return state
     })
   }
@@ -32,6 +39,7 @@ export class WorkspaceDeploymentStore extends BudiStore<WorkspaceDeploymentStore
       workspaceApps: {},
       tables: {},
       agents: {},
+      functions: {},
     })
   }
 

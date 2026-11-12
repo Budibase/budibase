@@ -19,6 +19,7 @@ export const PROJECT_ASSIGNABLE_RESOURCE_TYPES = new Set<ResourceType>([
   ResourceType.AGENT,
   ResourceType.DATASOURCE,
   ResourceType.TABLE,
+  ResourceType.FUNCTION,
 ])
 
 export const isProjectAssignableResourceType = (type: ResourceType) =>

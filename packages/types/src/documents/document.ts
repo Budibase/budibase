@@ -64,6 +64,8 @@ export enum DocumentType {
   AUTO_COLUMN_STATE = "autocolumn_state",
   ESCALATION_CONTEXT = "escalation_context",
   ESCALATION_NOTIFICATION = "escalation_notification",
+  FUNCTION = "fn",
+  FUNCTION_RUN_LOG = "log_fn",
   PLATFORM_ACTION_EVENT = "platform_action",
   PLATFORM_ACTION_SESSION = "platform_action_session",
 }
@@ -88,6 +90,7 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.MEM_VIEW,
   DocumentType.WORKSPACE_APP,
   DocumentType.WORKSPACE_FAVOURITE,
+  DocumentType.FUNCTION,
   // Deprecated but still copied
   DocumentType.INSTANCE,
   DocumentType.LAYOUT,

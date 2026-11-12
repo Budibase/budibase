@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { functionsAvailable } from "@/stores/builder/functionsAvailability"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import DuplicateAutomationModal from "@/components/automation/AutomationPanel/DuplicateAutomationModal.svelte"
   import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
@@ -29,6 +30,7 @@
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
+  import { functionStore } from "@/stores/builder/functions"
   import {
     agentsStore,
     workspacesStore,
@@ -58,6 +60,7 @@
     type HomeSortColumn,
     type HomeSortOrder,
     type HomeType,
+    type FunctionSummary,
     type ProjectFormPayload,
     type ProjectResponse,
     type ImportProjectResponse,
@@ -92,7 +95,14 @@
     withWorkspaceHomeReturn,
   } from "@/helpers/workspaceHomeNavigation"
 
+  import FunctionNameModal from "../function/FunctionNameModal.svelte"
+  import { DEFAULT_FUNCTION_SOURCE } from "../function/defaultSource"
+  import { canManageFunctions } from "../function/permissions"
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
+
+  $: functionsEnabled =
+    !!$functionsAvailable &&
+    canManageFunctions($auth.user, $workspaceStore.appId)
 
   $: goto = $gotoStore
   $: url = $urlStore
@@ -118,6 +128,9 @@
   let createTableModalKey = 0
 
   let selectedAgent: Agent | undefined
+  let functionNameModal: FunctionNameModal
+  let selectedFunction: FunctionSummary | undefined
+  let confirmDeleteFunctionDialog: Pick<ModalAPI, "show" | "hide">
   let updateAgentModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
   let selectedRow: HomeRow | null = null
@@ -155,6 +168,7 @@
   let highlightedRowId: string | null = null
 
   let hasMounted = false
+  let functionsRequestedForWorkspace = ""
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
@@ -237,6 +251,7 @@
       value === "app" ||
       value === "automation" ||
       value === "agent" ||
+      (value === "function" && functionsEnabled) ||
       value === "data"
     ) {
       return value
@@ -256,6 +271,7 @@
       return {
         q: "",
         type: null as HomeType | null,
+        createFunction: false,
         project: "",
         sort: null as HomeSortColumn | null,
         order: null as HomeSortOrder | null,
@@ -264,10 +280,11 @@
     const params = new URLSearchParams(window.location.search)
     const q = params.get("q") ?? ""
     const type = normaliseType(params.get("type"))
+    const createFunction = params.get("create") === "function"
     const project = params.get("project") ?? ""
     const sort = normaliseHomeSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
-    return { q, type, project, sort, order }
+    return { q, type, createFunction, project, sort, order }
   }
 
   const writeUrlState = (state: HomeUrlState) => {
@@ -312,6 +329,59 @@
 
   const createAutomation = () => {
     createAutomationModal?.show()
+  }
+
+  const createFunction = () => {
+    functionNameModal.show({
+      title: "New Function",
+      confirmText: "Create",
+      onConfirm: async name => {
+        const fn = await functionStore.create({
+          name,
+          source: DEFAULT_FUNCTION_SOURCE,
+          capabilities: [],
+        })
+        notifications.success("Function created")
+        goToResource(`../function/${fn._id}`)
+      },
+    })
+  }
+
+  const renameFunction = (fn: FunctionSummary) => {
+    functionNameModal.show({
+      title: "Rename Function",
+      confirmText: "Rename",
+      name: fn.name,
+      onConfirm: async name => {
+        await functionStore.rename(fn, name)
+        notifications.success("Function renamed")
+      },
+    })
+  }
+
+  const duplicateFunction = async (fn: FunctionSummary) => {
+    try {
+      await functionStore.duplicate(fn)
+      notifications.success("Function duplicated")
+    } catch (error) {
+      notifications.error(
+        getErrorMessage(error) || "Unable to duplicate Function"
+      )
+    }
+  }
+
+  const deleteFunction = async () => {
+    if (!selectedFunction) {
+      return
+    }
+    try {
+      await functionStore.delete(selectedFunction)
+      confirmDeleteFunctionDialog.hide()
+      notifications.success("Function deleted")
+    } catch (error) {
+      confirmDeleteFunctionDialog.hide()
+      notifications.error(getErrorMessage(error) || "Unable to delete Function")
+    }
   }
 
   const createAgent = () => {
@@ -704,6 +774,30 @@
   }
 
   const getContextMenuItemsForRow = (row: HomeRow) => {
+    if (row.type === "function" && functionsEnabled) {
+      const fn = row.resource
+      return [
+        {
+          icon: "pencil",
+          name: "Rename",
+          visible: true,
+          callback: () => renameFunction(fn),
+        },
+        {
+          icon: "copy",
+          name: "Duplicate",
+          visible: true,
+          callback: () => duplicateFunction(fn),
+        },
+        {
+          icon: "trash",
+          name: "Delete",
+          visible: true,
+          callback: () => confirmDeleteFunctionDialog.show(),
+        },
+      ]
+    }
+
     const project = selectedProject
     const removeFromProject = {
       icon: "stack-minus",
@@ -895,6 +989,7 @@
     selectedWorkspaceApp = undefined
     selectedAutomation = undefined
     selectedAgent = undefined
+    selectedFunction = undefined
     selectedRow = row
 
     highlightedRowId = row._id
@@ -905,6 +1000,8 @@
       selectedAutomation = row.resource
     } else if (row.type === "agent") {
       selectedAgent = row.resource
+    } else if (row.type === "function") {
+      selectedFunction = row.resource
     }
 
     contextMenuStore.open(
@@ -918,6 +1015,10 @@
   }
 
   const openRow = (row: HomeRow) => {
+    if (row.type === "function" && functionsEnabled) {
+      goToResource(`../function/${row.id}`)
+      return
+    }
     if (row.type === "app") {
       goToResource(`../design/${row.id}`)
       return
@@ -964,6 +1065,7 @@
     apps: $workspaceAppStore.workspaceApps,
     automations: $automationStore.automations,
     agents: $agentsStore.agents,
+    functions: functionsEnabled ? $functionStore.functions : [],
     datasources: $datasources.list,
     tables: $tables.list,
     getFavourite,
@@ -1037,6 +1139,20 @@
   $: showBudibaseAIMetric =
     budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
+  $: if (
+    hasMounted &&
+    functionsEnabled &&
+    $workspaceStore.appId &&
+    functionsRequestedForWorkspace !== $workspaceStore.appId
+  ) {
+    functionsRequestedForWorkspace = $workspaceStore.appId
+    functionStore.fetch()
+  }
+
+  $: if (hasMounted && !functionsEnabled && typeFilter === "function") {
+    typeFilter = "all"
+  }
+
   $: if (hasMounted) {
     writeUrlState({
       searchTerm,
@@ -1084,7 +1200,14 @@
       return
     }
 
-    const { q, type, project, sort, order } = readUrlState()
+    const {
+      q,
+      type,
+      createFunction: shouldCreateFunction,
+      project,
+      sort,
+      order,
+    } = readUrlState()
     const setupRequest = getProjectSetupRequest({
       workspaceId,
       homeUrl: window.location.href,
@@ -1120,6 +1243,10 @@
       sortOrder,
       projectsEnabled,
     })
+
+    if (shouldCreateFunction && functionsEnabled) {
+      createFunction()
+    }
 
     await agentsStore.fetchAgents()
     if (setupRequest && projectsEnabled && projectsStore.hasFetched()) {
@@ -1215,6 +1342,7 @@
               <div class="panel-toolbar">
                 <HomeControls
                   {typeFilter}
+                  showFunctions={functionsEnabled}
                   variant="panel"
                   onTypeChange={setTypeFilter}
                 />
@@ -1230,6 +1358,8 @@
                   </div>
                   <HomeCreateMenu
                     variant="pill"
+                    showFunctions={functionsEnabled}
+                    onCreateFunction={createFunction}
                     onCreateAgent={createAgent}
                     onCreateAutomation={createAutomation}
                     onCreateApp={createApp}
@@ -1278,7 +1408,11 @@
       </div>
     {:else}
       <div class="controls-row">
-        <HomeControls {typeFilter} onTypeChange={setTypeFilter} />
+        <HomeControls
+          {typeFilter}
+          showFunctions={functionsEnabled}
+          onTypeChange={setTypeFilter}
+        />
         <div class="controls-right">
           <div class="search-wrapper">
             <Icon name="magnifying-glass" size="S" />
@@ -1294,6 +1428,8 @@
             portalTarget=".workspace-home .create-popover-container"
             onCreateAgent={createAgent}
             onCreateAutomation={createAutomation}
+            onCreateFunction={createFunction}
+            showFunctions={functionsEnabled}
             onCreateApp={createApp}
             onCreateConnection={() => bb.settings("/connections/apis")}
             onCreateTable={openCreateTable}
@@ -1327,6 +1463,18 @@
     {/if}
   </div>
 </div>
+
+<FunctionNameModal bind:this={functionNameModal} />
+
+{#if selectedFunction}
+  <ConfirmDialog
+    bind:this={confirmDeleteFunctionDialog}
+    title="Delete Function"
+    body={`Are you sure you want to delete ${selectedFunction.name}?`}
+    okText="Delete"
+    onOk={deleteFunction}
+  />
+{/if}
 
 {#if projectsEnabled}
   <ConfirmDialog

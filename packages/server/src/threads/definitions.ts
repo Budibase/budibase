@@ -6,6 +6,7 @@ import {
   IdentityContext,
   RestPreviewConfig,
   SSOUser,
+  UserBindings,
 } from "@budibase/types"
 
 export type WorkerCallback = (error: any, response?: any) => void
@@ -19,7 +20,7 @@ export interface PublishWorkspaceJob {
 }
 
 export interface QueryEventCtx {
-  user?: Omit<ContextUser, "account" | "license"> | SSOUser
+  user?: Omit<ContextUser, "account" | "license"> | SSOUser | UserBindings
   auth?: {
     configId?: string
     sessionId?: string

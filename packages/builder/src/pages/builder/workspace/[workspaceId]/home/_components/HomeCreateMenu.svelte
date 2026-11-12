@@ -8,13 +8,19 @@
     PopoverAlignment,
     Tag,
   } from "@budibase/bbui"
-  import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
+  import {
+    getHomeIconWeight,
+    getHomeTypeIcon,
+    getHomeTypeIconColor,
+  } from "./rows"
 
   interface Props {
     variant?: "button" | "pill"
     portalTarget?: string
     onCreateAgent?: () => void
     onCreateAutomation?: () => void
+    onCreateFunction?: () => void
+    showFunctions?: boolean
     onCreateApp?: () => void
     onCreateConnection?: () => void
     onCreateTable?: () => void
@@ -26,6 +32,8 @@
     portalTarget = undefined,
     onCreateAgent = () => {},
     onCreateAutomation = () => {},
+    onCreateFunction = () => {},
+    showFunctions = false,
     onCreateApp = () => {},
     onCreateConnection = () => {},
     onCreateTable = () => {},
@@ -60,6 +68,19 @@
       <Tag emphasized>Beta</Tag>
     </div>
   </MenuItem>
+  {#if showFunctions}
+    <MenuItem
+      icon={getHomeTypeIcon("function")}
+      iconColour={getHomeTypeIconColor("function")}
+      iconWeight={getHomeIconWeight("function")}
+      on:click={onCreateFunction}
+    >
+      Function
+      <div slot="right">
+        <Tag emphasized>Alpha</Tag>
+      </div>
+    </MenuItem>
+  {/if}
   <MenuItem
     icon={getHomeTypeIcon("automation")}
     iconColour={getHomeTypeIconColor("automation")}

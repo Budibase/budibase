@@ -63,6 +63,7 @@ export enum SchemaFieldTypes {
   CATEGORIES = "categories",
   AGENT = "agent",
   OUTPUT_SCHEMA = "output_schema",
+  FUNCTION_INPUTS = "function_inputs",
 }
 
 export type KeyValuePair = {
@@ -253,6 +254,7 @@ export const customTypeToSchema: Record<string, SchemaFieldTypes> = {
   [AutomationCustomIOType.QUERY_PARAMS]: SchemaFieldTypes.QUERY_PARAMS,
   [AutomationCustomIOType.CATEGORIES]: SchemaFieldTypes.CATEGORIES,
   [AutomationCustomIOType.OUTPUT_SCHEMA]: SchemaFieldTypes.OUTPUT_SCHEMA,
+  [AutomationCustomIOType.FUNCTION_INPUTS]: SchemaFieldTypes.FUNCTION_INPUTS,
   ["fields"]: SchemaFieldTypes.FIELDS,
 }
 

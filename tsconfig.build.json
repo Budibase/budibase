@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "preserve",
     "moduleResolution": "bundler",
     "lib": ["es2020"],
     "strict": true,
@@ -17,6 +17,7 @@
       "@budibase/backend-core": ["./packages/backend-core/src"],
       "@budibase/backend-core/*": ["./packages/backend-core/*"],
       "@budibase/shared-core": ["./packages/shared-core/src"],
+      "@budibase/functions-runtime": ["./packages/functions-runtime/src"],
       "@budibase/pro": ["./packages/pro/src"],
       "@budibase/string-templates": ["./packages/string-templates/src"],
       "@budibase/string-templates/*": ["./packages/string-templates/*"],

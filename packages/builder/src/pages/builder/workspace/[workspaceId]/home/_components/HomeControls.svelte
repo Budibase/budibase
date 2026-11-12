@@ -1,17 +1,23 @@
 <script lang="ts">
   import { ActionButton, Icon } from "@budibase/bbui"
   import type { HomeType } from "@budibase/types"
-  import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
+  import {
+    getHomeIconWeight,
+    getHomeTypeIcon,
+    getHomeTypeIconColor,
+  } from "./rows"
 
   interface Props {
     typeFilter?: HomeType
     variant?: "default" | "panel"
+    showFunctions?: boolean
     onTypeChange?: (type: HomeType) => void
   }
 
   let {
     typeFilter = "all",
     variant = "default",
+    showFunctions = false,
     onTypeChange = () => {},
   }: Props = $props()
 
@@ -25,6 +31,7 @@
     { label: "All resources", value: "all" },
     { label: "Agents", value: "agent" },
     { label: "Automations", value: "automation" },
+    { label: "Functions", value: "function" },
     { label: "Apps", value: "app" },
     { label: "Data", value: "data" },
   ]
@@ -32,25 +39,27 @@
 
 <div class="filter" class:filter--panel={variant === "panel"}>
   {#each tabOptions as option (option.value)}
-    <span
-      class="filter-tab"
-      style="--tab-icon-color: {getHomeTypeIconColor(option.value)}"
-    >
-      <ActionButton
-        quiet
-        selected={typeFilter === option.value}
-        disabled={option.disabled}
-        on:click={() => !option.disabled && onTypeChange(option.value)}
+    {#if option.value !== "function" || showFunctions}
+      <span
+        class="filter-tab"
+        style="--tab-icon-color: {getHomeTypeIconColor(option.value)}"
       >
-        <Icon
-          name={getHomeTypeIcon(option.value)}
-          size="S"
-          color={getHomeTypeIconColor(option.value)}
-          weight="fill"
-        />
-        {option.label}
-      </ActionButton>
-    </span>
+        <ActionButton
+          quiet
+          selected={typeFilter === option.value}
+          disabled={option.disabled}
+          on:click={() => !option.disabled && onTypeChange(option.value)}
+        >
+          <Icon
+            name={getHomeTypeIcon(option.value)}
+            size="S"
+            color={getHomeTypeIconColor(option.value)}
+            weight={getHomeIconWeight(option.value)}
+          />
+          {option.label}
+        </ActionButton>
+      </span>
+    {/if}
   {/each}
 </div>
 

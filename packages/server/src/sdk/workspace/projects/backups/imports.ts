@@ -110,6 +110,7 @@ const IMPORT_ORDER: ResourceType[] = [
   ResourceType.DATASOURCE,
   ResourceType.TABLE,
   ResourceType.QUERY,
+  ResourceType.FUNCTION,
   ResourceType.AUTOMATION,
   ResourceType.ROW_ACTION,
   ResourceType.WORKSPACE_APP,
@@ -682,6 +683,10 @@ const sanitiseImportedDoc = async ({
     remapped.disabled = true
   }
 
+  if (resourceType === ResourceType.FUNCTION) {
+    remapped.appId = workspaceId
+  }
+
   if (resourceType === ResourceType.AGENT) {
     Object.assign(
       remapped,
@@ -728,6 +733,8 @@ const generateImportedId = (
       }
       return generateQueryID(datasourceId)
     }
+    case ResourceType.FUNCTION:
+      return docIds.generateFunctionID()
     case ResourceType.AUTOMATION:
       return generateAutomationID()
     case ResourceType.ROW_ACTION: {

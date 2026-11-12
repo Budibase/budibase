@@ -28,6 +28,7 @@ export interface PublishStatusResponse {
   automations: Record<string, PublishStatusResource>
   tables: Record<string, PublishStatusResource>
   agents: Record<string, PublishStatusResource>
+  functions: Record<string, PublishStatusResource>
 }
 
 export interface DeploymentProgressResponse extends DeploymentHistoryEntry {}

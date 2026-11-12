@@ -21,6 +21,7 @@ import {
   FieldType,
   DatabaseQueryOpts,
   FeatureFlag,
+  FunctionDocument,
   LockName,
   LockType,
   Project,
@@ -146,6 +147,7 @@ export async function analyseResourceDependencies({
     includeProjects && (await features.isEnabled(FeatureFlag.PROJECTS))
   const projects = projectsEnabled ? await sdk.projects.fetch() : []
   const workspaceApps = await sdk.workspaceApps.fetch()
+  const functions = await sdk.functions.fetch()
 
   const dependencies: Record<string, { dependencies: UsedResource[] }> = {}
   const addDependency = (forResource: string, dependency: UsedResource) => {
@@ -280,6 +282,14 @@ export async function analyseResourceDependencies({
     })
   )
 
+  baseSearchTargets.push(
+    ...functions.map<ResourceSearchTarget>(fn => ({
+      id: fn._id,
+      idToSearch: fn._id,
+      name: fn.name,
+      type: ResourceType.FUNCTION,
+    }))
+  )
   if (includeDatasourceQueries) {
     for (const datasource of datasources) {
       addDependencies(
@@ -386,19 +396,23 @@ export async function analyseResourceDependencies({
     })
   }
 
-  // Search in automations
-  for (const automation of automations) {
-    addReferencedDependencies({
-      forResource: automation._id,
-      resource: automation,
-    })
-  }
-
   // Search in queries
   for (const query of queries) {
     addReferencedDependencies({
       forResource: query._id!,
       resource: query,
+    })
+  }
+
+  for (const fn of functions) {
+    addReferencedDependencies({ forResource: fn._id, resource: fn })
+  }
+
+  // Search in automations after Functions so their dependencies are included.
+  for (const automation of automations) {
+    addReferencedDependencies({
+      forResource: automation._id,
+      resource: automation,
     })
   }
 
@@ -489,6 +503,7 @@ export async function analyseResourceDependencies({
         ),
         ...internalTables,
         ...automations,
+        ...functions,
         ...agents,
         ...workspaceApps,
       ].flatMap(resource =>
@@ -545,6 +560,9 @@ export async function analyseResourceDependencies({
               hasProject(table, project._id)
           )
           .map(table => buildUsedResource(table, ResourceType.TABLE)),
+        ...functions
+          .filter(fn => hasProject(fn, project._id))
+          .map(fn => buildUsedResource(fn, ResourceType.FUNCTION)),
         ...automations
           .filter(automation => hasProject(automation, project._id))
           .map(automation =>
@@ -642,6 +660,13 @@ function isAutomation(doc: AnyDocument): doc is Automation {
   return type === ResourceType.AUTOMATION
 }
 
+function isFunction(doc: AnyDocument): doc is FunctionDocument {
+  if (!doc._id) {
+    return false
+  }
+  return getResourceType(doc._id) === ResourceType.FUNCTION
+}
+
 function isAgent(doc: AnyDocument): doc is Agent {
   if (!doc._id) {
     return false
@@ -664,6 +689,10 @@ function isProject(doc: AnyDocument): doc is Project {
   }
   const type = getResourceType(doc._id)
   return type === ResourceType.PROJECT
+}
+
+function isDatasource(doc: AnyDocument): doc is Datasource {
+  return !!doc._id && getResourceType(doc._id) === ResourceType.DATASOURCE
 }
 
 function isTable(doc: AnyDocument): doc is WithDocMetadata<Table> {
@@ -1029,7 +1058,12 @@ async function duplicateResourceDocuments({
   const referencedProjectIds = Array.from(
     new Set(
       docsToInsert
-        .flatMap(getProjectIds)
+        .flatMap(doc => [
+          ...getProjectIds(doc),
+          ...(isDatasource(doc)
+            ? Object.values(doc.entities || {}).flatMap(getProjectIds)
+            : []),
+        ])
         .filter((projectId): projectId is string => !!projectId)
     )
   )
@@ -1085,8 +1119,16 @@ async function duplicateResourceDocuments({
         if (isAutomation(sanitisedDoc) || isWorkspaceApp(sanitisedDoc)) {
           sanitisedDoc.disabled = true
         }
-        if (isAutomation(sanitisedDoc)) {
+        if (isFunction(sanitisedDoc) || isAutomation(sanitisedDoc)) {
           sanitisedDoc.appId = toWorkspace
+        }
+        if (isDatasource(sanitisedDoc) && sanitisedDoc.entities) {
+          sanitisedDoc.entities = Object.fromEntries(
+            Object.entries(sanitisedDoc.entities).map(([name, entity]) => {
+              const sanitisedEntity = sanitiseProjectAssignment({ ...entity })
+              return [name, sanitisedEntity]
+            })
+          )
         }
         return sanitisedDoc
       })
@@ -1155,6 +1197,10 @@ async function duplicateResourcesToWorkspaceUnlocked({
       case ResourceType.QUERY:
         name = (doc as Query).name
         displayType = "Query"
+        break
+      case ResourceType.FUNCTION:
+        name = (doc as FunctionDocument).name
+        displayType = "Function"
         break
       case ResourceType.ROW_ACTION:
         name = doc._id // We don't really have a row action name

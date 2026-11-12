@@ -112,6 +112,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   deleteRow = this.step(AutomationActionStepId.DELETE_ROW)
   sendSmtpEmail = this.step(AutomationActionStepId.SEND_EMAIL_SMTP)
   executeQuery = this.step(AutomationActionStepId.EXECUTE_QUERY)
+  executeFunction = this.step(AutomationActionStepId.EXECUTE_FUNCTION)
   apiRequest = this.step(AutomationActionStepId.API_REQUEST)
   queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
   getRow = this.step(AutomationActionStepId.GET_ROW)

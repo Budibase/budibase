@@ -14,6 +14,7 @@ const resourceTypeIdPrefixes: Record<ResourceType, string> = {
   [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
   [ResourceType.ROW_ACTION]: prefixed(DocumentType.ROW_ACTIONS),
   [ResourceType.QUERY]: prefixed(DocumentType.QUERY),
+  [ResourceType.FUNCTION]: prefixed(DocumentType.FUNCTION),
   [ResourceType.AUTOMATION]: prefixed(DocumentType.AUTOMATION),
   [ResourceType.WORKSPACE_APP]: prefixed(DocumentType.WORKSPACE_APP),
   [ResourceType.SCREEN]: prefixed(DocumentType.SCREEN),

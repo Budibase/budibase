@@ -20,6 +20,8 @@ import {
   DeleteRowStepOutputs,
   ExecuteQueryStepInputs,
   ExecuteQueryStepOutputs,
+  ExecuteFunctionStepInputs,
+  ExecuteFunctionStepOutputs,
   ExecuteScriptStepInputs,
   ExecuteScriptStepOutputs,
   FilterStepInputs,
@@ -107,6 +109,10 @@ export type ActionImplementations<T extends Hosting> = {
   [AutomationActionStepId.EXECUTE_QUERY]: ActionImplementation<
     ExecuteQueryStepInputs,
     ExecuteQueryStepOutputs
+  >
+  [AutomationActionStepId.EXECUTE_FUNCTION]: ActionImplementation<
+    ExecuteFunctionStepInputs,
+    ExecuteFunctionStepOutputs
   >
   [AutomationActionStepId.API_REQUEST]: ActionImplementation<
     APIRequestStepInputs,
@@ -316,7 +322,9 @@ export type AutomationStepInputs<T extends AutomationActionStepId> =
                                                                       ? AgentStepInputs
                                                                       : T extends AutomationActionStepId.ESCALATION
                                                                         ? EscalationStepInputs
-                                                                        : never
+                                                                        : T extends AutomationActionStepId.EXECUTE_FUNCTION
+                                                                          ? ExecuteFunctionStepInputs
+                                                                          : never
 
 export type AutomationStepOutputs<T extends AutomationActionStepId> =
   T extends AutomationActionStepId.COLLECT
@@ -385,7 +393,9 @@ export type AutomationStepOutputs<T extends AutomationActionStepId> =
                                                                   ? AgentStepOutputs
                                                                   : T extends AutomationActionStepId.ESCALATION
                                                                     ? EscalationStepOutputs
-                                                                    : never
+                                                                    : T extends AutomationActionStepId.EXECUTE_FUNCTION
+                                                                      ? ExecuteFunctionStepOutputs
+                                                                      : never
 
 export interface AutomationStepInputSettings {
   continueOnError?: boolean
@@ -410,6 +420,9 @@ export type DeleteRowStep =
 
 export type ExecuteQueryStep =
   AutomationStepSchema<AutomationActionStepId.EXECUTE_QUERY>
+
+export type ExecuteFunctionStep =
+  AutomationStepSchema<AutomationActionStepId.EXECUTE_FUNCTION>
 
 export type APIRequestStep =
   AutomationStepSchema<AutomationActionStepId.API_REQUEST>
@@ -498,6 +511,7 @@ export type AutomationStep =
   | DelayStep
   | DeleteRowStep
   | ExecuteQueryStep
+  | ExecuteFunctionStep
   | APIRequestStep
   | ExecuteScriptStep
   | ExecuteScriptV2Step

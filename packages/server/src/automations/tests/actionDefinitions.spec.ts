@@ -3,6 +3,7 @@ import env, { setEnv } from "../../environment"
 import sdk from "../../sdk"
 import { getAction, getActionDefinitions } from "../actions"
 import { getAutomationPlugin } from "../../utilities/fileSystem"
+import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
 
 jest.mock("../../sdk", () => ({
   plugins: {
@@ -14,10 +15,19 @@ jest.mock("../../utilities/fileSystem", () => ({
   getAutomationPlugin: jest.fn(),
 }))
 
+jest.mock("../../middleware/functionsEnabled", () => ({
+  areFunctionsEnabled: jest.fn(),
+}))
+
 const mockPluginFetch = sdk.plugins.fetch as jest.Mock
 const mockGetAutomationPlugin = getAutomationPlugin as jest.Mock
+const mockAreFunctionsEnabled = jest.mocked(areFunctionsEnabled)
 
 describe("getActionDefinitions", () => {
+  beforeEach(() => {
+    mockAreFunctionsEnabled.mockResolvedValue(false)
+  })
+
   afterEach(() => {
     jest.clearAllMocks()
   })
@@ -29,7 +39,7 @@ describe("getActionDefinitions", () => {
     try {
       const definitions = await getActionDefinitions()
 
-      expect(definitions.OPENAI.deprecated).toEqual(true)
+      expect(definitions.OPENAI).toMatchObject({ deprecated: true })
       expect(mockPluginFetch).toHaveBeenCalledWith(PluginType.AUTOMATION)
     } finally {
       restoreEnv()
@@ -47,6 +57,14 @@ describe("getActionDefinitions", () => {
     } finally {
       restoreEnv()
     }
+  })
+
+  it("only includes the Function action when Functions are enabled", async () => {
+    expect((await getActionDefinitions()).EXECUTE_FUNCTION).toBeUndefined()
+
+    mockAreFunctionsEnabled.mockResolvedValue(true)
+
+    expect((await getActionDefinitions()).EXECUTE_FUNCTION).toBeDefined()
   })
 
   it("adds self-hosted automation plugin definitions as custom actions", async () => {
@@ -81,11 +99,11 @@ describe("getActionDefinitions", () => {
 
     try {
       const first = await getActionDefinitions()
-      first.OPENAI.deprecated = false
+      first.OPENAI!.deprecated = false
 
       const second = await getActionDefinitions()
 
-      expect(second.OPENAI.deprecated).toEqual(true)
+      expect(second.OPENAI).toMatchObject({ deprecated: true })
       expect(env.SELF_HOSTED).toEqual("1")
     } finally {
       restoreEnv()
