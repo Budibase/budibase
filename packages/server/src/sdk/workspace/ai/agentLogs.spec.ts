@@ -10,6 +10,7 @@ import type { AgentLogSessionIndexDoc } from "@budibase/types"
 import {
   addSessionLog,
   clearOldHistory,
+  exportSession,
   fetchRequestDetail,
   fetchSessions,
   fetchSessionDetail,
@@ -800,5 +801,44 @@ describe("agentLogs", () => {
       })
     )
     expect(sessionScope.isDone()).toBe(true)
+  })
+
+  it("exports session details using the existing session summaries", async () => {
+    jest.useRealTimers()
+    await saveAgent("agent-1")
+    const sessionScope = mockLiteLLMSessionRows([
+      {
+        request_id: "req-1",
+        session_id: "session-1",
+        startTime: "2026-03-08T11:00:00.000Z",
+        endTime: "2026-03-08T11:00:10.000Z",
+        prompt_tokens: 10,
+        completion_tokens: 20,
+        spend: 0.01,
+        model: "gpt-5",
+        end_user: "bb-agent:agent-1",
+        status: "success",
+      },
+    ])
+    const payloadScope = mockLiteLLMPayload(
+      "req-1",
+      buildLiteLLMPayload({ requestId: "req-1" })
+    )
+
+    const result = await withWorkspace(async () => {
+      return await exportSession("agent-1", "session-1", "production")
+    })
+
+    expect(result).toEqual({
+      session: expect.not.objectContaining({ entries: expect.anything() }),
+      actions: [
+        expect.objectContaining({
+          entry: expect.objectContaining({ requestId: "req-1" }),
+          detail: expect.objectContaining({ requestId: "req-1" }),
+        }),
+      ],
+    })
+    expect(sessionScope.isDone()).toBe(true)
+    expect(payloadScope.isDone()).toBe(true)
   })
 })

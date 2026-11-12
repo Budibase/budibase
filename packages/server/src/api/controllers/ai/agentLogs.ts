@@ -7,11 +7,9 @@ import type {
   UserCtx,
 } from "@budibase/types"
 import { Duration, HTTPError } from "@budibase/backend-core"
-import { utils } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/
-const EXPORT_CONCURRENCY = 5
 
 function getDefaultLogRange() {
   const now = new Date()
@@ -154,36 +152,11 @@ export async function exportAgentLogSession(
 ) {
   const { agentId, sessionId } = ctx.params
   const { environment } = ctx.query as Record<string, string>
-  const session = await sdk.ai.agentLogs.fetchSessionDetail(
+  ctx.body = await sdk.ai.agentLogs.exportSession(
     agentId,
     sessionId,
     sanitizeEnvironmentQuery(environment)
   )
-  if (!session) {
-    ctx.body = null
-    return
-  }
-
-  const { entries, ...sessionMetadata } = session
-  const actions: AgentLogSessionExport["actions"] = new Array(entries.length)
-  const toolDisplayNames =
-    await sdk.ai.agentLogs.fetchAgentToolDisplayNames(agentId)
-  await utils.parallelForeach(
-    entries.entries(),
-    async ([index, entry]) => {
-      actions[index] = {
-        entry,
-        detail: await sdk.ai.agentLogs.fetchRequestDetail({
-          agentId,
-          sessionId,
-          requestId: entry.requestId,
-          toolDisplayNames,
-        }),
-      }
-    },
-    EXPORT_CONCURRENCY
-  )
-  ctx.body = { session: sessionMetadata, actions }
 }
 
 export async function fetchAgentLogDetail(
