@@ -693,7 +693,7 @@ export const createRowTools = ({
       if (!view) {
         return result
       }
-      const allowedFields = new Set([...fields, ...PROTECTED_INTERNAL_COLUMNS])
+      const allowedFields = new Set([...fields, "_id", "_rev"])
       const restrictRow = (row: Row): Row =>
         Object.fromEntries(
           Object.entries(row).filter(([name]) => allowedFields.has(name))

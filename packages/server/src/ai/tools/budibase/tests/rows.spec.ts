@@ -279,9 +279,13 @@ describe("AI Tools - Rows", () => {
         const { getTool } = await setupView()
         const result = await executeTool(getTool(action), {})
         expect(result.rows).toEqual([
-          expect.objectContaining({ name: "Visible", status: "Open" }),
+          {
+            _id: expect.any(String),
+            _rev: expect.any(String),
+            name: "Visible",
+            status: "Open",
+          },
         ])
-        expect(result.rows[0]).not.toHaveProperty("secret")
       }
     )
 
@@ -353,8 +357,12 @@ describe("AI Tools - Rows", () => {
       const result = await executeTool(getTool("get_row"), {
         rowId: visibleRow._id!,
       })
-      expect(result.row).toMatchObject({ name: "Visible", status: "Open" })
-      expect(result.row).not.toHaveProperty("secret")
+      expect(result.row).toEqual({
+        _id: visibleRow._id,
+        _rev: visibleRow._rev,
+        name: "Visible",
+        status: "Open",
+      })
     })
 
     it("creates rows using visible writable fields", async () => {
@@ -365,7 +373,11 @@ describe("AI Tools - Rows", () => {
       expect(
         await config.api.row.get(table._id!, result.row._id!)
       ).toMatchObject({ name: "New ticket" })
-      expect(result.row).not.toHaveProperty("secret")
+      expect(result.row).toEqual({
+        _id: expect.any(String),
+        _rev: expect.any(String),
+        name: "New ticket",
+      })
     })
 
     it("protects columns when executing a redacted tool", async () => {
@@ -392,8 +404,12 @@ describe("AI Tools - Rows", () => {
         rowRev: visibleRow._rev!,
         data: { name: "Updated" },
       })
-      expect(result.row).toMatchObject({ name: "Updated", status: "Open" })
-      expect(result.row).not.toHaveProperty("secret")
+      expect(result.row).toEqual({
+        _id: visibleRow._id,
+        _rev: expect.any(String),
+        name: "Updated",
+        status: "Open",
+      })
       expect(
         await config.api.row.get(table._id!, visibleRow._id!)
       ).toMatchObject({
