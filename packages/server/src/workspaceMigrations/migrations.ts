@@ -9,7 +9,6 @@ import m20260227144312_unify_ai_configs from "./migrations/20260227144312_unify_
 import m20260708090000_sanitize_relationship_field_names from "./migrations/20260708090000_sanitize_relationship_field_names"
 import m20261006164506_backfill_agent_request_operation_ids from "./migrations/20261006164506_backfill_agent_request_operation_ids"
 import m20261015162044_move_agent_requests_to_tenant_db from "./migrations/20261015162044_move_agent_requests_to_tenant_db"
-import m20261112143119_repair_imported_attachment_keys from "./migrations/20261112143119_repair_imported_attachment_keys"
 
 export const MIGRATIONS: WorkspaceMigration[] = [
   // Migrations will be executed sorted by id
@@ -40,9 +39,5 @@ export const MIGRATIONS: WorkspaceMigration[] = [
   {
     id: "20261015162044_move_agent_requests_to_tenant_db",
     func: m20261015162044_move_agent_requests_to_tenant_db,
-  },
-  {
-    id: "20261112143119_repair_imported_attachment_keys",
-    func: m20261112143119_repair_imported_attachment_keys,
   },
 ]
