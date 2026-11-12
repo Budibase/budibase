@@ -8,6 +8,7 @@ import {
   RelationshipType,
   TableSourceType,
   type TableSchema,
+  type BasicViewFieldMetadata,
 } from "@budibase/types"
 import { type BudibaseToolDefinition, getBudibaseTools } from ".."
 import { createRowTools } from "../rows"
@@ -231,7 +232,9 @@ describe("AI Tools - Rows", () => {
   }
 
   describe("table views", () => {
-    const setupView = async () => {
+    const setupView = async ({
+      nameField = { visible: true },
+    }: { nameField?: BasicViewFieldMetadata } = {}) => {
       const table = await config.api.table.save(
         basicTable(undefined, {
           schema: {
@@ -257,7 +260,7 @@ describe("AI Tools - Rows", () => {
         tableId: table._id!,
         name: "Open records",
         schema: {
-          name: { visible: true },
+          name: nameField,
           status: { visible: true, readonly: true },
           secret: { visible: false },
         },
@@ -288,6 +291,51 @@ describe("AI Tools - Rows", () => {
         ])
       }
     )
+
+    it("searches fields with omitted visibility in the view", async () => {
+      const { getTool, visibleRow } = await setupView({ nameField: {} })
+      const result = await executeTool(getTool("search_rows"), {
+        query: { equal: { name: "Visible" } },
+      })
+      expect(result.rows).toEqual([
+        {
+          _id: visibleRow._id,
+          _rev: visibleRow._rev,
+          name: "Visible",
+          status: "Open",
+        },
+      ])
+    })
+
+    it("updates fields with omitted visibility in the view", async () => {
+      const { table, getTool, visibleRow } = await setupView({ nameField: {} })
+      const tool = getTool("update_row")
+      const result = await executeTool(tool, {
+        rowId: visibleRow._id!,
+        rowRev: visibleRow._rev!,
+        data: { name: "Updated" },
+      })
+      expect(result.row).toEqual({
+        _id: visibleRow._id,
+        _rev: expect.any(String),
+        name: "Updated",
+        status: "Open",
+      })
+      expect(
+        await config.api.row.get(table._id!, visibleRow._id!)
+      ).toMatchObject({
+        name: "Updated",
+        secret: "Private value",
+        internalNote: "Not in the view",
+      })
+      expect(await asSchema(tool.tool.inputSchema).jsonSchema).toMatchObject({
+        properties: {
+          data: {
+            properties: { name: expect.any(Object) },
+          },
+        },
+      })
+    })
 
     it.each(["get_row", "update_row"])(
       "prevents %s outside the view",
@@ -340,7 +388,7 @@ describe("AI Tools - Rows", () => {
         executeTool(getTool("search_rows"), {
           query: { equal: { secret: "Private value" } },
         })
-      ).rejects.toThrow()
+      ).rejects.toThrow("Invalid filter field: secret")
     })
 
     it("rejects sorting hidden columns", async () => {

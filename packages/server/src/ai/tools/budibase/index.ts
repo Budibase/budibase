@@ -57,7 +57,9 @@ export const getBudibaseTools = (
             tableSchema: Object.fromEntries(
               Object.entries(table.schema).filter(
                 ([name, field]) =>
-                  view.schema?.[name]?.visible && field.visible !== false
+                  view.schema?.[name] &&
+                  helpers.views.isVisible(view.schema[name]) &&
+                  field.visible !== false
               )
             ),
             primaryDisplay: view.primaryDisplay,
