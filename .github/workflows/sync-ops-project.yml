@@ -1,11 +1,6 @@
 name: Sync Ops project issues
 
 on:
-  push:
-    branches: [automation/ops-project-intake]
-    paths:
-      - .github/scripts/sync-ops-project.py
-      - .github/workflows/sync-ops-project.yml
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
