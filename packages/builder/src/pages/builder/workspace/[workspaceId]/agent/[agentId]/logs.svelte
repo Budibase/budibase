@@ -250,13 +250,15 @@
 
     downloadingSession = true
     try {
-      const actions = await Promise.all(
-        session.entries.map(async entry => ({
-          entry,
-          detail: await API.fetchAgentLogDetail(agentId, entry.requestId),
-        }))
+      const exportData = await API.exportAgentLogSession(
+        agentId,
+        session.sessionId,
+        session.environment
       )
-      const data = JSON.stringify({ session, actions }, null, 2)
+      if (!exportData) {
+        throw new Error("Session logs not found")
+      }
+      const data = JSON.stringify(exportData, null, 2)
       download(
         new Blob([data], { type: "application/json" }),
         `agent-session-${session.sessionId}.json`,

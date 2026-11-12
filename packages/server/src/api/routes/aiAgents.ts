@@ -76,6 +76,7 @@ builderAdminRoutes
   .get("/api/agent/requests", agentActivityEnabled, ai.fetchAgentRequests)
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
   .get("/api/agent/:agentId/logs/:sessionId", ai.fetchAgentLogSession)
+  .get("/api/agent/:agentId/logs/:sessionId/export", ai.exportAgentLogSession)
   .get(
     "/api/agent/:agentId/logs/:sessionId/actions/:requestId",
     ai.fetchAgentLogDetail
