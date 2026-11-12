@@ -153,6 +153,43 @@ async function fetchLiteLLMRequestPayloadById(
   return (await response.json()) as LiteLLMRequestPayload
 }
 
+function combineLiteLLMRequestData(
+  requestId: string,
+  payload: LiteLLMRequestPayload,
+  summary?: LiteLLMRequestRecord | null
+): LiteLLMRequestDetail {
+  return {
+    ...summary,
+    request_id: requestId,
+    response: payload.response,
+    proxy_server_request: payload.proxy_server_request,
+  }
+}
+
+export async function fetchLiteLLMRequestRawFromSummary({
+  agentId,
+  sessionId,
+  summary,
+}: {
+  agentId: string
+  sessionId: string
+  summary: LiteLLMRequestRecord
+}): Promise<LiteLLMRequestDetail> {
+  const requestId = summary.request_id
+  if (!requestId || summary.session_id !== sessionId) {
+    throw new HTTPError("Agent log detail not found", 404)
+  }
+
+  const payload = await fetchLiteLLMRequestPayloadById(requestId)
+  if (!payload) {
+    throw new HTTPError("Agent log detail not found", 404)
+  }
+
+  const data = combineLiteLLMRequestData(requestId, payload, summary)
+  validateLiteLLMRequestOwnership(agentId, data)
+  return data
+}
+
 export async function fetchLiteLLMRequestRaw(
   agentId: string,
   requestId: string
@@ -165,21 +202,7 @@ export async function fetchLiteLLMRequestRaw(
   if (!payload) {
     throw new HTTPError("Agent log detail not found", 404)
   }
-  const data: LiteLLMRequestDetail = {
-    request_id: requestId,
-    model: summary?.model,
-    prompt_tokens: summary?.prompt_tokens,
-    completion_tokens: summary?.completion_tokens,
-    spend: summary?.spend,
-    status: summary?.status,
-    startTime: summary?.startTime,
-    endTime: summary?.endTime,
-    end_user: summary?.end_user,
-    user: summary?.user,
-    metadata: summary?.metadata,
-    response: payload.response,
-    proxy_server_request: payload.proxy_server_request,
-  }
+  const data = combineLiteLLMRequestData(requestId, payload, summary)
 
   validateLiteLLMRequestOwnership(agentId, data)
 

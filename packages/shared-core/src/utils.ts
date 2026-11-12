@@ -44,6 +44,7 @@ export async function parallelForeach<T>(
   maxConcurrency: number
 ): Promise<void> {
   const results: Promise<void>[] = []
+  let failed = false
 
   // Check if it's an async iterable
   const isAsyncIterable = Symbol.asyncIterator in items
@@ -56,8 +57,16 @@ export async function parallelForeach<T>(
       ? (iterator as AsyncIterator<T>).next()
       : Promise.resolve((iterator as Iterator<T>).next()))
 
-    while (!result.done) {
-      await task(result.value)
+    while (!result.done && !failed) {
+      try {
+        await task(result.value)
+      } catch (error) {
+        failed = true
+        throw error
+      }
+      if (failed) {
+        return
+      }
       result = await (isAsyncIterable
         ? (iterator as AsyncIterator<T>).next()
         : Promise.resolve((iterator as Iterator<T>).next()))

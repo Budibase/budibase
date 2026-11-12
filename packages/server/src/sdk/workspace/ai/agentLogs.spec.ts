@@ -10,6 +10,7 @@ import type { AgentLogSessionIndexDoc } from "@budibase/types"
 import {
   addSessionLog,
   clearOldHistory,
+  exportSession,
   fetchRequestDetail,
   fetchSessions,
   fetchSessionDetail,
@@ -52,12 +53,15 @@ function createSessionDoc(
 function buildLiteLLMSummaryRow({
   requestId,
   user = "bb-agent:agent-1",
+  sessionId = "session-1",
 }: {
   requestId: string
   user?: string
+  sessionId?: string
 }) {
   return {
     request_id: requestId,
+    session_id: sessionId,
     model: "gpt-5",
     prompt_tokens: 10,
     completion_tokens: 20,
@@ -623,7 +627,11 @@ describe("agentLogs", () => {
 
     await expect(
       withWorkspace(async () => {
-        return await fetchRequestDetail("agent-1", "req-1")
+        return await fetchRequestDetail({
+          agentId: "agent-1",
+          sessionId: "session-1",
+          requestId: "req-1",
+        })
       })
     ).rejects.toMatchObject({
       status: 404,
@@ -645,7 +653,11 @@ describe("agentLogs", () => {
     )
 
     const detail = await withWorkspace(async () => {
-      return await fetchRequestDetail("agent-1", "req-1")
+      return await fetchRequestDetail({
+        agentId: "agent-1",
+        sessionId: "session-1",
+        requestId: "req-1",
+      })
     })
 
     expect(detail).toEqual(
@@ -690,7 +702,11 @@ describe("agentLogs", () => {
 
     await expect(
       withWorkspace(async () => {
-        return await fetchRequestDetail("agent-1", "req-1")
+        return await fetchRequestDetail({
+          agentId: "agent-1",
+          sessionId: "session-1",
+          requestId: "req-1",
+        })
       })
     ).resolves.toEqual(
       expect.objectContaining({
@@ -702,6 +718,35 @@ describe("agentLogs", () => {
     expect(payloadScope.isDone()).toBe(true)
   })
 
+  it("rejects request detail when it belongs to another session", async () => {
+    jest.useRealTimers()
+    const summaryScope = mockLiteLLMSummary([
+      buildLiteLLMSummaryRow({
+        requestId: "req-1",
+        sessionId: "session-2",
+      }),
+    ])
+    const payloadScope = mockLiteLLMPayload(
+      "req-1",
+      buildLiteLLMPayload({ requestId: "req-1" })
+    )
+
+    await expect(
+      withWorkspace(async () => {
+        return await fetchRequestDetail({
+          agentId: "agent-1",
+          sessionId: "session-1",
+          requestId: "req-1",
+        })
+      })
+    ).rejects.toMatchObject({
+      status: 404,
+      message: "Agent log detail not found",
+    })
+    expect(summaryScope.isDone()).toBe(true)
+    expect(payloadScope.isDone()).toBe(true)
+  })
+
   it("returns not found when LiteLLM does not return request detail", async () => {
     jest.useRealTimers()
     const summaryScope = mockLiteLLMSummary([])
@@ -709,7 +754,11 @@ describe("agentLogs", () => {
 
     await expect(
       withWorkspace(async () => {
-        return await fetchRequestDetail("agent-1", "req-missing")
+        return await fetchRequestDetail({
+          agentId: "agent-1",
+          sessionId: "session-1",
+          requestId: "req-missing",
+        })
       })
     ).rejects.toMatchObject({
       status: 404,
@@ -751,6 +800,82 @@ describe("agentLogs", () => {
         ],
       })
     )
+    expect(sessionScope.isDone()).toBe(true)
+  })
+
+  it("exports session details using the existing session summaries", async () => {
+    jest.useRealTimers()
+    await saveAgent("agent-1")
+    const sessionScope = mockLiteLLMSessionRows([
+      {
+        request_id: "req-1",
+        session_id: "session-1",
+        startTime: "2026-03-08T11:00:00.000Z",
+        endTime: "2026-03-08T11:00:10.000Z",
+        prompt_tokens: 10,
+        completion_tokens: 20,
+        spend: 0.01,
+        model: "gpt-5",
+        end_user: "bb-agent:agent-1",
+        status: "success",
+      },
+    ])
+    const payloadScope = mockLiteLLMPayload(
+      "req-1",
+      buildLiteLLMPayload({ requestId: "req-1" })
+    )
+
+    const result = await withWorkspace(async () => {
+      return await exportSession("agent-1", "session-1", "production")
+    })
+
+    expect(result).toEqual({
+      session: expect.not.objectContaining({ entries: expect.anything() }),
+      actions: [
+        expect.objectContaining({
+          entry: expect.objectContaining({ requestId: "req-1" }),
+          detail: expect.objectContaining({ requestId: "req-1" }),
+        }),
+      ],
+    })
+    expect(sessionScope.isDone()).toBe(true)
+    expect(payloadScope.isDone()).toBe(true)
+  })
+
+  it("rejects an export when a request belongs to another session", async () => {
+    jest.useRealTimers()
+    await saveAgent("agent-1")
+    const sessionScope = mockLiteLLMSessionRows([
+      {
+        request_id: "req-1",
+        session_id: "session-2",
+        startTime: "2026-03-08T11:00:00.000Z",
+        endTime: "2026-03-08T11:00:10.000Z",
+        end_user: "bb-agent:agent-1",
+        status: "success",
+      },
+    ])
+
+    await expect(
+      withWorkspace(async () => {
+        return await exportSession("agent-1", "session-1", "production")
+      })
+    ).rejects.toMatchObject({
+      status: 404,
+      message: "Agent log detail not found",
+    })
+    expect(sessionScope.isDone()).toBe(true)
+  })
+
+  it("returns null when exporting a missing session", async () => {
+    jest.useRealTimers()
+    const sessionScope = mockLiteLLMSessionRows([])
+
+    await expect(
+      withWorkspace(async () => {
+        return await exportSession("agent-1", "session-missing", "production")
+      })
+    ).resolves.toBeNull()
     expect(sessionScope.isDone()).toBe(true)
   })
 })

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Icon } from "@budibase/bbui"
+  import { ActionButton, Body, Icon } from "@budibase/bbui"
   import type {
     AgentLogEntry,
     AgentLogRequestDetail,
@@ -13,7 +13,9 @@
     expandedStepId: string | null
     expandedStepDetail: AgentLogRequestDetail | null
     expandedStepLoading: boolean
+    downloadingSession: boolean
     onToggleStep: (entry: AgentLogEntry) => void | Promise<void>
+    onDownloadSession: (session: AgentLogSession) => void | Promise<void>
   }
 
   let {
@@ -21,7 +23,9 @@
     expandedStepId,
     expandedStepDetail,
     expandedStepLoading,
+    downloadingSession,
     onToggleStep,
+    onDownloadSession,
   }: Props = $props()
 
   function formatEnvironment(environment: "development" | "production") {
@@ -34,9 +38,21 @@
   <div class="detail-content">
     <div class="detail-header">
       <h3 class="detail-title">Session</h3>
-      <div class="detail-header-stats">
-        <span class="header-stat">{selectedSession.entries.length} steps</span>
-        <span class="header-stat">{summary.latency}</span>
+      <div class="detail-header-actions">
+        <div class="detail-header-stats">
+          <span class="header-stat">{selectedSession.entries.length} steps</span
+          >
+          <span class="header-stat">{summary.latency}</span>
+        </div>
+        <ActionButton
+          icon="download"
+          size="S"
+          loading={downloadingSession}
+          disabled={downloadingSession}
+          on:click={() => onDownloadSession(selectedSession)}
+        >
+          Download logs
+        </ActionButton>
       </div>
     </div>
 
@@ -136,6 +152,14 @@
     gap: var(--spacing-s);
     align-items: center;
     flex-wrap: wrap;
+  }
+
+  .detail-header-actions {
+    display: flex;
+    gap: var(--spacing-s);
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .header-stat {
