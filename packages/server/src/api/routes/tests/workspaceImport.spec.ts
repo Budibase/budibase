@@ -295,6 +295,58 @@ describe("/applications/:appId/import", () => {
     }
   )
 
+  it("cannot access or delete a foreign attachment key from an imported row", async () => {
+    const sourceId = config.getDevWorkspaceId()
+    const foreignKey = "app_other/attachments/victim.txt"
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: foreignKey,
+      body: Buffer.from("victim content"),
+      type: "text/plain",
+    })
+    const table = await config.api.table.save(
+      basicTable(undefined, {
+        schema: { file: { name: "file", type: FieldType.ATTACHMENT_SINGLE } },
+      })
+    )
+    const row = await config.api.row.save(table._id!, {})
+    await config.doInContext(sourceId, async () => {
+      const sourceDb = db.getDB(sourceId)
+      const stored = await sourceDb.get<Row>(row._id!)
+      await sourceDb.put({
+        ...stored,
+        file: {
+          key: foreignKey,
+          name: "victim.txt",
+          extension: "txt",
+          size: 14,
+        },
+      })
+    })
+    const exportPath = await sdk.backups.exportWorkspace(sourceId, {
+      tar: true,
+    })
+    await config.createWorkspace()
+    const targetId = config.getDevWorkspaceId()
+    await request
+      .post(`/api/applications/${targetId}/import`)
+      .attach("appExport", exportPath)
+      .set(config.defaultHeaders())
+      .expect(200)
+
+    const imported = await config.api.row.get(table._id!, row._id!)
+    expect(imported.file.key).toBe(
+      `${config.getProdWorkspaceId()}/attachments/victim.txt`
+    )
+    await config.api.row.delete(table._id!, { _id: row._id! })
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        foreignKey
+      )
+    ).toBe(true)
+  })
+
   it("should preserve existing attachment files when importing an export that does not include attachments", async () => {
     const appId = config.getDevWorkspaceId()
     const prodAppId = db.getProdWorkspaceID(appId)
