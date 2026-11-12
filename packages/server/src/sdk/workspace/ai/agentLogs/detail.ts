@@ -4,6 +4,7 @@ import type {
   AgentLogRequestDetail,
   AgentLogSession,
 } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
 import { getAvailableTools, getOrThrow, getToolDisplayNames } from "../agents"
 import { fetchLiteLLMRequestRaw, fetchLiteLLMSessionRows } from "./liteLLM"
 import { getSessionSummary } from "./sessionIndex"
@@ -75,11 +76,19 @@ export async function fetchSessionDetail(
   }
 }
 
-export async function fetchRequestDetail(
-  agentId: string,
+export async function fetchRequestDetail({
+  agentId,
+  sessionId,
+  requestId,
+}: {
+  agentId: string
+  sessionId: string
   requestId: string
-): Promise<AgentLogRequestDetail> {
+}): Promise<AgentLogRequestDetail> {
   const data = await fetchLiteLLMRequestRaw(agentId, requestId)
+  if (data.session_id !== sessionId) {
+    throw new HTTPError("Agent log detail not found", 404)
+  }
   const requestMessages = data.proxy_server_request?.messages || []
   const responseMessage = data.response?.choices?.[0]?.message
   const agent = await getOrThrow(agentId)

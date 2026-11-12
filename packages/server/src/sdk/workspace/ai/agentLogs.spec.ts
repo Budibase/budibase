@@ -52,12 +52,15 @@ function createSessionDoc(
 function buildLiteLLMSummaryRow({
   requestId,
   user = "bb-agent:agent-1",
+  sessionId = "session-1",
 }: {
   requestId: string
   user?: string
+  sessionId?: string
 }) {
   return {
     request_id: requestId,
+    session_id: sessionId,
     model: "gpt-5",
     prompt_tokens: 10,
     completion_tokens: 20,
@@ -623,7 +626,11 @@ describe("agentLogs", () => {
 
     await expect(
       withWorkspace(async () => {
-        return await fetchRequestDetail("agent-1", "req-1")
+        return await fetchRequestDetail({
+          agentId: "agent-1",
+          sessionId: "session-1",
+          requestId: "req-1",
+        })
       })
     ).rejects.toMatchObject({
       status: 404,
@@ -645,7 +652,11 @@ describe("agentLogs", () => {
     )
 
     const detail = await withWorkspace(async () => {
-      return await fetchRequestDetail("agent-1", "req-1")
+      return await fetchRequestDetail({
+        agentId: "agent-1",
+        sessionId: "session-1",
+        requestId: "req-1",
+      })
     })
 
     expect(detail).toEqual(
@@ -690,7 +701,11 @@ describe("agentLogs", () => {
 
     await expect(
       withWorkspace(async () => {
-        return await fetchRequestDetail("agent-1", "req-1")
+        return await fetchRequestDetail({
+          agentId: "agent-1",
+          sessionId: "session-1",
+          requestId: "req-1",
+        })
       })
     ).resolves.toEqual(
       expect.objectContaining({
@@ -702,6 +717,35 @@ describe("agentLogs", () => {
     expect(payloadScope.isDone()).toBe(true)
   })
 
+  it("rejects request detail when it belongs to another session", async () => {
+    jest.useRealTimers()
+    const summaryScope = mockLiteLLMSummary([
+      buildLiteLLMSummaryRow({
+        requestId: "req-1",
+        sessionId: "session-2",
+      }),
+    ])
+    const payloadScope = mockLiteLLMPayload(
+      "req-1",
+      buildLiteLLMPayload({ requestId: "req-1" })
+    )
+
+    await expect(
+      withWorkspace(async () => {
+        return await fetchRequestDetail({
+          agentId: "agent-1",
+          sessionId: "session-1",
+          requestId: "req-1",
+        })
+      })
+    ).rejects.toMatchObject({
+      status: 404,
+      message: "Agent log detail not found",
+    })
+    expect(summaryScope.isDone()).toBe(true)
+    expect(payloadScope.isDone()).toBe(true)
+  })
+
   it("returns not found when LiteLLM does not return request detail", async () => {
     jest.useRealTimers()
     const summaryScope = mockLiteLLMSummary([])
@@ -709,7 +753,11 @@ describe("agentLogs", () => {
 
     await expect(
       withWorkspace(async () => {
-        return await fetchRequestDetail("agent-1", "req-missing")
+        return await fetchRequestDetail({
+          agentId: "agent-1",
+          sessionId: "session-1",
+          requestId: "req-missing",
+        })
       })
     ).rejects.toMatchObject({
       status: 404,

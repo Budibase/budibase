@@ -172,10 +172,11 @@ export async function exportAgentLogSession(
     async ([index, entry]) => {
       actions[index] = {
         entry,
-        detail: await sdk.ai.agentLogs.fetchRequestDetail(
+        detail: await sdk.ai.agentLogs.fetchRequestDetail({
           agentId,
-          entry.requestId
-        ),
+          sessionId,
+          requestId: entry.requestId,
+        }),
       }
     },
     EXPORT_CONCURRENCY
@@ -190,6 +191,10 @@ export async function fetchAgentLogDetail(
     { agentId: string; sessionId: string; requestId: string }
   >
 ) {
-  const { agentId, requestId } = ctx.params
-  ctx.body = await sdk.ai.agentLogs.fetchRequestDetail(agentId, requestId)
+  const { agentId, sessionId, requestId } = ctx.params
+  ctx.body = await sdk.ai.agentLogs.fetchRequestDetail({
+    agentId,
+    sessionId,
+    requestId,
+  })
 }

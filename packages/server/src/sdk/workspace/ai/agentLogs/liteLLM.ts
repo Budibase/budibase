@@ -174,6 +174,7 @@ export async function fetchLiteLLMRequestRaw(
     status: summary?.status,
     startTime: summary?.startTime,
     endTime: summary?.endTime,
+    session_id: summary?.session_id,
     end_user: summary?.end_user,
     user: summary?.user,
     metadata: summary?.metadata,
