@@ -18,10 +18,11 @@ export interface AgentLogEndpoints {
       triggerFilter?: string
     }
   ) => Promise<FetchAgentLogsResponse>
-  fetchAgentLogDetail: (
-    agentId: string,
+  fetchAgentLogDetail: (opts: {
+    agentId: string
+    sessionId: string
     requestId: string
-  ) => Promise<AgentLogRequestDetail>
+  }) => Promise<AgentLogRequestDetail>
   fetchAgentLogSession: (
     agentId: string,
     sessionId: string,
@@ -46,17 +47,20 @@ export const buildAgentLogEndpoints = (
     })
   },
 
-  fetchAgentLogDetail: async (agentId, requestId) => {
+  fetchAgentLogDetail: async ({ agentId, sessionId, requestId }) => {
     return await API.get({
-      url: `/api/agent/${agentId}/logs/${requestId}`,
+      url: `/api/agent/${agentId}/logs/${encodeURIComponent(
+        sessionId
+      )}/actions/${encodeURIComponent(requestId)}`,
     })
   },
 
   fetchAgentLogSession: async (agentId, sessionId, environment) => {
-    const params = new URLSearchParams({ sessionId })
-    params.set("environment", environment)
+    const params = new URLSearchParams({ environment })
     return await API.get({
-      url: `/api/agent/${agentId}/logs/session?${params.toString()}`,
+      url: `/api/agent/${agentId}/logs/${encodeURIComponent(
+        sessionId
+      )}?${params.toString()}`,
     })
   },
 })

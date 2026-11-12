@@ -127,10 +127,14 @@ export async function fetchAgentLogs(
 }
 
 export async function fetchAgentLogSession(
-  ctx: UserCtx<void, AgentLogSession | null>
+  ctx: UserCtx<
+    void,
+    AgentLogSession | null,
+    { agentId: string; sessionId: string }
+  >
 ) {
-  const { agentId } = ctx.params
-  const { sessionId, environment } = ctx.query as Record<string, string>
+  const { agentId, sessionId } = ctx.params
+  const { environment } = ctx.query as Record<string, string>
   ctx.body = await sdk.ai.agentLogs.fetchSessionDetail(
     agentId,
     sessionId,
@@ -139,7 +143,11 @@ export async function fetchAgentLogSession(
 }
 
 export async function fetchAgentLogDetail(
-  ctx: UserCtx<void, AgentLogRequestDetail>
+  ctx: UserCtx<
+    void,
+    AgentLogRequestDetail,
+    { agentId: string; sessionId: string; requestId: string }
+  >
 ) {
   const { agentId, requestId } = ctx.params
   ctx.body = await sdk.ai.agentLogs.fetchRequestDetail(agentId, requestId)

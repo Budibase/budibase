@@ -160,7 +160,11 @@
     expandedStepDetail = null
 
     try {
-      const detail = await API.fetchAgentLogDetail(agentId, entry.requestId)
+      const detail = await API.fetchAgentLogDetail({
+        agentId,
+        sessionId: entry.sessionId,
+        requestId: entry.requestId,
+      })
       if (expandedStepId === entry.requestId) {
         expandedStepDetail = detail
       }

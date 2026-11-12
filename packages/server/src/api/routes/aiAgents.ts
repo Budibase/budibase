@@ -75,8 +75,11 @@ builderAdminRoutes
   .get("/api/agent/tools", ai.fetchTools)
   .get("/api/agent/requests", agentActivityEnabled, ai.fetchAgentRequests)
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)
-  .get("/api/agent/:agentId/logs/session", ai.fetchAgentLogSession)
-  .get("/api/agent/:agentId/logs/:requestId", ai.fetchAgentLogDetail)
+  .get("/api/agent/:agentId/logs/:sessionId", ai.fetchAgentLogSession)
+  .get(
+    "/api/agent/:agentId/logs/:sessionId/actions/:requestId",
+    ai.fetchAgentLogDetail
+  )
 
 const aiTestBuilderAdminRoutes = endpointGroupList
   .group(auth.builderOrAdmin)
