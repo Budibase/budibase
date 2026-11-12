@@ -153,6 +153,12 @@ export const setAgentLogsQuota = (value: number) => {
   return useLicense(license)
 }
 
+export const setPlatformActionsRetentionQuota = (value: number) => {
+  const license = cloneDeep(UNLIMITED_LICENSE)
+  license.quotas.constant.platformActionsRetentionDays.value = value
+  return useLicense(license)
+}
+
 export const setEscalationDurationQuota = (value: number) => {
   const license = cloneDeep(UNLIMITED_LICENSE)
   license.quotas.constant.escalationDurationDays.value = value

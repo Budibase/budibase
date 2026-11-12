@@ -1,20 +1,57 @@
 import { middleware } from "@budibase/backend-core"
+import {
+  MAX_PROJECT_NAME_LENGTH,
+  MAX_PROJECT_README_LENGTH,
+} from "@budibase/types"
 import Joi from "joi"
 import { projectsEnabled } from "../../middleware/projectsEnabled"
+import {
+  AppType,
+  middleware as appInfoMiddleware,
+} from "../../middleware/appInfo"
 import * as controller from "../controllers/project"
 import { builderRoutes } from "./endpointGroups"
 
 const baseSchema = {
-  name: Joi.string().required(),
+  name: Joi.string().max(MAX_PROJECT_NAME_LENGTH).required(),
   description: Joi.string().optional().allow(""),
+  readme: Joi.string().max(MAX_PROJECT_README_LENGTH).optional().allow(""),
   color: Joi.string().optional().allow(""),
 }
 
 builderRoutes
   .get("/api/projects", projectsEnabled, controller.fetch)
   .post(
-    "/api/projects/import",
+    "/api/projects/assignments/preview",
     projectsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        resourceId: Joi.string().required(),
+        projectIds: Joi.array().items(Joi.string()).required(),
+      }),
+      { allowUnknown: false }
+    ),
+    controller.previewAssignment
+  )
+  .put(
+    "/api/projects/assignments/:resourceId",
+    projectsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        resourceRev: Joi.string().required(),
+        projectIds: Joi.array().items(Joi.string()).required(),
+        dependencyIds: Joi.array().items(Joi.string()).required(),
+        dependencyFingerprint: Joi.string().allow("").required(),
+      }),
+      { allowUnknown: false }
+    ),
+    controller.updateAssignment
+  )
+  .post(
+    "/api/projects/import",
+    controller.cleanupImportFiles,
+    projectsEnabled,
+    appInfoMiddleware({ appType: AppType.DEV }),
     middleware.joiValidator.body(
       Joi.object({
         encryptPassword: Joi.string().max(1024).optional().allow(""),
@@ -31,6 +68,7 @@ builderRoutes
     middleware.joiValidator.body(
       Joi.object({
         encryptPassword: Joi.string().max(1024).optional().allow(""),
+        includeRows: Joi.boolean().strict().optional(),
       }),
       {
         allowUnknown: false,

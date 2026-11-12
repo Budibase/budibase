@@ -16,7 +16,6 @@ const AUTOMATION_PREFIX = getPrefix(DocumentType.AUTOMATION)
 const FUNCTION_PREFIX = getPrefix(DocumentType.FUNCTION)
 const AGENT_PREFIX = getPrefix(DocumentType.AGENT)
 const TABLE_PREFIX = getPrefix(DocumentType.TABLE)
-const QUERY_PREFIX = getPrefix(DocumentType.QUERY)
 const DATASOURCE_PREFIX = getPrefix(DocumentType.DATASOURCE)
 const DATASOURCE_PLUS_PREFIX = getPrefix(DocumentType.DATASOURCE_PLUS)
 
@@ -120,8 +119,7 @@ export async function createProjectMembersView() {
         doc._id.startsWith("${AUTOMATION_PREFIX}") ||
         doc._id.startsWith("${FUNCTION_PREFIX}") ||
         doc._id.startsWith("${AGENT_PREFIX}") ||
-        doc._id.startsWith("${TABLE_PREFIX}") ||
-        doc._id.startsWith("${QUERY_PREFIX}")
+        doc._id.startsWith("${TABLE_PREFIX}")
       ) {
         emitProjectIds(doc.projectIds)
         return
@@ -132,14 +130,6 @@ export async function createProjectMembersView() {
         doc._id.startsWith("${DATASOURCE_PLUS_PREFIX}")
       ) {
         emitProjectIds(doc.projectIds)
-
-        if (!doc.entities) {
-          return
-        }
-
-        for (var key in doc.entities) {
-          emitProjectIds(doc.entities[key].projectIds)
-        }
       }
     }`,
   }

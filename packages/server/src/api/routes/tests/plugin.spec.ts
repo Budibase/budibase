@@ -6,7 +6,7 @@ jest.mock("@budibase/backend-core", () => {
       ...core.objectStore,
       upload: jest.fn(),
       uploadDirectory: jest.fn().mockImplementation(() => {
-        return [{ name: "test.js" }]
+        return [{ name: "plugin.min.js" }]
       }),
       deleteFolder: jest.fn().mockImplementation(),
     },
@@ -43,6 +43,7 @@ const getTempDirsWithPrefix = (prefix: string) =>
 const createDatasourcePluginTarball = async (opts: {
   pluginName: string
   js: string
+  jsFilename?: string
 }) => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), `${opts.pluginName}-`))
   const pluginDir = path.join(tempDir, "plugin")
@@ -88,7 +89,8 @@ const createDatasourcePluginTarball = async (opts: {
       },
     })
   )
-  fs.writeFileSync(path.join(pluginDir, "test.js"), opts.js)
+  const jsFilename = opts.jsFilename || "plugin.min.js"
+  fs.writeFileSync(path.join(pluginDir, jsFilename), opts.js)
 
   await tar.create(
     {
@@ -96,7 +98,7 @@ const createDatasourcePluginTarball = async (opts: {
       file: tarPath,
       cwd: pluginDir,
     },
-    ["package.json", "schema.json", "test.js"]
+    ["package.json", "schema.json", jsFilename]
   )
 
   return {
@@ -281,6 +283,30 @@ describe("/plugins", () => {
           "Failed to import plugin: JS invalid:"
         )
         expect(events.plugin.imported).toHaveBeenCalledTimes(0)
+      } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it("should reject a datasource plugin without plugin.min.js", async () => {
+      mockUploadDirectory.mockResolvedValueOnce([{ name: "a.js" }])
+      const { tarPath, tempDir } = await createDatasourcePluginTarball({
+        pluginName: "incorrect-entrypoint-datasource",
+        js: "module.exports = {}\n",
+        jsFilename: "a.js",
+      })
+
+      try {
+        const res = await request
+          .post("/api/plugin/upload")
+          .attach("file", tarPath)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        expect(res.body.message).toContain(
+          "Failed to import plugin: Plugin missing plugin.min.js file."
+        )
       } finally {
         fs.rmSync(tempDir, { recursive: true, force: true })
       }

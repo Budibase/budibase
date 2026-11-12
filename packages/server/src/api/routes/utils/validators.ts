@@ -15,6 +15,8 @@ import {
   BasicOperator,
   ArrayOperator,
   RangeOperator,
+  DocumentType,
+  prefixed,
 } from "@budibase/types"
 import Joi, { CustomValidator } from "joi"
 import { ValidSnippetNameRegex, helpers } from "@budibase/shared-core"
@@ -159,6 +161,12 @@ export function nameValidator() {
 export function publicApiUserValidator() {
   return auth.joiValidator.body(
     Joi.object({
+      userGroups: Joi.array()
+        .items(
+          Joi.string().pattern(new RegExp(`^${prefixed(DocumentType.GROUP)}`))
+        )
+        .unique()
+        .optional(),
       builder: Joi.object({
         global: Joi.boolean().optional(),
         apps: Joi.array().items(Joi.string()).optional(),

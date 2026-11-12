@@ -101,10 +101,30 @@ export class GeminiRagProcessor implements RagProcessor {
       query: question,
     })
 
-    const results = rows.map<RetrievedContextChunk>(row => ({
-      source: getChunkSource(row),
-      chunkText: getChunkText(row),
-    }))
+    const results = rows.flatMap<RetrievedContextChunk>(row => {
+      const chunkText = getChunkText(row)
+      const groundingIndices = asRecord(row.attributes)?.grounding_chunk_indices
+      if (!Array.isArray(groundingIndices)) {
+        return [{ source: getChunkSource(row), chunkText }]
+      }
+
+      const sources = new Set<string>()
+      for (const index of groundingIndices) {
+        if (typeof index !== "number" || !Number.isInteger(index)) {
+          continue
+        }
+        const groundingChunk = rows[index]
+        if (!groundingChunk) {
+          continue
+        }
+        const source = getChunkSource(groundingChunk)
+        if (source) {
+          sources.add(source)
+        }
+      }
+
+      return Array.from(sources, source => ({ source, chunkText }))
+    })
 
     return results
   }

@@ -152,6 +152,16 @@ export const escalationDurationDays = (value: number) => {
   }
 }
 
+export const platformActionsRetentionDays = (value: number) => {
+  return {
+    [ConstantQuotaName.PLATFORM_ACTIONS_RETENTION_DAYS]: {
+      name: "Platform Actions Retention",
+      value,
+      triggers: [],
+    },
+  }
+}
+
 export const customAIConfigurations = (value: number) => {
   return {
     [StaticQuotaName.AI_CUSTOM_CONFIGS]: {

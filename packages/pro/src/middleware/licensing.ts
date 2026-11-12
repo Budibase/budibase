@@ -26,6 +26,7 @@ const licensing = (
       // check user limit for the current user
       if (
         opts.checkUsersLimit &&
+        ctx.isAuthenticated &&
         (utils.isServingApp(ctx) ||
           utils.isServingBuilder(ctx) ||
           utils.isServingBuilderPreview(ctx) ||

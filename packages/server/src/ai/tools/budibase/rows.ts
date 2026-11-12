@@ -1,8 +1,10 @@
 import { createHash } from "crypto"
 import { tool } from "ai"
 import { z } from "zod"
+import validateJs from "validate.js"
 import {
   FieldType,
+  JsonFieldSubType,
   SortOrder,
   TableSourceType,
   ToolAction,
@@ -11,6 +13,7 @@ import {
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
+  type FieldConstraints,
   type Row,
   type RowSearchParams,
   type TableSchema,
@@ -18,10 +21,17 @@ import {
 import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
+  helpers,
+  utils,
 } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
-import { getAgentTableFields, sanitizeAgentRow } from "./tableScope"
+import {
+  getAgentTableFields,
+  getAgentTableSchema,
+  sanitizeAgentRow,
+} from "./tableScope"
+import { validateTimeOnlyField } from "../../../sdk/workspace/rows/validateTimeOnlyField"
 
 const PLAIN_TEXT_WARNING =
   "CRITICAL: Use plain text values only. Do NOT include HTML tags, markdown formatting, " +
@@ -55,7 +65,37 @@ const TOOL_NAME_HASH_LENGTH = 12
 type TableSchemaField = {
   name: string
   schema: TableSchema[string]
+  isPrimaryDisplay?: boolean
 }
+
+const toFiniteNumber = (value: unknown) => {
+  if (value === null || value === undefined || value === "") {
+    return undefined
+  }
+  const parsed = typeof value === "number" ? value : Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+const buildNumericalityConstraint = (
+  numericality: FieldConstraints["numericality"] | undefined
+) => {
+  if (!numericality) {
+    return undefined
+  }
+  const greaterThanOrEqualTo = toFiniteNumber(numericality.greaterThanOrEqualTo)
+  const lessThanOrEqualTo = toFiniteNumber(numericality.lessThanOrEqualTo)
+  if (greaterThanOrEqualTo === undefined && lessThanOrEqualTo === undefined) {
+    return undefined
+  }
+  return {
+    ...(greaterThanOrEqualTo !== undefined && { greaterThanOrEqualTo }),
+    ...(lessThanOrEqualTo !== undefined && { lessThanOrEqualTo }),
+  }
+}
+
+const isRequiredInputField = (schema: TableSchema[string]) =>
+  helpers.schema.isRequired(schema.constraints) &&
+  (!("default" in schema) || schema.default === undefined)
 
 const getProtectedColumns = (tableSourceType: TableSourceType) =>
   new Set<string>(
@@ -111,6 +151,9 @@ const formatFieldType = (schema: TableSchema[string]) => {
 
 const formatFieldSummary = ({ name, schema }: TableSchemaField) => {
   let summary = `${name} (${formatFieldType(schema)})`
+  if (isRequiredInputField(schema)) {
+    summary += " required"
+  }
   const options = schema.constraints?.inclusion
   if (
     (schema.type === FieldType.OPTIONS || schema.type === FieldType.ARRAY) &&
@@ -140,6 +183,19 @@ const getWritableFields = (
     .map(([name, schema]) => ({ name, schema }))
 }
 
+const getSearchableFields = (
+  tableSchema: TableSchema,
+  tableSourceType: TableSourceType
+): TableSchemaField[] => {
+  const protectedColumns = getProtectedColumns(tableSourceType)
+  return Object.entries(getAgentTableSchema(tableSchema))
+    .filter(([name]) => !protectedColumns.has(name))
+    .sort(
+      ([, a], [, b]) => Number(isReadOnlyField(b)) - Number(isReadOnlyField(a))
+    )
+    .map(([name, schema]) => ({ name, schema }))
+}
+
 const buildSchemaSummary = (fields: TableSchemaField[]) => {
   if (fields.length === 0) {
     return ""
@@ -148,7 +204,7 @@ const buildSchemaSummary = (fields: TableSchemaField[]) => {
   const limited = summaries.slice(0, MAX_SCHEMA_FIELDS)
   const remaining = summaries.length - limited.length
   if (remaining > 0) {
-    limited.push(`... +${remaining} more (use get_table for full schema)`)
+    limited.push(`... +${remaining} more`)
   }
   return limited.join(", ")
 }
@@ -158,12 +214,39 @@ const buildDataFieldDescription = (schemaSummary: string) =>
     ? `${DATA_FIELD_DESCRIPTION} Available fields: ${schemaSummary}.`
     : DATA_FIELD_DESCRIPTION
 
-const buildRowDataSchema = (
+const normalizeWrappedFieldNames = (
+  value: unknown,
+  fieldNames: ReadonlySet<string>
+) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value
+  }
+
+  const input: Record<string, unknown> = Object.fromEntries(
+    Object.entries(value)
+  )
+  const normalized = { ...input }
+  for (const [name, fieldValue] of Object.entries(input)) {
+    if (!name.startsWith("`") || !name.endsWith("`")) {
+      continue
+    }
+    const unwrapped = name.slice(1, -1)
+    if (!fieldNames.has(unwrapped) || Object.hasOwn(input, unwrapped)) {
+      continue
+    }
+    delete normalized[name]
+    normalized[unwrapped] = fieldValue
+  }
+  return normalized
+}
+
+export const buildRowDataSchema = (
   fields: TableSchemaField[],
-  schemaSummary: string
+  schemaSummary: string,
+  requirePresentFields = false
 ) => {
   if (fields.length === 0) {
-    return z.record(z.string(), z.any()).describe(DATA_FIELD_DESCRIPTION)
+    return z.record(z.string(), z.never()).describe(DATA_FIELD_DESCRIPTION)
   }
 
   const shape: Record<string, z.ZodTypeAny> = {}
@@ -174,16 +257,126 @@ const buildRowDataSchema = (
       Array.isArray(options) && options.length > 0
         ? ` Options: ${options.join(" | ")}.`
         : ""
-    shape[field.name] = z
-      .any()
-      .describe(`Field type: ${fieldType}.${optionsHint}`)
+    let fieldSchema: z.ZodTypeAny
+    if (Array.isArray(options) && options.length > 0) {
+      const optionSchema = z.enum(options as [string, ...string[]])
+      fieldSchema =
+        field.schema.type === FieldType.ARRAY
+          ? z.array(optionSchema)
+          : optionSchema
+    } else {
+      const { type } = field.schema
+      switch (type) {
+        case FieldType.STRING:
+        case FieldType.LONGFORM:
+        case FieldType.OPTIONS:
+        case FieldType.DATETIME:
+        case FieldType.BARCODEQR:
+        case FieldType.BIGINT:
+        case FieldType.BB_REFERENCE_SINGLE:
+          fieldSchema = z.string()
+          break
+        case FieldType.NUMBER:
+          fieldSchema = z.number()
+          break
+        case FieldType.BOOLEAN:
+          fieldSchema = z.boolean()
+          break
+        case FieldType.ARRAY:
+        case FieldType.ATTACHMENTS:
+        case FieldType.LINK:
+        case FieldType.BB_REFERENCE:
+          fieldSchema = z.array(z.any())
+          break
+        case FieldType.ATTACHMENT_SINGLE:
+        case FieldType.SIGNATURE_SINGLE:
+          fieldSchema = z.record(z.string(), z.any())
+          break
+        case FieldType.JSON:
+          fieldSchema =
+            field.schema.subtype === JsonFieldSubType.ARRAY
+              ? z.array(z.any())
+              : z.record(z.string(), z.any())
+          break
+        case FieldType.AUTO:
+        case FieldType.AI:
+        case FieldType.FORMULA:
+        case FieldType.INTERNAL:
+          fieldSchema = z.union([
+            z.string(),
+            z.number(),
+            z.boolean(),
+            z.array(z.any()),
+            z.record(z.string(), z.any()),
+          ])
+          break
+        default:
+          throw utils.unreachable(type)
+      }
+    }
+
+    const required =
+      field.isPrimaryDisplay ||
+      helpers.schema.isRequired(field.schema.constraints)
+    const mustProvide =
+      required &&
+      (!("default" in field.schema) || field.schema.default === undefined)
+    if (required) {
+      if (fieldSchema instanceof z.ZodString) {
+        fieldSchema = fieldSchema.min(1)
+      } else if (fieldSchema instanceof z.ZodArray) {
+        fieldSchema = fieldSchema.min(1)
+      } else if (fieldSchema instanceof z.ZodEnum) {
+        fieldSchema = fieldSchema.refine(value => value !== "", {
+          message: "Required option cannot be empty",
+        })
+      }
+      if (!requirePresentFields || !mustProvide) {
+        fieldSchema = fieldSchema.optional()
+      }
+    } else {
+      if (field.schema.type === FieldType.OPTIONS) {
+        fieldSchema = fieldSchema.or(z.literal(""))
+      }
+      fieldSchema = fieldSchema.nullish()
+    }
+    const { email, length, numericality, datetime } =
+      field.schema.constraints ?? {}
+    const numericalityConstraint = buildNumericalityConstraint(numericality)
+    fieldSchema = fieldSchema.superRefine((value, ctx) => {
+      if (value === undefined) {
+        return
+      }
+      const errors: string[] | undefined =
+        field.schema.type === FieldType.DATETIME && field.schema.timeOnly
+          ? validateTimeOnlyField(field.name, value, { datetime })
+          : validateJs.single(value, {
+              ...(email && { email }),
+              ...(length && { length }),
+              ...(numericalityConstraint && {
+                numericality: numericalityConstraint,
+              }),
+              ...(datetime && { datetime }),
+            })
+      for (const message of errors ?? []) {
+        ctx.addIssue({ code: "custom", message })
+      }
+    })
+    shape[field.name] = fieldSchema.describe(
+      `Field type: ${fieldType}.${requirePresentFields && mustProvide ? " Required." : ""}${optionsHint}`
+    )
   }
 
-  return z
+  const dataSchema = z
     .object(shape)
-    .partial()
-    .passthrough()
+    .strict()
     .describe(buildDataFieldDescription(schemaSummary))
+
+  const fieldNames = new Set(fields.map(field => field.name))
+  return z.preprocess(
+    value => normalizeWrappedFieldNames(value, fieldNames),
+    dataSchema
+  )
 }
 
 const buildSearchQueryDescription = (schemaSummary: string) =>
@@ -316,7 +509,6 @@ const ROW_TOOL: Record<RowToolAction, RowTool> = {
     description:
       "Search for rows in a table based on criteria. " +
       "IMPORTANT: You can ONLY filter on fields that exist in the table schema. " +
-      "Use get_table or list_tables first to see available field names. " +
       "Searching on non-existent fields will fail.",
     inputSchema: z.object({
       query: z
@@ -374,14 +566,36 @@ const getRequesterRedactedDescription = (action: string) =>
   `${formatActionLabel(action)} on the configured resource. Resource metadata is restricted. Do not infer its schema or substitute another resource if this tool is denied.`
 
 const buildCollisionSafeToolName = (tableId: string, action: string) => {
-  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const sanitisedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
   const tableIdHash = createHash("sha256")
     .update(tableId)
     .digest("hex")
     .substring(0, TOOL_NAME_HASH_LENGTH)
   const suffix = `_${tableIdHash}_${action}`
   const tableIdLength = MAX_TOOL_NAME_LENGTH - suffix.length
-  return `${sanitizedTableId.substring(0, tableIdLength)}${suffix}`
+  return `${sanitisedTableId.substring(0, tableIdLength)}${suffix}`
+}
+
+export const getRowToolNames = (tableId: string): Record<string, string> => {
+  const sanitisedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const truncatedToolNames = Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      `${sanitisedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
+    ])
+  )
+  const hasToolNameCollision =
+    new Set(Object.values(truncatedToolNames)).size !==
+    Object.keys(truncatedToolNames).length
+  if (!hasToolNameCollision) {
+    return truncatedToolNames
+  }
+  return Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      buildCollisionSafeToolName(tableId, action),
+    ])
+  )
 }
 
 export const createRowTools = ({
@@ -389,6 +603,7 @@ export const createRowTools = ({
   tableName,
   tableSourceType,
   tableSchema,
+  primaryDisplay,
   sourceLabel,
   sourceIconType,
 }: {
@@ -396,6 +611,7 @@ export const createRowTools = ({
   tableName: string
   tableSourceType: TableSourceType
   tableSchema: TableSchema
+  primaryDisplay?: string
   sourceLabel?: string
   sourceIconType?: string
 }): BudibaseToolDefinition[] => {
@@ -406,37 +622,36 @@ export const createRowTools = ({
   const resolvedSourceLabel =
     sourceLabel || (isExternal ? "External" : "Budibase")
 
-  const writableFields = getWritableFields(tableSchema, tableSourceType)
-  const schemaSummary = buildSchemaSummary(writableFields)
-  const dataSchema = buildRowDataSchema(writableFields, schemaSummary)
-  const searchInputSchema = buildSearchInputSchema(schemaSummary)
-  const fields = getAgentTableFields(tableSchema)
-  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
-  const truncatedToolNames = new Map(
-    ROW_TOOL_ACTIONS.map(action => [
-      action,
-      `${sanitizedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
-    ])
+  const writableFields = getWritableFields(tableSchema, tableSourceType).map(
+    field => ({ ...field, isPrimaryDisplay: field.name === primaryDisplay })
   )
-  const hasToolNameCollision =
-    new Set(truncatedToolNames.values()).size !== truncatedToolNames.size
+  const schemaSummary = buildSchemaSummary(writableFields)
+  const createDataSchema = buildRowDataSchema(
+    writableFields,
+    schemaSummary,
+    true
+  )
+  const updateDataSchema = buildRowDataSchema(writableFields, schemaSummary)
+  const searchInputSchema = buildSearchInputSchema(
+    buildSchemaSummary(getSearchableFields(tableSchema, tableSourceType))
+  )
+  const toolNames = getRowToolNames(tableId)
+  const fields = getAgentTableFields(tableSchema)
 
   return ROW_TOOL_ACTIONS.map(action => {
     const def = ROW_TOOL[action]
     const description = `${formatActionLabel(action)} in "${tableName}". ${def.description}`
-    const toolName = hasToolNameCollision
-      ? buildCollisionSafeToolName(tableId, action)
-      : truncatedToolNames.get(action)!
+    const toolName = toolNames[action]
     const isWrite =
       action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW
     let inputSchema = def.inputSchema
     if (action === ToolAction.CREATE_ROW) {
-      inputSchema = z.object({ data: dataSchema })
+      inputSchema = z.object({ data: createDataSchema })
     } else if (action === ToolAction.UPDATE_ROW) {
       inputSchema = z.object({
         rowId: z.string().describe("The ID of the row to update"),
         rowRev: z.string().describe("The current _rev of the row (if known)"),
-        data: dataSchema,
+        data: updateDataSchema,
       })
     } else if (action === ToolAction.SEARCH_ROWS) {
       inputSchema = searchInputSchema
@@ -455,6 +670,7 @@ export const createRowTools = ({
     return {
       name: toolName,
       readableName: `${tableName}.${action}`,
+      resourceName: tableName,
       tableId,
       sourceId: tableId,
       sourceType: resolvedSourceType,

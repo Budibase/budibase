@@ -6,7 +6,10 @@ import {
   SourceName,
   WebSearchProvider,
   ApprovalToolResultStatus,
+  ToolExecutionPrincipal,
+  type ActionAiAgentToolExecuted,
   type AgentExecutionContext,
+  type PlatformActionResourceOrigin,
 } from "@budibase/types"
 import {
   getReadableQueryToolBinding,
@@ -25,6 +28,7 @@ import {
   createDatasourceQueryTool,
   resolveToolExecutionPrincipal,
   toToolSet,
+  getToolEventContexts,
   type AiToolDefinition,
   type EscalationGateRuntime,
   type ToolAuthorizationRuntime,
@@ -101,7 +105,8 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
 }
 
 export async function getAvailableTools(
-  aiconfigId?: string
+  aiconfigId?: string,
+  { invokingAgent }: { invokingAgent?: PlatformActionResourceOrigin } = {}
 ): Promise<AiToolDefinition[]> {
   const [queries, datasources, aiConfig, tables, automations] =
     await Promise.all([
@@ -156,7 +161,8 @@ export async function getAvailableTools(
       tables,
       datasourceNamesById,
       datasourceIconTypesById,
-      automations
+      automations,
+      invokingAgent
     ),
     ...restQueryTools,
     ...datasourceQueryTools,
@@ -195,6 +201,7 @@ export async function buildPromptAndTools(
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  toolEventContexts: Record<string, ActionAiAgentToolExecuted>
   toolSources: Record<string, string | undefined>
 }> {
   const {
@@ -208,7 +215,9 @@ export async function buildPromptAndTools(
   }
   const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
-  const allTools = await getAvailableTools(agent.aiconfig)
+  const allTools = await getAvailableTools(agent.aiconfig, {
+    invokingAgent: { type: "agent", id: agentId, label: agent.name },
+  })
   const toolConfigs = operation?.enabledTools || []
   const enabledToolNames = new Set(toolConfigs.map(config => config.toolName))
   const configuredTools = allTools.filter(
@@ -232,9 +241,20 @@ export async function buildPromptAndTools(
           })
           visibilityByTable.set(tool.tableId, visibility)
         }
+        const config = toolConfigs.find(config => config.toolName === tool.name)
+        const runsAsAdmin =
+          resolveToolExecutionPrincipal(tool, config) ===
+          ToolExecutionPrincipal.ADMIN
         return (await visibility)
           ? tool
-          : { ...tool, tool: tool.requesterRedactedTool }
+          : {
+              ...tool,
+              authoritativeInputSchema:
+                tool.authoritativeInputSchema ?? tool.tool.inputSchema,
+              tool: runsAsAdmin
+                ? { ...tool.tool, execute: tool.requesterRedactedTool.execute }
+                : tool.requesterRedactedTool,
+            }
       })
     )
   }
@@ -285,6 +305,7 @@ export async function buildPromptAndTools(
           readableName: tool.readableName,
           displayName: getEscalationToolDisplayName(tool),
           sourceId: tool.sourceId,
+          sourceType: tool.sourceType,
           action: tool.action,
           argsKey: resolveToolArgsKey(tool),
           rules: config.executionRules,
@@ -316,6 +337,7 @@ export async function buildPromptAndTools(
   return {
     systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools, runtimes, gates),
+    toolEventContexts: getToolEventContexts({ tools: enabledTools, runtimes }),
     toolDisplayNames: getToolDisplayNames(enabledTools),
     toolSources: Object.fromEntries(
       enabledTools.map(tool => [tool.name, tool.sourceId])

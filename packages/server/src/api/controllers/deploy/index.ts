@@ -21,13 +21,12 @@ import {
   LockType,
   MAX_DEPLOYMENT_HISTORY,
   PublishStatusResponse,
-  PublishTableRequest,
-  PublishTableResponse,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
   Table,
   UserCtx,
   Workspace,
+  type Ctx,
 } from "@budibase/types"
 import {
   clearMetadata,
@@ -42,6 +41,8 @@ import {
 } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
+import { Thread, ThreadType } from "../../../threads"
+import type { PublishWorkspaceJob } from "../../../threads/definitions"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../workspaceMigrations"
 import Deployment from "./Deployment"
@@ -369,20 +370,18 @@ export async function publishStatus(ctx: UserCtx<void, PublishStatusResponse>) {
   }
 }
 
-type PublishContext = UserCtx<
-  PublishWorkspaceRequest | PublishTableRequest,
-  PublishWorkspaceResponse | PublishTableResponse
->
+type PublishWorkspaceOptions = PublishWorkspaceJob
+
+const publishRunner = env.isTest()
+  ? undefined
+  : new Thread(ThreadType.PUBLISH, { count: 1 })
 
 export const publishWorkspaceInternal = async (
-  ctx: PublishContext,
-  seedProductionTables?: boolean,
-  tablesToSeed?: string[]
+  options: PublishWorkspaceOptions,
+  publishCtx?: Ctx
 ) => {
-  const seedTables =
-    seedProductionTables !== undefined
-      ? seedProductionTables
-      : ctx.request.body?.seedProductionTables
+  const { appId, createdBy, seedProductionTables, tablesToSeed } = options
+  const seedTables = seedProductionTables
   const tablesToPublish = tablesToSeed?.length
     ? new Set<string>(tablesToSeed)
     : undefined
@@ -415,8 +414,6 @@ export const publishWorkspaceInternal = async (
     }
   }
 
-  const appId = context.getOrThrowWorkspaceId()
-
   let migrationResult: { app: Workspace; prodWorkspaceId: string }
   try {
     migrationResult = await doInMigrationLock(appId, async () => {
@@ -426,6 +423,21 @@ export const publishWorkspaceInternal = async (
         const prodId = dbCore.getProdWorkspaceID(appId)
         const automations = await sdk.automations.fetch()
         await sdk.functions.validateFunctionAutomationReferences(automations)
+        const prodMetadata = await sdk.workspaces.metadata.tryGet({
+          production: true,
+        })
+        if (prodMetadata?.pendingTableSeeds?.length) {
+          const pendingTables = await context
+            .getDevWorkspaceDB()
+            .getMultiple<Table>(prodMetadata.pendingTableSeeds, {
+              allowMissing: true,
+            })
+          if (pendingTables.length) {
+            throw new Error(
+              "Retry Seed from Dev for incomplete tables before publishing this workspace."
+            )
+          }
+        }
 
         if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
           const allWorkspaceApps = await sdk.workspaceApps.fetch()
@@ -469,7 +481,7 @@ export const publishWorkspaceInternal = async (
 
         if (await backups.isEnabled()) {
           await backups.triggerWorkspaceBackup(prodId, BackupTrigger.PUBLISH, {
-            createdBy: ctx.user._id,
+            createdBy,
           })
         }
         const config = {
@@ -615,6 +627,7 @@ export const publishWorkspaceInternal = async (
           ...Object.fromEntries(deployedMap.map(id => [id, publishedAt])),
         }
         delete appDoc.automationErrors
+        delete appDoc.pendingTableSeeds
         await db.put(appDoc)
         await sdk.plugins.reconcileWorkspaceUsedPlugins(prodId)
         await cache.workspace.invalidateWorkspaceMetadata(prodId)
@@ -661,6 +674,21 @@ export const publishWorkspaceInternal = async (
 
   await events.app.published(migrationResult.app)
 
+  if (publishCtx) {
+    builderSocket?.emitAppPublish(publishCtx)
+  }
+
+  return deployment
+}
+
+export const runPublishWorkspaceJob = async (
+  job: PublishWorkspaceJob,
+  ctx: Ctx
+) => {
+  if (!publishRunner) {
+    return publishWorkspaceInternal(job, ctx)
+  }
+  const deployment = await publishRunner.run<Deployment>(job)
   builderSocket?.emitAppPublish(ctx)
   return deployment
 }
@@ -677,7 +705,7 @@ export async function withPublishLock<T>(fn: () => Promise<T>): Promise<T> {
   )
   if (!lockResult.executed) {
     throw new errors.HTTPError(
-      "A publish for this app is already in progress, please wait for it to finish",
+      "A publish or table import for this app is already in progress, please wait for it to finish",
       429
     )
   }
@@ -693,5 +721,11 @@ export const publishWorkspace = async function (
     )
   }
 
-  ctx.body = await withPublishLock(() => publishWorkspaceInternal(ctx))
+  const job: PublishWorkspaceJob = {
+    appId: context.getOrThrowWorkspaceId(),
+    createdBy: ctx.user._id,
+    identity: context.getIdentity(),
+    seedProductionTables: ctx.request.body?.seedProductionTables,
+  }
+  ctx.body = await withPublishLock(() => runPublishWorkspaceJob(job, ctx))
 }

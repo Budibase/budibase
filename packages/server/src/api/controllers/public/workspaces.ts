@@ -1,6 +1,6 @@
 import { context, db as dbCore } from "@budibase/backend-core"
-import { sdk as proSdk } from "@budibase/pro"
-import { UserCtx } from "@budibase/types"
+import { db as proDb, sdk as proSdk } from "@budibase/pro"
+import { DocumentType, type UserCtx, type Workspace } from "@budibase/types"
 import { Next } from "koa"
 import { Application } from "../../../definitions/common"
 import * as backupController from "../backup"
@@ -58,6 +58,21 @@ export async function read(ctx: UserCtx, next: Next) {
   })
 }
 
+export const listGroups = async (ctx: UserCtx, next: Next) => {
+  await context.doInWorkspaceContext(ctx.params.appId, async () => {
+    await context
+      .getWorkspaceDB()
+      .get<Workspace>(DocumentType.WORKSPACE_METADATA)
+    const workspaceId = dbCore.getProdWorkspaceID(ctx.params.appId)
+    const groups = await proDb.groups.getAll()
+    ctx.body = groups.filter(
+      group =>
+        group.roles?.[workspaceId] || group.builder?.apps.includes(workspaceId)
+    )
+  })
+  await next()
+}
+
 export async function update(ctx: UserCtx, next: Next) {
   ctx.request.body = await addRev(fixAppID(ctx.request.body, ctx.params))
   await context.doInWorkspaceContext(ctx.params.appId, async () => {
@@ -107,6 +122,7 @@ export default {
   create,
   update,
   read,
+  listGroups,
   destroy,
   search,
   unpublish,

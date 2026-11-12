@@ -73,6 +73,9 @@ const allowDefaultColumnByType: Record<FieldType, boolean> = {
   [FieldType.BB_REFERENCE_SINGLE]: true,
 }
 
+export const hasSinglePrimaryKey = ({ table }: { table: Table }): boolean =>
+  table.primary?.length === 1
+
 export function canBeDisplayColumn(type: FieldType): boolean {
   return !!allowDisplayColumnByType[type]
 }

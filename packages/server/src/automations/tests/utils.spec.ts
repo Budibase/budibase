@@ -509,6 +509,46 @@ describe("automation utils process helpers", () => {
     expect(mockRunnerRun.mock.calls[1][0].data.event.bodyText).toEqual("two")
   })
 
+  it("attributes a repeatable cron job to the schedule", async () => {
+    const automation = buildCronAutomation("job_1")
+    const job = buildJob(automation, { appId: "app_prod" }, { repeat: {} })
+
+    await processEvent(job)
+
+    expect(mockRunnerRun.mock.calls[0][0].data.event.triggeredBy).toEqual({
+      type: "schedule",
+    })
+  })
+
+  it("does not attribute a non-repeatable run of a cron automation to the schedule", async () => {
+    const automation = buildCronAutomation("job_1")
+    const job = buildJob(automation, { appId: "app_prod" })
+
+    await processEvent(job)
+
+    expect(
+      mockRunnerRun.mock.calls[0][0].data.event.triggeredBy
+    ).toBeUndefined()
+  })
+
+  it("attributes each polled email run to the email system origin", async () => {
+    const automation = buildEmailAutomation(validEmailInputs)
+    const job = buildJob(automation, undefined, { repeat: {} })
+    mockCheckMail.mockResolvedValue({
+      proceed: true,
+      messages: [{ bodyText: "one" }, { bodyText: "two" }] as any,
+    })
+
+    await processEvent(job)
+
+    expect(
+      mockRunnerRun.mock.calls.map(([run]) => run.data.event.triggeredBy)
+    ).toEqual([
+      { type: "system", id: "email" },
+      { type: "system", id: "email" },
+    ])
+  })
+
   it("disables repeated cron jobs when the workspace database has been removed", async () => {
     const automation = buildCronAutomation("job_1")
     const job = buildJob(automation, { appId: "app_prod" }, { repeat: {} })

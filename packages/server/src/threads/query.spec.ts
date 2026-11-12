@@ -81,14 +81,12 @@ const buildEvent = (overrides: Partial<QueryEvent> = {}): QueryEvent => ({
 const runEvent = (event: QueryEvent): Promise<string | undefined> => {
   return new Promise((resolve, reject) => {
     let capturedPath: string | undefined
-    ;(getIntegration as jest.Mock).mockResolvedValue(
-      class {
-        read = jest.fn(async (opts: any) => {
-          capturedPath = opts.path
-          return []
-        })
-      }
-    )
+    ;(getIntegration as jest.Mock).mockResolvedValue(async () => ({
+      read: jest.fn(async (opts: any) => {
+        capturedPath = opts.path
+        return []
+      }),
+    }))
     execute(event, (err, _result) => {
       if (err) reject(err)
       else resolve(capturedPath)
@@ -101,14 +99,12 @@ const runEventForPreview = (
 ): Promise<Record<string, any> | undefined> => {
   return new Promise((resolve, reject) => {
     let capturedPreviewFields: Record<string, any> | undefined
-    ;(getIntegration as jest.Mock).mockResolvedValue(
-      class {
-        read = jest.fn(async (_query: any, opts: any) => {
-          capturedPreviewFields = opts?.previewFields
-          return []
-        })
-      }
-    )
+    ;(getIntegration as jest.Mock).mockResolvedValue(async () => ({
+      read: jest.fn(async (_query: any, opts: any) => {
+        capturedPreviewFields = opts?.previewFields
+        return []
+      }),
+    }))
     execute(event, (err, _result) => {
       if (err) reject(err)
       else resolve(capturedPreviewFields)
@@ -264,15 +260,13 @@ describe("QueryRunner - template datasource URL resolution", () => {
     const event = buildEvent({ includeRequest: true })
     let capturedQuery: Record<string, any> | undefined
     let capturedPreviewFields: Record<string, any> | undefined
-    ;(getIntegration as jest.Mock).mockResolvedValue(
-      class {
-        read = jest.fn(async (query: any, opts: any) => {
-          capturedQuery = query
-          capturedPreviewFields = opts?.previewFields
-          return []
-        })
-      }
-    )
+    ;(getIntegration as jest.Mock).mockResolvedValue(async () => ({
+      read: jest.fn(async (query: any, opts: any) => {
+        capturedQuery = query
+        capturedPreviewFields = opts?.previewFields
+        return []
+      }),
+    }))
     await new Promise<void>((resolve, reject) => {
       execute(event, err => (err ? reject(err) : resolve()))
     })

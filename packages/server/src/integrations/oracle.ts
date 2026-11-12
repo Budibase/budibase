@@ -7,6 +7,7 @@ import {
   SqlQuery,
   Table,
   DatasourcePlus,
+  type SqlDatasource,
   DatasourceFeature,
   ConnectionInfo,
   Schema,
@@ -115,7 +116,7 @@ const OracleContraintTypes = {
   UNIQUE: "U",
 }
 
-class OracleIntegration extends Sql implements DatasourcePlus {
+class OracleIntegration extends Sql implements DatasourcePlus, SqlDatasource {
   private readonly config: OracleConfig
   private index = 1
 

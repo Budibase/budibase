@@ -7,16 +7,21 @@ import {
   TriggerAutomationStepOutputs,
 } from "@budibase/types"
 import env from "../../environment"
+import sdk from "../../sdk"
 import * as triggers from "../triggers"
 
 export async function run({
   inputs,
   isTestRun,
   context: automationContext,
+  automationId: parentAutomationId,
+  automationName: parentAutomationName,
 }: {
   inputs: TriggerAutomationStepInputs
   isTestRun?: boolean
   context: Record<string, any>
+  automationId?: string
+  automationName?: string
 }): Promise<TriggerAutomationStepOutputs> {
   const { automationId, ...fieldParams } = inputs.automation
 
@@ -42,9 +47,20 @@ export async function run({
         timeout = inputs.timeout * 1000
       }
 
+      // The inherited user keeps the parent's permissions and bindings, but
+      // the child run was started by the parent automation, even in a test
+      const triggeredBy = sdk.platformActions.getAutomationOrigin({
+        automationId: parentAutomationId,
+        automationName: parentAutomationName,
+      })
       const response = await triggers.externalTrigger(
         automation,
-        { fields: { ...fieldParams }, timeout, user: automationContext.user },
+        {
+          fields: { ...fieldParams },
+          timeout,
+          user: automationContext.user,
+          triggeredBy,
+        },
         { getResponses: true, isTestRun }
       )
 

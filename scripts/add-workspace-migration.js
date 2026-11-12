@@ -49,7 +49,7 @@ export default migration
     path.join(__dirname, migrationsDir, "migrations")
   )
   const migrations = migrationDir
-    .filter(m => m.endsWith(".ts"))
+    .filter(m => m.endsWith(".ts") && !m.endsWith(".spec.ts"))
     .map(m => m.substring(0, m.length - 3))
 
   let migrationFileContent =

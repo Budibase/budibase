@@ -1,12 +1,16 @@
-import { context } from "@budibase/backend-core"
+import { constants, context, features } from "@budibase/backend-core"
 import {
+  Document,
   DocumentType,
   EscalationAction,
+  FeatureFlag,
   EscalationContextDoc,
+  EscalationNotificationDoc,
   EscalationSource,
   SEPARATOR,
 } from "@budibase/types"
 import { escalationProcessor } from "../../../escalation/processor"
+import { getQueue } from "../../../escalation/queue"
 import sdk from "../../../sdk"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
@@ -25,12 +29,18 @@ describe("/api/escalations", () => {
     config.end()
   })
 
-  const seedPending = async (escalationId: string) => {
+  const seedPending = async ({
+    escalationId,
+    appId = config.getDevWorkspaceId(),
+  }: {
+    escalationId: string
+    appId?: string
+  }) => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
       await context.getWorkspaceDB().put({
         _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
         source: EscalationSource.OPERATION,
-        appId: config.getDevWorkspaceId(),
+        appId,
         tenantId: config.getTenantId(),
         durationMs: 0,
         resolution: "pending",
@@ -47,7 +57,7 @@ describe("/api/escalations", () => {
   describe("resolve", () => {
     it("records a response on a pending escalation", async () => {
       const escalationId = "esc-resolve-pending"
-      await seedPending(escalationId)
+      await seedPending({ escalationId })
 
       const result = await config.api.escalation.resolve(escalationId, {
         accepted: true,
@@ -60,7 +70,7 @@ describe("/api/escalations", () => {
 
     it("reports closed when the escalation closes while waiting for the lock", async () => {
       const escalationId = "esc-resolve-race"
-      await seedPending(escalationId)
+      await seedPending({ escalationId })
 
       let releaseLock: () => void = () => {}
       let lockAcquired: () => void = () => {}
@@ -103,6 +113,144 @@ describe("/api/escalations", () => {
       const result = await request
       expect(result.status).toEqual("closed")
       expect((await getDoc(escalationId)).resolution).toEqual("cancelled")
+    })
+  })
+
+  // e.g. a prod escalation copied into dev by an old sync - it keeps prod's
+  // appId, so acting on it would resume or cancel the prod original
+  describe("copies of another workspace's escalation", () => {
+    const seedCopy = (escalationId: string) =>
+      seedPending({ escalationId, appId: config.getProdWorkspaceId() })
+
+    const getRawDoc = <T extends Document>(id: string) =>
+      config.doInContext(config.getDevWorkspaceId(), () =>
+        context.getWorkspaceDB().tryGet<T>(id)
+      )
+    const getRawContextDoc = (escalationId: string) =>
+      getRawDoc<EscalationContextDoc>(
+        `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
+      )
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it("does not resolve a copy", async () => {
+      const escalationId = "esc-copy-resolve"
+      await seedCopy(escalationId)
+      const addJob = jest.spyOn(getQueue(), "add")
+
+      await config.api.escalation.resolve(
+        escalationId,
+        { accepted: true, actionId: EscalationAction.APPROVE },
+        { status: 404 }
+      )
+
+      expect(addJob).not.toHaveBeenCalled()
+      expect(await getRawContextDoc(escalationId)).toHaveProperty(
+        "resolution",
+        "pending"
+      )
+    })
+
+    it("does not cancel a copy", async () => {
+      const escalationId = "esc-copy-cancel"
+      await seedCopy(escalationId)
+
+      await config.api.escalation.cancel(escalationId)
+
+      expect(await getRawContextDoc(escalationId)).toHaveProperty(
+        "resolution",
+        "pending"
+      )
+    })
+
+    it("does not record a response on a copy", async () => {
+      const escalationId = "esc-copy-respond"
+      const notificationId = `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}esc-copy-respond`
+      await seedCopy(escalationId)
+      await config.doInContext(config.getDevWorkspaceId(), () =>
+        context.getWorkspaceDB().put({
+          _id: notificationId,
+          escalationId,
+          appId: config.getProdWorkspaceId(),
+          tenantId: config.getTenantId(),
+          status: "sent",
+        })
+      )
+
+      await expect(
+        config.doInContext(config.getDevWorkspaceId(), () =>
+          sdk.escalations.respond(
+            escalationId,
+            notificationId,
+            { accepted: true, actionId: EscalationAction.APPROVE },
+            jest.fn()
+          )
+        )
+      ).rejects.toThrow(`Escalation ${escalationId} not found`)
+
+      expect(
+        await getRawDoc<EscalationNotificationDoc>(notificationId)
+      ).not.toHaveProperty("responses")
+    })
+  })
+
+  describe("respond", () => {
+    // A cross-site form post carries the session cookie but no CSRF header;
+    // JSON posts are excluded from the check because CORS preflight covers them
+    const withActivityEnabled = (task: () => Promise<unknown>) =>
+      features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
+        task
+      )
+
+    it("rejects a cross-site form post that lacks the CSRF token", async () => {
+      await withActivityEnabled(() =>
+        config.api.escalation.respond(
+          "esc_unknown",
+          { actionId: EscalationAction.APPROVE },
+          {
+            headers: {
+              "content-type": "application/x-www-form-urlencoded",
+              [constants.Header.CSRF_TOKEN]: "",
+            },
+            expectations: { status: 403 },
+          }
+        )
+      )
+    })
+
+    it("reaches the controller with a valid CSRF token", async () => {
+      await withActivityEnabled(() =>
+        config.api.escalation.respond(
+          "esc_unknown",
+          { actionId: EscalationAction.APPROVE },
+          { expectations: { status: 404 } }
+        )
+      )
+    })
+
+    it("returns 404 when the feature flag is disabled", async () => {
+      const escalationId = "esc-respond-flag-off"
+      await seedPending({ escalationId })
+
+      await features.testutils.withFeatureFlags(
+        config.getTenantId(),
+        { [FeatureFlag.AI_AGENT_ACTIVITY]: false },
+        async () => {
+          await config.api.escalation.respond(
+            escalationId,
+            { actionId: EscalationAction.APPROVE },
+            { expectations: { status: 404 } }
+          )
+        }
+      )
+
+      const doc = await getDoc(escalationId)
+      expect(doc.resolution).toEqual("pending")
+      expect(doc.approvals).toBeUndefined()
     })
   })
 })

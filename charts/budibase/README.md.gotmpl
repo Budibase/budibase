@@ -11,9 +11,11 @@
 
 ## Chart dependencies
 
-This chart depends on the official Apache CouchDB chart. You can see its
-documentation here:
-<https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
+CouchDB is bundled as a locally maintained subchart in `charts/couchdb`, based on
+version `4.5.6` of the Apache CouchDB chart.
+
+Configure it with the root `couchdb` values, and disable it with
+`services.couchdb.enabled=false` when using an external CouchDB instance.
 
 ## Upgrading
 

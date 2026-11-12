@@ -1,4 +1,4 @@
-import { context, docIds, events } from "@budibase/backend-core"
+import { constants, context, docIds, events } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DocumentType, Workspace } from "@budibase/types"
 import path from "path"
@@ -192,6 +192,44 @@ describe("/backups", () => {
       )
       await config.api.backup.importBackup(workspaceId, exportRes.backupId)
     })
+  })
+
+  it("rejects operations on another workspace's backup", async () => {
+    const ownerWorkspaceId = config.getDevWorkspaceId()
+    const otherWorkspace = await config.api.workspace.create({
+      name: "Other workspace",
+    })
+    const backup = await config.api.backup.createBackup(ownerWorkspaceId)
+
+    const path = `/api/apps/${otherWorkspace.appId}/backups/${backup.backupId}`
+    const headers = await config.api.backup.getHeaders()
+    headers[constants.Header.WORKSPACE_ID] = otherWorkspace.appId
+
+    const rename = await config.api.backup.request
+      .patch(path)
+      .set(headers)
+      .send({ name: "unauthorized rename" })
+    const download = await config.api.backup.request
+      .get(`${path}/file`)
+      .set(headers)
+    const restore = await config.api.backup.request
+      .post(`${path}/import`)
+      .set(headers)
+      .send({ name: "unauthorized restore" })
+    const remove = await config.api.backup.request.delete(path).set(headers)
+    const bulkRemove = await config.api.backup.request
+      .delete(`/api/apps/${otherWorkspace.appId}/backups`)
+      .set(headers)
+      .send({ backupIds: [backup.backupId] })
+
+    expect([
+      rename.status,
+      download.status,
+      restore.status,
+      remove.status,
+      bulkRemove.status,
+      bulkRemove.body.results[0].success,
+    ]).toEqual([404, 404, 404, 404, 200, false])
   })
 
   describe("calculateBackupStats", () => {

@@ -1,0 +1,41 @@
+suite: bundled CouchDB
+templates:
+  - charts/couchdb/templates/configmap.yaml
+  - charts/couchdb/templates/secrets.yaml
+  - charts/couchdb/templates/statefulset.yaml
+  - charts/couchdb/templates/service.yaml
+release:
+  name: budibase
+tests:
+  - it: should render one CouchDB StatefulSet with the Budibase data directory
+    template: charts/couchdb/templates/statefulset.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: budibase-couchdb
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: /data
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DATA_DIR
+            value: /data
+
+  - it: should render one CouchDB service with the SQS port
+    template: charts/couchdb/templates/service.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: budibase-svc-couchdb
+      - contains:
+          path: spec.ports
+          content:
+            name: sqs
+            port: 4984
+            targetPort: 4984
+            protocol: TCP

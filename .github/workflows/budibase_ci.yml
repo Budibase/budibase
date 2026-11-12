@@ -29,6 +29,48 @@ env:
   HUSKY: 0
 
 jobs:
+  runtime-version-sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Verify runtime versions are synchronized
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          nvm_version=$(sed 's/^v//' .nvmrc)
+          asdf_node_version=$(awk '$1 == "nodejs" { print $2 }' .tool-versions)
+          python_version=$(<.python-version)
+          asdf_python_version=$(awk '$1 == "python" { print $2 }' .tool-versions)
+
+          if [[ -z "$nvm_version" || -z "$asdf_node_version" ]]; then
+            echo "Node.js version is missing from .nvmrc or .tool-versions" >&2
+            exit 1
+          fi
+
+          if [[ "$nvm_version" != "$asdf_node_version" ]]; then
+            echo "Node.js version files are out of sync:" >&2
+            echo "  .nvmrc:         $nvm_version" >&2
+            echo "  .tool-versions: $asdf_node_version" >&2
+            exit 1
+          fi
+
+          if [[ -z "$python_version" || -z "$asdf_python_version" ]]; then
+            echo "Python version is missing from .python-version or .tool-versions" >&2
+            exit 1
+          fi
+
+          if [[ "$python_version" != "$asdf_python_version" ]]; then
+            echo "Python version files are out of sync:" >&2
+            echo "  .python-version: $python_version" >&2
+            echo "  .tool-versions:  $asdf_python_version" >&2
+            exit 1
+          fi
+
+          echo "Runtime version files are synchronized: Node.js $nvm_version, Python $python_version"
+
   install-deps:
     runs-on: ubuntu-24.04
     concurrency:
@@ -366,6 +408,7 @@ jobs:
     needs:
       - install-deps
       - compute-affected-jobs
+      - check-client-build-size
     strategy:
       fail-fast: false
       matrix:
@@ -455,6 +498,14 @@ jobs:
         with:
           path: ./packages/server/images-sha.env
 
+      - name: Free disk space for Oracle
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true' && matrix.datasource == 'oracle'
+        run: |
+          df -h /
+          # Oracle's data files need room to grow beyond the downloaded image.
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet
+          df -h /
+
       - name: Pull testcontainers images
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
         # These values reach the shell through the environment rather than
@@ -492,9 +543,12 @@ jobs:
 
           ./scripts/pull-images.sh "${IMAGES[@]}"
 
-      - name: Build client library - necessary for component tests
+      - name: Download client library for server integration tests
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true' && matrix.datasource == 'none'
-        run: yarn build:client
+        uses: actions/download-artifact@v8
+        with:
+          name: client-library
+          path: packages/client/dist
 
       - name: Test server
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
@@ -502,7 +556,7 @@ jobs:
           DATASOURCE: ${{ matrix.datasource }}
           JEST_SHARD_INDEX: ${{ matrix.shard_index }}
           JEST_SHARD_TOTAL: ${{ matrix.shard_total }}
-          JEST_MAX_WORKERS: 2
+          JEST_MAX_WORKERS: ${{ matrix.datasource == 'oracle' && 1 || 2 }}
           # DEBUG: testcontainers*
         run: |
           FILTER="./src/tests/filters/datasource-tests.js"
@@ -636,6 +690,14 @@ jobs:
 
       - name: Build client library
         run: yarn build:client
+
+      - name: Upload client library for server integration tests
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-library
+          path: packages/client/dist
+          if-no-files-found: error
+          overwrite: true
 
       - name: Check client build size
         run: |

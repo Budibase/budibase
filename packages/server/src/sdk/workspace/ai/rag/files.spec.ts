@@ -441,6 +441,76 @@ describe("rag files", () => {
       ])
     })
 
+    it("includes shared passages once while preserving every source and chunk", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "policy.md",
+          objectStoreKey: "objects/policy.md",
+          ragSourceId: "source-policy",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        },
+        {
+          _id: "file_2",
+          knowledgeBaseId: "kb_123",
+          filename: "guide.md",
+          objectStoreKey: "objects/guide.md",
+          ragSourceId: "source-guide",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        },
+      ] satisfies KnowledgeBaseFile[])
+      mockProcessorSearch.mockResolvedValue([
+        { source: "source-policy", chunkText: "Submit notes monthly." },
+        {
+          source: "source-policy",
+          chunkText: "Submit notes monthly and save twice.",
+        },
+        { source: "guide.md", chunkText: "Click Save Note twice." },
+        {
+          source: "guide.md",
+          chunkText: "Submit notes monthly and save twice.",
+        },
+      ])
+
+      const result = await retrieveContextForOperation(
+        defaultAgent,
+        "operation_1",
+        "How should I submit notes?"
+      )
+
+      expect(result).toEqual({
+        text: "Submit notes monthly.\n\nSubmit notes monthly and save twice.\n\nClick Save Note twice.",
+        chunks: [
+          { source: "source-policy", chunkText: "Submit notes monthly." },
+          {
+            source: "source-policy",
+            chunkText: "Submit notes monthly and save twice.",
+          },
+          { source: "source-guide", chunkText: "Click Save Note twice." },
+          {
+            source: "source-guide",
+            chunkText: "Submit notes monthly and save twice.",
+          },
+        ],
+        sources: [
+          {
+            sourceId: "source-policy",
+            fileId: "file_1",
+            filename: "policy.md",
+          },
+          {
+            sourceId: "source-guide",
+            fileId: "file_2",
+            filename: "guide.md",
+          },
+        ],
+      })
+    })
+
     it("returns exact tabular row matches and continues searching other sources", async () => {
       mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
       mockKnowledgeBaseListFiles.mockResolvedValue([

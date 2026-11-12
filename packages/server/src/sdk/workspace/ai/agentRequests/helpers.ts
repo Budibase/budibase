@@ -56,13 +56,13 @@ const extractJson = (value: string): AgentRequestLinkDecision | undefined => {
 
 const buildCandidateSummary = (request: AgentRequest) => ({
   requestId: request._id,
+  operationId: request.operationId,
   title: request.title,
   status: request.status,
   updatedAt: request.updatedAt,
   recentEntries: request.entries.slice(-3).map(entry => ({
     sessionId: entry.sessionId,
     source: entry.source,
-    operationNames: entry.operationNames,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
     status: entry.status,

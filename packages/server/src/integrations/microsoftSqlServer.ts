@@ -3,6 +3,7 @@ import {
   DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
+  type SqlDatasource,
   DatasourcePlusQueryResponse,
   EnrichedQueryJson,
   Integration,
@@ -220,7 +221,10 @@ const COLUMN_DEFINITION_METADATA: Record<string, ColumnDefinitionMetadata> = {
   NUMERIC: { usesPrecision: true },
 }
 
-class SqlServerIntegration extends Sql implements DatasourcePlus {
+class SqlServerIntegration
+  extends Sql
+  implements DatasourcePlus, SqlDatasource
+{
   private readonly config: MSSQLConfig
   private index = 0
   private client?: sqlServer.ConnectionPool

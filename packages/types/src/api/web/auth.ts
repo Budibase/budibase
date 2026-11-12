@@ -43,6 +43,7 @@ export interface UpdateSelfRequest {
   freeTrialConfirmedAt?: string
   appFavourites?: string[]
   appSort?: string
+  lastVisitedWorkspaceId?: string
   defaultLayout?: ScreenLayoutType
 }
 

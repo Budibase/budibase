@@ -1,3 +1,4 @@
+import type { ProjectAssignmentResponse } from "./project"
 import { AppCustomTheme, AppNavigation, Theme } from "../../../documents"
 
 export interface WorkspaceAppResponse {
@@ -22,7 +23,7 @@ export interface InsertWorkspaceAppRequest {
   projectIds?: string[]
 }
 
-export interface InsertWorkspaceAppResponse {
+export interface InsertWorkspaceAppResponse extends ProjectAssignmentResponse {
   workspaceApp: WorkspaceAppResponse
 }
 
@@ -42,7 +43,7 @@ export interface UpdateWorkspaceAppRequest {
   projectIds?: string[]
 }
 
-export interface UpdateWorkspaceAppResponse {
+export interface UpdateWorkspaceAppResponse extends ProjectAssignmentResponse {
   workspaceApp: WorkspaceAppResponse
 }
 

@@ -639,16 +639,23 @@ export async function publicSettings(
 
     const oidc = oidcConfig?.activated || false
     const googleDatasourceConfigured = !!googleDatasource
-    if (logoUrl) {
-      config.logoUrl = logoUrl
-    }
 
     ctx.body = {
       type: ConfigType.SETTINGS,
       _id: configDoc._id,
       _rev: configDoc._rev,
       config: {
-        ...config,
+        platformUrl: config.platformUrl,
+        company: config.company,
+        logoUrl: logoUrl || config.logoUrl,
+        docsUrl: config.docsUrl,
+        logoUrlEtag: config.logoUrlEtag,
+        uniqueTenantId: config.uniqueTenantId,
+        analyticsEnabled: config.analyticsEnabled,
+        createdVersion: config.createdVersion,
+        lockedBy: config.lockedBy,
+        deactivationScheduledAt: config.deactivationScheduledAt,
+        active: config.active,
         ...branding,
         ...{ faviconUrl },
         google,

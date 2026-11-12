@@ -87,11 +87,17 @@
 
   type RailTab = "tools" | "knowledge" | "approvals"
   type RemovableTool = Pick<AgentTool, "readableBinding" | "runtimeBinding">
+  type InstructionsSaveState = "idle" | "saving" | "saved" | "failed"
+
+  const INSTRUCTIONS_AUTOSAVE_DELAY_MS = 5000
 
   let togglingLive = $state(false)
   let saving = $state(false)
   let operation = $state<AgentOperation | undefined>()
   let lastSavedInstructions = $state("")
+  let instructionsSaveState = $state<InstructionsSaveState>("idle")
+  let instructionsAutosaveTimer: ReturnType<typeof setTimeout> | undefined
+  let inFlightInstructions: string | undefined
   let syncedAgentRev: string | undefined = $state()
   let toolSearch = $state("")
   let activeTab = $state<RailTab>("tools")
@@ -285,6 +291,53 @@
   const hasUnsavedInstructions = () =>
     operation && (operation.promptInstructions || "") !== lastSavedInstructions
 
+  const hasUnsentInstructions = () =>
+    operation &&
+    (operation.promptInstructions || "") !==
+      (inFlightInstructions ?? lastSavedInstructions)
+
+  let instructionsSaveStatusLabel = $derived.by(() => {
+    if (instructionsSaveState === "saving") {
+      return "Saving…"
+    }
+    if (instructionsSaveState === "failed") {
+      return "Failed to save"
+    }
+    if (hasUnsavedInstructions()) {
+      return "Unsaved changes"
+    }
+    if (instructionsSaveState === "saved") {
+      return "Saved"
+    }
+    return ""
+  })
+
+  const cancelInstructionsAutosave = () => {
+    clearTimeout(instructionsAutosaveTimer)
+    instructionsAutosaveTimer = undefined
+  }
+
+  const scheduleInstructionsAutosave = () => {
+    cancelInstructionsAutosave()
+    instructionsAutosaveTimer = setTimeout(() => {
+      instructionsAutosaveTimer = undefined
+      saveOperation()
+    }, INSTRUCTIONS_AUTOSAVE_DELAY_MS)
+  }
+
+  const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+    if (hasUnsavedInstructions() || instructionsSaveState === "saving") {
+      event.preventDefault()
+    }
+  }
+
+  $effect(() => () => {
+    cancelInstructionsAutosave()
+    if (hasUnsentInstructions()) {
+      saveOperation()
+    }
+  })
+
   $effect(() => {
     if (!agent?._id || !operationId) {
       operation = undefined
@@ -325,12 +378,17 @@
 
     const forOperationId = operation.id
     const snapshot = { ...operation }
+    const savingInstructions = hasUnsavedInstructions()
+    if (savingInstructions) {
+      instructionsSaveState = "saving"
+    }
 
     const enabledTools = normalizeConfiguredOperationTools({
       operation: snapshot,
       availableTools,
     })
     saving = true
+    inFlightInstructions = snapshot.promptInstructions || ""
     try {
       const updated = await agentsStore.updateAgentOperation(
         agentId,
@@ -354,12 +412,19 @@
           lastSavedInstructions = snapshot.promptInstructions || ""
         }
       }
+      if (savingInstructions) {
+        instructionsSaveState = "saved"
+      }
     } catch (error) {
       console.error(error)
       notifications.error("Failed to save operation")
+      if (savingInstructions) {
+        instructionsSaveState = "failed"
+      }
       return false
     } finally {
       saving = false
+      inFlightInstructions = undefined
     }
     try {
       await workspaceDeploymentStore.fetch()
@@ -385,6 +450,7 @@
       return false
     }
 
+    cancelInstructionsAutosave()
     return operationSaveCoordinator.save()
   }
 
@@ -408,6 +474,17 @@
       return
     }
     operation.promptInstructions = instructions
+    if (instructionsSaveState === "failed") {
+      instructionsSaveState = "idle"
+    }
+    if (!hasUnsavedInstructions()) {
+      cancelInstructionsAutosave()
+      if (instructionsSaveState === "saving") {
+        saveOperation()
+      }
+      return
+    }
+    scheduleInstructionsAutosave()
   }
 
   const applyGeneratedInstructions = (instructions: string) => {
@@ -999,6 +1076,8 @@
   const retryLoadTools = () => agentsStore.fetchTools()
 </script>
 
+<svelte:window onbeforeunload={handleBeforeUnload} />
+
 {#snippet toolsLoadStatus()}
   {#if toolsLoadFailed}
     <div class="loading-state">
@@ -1072,18 +1151,27 @@
               <span
                 >Use <code>{`{{`}</code> to add tools to your instructions.</span
               >
-              <div class="tools-popover-container">
-                <ToolsDropdown
-                  bind:this={editorToolsDropdown}
-                  {filteredTools}
-                  {toolSections}
-                  bind:toolSearch
-                  webSearchEnabled={webSearchConfigured}
-                  onToolClick={selectEditorTool}
-                  onClose={cancelAutocompleteToolAddition}
-                  onAddApiConnection={() => bb.settings("/connections/apis")}
-                  onConfigureWebSearch={() => webSearchConfigModal?.show()}
-                />
+              <div class="editor-footer-actions">
+                {#if instructionsSaveStatusLabel}
+                  <span
+                    class="instructions-save-status"
+                    class:failed={instructionsSaveState === "failed"}
+                    aria-live="polite">{instructionsSaveStatusLabel}</span
+                  >
+                {/if}
+                <div class="tools-popover-container">
+                  <ToolsDropdown
+                    bind:this={editorToolsDropdown}
+                    {filteredTools}
+                    {toolSections}
+                    bind:toolSearch
+                    webSearchEnabled={webSearchConfigured}
+                    onToolClick={selectEditorTool}
+                    onClose={cancelAutocompleteToolAddition}
+                    onAddApiConnection={() => bb.settings("/connections/apis")}
+                    onConfigureWebSearch={() => webSearchConfigModal?.show()}
+                  />
+                </div>
               </div>
             </div>
           {/if}
@@ -1432,6 +1520,21 @@
     padding: 8px 12px;
     border-top: 1px solid var(--spectrum-global-color-gray-200);
     font-size: 12px;
+  }
+
+  .editor-footer-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .instructions-save-status {
+    color: var(--spectrum-global-color-gray-700);
+    white-space: nowrap;
+  }
+
+  .instructions-save-status.failed {
+    color: var(--spectrum-global-color-red-600);
   }
 
   .editor-footer code {
