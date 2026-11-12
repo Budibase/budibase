@@ -68,12 +68,7 @@
   size="M"
   onConfirm={confirm}
 >
-  <Input
-    bind:value={name}
-    label="Name"
-    error={nameError}
-    helpText={`Maximum ${MAX_PROJECT_NAME_LENGTH} characters`}
-  />
+  <Input bind:value={name} label="Name" error={nameError} />
   <TextArea
     bind:value={description}
     label="Description"
