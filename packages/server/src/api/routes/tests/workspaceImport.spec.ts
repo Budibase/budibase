@@ -301,7 +301,7 @@ describe("/applications/:appId/import", () => {
     }
   )
 
-  it("cannot access or delete a foreign attachment key from an imported row", async () => {
+  it("rewrites a foreign attachment key from an imported row and preserves the foreign object on delete", async () => {
     const sourceId = config.getDevWorkspaceId()
     const foreignKey = "app_other/attachments/victim.txt"
     await objectStore.upload({
