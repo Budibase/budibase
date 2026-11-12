@@ -188,7 +188,6 @@ export async function updateWithExport(
       },
     }
 
-    // Rewrite imported rows in the temporary DB; existing workspace rows are retained below.
     await backups.importApp(devId, tempDb, template, {
       updateAttachmentColumns: true,
     })
