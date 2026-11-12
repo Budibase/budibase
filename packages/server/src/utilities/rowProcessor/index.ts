@@ -227,7 +227,7 @@ export async function inputProcessing(
   userId: string | null | undefined,
   source: Table | ViewV2,
   row: Row,
-  opts?: AutoColumnProcessingOpts & { existingRow?: Row }
+  opts?: AutoColumnProcessingOpts
 ) {
   const clonedRow = cloneDeep(row)
   const table = await getTableFromSource(source)
@@ -254,25 +254,12 @@ export async function inputProcessing(
       clonedRow[key] = coerce(value, field.type)
     }
 
-    const isAllowedAttachmentKey = (attachmentKey: string) => {
-      if (isWorkspaceAttachmentKey(attachmentKey)) {
-        return true
-      }
-      const previousValue = opts?.existingRow?.[key]
-      const previousAttachments: RowAttachment[] = Array.isArray(previousValue)
-        ? previousValue
-        : [previousValue]
-      return previousAttachments.some(
-        attachment => attachment?.key === attachmentKey
-      )
-    }
-
     // remove any attachment urls, they are generated on read
     if (field.type === FieldType.ATTACHMENTS) {
       const attachments = clonedRow[key]
       if (attachments?.length) {
         attachments.forEach((attachment: RowAttachment) => {
-          if (attachment.key && !isAllowedAttachmentKey(attachment.key)) {
+          if (attachment.key && !isWorkspaceAttachmentKey(attachment.key)) {
             throw new BadRequestError(
               "Attachment key is outside this workspace"
             )
@@ -285,7 +272,7 @@ export async function inputProcessing(
       field.type === FieldType.SIGNATURE_SINGLE
     ) {
       const attachment = clonedRow[key]
-      if (attachment?.key && !isAllowedAttachmentKey(attachment.key)) {
+      if (attachment?.key && !isWorkspaceAttachmentKey(attachment.key)) {
         throw new BadRequestError("Attachment key is outside this workspace")
       }
       if (attachment?.url) {

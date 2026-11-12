@@ -39,9 +39,7 @@ export async function save(
     inputs._id = db.generateRowID(inputs.tableId)
   }
 
-  const existingRow =
-    inputs._id && inputs._rev ? await findRow(tableId, inputs._id) : undefined
-  let row = await inputProcessing(userId, source, inputs, { existingRow })
+  let row = await inputProcessing(userId, source, inputs)
 
   const validateResult = await sdk.rows.utils.validate({
     row,

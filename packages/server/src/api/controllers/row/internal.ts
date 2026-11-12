@@ -62,9 +62,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   }
 
   // this returns the table and row incase they have been updated
-  let row = await inputProcessing(ctx.user?._id, source, combinedRow, {
-    existingRow: oldRow,
-  })
+  let row = await inputProcessing(ctx.user?._id, source, combinedRow)
   const validateResult = await sdk.rows.utils.validate({
     row,
     source,
