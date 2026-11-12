@@ -65,6 +65,7 @@ vi.mock("@/stores/portal", () => ({
   workspacesStore: mocks.createStore({ apps: [] }),
   projectsStore: Object.assign(mocks.projects, {
     fetch: mocks.fetchProjects,
+    ensureFetched: vi.fn().mockResolvedValue(undefined),
     hasFetched: () => true,
     updateProject: mocks.updateProject,
   }),

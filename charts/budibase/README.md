@@ -12,9 +12,9 @@ Budibase is an open source low-code platform, helping thousands of teams build a
 
 ## Chart dependencies
 
-This chart depends on the official Apache CouchDB chart. You can see its
-documentation here:
-<https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
+CouchDB is bundled as a locally maintained subchart in `charts/couchdb`, based on
+version `4.5.6` of the Apache CouchDB chart.
+
 
 ## Upgrading
 
@@ -208,7 +208,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.couchdb.backup.interval | string | `""` | Backup interval in seconds |
 | services.couchdb.backup.resources | object | `{}` | The resources to use for CouchDB backup pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.couchdb.backup.target | string | `""` | Target couchDB instance to back up to, either a hostname or an IP address. |
-| services.couchdb.enabled | bool | `true` | Whether or not to spin up a CouchDB instance in your cluster. True by default, and the configuration for the CouchDB instance is under the `couchdb` key at the root of this file. You can see what options are available to you by looking at the official CouchDB Helm chart: <https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>. |
+| services.couchdb.enabled | bool | `true` | Whether or not to spin up a CouchDB instance in your cluster. True by default, and the configuration for the CouchDB instance is under the `couchdb` key at the root of this file.
 | services.couchdb.port | int | `5984` |  |
 | services.dns | string | `"cluster.local"` | The DNS suffix to use for service discovery. You only need to change this if you've configured your cluster to use a different DNS suffix. |
 | services.litellm.bbaiKey | string | `""` | The Budibase AI virtual key (BBAI_LITELLM_KEY) used by agents. When set it is rendered onto both the app service and the automation worker. |
