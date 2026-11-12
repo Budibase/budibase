@@ -841,4 +841,41 @@ describe("agentLogs", () => {
     expect(sessionScope.isDone()).toBe(true)
     expect(payloadScope.isDone()).toBe(true)
   })
+
+  it("rejects an export when a request belongs to another session", async () => {
+    jest.useRealTimers()
+    await saveAgent("agent-1")
+    const sessionScope = mockLiteLLMSessionRows([
+      {
+        request_id: "req-1",
+        session_id: "session-2",
+        startTime: "2026-03-08T11:00:00.000Z",
+        endTime: "2026-03-08T11:00:10.000Z",
+        end_user: "bb-agent:agent-1",
+        status: "success",
+      },
+    ])
+
+    await expect(
+      withWorkspace(async () => {
+        return await exportSession("agent-1", "session-1", "production")
+      })
+    ).rejects.toMatchObject({
+      status: 404,
+      message: "Agent log detail not found",
+    })
+    expect(sessionScope.isDone()).toBe(true)
+  })
+
+  it("returns null when exporting a missing session", async () => {
+    jest.useRealTimers()
+    const sessionScope = mockLiteLLMSessionRows([])
+
+    await expect(
+      withWorkspace(async () => {
+        return await exportSession("agent-1", "session-missing", "production")
+      })
+    ).resolves.toBeNull()
+    expect(sessionScope.isDone()).toBe(true)
+  })
 })

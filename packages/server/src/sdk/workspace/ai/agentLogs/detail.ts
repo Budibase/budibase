@@ -229,7 +229,11 @@ export async function exportSession(
     rows.entries(),
     async ([index, row]) => {
       const requestId = row.request_id || ""
-      const data = await fetchLiteLLMRequestRawFromSummary(agentId, row)
+      const data = await fetchLiteLLMRequestRawFromSummary({
+        agentId,
+        sessionId,
+        summary: row,
+      })
       actions[index] = {
         entry: entries[index],
         detail: mapRequestDetail(data, requestId, toolDisplayNames),

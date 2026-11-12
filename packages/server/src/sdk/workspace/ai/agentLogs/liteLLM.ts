@@ -166,12 +166,17 @@ function combineLiteLLMRequestData(
   }
 }
 
-export async function fetchLiteLLMRequestRawFromSummary(
-  agentId: string,
+export async function fetchLiteLLMRequestRawFromSummary({
+  agentId,
+  sessionId,
+  summary,
+}: {
+  agentId: string
+  sessionId: string
   summary: LiteLLMRequestRecord
-): Promise<LiteLLMRequestDetail> {
+}): Promise<LiteLLMRequestDetail> {
   const requestId = summary.request_id
-  if (!requestId) {
+  if (!requestId || summary.session_id !== sessionId) {
     throw new HTTPError("Agent log detail not found", 404)
   }
 
