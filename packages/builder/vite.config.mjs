@@ -109,6 +109,7 @@ export default defineConfig(({ mode }) => {
       ...(isProduction ? [] : devOnlyPlugins),
     ],
     optimizeDeps: {
+      include: ["typescript", "@typescript/vfs"],
       // Let vite-plugin-svelte manage Svelte library prebundling
       exclude: ["@roxi/routify", "fsevents"],
     },
@@ -126,6 +127,10 @@ export default defineConfig(({ mode }) => {
         "@budibase/shared-core": path.resolve(__dirname, "../shared-core/src"),
         "@budibase/bbui": path.resolve(__dirname, "../bbui/src"),
         "@": path.resolve(__dirname, "src"),
+        "@typescript-libs": path.resolve(
+          __dirname,
+          "../../node_modules/typescript/lib"
+        ),
         assets: path.resolve(__dirname, "assets"),
       },
     },
