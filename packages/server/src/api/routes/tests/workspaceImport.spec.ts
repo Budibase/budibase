@@ -285,6 +285,12 @@ describe("/applications/:appId/import", () => {
         `${config.getProdWorkspaceId()}/attachments/imported.txt`
       )
       expect(importedAttachment.url).toBeTruthy()
+      expect(
+        await objectStore.objectExists(
+          objectStore.ObjectStoreBuckets.APPS,
+          importedAttachment.key
+        )
+      ).toBe(true)
       const updated = await config.api.row.patch(table._id!, {
         _id: row._id!,
         _rev: imported._rev!,
