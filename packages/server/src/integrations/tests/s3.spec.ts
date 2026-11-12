@@ -1,4 +1,10 @@
-import { default as S3Integration } from "../s3"
+import { GetObjectCommand } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import {
+  default as S3Integration,
+  DEFAULT_SIGNED_URL_EXPIRY_SECONDS,
+  MAX_SIGNED_URL_EXPIRY_SECONDS,
+} from "../s3"
 import { enrichContext } from "../../sdk/workspace/queries/queries"
 
 jest.mock("../../sdk/utils", () => ({
@@ -50,8 +56,15 @@ jest.mock("@aws-sdk/client-s3", () => {
     )
   }
 
-  return { S3: S3Mock }
+  class GetObjectCommandMock {
+    constructor(public input: any) {}
+  }
+
+  return { S3: S3Mock, GetObjectCommand: GetObjectCommandMock }
 })
+jest.mock("@aws-sdk/s3-request-presigner", () => ({
+  getSignedUrl: jest.fn(async () => "https://example.com/signed"),
+}))
 
 class TestConfiguration {
   integration: any
@@ -179,5 +192,135 @@ describe("S3 Integration", () => {
         ],
       },
     })
+  })
+
+  describe("getSignedUrl", () => {
+    const now = new Date("2026-01-01T00:00:00.000Z")
+    const getSignedUrlMock = jest.mocked(getSignedUrl)
+
+    beforeEach(() => {
+      jest.useFakeTimers({ now })
+      getSignedUrlMock.mockClear()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    const expiresAtFor = (seconds: number) =>
+      new Date(now.getTime() + seconds * 1000).toISOString()
+
+    it("signs a GetObject request for the given bucket and key", async () => {
+      const result = await config.integration.getSignedUrl({
+        bucket: "test",
+        key: "invoices/1.pdf",
+        expiresIn: 60,
+      })
+
+      expect(result).toEqual([
+        { url: "https://example.com/signed", expiresAt: expiresAtFor(60) },
+      ])
+      expect(getSignedUrlMock).toHaveBeenCalledWith(
+        config.integration.client,
+        expect.any(GetObjectCommand),
+        { expiresIn: 60, signingDate: now }
+      )
+      expect(getSignedUrlMock.mock.calls[0][1].input).toEqual({
+        Bucket: "test",
+        Key: "invoices/1.pdf",
+        ResponseContentDisposition: undefined,
+        ResponseContentType: undefined,
+      })
+    })
+
+    it.each([undefined, ""])(
+      "applies the default expiry when expiresIn is %p",
+      async expiresIn => {
+        const result = await config.integration.getSignedUrl({
+          bucket: "test",
+          key: "file.txt",
+          expiresIn,
+        })
+
+        expect(getSignedUrlMock.mock.calls[0][2]).toEqual({
+          expiresIn: DEFAULT_SIGNED_URL_EXPIRY_SECONDS,
+          signingDate: now,
+        })
+        expect(result[0].expiresAt).toEqual(
+          expiresAtFor(DEFAULT_SIGNED_URL_EXPIRY_SECONDS)
+        )
+      }
+    )
+
+    it("parses a numeric string expiry", async () => {
+      await config.integration.getSignedUrl({
+        bucket: "test",
+        key: "file.txt",
+        expiresIn: "120",
+      })
+
+      expect(getSignedUrlMock.mock.calls[0][2]).toEqual({
+        expiresIn: 120,
+        signingDate: now,
+      })
+    })
+
+    it("clamps the expiry to the maximum", async () => {
+      const result = await config.integration.getSignedUrl({
+        bucket: "test",
+        key: "file.txt",
+        expiresIn: MAX_SIGNED_URL_EXPIRY_SECONDS * 10,
+      })
+
+      expect(getSignedUrlMock.mock.calls[0][2]).toEqual({
+        expiresIn: MAX_SIGNED_URL_EXPIRY_SECONDS,
+        signingDate: now,
+      })
+      expect(result[0].expiresAt).toEqual(
+        expiresAtFor(MAX_SIGNED_URL_EXPIRY_SECONDS)
+      )
+    })
+
+    it("passes response headers through to GetObjectCommand", async () => {
+      await config.integration.getSignedUrl({
+        bucket: "test",
+        key: "file.pdf",
+        responseContentDisposition: 'attachment; filename="Invoice.pdf"',
+        responseContentType: "application/pdf",
+      })
+
+      expect(getSignedUrlMock.mock.calls[0][1].input).toEqual({
+        Bucket: "test",
+        Key: "file.pdf",
+        ResponseContentDisposition: 'attachment; filename="Invoice.pdf"',
+        ResponseContentType: "application/pdf",
+      })
+    })
+
+    it.each([
+      [{ bucket: "", key: "file.txt" }, "Bucket is required"],
+      [{ bucket: "test", key: "" }, "Key is required"],
+      [{ bucket: "test", key: "   " }, "Key is required"],
+      [{ bucket: "test" }, "Key is required"],
+    ])("rejects missing bucket or key: %p", async (query, message) => {
+      await expect(config.integration.getSignedUrl(query)).rejects.toThrow(
+        message
+      )
+      expect(getSignedUrlMock).not.toHaveBeenCalled()
+    })
+
+    it.each(["abc", 0, -10, 0.5])(
+      "rejects invalid expiry %p",
+      async expiresIn => {
+        await expect(
+          config.integration.getSignedUrl({
+            bucket: "test",
+            key: "file.txt",
+            expiresIn,
+          })
+        ).rejects.toThrow("Expiry must be a positive number of seconds")
+        expect(getSignedUrlMock).not.toHaveBeenCalled()
+      }
+    )
   })
 })
