@@ -225,15 +225,15 @@
         !isOnWorkspaceRoute &&
         !isOnPortalPage()
       ) {
-        const defaultApp = getDefaultWorkspace(
+        const defaultWorkspace = getDefaultWorkspace(
           $enrichedApps,
           $auth.user.lastVisitedWorkspaceId
         )
         // Only redirect if enriched apps are loaded and app is editable
-        if (defaultApp?.devId) {
+        if (defaultWorkspace?.devId) {
           return {
             type: "redirect",
-            path: `./workspace/${defaultApp.devId}/home`,
+            path: `./workspace/${defaultWorkspace.devId}/home`,
           }
         }
       }
