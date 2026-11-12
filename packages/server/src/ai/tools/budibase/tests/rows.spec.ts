@@ -238,6 +238,7 @@ describe("AI Tools - Rows", () => {
             name: { name: "name", type: FieldType.STRING },
             status: { name: "status", type: FieldType.STRING },
             secret: { name: "secret", type: FieldType.STRING },
+            internalNote: { name: "internalNote", type: FieldType.STRING },
           },
         })
       )
@@ -245,6 +246,7 @@ describe("AI Tools - Rows", () => {
         name: "Visible",
         status: "Open",
         secret: "Private value",
+        internalNote: "Not in the view",
       })
       const hiddenRow = await config.api.row.save(table._id!, {
         name: "Hidden",
@@ -297,17 +299,26 @@ describe("AI Tools - Rows", () => {
       }
     )
 
-    it.each(["secret", "status"])(
+    it.each(["secret", "status", "internalNote"])(
       "rejects writes to restricted column %s",
       async field => {
-        const { getTool, visibleRow } = await setupView()
+        const { table, getTool, visibleRow } = await setupView()
         await expect(
           executeTool(getTool("update_row"), {
             rowId: visibleRow._id!,
             rowRev: visibleRow._rev!,
-            data: { [field]: "Changed" },
+            data: { name: "Should not be saved", [field]: "Changed" },
           })
         ).rejects.toThrow(`Field "${field}" is not writable in this view`)
+        expect(
+          await config.api.row.get(table._id!, visibleRow._id!)
+        ).toMatchObject({
+          name: "Visible",
+          status: "Open",
+          secret: "Private value",
+          internalNote: "Not in the view",
+          _rev: visibleRow._rev,
+        })
       }
     )
 
@@ -389,6 +400,7 @@ describe("AI Tools - Rows", () => {
         name: "Updated",
         status: "Open",
         secret: "Private value",
+        internalNote: "Not in the view",
       })
     })
 
@@ -400,6 +412,7 @@ describe("AI Tools - Rows", () => {
         await asSchema(tool.tool.inputSchema).jsonSchema
       )
       expect(schema).toContain("name")
+      expect(schema).not.toContain("internalNote")
       expect(schema).not.toContain("secret")
       expect(schema).not.toContain('"status"')
     })
