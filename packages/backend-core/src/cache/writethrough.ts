@@ -42,12 +42,15 @@ async function put(
   if (key) {
     cacheItem = await cache.get(makeCacheKey(db, key))
   }
-  const updateDb = !cacheItem || cacheItem.lastWrite < Date.now() - writeRateMs
+  const updateDb =
+    writeRateMs === 0 ||
+    !cacheItem ||
+    cacheItem.lastWrite < Date.now() - writeRateMs
   let output = doc
   if (updateDb) {
     const lockResponse = await locks.doWithLock(
       {
-        type: LockType.TRY_ONCE,
+        type: writeRateMs === 0 ? LockType.DEFAULT : LockType.TRY_ONCE,
         name: LockName.PERSIST_WRITETHROUGH,
         resource: key,
         ttl: 15000,
@@ -62,7 +65,7 @@ async function put(
         try {
           await writeDb(doc)
         } catch (err: any) {
-          if (err.status !== 409) {
+          if (writeRateMs === 0 || err.status !== 409) {
             throw err
           } else {
             // Swallow 409s but log them
