@@ -282,7 +282,7 @@ describe("Project data export and import", () => {
     }
   )
 
-  it("includes referenced tables and their rows regardless of project assignment", async () => {
+  it("includes dependency schemas without exporting rows outside the project", async () => {
     await withProjectsEnabled(async () => {
       const source = await createDataProject()
       const preview = await config.api.project.previewAssignment({
@@ -312,21 +312,23 @@ describe("Project data export and import", () => {
           expect(imported.resources.table).toHaveLength(2)
           expect(categories.projectIds).toEqual([imported.project._id])
           expect(rows).toHaveLength(1)
-          expect(rows[0].category).toEqual([
-            expect.objectContaining({
-              _id: categoryRows.find(row => row.name === "Open")!._id,
-            }),
-          ])
+          expect(categoryRows).toEqual([])
+          expect(rows[0].category || []).toEqual([])
           expect(await readAttachmentContent(rows[0].attachment)).toEqual(
             attachmentContent
           )
           expect(imported.dataImport).toEqual({
             tables: 2,
-            rows: 3,
-            relationships: 1,
+            rows: 1,
+            relationships: 0,
             attachments: 1,
           })
-          expect(imported.unsupportedContent).toEqual([])
+          expect(imported.unsupportedContent).toContainEqual(
+            expect.objectContaining({
+              type: "excluded_row_relationship",
+              count: 1,
+            })
+          )
         }
       )
     })

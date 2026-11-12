@@ -92,8 +92,9 @@
 
   <Toggle text="Include rows and attachments" bind:value={includeRows} />
   <Body size="S">
-    Includes all rows from included Budibase DB tables, including shared tables,
-    and their referenced attachments.
+    Includes rows and attachments only from Budibase DB tables assigned to this
+    project, including shared tables. Tables included only as dependencies have
+    their schemas exported without rows.
   </Body>
 
   <Toggle text="Encrypt export" bind:value={encrypted} />

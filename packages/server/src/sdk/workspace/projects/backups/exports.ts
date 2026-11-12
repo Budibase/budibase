@@ -336,13 +336,32 @@ export async function exportProject(
 
     const graph = await sdk.resources.getResourcesInfo({
       includeProjects: false,
-      includeDatasourceQueries: true,
     })
-    const [agents, workspaceApps, directMembers] = await Promise.all([
+    const [agents, workspaceApps, directMembers, queries] = await Promise.all([
       sdk.ai.agents.fetch(),
       sdk.workspaceApps.fetch(),
       getDirectMembers(projectId),
+      sdk.queries.fetch(),
     ])
+    const directDatasourceIds = new Set(
+      directMembers
+        .filter(resource => resource.type === ResourceType.DATASOURCE)
+        .map(resource => resource.id)
+    )
+    for (const query of queries.filter(query =>
+      directDatasourceIds.has(query.datasourceId)
+    )) {
+      graph[query.datasourceId] ??= { dependencies: [] }
+      const dependencies = graph[query.datasourceId].dependencies
+      if (dependencies.some(resource => resource.id === query._id)) {
+        continue
+      }
+      dependencies.push({
+        id: query._id!,
+        name: query.name,
+        type: ResourceType.QUERY,
+      })
+    }
     graph[projectId] = { dependencies: directMembers }
     const projectDependencies = sortResources(
       collectTransitiveResourceDependencies(graph, projectId)
@@ -453,7 +472,9 @@ export async function exportProject(
         {
           workspaceId,
           tables: exportedDocs.filter(
-            doc => typeByResourceId.get(doc._id!) === ResourceType.TABLE
+            doc =>
+              typeByResourceId.get(doc._id!) === ResourceType.TABLE &&
+              hasProject(doc, projectId)
           ) as Table[],
           dirPath: tmpPath,
         }

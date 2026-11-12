@@ -1746,6 +1746,11 @@ describe("/projects", () => {
             projectIds: [otherProject._id],
           })
 
+          const unrelatedQuery = await config.api.query.save({
+            ...basicQuery(destination._id!),
+            fields: { headers: { Authorization: "Bearer unrelated-secret" } },
+          })
+
           const packageBuffer = await config.api.project.export(project._id)
           const files = await readTarEntries(packageBuffer)
           expect(Array.from(files.keys())).toEqual(
@@ -1759,6 +1764,10 @@ describe("/projects", () => {
             files.get(`docs/query/${query._id}.json`)!.toString()
           )
           expect(exportedQuery.datasourceId).toBe(destination._id)
+          expect(files.has(`docs/query/${unrelatedQuery._id}.json`)).toBe(false)
+          expect(Buffer.concat([...files.values()]).toString()).not.toContain(
+            "unrelated-secret"
+          )
           expect(files.has(`docs/datasource/${unrelated._id}.json`)).toBe(false)
           expect(
             (await config.api.datasource.get(destination._id!)).projectIds || []
