@@ -1765,9 +1765,9 @@ describe("/projects", () => {
           )
           expect(exportedQuery.datasourceId).toBe(destination._id)
           expect(files.has(`docs/query/${unrelatedQuery._id}.json`)).toBe(false)
-          expect(Buffer.concat([...files.values()]).toString()).not.toContain(
-            "unrelated-secret"
-          )
+          expect(
+            [...files.values()].map(file => file.toString()).join("")
+          ).not.toContain("unrelated-secret")
           expect(files.has(`docs/datasource/${unrelated._id}.json`)).toBe(false)
           expect(
             (await config.api.datasource.get(destination._id!)).projectIds || []
@@ -1949,6 +1949,27 @@ describe("/projects", () => {
         expect(exportedDatasource.config.authConfigs[0].config.password).toBe(
           password
         )
+      })
+    })
+
+    it("fetches saved requests once when exporting a project connection", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
+        const query = await config.api.query.save(basicQuery(datasource._id!))
+        const fetchQueries = jest.spyOn(sdk.queries, "fetch")
+        try {
+          const files = await readTarEntries(
+            await config.api.project.export(project._id)
+          )
+          expect(files.has(`docs/query/${query._id}.json`)).toBe(true)
+          expect(fetchQueries).toHaveBeenCalledTimes(1)
+        } finally {
+          fetchQueries.mockRestore()
+        }
       })
     })
 

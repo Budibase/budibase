@@ -334,34 +334,19 @@ export async function exportProject(
       throw new Error(`Project '${projectId}' not found`)
     }
 
-    const graph = await sdk.resources.getResourcesInfo({
-      includeProjects: false,
-    })
-    const [agents, workspaceApps, directMembers, queries] = await Promise.all([
+    const [agents, workspaceApps, directMembers] = await Promise.all([
       sdk.ai.agents.fetch(),
       sdk.workspaceApps.fetch(),
       getDirectMembers(projectId),
-      sdk.queries.fetch(),
     ])
-    const directDatasourceIds = new Set(
-      directMembers
-        .filter(resource => resource.type === ResourceType.DATASOURCE)
-        .map(resource => resource.id)
-    )
-    for (const query of queries.filter(query =>
-      directDatasourceIds.has(query.datasourceId)
-    )) {
-      graph[query.datasourceId] ??= { dependencies: [] }
-      const dependencies = graph[query.datasourceId].dependencies
-      if (dependencies.some(resource => resource.id === query._id)) {
-        continue
-      }
-      dependencies.push({
-        id: query._id!,
-        name: query.name,
-        type: ResourceType.QUERY,
-      })
-    }
+    const directDatasourceIds = directMembers
+      .filter(resource => resource.type === ResourceType.DATASOURCE)
+      .map(resource => resource.id)
+    const graph = await sdk.resources.getResourcesInfo({
+      includeProjects: false,
+      includeDatasourceQueries: true,
+      datasourceIdsForQueries: directDatasourceIds,
+    })
     graph[projectId] = { dependencies: directMembers }
     const projectDependencies = sortResources(
       collectTransitiveResourceDependencies(graph, projectId)

@@ -323,12 +323,12 @@ describe("Project data export and import", () => {
             relationships: 0,
             attachments: 1,
           })
-          expect(imported.unsupportedContent).toContainEqual(
-            expect.objectContaining({
-              type: "excluded_row_relationship",
-              count: 1,
-            })
-          )
+          expect(imported.unsupportedContent).toContainEqual({
+            type: "excluded_row_relationship",
+            count: 1,
+            reason:
+              "Row relationships to data outside this Project were omitted.",
+          })
         }
       )
     })

@@ -68,6 +68,7 @@ export type ResourceDependencyGraph = Record<
 export interface GetResourcesInfoOptions {
   includeProjects?: boolean
   includeDatasourceQueries?: boolean
+  datasourceIdsForQueries?: string[]
 }
 
 export interface ResourceDependencyAnalysis {
@@ -139,6 +140,7 @@ export function collectProjectResourceDependencies(
 export async function analyseResourceDependencies({
   includeProjects = true,
   includeDatasourceQueries = false,
+  datasourceIdsForQueries,
 }: GetResourcesInfoOptions = {}): Promise<ResourceDependencyAnalysis> {
   const automations = await sdk.automations.fetch()
   const agents = await sdk.ai.agents.fetch()
@@ -281,7 +283,13 @@ export async function analyseResourceDependencies({
   )
 
   if (includeDatasourceQueries) {
+    const datasourceIds = datasourceIdsForQueries
+      ? new Set(datasourceIdsForQueries)
+      : undefined
     for (const datasource of datasources) {
+      if (datasourceIds && !datasourceIds.has(datasource._id!)) {
+        continue
+      }
       addDependencies(
         datasource._id!,
         queries
