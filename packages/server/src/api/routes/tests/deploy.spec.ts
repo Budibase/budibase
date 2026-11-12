@@ -741,6 +741,63 @@ describe("/api/deploy", () => {
     expect(prodRowAfterPublish[formulaFieldName]).toBe(6)
   })
 
+  it("updates static formulas on production rows spanning multiple pages", async () => {
+    const amountFieldName = "amount"
+    const table = await config.api.table.save(
+      basicTable(undefined, {
+        schema: {
+          [amountFieldName]: {
+            name: amountFieldName,
+            type: FieldType.NUMBER,
+            constraints: {},
+          },
+        },
+      })
+    )
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    const rowCount = 2500
+    await context.doInWorkspaceContext(config.getProdWorkspaceId(), () =>
+      context.getWorkspaceDB().bulkDocs(
+        Array.from({ length: rowCount }, (_, amount) => ({
+          _id: dbCore.generateRowID(table._id!),
+          type: "row",
+          tableId: table._id!,
+          [amountFieldName]: amount,
+        }))
+      )
+    )
+
+    const formulaFieldName = "amountPlusOne"
+    const updatedTable = cloneDeep(table)
+    updatedTable.schema[formulaFieldName] = {
+      name: formulaFieldName,
+      type: FieldType.FORMULA,
+      formula: "{{ add amount 1 }}",
+      formulaType: FormulaType.STATIC,
+      responseType: FieldType.NUMBER,
+    }
+    await config.api.table.save(updatedTable)
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    const prodRows = await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () =>
+        (
+          await context
+            .getWorkspaceDB()
+            .allDocs<Row>(
+              getRowParams(table._id!, null, { include_docs: true })
+            )
+        ).rows.map(row => row.doc!)
+    )
+    expect(prodRows).toHaveLength(rowCount)
+    expect(
+      prodRows.filter(row => row[formulaFieldName] !== row[amountFieldName] + 1)
+    ).toEqual([])
+  })
+
   it("migrates production row data when a column is renamed in development", async () => {
     const table = await config.api.table.save(basicTable())
     await config.api.row.save(table._id!, {
