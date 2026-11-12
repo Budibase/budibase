@@ -65,6 +65,7 @@ vi.mock("@/stores/portal", () => ({
   workspacesStore: mocks.createStore({ apps: [] }),
   projectsStore: Object.assign(mocks.projects, {
     fetch: mocks.fetchProjects,
+    ensureFetched: vi.fn().mockResolvedValue(undefined),
     hasFetched: () => true,
     updateProject: mocks.updateProject,
   }),
@@ -72,6 +73,16 @@ vi.mock("@/stores/portal", () => ({
 
 vi.mock("@/stores/bb", () => ({
   bb: mocks.createStore({ settings: { open: false } }),
+}))
+
+vi.mock("@/stores/builder/functionsAvailability", () => ({
+  functionsAvailable: mocks.createStore(false),
+}))
+
+vi.mock("@/stores/builder/functions", () => ({
+  functionStore: Object.assign(mocks.createStore({ functions: [] }), {
+    fetch: vi.fn(),
+  }),
 }))
 
 vi.mock("@budibase/shared-core", async importOriginal => {
@@ -128,6 +139,10 @@ vi.mock(
 )
 vi.mock(
   "../_components/UpdateAgentModal.svelte",
+  () => import("@/test/mocks/MockSlot.svelte")
+)
+vi.mock(
+  "../function/FunctionNameModal.svelte",
   () => import("@/test/mocks/MockSlot.svelte")
 )
 vi.mock(

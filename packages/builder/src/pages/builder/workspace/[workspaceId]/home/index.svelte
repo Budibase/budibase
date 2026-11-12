@@ -140,6 +140,8 @@
   let editProjectModal: ModalAPI
   let confirmDeleteProjectDialog: Pick<ModalAPI, "show" | "hide">
   let assignProjectModal: ModalAPI
+  let confirmRemoveFromProjectDialog: Pick<ModalAPI, "show" | "hide">
+  let projectRemoval: { row: HomeRow; project: ProjectResponse } | undefined
   let exportProjectModal: ModalAPI
   let importProjectModal: ModalAPI
   let importProjectResultModal: ModalAPI
@@ -166,13 +168,13 @@
   let highlightedRowId: string | null = null
 
   let hasMounted = false
-  let projectsRequestedForWorkspace = ""
   let functionsRequestedForWorkspace = ""
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
   $: canEditProjectNotes = sdk.users.hasBuilderPermissions($auth.user)
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: canAssignProject = projectsEnabled && $projectsStore.length > 0
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: selectedProjectResource = projectAssignmentRow
     ? {
@@ -555,6 +557,42 @@
     }
   }
 
+  const removeResourceFromProject = async () => {
+    const resourceRev = projectRemoval?.row.resource._rev
+    if (!projectRemoval || !resourceRev) {
+      return keepOpen
+    }
+
+    const { row, project } = projectRemoval
+    const projectIds = (row.projectIds || []).filter(id => id !== project._id)
+    try {
+      await projectsStore.updateAssignment({
+        resourceId: row.id,
+        request: {
+          resourceRev,
+          projectIds,
+          dependencyIds: [],
+          dependencyFingerprint: "",
+        },
+      })
+      notifications.success(`Removed '${row.name}' from '${project.name}'`)
+    } catch (error) {
+      notifications.error(
+        getErrorMessage(error) || "Unable to remove resource from project"
+      )
+      return keepOpen
+    }
+
+    try {
+      await workspaceStore.refresh()
+    } catch (error) {
+      console.error(error)
+      notifications.warning(
+        "Resource removed from project, but some resources could not be refreshed. Reload the workspace to see all changes."
+      )
+    }
+  }
+
   const handleCreateProject = async (project: ProjectFormPayload) => {
     try {
       const createdProject = await projectsStore.create(project)
@@ -760,6 +798,20 @@
       ]
     }
 
+    const project = selectedProject
+    const removeFromProject = {
+      icon: "stack-minus",
+      name: "Remove from project",
+      visible: true,
+      callback: () => {
+        if (!project) {
+          return
+        }
+        projectRemoval = { row, project }
+        confirmRemoveFromProjectDialog.show()
+      },
+    }
+
     if (row.type === "app") {
       const workspaceApp = row.resource
       const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
@@ -788,10 +840,11 @@
         },
         {
           icon: "stack",
-          name: "Assign project",
-          visible: projectsEnabled,
+          name: "Assign projects",
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
         {
           icon: "globe-simple",
           name: "View live app",
@@ -842,10 +895,11 @@
         edit,
         {
           icon: "stack",
-          name: "Assign project",
-          visible: projectsEnabled,
+          name: "Assign projects",
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
         {
           icon: "copy",
           name: "Duplicate",
@@ -877,10 +931,11 @@
         },
         {
           icon: "stack",
-          name: "Assign project",
-          visible: projectsEnabled,
+          name: "Assign projects",
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
         {
           icon: "copy",
           name: "Duplicate",
@@ -907,10 +962,11 @@
         },
         {
           icon: "stack",
-          name: "Assign project",
-          visible: projectsEnabled,
+          name: "Assign projects",
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
       ]
     }
 
@@ -926,6 +982,10 @@
     x: number
     y: number
   }) => {
+    if (selectedProjectId && !selectedProject) {
+      return
+    }
+
     selectedWorkspaceApp = undefined
     selectedAutomation = undefined
     selectedAgent = undefined
@@ -982,18 +1042,6 @@
     if (row.type === "table") {
       goto(url(`../data/table/${row.id}`))
       return
-    }
-  }
-
-  const loadProjects = async (workspaceId: string) => {
-    try {
-      projectsRequestedForWorkspace = workspaceId
-      await projectsStore.fetch(workspaceId)
-    } catch (error) {
-      projectsRequestedForWorkspace = ""
-      if ($workspaceStore.appId === workspaceId && projectsEnabled) {
-        notifications.error(getErrorMessage(error) || "Unable to load projects")
-      }
     }
   }
 
@@ -1090,15 +1138,6 @@
     $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
   $: showBudibaseAIMetric =
     budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
-
-  $: if (
-    hasMounted &&
-    projectsEnabled &&
-    $workspaceStore.appId &&
-    projectsRequestedForWorkspace !== $workspaceStore.appId
-  ) {
-    loadProjects($workspaceStore.appId)
-  }
 
   $: if (
     hasMounted &&
@@ -1210,7 +1249,7 @@
     }
 
     await agentsStore.fetchAgents()
-    if (setupRequest && projectsEnabled) {
+    if (setupRequest && projectsEnabled && projectsStore.hasFetched()) {
       await openProjectSetup({ refresh: false })
     }
   })
@@ -1438,6 +1477,18 @@
 {/if}
 
 {#if projectsEnabled}
+  <ConfirmDialog
+    bind:this={confirmRemoveFromProjectDialog}
+    title="Remove from project"
+    okText="Remove"
+    onOk={removeResourceFromProject}
+    warning={false}
+  >
+    Remove <b>{projectRemoval?.row.name}</b> from
+    <b>{projectRemoval?.project.name}</b>? The resource will remain available in
+    the workspace and any other projects.
+  </ConfirmDialog>
+
   <Modal bind:this={createProjectModal}>
     {#key createProjectModalKey}
       <CreateProjectModal onConfirm={handleCreateProject} />

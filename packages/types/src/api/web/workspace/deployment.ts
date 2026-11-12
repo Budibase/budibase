@@ -19,6 +19,7 @@ export type PublishStatusResource = {
   publishedAt?: string
   lastDeployedLiveAt?: string
   unpublishedChanges?: boolean
+  seedPending?: boolean
   state: PublishResourceState
 }
 
