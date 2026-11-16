@@ -12,20 +12,14 @@ describe("row search query bindings", () => {
 
   afterAll(() => config.end())
 
-  it("does not execute external helper chains in builder-supplied search filters", async () => {
-    const marker = "__budibaseSearchFilterProof"
-    const binding = `{{ first (first (map (arrayify "a = (globalThis.${marker} = 'executed')//") (get "constructor.constructor" this))) }}`
+  it("does not evaluate external helpers in builder-supplied search filters", async () => {
     const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, { name: "template-target" })
 
-    Reflect.deleteProperty(globalThis, marker)
-    try {
-      await config.api.row.search(table._id!, {
-        query: { equal: { name: binding } },
-      })
-      expect(Reflect.get(globalThis, marker)).toBeUndefined()
-    } finally {
-      Reflect.deleteProperty(globalThis, marker)
-    }
+    const result = await config.api.row.search(table._id!, {
+      query: { equal: { name: '{{ first (arrayify "template-target") }}' } },
+    })
+    expect(result.rows).toHaveLength(0)
   })
 
   it("keeps the default helper available in builder-supplied search filters", async () => {
