@@ -39,22 +39,12 @@ function main() {
   const version = required(versionConfig.version, "version")
   const channel = required(versionConfig.channel, "channel")
 
-  const imageTag = `main-v${version}-${channel}`
+  const imageTag = `v${version}`
 
   const dockerHubImagePattern =
-    /image:\s*docker\.io\/litellm\/litellm:main-v(\d+\.\d+\.\d+)-([a-zA-Z0-9]+)((?:\.[a-zA-Z0-9]+)*)/
-  const dockerHubImageReplacement = (
-    _match,
-    existingVersion,
-    existingChannel,
-    suffix
-  ) => {
-    const isSameRelease =
-      existingVersion === version && existingChannel === channel
-    return `image: docker.io/litellm/litellm:${imageTag}${
-      isSameRelease ? suffix : ""
-    }`
-  }
+    /image:\s*docker\.io\/litellm\/litellm:[^\s\n]+/
+  const dockerHubImageReplacement =
+    `image: docker.io/litellm/litellm:${imageTag}`
 
   const updates = [
     {
@@ -105,6 +95,16 @@ function main() {
           /image:\s*ghcr\.io\/berriai\/litellm:[^\s\n]+/,
           `image: ghcr.io/berriai/litellm:${imageTag}`,
           "charts/budibase/values.yaml"
+        ),
+    },
+    {
+      path: path.join(repoRoot, "charts", "budibase", "README.md"),
+      update: content =>
+        replaceRequired(
+          content,
+          /ghcr\.io\/berriai\/litellm:[^"`\s]+/,
+          `ghcr.io/berriai/litellm:${imageTag}`,
+          "charts/budibase/README.md"
         ),
     },
   ]
