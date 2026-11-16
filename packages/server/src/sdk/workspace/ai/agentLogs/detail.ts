@@ -239,7 +239,8 @@ export async function exportSession(
         detail: mapRequestDetail(data, requestId, toolDisplayNames),
       }
     },
-    EXPORT_CONCURRENCY
+    EXPORT_CONCURRENCY,
+    { stopOnError: true }
   )
 
   return { session: sessionMetadata, actions }
