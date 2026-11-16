@@ -101,6 +101,7 @@ export async function search(
       let viewQuery = await enrichSearchContext({
         fields: view.query || {},
         inputs: context,
+        safeSearchHelpers: true,
       })
       if (Array.isArray(viewQuery)) {
         viewQuery = dataFilters.buildQuery(viewQuery)
