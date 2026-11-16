@@ -1,12 +1,13 @@
+import type { ProjectAssignmentResponse } from "./project"
 import { Datasource } from "../../../documents"
 import { DatasourceRelationshipConfig } from "../../../sdk/datasources"
 
-export interface CreateDatasourceResponse {
+export interface CreateDatasourceResponse extends ProjectAssignmentResponse {
   datasource: Datasource
   errors: Record<string, string>
 }
 
-export interface UpdateDatasourceResponse {
+export interface UpdateDatasourceResponse extends ProjectAssignmentResponse {
   datasource: Datasource
 }
 

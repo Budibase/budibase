@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
 import { constants as proConstants, licensing } from "@budibase/pro"
-import { dataFilters, Duration } from "@budibase/shared-core"
+import { dataFilters, Duration, isQueryToolType } from "@budibase/shared-core"
 import {
   AgentOperation,
   AgentOperationApprovalPolicy,
@@ -13,7 +13,9 @@ import {
   EscalationSource,
   type EscalationReviewContext,
   type EscalationReviewParameter,
+  type Query,
   ResolutionStrategy,
+  Row,
   ToolExecutionRule,
   ToolAction,
   ToolType,
@@ -30,6 +32,7 @@ import {
   stringifyToolParameters,
   truncateReviewField,
 } from "../../../../escalation/reviewContext"
+import { processDefaultValues } from "../../../../utilities/rowProcessor"
 
 const SUMMARY_MAX_LENGTH = 300
 const DAY_MS = Duration.fromDays(1).toMs()
@@ -79,11 +82,18 @@ interface CreateGateParams {
   readableName?: string
   displayName?: string
   sourceId?: string
+  sourceType?: ToolType
   action?: ToolAction
   // Key of the args object holding the condition fields e.g "data"
   argsKey?: string
   rules: ToolExecutionRule[]
   gateContext: EscalationGateContext
+}
+
+interface ConditionRecordResult {
+  record?: Record<string, unknown>
+  defaulted: Record<string, unknown>
+  fields?: string[]
 }
 
 export const resolveToolArgsKey = (tool: {
@@ -120,14 +130,22 @@ const conditionRecord = (
     : undefined
 }
 
-const reviewRecord = (input: unknown, argsKey?: string) => {
+const reviewRecord = ({
+  input,
+  argsKey,
+  defaulted,
+}: {
+  input: unknown
+  argsKey?: string
+  defaulted: Record<string, unknown>
+}) => {
   const root = conditionRecord(input)
   const nested = conditionRecord(input, argsKey)
   if (!argsKey || !root || !nested) {
-    return nested ?? input
+    return nested ? { ...nested, ...defaulted } : input
   }
   const { [argsKey]: _nested, ...directArguments } = root
-  return { ...directArguments, ...nested }
+  return { ...directArguments, ...nested, ...defaulted }
 }
 
 const ruleMatches = (
@@ -145,39 +163,117 @@ const ruleMatches = (
   return dataFilters.runQuery([record], query).length > 0
 }
 
+const changedFields = (
+  before: Record<string, unknown>,
+  after: Record<string, unknown>
+) =>
+  Object.fromEntries(
+    Object.entries(after).filter(([key, value]) => before[key] !== value)
+  )
+
+const queryConditionRecord = async ({
+  queryId,
+  record,
+}: {
+  queryId: string
+  record: Record<string, unknown>
+}): Promise<ConditionRecordResult> => {
+  const query = await context.getWorkspaceDB().tryGet<Query>(queryId)
+  if (!query) {
+    throw new Error(`Query ${queryId} not found`)
+  }
+  const withDefaults: Record<string, unknown> = { ...record }
+  for (const parameter of query.parameters) {
+    const value = withDefaults[parameter.name]
+    if (value == null || value === "") {
+      withDefaults[parameter.name] = parameter.default
+    }
+  }
+  return {
+    record: await sdk.queries.enrichContext(withDefaults),
+    defaulted: changedFields(record, withDefaults),
+  }
+}
+
+const rowConditionRecord = async ({
+  tableId,
+  action,
+  input,
+  record,
+}: {
+  tableId: string
+  action?: ToolAction
+  input: unknown
+  record: Record<string, unknown>
+}): Promise<ConditionRecordResult> => {
+  const rowId = (input as Record<string, unknown>).rowId
+  const existing: Row =
+    action === ToolAction.UPDATE_ROW && typeof rowId === "string"
+      ? await sdk.rows.find(tableId, rowId)
+      : {}
+  const row: Row = { ...existing, ...record }
+  const withDefaults: Row = { ...row }
+  const table = await sdk.tables.getTable(tableId)
+  await processDefaultValues(table, withDefaults)
+  return {
+    record: withDefaults,
+    defaulted: changedFields(row, withDefaults),
+    fields: Object.keys(table.schema),
+  }
+}
+
 const buildConditionRecord = async ({
   input,
   argsKey,
   toolName,
   action,
   sourceId,
+  sourceType,
 }: {
   input: unknown
   argsKey?: string
   toolName: string
   action?: ToolAction
   sourceId?: string
-}): Promise<Record<string, unknown> | undefined> => {
+  sourceType?: ToolType
+}): Promise<ConditionRecordResult | undefined> => {
   const record = conditionRecord(input, argsKey)
-  if (!record || action !== ToolAction.UPDATE_ROW || !sourceId) {
-    return record
-  }
-  const rowId = (input as Record<string, unknown>).rowId
-  if (typeof rowId !== "string") {
-    return record
+  const isQuery = isQueryToolType(sourceType)
+  const isRowWrite =
+    action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW
+  if (!record || !sourceId || (!isQuery && !isRowWrite)) {
+    return { record, defaulted: {} }
   }
   try {
-    const existing = await sdk.rows.find(sourceId, rowId)
-    return { ...existing, ...record }
+    if (isQuery) {
+      return await queryConditionRecord({ queryId: sourceId, record })
+    }
+    return await rowConditionRecord({
+      tableId: sourceId,
+      action,
+      input,
+      record,
+    })
   } catch (error) {
-    console.warn("escalation gate: could not load row for update conditions", {
+    console.warn("escalation gate: could not apply defaults for conditions", {
       toolName,
-      rowId,
+      sourceId,
       error: error instanceof Error ? error.message : String(error),
     })
     return undefined
   }
 }
+
+const hasMissingConditionField = ({
+  rules,
+  fields,
+}: {
+  rules: ToolExecutionRule[]
+  fields: string[]
+}) =>
+  rules.some(rule =>
+    rule.conditions?.some(condition => !fields.includes(condition.field))
+  )
 
 // First matching rule in array order wins.
 const matchRule = (
@@ -213,6 +309,13 @@ const unavailableResult = (label: string) => ({
     "right now.",
 })
 
+const unresolvedResult = (label: string) => ({
+  status: ApprovalToolResultStatus.UNAVAILABLE,
+  note:
+    `"${label}" could not be checked against its approval rules. Tell the ` +
+    "user this action cannot be run right now.",
+})
+
 export const createEscalationGateRuntime = ({
   agentId,
   operation,
@@ -220,6 +323,7 @@ export const createEscalationGateRuntime = ({
   readableName,
   displayName,
   sourceId,
+  sourceType,
   action,
   argsKey,
   rules,
@@ -242,20 +346,31 @@ export const createEscalationGateRuntime = ({
           "must ask again before another attempt can be requested.",
       }
     }
-    const record = await buildConditionRecord({
+    const condition = await buildConditionRecord({
       input,
       argsKey,
       toolName,
       action,
       sourceId,
+      sourceType,
     })
+    if (!condition) {
+      return unresolvedResult(label)
+    }
+    const { record, defaulted, fields } = condition
+    if (fields && hasMissingConditionField({ rules, fields })) {
+      return unresolvedResult(label)
+    }
     const rule = matchRule(rules, record)
     if (!rule) {
       return undefined
     }
 
     const policy = resolvePolicy(operation, rule.policyId)
-    if (!policy?.notifications?.recipients?.length) {
+    if (
+      !policy ||
+      (!policy.approvers?.length && !policy.notifications?.recipients?.length)
+    ) {
       return unavailableResult(label)
     }
     const { notifications, ...policySnapshot } = policy
@@ -275,7 +390,7 @@ export const createEscalationGateRuntime = ({
 
     const requestedBy = gateContext.requesterLabel ?? "Unknown requester"
     const parameters = formatToolParameters({
-      input: reviewRecord(input, argsKey),
+      input: reviewRecord({ input, argsKey, defaulted }),
       names: rule.reviewParameters,
     })
     const actionLabel = truncateReviewField(label)
@@ -334,6 +449,10 @@ export const createEscalationGateRuntime = ({
         channel: gateContext.channel,
         userId: gateContext.userId,
         requester: gateContext.requester,
+        sessionMetadata: context.getPlatformActionSessionMetadata({
+          sourceType: "agent_session",
+          sourceId: gateContext.sessionId,
+        }),
         messages: frozenMessages,
         pendingToolCall: {
           toolCallId,

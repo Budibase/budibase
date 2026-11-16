@@ -1,4 +1,6 @@
+import { asSchema } from "@ai-sdk/provider-utils"
 import {
+  AutoFieldSubType,
   FieldType,
   PermissionLevel,
   PermissionType,
@@ -128,6 +130,70 @@ describe("AI Tools - Rows", () => {
       expect(serializedDefinition).not.toContain("Manager")
       expect(serializedDefinition).toContain("Resource metadata is restricted")
     }
+  })
+
+  it("lists automatic columns on search_rows but not on create_row", () => {
+    const tools = createRowTools({
+      tableId: "ta_expenses",
+      tableName: "Expenses",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema: {
+        Notes: { name: "Notes", type: FieldType.STRING },
+        "Created At": {
+          name: "Created At",
+          type: FieldType.DATETIME,
+          autocolumn: true,
+          subtype: AutoFieldSubType.CREATED_AT,
+        },
+      },
+    })
+    const getInputSchemaText = (action: string) => {
+      const rowTool = tools.find(
+        tool => tool.readableName === `Expenses.${action}`
+      )
+      if (!rowTool) {
+        throw new Error(`${action} tool not found`)
+      }
+      return JSON.stringify(asSchema(rowTool.tool.inputSchema).jsonSchema)
+    }
+
+    expect(getInputSchemaText("search_rows")).toContain("Created At")
+    expect(getInputSchemaText("create_row")).toContain("Notes")
+    expect(getInputSchemaText("create_row")).not.toContain("Created At")
+  })
+
+  it("keeps automatic columns on search_rows when the field list is capped", () => {
+    const tableSchema: TableSchema = {}
+    for (let index = 0; index < 31; index++) {
+      tableSchema[`Field ${index}`] = {
+        name: `Field ${index}`,
+        type: FieldType.STRING,
+      }
+    }
+    tableSchema["Created At"] = {
+      name: "Created At",
+      type: FieldType.DATETIME,
+      autocolumn: true,
+      subtype: AutoFieldSubType.CREATED_AT,
+    }
+    const tools = createRowTools({
+      tableId: "ta_wide",
+      tableName: "Wide",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema,
+    })
+    const searchTool = tools.find(
+      tool => tool.readableName === "Wide.search_rows"
+    )
+    if (!searchTool) {
+      throw new Error("search_rows tool not found")
+    }
+
+    const searchSchemaText = JSON.stringify(
+      asSchema(searchTool.tool.inputSchema).jsonSchema
+    )
+    expect(searchSchemaText).toContain("Created At")
+    expect(searchSchemaText).not.toContain("Field 30")
   })
 
   async function executeTool<T extends BudibaseToolDefinition>(

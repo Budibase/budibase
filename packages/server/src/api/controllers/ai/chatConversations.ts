@@ -10,23 +10,39 @@ import {
 import { v4 } from "uuid"
 import {
   ActionFailureReason,
+  Agent,
   ChatAgentRequest,
   ChatConversation,
   ChatConversationRequest,
   ApprovalToolResultStatus,
   FeatureFlag,
   ContextUser,
+  PlatformActionUserOrigin,
   UserCtx,
   WebhookChatCompleteResult,
 } from "@budibase/types"
 import {
   consumeStream,
+  isToolUIPart,
   readUIMessageStream,
   type LanguageModelUsage,
   type UIMessage,
   type UIMessageChunk,
 } from "ai"
 import sdk from "../../../sdk"
+
+const buildAgentSessionActionContext = ({
+  sessionId,
+  requestId,
+}: {
+  sessionId: string
+  requestId?: string
+}) => ({
+  sourceType: "agent_session" as const,
+  sourceId: sessionId,
+  sessionId,
+  requestId,
+})
 import { isDevWorkspaceID } from "../../../db/utils"
 import {
   buildAgentMessageUsage,
@@ -35,11 +51,36 @@ import {
   type AgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
-import { truncateTitle } from "../../../sdk/workspace/ai/chatConversations"
+import {
+  getRecentChatContext,
+  truncateTitle,
+} from "../../../sdk/workspace/ai/chatConversations"
 import {
   determineTrigger,
   resolvePreviewSessionId,
 } from "../../../sdk/workspace/ai/agentLogs/shared"
+
+const markAgentSessionActive = async ({
+  agentId,
+  sessionId,
+}: {
+  agentId: string
+  sessionId: string
+}) => {
+  await events.platformActions
+    .enqueuePlatformActionSessionLifecycle({
+      sourceType: "agent_session",
+      sourceId: sessionId,
+      signal: "active",
+    })
+    .catch(error => {
+      console.error("Failed to mark agent session active", {
+        agentId,
+        sessionId,
+        error,
+      })
+    })
+}
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -47,38 +88,6 @@ const getGlobalUserId = (ctx: UserCtx) => {
     throw new HTTPError("userId is required", 400)
   }
   return userId as string
-}
-
-const getRecentChatContext = (
-  messages: ChatConversation["messages"],
-  limit = 6
-) => {
-  return messages
-    .flatMap(message => {
-      if (message.role !== "user" && message.role !== "assistant") {
-        return []
-      }
-
-      const content = (message.parts || [])
-        .filter(
-          (
-            part
-          ): part is Extract<
-            (typeof message.parts)[number],
-            { type: "text" }
-          > => part.type === "text"
-        )
-        .map(part => part.text)
-        .join("\n")
-        .trim()
-
-      if (!content) {
-        return []
-      }
-
-      return [{ role: message.role, content }]
-    })
-    .slice(-limit)
 }
 
 type AgentRequestTrackingHandle = { requestId: string } | undefined
@@ -123,7 +132,7 @@ const startAgentRequestTracking = async ({
         operation,
         userId,
         source: determineTrigger(sessionId),
-        recentChatContext: getRecentChatContext(chatMessages),
+        recentChatContext: getRecentChatContext({ messages: chatMessages }),
       })
       .catch(error => {
         console.error("Failed to init active agent request", {
@@ -139,7 +148,7 @@ const startAgentRequestTracking = async ({
         agentId,
         sessionId,
         latestUserPrompt: run.latestQuestion,
-        recentChatContext: getRecentChatContext(chatMessages),
+        recentChatContext: getRecentChatContext({ messages: chatMessages }),
         operation,
         userId,
         existingRequestId: trackingHandle?.requestId,
@@ -175,6 +184,7 @@ const buildToolCallTrackingHandler = ({
   // before writing the terminal status.
   let chain = Promise.resolve()
   let needsInputUpdate = Promise.resolve()
+  let awaitingEscalation = false
 
   const onToolCallCompleted = ({
     toolName,
@@ -187,16 +197,19 @@ const buildToolCallTrackingHandler = ({
     input?: unknown
     output?: unknown
   }) => {
-    if (!trackingHandle) {
-      return
-    }
     const approvalOutput = output as
       | { status?: string; escalationId?: string }
       | undefined
-    if (
+    const pendingApproval =
       approvalOutput?.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
-      approvalOutput.escalationId
-    ) {
+      !!approvalOutput.escalationId
+    if (pendingApproval) {
+      awaitingEscalation = true
+    }
+    if (!trackingHandle) {
+      return
+    }
+    if (pendingApproval) {
       needsInputUpdate = needsInputUpdate.then(() =>
         sdk.ai.agentRequests
           .updateRequestStatus({
@@ -237,6 +250,7 @@ const buildToolCallTrackingHandler = ({
   return {
     onToolCallCompleted,
     flush: () => Promise.all([chain, needsInputUpdate]),
+    isAwaitingEscalation: () => awaitingEscalation,
   }
 }
 
@@ -311,6 +325,36 @@ const finalizeAgentRequestTracking = async ({
         error: updateError,
       })
     })
+}
+
+const emitAgentRunFinished = ({
+  agentId,
+  sessionId,
+  requestId,
+  awaitingEscalation,
+  toolCallsIncomplete,
+}: {
+  agentId: string
+  sessionId: string
+  requestId?: string
+  awaitingEscalation: boolean
+  toolCallsIncomplete: boolean
+}) => {
+  const source = {
+    agentId,
+    ...buildAgentSessionActionContext({ sessionId, requestId }),
+  }
+  if (awaitingEscalation) {
+    events.action.aiAgentExecuted({ ...source, awaitingEscalation: true })
+  } else if (toolCallsIncomplete) {
+    events.action.aiAgentFailed({
+      ...source,
+      reason: ActionFailureReason.ERROR,
+      errorMessage: formatIncompleteToolCallError([]),
+    })
+  } else {
+    events.action.aiAgentExecuted(source)
+  }
 }
 
 interface ResolvedChatStreamRequest {
@@ -407,6 +451,49 @@ const getAssistantMessageText = (assistantMessage?: UIMessage) =>
     ?.flatMap(part => (part.type === "text" ? [part.text] : []))
     .join("") || ""
 
+const hasSettledToolCall = <T extends UIMessage>(
+  assistantMessage?: T
+): assistantMessage is T =>
+  !!assistantMessage?.parts.some(
+    part =>
+      isToolUIPart(part) &&
+      (part.state === "output-available" || part.state === "output-error")
+  )
+
+const isSettledToolPart = (part: UIMessage["parts"][number]) =>
+  !isToolUIPart(part) ||
+  part.state === "approval-responded" ||
+  (part.state === "output-available" && part.preliminary !== true) ||
+  part.state === "output-error" ||
+  part.state === "output-denied"
+
+const buildFailedWebhookChatResult = ({
+  chat,
+  assistantMessage,
+  title,
+  error,
+}: {
+  chat: ChatConversationRequest
+  assistantMessage: ChatConversation["messages"][number]
+  title?: string
+  error: unknown
+}): WebhookChatCompleteResult => {
+  const failedMessage = {
+    ...assistantMessage,
+    parts: assistantMessage.parts.filter(isSettledToolPart),
+    metadata: {
+      ...assistantMessage.metadata,
+      error: getErrorMessage(error),
+    },
+  }
+  return {
+    messages: [...chat.messages, failedMessage],
+    assistantText: getAssistantMessageText(failedMessage),
+    title,
+    failed: true,
+  }
+}
+
 const createAssistantTextStream = async function* (
   stream: ReadableStream<UIMessageChunk>
 ): AsyncGenerator<string, void, void> {
@@ -430,15 +517,18 @@ const createAssistantTextStream = async function* (
   }
 }
 
-export async function webhookChat({
-  chat,
-  user,
-  onAssistantStream,
-}: {
+interface WebhookChatParams {
   chat: ChatConversationRequest
   user: ContextUser
+  triggeredBy: PlatformActionUserOrigin
   onAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
-}): Promise<WebhookChatCompleteResult> {
+}
+
+export async function webhookChat({
+  triggeredBy,
+  ...params
+}: WebhookChatParams): Promise<WebhookChatCompleteResult> {
+  const { chat, user } = params
   const agentId = chat.agentId
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -451,6 +541,32 @@ export async function webhookChat({
   }
   const chatId = chat._id ?? docIds.generateChatConversationID()
   const sessionId = `${provider}:${chatId}`
+
+  return await sdk.users.doInUserIdentity({
+    userId: user.globalId || user.userId || user._id,
+    task: () =>
+      sdk.platformActions.doInAgentSessionScope({
+        sessionId,
+        agentId,
+        agentName: agent.name,
+        triggeredBy,
+        task: () => runWebhookChat({ ...params, agentId, agent, sessionId }),
+      }),
+  })
+}
+
+const runWebhookChat = async ({
+  chat,
+  user,
+  onAssistantStream,
+  agentId,
+  agent,
+  sessionId,
+}: Omit<WebhookChatParams, "triggeredBy"> & {
+  agentId: string
+  agent: Agent
+  sessionId: string
+}): Promise<WebhookChatCompleteResult> => {
   const suspendedModelMessages =
     await sdk.ai.chatConversations.prepareModelMessages(chat.messages)
   const modelMessages =
@@ -491,6 +607,7 @@ export async function webhookChat({
     toolDisplayNames: run.toolDisplayNames,
   })
 
+  await markAgentSessionActive({ agentId, sessionId })
   const result = await run.stream({
     pendingToolCalls,
     unrecoveredToolFailures,
@@ -500,6 +617,7 @@ export async function webhookChat({
   const uiMessageStream = result.toUIMessageStream({
     generateMessageId: v4,
     sendReasoning: true,
+    onError: getErrorMessage,
   })
   let assistantStreamForCapture: ReadableStream<UIMessageChunk> =
     uiMessageStream
@@ -510,16 +628,19 @@ export async function webhookChat({
     streamTask = onAssistantStream(createAssistantTextStream(deliveryStream))
   }
 
+  let latestAssistantMessage: ChatConversation["messages"][number] | undefined
   const assistantMessageTask = (async () => {
-    let assistantMessage: ChatConversation["messages"][number] | undefined
     for await (const message of readUIMessageStream<
       ChatConversation["messages"][number]
     >({
+      // An error after a completed step doesn't reject result.response or
+      // result.finishReason, so this is the only place that surfaces it.
+      terminateOnError: true,
       stream: assistantStreamForCapture,
     })) {
-      assistantMessage = message
+      latestAssistantMessage = message
     }
-    return assistantMessage
+    return latestAssistantMessage
   })()
 
   const [
@@ -534,10 +655,21 @@ export async function webhookChat({
     result.finishReason,
   ])
 
+  const requestId =
+    responseResult.status === "fulfilled"
+      ? (responseResult.value.id ?? undefined)
+      : undefined
+  run.sessionLogIndexer.addRequestId(requestId)
+  await run.sessionLogIndexer.index()
+
   if (streamOutcome.status === "rejected") {
     console.error("Chat webhook stream delivery failed", streamOutcome.reason)
     events.action.aiAgentFailed({
       agentId,
+      ...buildAgentSessionActionContext({
+        sessionId,
+        requestId: trackingHandle?.requestId,
+      }),
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(streamOutcome.reason),
     })
@@ -548,14 +680,16 @@ export async function webhookChat({
       sessionId,
       errorMessage: getErrorMessage(streamOutcome.reason),
     })
+    if (hasSettledToolCall(latestAssistantMessage)) {
+      return buildFailedWebhookChatResult({
+        chat,
+        assistantMessage: latestAssistantMessage,
+        title,
+        error: streamOutcome.reason,
+      })
+    }
     throw streamOutcome.reason
   }
-  const requestId =
-    responseResult.status === "fulfilled"
-      ? (responseResult.value.id ?? undefined)
-      : undefined
-  run.sessionLogIndexer.addRequestId(requestId)
-  await run.sessionLogIndexer.index()
 
   if (assistantMessageResult.status === "rejected") {
     console.error("Agent streaming error", {
@@ -565,6 +699,10 @@ export async function webhookChat({
     })
     events.action.aiAgentFailed({
       agentId,
+      ...buildAgentSessionActionContext({
+        sessionId,
+        requestId: trackingHandle?.requestId,
+      }),
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
@@ -575,6 +713,14 @@ export async function webhookChat({
       sessionId,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
+    if (hasSettledToolCall(latestAssistantMessage)) {
+      return buildFailedWebhookChatResult({
+        chat,
+        assistantMessage: latestAssistantMessage,
+        title,
+        error: assistantMessageResult.reason,
+      })
+    }
     throw assistantMessageResult.reason
   }
   if (responseResult.status === "rejected") {
@@ -585,6 +731,10 @@ export async function webhookChat({
     })
     events.action.aiAgentFailed({
       agentId,
+      ...buildAgentSessionActionContext({
+        sessionId,
+        requestId: trackingHandle?.requestId,
+      }),
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(responseResult.reason),
     })
@@ -598,7 +748,6 @@ export async function webhookChat({
     throw responseResult.reason
   }
 
-  events.action.aiAgentExecuted({ agentId })
   const ragSources = run.getUsedKnowledgeSourcesMetadata()
 
   const finalAssistantMessage =
@@ -626,6 +775,13 @@ export async function webhookChat({
     unrecoveredToolFailures,
     finalResponse: assistantText,
   })
+  emitAgentRunFinished({
+    agentId,
+    sessionId,
+    requestId: trackingHandle?.requestId ?? requestId,
+    awaitingEscalation: toolCallTracking.isAwaitingEscalation(),
+    toolCallsIncomplete,
+  })
 
   return {
     messages: [...chat.messages, assistantMessage],
@@ -639,8 +795,37 @@ export async function webhookChat({
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
-  const { agentId, chat, userId, user } = await resolveChatStreamRequest(ctx)
+  const request = await resolveChatStreamRequest(ctx)
+  const { agentId, chat } = request
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const sessionId = resolvePreviewSessionId({
+    sessionId: chat.sessionId,
+    fallbackId: chat._id ?? docIds.generateChatConversationID(),
+  })
 
+  await sdk.platformActions.doInAgentSessionScope({
+    sessionId,
+    agentId,
+    agentName: agent.name,
+    // The developer who started the chat, regardless of the preview role
+    triggeredBy: sdk.platformActions.getUserOrigin(ctx.user),
+    task: () => streamAgentChat({ ctx, ...request, agent, sessionId }),
+  })
+}
+
+const streamAgentChat = async ({
+  ctx,
+  agentId,
+  chat,
+  userId,
+  user,
+  agent,
+  sessionId,
+}: ResolvedChatStreamRequest & {
+  ctx: UserCtx<ChatAgentRequest, void>
+  agent: Agent
+  sessionId: string
+}) => {
   ctx.status = 200
   ctx.set("Content-Type", "text/event-stream")
   ctx.set("Cache-Control", "no-cache")
@@ -649,18 +834,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   ctx.res.setHeader("X-Accel-Buffering", "no")
   ctx.res.setHeader("Transfer-Encoding", "chunked")
 
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
   await sdk.ai.agents.assertAgentHasValidConfig(agent)
 
   let trackingHandle: AgentRequestTrackingHandle
-  let sessionId = ""
 
   try {
-    const chatId = chat._id ?? docIds.generateChatConversationID()
-    sessionId = resolvePreviewSessionId({
-      sessionId: chat.sessionId,
-      fallbackId: chatId,
-    })
     const run = await prepareAgentChatRun({
       agent,
       agentId,
@@ -681,7 +859,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
     const pendingToolCalls = new Set<string>()
     const unrecoveredToolFailures = new Set<string>()
-    const streamResult = { toolCallsIncomplete: false }
+    const streamResult = { toolCallsIncomplete: false, errored: false }
     const toolCallTracking = buildToolCallTrackingHandler({
       trackingHandle,
       agentId,
@@ -689,6 +867,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       toolDisplayNames: run.toolDisplayNames,
     })
 
+    await markAgentSessionActive({ agentId, sessionId })
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
@@ -713,6 +892,37 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
       messageMetadata: ({ part }) => {
+        // UI onError also formats tool failures; only a stream error aborts the run.
+        if (part.type === "error" && !streamResult.errored) {
+          streamResult.errored = true
+          run.sessionLogIndexer.index().catch(indexError => {
+            console.error("Failed to index agent session after stream error", {
+              agentId,
+              sessionId,
+              error: indexError,
+            })
+          })
+          console.error("Agent streaming error", {
+            agentId,
+            sessionId,
+            error: part.error,
+          })
+          events.action.aiAgentFailed({
+            agentId,
+            ...buildAgentSessionActionContext({
+              sessionId,
+              requestId: trackingHandle?.requestId,
+            }),
+            reason: ActionFailureReason.ERROR,
+            errorMessage: getErrorMessage(part.error),
+          })
+          markAgentRequestFailed({
+            trackingHandle,
+            agentId,
+            sessionId,
+            errorMessage: getErrorMessage(part.error),
+          })
+        }
         if (part.type === "start") {
           return {
             ...sharedMetadata,
@@ -750,42 +960,21 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           }
         }
       },
-      onError: error => {
-        run.sessionLogIndexer.index().catch(indexError => {
-          console.error("Failed to index agent session after stream error", {
-            agentId,
-            sessionId,
-            error: indexError,
-          })
-        })
-        console.error("Agent streaming error", {
-          agentId,
-          sessionId,
-          error,
-        })
-        events.action.aiAgentFailed({
-          agentId,
-          reason: ActionFailureReason.ERROR,
-          errorMessage: getErrorMessage(error),
-        })
-        markAgentRequestFailed({
-          trackingHandle,
-          agentId,
-          sessionId,
-          errorMessage: getErrorMessage(error),
-        })
-        return getErrorMessage(error)
-      },
+      onError: getErrorMessage,
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
-        events.action.aiAgentExecuted({ agentId })
-
         await toolCallTracking.flush()
+
+        // The SDK also calls onFinish when the stream closes after an error,
+        // which the error stream part has already reported as the end of this run.
+        if (streamResult.errored) {
+          return
+        }
 
         const finalAssistantMessage = [...messages]
           .reverse()
           .find(message => message.role === "assistant")
-        const finalizeTask = finalizeAgentRequestTracking({
+        await finalizeAgentRequestTracking({
           trackingHandle,
           agentId,
           sessionId,
@@ -793,8 +982,15 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           unrecoveredToolFailures,
           finalResponse: getAssistantMessageText(finalAssistantMessage),
         })
-
-        await finalizeTask
+        emitAgentRunFinished({
+          agentId,
+          sessionId,
+          requestId:
+            trackingHandle?.requestId ??
+            run.sessionLogIndexer.getRequestIds().at(-1),
+          awaitingEscalation: toolCallTracking.isAwaitingEscalation(),
+          toolCallsIncomplete: streamResult.toolCallsIncomplete,
+        })
       },
       consumeSseStream: consumeStream,
       sendReasoning: true,

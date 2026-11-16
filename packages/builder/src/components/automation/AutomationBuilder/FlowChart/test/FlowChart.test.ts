@@ -134,9 +134,10 @@ vi.mock("@budibase/bbui", () => ({
 }))
 
 vi.mock("@budibase/frontend-core", () => ({
-  createAPIClient: () => ({}),
   memo: (value: unknown) => writable(value),
 }))
+
+vi.mock("@/api", () => ({ API: {}, productionAPI: {} }))
 
 vi.mock("@/components/common/LiveToggleButton.svelte", () => ({
   default: MockSlot,

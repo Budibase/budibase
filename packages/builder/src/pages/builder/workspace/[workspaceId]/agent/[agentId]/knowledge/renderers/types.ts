@@ -9,7 +9,6 @@ interface KnowledgeTableRowBase {
 
 export interface FileKnowledgeTableRow extends KnowledgeTableRowBase {
   kind: "file"
-  __clickable?: boolean
   _id?: string
   filename: string
   status: KnowledgeBaseFileStatus
@@ -18,13 +17,16 @@ export interface FileKnowledgeTableRow extends KnowledgeTableRowBase {
   updatedAt: string | number
   mimetype?: string
   isUploading?: boolean
+  isRejected?: boolean
+  canRetry: boolean
   onDelete?: () => Promise<void>
+  onRetry?: () => Promise<void>
+  onDismiss?: () => void
   errorMessage?: string
 }
 
 export interface SharePointConnectionTableRow extends KnowledgeTableRowBase {
   kind: "sharepoint_connection"
-  __clickable: boolean
   _id: string
   sourceId: string
   siteId: string

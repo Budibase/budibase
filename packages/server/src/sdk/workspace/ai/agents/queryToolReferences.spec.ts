@@ -3,6 +3,7 @@ import type { Agent, Datasource, Query } from "@budibase/types"
 import { requesterTools } from "../tests/utils"
 import { fetch, update } from "./crud"
 import {
+  getQueryToolBindingsForResource,
   migrateQueryToolReferences,
   updateAgentQueryToolReferences,
 } from "./queryToolReferences"
@@ -240,9 +241,9 @@ describe("migrateQueryToolReferences", () => {
     })
     const queries = [makeQuery("First query"), makeQuery("Second query")]
     fetchAgents.mockResolvedValue([agent])
-    updateAgent.mockResolvedValue(agent)
+    updateAgent.mockImplementation(async updatedAgent => updatedAgent)
 
-    await migrateQueryToolReferences(
+    const referencingAgents = await migrateQueryToolReferences(
       queries.map(query => ({
         existingDatasource,
         updatedDatasource,
@@ -252,7 +253,7 @@ describe("migrateQueryToolReferences", () => {
     )
 
     expect(updateAgent).toHaveBeenCalledTimes(1)
-    expect(updateAgent).toHaveBeenCalledWith(
+    expect(referencingAgents).toEqual([
       expect.objectContaining({
         operations: [
           expect.objectContaining({
@@ -264,7 +265,123 @@ describe("migrateQueryToolReferences", () => {
             ),
           }),
         ],
-      })
-    )
+      }),
+    ])
+  })
+
+  it("returns referencing agents when query bindings do not change", async () => {
+    const datasource: Datasource = {
+      _id: "datasource_1",
+      name: "API",
+      type: "datasource",
+      source: SourceName.REST,
+      config: {},
+    }
+    const query: Query = {
+      _id: "query_1",
+      datasourceId: datasource._id!,
+      fields: {},
+      name: "Query",
+      parameters: [],
+      queryVerb: "read",
+      readable: true,
+      schema: {},
+      transformer: "return data",
+    }
+    const bindings = getQueryToolBindingsForResource({ datasource, query })
+    const agent = makeAgent({
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main",
+          live: false,
+          enabledTools: requesterTools(bindings.runtimeBinding),
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    })
+    fetchAgents.mockResolvedValue([agent])
+
+    const referencingAgents = await migrateQueryToolReferences({
+      existingDatasource: datasource,
+      updatedDatasource: { ...datasource, _id: "datasource_2" },
+      existingQuery: query,
+      updatedQuery: { ...query, datasourceId: "datasource_2" },
+    })
+
+    expect(referencingAgents).toEqual([agent])
+    expect(updateAgent).not.toHaveBeenCalled()
+  })
+
+  it("ignores matching readable names while recognising migrated runtime tools", async () => {
+    const existingDatasource: Datasource = {
+      _id: "datasource_1",
+      name: "Old API",
+      type: "datasource",
+      source: SourceName.REST,
+      config: {},
+    }
+    const updatedDatasource: Datasource = {
+      ...existingDatasource,
+      _id: "datasource_2",
+      name: "New API",
+    }
+    const existingQuery: Query = {
+      _id: "query_1",
+      datasourceId: existingDatasource._id!,
+      fields: {},
+      name: "Query",
+      parameters: [],
+      queryVerb: "read",
+      readable: true,
+      schema: {},
+      transformer: "return data",
+    }
+    const updatedQuery = {
+      ...existingQuery,
+      datasourceId: updatedDatasource._id!,
+    }
+    const updatedBindings = getQueryToolBindingsForResource({
+      datasource: updatedDatasource,
+      query: updatedQuery,
+    })
+    const readableNameCollision = makeAgent({
+      _id: "agent_readable_collision",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main",
+          live: false,
+          promptInstructions: `Use {{ ${updatedBindings.readableBinding} }}.`,
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    })
+    const migratedRuntimeReference = makeAgent({
+      _id: "agent_migrated_runtime",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main",
+          live: false,
+          enabledTools: requesterTools(updatedBindings.runtimeBinding),
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    })
+    fetchAgents.mockResolvedValue([
+      readableNameCollision,
+      migratedRuntimeReference,
+    ])
+
+    const referencingAgents = await migrateQueryToolReferences({
+      existingDatasource,
+      updatedDatasource,
+      existingQuery,
+      updatedQuery,
+    })
+
+    expect(referencingAgents).toEqual([migratedRuntimeReference])
+    expect(updateAgent).not.toHaveBeenCalled()
   })
 })

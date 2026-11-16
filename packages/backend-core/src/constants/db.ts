@@ -29,6 +29,11 @@ export enum ViewName {
   AGENT_REQUESTS_BY_AGENT = "agent_requests_by_agent",
   AGENT_REQUESTS_BY_UPDATED_AT = "agent_requests_by_updated_at_2",
   AGENT_REQUESTS_BY_STATUS_AND_UPDATED_AT = "agent_requests_by_status_and_updated_at",
+  REQUESTS_BY_WORKSPACE = "requests_by_workspace",
+  REQUESTS_BY_WORKSPACE_STATUS = "requests_by_workspace_status",
+  REQUESTS_BY_WORKSPACE_AGENT = "requests_by_workspace_agent",
+  REQUESTS_BY_USER = "requests_by_user",
+  REQUESTS_COUNT_BY_STATUS = "requests_count_by_status",
   LINK = "by_link",
   ROUTING = "screen_routes_2",
   PROJECT_MEMBERS = "project_members",
@@ -38,6 +43,11 @@ export enum ViewName {
   USER_BY_GROUP = "user_by_group",
   WORKSPACE_BACKUP_BY_TRIGGER = "by_trigger",
   WORKSPACE_BACKUP_BY_EXPIRY = "workspace_backup_by_expiry",
+  PLATFORM_ACTION_SESSIONS_BY_UPDATED_AT = "platform_action_sessions_by_updated_at",
+  PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT = "platform_action_sessions_by_status_and_updated_at",
+  PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_AND_UPDATED_AT = "platform_action_sessions_by_environment_and_updated_at",
+  PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_STATUS_AND_UPDATED_AT = "platform_action_sessions_by_environment_status_and_updated_at",
+  PLATFORM_ACTION_EVENTS_BY_SESSION = "platform_action_events_by_session",
 }
 
 export const DeprecatedViews: Record<string, string[]> = {
@@ -75,6 +85,9 @@ export const StaticDatabases = {
   },
   SCIM_LOGS: {
     name: "scim-logs",
+  },
+  REQUESTS: {
+    name: "requests",
   },
   // Used by self-host users making use of Budicloud resources. Introduced when
   // we started letting self-host users use Budibase AI in the cloud.

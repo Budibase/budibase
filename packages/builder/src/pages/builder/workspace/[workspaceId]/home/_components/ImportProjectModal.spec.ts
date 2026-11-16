@@ -1,0 +1,109 @@
+import { fireEvent, render, screen } from "@testing-library/svelte"
+import { describe, expect, it, vi } from "vitest"
+import MockBody from "@/test/mocks/MockBody.svelte"
+import MockDropzone from "@/test/mocks/MockDropzone.svelte"
+import MockInput from "@/test/mocks/MockInput.svelte"
+import MockModalContent from "@/test/mocks/MockModalContent.svelte"
+import MockSlot from "@/test/mocks/MockSlot.svelte"
+
+vi.mock("@budibase/bbui", async importOriginal => {
+  const { Toggle } = await importOriginal<typeof import("@budibase/bbui")>()
+  return {
+    Body: MockBody,
+    Dropzone: MockDropzone,
+    Input: MockInput,
+    Layout: MockSlot,
+    ModalContent: MockModalContent,
+    Toggle,
+  }
+})
+
+import ImportProjectModal from "./ImportProjectModal.svelte"
+
+describe("ImportProjectModal", () => {
+  it("shows filename encryption and requires a password before importing", async () => {
+    const onConfirm = vi.fn()
+    const file = new File(["project"], "project.enc.tar.gz")
+    render(ImportProjectModal, { onConfirm })
+
+    await fireEvent.change(screen.getByLabelText("Project export"), {
+      target: { files: [file] },
+    })
+
+    expect(screen.getByRole("checkbox")).toBeChecked()
+    expect(screen.getByRole("checkbox")).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Import" })).toBeDisabled()
+
+    await fireEvent.input(screen.getByLabelText("Password"), {
+      target: { value: " password " },
+    })
+    await fireEvent.click(screen.getByRole("button", { name: "Import" }))
+
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith({
+      file,
+      encryptPassword: "password",
+    })
+  })
+
+  it("requires a password when encryption is selected manually", async () => {
+    const onConfirm = vi.fn()
+    const file = new File(["project"], "project.tar.gz")
+    render(ImportProjectModal, { onConfirm })
+    await fireEvent.change(screen.getByLabelText("Project export"), {
+      target: { files: [file] },
+    })
+    await fireEvent.click(screen.getByRole("checkbox"))
+    expect(screen.getByRole("button", { name: "Import" })).toBeDisabled()
+
+    await fireEvent.input(screen.getByLabelText("Password"), {
+      target: { value: " password " },
+    })
+    await fireEvent.click(screen.getByRole("button", { name: "Import" }))
+
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith({
+      file,
+      encryptPassword: "password",
+    })
+  })
+
+  it("clears the password when manual encryption is switched off", async () => {
+    const onConfirm = vi.fn()
+    const file = new File(["project"], "project.tar.gz")
+    render(ImportProjectModal, { onConfirm })
+    await fireEvent.change(screen.getByLabelText("Project export"), {
+      target: { files: [file] },
+    })
+    const toggle = screen.getByRole("checkbox")
+    await fireEvent.click(toggle)
+    await fireEvent.input(screen.getByLabelText("Password"), {
+      target: { value: "old password" },
+    })
+    await fireEvent.click(toggle)
+    await fireEvent.click(toggle)
+
+    expect(screen.getByLabelText("Password")).toHaveValue("")
+    expect(screen.getByRole("button", { name: "Import" })).toBeDisabled()
+    await fireEvent.click(toggle)
+    await fireEvent.click(screen.getByRole("button", { name: "Import" }))
+
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith({
+      file,
+      encryptPassword: undefined,
+    })
+  })
+
+  it("imports a plain file without an encryption password", async () => {
+    const onConfirm = vi.fn()
+    const file = new File(["project"], "project.tar.gz")
+    render(ImportProjectModal, { onConfirm })
+    await fireEvent.change(screen.getByLabelText("Project export"), {
+      target: { files: [file] },
+    })
+    await fireEvent.click(screen.getByRole("button", { name: "Import" }))
+
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith({
+      file,
+      encryptPassword: undefined,
+    })
+  })
+})

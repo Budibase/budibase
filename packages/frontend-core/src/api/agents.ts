@@ -15,6 +15,7 @@ import {
   ProvisionAgentSlackChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
+  RetryAgentFileResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   ToggleAgentDeploymentRequest,
@@ -88,6 +89,11 @@ export interface AgentEndpoints {
     operationId: string,
     fileId: string
   ) => Promise<{ deleted: true }>
+  retryOperationFile: (params: {
+    agentId: string
+    operationId: string
+    fileId: string
+  }) => Promise<RetryAgentFileResponse>
   fetchOperationFileUrl: (
     agentId: string,
     operationId: string,
@@ -283,6 +289,12 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
   ) => {
     return await API.delete({
       url: `/api/agent/${agentId}/operations/${operationId}/files/${fileId}`,
+    })
+  },
+
+  retryOperationFile: async ({ agentId, operationId, fileId }) => {
+    return await API.post<void, RetryAgentFileResponse>({
+      url: `/api/agent/${agentId}/operations/${operationId}/files/${fileId}/retry`,
     })
   },
 

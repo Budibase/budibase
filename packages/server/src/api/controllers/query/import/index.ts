@@ -217,19 +217,24 @@ export class RestImporter {
 
   getInfo = () => this.source.getInfo()
 
-  importQueries = async (
-    datasourceId: string,
+  importQueries = async ({
+    datasourceId,
+    selectedEndpointId,
+    staticVariables,
+  }: {
+    datasourceId: string
     selectedEndpointId?: string
-  ): Promise<ImportResult> => {
+    staticVariables?: Record<string, string>
+  }): Promise<ImportResult> => {
     const filterIds = selectedEndpointId
       ? new Set<string>([selectedEndpointId])
       : undefined
-    const staticVariables =
-      await this.getDatasourceStaticVariables(datasourceId)
     // construct the queries
     let queries = this.source.getQueries(datasourceId, {
       filterIds,
-      staticVariables,
+      staticVariables:
+        staticVariables ??
+        (await this.getDatasourceStaticVariables(datasourceId)),
     })
 
     if (filterIds && queries.length === 0) {
@@ -269,10 +274,12 @@ export class RestImporter {
     )
 
     // check for failed writes
-    response.forEach((query: any) => {
-      if (!query.ok) {
-        errorQueries.push(queryIndex[query.id])
-        delete queryIndex[query.id]
+    response.forEach(result => {
+      if (result.error) {
+        errorQueries.push(queryIndex[result.id])
+        delete queryIndex[result.id]
+      } else {
+        queryIndex[result.id]._rev = result.rev
       }
     })
 
@@ -281,15 +288,26 @@ export class RestImporter {
     // events
     const count = successQueries.length
     const importSource = this.source.getImportSource()
-    const datasource = await sdk.datasources.get(datasourceId)
-    await events.query.imported(datasource, importSource, count)
-    for (let query of successQueries) {
-      await events.query.created(datasource, query)
+    try {
+      const datasource = await sdk.datasources.get(datasourceId)
+      await events.query.imported(datasource, importSource, count)
+      for (const query of successQueries) {
+        await events.query.created(datasource, query)
+      }
+    } catch (error) {
+      await this.rollbackQueries(successQueries)
+      throw error
     }
 
     return {
       errorQueries,
       queries: successQueries,
+    }
+  }
+
+  rollbackQueries = async (queries: Query[]) => {
+    if (queries.length) {
+      await context.getWorkspaceDB().bulkRemove(queries)
     }
   }
 

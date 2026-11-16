@@ -131,6 +131,14 @@ export interface SortJson {
   }
 }
 
+// Internal query sort, not exposed through the rows API. containsValue orders
+// by whether a JSON array column contains the value (SQLite only).
+export interface QuerySortJson {
+  [key: string]: SortJson[string] & {
+    containsValue?: string
+  }
+}
+
 export interface PaginationJson {
   limit: number
   page?: string | number
@@ -175,7 +183,7 @@ export interface QueryJson {
     aggregations?: Aggregation[]
   }
   filters?: SearchFilters
-  sort?: SortJson
+  sort?: QuerySortJson
   paginate?: PaginationJson
   body?: Row | Row[]
   meta?: {

@@ -7,7 +7,9 @@ import {
   AutomationStepResult,
   AutomationTriggerStepId,
   AutomationTriggerResult,
+  PlatformActionResourceOrigin,
 } from "@budibase/types"
+import { captureRunMetadata } from "../../../../automations/tests/utilities"
 import createAutomationTools from "../automations"
 
 interface TriggerAutomationStepsResult {
@@ -28,8 +30,14 @@ type TriggerAutomationResult =
 describe("AI Tools - Automations", () => {
   const config = new TestConfiguration()
 
-  const getTriggerAutomationTool = (automation: any) => {
-    const tools = createAutomationTools([automation])
+  const getTriggerAutomationTool = (
+    automation: any,
+    triggeredBy?: PlatformActionResourceOrigin
+  ) => {
+    const tools = createAutomationTools({
+      automations: [automation],
+      triggeredBy,
+    })
     const automationName = automation.name || automation._id
     const tool = tools.find(t => t.readableName === `${automationName}.trigger`)
     if (!tool) {
@@ -39,7 +47,7 @@ describe("AI Tools - Automations", () => {
   }
 
   const findTriggerAutomationTool = (automation: any) => {
-    const tools = createAutomationTools([automation])
+    const tools = createAutomationTools({ automations: [automation] })
     const automationName = automation.name || automation._id
     return tools.find(t => t.readableName === `${automationName}.trigger`)
   }
@@ -136,6 +144,27 @@ describe("AI Tools - Automations", () => {
       if (isStepsResult(result)) {
         expect(result.status).toBe(AutomationStatus.SUCCESS)
       }
+    })
+
+    it("attributes the triggered run to the invoking agent", async () => {
+      const { automation: targetAutomation } = await createAutomationBuilder(
+        config
+      )
+        .onAppAction()
+        .serverLog({ text: "Step 1" })
+        .save()
+      const agent: PlatformActionResourceOrigin = {
+        type: "agent",
+        id: "agent_1",
+        label: "HR assistant",
+      }
+
+      const tool = getTriggerAutomationTool(targetAutomation, agent)
+      const metadata = await captureRunMetadata(() =>
+        runInContext(() => executeTool(tool, { fields: {} }))
+      )
+
+      expect(metadata.map(run => run?.triggeredBy)).toEqual([agent])
     })
 
     it("should not create tool for non-APP automations", async () => {

@@ -22,6 +22,7 @@ vi.mock("@/api", () => {
       fetchAgentKnowledge: vi.fn(),
       uploadOperationFile: vi.fn(),
       deleteOperationFile: vi.fn(),
+      retryOperationFile: vi.fn(),
       syncOperationKnowledgeSources: vi.fn(),
       resetOperationKnowledgeBaseStore: vi.fn(),
     },
@@ -33,6 +34,7 @@ const fetchTools = vi.mocked(API.fetchTools)
 const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
 const uploadOperationFile = vi.mocked(API.uploadOperationFile)
 const deleteOperationFile = vi.mocked(API.deleteOperationFile)
+const retryOperationFile = vi.mocked(API.retryOperationFile)
 const syncOperationKnowledgeSources = vi.mocked(
   API.syncOperationKnowledgeSources
 )
@@ -375,9 +377,200 @@ describe("AgentsStore file operations", () => {
     expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
     expect(store.getOperationUploadState("agent_1", "operation_1")).toEqual({
       pendingUploads: [],
+      rejectedUploads: [],
       uploading: false,
       progress: "",
     })
+  })
+
+  it.each([400, 413, 415, 422])(
+    "uploadOperationFiles keeps HTTP %s validation failures as non-retryable rejections",
+    async status => {
+      uploadOperationFile.mockRejectedValue({
+        message: "Unsupported file type for knowledge ingestion",
+        status,
+      })
+
+      const file = new File(["hello"], "notes.bin")
+      await store.uploadOperationFiles("agent_1", "operation_1", [file])
+
+      expect(
+        store.getOperationUploadState("agent_1", "operation_1").rejectedUploads
+      ).toEqual([
+        expect.objectContaining({
+          file,
+          filename: "notes.bin",
+          reason: "Unsupported file type for knowledge ingestion",
+          retryable: false,
+        }),
+      ])
+    }
+  )
+
+  it.each([408, 429, 500, 503])(
+    "uploadOperationFiles allows retrying HTTP %s failures",
+    async status => {
+      uploadOperationFile.mockRejectedValue({ message: "Try again", status })
+      await store.uploadOperationFiles("agent_1", "operation_1", [
+        new File(["hello"], "notes.txt"),
+      ])
+
+      expect(
+        store.getOperationUploadState("agent_1", "operation_1").rejectedUploads
+      ).toEqual([
+        expect.objectContaining({ reason: "Try again", retryable: true }),
+      ])
+    }
+  )
+
+  it("uploadOperationFiles marks oversized uploads as not retryable", async () => {
+    const file = new File(["hello"], "huge.pdf")
+    Object.defineProperty(file, "size", { value: 101 * 1024 * 1024 })
+
+    await store.uploadOperationFiles("agent_1", "operation_1", [file])
+
+    expect(uploadOperationFile).not.toHaveBeenCalled()
+    expect(
+      store.getOperationUploadState("agent_1", "operation_1").rejectedUploads
+    ).toEqual([
+      expect.objectContaining({
+        filename: "huge.pdf",
+        reason: "File exceeds the 100MB limit",
+        retryable: false,
+      }),
+    ])
+  })
+
+  it("retryRejectedUpload re-uploads the same file and clears the rejection", async () => {
+    const uploadedFile = {
+      _id: "kb_file_1",
+      filename: "notes.txt",
+      status: KnowledgeBaseFileStatus.PROCESSING,
+    } as KnowledgeBaseFile
+    uploadOperationFile.mockRejectedValueOnce({ message: "Bad Gateway" })
+    uploadOperationFile.mockResolvedValueOnce({ file: uploadedFile })
+    fetchAgents.mockResolvedValue({ agents: [] })
+    fetchAgentKnowledge.mockResolvedValue({
+      operations: {
+        operation_1: { files: [uploadedFile], sharePointSources: [] },
+      },
+      configuration: knowledgeConfiguration,
+    })
+    const file = new File(["hello"], "notes.txt")
+    await store.uploadOperationFiles("agent_1", "operation_1", [file])
+    const [rejected] = store.getOperationUploadState(
+      "agent_1",
+      "operation_1"
+    ).rejectedUploads
+
+    await store.retryRejectedUpload({
+      agentId: "agent_1",
+      operationId: "operation_1",
+      tempId: rejected.tempId,
+    })
+
+    expect(uploadOperationFile).toHaveBeenLastCalledWith(
+      "agent_1",
+      "operation_1",
+      file
+    )
+    expect(
+      store.getOperationUploadState("agent_1", "operation_1").rejectedUploads
+    ).toEqual([])
+    expect(
+      store.getOperationKnowledge("agent_1", "operation_1")?.files
+    ).toEqual([uploadedFile])
+  })
+
+  it("keeps a rejected upload available when its individual retry also fails", async () => {
+    const file = new File(["hello"], "notes.txt")
+    uploadOperationFile.mockRejectedValue({
+      message: "Bad Gateway",
+      status: 502,
+    })
+    await store.uploadOperationFiles("agent_1", "operation_1", [file])
+    const [rejected] = store.getOperationUploadState(
+      "agent_1",
+      "operation_1"
+    ).rejectedUploads
+
+    await store.retryRejectedUpload({
+      agentId: "agent_1",
+      operationId: "operation_1",
+      tempId: rejected.tempId,
+    })
+
+    expect(store.getOperationUploadState("agent_1", "operation_1")).toEqual({
+      pendingUploads: [],
+      rejectedUploads: [
+        expect.objectContaining({
+          file,
+          filename: "notes.txt",
+          reason: "Bad Gateway",
+          retryable: true,
+        }),
+      ],
+      uploading: false,
+      progress: "",
+    })
+  })
+
+  it("dismissRejectedUpload removes the rejection", async () => {
+    uploadOperationFile.mockRejectedValue({ message: "Bad Gateway" })
+    await store.uploadOperationFiles("agent_1", "operation_1", [
+      new File(["hello"], "notes.txt"),
+    ])
+    const [rejected] = store.getOperationUploadState(
+      "agent_1",
+      "operation_1"
+    ).rejectedUploads
+
+    store.dismissRejectedUpload({
+      agentId: "agent_1",
+      operationId: "operation_1",
+      tempId: rejected.tempId,
+    })
+
+    expect(
+      store.getOperationUploadState("agent_1", "operation_1").rejectedUploads
+    ).toEqual([])
+  })
+
+  it("retryOperationKnowledgeFile requeues a failed file", async () => {
+    const failedFile = {
+      _id: "kb_file_1",
+      filename: "notes.txt",
+      status: KnowledgeBaseFileStatus.FAILED,
+      errorMessage: "Resource has been exhausted",
+    } as KnowledgeBaseFile
+    const retriedFile = {
+      ...failedFile,
+      status: KnowledgeBaseFileStatus.PROCESSING,
+      errorMessage: undefined,
+    }
+    store.update(state => {
+      state.knowledgeByOperation["agent_1:operation_1"] = {
+        files: [failedFile],
+        sharePointSources: [],
+      }
+      return state
+    })
+    retryOperationFile.mockResolvedValue({ file: retriedFile })
+
+    await store.retryOperationKnowledgeFile({
+      agentId: "agent_1",
+      operationId: "operation_1",
+      fileId: "kb_file_1",
+    })
+
+    expect(retryOperationFile).toHaveBeenCalledWith({
+      agentId: "agent_1",
+      operationId: "operation_1",
+      fileId: "kb_file_1",
+    })
+    expect(
+      store.getOperationKnowledge("agent_1", "operation_1")?.files
+    ).toEqual([retriedFile])
   })
 
   it("calls resetOperationKnowledgeBaseStore and re-fetches knowledge on reset", async () => {

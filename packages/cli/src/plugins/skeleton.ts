@@ -3,6 +3,7 @@ import fs from "fs"
 import os from "os"
 import { join } from "path"
 import { processStringSync } from "@budibase/string-templates"
+import { SVELTE_VERSION } from "./svelteVersion"
 
 const download = require("download")
 const tar = require("tar")
@@ -59,8 +60,20 @@ export async function fleshOutSkeleton(
       description,
       version,
     })
-    // write the updated file and remove the HBS file
-    fs.writeFileSync(newFile, output)
+    // Pin Svelte to the exact version the builder uses to avoid
+    // runtime incompatibility crashes. See BUDI-19842.
+    if (file === "package.json.hbs") {
+      const pkg = JSON.parse(output)
+      if (pkg.dependencies?.svelte || pkg.peerDependencies?.svelte) {
+        if (!pkg.dependencies) pkg.dependencies = {}
+        if (!pkg.peerDependencies) pkg.peerDependencies = {}
+        pkg.dependencies.svelte = SVELTE_VERSION
+        pkg.peerDependencies.svelte = SVELTE_VERSION
+      }
+      fs.writeFileSync(newFile, JSON.stringify(pkg, null, 2) + "\n")
+    } else {
+      fs.writeFileSync(newFile, output)
+    }
     fs.rmSync(oldFile)
   }
 }

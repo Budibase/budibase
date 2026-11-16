@@ -8,6 +8,34 @@ import {
 } from "ai"
 import { truncateToolPartsForSave } from "./messages"
 
+export const getRecentChatContext = ({
+  messages,
+  limit = 6,
+}: {
+  messages: ChatConversation["messages"] | ModelMessage[]
+  limit?: number
+}) => {
+  if (limit <= 0) {
+    return []
+  }
+  return messages
+    .flatMap(message => {
+      if (message.role !== "user" && message.role !== "assistant") {
+        return []
+      }
+      const parts = "parts" in message ? message.parts : message.content
+      const content =
+        typeof parts === "string"
+          ? parts.trim()
+          : (parts ?? [])
+              .flatMap(part => (part.type === "text" ? [part.text] : []))
+              .join("\n")
+              .trim()
+      return content ? [{ role: message.role, content }] : []
+    })
+    .slice(-limit)
+}
+
 interface PrepareChatConversationForSaveParams {
   chatId: string
   userId: string

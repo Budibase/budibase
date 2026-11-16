@@ -60,8 +60,7 @@ export function createGroupRequest(groupData?: {
   externalId?: string
   displayName?: string
 }) {
-  const { externalId = uuid(), displayName = generator.word() } =
-    groupData || {}
+  const { externalId = uuid(), displayName = uuid() } = groupData || {}
 
   const group: ScimCreateGroupRequest = {
     schemas: [

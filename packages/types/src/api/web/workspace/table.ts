@@ -1,3 +1,4 @@
+import type { ProjectAssignmentResponse } from "./project"
 import { Row, Table, TableRequest, TableSchema, View } from "../../../documents"
 import { ViewV2Enriched } from "../../../sdk"
 
@@ -12,7 +13,7 @@ export type FetchTablesResponse = FindTableResponse[]
 export interface SaveTableRequest extends TableRequest {
   rows?: Row[]
 }
-export type SaveTableResponse = Table
+export type SaveTableResponse = Table & ProjectAssignmentResponse
 
 export interface BulkImportRequest {
   rows: Row[]

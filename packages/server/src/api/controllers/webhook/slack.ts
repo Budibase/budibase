@@ -458,11 +458,15 @@ export async function slackWebhook(
         `/${ChatCommands.NEW}`,
         async (event: SlashCommandEvent) => {
           const raw = event.raw as Record<string, string | undefined>
-          const channelId = raw.channel_id
-          if (!channelId || !event.user.userId) {
+          if (!raw.channel_id || !event.user.userId) {
             await event.channel.post("Missing Slack command metadata.")
             return
           }
+          const channelId = event.channel.id
+          const isDirectMessage = isSlackDirectMessage({
+            type: "message",
+            channel: raw.channel_id,
+          })
           await handleSlackInput({
             target: event.channel as SlackReplyTarget,
             privateTarget: event.channel as SlackReplyTarget,
@@ -470,11 +474,9 @@ export async function slackWebhook(
             command: ChatCommands.NEW,
             content: event.text,
             channelId,
+            threadId: isDirectMessage ? `${channelId}:` : undefined,
             externalUserId: event.user.userId,
-            isDirectMessage: isSlackDirectMessage({
-              type: "message",
-              channel: raw.channel_id,
-            }),
+            isDirectMessage,
             teamId: raw.team_id,
           })
         }

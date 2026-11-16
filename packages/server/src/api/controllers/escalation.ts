@@ -1,5 +1,10 @@
-import { context } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
+import { context, HTTPError } from "@budibase/backend-core"
+import {
+  EscalationAction,
+  EscalationRespondResult,
+  RespondToEscalationRequest,
+  UserCtx,
+} from "@budibase/types"
 import { escalationProcessor } from "../../escalation/processor"
 import sdk from "../../sdk"
 
@@ -72,14 +77,34 @@ export async function fetchNotifications(ctx: UserCtx) {
   ctx.body = await sdk.escalations.listNotifications(id)
 }
 
-export async function respond(ctx: UserCtx) {
-  const { id, notificationId } = ctx.params
-  const { response } = ctx.request.body
-  const result = await sdk.escalations.respond(
+export async function respond(
+  ctx: UserCtx<
+    RespondToEscalationRequest,
+    EscalationRespondResult,
+    { id: string }
+  >
+) {
+  const { id } = ctx.params
+  const globalUserId = ctx.user?.globalId
+  const doc = globalUserId ? await sdk.escalations.getContextDoc(id) : undefined
+  if (!globalUserId || !doc?.policy?.approvers?.includes(globalUserId)) {
+    throw new HTTPError("Escalation not found", 404)
+  }
+  const { actionId, note } = ctx.request.body
+  if (
+    actionId !== EscalationAction.APPROVE &&
+    actionId !== EscalationAction.REJECT
+  ) {
+    throw new HTTPError("Invalid actionId", 400)
+  }
+  ctx.body = await sdk.escalations.respond(
     id,
-    notificationId,
-    response,
+    undefined,
+    {
+      userId: globalUserId,
+      actionId,
+      ...(typeof note === "string" && note.trim() ? { note: note.trim() } : {}),
+    },
     (escalationId, res) => escalationProcessor.resolve(escalationId, res)
   )
-  ctx.body = result
 }

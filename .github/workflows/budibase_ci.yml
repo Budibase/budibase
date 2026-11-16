@@ -29,6 +29,48 @@ env:
   HUSKY: 0
 
 jobs:
+  runtime-version-sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Verify runtime versions are synchronized
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          nvm_version=$(sed 's/^v//' .nvmrc)
+          asdf_node_version=$(awk '$1 == "nodejs" { print $2 }' .tool-versions)
+          python_version=$(<.python-version)
+          asdf_python_version=$(awk '$1 == "python" { print $2 }' .tool-versions)
+
+          if [[ -z "$nvm_version" || -z "$asdf_node_version" ]]; then
+            echo "Node.js version is missing from .nvmrc or .tool-versions" >&2
+            exit 1
+          fi
+
+          if [[ "$nvm_version" != "$asdf_node_version" ]]; then
+            echo "Node.js version files are out of sync:" >&2
+            echo "  .nvmrc:         $nvm_version" >&2
+            echo "  .tool-versions: $asdf_node_version" >&2
+            exit 1
+          fi
+
+          if [[ -z "$python_version" || -z "$asdf_python_version" ]]; then
+            echo "Python version is missing from .python-version or .tool-versions" >&2
+            exit 1
+          fi
+
+          if [[ "$python_version" != "$asdf_python_version" ]]; then
+            echo "Python version files are out of sync:" >&2
+            echo "  .python-version: $python_version" >&2
+            echo "  .tool-versions:  $asdf_python_version" >&2
+            exit 1
+          fi
+
+          echo "Runtime version files are synchronized: Node.js $nvm_version, Python $python_version"
+
   install-deps:
     runs-on: ubuntu-24.04
     concurrency:

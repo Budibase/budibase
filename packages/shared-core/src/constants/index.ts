@@ -110,6 +110,7 @@ export enum BuilderSocketEvent {
   RoleChange = "RoleChange",
   WorkspaceAppChange = "WorkspaceAppChange",
   AgentRequestChange = "AgentRequestChange",
+  ActionSessionChange = "ActionSessionChange",
 }
 
 export const SocketSessionTTL = 60

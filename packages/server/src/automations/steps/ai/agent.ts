@@ -69,6 +69,8 @@ export async function run({
   inputs,
   appId,
   context,
+  automationId,
+  automationName,
 }: {
   inputs: AgentStepInputs
 } & AutomationStepInputBase): Promise<AgentStepOutputs> {
@@ -117,144 +119,188 @@ export async function run({
       ? outputSchema
       : undefined
 
+  const triggeredBy = sdk.platformActions.getAutomationOrigin({
+    automationId,
+    automationName,
+  })
+
   return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
     async agentSpan => {
       let agentRun: AgentChatRun | undefined
+      let agentName: string | undefined
+      const inSessionScope = <T>(task: () => T) =>
+        sdk.platformActions.doInAgentSessionScope({
+          sessionId,
+          agentId,
+          agentName,
+          triggeredBy,
+          task,
+        })
+      const emitAgentFailed = (errorMessage: string) =>
+        inSessionScope(() =>
+          events.action.aiAgentFailed({
+            agentId,
+            sourceType: "agent_session",
+            sourceId: sessionId,
+            sessionId,
+            requestId: agentRun?.sessionLogIndexer.getRequestIds().at(-1),
+            reason: ActionFailureReason.ERROR,
+            errorMessage,
+          })
+        )
       try {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
+        agentName = agent.name
 
-        tracer.llmobs.annotate(agentSpan, {
-          inputData: prompt,
-          metadata: {
-            agentId,
-            agentName: agent.name,
-            appId,
-            isForkedProcess: env.isInThread(),
-            forkedProcessName: process.env.FORKED_PROCESS_NAME || "main",
-          },
-        })
-
-        if (appId && isProdWorkspaceID(appId) && agent.live !== true) {
+        // Tool calls emit their own actions, so the whole run must be scoped
+        // for them to carry the session's Asset and Triggered by
+        return await inSessionScope(async (): Promise<AgentStepOutputs> => {
           tracer.llmobs.annotate(agentSpan, {
-            outputData: "Agent is paused",
-            tags: { error: "agent_paused" },
-          })
-          return {
-            success: false,
-            response:
-              "Agent is paused. Set it live to use it in published automations.",
-          }
-        }
-
-        const user =
-          executionPrincipal === ToolExecutionPrincipal.REQUESTER &&
-          requesterUser
-            ? requesterUser
-            : getAdminUser({ sessionId })
-
-        agentRun = await sdk.ai.agents.prepareAgentChatRun({
-          agent,
-          agentId,
-          modelMessages: [{ role: "user", content: prompt }],
-          latestQuestion: prompt,
-          errorLabel: "automation agent",
-          sessionId,
-          user,
-          outputSchema: structuredOutputSchema,
-          promptMode: "automation",
-        })
-
-        const pendingToolCalls = new Set<string>()
-        const streamResult = await agentRun.stream({ pendingToolCalls })
-        const responseErrorPromise = streamResult.response.then(
-          () => undefined,
-          error => getErrorMessage(error)
-        )
-        let assistantMessage: UIMessage | undefined
-        let streamingError: string | undefined
-
-        for await (const uiMessage of readUIMessageStream({
-          stream: streamResult.toUIMessageStream({
-            sendReasoning: true,
-            onError: error => {
-              const errorMessage = getErrorMessage(error)
-              streamingError = errorMessage
-              return errorMessage
+            inputData: prompt,
+            metadata: {
+              agentId,
+              agentName: agent.name,
+              appId,
+              isForkedProcess: env.isInThread(),
+              forkedProcessName: process.env.FORKED_PROCESS_NAME || "main",
             },
-          }),
-        })) {
-          assistantMessage = uiMessage
-        }
+          })
 
-        const responseError = await responseErrorPromise
+          if (appId && isProdWorkspaceID(appId) && agent.live !== true) {
+            tracer.llmobs.annotate(agentSpan, {
+              outputData: "Agent is paused",
+              tags: { error: "agent_paused" },
+            })
+            return {
+              success: false,
+              response:
+                "Agent is paused. Set it live to use it in published automations.",
+            }
+          }
 
-        const incompleteTools = assistantMessage
-          ? findIncompleteToolCalls([assistantMessage])
-          : []
-        if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
-          const errorMessage = formatIncompleteToolCallError(incompleteTools)
+          const user =
+            executionPrincipal === ToolExecutionPrincipal.REQUESTER &&
+            requesterUser
+              ? requesterUser
+              : getAdminUser({ sessionId })
+
+          agentRun = await sdk.ai.agents.prepareAgentChatRun({
+            agent,
+            agentId,
+            modelMessages: [{ role: "user", content: prompt }],
+            latestQuestion: prompt,
+            errorLabel: "automation agent",
+            sessionId,
+            user,
+            outputSchema: structuredOutputSchema,
+            promptMode: "automation",
+          })
+
+          const pendingToolCalls = new Set<string>()
+          const streamResult = await agentRun.stream({ pendingToolCalls })
+          const responseErrorPromise = streamResult.response.then(
+            () => undefined,
+            error => getErrorMessage(error)
+          )
+          let assistantMessage: UIMessage | undefined
+          let streamingError: string | undefined
+
+          for await (const uiMessage of readUIMessageStream({
+            stream: streamResult.toUIMessageStream({
+              sendReasoning: true,
+              onError: error => {
+                const errorMessage = getErrorMessage(error)
+                streamingError = errorMessage
+                return errorMessage
+              },
+            }),
+          })) {
+            assistantMessage = uiMessage
+          }
+
+          const responseError = await responseErrorPromise
+
+          const incompleteTools = assistantMessage
+            ? findIncompleteToolCalls([assistantMessage])
+            : []
+          if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
+            const errorMessage = formatIncompleteToolCallError(incompleteTools)
+            emitAgentFailed(errorMessage)
+            return {
+              success: false,
+              response: errorMessage,
+              message: assistantMessage,
+              sessionId,
+            }
+          }
+
+          let responseText: string | undefined
+          try {
+            responseText = await streamResult.text
+          } catch (error) {
+            if (!streamingError) {
+              streamingError = getErrorMessage(error)
+            }
+          }
+          const runError = streamingError || responseError
+          if (runError && !responseText) {
+            emitAgentFailed(runError)
+            return {
+              success: false,
+              response: runError,
+              message: assistantMessage,
+              sessionId,
+            }
+          }
+
+          let usage: AgentStepOutputs["usage"]
+          let usageError: string | undefined
+          try {
+            usage = await streamResult.usage
+          } catch (error) {
+            usageError = getErrorMessage(error)
+          }
+          if (usageError && !responseText) {
+            emitAgentFailed(usageError)
+            return {
+              success: false,
+              response: usageError,
+              message: assistantMessage,
+              sessionId,
+            }
+          }
+
+          const output =
+            structuredOutputSchema && !agentRun.isSuspended()
+              ? ((await streamResult.output) as AgentStepOutputs["output"])
+              : undefined
+
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: responseText,
+            metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
+          })
+
+          const requestId = agentRun.sessionLogIndexer.getRequestIds().at(-1)
+          const awaitingEscalation = agentRun.isSuspended()
+          events.action.aiAgentExecuted({
+            agentId,
+            sourceType: "agent_session",
+            sourceId: sessionId,
+            sessionId,
+            requestId,
+            ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
+          })
+
           return {
-            success: false,
-            response: errorMessage,
+            success: true,
+            response: responseText,
+            usage,
             message: assistantMessage,
             sessionId,
+            output,
           }
-        }
-
-        let responseText: string | undefined
-        try {
-          responseText = await streamResult.text
-        } catch (error) {
-          if (!streamingError) {
-            streamingError = getErrorMessage(error)
-          }
-        }
-        const runError = streamingError || responseError
-        if (runError && !responseText) {
-          return {
-            success: false,
-            response: runError,
-            message: assistantMessage,
-            sessionId,
-          }
-        }
-
-        let usage: AgentStepOutputs["usage"]
-        let usageError: string | undefined
-        try {
-          usage = await streamResult.usage
-        } catch (error) {
-          usageError = getErrorMessage(error)
-        }
-        if (usageError && !responseText) {
-          return {
-            success: false,
-            response: usageError,
-            message: assistantMessage,
-            sessionId,
-          }
-        }
-
-        const output =
-          structuredOutputSchema && !agentRun.isSuspended()
-            ? ((await streamResult.output) as AgentStepOutputs["output"])
-            : undefined
-
-        tracer.llmobs.annotate(agentSpan, {
-          outputData: responseText,
-          metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
-        events.action.aiAgentExecuted({ agentId })
-
-        return {
-          success: true,
-          response: responseText,
-          usage,
-          message: assistantMessage,
-          sessionId,
-          output,
-        }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
         tracer.llmobs.annotate(agentSpan, {
@@ -271,11 +317,7 @@ export async function run({
           errorName: err?.name,
           errorMessage,
         })
-        events.action.aiAgentFailed({
-          agentId,
-          reason: ActionFailureReason.ERROR,
-          errorMessage,
-        })
+        emitAgentFailed(errorMessage)
         return {
           success: false,
           response: errorMessage,

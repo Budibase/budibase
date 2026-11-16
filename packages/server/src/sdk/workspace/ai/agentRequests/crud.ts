@@ -5,7 +5,7 @@ import {
   Duration,
   utils,
 } from "@budibase/backend-core"
-import { ApprovalToolResultStatus } from "@budibase/types"
+import { AGENT_REQUEST_TYPE, ApprovalToolResultStatus } from "@budibase/types"
 import type {
   AgentRequestOperation,
   AgentRequest,
@@ -28,11 +28,18 @@ import {
   generateToolCallSummary,
 } from "./helpers"
 import {
-  queryRequestsByAgent,
-  queryRequestStatuses,
-  queryRequestsByUpdatedAt,
-  queryRequestsByStatusAndUpdatedAt,
+  getRequest,
+  loadRaisedEscalations,
+  withDerivedFields,
+} from "./requestsStore"
+import {
+  queryAllRequestsByWorkspace,
+  queryRequestCountsByStatus,
+  queryRequestsByWorkspace,
+  queryRequestsByWorkspaceAgent,
+  queryRequestsByWorkspaceStatus,
 } from "./views"
+import type { RequestsPage } from "./views"
 import {
   getContextDoc,
   listContextDocs,
@@ -77,7 +84,9 @@ const buildThread = ({
   actions?: AgentRequestAction[]
 }): AgentRequest => {
   return {
-    _id: docIds.generateAgentRequestID(),
+    _id: docIds.generateRequestID(),
+    type: AGENT_REQUEST_TYPE,
+    workspaceId: context.getProdWorkspaceId(),
     title: undefined,
     agentId,
     userId,
@@ -87,6 +96,10 @@ const buildThread = ({
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
     status: entry.status,
+    statusRank: 0,
+    approvers: [],
+    pendingApprovers: [],
+    respondedApprovers: [],
   }
 }
 
@@ -163,7 +176,7 @@ async function refineUserMessageActionSummary({
   }
 
   const latest = await context
-    .getWorkspaceDB()
+    .getRequestsDB()
     .tryGet<AgentRequest>(request._id!)
   if (!latest) {
     return request
@@ -191,17 +204,15 @@ async function refineUserMessageActionSummary({
 const isTerminalStatus = (status: AgentRequestStatus) =>
   status === "completed" || status === "failed"
 
-const sortRequests = (requests: AgentRequest[]) =>
-  requests.sort(
-    (a, b) =>
-      new Date(b.updatedAt || 0).getTime() -
-      new Date(a.updatedAt || 0).getTime()
-  )
-
 async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
-  const response = await context.getWorkspaceDB().put(request)
+  const escalations = await loadRaisedEscalations(request)
+  const toSave = withDerivedFields(
+    { ...request, workspaceId: context.getProdWorkspaceId() },
+    escalations
+  )
+  const response = await context.getRequestsDB().put(toSave)
   const saved = {
-    ...request,
+    ...toSave,
     _rev: response.rev,
   }
 
@@ -211,6 +222,33 @@ async function saveRequest(request: AgentRequest): Promise<AgentRequest> {
   }
 
   return saved
+}
+
+export async function refreshRequestForEscalation(
+  escalationId: string
+): Promise<void> {
+  const doc = await getContextDoc(escalationId)
+  if (!doc?.requestId) {
+    return
+  }
+  for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
+    const request = await getRequest(doc.requestId)
+    if (!request) {
+      return
+    }
+    try {
+      await saveRequest(request)
+      return
+    } catch (err) {
+      if (
+        dbCore.isDocumentConflictError(err) &&
+        attempt < MAX_CONFLICT_RETRIES - 1
+      ) {
+        continue
+      }
+      throw err
+    }
+  }
 }
 
 // Plain Omit<T, K> isn't distributive over a union - it collapses to the
@@ -230,10 +268,8 @@ async function appendAction(
   action: DistributiveOmit<AgentRequestAction, "id" | "timestamp">,
   timestamp: string = nowIso()
 ): Promise<AgentRequestAction | undefined> {
-  const db = context.getWorkspaceDB()
-
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
-    const request = await db.tryGet<AgentRequest>(requestId)
+    const request = await getRequest(requestId)
     if (!request) {
       return
     }
@@ -275,10 +311,8 @@ async function refineToolCallActionSummary({
   actionId: string
   summary: string
 }): Promise<void> {
-  const db = context.getWorkspaceDB()
-
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
-    const latest = await db.tryGet<AgentRequest>(requestId)
+    const latest = await getRequest(requestId)
     if (!latest) {
       return
     }
@@ -541,38 +575,51 @@ async function createNewRequest({
 
 export async function fetchRequests({
   limit,
-  page,
+  bookmark,
   status,
 }: {
   limit: number
-  page: number
+  bookmark?: string
   status?: AgentRequestStatus
-}): Promise<AgentRequest[]> {
+}): Promise<RequestsPage> {
   if (status) {
-    return await queryRequestsByStatusAndUpdatedAt({ status, limit, page })
+    return await queryRequestsByWorkspaceStatus({ status, limit, bookmark })
   }
-
-  return await queryRequestsByUpdatedAt({
-    limit,
-    page,
-  })
+  return await queryRequestsByWorkspace({ limit, bookmark })
 }
 
 export async function fetchRequestsSummary(): Promise<AgentRequestsSummary> {
-  const statuses = await queryRequestStatuses()
+  const counts = await queryRequestCountsByStatus()
   return {
-    total: statuses.length,
-    active: statuses.filter(status => status === "active").length,
-    needs_input: statuses.filter(status => status === "needs_input").length,
-    completed: statuses.filter(status => status === "completed").length,
-    failed: statuses.filter(status => status === "failed").length,
+    ...counts,
+    total:
+      counts.active + counts.needs_input + counts.completed + counts.failed,
   }
 }
 
 export async function fetchRequestsByAgent(
   agentId: string
 ): Promise<AgentRequest[]> {
-  return sortRequests(await queryRequestsByAgent(agentId))
+  return await queryRequestsByWorkspaceAgent(agentId)
+}
+
+export async function deleteWorkspaceRequests(
+  workspaceId: string
+): Promise<void> {
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  const requests = await queryAllRequestsByWorkspace(prodWorkspaceId)
+  if (!requests.length) {
+    return
+  }
+  const results = await context
+    .getRequestsDB()
+    .bulkDocs(requests.map(request => ({ ...request, _deleted: true })))
+  const failed = results.filter(result => result.error)
+  if (failed.length) {
+    throw new Error(
+      `Failed to delete ${failed.length} of ${requests.length} requests for workspace ${prodWorkspaceId}: ${failed[0].error}`
+    )
+  }
 }
 
 export function resolveFinalRequestStatus({
@@ -622,7 +669,7 @@ export async function resolveFinalRequestOutcome({
   // it waiting.
   isHumanResponse?: boolean
 }): Promise<{ status: "completed" | "failed"; error?: string } | undefined> {
-  const request = await context.getWorkspaceDB().tryGet<AgentRequest>(requestId)
+  const request = await getRequest(requestId)
   if (
     !request ||
     isTerminalStatus(request.status) ||
@@ -767,7 +814,7 @@ export async function initActiveRequest({
   if (decision.decision === "existing_thread" && decision.requestId) {
     for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
       const existing = await context
-        .getWorkspaceDB()
+        .getRequestsDB()
         .tryGet<AgentRequest>(decision.requestId)
       if (!existing || isTerminalStatus(existing.status)) {
         break
@@ -839,11 +886,9 @@ export async function updateRequestStatus({
   // same conversation, an unrelated error) must leave it as-is.
   isHumanResponse?: boolean
 }): Promise<void> {
-  const db = context.getWorkspaceDB()
-
   // Retries on conflict since createOrUpdateRequestForPrompt writes to the same document concurrently.
   for (let attempt = 0; attempt < MAX_CONFLICT_RETRIES; attempt++) {
-    const request = await db.tryGet<AgentRequest>(requestId)
+    const request = await getRequest(requestId)
     if (!request) {
       return
     }
@@ -950,9 +995,7 @@ export async function createOrUpdateRequestForPrompt({
   }
 
   if (existingRequestId) {
-    const existing = await context
-      .getWorkspaceDB()
-      .tryGet<AgentRequest>(existingRequestId)
+    const existing = await getRequest(existingRequestId)
     if (existing) {
       if (isTerminalStatus(existing.status)) {
         return { request: existing, created: false }
@@ -971,9 +1014,7 @@ export async function createOrUpdateRequestForPrompt({
       })
 
       // Re-read before writing - the status may have changed while we awaited the LLM calls above.
-      const latest = await context
-        .getWorkspaceDB()
-        .tryGet<AgentRequest>(existingRequestId)
+      const latest = await getRequest(existingRequestId)
       if (!latest || isTerminalStatus(latest.status)) {
         return { request: latest ?? withTitle, created: false }
       }
@@ -1057,7 +1098,7 @@ export async function createOrUpdateRequestForPrompt({
 
   // Re-read before writing - the status may have changed while we awaited the LLM calls above.
   const latestRequest = await context
-    .getWorkspaceDB()
+    .getRequestsDB()
     .tryGet<AgentRequest>(request._id!)
   if (!latestRequest || isTerminalStatus(latestRequest.status)) {
     return { request: latestRequest ?? request, created: false }
