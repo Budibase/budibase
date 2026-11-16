@@ -81,7 +81,7 @@ const enrichJsonValue = (
         processJsonStringSync(value, parameters, {
           noEscaping: true,
           noHelpers: true,
-          escapeNewlines: options.escapeNewlines,
+          escapeNewlines: false,
         })
       )
     }
