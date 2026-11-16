@@ -217,7 +217,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.litellm.extraEnv | list | `[{"name":"LITELLM_REASONING_AUTO_SUMMARY","value":"true"}]` | Extra environment variables for the litellm container. Budibase uses LiteLLM virtual keys/models and requires database-backed proxy mode. If `general_settings.store_model_in_db: true` (default), set DATABASE_URL here. |
 | services.litellm.extraVolumeMounts | list | `[]` | Additional volumeMounts on the litellm container. |
 | services.litellm.extraVolumes | list | `[]` | Additional volumes on the litellm pod. |
-| services.litellm.image | string | `"ghcr.io/berriai/litellm:main-v1.83.10-stable"` | litellm image to use. |
+| services.litellm.image | string | `"ghcr.io/berriai/litellm:v1.109.1"` | litellm image to use. |
 | services.litellm.masterKey | string | `""` | The master key to use for litellm. |
 | services.litellm.pdb | object | `{}` | PodDisruptionBudget settings for the litellm service. Requires podDisruptionBudget.enabled to be true. Set minAvailable to override the global podDisruptionBudget.minAvailable for this service. |
 | services.litellm.port | int | `4000` | Port exposed by the litellm container. |

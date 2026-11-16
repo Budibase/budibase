@@ -104,6 +104,15 @@ export async function search(ctx: UserCtx, next: Next) {
 }
 
 export async function create(ctx: UserCtx, next: Next) {
+  if (
+    ctx.request.body._id !== undefined ||
+    ctx.request.body._rev !== undefined
+  ) {
+    ctx.throw(
+      400,
+      "User IDs and revisions cannot be supplied when creating a user"
+    )
+  }
   await createUpdateResponse(ctx)
   await next()
 }
