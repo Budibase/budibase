@@ -1,0 +1,51 @@
+suite: litellm deployment
+templates:
+  - templates/litellm-service-deployment.yaml
+release:
+  name: budibase
+tests:
+  - it: should disable Kubernetes API credentials and service discovery
+    set:
+      services.litellm.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
+      - equal:
+          path: spec.template.spec.enableServiceLinks
+          value: false
+
+  - it: should load credentials from the generated secret
+    set:
+      services.litellm.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase-litellm
+                key: masterKey
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_SALT_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase-litellm
+                key: saltKey
+
+  - it: should load credentials from an existing secret
+    set:
+      services.litellm.enabled: true
+      services.litellm.existingSecret: production-litellm
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: production-litellm
+                key: masterKey

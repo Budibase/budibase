@@ -806,11 +806,15 @@ services:
       # -- Whether to expose the litellm service to a Tailscale tailnet via annotation.
       expose: false
     networkPolicy:
-      # -- Restrict LiteLLM ingress to Budibase app and worker pods.
+      # -- Restrict LiteLLM ingress to Budibase pods and egress to DNS and
+      # public IP addresses.
       enabled: true
       # -- Additional NetworkPolicy ingress rules. Required for any external
       # access mechanism, including Tailscale proxy pods.
       additionalIngress: []
+      # -- Additional NetworkPolicy egress rules. Use this for required private
+      # dependencies such as a PostgreSQL service or private model provider.
+      additionalEgress: []
 
   objectStore:
     # -- Set to false if using another object store, such as S3. You will need

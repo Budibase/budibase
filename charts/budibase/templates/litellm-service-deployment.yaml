@@ -18,6 +18,8 @@ spec:
       labels:
         io.kompose.service: litellm-service
     spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
       terminationGracePeriodSeconds: {{ .Values.services.litellm.terminationGracePeriodSeconds }}
       {{- if .Values.services.litellm.readinessGates }}
       readinessGates:

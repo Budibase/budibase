@@ -219,8 +219,9 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.litellm.extraVolumes | list | `[]` | Additional volumes on the litellm pod. |
 | services.litellm.image | string | `"ghcr.io/berriai/litellm:v1.109.1"` | litellm image to use. |
 | services.litellm.masterKey | string | `""` | The master key to use for litellm. |
+| services.litellm.networkPolicy.additionalEgress | list | `[]` | Additional NetworkPolicy egress rules. Use this for required private dependencies such as a PostgreSQL service or private model provider. |
 | services.litellm.networkPolicy.additionalIngress | list | `[]` | Additional NetworkPolicy ingress rules. Required for any external access mechanism, including Tailscale proxy pods. |
-| services.litellm.networkPolicy.enabled | bool | `true` | Restrict LiteLLM ingress to Budibase app and worker pods. |
+| services.litellm.networkPolicy.enabled | bool | `true` | Restrict LiteLLM ingress to Budibase pods and egress to DNS and public IP addresses. |
 | services.litellm.pdb | object | `{}` | PodDisruptionBudget settings for the litellm service. Requires podDisruptionBudget.enabled to be true. Set minAvailable to override the global podDisruptionBudget.minAvailable for this service. |
 | services.litellm.port | int | `4000` | Port exposed by the litellm container. |
 | services.litellm.preStopDelaySeconds | int | `45` | Seconds to sleep before SIGTERM to allow load balancer deregistration. |

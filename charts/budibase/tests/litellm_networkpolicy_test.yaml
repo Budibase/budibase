@@ -16,12 +16,24 @@ tests:
       - equal:
           path: spec.policyTypes[0]
           value: Ingress
+      - equal:
+          path: spec.policyTypes[1]
+          value: Egress
       - lengthEqual:
           path: spec.ingress[0].from
           count: 3
       - equal:
           path: spec.ingress[0].ports[0].port
           value: 4000
+      - lengthEqual:
+          path: spec.egress
+          count: 3
+      - equal:
+          path: spec.egress[0].ports[0].port
+          value: 53
+      - equal:
+          path: spec.egress[1].to[0].ipBlock.cidr
+          value: 0.0.0.0/0
 
   - it: should not create a policy when disabled
     set:
@@ -46,3 +58,25 @@ tests:
       - equal:
           path: spec.ingress[1].from[0].namespaceSelector.matchLabels["kubernetes.io/metadata.name"]
           value: tailscale
+
+  - it: should append additional egress rules
+    set:
+      services.litellm.enabled: true
+      services.litellm.networkPolicy.additionalEgress:
+        - to:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: postgres
+          ports:
+            - protocol: TCP
+              port: 5432
+    asserts:
+      - lengthEqual:
+          path: spec.egress
+          count: 4
+      - equal:
+          path: spec.egress[3].to[0].podSelector.matchLabels["app.kubernetes.io/name"]
+          value: postgres
+      - equal:
+          path: spec.egress[3].ports[0].port
+          value: 5432
