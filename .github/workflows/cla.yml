@@ -16,13 +16,23 @@ jobs:
       github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA'
     runs-on: ubuntu-latest
     steps:
-      - name: "CLA Assistant"
+      - name: Generate CLA App token
+        id: cla-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          app-id: ${{ vars.CLA_APP_ID }}
+          private-key: ${{ secrets.CLA_APP_PRIVATE_KEY }}
+          owner: Budibase
+          repositories: budibase
+          permission-contents: write
+
+      - name: CLA Assistant
         # Beta Release
-        uses: cla-assistant/github-action@948230deb0d44dd38957592f08c6bd934d96d0cf  # v2.1.2-beta
+        uses: cla-assistant/github-action@948230deb0d44dd38957592f08c6bd934d96d0cf # v2.1.2-beta
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # the below token should have repo scope and must be manually added by you in the repository's secret
-          PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          # Short-lived App token used to commit signatures to the next branch.
+          PERSONAL_ACCESS_TOKEN: ${{ steps.cla-app-token.outputs.token }}
         with:
           path-to-signatures: '.github/cla/signatures.json'
           path-to-document: 'https://github.com/budibase/budibase/blob/next/.github/cla/individual-cla.md' # e.g. a CLA or a DCO document
