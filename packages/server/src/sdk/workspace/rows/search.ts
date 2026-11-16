@@ -1,7 +1,9 @@
 import {
   EmptyFilterOption,
+  LegacyFilter,
   Row,
   RowSearchParams,
+  SearchFilters,
   SearchResponse,
   SortOrder,
   Table,
@@ -98,11 +100,21 @@ export async function search(
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
       // that could let users find rows they should not be allowed to access.
-      let viewQuery = await enrichSearchContext({
-        fields: view.query || {},
-        inputs: context,
-        safeSearchHelpers: true,
-      })
+      let viewQuery: SearchFilters | LegacyFilter[]
+      try {
+        viewQuery = await enrichSearchContext({
+          fields: view.query || {},
+          inputs: context,
+          safeSearchHelpers: true,
+          noThrow: false,
+        })
+      } catch (_err) {
+        // Unevaluated exclusion filters could expose rows the view hides.
+        console.log(
+          `View ${options.viewId} filter evaluation failed - returning no rows`
+        )
+        return { rows: [] }
+      }
       if (Array.isArray(viewQuery)) {
         viewQuery = dataFilters.buildQuery(viewQuery)
       }

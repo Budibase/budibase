@@ -36,30 +36,33 @@ describe("row search query bindings", () => {
     expect(result.rows.map(found => found._id)).toEqual([row._id])
   })
 
-  it("does not evaluate external helpers in saved view filters", async () => {
-    const table = await config.api.table.save(basicTable())
-    await config.api.row.save(table._id!, { name: "template-target" })
-    const view = await config.api.viewV2.create({
-      tableId: table._id!,
-      name: "Restricted search filters",
-      queryUI: {
-        groups: [
-          {
-            filters: [
-              {
-                field: "name",
-                operator: BasicOperator.EQUAL,
-                value: '{{ first (arrayify "template-target") }}',
-              },
-            ],
-          },
-        ],
-      },
-    })
+  it.each([BasicOperator.EQUAL, BasicOperator.NOT_EQUAL])(
+    "returns no rows when a saved view %s filter uses an unavailable helper",
+    async operator => {
+      const table = await config.api.table.save(basicTable())
+      await config.api.row.save(table._id!, { name: "template-target" })
+      const view = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: "Restricted search filters",
+        queryUI: {
+          groups: [
+            {
+              filters: [
+                {
+                  field: "name",
+                  operator,
+                  value: '{{ first (arrayify "template-target") }}',
+                },
+              ],
+            },
+          ],
+        },
+      })
 
-    const result = await config.api.viewV2.search(view.id)
-    expect(result.rows).toHaveLength(0)
-  })
+      const result = await config.api.viewV2.search(view.id)
+      expect(result.rows).toHaveLength(0)
+    }
+  )
 
   it("does not evaluate JavaScript supplied by a table reader", async () => {
     const table = await config.api.table.save(basicTable())
