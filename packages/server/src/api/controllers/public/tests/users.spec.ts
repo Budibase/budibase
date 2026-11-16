@@ -23,17 +23,16 @@ jest.mock("@budibase/pro", () => ({
 
 type TestUser = ContextUser
 type TestTarget = {
-  _id: string
+  _id?: string
   email: string
 }
 type TestContext = {
   user: TestUser
   params: {
-    userId: string
+    userId?: string
   }
   request: {
     body: {
-      _id: string
       email: string
       roles?: User["roles"]
       builder: {
@@ -57,12 +56,9 @@ const createCtx = ({
 }): UserCtx =>
   ({
     user: caller,
-    params: {
-      userId: target._id,
-    },
+    params: target._id ? { userId: target._id } : {},
     request: {
       body: {
-        _id: target._id,
         email: target.email,
         ...(roles === undefined ? {} : { roles }),
         builder: {
@@ -102,6 +98,34 @@ describe("public users controller", () => {
   const saveTargetUser = () => {
     saveUser.mockResolvedValue({ _id: targetUser._id })
   }
+
+  it.each([
+    { field: "_id", value: "user_target" },
+    { field: "_rev", value: "1-existing" },
+  ])(
+    "rejects a supplied $field on public user creation",
+    async ({ field, value }) => {
+      const ctx = createCtx({
+        caller: {
+          _id: "user_creator",
+          email: "creator@example.com",
+          tenantId: "tenant",
+          builder: { apps: ["app_allowed"] },
+        },
+        target: { email: targetUser.email },
+        builderApps: ["app_allowed"],
+      })
+      ctx.request.body[field] = value
+      const next = jest
+        .fn()
+        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+      await expect(controller.create(ctx, next)).rejects.toMatchObject({
+        status: 400,
+      })
+      expect(saveUser).not.toHaveBeenCalled()
+    }
+  )
 
   it("allows an organisation admin to assign any user to any workspace", async () => {
     const ctx = createCtx({
@@ -163,7 +187,7 @@ describe("public users controller", () => {
           apps: ["app_allowed"],
         },
       },
-      target: targetUser,
+      target: { email: targetUser.email },
       builderApps: ["app_allowed"],
     })
     setExistingTargetUser()
@@ -175,6 +199,8 @@ describe("public users controller", () => {
     await controller.create(ctx, next)
 
     expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(saveUser.mock.calls[0][0].request.body).not.toHaveProperty("_id")
+    expect(saveUser.mock.calls[0][0].request.body).not.toHaveProperty("_rev")
     expect(next).toHaveBeenCalled()
   })
 
@@ -213,7 +239,7 @@ describe("public users controller", () => {
           apps: ["app_allowed"],
         },
       },
-      target: targetUser,
+      target: { email: targetUser.email },
       builderApps: ["app_target"],
     })
     const next = jest
@@ -284,7 +310,7 @@ describe("public users controller", () => {
           apps: ["app_allowed"],
         },
       },
-      target: targetUser,
+      target: { email: targetUser.email },
       roles: { app_allowed: "BASIC" },
     })
     saveTargetUser()
@@ -295,6 +321,8 @@ describe("public users controller", () => {
     await controller.create(ctx, next)
 
     expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(saveUser.mock.calls[0][0].request.body).not.toHaveProperty("_id")
+    expect(saveUser.mock.calls[0][0].request.body).not.toHaveProperty("_rev")
     expect(next).toHaveBeenCalled()
   })
 
@@ -333,7 +361,7 @@ describe("public users controller", () => {
           apps: ["app_allowed"],
         },
       },
-      target: targetUser,
+      target: { email: targetUser.email },
       roles: { app_other: "ADMIN" },
     })
     const next = jest
