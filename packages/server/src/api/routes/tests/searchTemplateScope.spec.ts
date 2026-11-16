@@ -12,16 +12,34 @@ describe("row search query bindings", () => {
 
   afterAll(() => config.end())
 
-  it("does not evaluate Handlebars helpers in builder-supplied search filters", async () => {
+  it("does not execute external helper chains in builder-supplied search filters", async () => {
+    const marker = "__budibaseSearchFilterProof"
+    const binding = `{{ first (first (map (arrayify "a = (globalThis.${marker} = 'executed')//") (get "constructor.constructor" this))) }}`
     const table = await config.api.table.save(basicTable())
-    await config.api.row.save(table._id!, { name: "template-target" })
+
+    Reflect.deleteProperty(globalThis, marker)
+    try {
+      await config.api.row.search(table._id!, {
+        query: { equal: { name: binding } },
+      })
+      expect(Reflect.get(globalThis, marker)).toBeUndefined()
+    } finally {
+      Reflect.deleteProperty(globalThis, marker)
+    }
+  })
+
+  it("keeps the default helper available in builder-supplied search filters", async () => {
+    const table = await config.api.table.save(basicTable())
+    const row = await config.api.row.save(table._id!, {
+      name: "template-target",
+    })
 
     const result = await config.api.row.search(table._id!, {
       query: {
-        equal: { name: '{{ first (arrayify "template-target") }}' },
+        equal: { name: '{{ default user.missing "template-target" }}' },
       },
     })
-    expect(result.rows).toHaveLength(0)
+    expect(result.rows.map(found => found._id)).toEqual([row._id])
   })
 
   it("does not evaluate JavaScript supplied by a table reader", async () => {

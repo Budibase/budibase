@@ -32,6 +32,10 @@ registerAll(hbsInstance)
 const helperNames = Object.keys(hbsInstance.helpers)
 const hbsInstanceNoHelpers = create()
 registerMinimum(hbsInstanceNoHelpers, { includeJS: false })
+const hbsInstanceSafeSearch = create()
+// Search filters may use sandboxed JS and default, but not external helpers that traverse prototypes.
+registerMinimum(hbsInstanceSafeSearch)
+hbsInstanceSafeSearch.registerHelper("default", hbsInstance.helpers.default)
 const defaultOpts: ProcessOptions = {
   noHelpers: false,
   cacheTemplates: false,
@@ -107,7 +111,12 @@ function createTemplate(
 
   // This does not throw an error when template can't be fulfilled,
   // have to try correct beforehand
-  const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
+  let instance = hbsInstance
+  if (opts.noHelpers) {
+    instance = hbsInstanceNoHelpers
+  } else if (opts.safeSearchHelpers) {
+    instance = hbsInstanceSafeSearch
+  }
 
   const template = instance.compile(string, {
     strict: false,

@@ -223,62 +223,52 @@ export function resolveReaderSearchBindings({
   return resolve(query ?? {}) as SearchFilters
 }
 
-export async function enrichArrayContext(
-  fields: Record<string, unknown>[],
-  inputs = {},
-  helpers = true
-): Promise<Record<string, any>[]> {
-  const map: Record<string, any> = {}
-  for (let index in fields) {
-    map[index] = fields[index]
-  }
-  const output = await enrichSearchContext(map, inputs, helpers)
-  const outputArray = []
-  for (let [key, value] of Object.entries(output)) {
-    outputArray[parseInt(key)] = value
-  }
-  return outputArray
+interface EnrichSearchContextOptions<T extends object> {
+  fields?: T
+  inputs?: Record<string, unknown>
+  safeSearchHelpers?: boolean
 }
 
-export async function enrichSearchContext(
-  fields: Record<string, any> | undefined,
+const enrichSearchValue = ({
+  value,
+  inputs,
+  safeSearchHelpers,
+}: {
+  value: unknown
+  inputs: Record<string, unknown>
+  safeSearchHelpers: boolean
+}): unknown => {
+  if (typeof value === "string") {
+    return processStringSync(value, inputs, {
+      noEscaping: true,
+      safeSearchHelpers,
+      escapeNewlines: true,
+    })
+  }
+  if (Array.isArray(value)) {
+    return value.map(item =>
+      enrichSearchValue({ value: item, inputs, safeSearchHelpers })
+    )
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        enrichSearchValue({ value: item, inputs, safeSearchHelpers }),
+      ])
+    )
+  }
+  return value
+}
+
+export async function enrichSearchContext<T extends object>({
+  fields,
   inputs = {},
-  helpers = true
-): Promise<Record<string, any>> {
-  const enrichedQuery: Record<string, unknown> = {}
-  if (!fields || !inputs) {
-    return enrichedQuery
-  }
-  const parameters = { ...inputs }
-
-  if (Array.isArray(fields)) {
-    return enrichArrayContext(fields, inputs, helpers)
-  }
-
-  // enrich the fields with dynamic parameters
-  for (let key of Object.keys(fields)) {
-    if (fields[key] == null) {
-      enrichedQuery[key] = null
-      continue
-    }
-    if (typeof fields[key] === "object") {
-      // enrich nested fields object
-      enrichedQuery[key] = await enrichSearchContext(
-        fields[key],
-        parameters,
-        helpers
-      )
-    } else if (typeof fields[key] === "string") {
-      // enrich string value as normal
-      enrichedQuery[key] = processStringSync(fields[key], parameters, {
-        noEscaping: true,
-        noHelpers: !helpers,
-        escapeNewlines: true,
-      })
-    } else {
-      enrichedQuery[key] = fields[key]
-    }
-  }
-
-  return enrichedQuery
+  safeSearchHelpers = false,
+}: EnrichSearchContextOptions<T>): Promise<T> {
+  return enrichSearchValue({
+    value: fields ?? {},
+    inputs: { ...inputs },
+    safeSearchHelpers,
+  }) as T
 }
