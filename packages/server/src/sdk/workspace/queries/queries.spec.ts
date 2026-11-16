@@ -268,7 +268,8 @@ describe("queries SDK", () => {
     })
 
     it("keeps MongoDB aggregate step parameters inside the stage value", async () => {
-      const injected = 'alpha", "name": {"$exists": true}, "$comment": "injected'
+      const injected =
+        'alpha", "name": {"$exists": true}, "$comment": "injected'
       const result = await enrichContext(
         {
           steps: [
