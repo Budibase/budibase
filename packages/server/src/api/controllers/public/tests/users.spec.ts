@@ -33,7 +33,7 @@ type TestContext = {
   }
   request: {
     body: {
-      _id: string
+      _id?: string
       email: string
       roles?: User["roles"]
       builder: {
@@ -49,11 +49,13 @@ const createCtx = ({
   target,
   builderApps,
   roles,
+  includeId = true,
 }: {
   caller: TestUser
   target: TestTarget
   builderApps?: unknown
   roles?: User["roles"]
+  includeId?: boolean
 }): UserCtx =>
   ({
     user: caller,
@@ -62,7 +64,7 @@ const createCtx = ({
     },
     request: {
       body: {
-        _id: target._id,
+        ...(includeId ? { _id: target._id } : {}),
         email: target.email,
         ...(roles === undefined ? {} : { roles }),
         builder: {
@@ -102,6 +104,27 @@ describe("public users controller", () => {
   const saveTargetUser = () => {
     saveUser.mockResolvedValue({ _id: targetUser._id })
   }
+
+  it("rejects a supplied user ID on public user creation", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: { apps: ["app_allowed"] },
+      },
+      target: targetUser,
+      builderApps: ["app_allowed"],
+    })
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await expect(controller.create(ctx, next)).rejects.toMatchObject({
+      status: 400,
+    })
+    expect(saveUser).not.toHaveBeenCalled()
+  })
 
   it("allows an organisation admin to assign any user to any workspace", async () => {
     const ctx = createCtx({
@@ -165,6 +188,7 @@ describe("public users controller", () => {
       },
       target: targetUser,
       builderApps: ["app_allowed"],
+      includeId: false,
     })
     setExistingTargetUser()
     saveTargetUser()
@@ -215,6 +239,7 @@ describe("public users controller", () => {
       },
       target: targetUser,
       builderApps: ["app_target"],
+      includeId: false,
     })
     const next = jest
       .fn()
@@ -286,6 +311,7 @@ describe("public users controller", () => {
       },
       target: targetUser,
       roles: { app_allowed: "BASIC" },
+      includeId: false,
     })
     saveTargetUser()
     const next = jest
@@ -335,6 +361,7 @@ describe("public users controller", () => {
       },
       target: targetUser,
       roles: { app_other: "ADMIN" },
+      includeId: false,
     })
     const next = jest
       .fn()
