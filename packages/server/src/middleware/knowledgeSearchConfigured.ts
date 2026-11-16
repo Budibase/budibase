@@ -3,6 +3,6 @@ import type { Next } from "koa"
 import sdk from "../sdk"
 
 export const knowledgeSearchConfigured = (_ctx: Ctx, next: Next) => {
-  sdk.ai.knowledgeBase.getGeminiApiKey()
+  sdk.ai.knowledgeBase.guardGeminiApiKey()
   return next()
 }

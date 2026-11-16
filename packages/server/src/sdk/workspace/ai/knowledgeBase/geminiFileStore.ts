@@ -70,7 +70,7 @@ const RETRY_DELAYS_MS = [500, 1500, 3000]
 export const isGeminiFileSearchConfigured = () =>
   !!environment.GEMINI_API_KEY?.trim()
 
-export const getGeminiApiKey = () => {
+export const guardGeminiApiKey = () => {
   const key = environment.GEMINI_API_KEY?.trim()
   if (!key) {
     throw new HTTPError(
@@ -78,7 +78,6 @@ export const getGeminiApiKey = () => {
       400
     )
   }
-  return key
 }
 
 const isRetryableResponse = (response: GeminiFileStoreResponse) => {
@@ -143,7 +142,7 @@ const getCommonAuthHeaders = async () => {
 }
 
 export async function createGeminiFileStore(name: string): Promise<string> {
-  getGeminiApiKey()
+  guardGeminiApiKey()
   const response = await fetch(`${environment.LITELLM_URL}/v1/vector_stores`, {
     method: "POST",
     headers: await getCommonAuthHeaders(),
@@ -169,7 +168,7 @@ export async function createGeminiFileStore(name: string): Promise<string> {
 export async function deleteGeminiVectorStore(
   vectorStoreId: string
 ): Promise<void> {
-  getGeminiApiKey()
+  guardGeminiApiKey()
   const response = await requestWithRetries(async () =>
     fetch(
       `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(vectorStoreId)}`,
@@ -216,7 +215,7 @@ export async function ingestGeminiFile({
   mimetype?: string
   buffer: Buffer
 }): Promise<{ fileId: string }> {
-  getGeminiApiKey()
+  guardGeminiApiKey()
   const response = await fetch(`${environment.LITELLM_URL}/v1/rag/ingest`, {
     method: "POST",
     headers: await getCommonAuthHeaders(),
@@ -305,7 +304,7 @@ export async function searchGeminiFileStore({
   vectorStoreId: string
   query: string
 }): Promise<RagSearchResultItem[]> {
-  getGeminiApiKey()
+  guardGeminiApiKey()
   const sessionId = getLiteLLMSessionId()
   const response = await requestWithRetries(async () =>
     fetch(
@@ -346,7 +345,7 @@ export async function deleteGeminiFileFromStore({
   vectorStoreId: string
   fileId: string
 }): Promise<void> {
-  getGeminiApiKey()
+  guardGeminiApiKey()
   const response = await requestWithRetries(async () =>
     fetch(
       `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
