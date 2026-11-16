@@ -77,7 +77,12 @@ const enrichJsonValue = (
       return value
     }
     if (path.join(".") === "steps.value.value") {
-      return JSON.stringify(enrichJsonTemplate(value, parameters, options))
+      return JSON.stringify(
+        enrichJsonTemplate(value, parameters, {
+          ...options,
+          preserveNullValues: true,
+        })
+      )
     }
     return processTemplateString(value, parameters, options)
   }

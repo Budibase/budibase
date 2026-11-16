@@ -290,6 +290,20 @@ describe("queries SDK", () => {
       ])
     })
 
+    it.each([
+      { key: "$match", stage: { deletedAt: null } },
+      { key: "$group", stage: { _id: null } },
+    ])(
+      "preserves null fields in MongoDB $key stages",
+      async ({ key, stage }) => {
+        const steps = [{ key, value: { value: JSON.stringify(stage) } }]
+
+        const result = await enrichContext({ steps }, {})
+
+        expect(result.steps).toEqual(steps)
+      }
+    )
+
     it("keeps quoted JSON parameters safe in multi-object MongoDB templates", async () => {
       const injected = 'x","name":{"$exists":true},"$comment":"esc'
       const result = await enrichContext(
