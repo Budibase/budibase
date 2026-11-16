@@ -267,6 +267,28 @@ describe("queries SDK", () => {
       })
     })
 
+    it("keeps MongoDB aggregate step parameters inside the stage value", async () => {
+      const injected = 'alpha", "name": {"$exists": true}, "$comment": "injected'
+      const result = await enrichContext(
+        {
+          steps: [
+            {
+              key: "$match",
+              value: { value: '{"name": "{{ target }}"}' },
+            },
+          ],
+        },
+        { target: injected }
+      )
+
+      expect(result.steps).toEqual([
+        {
+          key: "$match",
+          value: { value: JSON.stringify({ name: injected }) },
+        },
+      ])
+    })
+
     it("keeps quoted JSON parameters safe in multi-object MongoDB templates", async () => {
       const injected = 'x","name":{"$exists":true},"$comment":"esc'
       const result = await enrichContext(
