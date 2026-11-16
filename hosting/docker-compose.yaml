@@ -128,7 +128,7 @@ services:
 
   litellm-service:
     restart: unless-stopped
-    image: docker.io/litellm/litellm:main-v1.83.10-stable.patch.3
+    image: docker.io/litellm/litellm:v1.109.1
     ports:
       - "${LITELLM_PORT:-4000}:4000"
     volumes:

@@ -725,7 +725,7 @@ services:
     # -- Whether or not to deploy the litellm gateway.
     enabled: false
     # -- litellm image to use.
-    image: ghcr.io/berriai/litellm:main-v1.83.10-stable
+    image: ghcr.io/berriai/litellm:v1.109.1
     # -- Port exposed by the litellm container.
     port: 4000
     # -- Number of litellm replicas.
