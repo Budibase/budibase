@@ -290,6 +290,29 @@ describe("queries SDK", () => {
       ])
     })
 
+    it("keeps MongoDB server-side JavaScript operators inside a bound value", async () => {
+      const injected =
+        'x", "pwned": {"$function": {"body": "function(){ return 1 }", "args": [], "lang": "js"}}, "tail": "y'
+      const result = await enrichContext(
+        {
+          steps: [
+            {
+              key: "$addFields",
+              value: { value: '{"injected": "{{ target }}"}' },
+            },
+          ],
+        },
+        { target: injected }
+      )
+
+      expect(result.steps).toEqual([
+        {
+          key: "$addFields",
+          value: { value: JSON.stringify({ injected }) },
+        },
+      ])
+    })
+
     it.each([
       { key: "$match", stage: { deletedAt: null } },
       { key: "$group", stage: { _id: null } },
