@@ -290,6 +290,30 @@ describe("queries SDK", () => {
       ])
     })
 
+    it.each(["{{ other }}", "{{ env.secret }}"])(
+      "preserves binding syntax in MongoDB aggregate parameter %s",
+      async target => {
+        const result = await enrichContext(
+          {
+            steps: [
+              {
+                key: "$match",
+                value: { value: '{"name": "{{ target }}"}' },
+              },
+            ],
+          },
+          { target, other: "unexpected replacement" }
+        )
+
+        expect(result.steps).toEqual([
+          {
+            key: "$match",
+            value: { value: JSON.stringify({ name: target }) },
+          },
+        ])
+      }
+    )
+
     it("keeps MongoDB server-side JavaScript operators inside a bound value", async () => {
       const injected =
         'x", "pwned": {"$function": {"body": "function(){ return 1 }", "args": [], "lang": "js"}}, "tail": "y'

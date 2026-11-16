@@ -78,9 +78,10 @@ const enrichJsonValue = (
     }
     if (path.join(".") === "steps.value.value") {
       return JSON.stringify(
-        enrichJsonTemplate(value, parameters, {
-          ...options,
-          preserveNullValues: true,
+        processJsonStringSync(value, parameters, {
+          noEscaping: true,
+          noHelpers: true,
+          escapeNewlines: options.escapeNewlines,
         })
       )
     }
