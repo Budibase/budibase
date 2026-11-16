@@ -89,3 +89,12 @@ tests:
           content:
             name: DISABLE_SCHEMA_UPDATE
             value: "true"
+
+  - it: does not render the migration Job when disabled
+    template: templates/litellm-migration-job.yaml
+    set:
+      services.litellm.enabled: true
+      services.litellm.migrationJob.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
