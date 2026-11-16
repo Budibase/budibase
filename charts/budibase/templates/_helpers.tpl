@@ -72,6 +72,17 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
+LiteLLM secret name
+*/}}
+{{- define "budibase.litellmSecretName" -}}
+{{- if .Values.services.litellm.existingSecret -}}
+{{- .Values.services.litellm.existingSecret -}}
+{{- else -}}
+{{- printf "%s-litellm" (include "budibase.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end }}
+
+{{/*
 Create a random string if the supplied key does not exist
 */}}
 {{- define "budibase.defaultsecret" -}}

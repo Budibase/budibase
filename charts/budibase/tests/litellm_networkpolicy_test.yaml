@@ -1,0 +1,48 @@
+suite: litellm network policy
+templates:
+  - templates/litellm-networkpolicy.yaml
+release:
+  name: budibase
+tests:
+  - it: should restrict LiteLLM ingress by default when enabled
+    set:
+      services.litellm.enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.podSelector.matchLabels["io.kompose.service"]
+          value: litellm-service
+      - equal:
+          path: spec.policyTypes[0]
+          value: Ingress
+      - lengthEqual:
+          path: spec.ingress[0].from
+          count: 3
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 4000
+
+  - it: should not create a policy when disabled
+    set:
+      services.litellm.enabled: true
+      services.litellm.networkPolicy.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should append additional ingress rules
+    set:
+      services.litellm.enabled: true
+      services.litellm.networkPolicy.additionalIngress:
+        - from:
+            - namespaceSelector:
+                matchLabels:
+                  kubernetes.io/metadata.name: tailscale
+    asserts:
+      - lengthEqual:
+          path: spec.ingress
+          count: 2
+      - equal:
+          path: spec.ingress[1].from[0].namespaceSelector.matchLabels["kubernetes.io/metadata.name"]
+          value: tailscale

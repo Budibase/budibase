@@ -773,6 +773,10 @@ services:
     saltKey: ""
     # -- The master key to use for litellm.
     masterKey: ""
+    # -- Name of an existing Secret containing `masterKey`, `saltKey`,
+    # `bbaiKey`, `uiUsername`, and `uiPassword`. When set, inline credential
+    # values are ignored and the chart does not create a LiteLLM Secret.
+    existingSecret: ""
     # -- The Budibase AI virtual key (BBAI_LITELLM_KEY) used by agents. When set
     # it is rendered onto both the app service and the automation worker.
     bbaiKey: ""
@@ -801,6 +805,12 @@ services:
     tailscale:
       # -- Whether to expose the litellm service to a Tailscale tailnet via annotation.
       expose: false
+    networkPolicy:
+      # -- Restrict LiteLLM ingress to Budibase app and worker pods.
+      enabled: true
+      # -- Additional NetworkPolicy ingress rules. Required for any external
+      # access mechanism, including Tailscale proxy pods.
+      additionalIngress: []
 
   objectStore:
     # -- Set to false if using another object store, such as S3. You will need

@@ -161,13 +161,19 @@ spec:
           value: http://worker-service:{{ .Values.services.worker.port }}
         - name: LITELLM_URL
           value: {{ .Values.globals.litellmUrl | quote }}
-        {{- if .Values.services.litellm.masterKey }}
+        {{- if or .Values.services.litellm.masterKey .Values.services.litellm.existingSecret }}
         - name: LITELLM_MASTER_KEY
-          value: {{ .Values.services.litellm.masterKey | quote }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "budibase.litellmSecretName" . }}
+              key: masterKey
         {{- end }}
-        {{- if .Values.services.litellm.bbaiKey }}
+        {{- if or .Values.services.litellm.bbaiKey .Values.services.litellm.existingSecret }}
         - name: BBAI_LITELLM_KEY
-          value: {{ .Values.services.litellm.bbaiKey | quote }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "budibase.litellmSecretName" . }}
+              key: bbaiKey
         {{- end }}
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}

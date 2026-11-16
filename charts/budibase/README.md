@@ -15,7 +15,6 @@ Budibase is an open source low-code platform, helping thousands of teams build a
 CouchDB is bundled as a locally maintained subchart in `charts/couchdb`, based on
 version `4.5.6` of the Apache CouchDB chart.
 
-
 ## Upgrading
 
 ### `2.x` to `3.0.0`
@@ -214,11 +213,14 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.litellm.bbaiKey | string | `""` | The Budibase AI virtual key (BBAI_LITELLM_KEY) used by agents. When set it is rendered onto both the app service and the automation worker. |
 | services.litellm.config | string | `"general_settings:\n  store_model_in_db: true\n  store_prompts_in_spend_logs: true\n  enable_mcp_registry: false\n  require_key_mcp_access_defined: true\nlitellm_settings:\n  drop_params: true\n  extra_spend_tag_headers:\n    - \"x-litellm-tags\"\n  disable_add_user_agent_to_request_tags: true\n  num_retries: 3\n  retry_after: 5\n  retry_policy:\n    RateLimitErrorRetries: 4\n"` | Inline configuration passed to litellm as config.yaml. |
 | services.litellm.enabled | bool | `false` | Whether or not to deploy the litellm gateway. |
+| services.litellm.existingSecret | string | `""` | Name of an existing Secret containing `masterKey`, `saltKey`, `bbaiKey`, `uiUsername`, and `uiPassword`. When set, inline credential values are ignored and the chart does not create a LiteLLM Secret. |
 | services.litellm.extraEnv | list | `[{"name":"LITELLM_REASONING_AUTO_SUMMARY","value":"true"}]` | Extra environment variables for the litellm container. Budibase uses LiteLLM virtual keys/models and requires database-backed proxy mode. If `general_settings.store_model_in_db: true` (default), set DATABASE_URL here. |
 | services.litellm.extraVolumeMounts | list | `[]` | Additional volumeMounts on the litellm container. |
 | services.litellm.extraVolumes | list | `[]` | Additional volumes on the litellm pod. |
 | services.litellm.image | string | `"ghcr.io/berriai/litellm:v1.109.1"` | litellm image to use. |
 | services.litellm.masterKey | string | `""` | The master key to use for litellm. |
+| services.litellm.networkPolicy.additionalIngress | list | `[]` | Additional NetworkPolicy ingress rules. Required for any external access mechanism, including Tailscale proxy pods. |
+| services.litellm.networkPolicy.enabled | bool | `true` | Restrict LiteLLM ingress to Budibase app and worker pods. |
 | services.litellm.pdb | object | `{}` | PodDisruptionBudget settings for the litellm service. Requires podDisruptionBudget.enabled to be true. Set minAvailable to override the global podDisruptionBudget.minAvailable for this service. |
 | services.litellm.port | int | `4000` | Port exposed by the litellm container. |
 | services.litellm.preStopDelaySeconds | int | `45` | Seconds to sleep before SIGTERM to allow load balancer deregistration. |
