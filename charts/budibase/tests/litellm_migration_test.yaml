@@ -32,6 +32,40 @@ tests:
             name: DATABASE_URL
             value: postgresql://example.com/litellm
 
+  - it: applies chart-wide scheduling settings to the migration Job
+    template: templates/litellm-migration-job.yaml
+    set:
+      services.litellm.enabled: true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: example.com/workload
+                    operator: In
+                    values:
+                      - migrations
+      tolerations:
+        - key: example.com/workload
+          operator: Equal
+          value: migrations
+          effect: NoSchedule
+      schedulerName: custom-scheduler
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
+          value: example.com/workload
+      - equal:
+          path: spec.template.spec.tolerations[0]
+          value:
+            key: example.com/workload
+            operator: Equal
+            value: migrations
+            effect: NoSchedule
+      - equal:
+          path: spec.template.spec.schedulerName
+          value: custom-scheduler
+
   - it: disables schema updates on serving pods
     template: templates/litellm-service-deployment.yaml
     set:
