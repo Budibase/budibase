@@ -787,6 +787,8 @@ services:
       general_settings:
         store_model_in_db: true
         store_prompts_in_spend_logs: true
+        enable_mcp_registry: false
+        require_key_mcp_access_defined: true
       litellm_settings:
         drop_params: true
         extra_spend_tag_headers:
