@@ -1,0 +1,67 @@
+{{- if and .Values.services.litellm.enabled .Values.services.litellm.migrationJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: litellm-migrations
+  labels:
+    app.kubernetes.io/name: litellm
+    io.kompose.service: litellm-migrations
+  annotations:
+    helm.sh/hook: "pre-install,pre-upgrade"
+    helm.sh/hook-delete-policy: "before-hook-creation"
+    helm.sh/hook-weight: {{ .Values.services.litellm.migrationJob.hookWeight | quote }}
+spec:
+  activeDeadlineSeconds: {{ .Values.services.litellm.migrationJob.activeDeadlineSeconds }}
+  backoffLimit: {{ .Values.services.litellm.migrationJob.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.services.litellm.migrationJob.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: litellm
+        io.kompose.service: litellm-migrations
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: prisma-migrations
+          image: {{ .Values.globals.dockerRegistry }}{{ .Values.services.litellm.image }}
+          imagePullPolicy: IfNotPresent
+          command: ["python", "litellm/proxy/prisma_migration.py"]
+          workingDir: /app
+          env:
+            - name: LITELLM_MASTER_KEY
+              value: {{ .Values.services.litellm.masterKey | quote }}
+            - name: LITELLM_SALT_KEY
+              value: {{ .Values.services.litellm.saltKey | quote }}
+          {{- if .Values.services.litellm.extraEnv }}
+            {{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
+          {{- end }}
+            - name: DISABLE_SCHEMA_UPDATE
+              value: "false"
+          {{- with .Values.services.litellm.migrationJob.resources }}
+          resources:
+{{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.services.litellm.extraVolumeMounts }}
+          volumeMounts:
+{{- toYaml .Values.services.litellm.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .Values.services.litellm.extraVolumes }}
+      volumes:
+{{- toYaml .Values.services.litellm.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+{{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+{{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{- end }}
+{{- end }}
