@@ -36,6 +36,14 @@ const hbsInstanceSafeSearch = create()
 // Search filters may use sandboxed JS and default, but not external helpers that traverse prototypes.
 registerMinimum(hbsInstanceSafeSearch)
 hbsInstanceSafeSearch.registerHelper("default", hbsInstance.helpers.default)
+// Missing zero-argument helpers otherwise resolve to undefined without throwing.
+for (const name of helperNames) {
+  if (!hbsInstanceSafeSearch.helpers[name]) {
+    hbsInstanceSafeSearch.registerHelper(name, () => {
+      throw new Error(`Helper "${name}" is not available in search filters`)
+    })
+  }
+}
 const defaultOpts: ProcessOptions = {
   noHelpers: false,
   cacheTemplates: false,

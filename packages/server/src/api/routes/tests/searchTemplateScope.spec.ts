@@ -1,5 +1,6 @@
 import { roles } from "@budibase/backend-core"
 import { BasicOperator, PermissionLevel } from "@budibase/types"
+import { processStringSync } from "@budibase/string-templates"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { basicTable } from "../../../tests/utilities/structures"
 
@@ -63,6 +64,33 @@ describe("row search query bindings", () => {
       expect(result.rows).toHaveLength(0)
     }
   )
+
+  it("returns no rows when a saved exclusion uses an unavailable zero-argument helper", async () => {
+    const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, {
+      name: processStringSync("{{ date }}", {}),
+    })
+    const view = await config.api.viewV2.create({
+      tableId: table._id!,
+      name: "Exclude today's records",
+      queryUI: {
+        groups: [
+          {
+            filters: [
+              {
+                field: "name",
+                operator: BasicOperator.NOT_EQUAL,
+                value: "{{ date }}",
+              },
+            ],
+          },
+        ],
+      },
+    })
+
+    const result = await config.api.viewV2.search(view.id)
+    expect(result.rows).toHaveLength(0)
+  })
 
   it("does not evaluate JavaScript supplied by a table reader", async () => {
     const table = await config.api.table.save(basicTable())
