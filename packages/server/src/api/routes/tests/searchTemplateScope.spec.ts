@@ -12,6 +12,18 @@ describe("row search query bindings", () => {
 
   afterAll(() => config.end())
 
+  it("does not evaluate Handlebars helpers in builder-supplied search filters", async () => {
+    const table = await config.api.table.save(basicTable())
+    await config.api.row.save(table._id!, { name: "template-target" })
+
+    const result = await config.api.row.search(table._id!, {
+      query: {
+        equal: { name: '{{ first (arrayify "template-target") }}' },
+      },
+    })
+    expect(result.rows).toHaveLength(0)
+  })
+
   it("does not evaluate JavaScript supplied by a table reader", async () => {
     const table = await config.api.table.save(basicTable())
     await config.api.row.save(table._id!, { name: "template-target" })

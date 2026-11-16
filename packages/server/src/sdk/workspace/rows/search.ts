@@ -84,7 +84,7 @@ export async function search(
     }
 
     if (context) {
-      options.query = await enrichSearchContext(options.query, context)
+      options.query = await enrichSearchContext(options.query, context, false)
     }
 
     // need to make sure filters in correct shape before checking for view

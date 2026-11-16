@@ -352,7 +352,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const userBindings = sdk.users.getUserContextBindings(ctx.user)
   const enrichedQuery: SearchFilters =
     ctx.user && users.isBuilder(ctx.user, context.getWorkspaceId())
-      ? await utils.enrichSearchContext(query, { user: userBindings })
+      ? await utils.enrichSearchContext(query, { user: userBindings }, false)
       : utils.resolveReaderSearchBindings({ query, user: userBindings })
 
   const fields = viewId
