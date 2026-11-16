@@ -1,0 +1,57 @@
+suite: LiteLLM migrations
+templates:
+  - templates/litellm-migration-job.yaml
+  - templates/litellm-service-deployment.yaml
+tests:
+  - it: runs migrations before install and upgrade
+    template: templates/litellm-migration-job.yaml
+    set:
+      services.litellm.enabled: true
+      services.litellm.extraEnv:
+        - name: DATABASE_URL
+          value: postgresql://example.com/litellm
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: pre-install,pre-upgrade
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value:
+            - python
+            - litellm/proxy/prisma_migration.py
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DISABLE_SCHEMA_UPDATE
+            value: "false"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DATABASE_URL
+            value: postgresql://example.com/litellm
+
+  - it: disables schema updates on serving pods
+    template: templates/litellm-service-deployment.yaml
+    set:
+      services.litellm.enabled: true
+      services.litellm.migrationJob.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DISABLE_SCHEMA_UPDATE
+            value: "true"
+
+  - it: preserves startup migrations when the migration Job is disabled
+    template: templates/litellm-service-deployment.yaml
+    set:
+      services.litellm.enabled: true
+      services.litellm.migrationJob.enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DISABLE_SCHEMA_UPDATE
+            value: "true"
