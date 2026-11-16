@@ -83,23 +83,75 @@ describe("/rest-templates", () => {
     }))
   })
 
-  it.each(["workspace", "global"])(
-    "allows %s builders to list templates but rejects imports, updates and deletes",
-    async scope => {
-      const template = await uploadExampleTemplate(`${scope} builder API`)
+  it.each([
+    {
+      scope: "workspace",
+      permissions: () => ({ apps: [config.getProdWorkspaceId()] }),
+    },
+    { scope: "global", permissions: () => ({ global: true }) },
+  ])(
+    "allows $scope builders to upload, list, update and delete templates",
+    async ({ scope, permissions }) => {
       const builder = await config.globalUser({
-        builder:
-          scope === "global"
-            ? { global: true }
-            : { apps: [config.getProdWorkspaceId()] },
+        builder: permissions(),
         admin: { global: false },
       })
 
       await config.withUser(builder, async () => {
+        const template = await uploadExampleTemplate(`${scope} builder API`)
         await request
+          .put(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
+          .field("name", `Updated ${scope} builder API`)
+          .field("description", "An updated example API")
+          .expect(200)
+
+        const updatedTemplates = await request
           .get("/api/rest-templates")
           .set(config.defaultHeaders())
           .expect(200)
+        expect(updatedTemplates.body).toContainEqual({
+          ...template,
+          name: `Updated ${scope} builder API`,
+          description: "An updated example API",
+        })
+
+        await request
+          .delete(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
+          .expect(200)
+
+        const remainingTemplates = await request
+          .get("/api/rest-templates")
+          .set(config.defaultHeaders())
+          .expect(200)
+        expect(remainingTemplates.body).not.toContainEqual(
+          expect.objectContaining({ id: template.id })
+        )
+      })
+    }
+  )
+
+  it.each([
+    { role: "end users", builder: { global: false } },
+    {
+      role: "builders from another workspace",
+      builder: { apps: ["app_other"] },
+    },
+  ])(
+    "rejects template access and management by $role",
+    async ({ role, builder }) => {
+      const template = await uploadExampleTemplate(`${role} API`)
+      const user = await config.globalUser({
+        builder,
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        await request
+          .get("/api/rest-templates")
+          .set(config.defaultHeaders())
+          .expect(403)
         await request
           .post("/api/rest-templates")
           .set(config.defaultHeaders())

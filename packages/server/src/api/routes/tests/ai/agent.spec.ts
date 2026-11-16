@@ -1,4 +1,9 @@
-import { ToolExecutionPrincipal } from "@budibase/types"
+import { context } from "@budibase/backend-core"
+import {
+  type Agent,
+  AgentKnowledgeSourceType,
+  ToolExecutionPrincipal,
+} from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 
@@ -54,6 +59,58 @@ describe("agent duplicate", () => {
     )
     expect(duplicate.live).toEqual(created.live)
     expect(duplicate.allowConversationAttachments).toBe(false)
+  })
+
+  it("does not copy operation knowledge to the duplicate", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Knowledge Agent",
+        aiconfig: "default",
+      },
+      {
+        id: "operation_1",
+        name: "Knowledge",
+        live: false,
+        enabledTools: [],
+        allowKnowledgeSourceDownload: true,
+      }
+    )
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const agent = await db.get<Agent>(created._id!)
+      await db.put({
+        ...agent,
+        operations: agent.operations?.map(operation => ({
+          ...operation,
+          knowledgeBases: ["knowledgebase_1"],
+          knowledgeSources: [
+            {
+              id: "sharepoint_site_1",
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                datasourceId: "datasource_1",
+                authConfigId: "auth_1",
+                site: { id: "site_1" },
+              },
+            },
+          ],
+        })),
+      })
+    })
+
+    const duplicate = await config.api.agent.duplicate(created._id!)
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const stored = await context.getWorkspaceDB().get<Agent>(duplicate._id!)
+      expect(stored.operations).toEqual([
+        expect.objectContaining({
+          id: "operation_1",
+          knowledgeBases: [],
+          knowledgeSources: [],
+        }),
+      ])
+    })
   })
 
   it("persists operation name on create and update", async () => {

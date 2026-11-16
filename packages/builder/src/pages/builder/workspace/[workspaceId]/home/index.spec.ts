@@ -55,6 +55,7 @@ const mocks = vi.hoisted(() => {
     workspaceApps: createStore({ workspaceApps: apps }),
     ensureFetched: vi.fn().mockResolvedValue(undefined),
     fetchProjects: vi.fn(),
+    hasFetchedProjects: vi.fn().mockReturnValue(true),
     fetchAgents: vi.fn().mockResolvedValue(undefined),
     refreshWorkspace: vi.fn().mockResolvedValue(undefined),
     previewAssignment:
@@ -64,11 +65,58 @@ const mocks = vi.hoisted(() => {
         ) => Promise<PreviewProjectAssignmentResponse>
       >(),
     saveAssignment: vi.fn(),
+    updateAssignment: vi.fn().mockResolvedValue(undefined),
+    deleteResource: vi.fn(),
+    notifications: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
+    automations: createStore({
+      automations: [
+        {
+          _id: "automation_operations",
+          _rev: "1-automation",
+          name: "Operations workflow",
+          projectIds: ["project_operations", "project_finance"],
+          publishStatus: { state: "draft" },
+          definition: { trigger: {}, steps: [] },
+        },
+      ],
+    }),
+    agents: createStore({
+      agents: [
+        {
+          _id: "agent_operations",
+          _rev: "1-agent",
+          name: "Operations assistant",
+          projectIds: ["project_operations", "project_finance"],
+        },
+      ],
+    }),
+    datasources: createStore({
+      list: [
+        {
+          _id: "datasource_operations",
+          _rev: "1-datasource",
+          name: "Operations connection",
+          source: "REST",
+          projectIds: ["project_operations", "project_finance"],
+        },
+      ],
+    }),
+    tables: createStore({
+      list: [
+        {
+          _id: "ta_operations",
+          _rev: "1-table",
+          name: "Operations records",
+          sourceId: "bb_internal",
+          projectIds: ["project_operations", "project_finance"],
+        },
+      ],
+    }),
     openContextMenu:
       vi.fn<
         (
           id: string,
-          items: { name: string; callback: () => void }[],
+          items: { name: string; icon: string; callback: () => void }[],
           position: { x: number; y: number },
           onClose: () => void
         ) => void
@@ -89,7 +137,7 @@ vi.mock("@budibase/bbui", () => ({
   Helpers: { getDateDisplayValue: () => "", uuid: () => "test-api-session" },
   Notification: MockSlot,
   keepOpen: Symbol("keepOpen"),
-  notifications: { success: vi.fn(), warning: vi.fn(), error: vi.fn() },
+  notifications: mocks.notifications,
 }))
 
 vi.mock("@roxi/routify", () => ({
@@ -102,11 +150,15 @@ vi.mock("@/stores/builder", () => ({
     mocks.createStore({ appId: "app_dev_test", name: "Team workspace" }),
     { refresh: mocks.refreshWorkspace }
   ),
-  automationStore: mocks.createStore({ automations: [] }),
+  automationStore: Object.assign(mocks.automations, {
+    actions: { delete: mocks.deleteResource },
+  }),
   contextMenuStore: { open: mocks.openContextMenu },
-  datasources: mocks.createStore({ list: [] }),
-  tables: mocks.createStore({ list: [] }),
-  workspaceAppStore: mocks.workspaceApps,
+  datasources: mocks.datasources,
+  tables: mocks.tables,
+  workspaceAppStore: Object.assign(mocks.workspaceApps, {
+    delete: mocks.deleteResource,
+  }),
   workspaceFavouriteStore: { lookup: mocks.createStore({}) },
 }))
 
@@ -115,15 +167,17 @@ vi.mock("@/stores/portal", () => ({
   enrichedApps: mocks.createStore([]),
   featureFlags: mocks.createStore({ PROJECTS: true }),
   licensing: mocks.createStore({ isEnterprisePlan: true }),
-  agentsStore: Object.assign(mocks.createStore({ agents: [] }), {
+  agentsStore: Object.assign(mocks.agents, {
     fetchAgents: mocks.fetchAgents,
+    deleteAgent: mocks.deleteResource,
   }),
   workspacesStore: mocks.createStore({ apps: [] }),
   projectsStore: Object.assign(mocks.projects, {
     fetch: mocks.fetchProjects,
     ensureFetched: mocks.ensureFetched,
-    hasFetched: () => true,
+    hasFetched: mocks.hasFetchedProjects,
     previewAssignment: mocks.previewAssignment,
+    updateAssignment: mocks.updateAssignment,
   }),
 }))
 
@@ -137,10 +191,6 @@ vi.mock("@/constants/backend", async () => {
 })
 vi.mock(
   "@/pages/builder/_components/FavouriteResourceButton.svelte",
-  () => import("@/test/mocks/MockSlot.svelte")
-)
-vi.mock(
-  "@/components/common/ConfirmDialog.svelte",
   () => import("@/test/mocks/MockSlot.svelte")
 )
 vi.mock(
@@ -230,7 +280,7 @@ const openContextMenu = async ({ name }: { name: string }) => {
 }
 const chooseAssignProject = async () => {
   const [, items] = mocks.openContextMenu.mock.lastCall!
-  items.find(item => item.name === "Assign project")!.callback()
+  items.find(item => item.name === "Assign projects")!.callback()
   await tick()
   await advancePreview()
 }
@@ -259,8 +309,11 @@ describe("workspace home project assignments", () => {
       }))
     )
     mocks.fetchProjects.mockImplementation(async () => get(mocks.projects))
+    mocks.hasFetchedProjects.mockReturnValue(true)
     mocks.ensureFetched.mockImplementation(async () => get(mocks.projects))
     mocks.saveAssignment.mockResolvedValue(undefined)
+    mocks.updateAssignment.mockResolvedValue(undefined)
+    mocks.refreshWorkspace.mockResolvedValue(undefined)
     mocks.previewAssignment.mockImplementation(async request => {
       const app = mocks.apps.find(app => app._id === request.resourceId)!
       return {
@@ -314,8 +367,27 @@ describe("workspace home project assignments", () => {
         screen.getByRole("button", { name: "Configure Support agent" })
       ).toBeInTheDocument()
     })
-    expect(mocks.fetchProjects).toHaveBeenCalledExactlyOnceWith("app_dev_test")
+    expect(mocks.ensureFetched).toHaveBeenCalledWith("app_dev_test")
     expect(window.location.search).toBe("?project=project_operations")
+  })
+
+  it("does not retry a failed initial project load for a setup deep link", async () => {
+    mocks.projects.set([])
+    mocks.hasFetchedProjects.mockReturnValue(false)
+    mocks.ensureFetched.mockRejectedValue(new Error("Unable to load projects"))
+    history.replaceState(
+      {},
+      "",
+      "/builder/workspace/app_dev_test/home?project=project_operations&setup=project_operations"
+    )
+
+    render(WorkspaceHome)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(mocks.ensureFetched).not.toHaveBeenCalled()
+    expect(mocks.fetchProjects).not.toHaveBeenCalled()
+    expect(mocks.notifications.error).not.toHaveBeenCalled()
+    expect(screen.queryByText("Project setup")).not.toBeInTheDocument()
   })
 
   it("keeps the open assignment and its save target when another row's context menu opens", async () => {
@@ -347,7 +419,7 @@ describe("workspace home project assignments", () => {
     { name: "Reporting portal", id: "reporting", revision: "2-reporting" },
     { name: "Operations portal", id: "operations", revision: "1-operations" },
   ])(
-    "starts a fresh assignment when Assign project is chosen again for $name",
+    "starts a fresh assignment when Assign projects is chosen again for $name",
     async ({ name, id, revision }) => {
       render(WorkspaceHome)
       await openContextMenu({ name: "Operations portal" })
@@ -380,4 +452,232 @@ describe("workspace home project assignments", () => {
       })
     }
   )
+
+  it.each([
+    {
+      type: "app",
+      name: "Operations portal",
+      id: "workspace_app_operations",
+      revision: "1-operations",
+    },
+    {
+      type: "automation",
+      name: "Operations workflow",
+      id: "automation_operations",
+      revision: "1-automation",
+    },
+    {
+      type: "agent",
+      name: "Operations assistant",
+      id: "agent_operations",
+      revision: "1-agent",
+    },
+    {
+      type: "datasource",
+      name: "Operations connection",
+      id: "datasource_operations",
+      revision: "1-datasource",
+    },
+    {
+      type: "table",
+      name: "Operations records",
+      id: "ta_operations",
+      revision: "1-table",
+    },
+  ])(
+    "removes an $type from the selected project while preserving its other assignments",
+    async ({ name, id, revision }) => {
+      mocks.workspaceApps.set({
+        workspaceApps: mocks.apps.map(app => ({
+          ...app,
+          projectIds: [...app.projectIds, "project_finance"],
+        })),
+      })
+      mocks.previewAssignment.mockRejectedValue(
+        new Error("Unable to build dependency graph")
+      )
+      history.replaceState(
+        {},
+        "",
+        "/builder/workspace/app_dev_test/home?project=project_operations"
+      )
+      render(WorkspaceHome)
+      await tick()
+      await openContextMenu({ name })
+      const [, items] = mocks.openContextMenu.mock.lastCall!
+      const remove = items.find(item => item.name === "Remove from project")!
+      remove.callback()
+      await tick()
+
+      expect(remove.icon).toBe("stack-minus")
+      expect(
+        screen.getByRole("heading", { name: "Remove from project" })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "The resource will remain available in the workspace and any other projects.",
+          { exact: false }
+        )
+      ).toHaveTextContent(name)
+
+      await fireEvent.click(screen.getByRole("button", { name: "Remove" }))
+
+      expect(mocks.updateAssignment).toHaveBeenCalledExactlyOnceWith({
+        resourceId: id,
+        request: {
+          resourceRev: revision,
+          projectIds: ["project_finance"],
+          dependencyIds: [],
+          dependencyFingerprint: "",
+        },
+      })
+      expect(mocks.deleteResource).not.toHaveBeenCalled()
+      expect(mocks.previewAssignment).not.toHaveBeenCalled()
+      expect(mocks.notifications.success).toHaveBeenCalledWith(
+        `Removed '${name}' from 'Operations'`
+      )
+      expect(mocks.refreshWorkspace).toHaveBeenCalledOnce()
+    }
+  )
+
+  it.each([
+    "Operations portal",
+    "Operations workflow",
+    "Operations assistant",
+    "Operations connection",
+    "Operations records",
+  ])(
+    "waits for the URL-selected project before opening the menu for %s",
+    async name => {
+      const projects = get(mocks.projects)
+      mocks.projects.set([])
+      mocks.hasFetchedProjects.mockReturnValue(false)
+      history.replaceState(
+        {},
+        "",
+        "/builder/workspace/app_dev_test/home?project=project_operations"
+      )
+      render(WorkspaceHome)
+      await tick()
+
+      await openContextMenu({ name })
+
+      mocks.hasFetchedProjects.mockReturnValue(true)
+      mocks.projects.set(projects)
+      await tick()
+      await openContextMenu({ name })
+
+      expect(mocks.openContextMenu).toHaveBeenCalledOnce()
+      const [, items] = mocks.openContextMenu.mock.lastCall!
+      expect(items.some(item => item.name === "Remove from project")).toBe(true)
+      expect(mocks.deleteResource).not.toHaveBeenCalled()
+    }
+  )
+
+  it("keeps permanent deletion in the workspace-wide menu", async () => {
+    render(WorkspaceHome)
+    await openContextMenu({ name: "Operations portal" })
+
+    const [, items] = mocks.openContextMenu.mock.lastCall!
+    expect(items.find(item => item.name === "Delete")?.icon).toBe("trash")
+    expect(items.some(item => item.name === "Remove from project")).toBe(false)
+  })
+
+  it.each([
+    {
+      name: "Operations portal",
+      confirmText: "Delete App",
+      successMessage: "App 'Operations portal' deleted successfully",
+      expectedArguments: ["workspace_app_operations", "1-operations"],
+    },
+    {
+      name: "Operations workflow",
+      confirmText: "Delete Automation",
+      successMessage: "Automation deleted successfully",
+      expectedArguments: [get(mocks.automations).automations[0]],
+    },
+    {
+      name: "Operations assistant",
+      confirmText: "Delete Agent",
+      successMessage: "Agent deleted successfully",
+      expectedArguments: ["agent_operations"],
+    },
+  ])(
+    "allows permanent deletion of $name from the project view",
+    async ({ name, confirmText, successMessage, expectedArguments }) => {
+      history.replaceState(
+        {},
+        "",
+        "/builder/workspace/app_dev_test/home?project=project_operations"
+      )
+      render(WorkspaceHome)
+      await tick()
+      await openContextMenu({ name })
+      const [, items] = mocks.openContextMenu.mock.lastCall!
+      items.find(item => item.name === "Delete")!.callback()
+      await tick()
+      await fireEvent.click(screen.getByRole("button", { name: confirmText }))
+
+      expect(items.some(item => item.name === "Remove from project")).toBe(true)
+      expect(mocks.deleteResource).toHaveBeenCalledExactlyOnceWith(
+        ...expectedArguments
+      )
+      expect(mocks.updateAssignment).not.toHaveBeenCalled()
+      expect(mocks.notifications.success).toHaveBeenCalledWith(successMessage)
+    }
+  )
+
+  it("keeps the resource when removing its last project assignment", async () => {
+    history.replaceState(
+      {},
+      "",
+      "/builder/workspace/app_dev_test/home?project=project_operations"
+    )
+    render(WorkspaceHome)
+    await tick()
+    await openContextMenu({ name: "Operations portal" })
+    const [, items] = mocks.openContextMenu.mock.lastCall!
+    items.find(item => item.name === "Remove from project")!.callback()
+    await tick()
+    await fireEvent.click(screen.getByRole("button", { name: "Remove" }))
+
+    expect(mocks.updateAssignment).toHaveBeenCalledExactlyOnceWith({
+      resourceId: "workspace_app_operations",
+      request: {
+        resourceRev: "1-operations",
+        projectIds: [],
+        dependencyIds: [],
+        dependencyFingerprint: "",
+      },
+    })
+    expect(mocks.deleteResource).not.toHaveBeenCalled()
+    expect(mocks.notifications.success).toHaveBeenCalledWith(
+      "Removed 'Operations portal' from 'Operations'"
+    )
+  })
+
+  it("reports a failed removal without deleting the resource or reporting success", async () => {
+    mocks.updateAssignment.mockRejectedValueOnce(
+      new Error("Resource revision does not match.")
+    )
+    history.replaceState(
+      {},
+      "",
+      "/builder/workspace/app_dev_test/home?project=project_operations"
+    )
+    render(WorkspaceHome)
+    await tick()
+    await openContextMenu({ name: "Operations portal" })
+    const [, items] = mocks.openContextMenu.mock.lastCall!
+    items.find(item => item.name === "Remove from project")!.callback()
+    await tick()
+    await fireEvent.click(screen.getByRole("button", { name: "Remove" }))
+
+    expect(mocks.notifications.error).toHaveBeenCalledWith(
+      "Resource revision does not match."
+    )
+    expect(mocks.notifications.success).not.toHaveBeenCalled()
+    expect(mocks.deleteResource).not.toHaveBeenCalled()
+    expect(mocks.refreshWorkspace).not.toHaveBeenCalled()
+  })
 })
