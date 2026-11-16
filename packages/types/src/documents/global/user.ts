@@ -102,6 +102,7 @@ export interface User
   appFavourites?: string[]
   ssoId?: string
   appSort?: string
+  lastVisitedWorkspaceId?: string
   budibaseAccess?: boolean
   accountPortalAccess?: boolean
   onboardedAt?: string // deprecated and no longer saved
