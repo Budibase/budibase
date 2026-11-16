@@ -2,7 +2,7 @@
 ARG BASEIMG=budibase/database:2.1.0
 FROM budibase/minio:final AS minio
 
-FROM node:22-slim AS build
+FROM node:22.23.5-slim AS build
 
 # Install node-gyp dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
