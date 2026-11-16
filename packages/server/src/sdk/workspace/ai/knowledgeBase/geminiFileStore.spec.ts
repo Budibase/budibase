@@ -15,6 +15,7 @@ import { withLiteLLMSessionId } from "../llm/requestSession"
 import {
   createGeminiFileStore,
   deleteGeminiFileFromStore,
+  deleteGeminiVectorStore,
   ingestGeminiFile,
   searchGeminiFileStore,
 } from "./geminiFileStore"
@@ -68,6 +69,54 @@ describe("geminiFileStore", () => {
     } finally {
       cleanup()
     }
+  })
+
+  it("does not send the Gemini API key in vector store requests", async () => {
+    await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
+      mockFetch
+        .mockResolvedValueOnce(
+          response({ ok: true, status: 200, json: { id: "vector-store-1" } })
+        )
+        .mockResolvedValueOnce(response({ ok: true, status: 200 }))
+        .mockResolvedValueOnce(
+          response({
+            ok: true,
+            status: 200,
+            json: {
+              id: "ingest-1",
+              status: "completed",
+              vector_store_id: "vector-store-1",
+              file_id: "file-1",
+            },
+          })
+        )
+        .mockResolvedValueOnce(
+          response({ ok: true, status: 200, json: { data: [] } })
+        )
+        .mockResolvedValueOnce(response({ ok: true, status: 200 }))
+
+      await createGeminiFileStore("Support Docs")
+      await deleteGeminiVectorStore("vector-store-1")
+      await ingestGeminiFile({
+        vectorStoreId: "vector-store-1",
+        filename: "notes.txt",
+        buffer: Buffer.from("hello"),
+      })
+      await searchGeminiFileStore({
+        vectorStoreId: "vector-store-1",
+        query: "hello",
+      })
+      await deleteGeminiFileFromStore({
+        vectorStoreId: "vector-store-1",
+        fileId: "file-1",
+      })
+
+      expect(mockFetch).toHaveBeenCalledTimes(5)
+      for (const [, init] of mockFetch.mock.calls) {
+        expect(String(init?.body)).not.toContain("api_key")
+        expect(String(init?.body)).not.toContain("test-gemini-key")
+      }
+    })
   })
 
   it("uses upstream response status when ingest fails", async () => {

@@ -143,14 +143,13 @@ const getCommonAuthHeaders = async () => {
 }
 
 export async function createGeminiFileStore(name: string): Promise<string> {
-  const geminiApiKey = getGeminiApiKey()
+  getGeminiApiKey()
   const response = await fetch(`${environment.LITELLM_URL}/v1/vector_stores`, {
     method: "POST",
     headers: await getCommonAuthHeaders(),
     body: JSON.stringify({
       name,
       custom_llm_provider: "gemini",
-      ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
     }),
   })
 
@@ -170,7 +169,7 @@ export async function createGeminiFileStore(name: string): Promise<string> {
 export async function deleteGeminiVectorStore(
   vectorStoreId: string
 ): Promise<void> {
-  const geminiApiKey = getGeminiApiKey()
+  getGeminiApiKey()
   const response = await requestWithRetries(async () =>
     fetch(
       `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(vectorStoreId)}`,
@@ -179,7 +178,6 @@ export async function deleteGeminiVectorStore(
         headers: await getCommonAuthHeaders(),
         body: JSON.stringify({
           custom_llm_provider: "gemini",
-          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
         }),
       }
     )
@@ -218,7 +216,7 @@ export async function ingestGeminiFile({
   mimetype?: string
   buffer: Buffer
 }): Promise<{ fileId: string }> {
-  const geminiApiKey = getGeminiApiKey()
+  getGeminiApiKey()
   const response = await fetch(`${environment.LITELLM_URL}/v1/rag/ingest`, {
     method: "POST",
     headers: await getCommonAuthHeaders(),
@@ -233,7 +231,6 @@ export async function ingestGeminiFile({
         vector_store: {
           custom_llm_provider: "gemini",
           vector_store_id: vectorStoreId,
-          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
         },
       },
     }),
@@ -308,7 +305,7 @@ export async function searchGeminiFileStore({
   vectorStoreId: string
   query: string
 }): Promise<RagSearchResultItem[]> {
-  const geminiApiKey = getGeminiApiKey()
+  getGeminiApiKey()
   const sessionId = getLiteLLMSessionId()
   const response = await requestWithRetries(async () =>
     fetch(
@@ -322,7 +319,6 @@ export async function searchGeminiFileStore({
           query,
           passthrough_on_no_deployment: true,
           model: "gemini/gemini-3.8-flash",
-          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
           ...(sessionId
             ? {
                 litellm_session_id: sessionId,
@@ -350,7 +346,7 @@ export async function deleteGeminiFileFromStore({
   vectorStoreId: string
   fileId: string
 }): Promise<void> {
-  const geminiApiKey = getGeminiApiKey()
+  getGeminiApiKey()
   const response = await requestWithRetries(async () =>
     fetch(
       `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
@@ -361,7 +357,6 @@ export async function deleteGeminiFileFromStore({
         headers: await getCommonAuthHeaders(),
         body: JSON.stringify({
           custom_llm_provider: "gemini",
-          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
         }),
       }
     )
