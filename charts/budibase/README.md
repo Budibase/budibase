@@ -219,6 +219,12 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.litellm.extraVolumes | list | `[]` | Additional volumes on the litellm pod. |
 | services.litellm.image | string | `"ghcr.io/berriai/litellm:v1.109.1"` | litellm image to use. |
 | services.litellm.masterKey | string | `""` | The master key to use for litellm. |
+| services.litellm.migrationJob.activeDeadlineSeconds | int | `1800` | Wall-clock timeout for the complete migration Job. |
+| services.litellm.migrationJob.backoffLimit | int | `4` | Maximum number of retries after the initial migration attempt. |
+| services.litellm.migrationJob.enabled | bool | `true` | Run schema migrations once before installing or upgrading LiteLLM. Serving pods disable schema updates while this Job owns migrations. |
+| services.litellm.migrationJob.hookWeight | string | `"1"` | Helm hook ordering weight. |
+| services.litellm.migrationJob.resources | object | `{}` | Resources for the migration Job. |
+| services.litellm.migrationJob.ttlSecondsAfterFinished | int | `120` | Remove a completed migration Job after this many seconds. |
 | services.litellm.pdb | object | `{}` | PodDisruptionBudget settings for the litellm service. Requires podDisruptionBudget.enabled to be true. Set minAvailable to override the global podDisruptionBudget.minAvailable for this service. |
 | services.litellm.port | int | `4000` | Port exposed by the litellm container. |
 | services.litellm.preStopDelaySeconds | int | `45` | Seconds to sleep before SIGTERM to allow load balancer deregistration. |
