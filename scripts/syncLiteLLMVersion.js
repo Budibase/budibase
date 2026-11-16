@@ -41,10 +41,10 @@ function main() {
 
   const imageTag = `v${version}`
 
-  const dockerHubImagePattern =
-    /image:\s*docker\.io\/litellm\/litellm:[^\s\n]+/
-  const dockerHubImageReplacement =
-    `image: docker.io/litellm/litellm:${imageTag}`
+  const liteLLMImagePattern =
+    /image:\s*(?:docker\.io\/litellm\/litellm|ghcr\.io\/berriai\/litellm):[^\s\n]+/
+  const liteLLMImageReplacement =
+    `image: ghcr.io/berriai/litellm:${imageTag}`
 
   const updates = [
     {
@@ -62,8 +62,8 @@ function main() {
       update: content =>
         replaceRequired(
           content,
-          dockerHubImagePattern,
-          dockerHubImageReplacement,
+          liteLLMImagePattern,
+          liteLLMImageReplacement,
           "hosting/docker-compose.yaml"
         ),
     },
@@ -72,8 +72,8 @@ function main() {
       update: content =>
         replaceRequired(
           content,
-          dockerHubImagePattern,
-          dockerHubImageReplacement,
+          liteLLMImagePattern,
+          liteLLMImageReplacement,
           "hosting/docker-compose.build.yaml"
         ),
     },
@@ -82,8 +82,8 @@ function main() {
       update: content =>
         replaceRequired(
           content,
-          dockerHubImagePattern,
-          dockerHubImageReplacement,
+          liteLLMImagePattern,
+          liteLLMImageReplacement,
           "hosting/docker-compose.dev.yaml"
         ),
     },
