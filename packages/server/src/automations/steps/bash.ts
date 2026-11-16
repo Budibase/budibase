@@ -53,6 +53,107 @@ const parseArgs = (args: unknown) => {
   throw new Error(ARGS_VALIDATION_ERROR)
 }
 
+type WrapperResult =
+  | { kind: "script"; index: number }
+  | { kind: "nested"; index: number }
+  | { kind: "none" }
+
+type WrapperParser = (args: string[]) => WrapperResult
+
+interface InterpreterSpec {
+  matches: (executable: string) => boolean
+  codeInNextArg: (arg: string) => boolean
+  codeAttached: (arg: string) => boolean
+}
+
+const parseEnvArgs: WrapperParser = args => {
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index]
+    if (arg === "-S") {
+      return { kind: "script", index: index + 1 }
+    }
+    if (arg.startsWith("-S") && arg.length > 2) {
+      return { kind: "script", index }
+    }
+    if (["-u", "--unset", "-C", "--chdir"].includes(arg)) {
+      index++
+      continue
+    }
+    if (
+      arg === "--" ||
+      arg.startsWith("-") ||
+      /^[A-Za-z_][A-Za-z_0-9]*=/.test(arg)
+    ) {
+      continue
+    }
+    return { kind: "nested", index }
+  }
+  return { kind: "none" }
+}
+
+const parseTimeoutArgs: WrapperParser = args => {
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index]
+    if (["-s", "--signal", "-k", "--kill-after"].includes(arg)) {
+      index++
+      continue
+    }
+    if (arg.startsWith("-")) {
+      continue
+    }
+    if (index + 1 < args.length) {
+      return { kind: "nested", index: index + 1 }
+    }
+    return { kind: "none" }
+  }
+  return { kind: "none" }
+}
+
+const WRAPPERS = new Map<string, WrapperParser>([
+  ["env", parseEnvArgs],
+  ["timeout", parseTimeoutArgs],
+])
+
+const INTERPRETERS: InterpreterSpec[] = [
+  {
+    matches: executable =>
+      ["bash", "sh", "dash", "zsh", "ksh"].includes(executable),
+    codeInNextArg: arg => /^-[a-zA-Z]*c$/.test(arg),
+    codeAttached: arg => /^-[a-zA-Z]*c.+/.test(arg),
+  },
+  {
+    matches: executable => /^python(?:\d+(?:\.\d+)?)?$/.test(executable),
+    codeInNextArg: arg => arg === "-c",
+    codeAttached: arg => /^-[a-zA-Z]*c.+/.test(arg),
+  },
+  {
+    matches: executable => ["node", "nodejs"].includes(executable),
+    codeInNextArg: arg => ["-e", "--eval", "-p", "--print"].includes(arg),
+    codeAttached: arg => /^-[ep].+/.test(arg) || /^--(?:eval|print)=/.test(arg),
+  },
+]
+
+const findInlineCode = ({
+  spec,
+  args,
+}: {
+  spec: InterpreterSpec
+  args: string[]
+}): number => {
+  for (const [index, arg] of args.entries()) {
+    if (arg === "--") {
+      return -1
+    }
+    if (spec.codeInNextArg(arg)) {
+      return index + 1
+    }
+    if (spec.codeAttached(arg)) {
+      return index
+    }
+  }
+  return -1
+}
+
 const scriptArgumentIndex = ({
   command,
   args,
@@ -61,95 +162,20 @@ const scriptArgumentIndex = ({
   args: string[]
 }): number => {
   const executable = path.basename(command).toLowerCase()
-
-  if (executable === "env") {
-    for (let index = 0; index < args.length; index++) {
-      const arg = args[index]
-      if (arg === "-S") {
-        return index + 1
-      }
-      if (arg.startsWith("-S") && arg.length > 2) {
-        return index
-      }
-      if (["-u", "--unset", "-C", "--chdir"].includes(arg)) {
-        index++
-        continue
-      }
-      if (
-        arg === "--" ||
-        arg.startsWith("-") ||
-        /^[A-Za-z_][A-Za-z_0-9]*=/.test(arg)
-      ) {
-        continue
-      }
-      const nestedIndex = scriptArgumentIndex({
-        command: arg,
-        args: args.slice(index + 1),
-      })
-      return nestedIndex < 0 ? -1 : index + 1 + nestedIndex
+  const wrapper = WRAPPERS.get(executable)
+  if (wrapper) {
+    const result = wrapper(args)
+    if (result.kind !== "nested") {
+      return result.kind === "script" ? result.index : -1
     }
-
-    return -1
+    const nestedIndex = scriptArgumentIndex({
+      command: args[result.index],
+      args: args.slice(result.index + 1),
+    })
+    return nestedIndex < 0 ? -1 : result.index + 1 + nestedIndex
   }
-
-  if (executable === "timeout") {
-    for (let index = 0; index < args.length; index++) {
-      const arg = args[index]
-      if (["-s", "--signal", "-k", "--kill-after"].includes(arg)) {
-        index++
-        continue
-      }
-      if (arg.startsWith("-")) {
-        continue
-      }
-      if (index + 1 < args.length) {
-        const nestedIndex = scriptArgumentIndex({
-          command: args[index + 1],
-          args: args.slice(index + 2),
-        })
-        return nestedIndex < 0 ? -1 : index + 2 + nestedIndex
-      }
-      return -1
-    }
-
-    return -1
-  }
-
-  const isShell = ["bash", "sh", "dash", "zsh", "ksh"].includes(executable)
-  const isPython = /^python(?:\d+(?:\.\d+)?)?$/.test(executable)
-  const isNode = ["node", "nodejs"].includes(executable)
-
-  if (!isShell && !isPython && !isNode) {
-    return -1
-  }
-
-  for (const [index, arg] of args.entries()) {
-    if (arg === "--") {
-      return -1
-    }
-
-    if (isShell && /^-[a-zA-Z]*c$/.test(arg)) {
-      return index + 1
-    }
-
-    if (isPython && arg === "-c") {
-      return index + 1
-    }
-
-    if (isNode && ["-e", "--eval", "-p", "--print"].includes(arg)) {
-      return index + 1
-    }
-
-    if ((isShell || isPython) && /^-[a-zA-Z]*c.+/.test(arg)) {
-      return index
-    }
-
-    if (isNode && (/^-[ep].+/.test(arg) || /^--(?:eval|print)=/.test(arg))) {
-      return index
-    }
-  }
-
-  return -1
+  const spec = INTERPRETERS.find(spec => spec.matches(executable))
+  return spec ? findInlineCode({ spec, args }) : -1
 }
 
 const processArgs = ({
