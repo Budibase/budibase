@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import GoogleLogo from "./_logos/Google.svelte"
   import { isEqual, cloneDeep } from "lodash/fp"
   import {
@@ -19,66 +19,83 @@
   import { API } from "@/api"
   import { organisation } from "@/stores/portal/organisation"
   import { admin } from "@/stores/portal/admin"
+  import {
+    ConfigType,
+    isConfig,
+    isGoogleConfig,
+    type GoogleConfig,
+    type GoogleInnerConfig,
+  } from "@budibase/types"
 
-  const ConfigTypes = {
-    Google: "google",
+  interface EditableGoogleConfig extends GoogleInnerConfig {
+    sheetsURL?: string
+  }
+
+  interface EditableGoogleProvider extends Omit<GoogleConfig, "config"> {
+    config: EditableGoogleConfig
+  }
+
+  interface GoogleConfigField {
+    name: "clientID" | "clientSecret" | "callbackURL" | "sheetsURL"
+    label: string
+    readonly?: boolean
+    tooltip?: string
+    placeholder?: string
+    copyButton?: boolean
   }
 
   // Some older google configs contain a manually specified value - retain the functionality to edit the field
   // When there is no value or we are in the cloud - prohibit editing the field, must use platform url to change
-  $: googleCallbackUrl = undefined
-  $: googleCallbackReadonly = $admin.cloud || !googleCallbackUrl
+  let googleCallbackUrl = $state<string | undefined>()
+  const googleCallbackReadonly = $derived($admin.cloud || !googleCallbackUrl)
 
   // Indicate to user that callback is based on platform url
   // If there is an existing value, indicate that it may be removed to return to default behaviour
-  $: googleCallbackTooltip = $admin.cloud
-    ? null
-    : googleCallbackReadonly
-      ? "Visit the organisation page to update the platform URL"
-      : "Leave blank to use the default callback URL"
-  $: googleSheetsCallbackUrl = `${$organisation.platformUrl}/api/global/auth/datasource/google/callback`
-
-  $: GoogleConfigFields = {
-    Google: [
-      { name: "clientID", label: "Client ID" },
-      { name: "clientSecret", label: "Client secret" },
-      {
-        name: "callbackURL",
-        label: "Callback URL",
-        readonly: googleCallbackReadonly,
-        tooltip: googleCallbackTooltip,
-        placeholder: $organisation.googleCallbackUrl,
-        copyButton: true,
-      },
-      {
-        name: "sheetsURL",
-        label: "Sheets URL",
-        readonly: googleCallbackReadonly,
-        tooltip: googleCallbackTooltip,
-        placeholder: googleSheetsCallbackUrl,
-        copyButton: true,
-      },
-    ],
-  }
-
-  let google
-
-  const providers = { google }
-
-  // control the state of the save button depending on whether form has changed
-  let originalGoogleDoc
-  let googleSaveButtonDisabled
-  $: {
-    isEqual(providers.google?.config, originalGoogleDoc?.config)
-      ? (googleSaveButtonDisabled = true)
-      : (googleSaveButtonDisabled = false)
-  }
-
-  $: googleComplete = !!(
-    providers.google?.config?.clientID && providers.google?.config?.clientSecret
+  const googleCallbackTooltip = $derived(
+    $admin.cloud
+      ? undefined
+      : googleCallbackReadonly
+        ? "Visit the organisation page to update the platform URL"
+        : "Leave blank to use the default callback URL"
+  )
+  const googleSheetsCallbackUrl = $derived(
+    `${$organisation.platformUrl}/api/global/auth/datasource/google/callback`
   )
 
-  async function saveConfig(config) {
+  const googleConfigFields = $derived<GoogleConfigField[]>([
+    { name: "clientID", label: "Client ID" },
+    { name: "clientSecret", label: "Client secret" },
+    {
+      name: "callbackURL",
+      label: "Callback URL",
+      readonly: googleCallbackReadonly,
+      tooltip: googleCallbackTooltip,
+      placeholder: $organisation.googleCallbackUrl,
+      copyButton: true,
+    },
+    {
+      name: "sheetsURL",
+      label: "Sheets URL",
+      readonly: googleCallbackReadonly,
+      tooltip: googleCallbackTooltip,
+      placeholder: googleSheetsCallbackUrl,
+      copyButton: true,
+    },
+  ])
+
+  let googleProvider = $state<EditableGoogleProvider>()
+
+  // control the state of the save button depending on whether form has changed
+  let originalGoogleDoc = $state<EditableGoogleProvider>()
+  const googleSaveButtonDisabled = $derived(
+    isEqual(googleProvider?.config, originalGoogleDoc?.config)
+  )
+
+  const googleComplete = $derived(
+    !!(googleProvider?.config.clientID && googleProvider.config.clientSecret)
+  )
+
+  async function saveConfig(config: GoogleConfig) {
     // Delete unsupported fields
     delete config.createdAt
     delete config.updatedAt
@@ -88,28 +105,33 @@
   async function saveGoogle() {
     if (!googleComplete) {
       notifications.error(
-        `Please fill in all required ${ConfigTypes.Google} fields`
+        `Please fill in all required ${ConfigType.GOOGLE} fields`
       )
       return
     }
 
-    const google = providers.google
+    const google = googleProvider
+    if (!google) return
 
     try {
       const res = await saveConfig(google)
-      providers[res.type]._rev = res._rev
-      providers[res.type]._id = res._id
+      google._rev = res._rev
+      google._id = res._id
       notifications.success(`Settings saved`)
-    } catch (e) {
-      notifications.error(e.message)
+    } catch (error) {
+      notifications.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to save Google OAuth config"
+      )
       return
     }
 
-    googleSaveButtonDisabled = true
-    originalGoogleDoc = cloneDeep(providers.google)
+    originalGoogleDoc = cloneDeep(googleProvider)
   }
 
-  const copyToClipboard = async value => {
+  const copyToClipboard = async (value?: string) => {
+    if (!value) return
     await Helpers.copyToClipboard(value)
     notifications.success("Copied")
   }
@@ -124,31 +146,34 @@
     // Fetch Google config
     let googleDoc
     try {
-      googleDoc = await API.getConfig(ConfigTypes.Google)
+      googleDoc = await API.getConfig(ConfigType.GOOGLE)
     } catch (error) {
       notifications.error("Error fetching Google OAuth config")
     }
-    if (!googleDoc?._id) {
-      providers.google = {
-        type: ConfigTypes.Google,
-        config: { activated: false },
+    if (!googleDoc || !isConfig(googleDoc) || !isGoogleConfig(googleDoc)) {
+      googleProvider = {
+        type: ConfigType.GOOGLE,
+        config: {
+          activated: false,
+          clientID: "",
+          clientSecret: "",
+        },
       }
-      originalGoogleDoc = cloneDeep(googleDoc)
     } else {
       // Default activated to true for older configs
       if (googleDoc.config.activated === undefined) {
         googleDoc.config.activated = true
       }
       originalGoogleDoc = cloneDeep(googleDoc)
-      providers.google = googleDoc
+      googleProvider = googleDoc
     }
-    googleCallbackUrl = providers?.google?.config?.callbackURL
+    googleCallbackUrl = googleProvider.config.callbackURL
   })
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-{#if providers.google}
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+{#if googleProvider}
   <Divider />
   <Layout gap="XS" noPadding>
     <Heading size="S">
@@ -167,13 +192,13 @@
     </Body>
   </Layout>
   <Layout gap="XS" noPadding>
-    {#each GoogleConfigFields.Google as field}
+    {#each googleConfigFields as field}
       <div class="form-row">
         <Label size="L" tooltip={field.tooltip}>{field.label}</Label>
         <div class="inputContainer">
           <div class="input">
             <Input
-              bind:value={providers.google.config[field.name]}
+              bind:value={googleProvider.config[field.name]}
               readonly={field.readonly}
               placeholder={field.placeholder}
             />
@@ -181,7 +206,7 @@
           {#if field.copyButton}
             <div
               class="copy"
-              on:click={() => copyToClipboard(field.placeholder)}
+              onclick={() => copyToClipboard(field.placeholder)}
             >
               <Icon size="S" name="copy" />
             </div>
@@ -191,7 +216,7 @@
     {/each}
     <div class="form-row">
       <Label size="L">Activated</Label>
-      <Toggle text="" bind:value={providers.google.config.activated} />
+      <Toggle text="" bind:value={googleProvider.config.activated} />
     </div>
   </Layout>
   <div>

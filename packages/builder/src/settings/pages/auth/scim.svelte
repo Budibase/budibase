@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Button,
     Heading,
@@ -18,16 +18,28 @@
   import { API } from "@/api"
   import { organisation } from "@/stores/portal/organisation"
   import { auth } from "@/stores/portal/auth"
+  import {
+    ConfigType,
+    isConfig,
+    isSCIMConfig,
+    type SCIMDisableAction,
+    type SCIMInnerConfig,
+  } from "@budibase/types"
+  import type { ModalAPI } from "@budibase/bbui"
 
-  const configType = "scim"
+  interface DisableActionOption {
+    label: string
+    value: SCIMDisableAction
+    subtitle: string
+  }
 
-  let scimEnabled = false
-  let savedScimEnabled = false
-  let apiKey = null
-  let disableScimModal
-  let selectedAction = "remove"
+  let scimEnabled = $state(false)
+  let savedScimEnabled = $state(false)
+  let apiKey = $state<string | undefined>()
+  let disableScimModal: ModalAPI
+  let selectedAction = $state<SCIMDisableAction>("remove")
 
-  const disableActions = [
+  const disableActions: DisableActionOption[] = [
     {
       label: "Remove SCIM users",
       value: "remove",
@@ -49,17 +61,19 @@
     await persistSCIMConfig()
   }
 
-  async function persistSCIMConfig(disableAction) {
+  async function persistSCIMConfig(disableAction?: SCIMDisableAction) {
     try {
-      const config = { enabled: scimEnabled }
+      const config: SCIMInnerConfig = { enabled: scimEnabled }
       if (disableAction) {
         config.disableAction = disableAction
       }
-      await API.saveConfig({ type: configType, config })
+      await API.saveConfig({ type: ConfigType.SCIM, config })
       savedScimEnabled = scimEnabled
       notifications.success(`Settings saved`)
-    } catch (e) {
-      notifications.error(e.message)
+    } catch (error) {
+      notifications.error(
+        error instanceof Error ? error.message : "Unable to save SCIM config"
+      )
     }
   }
 
@@ -73,13 +87,16 @@
 
   async function fetchConfig() {
     try {
-      const scimConfig = await API.getConfig(configType)
-      scimEnabled = scimConfig?.config?.enabled
+      const scimConfig = await API.getConfig(ConfigType.SCIM)
+      scimEnabled =
+        isConfig(scimConfig) && isSCIMConfig(scimConfig)
+          ? scimConfig.config.enabled
+          : false
       savedScimEnabled = scimEnabled
     } catch (error) {
       console.error(error)
       notifications.error(
-        `Error fetching SCIM config - ${error?.message || "unknown error"}`
+        `Error fetching SCIM config - ${error instanceof Error ? error.message : "unknown error"}`
       )
     }
   }
@@ -87,9 +104,9 @@
   async function fetchAPIKey() {
     try {
       apiKey = await auth.fetchAPIKey()
-    } catch (err) {
+    } catch (error) {
       notifications.error(
-        `Unable to fetch API key - ${err?.message || "unknown error"}`
+        `Unable to fetch API key - ${error instanceof Error ? error.message : "unknown error"}`
       )
     }
   }
@@ -98,14 +115,15 @@
     await Promise.all([fetchConfig(), fetchAPIKey()])
   })
 
-  const copyToClipboard = async value => {
+  const copyToClipboard = async (value?: string) => {
+    if (!value) return
     await Helpers.copyToClipboard(value)
     notifications.success("Copied")
   }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <Layout gap="XS" noPadding>
   <div class="provider-title">
     <Heading size="S">SCIM</Heading>
@@ -123,7 +141,7 @@
           <div class="input">
             <Input value={setting.value} readonly={true} />
           </div>
-          <div class="copy" on:click={() => copyToClipboard(setting.value)}>
+          <div class="copy" onclick={() => copyToClipboard(setting.value)}>
             <Icon size="S" name="copy" />
           </div>
         </div>
