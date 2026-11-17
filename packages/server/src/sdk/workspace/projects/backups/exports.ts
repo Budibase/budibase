@@ -40,10 +40,12 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
   PROJECT_PERMISSIONS_FILE,
+  PROJECT_REST_TEMPLATES_FILE,
 } from "./constants"
 import { exportProjectData } from "./data"
 import { readProjectPackageFiles } from "./files"
 import { exportProjectPermissions } from "./permissions"
+import { exportProjectRestTemplates } from "./restTemplates"
 import { doWithProjectAssignmentsLock } from "../lock"
 import {
   fetchAssignedProjectDocs,
@@ -401,6 +403,11 @@ export async function exportProject(
         doc,
       })),
     })
+    const restTemplates = await exportProjectRestTemplates({
+      datasources: exportedDocs.filter(
+        doc => typeByResourceId.get(doc._id!) === ResourceType.DATASOURCE
+      ) as Datasource[],
+    })
 
     return {
       agents,
@@ -411,6 +418,7 @@ export async function exportProject(
       graph,
       project,
       permissions,
+      restTemplates,
       projectDependencies,
       typeByResourceId,
       workspaceApps,
@@ -425,6 +433,7 @@ export async function exportProject(
     graph,
     project,
     permissions,
+    restTemplates,
     projectDependencies,
     typeByResourceId,
     workspaceApps,
@@ -514,6 +523,12 @@ export async function exportProject(
     }
     await writeJsonFile(join(tmpPath, PROJECT_MANIFEST_FILE), manifest)
     await writeJsonFile(join(tmpPath, PROJECT_PERMISSIONS_FILE), permissions)
+    if (restTemplates.length) {
+      await writeJsonFile(
+        join(tmpPath, PROJECT_REST_TEMPLATES_FILE),
+        restTemplates
+      )
+    }
     await writeJsonFile(
       join(tmpPath, PROJECT_FILE),
       sanitiseProjectForExport(project)
