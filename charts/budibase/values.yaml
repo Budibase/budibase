@@ -1,3 +1,7 @@
+reloader:
+  # -- Enable Stakater Reloader for Deployments in this chart.
+  enabled: false
+
 # -- Passed to all pods created by this chart. Should not ordinarily need to be changed.
 imagePullSecrets: []
 
@@ -87,6 +91,12 @@ tolerations: []
 affinity: {}
 
 globals:
+  # -- Use an externally managed Secret instead of creating a chart-owned Secret.
+  existingSecret: ""
+  # -- Override Secret keys, for example:
+  # secretKeyMapping:
+  #   internalApiKey: internal_api_key
+  secretKeyMapping: {}
   # -- The version of Budibase to deploy. Defaults to what's specified by {{ .Chart.AppVersion }}.
   # Ends up being used as the image version tag for the apps, proxy, and worker images.
   appVersion: ""
