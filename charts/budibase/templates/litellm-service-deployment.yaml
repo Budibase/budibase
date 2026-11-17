@@ -15,6 +15,7 @@ spec:
     metadata:
       annotations:
         ad.datadoghq.com/litellm.logs: '[{"source":"python"}]'
+        checksum/litellm-config: {{ .Values.services.litellm.config | sha256sum }}
       labels:
         io.kompose.service: litellm-service
     spec:
@@ -53,6 +54,10 @@ spec:
           {{- end }}
           {{- if .Values.services.litellm.extraEnv }}
             {{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
+          {{- end }}
+          {{- if .Values.services.litellm.migrationJob.enabled }}
+            - name: DISABLE_SCHEMA_UPDATE
+              value: "true"
           {{- end }}
           volumeMounts:
             - name: litellm-config

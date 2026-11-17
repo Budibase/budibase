@@ -155,12 +155,12 @@
   let highlightedRowId: string | null = null
 
   let hasMounted = false
-  let projectsRequestedForWorkspace = ""
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
   $: canEditProjectNotes = sdk.users.hasBuilderPermissions($auth.user)
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: canAssignProject = projectsEnabled && $projectsStore.length > 0
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: selectedProjectResource = projectAssignmentRow
     ? {
@@ -747,7 +747,7 @@
         {
           icon: "stack",
           name: "Assign projects",
-          visible: projectsEnabled,
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
         ...(project ? [removeFromProject] : []),
@@ -802,7 +802,7 @@
         {
           icon: "stack",
           name: "Assign projects",
-          visible: projectsEnabled,
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
         ...(project ? [removeFromProject] : []),
@@ -838,7 +838,7 @@
         {
           icon: "stack",
           name: "Assign projects",
-          visible: projectsEnabled,
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
         ...(project ? [removeFromProject] : []),
@@ -869,7 +869,7 @@
         {
           icon: "stack",
           name: "Assign projects",
-          visible: projectsEnabled,
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
         ...(project ? [removeFromProject] : []),
@@ -941,18 +941,6 @@
     if (row.type === "table") {
       goto(url(`../data/table/${row.id}`))
       return
-    }
-  }
-
-  const loadProjects = async (workspaceId: string) => {
-    try {
-      projectsRequestedForWorkspace = workspaceId
-      await projectsStore.fetch(workspaceId)
-    } catch (error) {
-      projectsRequestedForWorkspace = ""
-      if ($workspaceStore.appId === workspaceId && projectsEnabled) {
-        notifications.error(getErrorMessage(error) || "Unable to load projects")
-      }
     }
   }
 
@@ -1049,15 +1037,6 @@
   $: showBudibaseAIMetric =
     budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
-  $: if (
-    hasMounted &&
-    projectsEnabled &&
-    $workspaceStore.appId &&
-    projectsRequestedForWorkspace !== $workspaceStore.appId
-  ) {
-    loadProjects($workspaceStore.appId)
-  }
-
   $: if (hasMounted) {
     writeUrlState({
       searchTerm,
@@ -1143,7 +1122,7 @@
     })
 
     await agentsStore.fetchAgents()
-    if (setupRequest && projectsEnabled) {
+    if (setupRequest && projectsEnabled && projectsStore.hasFetched()) {
       await openProjectSetup({ refresh: false })
     }
   })
