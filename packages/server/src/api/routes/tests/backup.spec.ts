@@ -1,4 +1,4 @@
-import { constants, context, events } from "@budibase/backend-core"
+import { constants, context, events, objectStore } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DocumentType, Workspace } from "@budibase/types"
 import path from "path"
@@ -28,6 +28,8 @@ describe("/backups", () => {
 
   describe("/api/backups/export", () => {
     let attachmentFileNames: string[] = []
+    const knowledgeFilePath =
+      "ai/knowledge-bases/kb_test/files/kb_file_test/knowledge.txt"
 
     async function checkExportContent(
       buffer: Buffer,
@@ -49,6 +51,7 @@ describe("/backups", () => {
         "budibase-client.js",
         "db.txt",
         "manifest.json",
+        knowledgeFilePath,
       ].map(encodeIfNeeded)
       if (opts.includeRows) {
         expectedFiles.push(
@@ -65,6 +68,12 @@ describe("/backups", () => {
     }
 
     beforeEach(async () => {
+      await objectStore.upload({
+        bucket: objectStore.ObjectStoreBuckets.APPS,
+        filename: `${config.getDevWorkspaceId()}/${knowledgeFilePath}`,
+        body: Buffer.from("workspace knowledge"),
+        type: "text/plain",
+      })
       const table = await config.api.table.save(
         setup.structures.basicTableWithAttachmentField()
       )

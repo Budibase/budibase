@@ -151,7 +151,8 @@ export const uploadKnowledgeBaseFile = async (
 }
 
 export const resetKnowledgeBaseStore = async (
-  knowledgeBase: GeminiKnowledgeBase
+  knowledgeBase: GeminiKnowledgeBase,
+  { deleteExistingStore = true }: { deleteExistingStore?: boolean } = {}
 ): Promise<void> => {
   const db = context.getWorkspaceDB()
   const workspaceId = context.getOrThrowWorkspaceId()
@@ -169,17 +170,19 @@ export const resetKnowledgeBaseStore = async (
   const { rev } = await db.put(updated)
   updated._rev = rev
 
-  await deleteGeminiVectorStore(knowledgeBase.config.googleFileStoreId).catch(
-    (error: any) => {
-      if (error?.status !== 403 && error?.status !== 404) {
-        console.error("Failed to delete old Gemini vector store", {
-          vectorStoreId: knowledgeBase.config.googleFileStoreId,
-          error,
-        })
-        throw error
+  if (deleteExistingStore) {
+    await deleteGeminiVectorStore(knowledgeBase.config.googleFileStoreId).catch(
+      (error: any) => {
+        if (error?.status !== 403 && error?.status !== 404) {
+          console.error("Failed to delete old Gemini vector store", {
+            vectorStoreId: knowledgeBase.config.googleFileStoreId,
+            error,
+          })
+          throw error
+        }
       }
-    }
-  )
+    )
+  }
 
   await syncKeyVectorStores()
 

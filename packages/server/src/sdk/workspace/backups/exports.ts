@@ -111,6 +111,28 @@ export const exportWorkspace: ExportWorkspaceFn = async (
       toExclude
     )
 
+    const knowledgeObjectStorePath = `${workspaceId}/ai/knowledge-bases/`
+    const knowledgeTmpPath = await objectStore.retrieveDirectory(
+      ObjectStoreBuckets.APPS,
+      knowledgeObjectStorePath
+    )
+    try {
+      const exportKnowledgePath = join(tmpPath, "ai", "knowledge-bases")
+      await fsp.mkdir(exportKnowledgePath, { recursive: true })
+      const downloadedKnowledgePath = join(
+        knowledgeTmpPath,
+        knowledgeObjectStorePath
+      )
+      if (fs.existsSync(downloadedKnowledgePath)) {
+        await fsp.cp(downloadedKnowledgePath, exportKnowledgePath, {
+          recursive: true,
+          force: true,
+        })
+      }
+    } finally {
+      await fsp.rm(knowledgeTmpPath, { recursive: true, force: true })
+    }
+
     span.addTags({ prodAppId: prodWorkspaceId, tmpPath })
 
     const downloadedPath = join(tmpPath, workspacePath)
@@ -118,8 +140,14 @@ export const exportWorkspace: ExportWorkspaceFn = async (
       const allFiles = await fsp.readdir(downloadedPath)
       for (let file of allFiles) {
         const path = join(downloadedPath, file)
+        const destination = join(downloadedPath, "..", file)
         // move out of workspace directory, simplify structure
-        await fsp.rename(path, join(downloadedPath, "..", file))
+        if (fs.existsSync(destination)) {
+          await fsp.cp(path, destination, { recursive: true, force: true })
+          await fsp.rm(path, { recursive: true, force: true })
+        } else {
+          await fsp.rename(path, destination)
+        }
       }
       // remove the old workspace directory created by object export
       await fsp.rmdir(downloadedPath)

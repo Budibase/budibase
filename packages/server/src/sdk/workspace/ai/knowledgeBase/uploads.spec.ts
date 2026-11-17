@@ -265,6 +265,20 @@ describe("resetKnowledgeBaseStore", () => {
     expect(mockSyncKeyVectorStores).toHaveBeenCalled()
   })
 
+  it("preserves the source vector store when rebuilding an imported knowledge base", async () => {
+    const db = { put: jest.fn().mockResolvedValue({ rev: "2-abc" }) }
+    mockGetWorkspaceDB.mockReturnValue(db)
+    mockListKnowledgeBaseFiles.mockResolvedValue([])
+
+    await resetKnowledgeBaseStore(knowledgeBase as any, {
+      deleteExistingStore: false,
+    })
+
+    expect(mockCreateGeminiFileStore).toHaveBeenCalledWith("Support Docs")
+    expect(mockDeleteGeminiVectorStore).not.toHaveBeenCalled()
+    expect(mockSyncKeyVectorStores).toHaveBeenCalled()
+  })
+
   it("swallows 404 from deleteGeminiVectorStore and continues", async () => {
     const db = { put: jest.fn().mockResolvedValue({ rev: "2-abc" }) }
     mockGetWorkspaceDB.mockReturnValue(db)
