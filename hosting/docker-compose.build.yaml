@@ -105,6 +105,7 @@ services:
       LITELLM_REASONING_AUTO_SUMMARY: "true"
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     command: ["--config", "/app/config.yaml"]
     depends_on:
       - litellm-db

@@ -3,6 +3,13 @@ general_settings:
   store_prompts_in_spend_logs: true
   enable_mcp_registry: false
 
+credential_list:
+  - credential_name: budibase-gemini
+    credential_values:
+      api_key: os.environ/GEMINI_API_KEY
+    credential_info:
+      custom_llm_provider: gemini
+
 litellm_settings:
   drop_params: true
   extra_spend_tag_headers:
