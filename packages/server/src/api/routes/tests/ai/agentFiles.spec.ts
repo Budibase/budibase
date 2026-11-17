@@ -12,27 +12,37 @@ import {
   RestAuthType,
   SharePointScopeMode,
 } from "@budibase/types"
-import environment, { setEnv } from "../../../../environment"
+import environment from "../../../../environment"
 import sdk from "../../../../sdk"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
 import * as knowledgeSourceSyncQueue from "../../../../sdk/workspace/ai/rag/sources/knowledgeSourceSyncQueue"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
+const mockGuardGeminiFileSearchConfigured = jest.fn()
+
+jest.mock("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  >("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  return {
+    ...actual,
+    guardGeminiFileSearchConfigured: (...args: []) =>
+      mockGuardGeminiFileSearchConfigured(...args),
+  }
+})
+
 describe("agent files", () => {
   const config = new TestConfiguration()
-  let cleanup: ReturnType<typeof setEnv> | undefined
   let mockAgent: MockAgent
 
   beforeAll(() => {
-    cleanup = setEnv({ GEMINI_API_KEY: "test-gemini-key" })
     mockAgent = installHttpMocking()
   })
 
   afterAll(async () => {
     await resetHttpMocking()
     config.end()
-    cleanup?.()
   })
 
   beforeEach(async () => {
@@ -42,6 +52,8 @@ describe("agent files", () => {
     await config.newTenant()
     jest.restoreAllMocks()
     nock.cleanAll()
+    mockGuardGeminiFileSearchConfigured.mockReset()
+    mockGuardGeminiFileSearchConfigured.mockResolvedValue(undefined)
   })
 
   const fileBuffer = Buffer.from("Hello from Budibase")
