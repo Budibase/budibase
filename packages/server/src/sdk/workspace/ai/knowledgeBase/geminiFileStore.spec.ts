@@ -117,7 +117,13 @@ describe("geminiFileStore", () => {
       })
 
       expect(mockFetch).toHaveBeenCalledTimes(5)
-      for (const [, init] of mockFetch.mock.calls) {
+      for (const [url, init] of mockFetch.mock.calls) {
+        expect(String(url)).not.toContain("test-gemini-key")
+        expect(JSON.stringify(init?.headers)).not.toContain("test-gemini-key")
+        expect(init?.headers).toMatchObject({
+          "Content-Type": "application/json",
+          Authorization: "Bearer workspace-key",
+        })
         expect(String(init?.body)).not.toContain("api_key")
         expect(String(init?.body)).not.toContain("test-gemini-key")
         expect(String(init?.body)).toContain(
