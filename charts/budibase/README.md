@@ -212,13 +212,19 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.couchdb.port | int | `5984` |  |
 | services.dns | string | `"cluster.local"` | The DNS suffix to use for service discovery. You only need to change this if you've configured your cluster to use a different DNS suffix. |
 | services.litellm.bbaiKey | string | `""` | The Budibase AI virtual key (BBAI_LITELLM_KEY) used by agents. When set it is rendered onto both the app service and the automation worker. |
-| services.litellm.config | string | `"general_settings:\n  store_model_in_db: true\n  store_prompts_in_spend_logs: true\nlitellm_settings:\n  drop_params: true\n  extra_spend_tag_headers:\n    - \"x-litellm-tags\"\n  disable_add_user_agent_to_request_tags: true\n  num_retries: 3\n  retry_after: 5\n  retry_policy:\n    RateLimitErrorRetries: 4\n"` | Inline configuration passed to litellm as config.yaml. |
+| services.litellm.config | string | `"general_settings:\n  store_model_in_db: true\n  store_prompts_in_spend_logs: true\n  enable_mcp_registry: false\nlitellm_settings:\n  drop_params: true\n  extra_spend_tag_headers:\n    - \"x-litellm-tags\"\n  disable_add_user_agent_to_request_tags: true\n  num_retries: 3\n  retry_after: 5\n  retry_policy:\n    RateLimitErrorRetries: 4\n"` | Inline configuration passed to litellm as config.yaml. |
 | services.litellm.enabled | bool | `false` | Whether or not to deploy the litellm gateway. |
 | services.litellm.extraEnv | list | `[{"name":"LITELLM_REASONING_AUTO_SUMMARY","value":"true"}]` | Extra environment variables for the litellm container. Budibase uses LiteLLM virtual keys/models and requires database-backed proxy mode. If `general_settings.store_model_in_db: true` (default), set DATABASE_URL here. |
 | services.litellm.extraVolumeMounts | list | `[]` | Additional volumeMounts on the litellm container. |
 | services.litellm.extraVolumes | list | `[]` | Additional volumes on the litellm pod. |
-| services.litellm.image | string | `"ghcr.io/berriai/litellm:main-v1.83.10-stable"` | litellm image to use. |
+| services.litellm.image | string | `"ghcr.io/berriai/litellm:v1.109.1"` | litellm image to use. |
 | services.litellm.masterKey | string | `""` | The master key to use for litellm. |
+| services.litellm.migrationJob.activeDeadlineSeconds | int | `1800` | Wall-clock timeout for the complete migration Job. |
+| services.litellm.migrationJob.backoffLimit | int | `4` | Maximum number of retries after the initial migration attempt. |
+| services.litellm.migrationJob.enabled | bool | `true` | Run schema migrations once before installing or upgrading LiteLLM. Serving pods disable schema updates while this Job owns migrations. |
+| services.litellm.migrationJob.hookWeight | string | `"1"` | Helm hook ordering weight. |
+| services.litellm.migrationJob.resources | object | `{}` | Resources for the migration Job. |
+| services.litellm.migrationJob.ttlSecondsAfterFinished | int | `120` | Remove a completed migration Job after this many seconds. |
 | services.litellm.pdb | object | `{}` | PodDisruptionBudget settings for the litellm service. Requires podDisruptionBudget.enabled to be true. Set minAvailable to override the global podDisruptionBudget.minAvailable for this service. |
 | services.litellm.port | int | `4000` | Port exposed by the litellm container. |
 | services.litellm.preStopDelaySeconds | int | `45` | Seconds to sleep before SIGTERM to allow load balancer deregistration. |
