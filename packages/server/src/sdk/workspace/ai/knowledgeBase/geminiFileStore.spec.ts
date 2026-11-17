@@ -76,6 +76,17 @@ describe("geminiFileStore", () => {
     await expect(isGeminiFileSearchConfigured()).resolves.toBe(false)
   })
 
+  it("propagates unexpected LiteLLM credential lookup failures", async () => {
+    mockFetch.mockResolvedValue(
+      response({ ok: false, status: 500, text: "LiteLLM unavailable" })
+    )
+
+    await expect(isGeminiFileSearchConfigured()).rejects.toMatchObject({
+      message: "LiteLLM unavailable",
+      status: 500,
+    })
+  })
+
   it("does not send the Gemini API key in vector store requests", async () => {
     await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
       mockFetch

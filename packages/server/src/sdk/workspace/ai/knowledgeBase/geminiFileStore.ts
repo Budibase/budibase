@@ -130,17 +130,21 @@ const getCommonAuthHeaders = async () => {
 }
 
 export const isGeminiFileSearchConfigured = async () => {
-  try {
-    const response = await fetch(
-      `${environment.LITELLM_URL}/credentials/by_name/${GEMINI_CREDENTIAL_NAME}`,
-      {
-        headers: await getCommonAuthHeaders(),
-      }
-    )
-    return response.ok
-  } catch (_error) {
+  const response = await fetch(
+    `${environment.LITELLM_URL}/credentials/by_name/${GEMINI_CREDENTIAL_NAME}`,
+    {
+      headers: await getCommonAuthHeaders(),
+    }
+  )
+  if (response.status === 404) {
     return false
   }
+
+  await handleNotOkResponse({
+    response,
+    fallbackMessage: "Failed to check Gemini credential in LiteLLM",
+  })
+  return true
 }
 
 export const guardGeminiFileSearchConfigured = async () => {
