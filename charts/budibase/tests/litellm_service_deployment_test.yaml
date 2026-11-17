@@ -1,0 +1,25 @@
+suite: LiteLLM service deployment
+templates:
+  - templates/litellm-service-deployment.yaml
+tests:
+  - it: should propagate GEMINI_API_KEY when configured
+    set:
+      services.litellm.enabled: true
+      services.litellm.extraEnv:
+        - name: GEMINI_API_KEY
+          value: "gemini-test"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GEMINI_API_KEY
+            value: "gemini-test"
+
+  - it: should not render GEMINI_API_KEY when unset
+    set:
+      services.litellm.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GEMINI_API_KEY
