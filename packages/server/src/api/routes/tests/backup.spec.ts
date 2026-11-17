@@ -51,12 +51,15 @@ describe("/backups", () => {
         "budibase-client.js",
         "db.txt",
         "manifest.json",
-        knowledgeFilePath,
       ].map(encodeIfNeeded)
       if (opts.includeRows) {
+        expectedFiles.push(encodeIfNeeded(knowledgeFilePath))
         expectedFiles.push(
           ...attachmentFileNames.sort().map(f => `attachments/${f}`)
         )
+      } else {
+        expect(exportedFiles).not.toContain(knowledgeFilePath)
+        expect(exportedFiles).not.toContain(`${knowledgeFilePath}.enc`)
       }
 
       expect(exportedFiles).toEqual(expect.arrayContaining(expectedFiles))

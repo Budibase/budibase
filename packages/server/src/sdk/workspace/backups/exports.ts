@@ -103,6 +103,7 @@ export const exportWorkspace: ExportWorkspaceFn = async (
     const toExclude = [/\/\..+/]
     if (config?.excludeRows) {
       toExclude.push(/\/attachments\/.*/)
+      toExclude.push(/\/ai\/knowledge-bases\/.*/)
     }
 
     const tmpPath = await objectStore.retrieveDirectory(
@@ -111,26 +112,28 @@ export const exportWorkspace: ExportWorkspaceFn = async (
       toExclude
     )
 
-    const knowledgeObjectStorePath = `${workspaceId}/ai/knowledge-bases/`
-    const knowledgeTmpPath = await objectStore.retrieveDirectory(
-      ObjectStoreBuckets.APPS,
-      knowledgeObjectStorePath
-    )
-    try {
-      const exportKnowledgePath = join(tmpPath, "ai", "knowledge-bases")
-      await fsp.mkdir(exportKnowledgePath, { recursive: true })
-      const downloadedKnowledgePath = join(
-        knowledgeTmpPath,
+    if (!config?.excludeRows) {
+      const knowledgeObjectStorePath = `${workspaceId}/ai/knowledge-bases/`
+      const knowledgeTmpPath = await objectStore.retrieveDirectory(
+        ObjectStoreBuckets.APPS,
         knowledgeObjectStorePath
       )
-      if (fs.existsSync(downloadedKnowledgePath)) {
-        await fsp.cp(downloadedKnowledgePath, exportKnowledgePath, {
-          recursive: true,
-          force: true,
-        })
+      try {
+        const exportKnowledgePath = join(tmpPath, "ai", "knowledge-bases")
+        await fsp.mkdir(exportKnowledgePath, { recursive: true })
+        const downloadedKnowledgePath = join(
+          knowledgeTmpPath,
+          knowledgeObjectStorePath
+        )
+        if (fs.existsSync(downloadedKnowledgePath)) {
+          await fsp.cp(downloadedKnowledgePath, exportKnowledgePath, {
+            recursive: true,
+            force: true,
+          })
+        }
+      } finally {
+        await fsp.rm(knowledgeTmpPath, { recursive: true, force: true })
       }
-    } finally {
-      await fsp.rm(knowledgeTmpPath, { recursive: true, force: true })
     }
 
     span.addTags({ prodAppId: prodWorkspaceId, tmpPath })
