@@ -87,4 +87,48 @@ describe("parallelForeach", () => {
 
     expect(unhandledRejectionErrors).toHaveLength(0)
   })
+
+  it("should not start more tasks after one fails", async () => {
+    const started: number[] = []
+
+    await expect(
+      utils.parallelForeach(
+        [1, 2, 3, 4],
+        async item => {
+          started.push(item)
+          if (item === 1) {
+            throw new Error("Task failed")
+          }
+          await new Promise(resolve => setTimeout(resolve, 20))
+        },
+        2,
+        { stopOnError: true }
+      )
+    ).rejects.toThrow("Task failed")
+
+    await new Promise(resolve => setTimeout(resolve, 30))
+    expect(started).toEqual([1, 2])
+    expect(unhandledRejectionErrors).toHaveLength(0)
+  })
+
+  it("should continue processing by default after one task fails", async () => {
+    const started: number[] = []
+
+    await expect(
+      utils.parallelForeach(
+        [1, 2, 3, 4],
+        async item => {
+          started.push(item)
+          if (item === 1) {
+            throw new Error("Task failed")
+          }
+        },
+        2
+      )
+    ).rejects.toThrow("Task failed")
+
+    await new Promise(resolve => setTimeout(resolve, 10))
+    expect(started).toEqual([1, 2, 3, 4])
+    expect(unhandledRejectionErrors).toHaveLength(0)
+  })
 })
