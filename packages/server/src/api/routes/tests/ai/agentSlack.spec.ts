@@ -1390,7 +1390,7 @@ describe("agent slack integration provisioning", () => {
 
     it("queues file ingestion and subsequent Slack turns", async () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
-      mockedIsGeminiFileSearchConfigured.mockReturnValue(true)
+      mockedIsGeminiFileSearchConfigured.mockResolvedValue(true)
       await linkExternalUser("user-file")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       const content = "quarterly revenue is 42"
@@ -1582,7 +1582,7 @@ describe("agent slack integration provisioning", () => {
 
     it("rejects file turns when Gemini File Search is not enabled", async () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
-      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      mockedIsGeminiFileSearchConfigured.mockResolvedValue(false)
       await linkExternalUser("user-file-disabled")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       const response = await postSlackMessage({
@@ -1623,7 +1623,7 @@ describe("agent slack integration provisioning", () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
         allowConversationAttachments: false,
       })
-      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      mockedIsGeminiFileSearchConfigured.mockResolvedValue(false)
       await linkExternalUser("user-file-disabled-by-agent")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       const response = await postSlackMessage({

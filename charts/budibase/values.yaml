@@ -757,6 +757,20 @@ services:
       timeoutSeconds: 1
     # -- Resources for litellm pods.
     resources: {}
+    # -- Run schema migrations once before installing or upgrading LiteLLM.
+    # Serving pods disable schema updates while this Job owns migrations.
+    migrationJob:
+      enabled: true
+      # -- Maximum number of retries after the initial migration attempt.
+      backoffLimit: 4
+      # -- Wall-clock timeout for the complete migration Job.
+      activeDeadlineSeconds: 1800
+      # -- Remove a completed migration Job after this many seconds.
+      ttlSecondsAfterFinished: 120
+      # -- Helm hook ordering weight.
+      hookWeight: "1"
+      # -- Resources for the migration Job.
+      resources: {}
     # -- Extra environment variables for the litellm container.
     # Budibase uses LiteLLM virtual keys/models and requires database-backed proxy mode.
     # If `general_settings.store_model_in_db: true` (default), set DATABASE_URL here.
@@ -782,11 +796,20 @@ services:
     # -- Optional password for LiteLLM Admin UI login.
     # If not set, LiteLLM uses its built-in defaults.
     uiPassword: ""
-    # -- Inline configuration passed to litellm as config.yaml.
+    # -- Inline configuration passed to litellm as config.yaml. Overriding this
+    # value replaces the entire config; retain the `budibase-gemini` entry in
+    # `credential_list` or Gemini file search will not work.
     config: |
       general_settings:
         store_model_in_db: true
         store_prompts_in_spend_logs: true
+        enable_mcp_registry: false
+      credential_list:
+        - credential_name: budibase-gemini
+          credential_values:
+            api_key: os.environ/GEMINI_API_KEY
+          credential_info:
+            custom_llm_provider: gemini
       litellm_settings:
         drop_params: true
         extra_spend_tag_headers:

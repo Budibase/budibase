@@ -13,6 +13,7 @@
   import LogsSessionList from "./LogComponents/LogsSessionList.svelte"
   import { formatLogDateForApi, formatTime } from "./LogComponents/utils"
   import { notifications } from "@budibase/bbui"
+  import download from "downloadjs"
 
   const AGENT_LOG_SESSION_LIMIT = 75
 
@@ -22,6 +23,7 @@
   let expandedStepId = $state<string | null>(null)
   let expandedStepDetail = $state<AgentLogRequestDetail | null>(null)
   let expandedStepLoading = $state(false)
+  let downloadingSession = $state(false)
   let hasMore = $state(false)
   let nextBookmark = $state<string | undefined>(undefined)
 
@@ -158,7 +160,11 @@
     expandedStepDetail = null
 
     try {
-      const detail = await API.fetchAgentLogDetail(agentId, entry.requestId)
+      const detail = await API.fetchAgentLogDetail({
+        agentId,
+        sessionId: entry.sessionId,
+        requestId: entry.requestId,
+      })
       if (expandedStepId === entry.requestId) {
         expandedStepDetail = detail
       }
@@ -238,6 +244,34 @@
     await loadStepDetail(entry)
   }
 
+  async function downloadSession(session: AgentLogSession) {
+    const agentId = $selectedAgent?._id
+    if (!agentId || downloadingSession) return
+
+    downloadingSession = true
+    try {
+      const exportData = await API.exportAgentLogSession(
+        agentId,
+        session.sessionId,
+        session.environment
+      )
+      if (!exportData) {
+        throw new Error("Session logs not found")
+      }
+      const data = JSON.stringify(exportData, null, 2)
+      download(
+        new Blob([data], { type: "application/json" }),
+        `agent-session-${session.sessionId}.json`,
+        "application/json"
+      )
+    } catch (error) {
+      console.error("Failed to download session logs", error)
+      notifications.error("Failed to download session logs")
+    } finally {
+      downloadingSession = false
+    }
+  }
+
   $effect(() => {
     statusFilter
     dateRange
@@ -275,7 +309,9 @@
         {expandedStepId}
         {expandedStepDetail}
         {expandedStepLoading}
+        {downloadingSession}
         onToggleStep={toggleStep}
+        onDownloadSession={downloadSession}
       />
     </div>
   </div>

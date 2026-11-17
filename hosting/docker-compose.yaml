@@ -129,8 +129,6 @@ services:
   litellm-service:
     restart: unless-stopped
     image: ghcr.io/berriai/litellm:v1.109.1
-    ports:
-      - "${LITELLM_PORT:-4000}:4000"
     volumes:
       - ./litellm_config.yaml:/app/config.yaml
     environment:
@@ -139,6 +137,7 @@ services:
       LITELLM_REASONING_AUTO_SUMMARY: "true"
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     command: ["--config", "/app/config.yaml"]
     depends_on:
       - litellm-db
