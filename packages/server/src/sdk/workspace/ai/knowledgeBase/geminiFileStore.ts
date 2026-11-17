@@ -145,10 +145,7 @@ export const isGeminiFileSearchConfigured = async () => {
 
 export const guardGeminiFileSearchConfigured = async () => {
   if (!(await isGeminiFileSearchConfigured())) {
-    throw new HTTPError(
-      "Gemini File Search is not configured in LiteLLM",
-      400
-    )
+    throw new HTTPError("Gemini File Search is not configured in LiteLLM", 400)
   }
 }
 
