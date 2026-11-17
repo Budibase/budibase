@@ -3,9 +3,10 @@
   import { workspaceStore } from "@/stores/builder"
   import { admin } from "@/stores/portal/admin"
 
-  $: isCloud = $admin.cloud
-  $: chainAutomations =
+  const isCloud = $derived($admin.cloud)
+  const chainAutomations = $derived(
     $workspaceStore.automations?.chainAutomations ?? !isCloud
+  )
 
   async function save({ detail }: CustomEvent<boolean>) {
     try {
