@@ -3,9 +3,7 @@ interface StatusInfo {
   message: string
 }
 
-export const getAutomationStatusInfo = (
-  value?: string | null
-): StatusInfo => {
+export const getAutomationStatusInfo = (value?: string | null): StatusInfo => {
   switch (value?.toLowerCase()) {
     case "stopped_error":
       return { color: "red", message: "Stopped - Error" }
