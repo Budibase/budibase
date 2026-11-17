@@ -3,7 +3,7 @@ export * from "./files"
 export {
   createGeminiFileStore,
   deleteGeminiVectorStore,
-  guardGeminiApiKey,
+  guardGeminiFileSearchConfigured,
   ingestGeminiFile,
   isGeminiFileSearchConfigured,
 } from "./geminiFileStore"

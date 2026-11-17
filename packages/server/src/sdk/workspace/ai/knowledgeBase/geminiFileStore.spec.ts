@@ -10,13 +10,14 @@ jest.mock("../configs/litellm", () => ({
   getKeySettings: (...args: any[]) => mockGetKeySettings(...args),
 }))
 
-import { setEnv, withEnv } from "../../../../environment"
+import { withEnv } from "../../../../environment"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 import {
   createGeminiFileStore,
   deleteGeminiFileFromStore,
   deleteGeminiVectorStore,
   ingestGeminiFile,
+  isGeminiFileSearchConfigured,
   searchGeminiFileStore,
 } from "./geminiFileStore"
 
@@ -55,20 +56,24 @@ describe("geminiFileStore", () => {
     mockGetKeySettings.mockResolvedValue({ secretKey: "workspace-key" })
   })
 
-  it("throws a 400 when GEMINI_API_KEY is missing", async () => {
-    const cleanup = setEnv({ GEMINI_API_KEY: undefined as any })
-    try {
-      await expect(createGeminiFileStore("Support Docs")).rejects.toMatchObject(
-        {
-          status: 400,
-          message:
-            "Gemini File Search failed. Set GEMINI_API_KEY on your local environment",
-        }
-      )
-      expect(mockFetch).not.toHaveBeenCalled()
-    } finally {
-      cleanup()
-    }
+  it("detects the configured LiteLLM Gemini credential", async () => {
+    mockFetch.mockResolvedValue(response({ ok: true, status: 200 }))
+
+    await expect(isGeminiFileSearchConfigured()).resolves.toBe(true)
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("/credentials/by_name/budibase-gemini"),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer workspace-key",
+        }),
+      })
+    )
+  })
+
+  it("reports Gemini file search as unconfigured when LiteLLM rejects the lookup", async () => {
+    mockFetch.mockResolvedValue(response({ ok: false, status: 404 }))
+
+    await expect(isGeminiFileSearchConfigured()).resolves.toBe(false)
   })
 
   it("does not send the Gemini API key in vector store requests", async () => {
@@ -115,6 +120,9 @@ describe("geminiFileStore", () => {
       for (const [, init] of mockFetch.mock.calls) {
         expect(String(init?.body)).not.toContain("api_key")
         expect(String(init?.body)).not.toContain("test-gemini-key")
+        expect(String(init?.body)).toContain(
+          '"litellm_credential_name":"budibase-gemini"'
+        )
       }
     })
   })
