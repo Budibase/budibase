@@ -16,6 +16,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "@/api"
+  import { getErrorMessage } from "@/helpers/errors"
   import { organisation } from "@/stores/portal/organisation"
   import { auth } from "@/stores/portal/auth"
   import {
@@ -72,7 +73,7 @@
       notifications.success(`Settings saved`)
     } catch (error) {
       notifications.error(
-        error instanceof Error ? error.message : "Unable to save SCIM config"
+        getErrorMessage(error) || "Unable to save SCIM config"
       )
     }
   }
@@ -96,7 +97,7 @@
     } catch (error) {
       console.error(error)
       notifications.error(
-        `Error fetching SCIM config - ${error instanceof Error ? error.message : "unknown error"}`
+        `Error fetching SCIM config - ${getErrorMessage(error) || "unknown error"}`
       )
     }
   }
@@ -106,7 +107,7 @@
       apiKey = await auth.fetchAPIKey()
     } catch (error) {
       notifications.error(
-        `Unable to fetch API key - ${error instanceof Error ? error.message : "unknown error"}`
+        `Unable to fetch API key - ${getErrorMessage(error) || "unknown error"}`
       )
     }
   }

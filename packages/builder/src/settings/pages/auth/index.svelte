@@ -25,6 +25,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "@/api"
+  import { getErrorMessage } from "@/helpers/errors"
   import { organisation } from "@/stores/portal/organisation"
   import { admin } from "@/stores/portal/admin"
   import { licensing } from "@/stores/portal/licensing"
@@ -174,7 +175,7 @@
       await organisation.save({ isSSOEnforced: !value })
     } catch (error) {
       notifications.error(
-        error instanceof Error ? error.message : "Unable to update SSO setting"
+        getErrorMessage(error) || "Unable to update SSO setting"
       )
     }
   }
@@ -222,7 +223,7 @@
       notifications.success(`Settings saved`)
     } catch (error) {
       notifications.error(
-        error instanceof Error ? error.message : "Unable to save OIDC config"
+        getErrorMessage(error) || "Unable to save OIDC config"
       )
       return
     }

@@ -17,6 +17,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "@/api"
+  import { getErrorMessage } from "@/helpers/errors"
   import { organisation } from "@/stores/portal/organisation"
   import { admin } from "@/stores/portal/admin"
   import {
@@ -120,9 +121,7 @@
       notifications.success(`Settings saved`)
     } catch (error) {
       notifications.error(
-        error instanceof Error
-          ? error.message
-          : "Unable to save Google OAuth config"
+        getErrorMessage(error) || "Unable to save Google OAuth config"
       )
       return
     }
