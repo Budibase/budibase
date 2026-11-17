@@ -226,39 +226,36 @@ export function resolveReaderSearchBindings({
 interface EnrichSearchContextOptions<T extends object> {
   fields?: T
   inputs?: Record<string, unknown>
-  safeSearchHelpers?: boolean
   noThrow?: boolean
 }
 
 const enrichSearchValue = ({
   value,
   inputs,
-  safeSearchHelpers,
   noThrow,
 }: {
   value: unknown
   inputs: Record<string, unknown>
-  safeSearchHelpers: boolean
   noThrow: boolean
 }): unknown => {
   if (typeof value === "string") {
     return processStringSync(value, inputs, {
       noEscaping: true,
-      safeSearchHelpers,
+      safeSearchHelpers: true,
       noThrow,
       escapeNewlines: true,
     })
   }
   if (Array.isArray(value)) {
     return value.map(item =>
-      enrichSearchValue({ value: item, inputs, safeSearchHelpers, noThrow })
+      enrichSearchValue({ value: item, inputs, noThrow })
     )
   }
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, item]) => [
         key,
-        enrichSearchValue({ value: item, inputs, safeSearchHelpers, noThrow }),
+        enrichSearchValue({ value: item, inputs, noThrow }),
       ])
     )
   }
@@ -268,13 +265,11 @@ const enrichSearchValue = ({
 export async function enrichSearchContext<T extends object>({
   fields,
   inputs = {},
-  safeSearchHelpers = false,
   noThrow = true,
 }: EnrichSearchContextOptions<T>): Promise<T> {
   return enrichSearchValue({
     value: fields ?? {},
     inputs: { ...inputs },
-    safeSearchHelpers,
     noThrow,
   }) as T
 }

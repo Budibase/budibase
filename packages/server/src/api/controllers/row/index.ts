@@ -355,7 +355,6 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
       ? await utils.enrichSearchContext({
           fields: query,
           inputs: { user: userBindings },
-          safeSearchHelpers: true,
         })
       : utils.resolveReaderSearchBindings({ query, user: userBindings })
 

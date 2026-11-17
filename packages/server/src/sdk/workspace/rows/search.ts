@@ -87,7 +87,6 @@ export async function search(
       options.query = await enrichSearchContext({
         fields: options.query,
         inputs: context,
-        safeSearchHelpers: true,
       })
     }
 
@@ -105,7 +104,6 @@ export async function search(
         viewQuery = await enrichSearchContext({
           fields: view.query || {},
           inputs: context,
-          safeSearchHelpers: true,
           noThrow: false,
         })
       } catch (_err) {
