@@ -90,10 +90,11 @@
     getOptionColour={project => project.color}
   />
 
-  <Toggle text="Include rows and attachments" bind:value={includeRows} />
+  <Toggle text="Include data and files" bind:value={includeRows} />
   <Body size="S">
     Includes all rows from included Budibase DB tables, including shared tables,
-    and their referenced attachments.
+    their referenced attachments, and agent knowledge files. Connected knowledge
+    sources are exported as file snapshots.
   </Body>
 
   <Toggle text="Encrypt export" bind:value={encrypted} />
