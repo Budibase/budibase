@@ -2,6 +2,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+{{- include "budibase.deploymentAnnotations" (dict "root" . "annotations" dict) | nindent 4 }}
   labels:
     io.kompose.service: redis-service
   name: redis-service
@@ -27,10 +29,14 @@ spec:
         fsGroup: 1000
       {{- end }}
       containers:
-      - args:
+      - env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "redis_password") | nindent 12 }}
+        args:
         - redis-server
         - --requirepass
-        - {{ .Values.services.redis.password }}
+        - "$(REDIS_PASSWORD)"
         image: {{ .Values.services.redis.image | default (printf "%sredis" (.Values.globals.dockerRegistry | default "")) }}
         imagePullPolicy: ""
         {{- with .Values.services.redis.securityContext }}

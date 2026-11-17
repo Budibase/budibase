@@ -81,3 +81,17 @@ Create a random string if the supplied key does not exist
 {{- randAlphaNum 20 | b64enc | quote -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "budibase.secretName" -}}
+{{- default (include "budibase.fullname" .) .Values.globals.existingSecret -}}
+{{- end -}}
+
+{{- define "budibase.secretKeyRef" -}}
+secretKeyRef:
+  name: {{ include "budibase.secretName" .root }}
+  key: {{ default .key (get .root.Values.globals.secretKeyMapping .key) | quote }}
+{{- end -}}
+
+{{- define "budibase.deploymentAnnotations" -}}
+{{- merge (dict "reloader.stakater.com/auto" (toString .root.Values.reloader.enabled)) (.annotations | default dict) | toYaml -}}
+{{- end -}}

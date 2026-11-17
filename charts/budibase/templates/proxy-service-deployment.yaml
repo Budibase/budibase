@@ -2,9 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-{{ if .Values.services.proxy.deploymentAnnotations }}
-{{- toYaml .Values.services.proxy.deploymentAnnotations | indent 4 -}}
-{{ end }}
+{{- include "budibase.deploymentAnnotations" (dict "root" . "annotations" .Values.services.proxy.deploymentAnnotations) | nindent 4 }}
   labels:
     app.kubernetes.io/name: budibase-proxy
 {{ if .Values.services.proxy.deploymentLabels }}

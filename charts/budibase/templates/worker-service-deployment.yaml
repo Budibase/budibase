@@ -2,9 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-{{ if .Values.services.worker.deploymentAnnotations }}
-{{- toYaml .Values.services.worker.deploymentAnnotations | indent 4 -}}
-{{ end }}
+{{- include "budibase.deploymentAnnotations" (dict "root" . "annotations" .Values.services.worker.deploymentAnnotations) | nindent 4 }}
   labels:
     io.kompose.service: worker-service
 {{ if .Values.services.worker.deploymentLabels }}
@@ -67,11 +65,8 @@ spec:
               key: adminPassword
         {{ end }}
         - name: COUCH_DB_URL
-          {{ if .Values.services.couchdb.url }}
-          value: {{ .Values.services.couchdb.url }}
-          {{ else }}
-          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
-          {{ end }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "couchdb_url") | nindent 12 }}
         - name: COUCH_DB_SQL_URL
           {{ if .Values.globals.sqs.url }}
           value: {{ .Values.globals.sqs.url | quote }}
@@ -80,25 +75,21 @@ spec:
           {{ end }}
         - name: API_ENCRYPTION_KEY
           valueFrom:
-            secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
-              key: apiEncryptionKey
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "apiEncryptionKey") | nindent 12 }}
         - name: HTTP_LOGGING
           value: {{ .Values.services.worker.httpLogging | quote }}
         - name: INTERNAL_API_KEY
           valueFrom:
-            secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
-              key: internalApiKey
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "internalApiKey") | nindent 12 }}
         - name: INTERNAL_API_KEY_FALLBACK
-          value: {{ .Values.globals.internalApiKeyFallback | quote }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "internal_api_key_fallback") | nindent 12 }}
         - name: JWT_SECRET
           valueFrom:
-            secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
-              key: jwtSecret
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "jwtSecret") | nindent 12 }}
         - name: JWT_SECRET_FALLBACK
-          value: {{ .Values.globals.jwtSecretFallback | quote }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "jwt_secret_fallback") | nindent 12 }}
         {{ if .Values.services.objectStore.region }}
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}
@@ -107,14 +98,10 @@ spec:
           value: {{ .Values.services.objectStore.minio | quote }}
         - name: MINIO_ACCESS_KEY
           valueFrom:
-            secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
-              key: objectStoreAccess
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "objectStoreAccess") | nindent 12 }}
         - name: MINIO_SECRET_KEY
           valueFrom:
-            secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
-              key: objectStoreSecret
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "objectStoreSecret") | nindent 12 }}
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
         - name: S3_IGNORE_SELF_SIGNED
@@ -124,7 +111,8 @@ spec:
         - name: CLOUDFRONT_PUBLIC_KEY_ID
           value: {{ .Values.services.objectStore.cloudfront.publicKeyId | quote }}
         - name: CLOUDFRONT_PRIVATE_KEY_64
-          value: {{ .Values.services.objectStore.cloudfront.privateKey64 | quote }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "cloudfront_private_key_64") | nindent 12 }}
         - name: PLUGIN_BUCKET_NAME
           value: {{ .Values.services.objectStore.pluginBucketName | quote }}
         - name: APPS_BUCKET_NAME
@@ -144,10 +132,12 @@ spec:
         - name: LOG_LEVEL
           value: {{ .Values.services.worker.logLevel | quote }}
         - name: REDIS_PASSWORD
-          value: {{ .Values.services.redis.password | quote }}
-        {{- if .Values.services.redis.username }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "redis_password") | nindent 12 }}
+        {{- if or .Values.globals.existingSecret .Values.services.redis.username }}
         - name: REDIS_USERNAME
-          value: {{ .Values.services.redis.username | quote }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "redis_username") | nindent 12 }}
         {{- end }}
         - name: REDIS_URL
           {{ if .Values.services.redis.url }}
@@ -160,7 +150,8 @@ spec:
         - name: ENABLE_ANALYTICS
           value: {{ .Values.globals.enableAnalytics | quote }}
         - name: POSTHOG_TOKEN
-          value: {{ .Values.globals.posthogToken }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "posthog_token") | nindent 12 }}
         - name: LITELLM_URL
           value: {{ .Values.globals.litellmUrl | quote }}
         - name: ACCOUNT_PORTAL_URL
@@ -168,7 +159,8 @@ spec:
         - name: INTERNAL_ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.internalAccountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
-          value: {{ .Values.globals.accountPortalApiKey | quote }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "account_portal_api_key") | nindent 12 }}
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
         - name: COOKIE_DOMAIN
@@ -176,9 +168,11 @@ spec:
         - name: SMTP_FALLBACK_ENABLED
           value: {{ .Values.globals.smtp.enabled | quote }}
         - name: SMTP_USER
-          value: {{ .Values.globals.smtp.user | quote }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "smtp_user") | nindent 12 }}
         - name: SMTP_PASSWORD
-          value: {{ .Values.globals.smtp.password | quote }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "smtp_pass") | nindent 12 }}
         - name: SMTP_HOST
           value: {{ .Values.globals.smtp.host | quote }}
         - name: SMTP_PORT
@@ -188,16 +182,16 @@ spec:
         - name: APPS_URL
           value: http://app-service:{{ .Values.services.apps.port }}
         - name: GOOGLE_CLIENT_ID
-          value: {{ .Values.globals.google.clientId | quote }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "google_client_id") | nindent 12 }}
         - name: GOOGLE_CLIENT_SECRET
-          value: {{ .Values.globals.google.secret | quote }}
+          valueFrom:
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "google_client_secret") | nindent 12 }}
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         - name: ENCRYPTION_KEY
           valueFrom:
-            secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
-              key: bbEncryptionKey
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "bbEncryptionKey") | nindent 12 }}
         {{ if .Values.globals.datadogApmEnabled }}
         - name: DD_LOGS_INJECTION
           value: {{ .Values.globals.datadogApmEnabled | quote }}
