@@ -329,7 +329,6 @@ export async function searchGeminiFileStore({
           query,
           passthrough_on_no_deployment: true,
           model: "gemini/gemini-3.8-flash",
-          litellm_credential_name: GEMINI_CREDENTIAL_NAME,
           ...(sessionId
             ? {
                 litellm_session_id: sessionId,

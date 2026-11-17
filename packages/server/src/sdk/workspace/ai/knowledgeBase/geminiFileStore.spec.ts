@@ -137,11 +137,24 @@ describe("geminiFileStore", () => {
         })
         expect(String(init?.body)).not.toContain("api_key")
         expect(String(init?.body)).not.toContain("test-gemini-key")
-        expect(String(init?.body)).toContain(
-          '"litellm_credential_name":"budibase-gemini"'
-        )
       }
     })
+  })
+
+  it("uses the vector store's registered credential when searching", async () => {
+    mockFetch.mockResolvedValue(
+      response({ ok: true, status: 200, json: { data: [] } })
+    )
+
+    await searchGeminiFileStore({
+      vectorStoreId: "vector-store-1",
+      query: "hello",
+    })
+
+    const [, init] = mockFetch.mock.calls[0]
+    expect(JSON.parse(String(init.body))).not.toHaveProperty(
+      "litellm_credential_name"
+    )
   })
 
   it("uses upstream response status when ingest fails", async () => {
