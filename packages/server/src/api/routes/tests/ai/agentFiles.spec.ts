@@ -20,6 +20,7 @@ import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 const mockGuardGeminiFileSearchConfigured = jest.fn()
+const mockIsGeminiFileSearchConfigured = jest.fn()
 
 jest.mock("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => {
   const actual = jest.requireActual<
@@ -29,6 +30,8 @@ jest.mock("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => {
     ...actual,
     guardGeminiFileSearchConfigured: (...args: []) =>
       mockGuardGeminiFileSearchConfigured(...args),
+    isGeminiFileSearchConfigured: (...args: []) =>
+      mockIsGeminiFileSearchConfigured(...args),
   }
 })
 
@@ -54,6 +57,8 @@ describe("agent files", () => {
     nock.cleanAll()
     mockGuardGeminiFileSearchConfigured.mockReset()
     mockGuardGeminiFileSearchConfigured.mockResolvedValue(undefined)
+    mockIsGeminiFileSearchConfigured.mockReset()
+    mockIsGeminiFileSearchConfigured.mockResolvedValue(true)
   })
 
   const fileBuffer = Buffer.from("Hello from Budibase")
