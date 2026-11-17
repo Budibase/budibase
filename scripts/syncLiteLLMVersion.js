@@ -37,7 +37,6 @@ function main() {
   const checkOnly = process.argv.includes("--check")
   const versionConfig = readJson(versionConfigPath)
   const version = required(versionConfig.version, "version")
-  const channel = required(versionConfig.channel, "channel")
 
   const imageTag = `v${version}`
 
@@ -121,9 +120,7 @@ function main() {
   }
 
   console.log(
-    `LiteLLM version ${
-      checkOnly ? "check" : "sync"
-    }: version=${version}, channel=${channel}`
+    `LiteLLM version ${checkOnly ? "check" : "sync"}: version=${version}`
   )
   if (changed.length > 0) {
     const header = checkOnly ? "Out-of-sync files" : "Updated files"

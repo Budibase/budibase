@@ -55,6 +55,10 @@ spec:
           {{- if .Values.services.litellm.extraEnv }}
             {{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
           {{- end }}
+          {{- if .Values.services.litellm.migrationJob.enabled }}
+            - name: DISABLE_SCHEMA_UPDATE
+              value: "true"
+          {{- end }}
           volumeMounts:
             - name: litellm-config
               mountPath: /app/config.yaml
