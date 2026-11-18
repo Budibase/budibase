@@ -131,6 +131,32 @@ describe("/backups", () => {
       }
     })
 
+    it("does not create an empty knowledge directory", async () => {
+      await objectStore.deleteFile(
+        objectStore.ObjectStoreBuckets.APPS,
+        `${config.getDevWorkspaceId()}/${knowledgeFilePath}`
+      )
+      const exportPath = await sdk.backups.exportWorkspace(
+        config.getDevWorkspaceId(),
+        { tar: true }
+      )
+      try {
+        const exportedEntries: string[] = []
+        const parser = tar.list({
+          onReadEntry: entry => exportedEntries.push(entry.path),
+        })
+        await pipeline(
+          Readable.from(await fsp.readFile(exportPath)),
+          parser as unknown as Writable
+        )
+        expect(
+          exportedEntries.some(entry => entry.startsWith("ai/knowledge-bases"))
+        ).toBe(false)
+      } finally {
+        await fsp.rm(exportPath, { force: true })
+      }
+    })
+
     it("should be able to export a workspace without rows", async () => {
       const body = await config.api.backup.exportBasicBackup(
         config.getDevWorkspaceId(),

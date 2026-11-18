@@ -3,7 +3,7 @@ import { ExportWorkspaceFn } from "@budibase/pro"
 import { tracer } from "dd-trace"
 import fs from "fs"
 import fsp from "fs/promises"
-import { join } from "path"
+import { dirname, join } from "path"
 import * as tar from "tar"
 import { v4 as uuid } from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
@@ -100,10 +100,9 @@ export const exportWorkspace: ExportWorkspaceFn = async (
     const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
     const workspacePath = `${prodWorkspaceId}/`
 
-    const toExclude = [/\/\..+/]
+    const toExclude = [/\/\..+/, /\/ai\/knowledge-bases\/.*/]
     if (config?.excludeRows) {
       toExclude.push(/\/attachments\/.*/)
-      toExclude.push(/\/ai\/knowledge-bases\/.*/)
     }
 
     const tmpPath = await objectStore.retrieveDirectory(
@@ -120,17 +119,14 @@ export const exportWorkspace: ExportWorkspaceFn = async (
         knowledgeObjectStorePath
       )
       try {
-        const exportKnowledgePath = join(tmpPath, "ai", "knowledge-bases")
-        await fsp.mkdir(exportKnowledgePath, { recursive: true })
         const downloadedKnowledgePath = join(
           knowledgeTmpPath,
-          knowledgeObjectStorePath
+          objectStore.sanitizeKey(knowledgeObjectStorePath)
         )
         if (fs.existsSync(downloadedKnowledgePath)) {
-          await fsp.cp(downloadedKnowledgePath, exportKnowledgePath, {
-            recursive: true,
-            force: true,
-          })
+          const exportKnowledgePath = join(tmpPath, "ai", "knowledge-bases")
+          await fsp.mkdir(dirname(exportKnowledgePath), { recursive: true })
+          await fsp.rename(downloadedKnowledgePath, exportKnowledgePath)
         }
       } finally {
         await fsp.rm(knowledgeTmpPath, { recursive: true, force: true })
