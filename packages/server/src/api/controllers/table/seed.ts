@@ -9,7 +9,8 @@ import {
   StaticQuotaName,
 } from "@budibase/types"
 import type { Database, Document, Row, Table } from "@budibase/types"
-import { getRowParams, pageAllDocs } from "../../../db/utils"
+import { pageAllDocs } from "../../../db/pageAllDocs"
+import { getRowParams } from "../../../db/utils"
 
 const ROW_PAGE_SIZE = 1000
 const ROW_CHUNK_SIZE = 500

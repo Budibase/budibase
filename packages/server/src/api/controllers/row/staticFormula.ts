@@ -3,7 +3,8 @@ import { FieldType, FormulaType, Row, Table, ViewV2 } from "@budibase/types"
 import { cloneDeep, merge } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import * as linkRows from "../../../db/linkedRows"
-import { getRowParams, pageAllDocs } from "../../../db/utils"
+import { pageAllDocs } from "../../../db/pageAllDocs"
+import { getRowParams } from "../../../db/utils"
 import sdk from "../../../sdk"
 import {
   outputProcessing,
