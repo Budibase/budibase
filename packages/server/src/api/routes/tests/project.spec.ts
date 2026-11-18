@@ -24,6 +24,7 @@ import {
   SourceName,
   ToolExecutionPrincipal,
   type Automation,
+  type Agent,
   type Datasource,
   type EmailTrigger,
   type EmailTriggerInputs,
@@ -1407,6 +1408,47 @@ describe("/projects", () => {
         },
       })
     }
+
+    it("omits stale knowledge references from exported agents", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Stale knowledge",
+        })
+        const agent = await config.api.agent.create({
+          name: "Stale knowledge agent",
+          aiconfig: "default",
+          projectIds: [project._id],
+        })
+        await config.api.agent.createOperation(agent._id!, {
+          id: "operation_1",
+          name: "Search knowledge",
+          live: false,
+          allowKnowledgeSourceDownload: true,
+        })
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const workspaceDb = context.getWorkspaceDB()
+          const storedAgent = await workspaceDb.get<Agent>(agent._id!)
+          await workspaceDb.put({
+            ...storedAgent,
+            operations: storedAgent.operations?.map(operation => ({
+              ...operation,
+              knowledgeBases: ["knowledgebase_missing"],
+            })),
+          })
+        })
+
+        const files = await readTarEntries(
+          await config.api.project.export(project._id, { includeRows: true })
+        )
+        const exportedAgent: Agent = JSON.parse(
+          files.get(`docs/agent/${agent._id}.json`)!.toString()
+        )
+        const manifest = JSON.parse(files.get("manifest.json")!.toString())
+
+        expect(exportedAgent.operations?.[0].knowledgeBases).toEqual([])
+        expect(manifest.containsKnowledge).toBe(false)
+      })
+    })
 
     const exportThenImportUnsanitisedEmailAutomation = async ({
       projectId,

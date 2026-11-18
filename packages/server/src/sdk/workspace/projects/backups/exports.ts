@@ -236,7 +236,8 @@ async function sanitiseDocumentForExport(
   doc: AnyDocument,
   type: ResourceType,
   screenWorkspaceAppIdByScreenId?: Map<string, string>,
-  includeKnowledge = false
+  includeKnowledge = false,
+  exportedKnowledgeBaseIds?: Set<string>
 ) {
   const sanitised = structuredClone(doc)
   delete sanitised._rev
@@ -264,8 +265,11 @@ async function sanitiseDocumentForExport(
       agent.operations = agent.operations?.map(operation => ({
         ...operation,
         knowledgeBases:
-          (sanitised as Agent).operations?.find(({ id }) => id === operation.id)
-            ?.knowledgeBases || [],
+          (sanitised as Agent).operations
+            ?.find(({ id }) => id === operation.id)
+            ?.knowledgeBases?.filter(knowledgeBaseId =>
+              exportedKnowledgeBaseIds?.has(knowledgeBaseId)
+            ) || [],
       }))
     }
     return agent
@@ -312,10 +316,7 @@ const exportProjectKnowledge = async ({
   for (const knowledgeBaseId of knowledgeBaseIds) {
     const knowledgeBase = await sdk.ai.knowledgeBase.find(knowledgeBaseId)
     if (!knowledgeBase) {
-      throw new HTTPError(
-        `Knowledge base '${knowledgeBaseId}' could not be exported.`,
-        400
-      )
+      continue
     }
     const files =
       await sdk.ai.knowledgeBase.listKnowledgeBaseFiles(knowledgeBaseId)
@@ -596,6 +597,7 @@ export async function exportProject(
   }
 
   const tmpPath = await fsp.mkdtemp(join(budibaseTempDir(), "project-export-"))
+  let exportedKnowledgeBaseIds: Set<string> | undefined
   try {
     if (opts?.includeRows) {
       const exportedAgents = agents.filter(
@@ -605,6 +607,9 @@ export async function exportProject(
         agents: exportedAgents,
         dirPath: tmpPath,
       })
+      exportedKnowledgeBaseIds = new Set(
+        knowledge.knowledgeBases.map(knowledgeBase => knowledgeBase._id)
+      )
       manifest.containsKnowledge = knowledge.knowledgeBases.length > 0
       manifest.knowledgeBaseCount = knowledge.knowledgeBases.length
       manifest.knowledgeFileCount = knowledge.knowledgeBases.reduce(
@@ -659,7 +664,8 @@ export async function exportProject(
           doc,
           type,
           screenWorkspaceAppIdByScreenId,
-          !!opts?.includeRows
+          !!opts?.includeRows,
+          exportedKnowledgeBaseIds
         )
         await writeJsonFile(
           join(tmpPath, PROJECT_DOCS_DIRECTORY, type, `${doc._id}.json`),
