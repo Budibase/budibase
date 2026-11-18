@@ -88,10 +88,13 @@ function mergeUpdateAndDeleteDocuments({
   return finalDocs
 }
 
-async function removeImportableDocuments(db: Database) {
+async function removeImportableDocuments(
+  db: Database,
+  documentTypes = DocumentTypesToImport
+) {
   // get the references to the documents, not the whole document
   const docPromises = []
-  for (let docType of DocumentTypesToImport) {
+  for (let docType of documentTypes) {
     docPromises.push(db.allDocs(dbCore.getDocParams(docType)))
   }
   let documentRefs: { _id: string; _rev: string }[] = []
@@ -195,8 +198,23 @@ export async function updateWithExport(
     const newMetadata = await getNewWorkspaceMetadata(tempDb, workspaceDb)
     // get the documents to copy
     const toUpdate = await getImportableDocuments(tempDb)
+    const importsKnowledge = toUpdate.some(
+      doc =>
+        doc._id?.startsWith(`${DocumentType.KNOWLEDGE_BASE}_`) ||
+        doc._id?.startsWith(`${DocumentType.KNOWLEDGE_BASE_FILE}_`)
+    )
+    const documentTypesToReplace = importsKnowledge
+      ? DocumentTypesToImport
+      : DocumentTypesToImport.filter(
+          type =>
+            type !== DocumentType.KNOWLEDGE_BASE &&
+            type !== DocumentType.KNOWLEDGE_BASE_FILE
+        )
     // clear out the old documents
-    const toDelete = await removeImportableDocuments(workspaceDb)
+    const toDelete = await removeImportableDocuments(
+      workspaceDb,
+      documentTypesToReplace
+    )
 
     // get existing tables to ensure we only import rows for newly created tables
     const existingTablesRes = await workspaceDb.allDocs(

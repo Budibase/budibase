@@ -194,7 +194,25 @@ describe("/applications/:appId/import", () => {
 
     await config.createWorkspace()
     const targetId = config.getDevWorkspaceId()
-    const staleObjectKey = `${targetId}/ai/knowledge-bases/stale/file.txt`
+    const targetKnowledgeBaseId = `${DocumentType.KNOWLEDGE_BASE}_existing`
+    const targetKnowledgeFileId = `${DocumentType.KNOWLEDGE_BASE_FILE}_existing_file`
+    const staleObjectKey = `${targetId}/ai/knowledge-bases/${targetKnowledgeBaseId}/files/${targetKnowledgeFileId}/existing.txt`
+    await db.getDB(targetId).bulkDocs([
+      {
+        _id: targetKnowledgeBaseId,
+        name: "Existing knowledge",
+        type: KnowledgeBaseType.GEMINI,
+        config: { googleFileStoreId: "existing-store" },
+      } satisfies GeminiKnowledgeBase,
+      {
+        _id: targetKnowledgeFileId,
+        knowledgeBaseId: targetKnowledgeBaseId,
+        filename: "existing.txt",
+        objectStoreKey: staleObjectKey,
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "test-user",
+      } satisfies KnowledgeBaseFile,
+    ])
     await objectStore.upload({
       bucket: objectStore.ObjectStoreBuckets.APPS,
       filename: staleObjectKey,
@@ -221,6 +239,12 @@ describe("/applications/:appId/import", () => {
         staleObjectKey
       )
     ).toBe(false)
+    expect(
+      await targetDb.getMultiple(
+        [targetKnowledgeBaseId, targetKnowledgeFileId],
+        { allowMissing: true }
+      )
+    ).toHaveLength(2)
     expect(
       await objectStore.objectExists(
         objectStore.ObjectStoreBuckets.APPS,
