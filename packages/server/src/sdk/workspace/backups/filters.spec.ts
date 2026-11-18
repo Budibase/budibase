@@ -22,6 +22,22 @@ describe("workspace export filter", () => {
     expect(filter({ _id: `${type}${SEPARATOR}id` })).toBe(false)
   })
 
+  it.each([DocumentType.KNOWLEDGE_BASE, DocumentType.KNOWLEDGE_BASE_FILE])(
+    "excludes %s documents when data and files are excluded",
+    type => {
+      expect(
+        createWorkspaceExportFilter(true)({
+          _id: `${type}${SEPARATOR}id`,
+        })
+      ).toBe(false)
+      expect(
+        createWorkspaceExportFilter(false)({
+          _id: `${type}${SEPARATOR}id`,
+        })
+      ).toBe(true)
+    }
+  )
+
   it.each(RuntimeDocumentTypes)(
     "keeps documents whose ID only contains %s",
     type => {
