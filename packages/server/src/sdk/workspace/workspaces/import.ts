@@ -196,6 +196,7 @@ export async function updateWithExport(
     await backups.importApp(devId, tempDb, template, {
       updateAttachmentColumns: true,
       restoreKnowledgeBases: false,
+      cleanupObjectStoreContents: false,
     })
     const newMetadata = await getNewWorkspaceMetadata(tempDb, workspaceDb)
     // get the documents to copy
@@ -292,6 +293,7 @@ export async function updateWithExport(
     }
 
     await backups.restoreImportedKnowledgeBases(devId, workspaceDb)
+    await backups.cleanupUnusedKnowledgeBaseObjects(devId, workspaceDb)
     for (const storeId of replacedStoreIds) {
       await deleteGeminiVectorStore(storeId).catch((error: any) => {
         if (error?.status !== 403 && error?.status !== 404) {

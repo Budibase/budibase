@@ -209,6 +209,7 @@ export interface ImportAppOpts {
   objectStoreAppId?: string
   preserveLiteLLMConfig?: boolean
   restoreKnowledgeBases?: boolean
+  cleanupObjectStoreContents?: boolean
 }
 
 async function sanitizeLiteLLMImportData(db: Database) {
@@ -346,6 +347,37 @@ async function removeMissingKnowledgeBaseReferences(db: Database) {
   }
 }
 
+export async function cleanupUnusedKnowledgeBaseObjects(
+  appId: string,
+  db: Database
+) {
+  const filesResponse = await db.allDocs<KnowledgeBaseFile>(
+    docIds.getDocParams(DocumentType.KNOWLEDGE_BASE_FILE, undefined, {
+      include_docs: true,
+    })
+  )
+  const referencedKeys = new Set(
+    filesResponse.rows
+      .map(row => row.doc?.objectStoreKey)
+      .filter((key): key is string => !!key)
+      .map(key => objectStore.sanitizeKey(key))
+  )
+  const prefix = `${appId}/ai/knowledge-bases`
+  const filesToDelete: string[] = []
+  await utils.parallelForeach(
+    objectStore.listAllObjects(ObjectStoreBuckets.APPS, prefix),
+    async file => {
+      if (file.Key && !referencedKeys.has(file.Key)) {
+        filesToDelete.push(file.Key)
+      }
+    },
+    5
+  )
+  if (filesToDelete.length) {
+    await objectStore.deleteFiles(ObjectStoreBuckets.APPS, filesToDelete)
+  }
+}
+
 export const importApp: ImportWorkspaceFn = async (
   appId,
   db,
@@ -357,6 +389,7 @@ export const importApp: ImportWorkspaceFn = async (
     importObjStoreContents: true,
     preserveLiteLLMConfig: false,
     restoreKnowledgeBases: true,
+    cleanupObjectStoreContents: true,
     ...opts,
   }
   const prodAppId = dbCore.getProdWorkspaceID(appId)
@@ -449,14 +482,16 @@ export const importApp: ImportWorkspaceFn = async (
           5
         )
       }
-      await collectFilesToDelete({
-        prefix: objectStoreProdAppId,
-        toExportPath: relativePath => relativePath,
-      })
-      await collectFilesToDelete({
-        prefix: `${objectStoreWorkspaceId}/ai/knowledge-bases`,
-        toExportPath: relativePath => `ai/knowledge-bases/${relativePath}`,
-      })
+      if (importOpts.cleanupObjectStoreContents) {
+        await collectFilesToDelete({
+          prefix: objectStoreProdAppId,
+          toExportPath: relativePath => relativePath,
+        })
+        await collectFilesToDelete({
+          prefix: `${objectStoreWorkspaceId}/ai/knowledge-bases`,
+          toExportPath: relativePath => `ai/knowledge-bases/${relativePath}`,
+        })
+      }
 
       if (filesToDelete.length) {
         await objectStore.deleteFiles(

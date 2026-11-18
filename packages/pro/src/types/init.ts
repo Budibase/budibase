@@ -25,6 +25,7 @@ export interface ImportWorkspaceOpts {
   objectStoreAppId?: string
   preserveLiteLLMConfig?: boolean
   restoreKnowledgeBases?: boolean
+  cleanupObjectStoreContents?: boolean
 }
 
 export type ExportWorkspaceFn = (

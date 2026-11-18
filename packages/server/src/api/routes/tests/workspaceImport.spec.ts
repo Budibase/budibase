@@ -265,7 +265,7 @@ describe("/applications/:appId/import", () => {
         objectStore.ObjectStoreBuckets.APPS,
         staleObjectKey
       )
-    ).toBe(false)
+    ).toBe(true)
     expect(
       await targetDb.getMultiple(
         [targetKnowledgeBaseId, targetKnowledgeFileId],
@@ -276,6 +276,80 @@ describe("/applications/:appId/import", () => {
       await objectStore.objectExists(
         objectStore.ObjectStoreBuckets.APPS,
         sourceObjectKey
+      )
+    ).toBe(true)
+  })
+
+  it("preserves existing knowledge objects when workspace replacement fails", async () => {
+    const sourceId = config.getDevWorkspaceId()
+    const sourceKnowledgeBaseId = `${DocumentType.KNOWLEDGE_BASE}_source`
+    const sourceKnowledgeFileId = `${DocumentType.KNOWLEDGE_BASE_FILE}_source_file`
+    const sourceObjectKey = `${sourceId}/ai/knowledge-bases/${sourceKnowledgeBaseId}/files/${sourceKnowledgeFileId}/source.txt`
+    await db.getDB(sourceId).bulkDocs([
+      {
+        _id: sourceKnowledgeBaseId,
+        name: "Source knowledge",
+        type: KnowledgeBaseType.GEMINI,
+        config: { googleFileStoreId: "source-store" },
+      } satisfies GeminiKnowledgeBase,
+      {
+        _id: sourceKnowledgeFileId,
+        knowledgeBaseId: sourceKnowledgeBaseId,
+        filename: "source.txt",
+        objectStoreKey: sourceObjectKey,
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "test-user",
+      } satisfies KnowledgeBaseFile,
+    ])
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: sourceObjectKey,
+      body: Buffer.from("source knowledge"),
+      type: "text/plain",
+    })
+    const exportPath = await sdk.backups.exportWorkspace(sourceId, {
+      tar: true,
+    })
+
+    await config.createWorkspace()
+    const targetId = config.getDevWorkspaceId()
+    const existingObjectKey = `${targetId}/ai/knowledge-bases/existing/files/existing-file/existing.txt`
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: existingObjectKey,
+      body: Buffer.from("existing knowledge"),
+      type: "text/plain",
+    })
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        existingObjectKey
+      )
+    ).toBe(true)
+    const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
+    const bulkDocsSpy = jest
+      .spyOn(DatabaseImpl.prototype, "bulkDocs")
+      .mockImplementation(async function (this: DatabaseImpl, documents) {
+        if (this.name === targetId) {
+          throw new Error("Workspace write failed")
+        }
+        return originalBulkDocs.call(this, documents)
+      })
+
+    try {
+      await request
+        .post(`/api/applications/${targetId}/import`)
+        .attach("appExport", exportPath)
+        .set(config.defaultHeaders())
+        .expect(500)
+    } finally {
+      bulkDocsSpy.mockRestore()
+    }
+
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        existingObjectKey
       )
     ).toBe(true)
   })
