@@ -54,6 +54,8 @@ describe("/applications/:appId/import", () => {
   })
 
   beforeEach(async () => {
+    mockDeleteGeminiVectorStore.mockClear()
+    mockResetKnowledgeBaseStore.mockClear()
     await config.newTenant()
   })
 
@@ -358,7 +360,6 @@ describe("/applications/:appId/import", () => {
 
   it("should be able to perform an old import", async () => {
     const appId = config.getDevWorkspaceId()
-    mockResetKnowledgeBaseStore.mockClear()
     await request
       .post(`/api/applications/${appId}/import`)
       .field("encryptionPassword", PASSWORD)
