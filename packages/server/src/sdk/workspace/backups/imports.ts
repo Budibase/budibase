@@ -474,6 +474,7 @@ export const importApp: ImportWorkspaceFn = async (
             // which are not included in the export and cannot be re-uploaded
             if (
               !relativePath.startsWith(`${ATTACHMENT_DIRECTORY}/`) &&
+              !relativePath.startsWith("ai/knowledge-bases/") &&
               !uploadedFiles.includes(toExportPath(relativePath))
             ) {
               filesToDelete.push(file.Key)
@@ -482,7 +483,7 @@ export const importApp: ImportWorkspaceFn = async (
           5
         )
       }
-      if (importOpts.cleanupObjectStoreContents) {
+      if (importOpts.cleanupObjectStoreContents && shouldRestoreKnowledge) {
         await collectFilesToDelete({
           prefix: objectStoreProdAppId,
           toExportPath: relativePath => relativePath,

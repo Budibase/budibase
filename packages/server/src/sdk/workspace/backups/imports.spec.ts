@@ -1,4 +1,4 @@
-import { context, db } from "@budibase/backend-core"
+import { context, db, objectStore } from "@budibase/backend-core"
 import { RuntimeDocumentTypes, SEPARATOR } from "@budibase/types"
 import fs from "fs"
 import os from "os"
@@ -53,5 +53,36 @@ describe("importApp", () => {
       .getDB(targetWorkspaceId)
       .getMultiple(runtimeDocIds, { allowMissing: true })
     expect(imported).toEqual([])
+  })
+
+  it("preserves knowledge objects when an older export has no ai payload", async () => {
+    const sourceWorkspaceId = config.getDevWorkspaceId()
+    const exportDir = fs.mkdtempSync(path.join(os.tmpdir(), "bb-import-"))
+    await exportDB(sourceWorkspaceId, {
+      exportPath: path.join(exportDir, DB_EXPORT_FILE),
+    })
+    const { appId: targetWorkspaceId } = await config.api.workspace.create({
+      name: "Legacy knowledge import",
+    })
+    const existingObjectKey = `${targetWorkspaceId}/ai/knowledge-bases/existing/files/existing-file/existing.txt`
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: existingObjectKey,
+      body: Buffer.from("existing knowledge"),
+      type: "text/plain",
+    })
+
+    await config.doInContext(targetWorkspaceId, () =>
+      importApp(targetWorkspaceId, db.getDB(targetWorkspaceId), {
+        file: { path: exportDir },
+      })
+    )
+
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        existingObjectKey
+      )
+    ).toBe(true)
   })
 })
