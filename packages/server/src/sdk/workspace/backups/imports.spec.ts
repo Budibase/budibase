@@ -121,6 +121,13 @@ describe("importApp", () => {
     )
 
     const file = await workspaceDb.get(fileId)
+    expect(file).toMatchObject({
+      _id: fileId,
+      knowledgeBaseId: `${DocumentType.KNOWLEDGE_BASE}_legacy`,
+      filename: "legacy.txt",
+      status: KnowledgeBaseFileStatus.READY,
+      uploadedBy: "test-user",
+    })
     expect(file).not.toHaveProperty("objectStoreKey")
   })
 })
