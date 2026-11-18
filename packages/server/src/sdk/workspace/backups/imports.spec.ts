@@ -70,11 +70,18 @@ describe("importApp", () => {
       name: "Legacy knowledge import",
     })
     const existingObjectKey = `${targetWorkspaceId}/ai/knowledge-bases/existing/files/existing-file/existing.txt`
+    const staleObjectKey = `${db.getProdWorkspaceID(targetWorkspaceId)}/plugins/stale.js`
     await objectStore.upload({
       bucket: objectStore.ObjectStoreBuckets.APPS,
       filename: existingObjectKey,
       body: Buffer.from("existing knowledge"),
       type: "text/plain",
+    })
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: staleObjectKey,
+      body: Buffer.from("stale plugin"),
+      type: "text/javascript",
     })
 
     await config.doInContext(targetWorkspaceId, () =>
@@ -89,6 +96,12 @@ describe("importApp", () => {
         existingObjectKey
       )
     ).toBe(true)
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        staleObjectKey
+      )
+    ).toBe(false)
   })
 
   it("preserves imported knowledge file documents without object keys", async () => {

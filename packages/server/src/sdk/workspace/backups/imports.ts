@@ -486,15 +486,17 @@ export const importApp: ImportWorkspaceFn = async (
           5
         )
       }
-      if (importOpts.cleanupObjectStoreContents && shouldRestoreKnowledge) {
+      if (importOpts.cleanupObjectStoreContents) {
         await collectFilesToDelete({
           prefix: objectStoreProdAppId,
           toExportPath: relativePath => relativePath,
         })
-        await collectFilesToDelete({
-          prefix: `${objectStoreWorkspaceId}/ai/knowledge-bases`,
-          toExportPath: relativePath => `ai/knowledge-bases/${relativePath}`,
-        })
+        if (shouldRestoreKnowledge) {
+          await collectFilesToDelete({
+            prefix: `${objectStoreWorkspaceId}/ai/knowledge-bases`,
+            toExportPath: relativePath => `ai/knowledge-bases/${relativePath}`,
+          })
+        }
       }
 
       if (filesToDelete.length) {
