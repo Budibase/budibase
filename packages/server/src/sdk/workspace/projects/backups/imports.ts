@@ -1971,8 +1971,8 @@ export async function importProject(
     }
     if (canCleanupAttachments) {
       await cleanupProjectAttachments(uploadedKeys)
+      await cleanupImportedKnowledge(createdKnowledgeBaseIds)
     }
-    await cleanupImportedKnowledge(createdKnowledgeBaseIds)
     for (const templateId of createdTemplateIds) {
       try {
         await sdk.restTemplates.removeIfUnused(templateId)
