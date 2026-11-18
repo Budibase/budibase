@@ -90,7 +90,9 @@ export class ScreenStore extends BudiStore<ScreenState> {
     const deleteWithHistory = this.history.wrapDeleteDoc(this.deleteScreen)
     this.delete = async screen => {
       if (screen && !Array.isArray(screen) && !screen._rev) {
-        const screens = await API.get<FetchScreenResponse>({ url: "/api/screens" })
+        const screens = await API.get<FetchScreenResponse>({
+          url: "/api/screens",
+        })
         screen = screens.find(fullScreen => fullScreen._id === screen._id)!
       }
       await deleteWithHistory(screen)

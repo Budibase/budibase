@@ -1,7 +1,8 @@
 <script lang="ts">
   import { sdk } from "@budibase/shared-core"
-  import { FeatureFlag } from "@budibase/types"
   import { get } from "svelte/store"
+  import { goto, params } from "@roxi/routify"
+  import { FeatureFlag } from "@budibase/types"
   import {
     initialise,
     reset,
@@ -29,7 +30,6 @@
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
   import { onMount } from "svelte"
-  import { goto, params } from "@roxi/routify"
   import { getErrorMessage } from "@/helpers/errors"
 
   export let workspaceId: string
@@ -46,10 +46,6 @@
   })
   let sideNav: SideNav
   let showInviteUsersModal = false
-  $: projectSetupReturn = getProjectSetupRequest({
-    workspaceId,
-    homeUrl: $params["?returnTo"],
-  })
   $: {
     const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
     if (nextPackageKey !== packageKey) {
@@ -65,6 +61,10 @@
       })
     }
   }
+  $: projectSetupReturn = getProjectSetupRequest({
+    workspaceId,
+    homeUrl: $params["?returnTo"],
+  })
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
   $: canManageConnections =
     $auth.user != null &&
@@ -90,6 +90,23 @@
       await projectsStore.fetch(workspaceId)
     } catch (error) {
       notifications.error(getErrorMessage(error) || "Unable to load projects")
+    }
+  }
+
+  const initialiseWorkspaceMetadata = async (appId: string) => {
+    if (workspaceReady) {
+      return
+    }
+    if ($featureFlags[FeatureFlag.PROJECTS]) {
+      await loadProjects(appId)
+    }
+    workspaceReady = true
+    if ($auth.user?.lastVisitedWorkspaceId !== appId) {
+      auth
+        .updateLastVisitedWorkspace(appId)
+        .catch(error =>
+          console.error("Failed to save last visited workspace", error)
+        )
     }
   }
 
@@ -127,6 +144,8 @@
         if (!isSameWorkspace) {
           reset()
           initialisedWorkspaceId = undefined
+          workspaceReady = false
+          projectsRequested = false
         }
         componentStore.update(state => ({ ...state, componentToPaste }))
         workspaceStore.update(state => ({ ...state, appId }))
@@ -147,6 +166,7 @@
           }
           if (requestKey === packageKey) {
             await deploymentStore.load()
+            await initialiseWorkspaceMetadata(appId)
           }
         })
         packageInitialisation = currentInitialisation.catch(() => {})
@@ -154,17 +174,7 @@
         return
       }
       await deploymentStore.load()
-      if ($featureFlags[FeatureFlag.PROJECTS]) {
-        await loadProjects(appId)
-      }
-      workspaceReady = true
-      if ($auth.user?.lastVisitedWorkspaceId !== appId) {
-        auth
-          .updateLastVisitedWorkspace(appId)
-          .catch(error =>
-            console.error("Failed to save last visited workspace", error)
-          )
-      }
+      await initialiseWorkspaceMetadata(appId)
     } catch (error: any) {
       if (requestKey !== packageKey) {
         return
