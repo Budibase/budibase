@@ -1466,18 +1466,18 @@ async function extractProjectPackage(
           knowledgePaths,
         })
       : undefined
+    const referencedKnowledgeBaseIds = new Set(
+      docs
+        .filter(({ resourceType }) => resourceType === ResourceType.AGENT)
+        .flatMap(({ doc }) =>
+          ((doc as Agent).operations || []).flatMap(
+            operation => operation.knowledgeBases || []
+          )
+        )
+    )
     if (knowledge) {
       const packagedKnowledgeBaseIds = new Set(
         knowledge.knowledgeBases.map(knowledgeBase => knowledgeBase._id)
-      )
-      const referencedKnowledgeBaseIds = new Set(
-        docs
-          .filter(({ resourceType }) => resourceType === ResourceType.AGENT)
-          .flatMap(({ doc }) =>
-            ((doc as Agent).operations || []).flatMap(
-              operation => operation.knowledgeBases || []
-            )
-          )
       )
       if (
         packagedKnowledgeBaseIds.size !== referencedKnowledgeBaseIds.size ||
@@ -1502,7 +1502,10 @@ async function extractProjectPackage(
         }
       }
     }
-    if (!knowledge && knowledgePaths.length) {
+    if (
+      !knowledge &&
+      (knowledgePaths.length || referencedKnowledgeBaseIds.size)
+    ) {
       throw new HTTPError(
         "Project package knowledge does not match its manifest.",
         400

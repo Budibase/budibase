@@ -17,6 +17,7 @@ import {
   isWebhookTrigger,
   MAX_PROJECT_NAME_LENGTH,
   MAX_PROJECT_README_LENGTH,
+  KnowledgeBaseType,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
   PASSWORD_REPLACEMENT,
@@ -29,6 +30,7 @@ import {
   type EmailTrigger,
   type EmailTriggerInputs,
   type ImportProjectResponse,
+  type GeminiKnowledgeBase,
   type Project,
   type ProjectPackageDependencyIndex,
   type Query,
@@ -2902,6 +2904,71 @@ describe("/projects", () => {
             "Project package contains docs not listed in dependency-index.json.",
         },
       })
+    })
+  })
+
+  it("rejects agent knowledge references without a knowledge payload", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Missing knowledge payload",
+      })
+      const agent = await config.api.agent.create({
+        name: "Knowledge agent",
+        aiconfig: "default",
+        projectIds: [project._id],
+      })
+      await config.api.agent.createOperation(agent._id!, {
+        id: "operation_1",
+        name: "Search knowledge",
+        live: false,
+        allowKnowledgeSourceDownload: true,
+      })
+      const knowledgeBaseId = "knowledgebase_exported"
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const workspaceDb = context.getWorkspaceDB()
+        await workspaceDb.put({
+          _id: knowledgeBaseId,
+          name: "Exported knowledge",
+          type: KnowledgeBaseType.GEMINI,
+          config: { googleFileStoreId: "source-store" },
+        } satisfies GeminiKnowledgeBase)
+        const storedAgent = await workspaceDb.get<Agent>(agent._id!)
+        await workspaceDb.put({
+          ...storedAgent,
+          operations: storedAgent.operations?.map(operation => ({
+            ...operation,
+            knowledgeBases: [knowledgeBaseId],
+          })),
+        })
+      })
+
+      const files = await readTarEntries(
+        await config.api.project.export(project._id, { includeRows: true })
+      )
+      files.delete("knowledge.json")
+      const entries = Object.fromEntries(
+        [...files].map(([entryPath, contents]) => [
+          entryPath,
+          JSON.parse(contents.toString()),
+        ])
+      )
+      entries["manifest.json"] = {
+        ...entries["manifest.json"],
+        containsKnowledge: false,
+        knowledgeBaseCount: 0,
+        knowledgeFileCount: 0,
+      }
+
+      await config.api.project.import(
+        await createTarPackage(entries),
+        undefined,
+        {
+          status: 400,
+          body: {
+            message: "Project package knowledge does not match its manifest.",
+          },
+        }
+      )
     })
   })
 
