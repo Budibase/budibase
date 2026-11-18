@@ -190,6 +190,7 @@ export async function updateWithExport(
 
     await backups.importApp(devId, tempDb, template, {
       updateAttachmentColumns: true,
+      restoreKnowledgeBases: false,
     })
     const newMetadata = await getNewWorkspaceMetadata(tempDb, workspaceDb)
     // get the documents to copy
@@ -246,6 +247,8 @@ export async function updateWithExport(
     if (results.some(r => r.error)) {
       throw new HTTPError("Error importing documents", 500)
     }
+
+    await backups.restoreImportedKnowledgeBases(devId, workspaceDb)
 
     let partialImport = false
     for (let offset = 0; offset < rowDocs.length; offset += IMPORT_BATCH_SIZE) {

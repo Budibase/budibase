@@ -11,6 +11,7 @@ import {
   AutomationTriggerStepId,
   BUDIBASE_AI_PROVIDER_ID,
   CustomAIProviderConfig,
+  Agent,
   Database,
   DocumentType,
   FieldType,
@@ -207,6 +208,7 @@ export interface ImportAppOpts {
   importObjStoreContents?: boolean
   objectStoreAppId?: string
   preserveLiteLLMConfig?: boolean
+  restoreKnowledgeBases?: boolean
 }
 
 async function sanitizeLiteLLMImportData(db: Database) {
@@ -271,7 +273,10 @@ async function removeRuntimeDocuments(db: Database) {
   }
 }
 
-async function restoreImportedKnowledgeBases(appId: string, db: Database) {
+export async function restoreImportedKnowledgeBases(
+  appId: string,
+  db: Database
+) {
   const filesResponse = await db.allDocs<KnowledgeBaseFile>(
     docIds.getDocParams(DocumentType.KNOWLEDGE_BASE_FILE, undefined, {
       include_docs: true,
@@ -312,6 +317,35 @@ async function restoreImportedKnowledgeBases(appId: string, db: Database) {
   }
 }
 
+async function removeMissingKnowledgeBaseReferences(db: Database) {
+  const [agentsResponse, knowledgeBasesResponse] = await Promise.all([
+    db.allDocs<Agent>(
+      docIds.getDocParams(DocumentType.AGENT, undefined, {
+        include_docs: true,
+      })
+    ),
+    db.allDocs(docIds.getDocParams(DocumentType.KNOWLEDGE_BASE)),
+  ])
+  const knowledgeBaseIds = new Set(
+    knowledgeBasesResponse.rows.map(row => row.id)
+  )
+  const agents = agentsResponse.rows
+    .map(row => row.doc)
+    .filter((agent): agent is Agent => !!agent)
+    .map(agent => ({
+      ...agent,
+      operations: agent.operations?.map(operation => ({
+        ...operation,
+        knowledgeBases: operation.knowledgeBases?.filter(knowledgeBaseId =>
+          knowledgeBaseIds.has(knowledgeBaseId)
+        ),
+      })),
+    }))
+  if (agents.length) {
+    await db.bulkDocs(agents)
+  }
+}
+
 export const importApp: ImportWorkspaceFn = async (
   appId,
   db,
@@ -322,6 +356,7 @@ export const importApp: ImportWorkspaceFn = async (
     updateAttachmentColumns: true,
     importObjStoreContents: true,
     preserveLiteLLMConfig: false,
+    restoreKnowledgeBases: true,
     ...opts,
   }
   const prodAppId = dbCore.getProdWorkspaceID(appId)
@@ -418,12 +453,10 @@ export const importApp: ImportWorkspaceFn = async (
         prefix: objectStoreProdAppId,
         toExportPath: relativePath => relativePath,
       })
-      if (contents.includes("ai")) {
-        await collectFilesToDelete({
-          prefix: `${objectStoreWorkspaceId}/ai`,
-          toExportPath: relativePath => `ai/${relativePath}`,
-        })
-      }
+      await collectFilesToDelete({
+        prefix: `${objectStoreWorkspaceId}/ai/knowledge-bases`,
+        toExportPath: relativePath => `ai/knowledge-bases/${relativePath}`,
+      })
 
       if (filesToDelete.length) {
         await objectStore.deleteFiles(
@@ -441,7 +474,8 @@ export const importApp: ImportWorkspaceFn = async (
     throw "Error loading database dump from template."
   }
   await removeRuntimeDocuments(db)
-  if (shouldRestoreKnowledge) {
+  await removeMissingKnowledgeBaseReferences(db)
+  if (shouldRestoreKnowledge && importOpts.restoreKnowledgeBases) {
     await restoreImportedKnowledgeBases(objectStoreWorkspaceId, db)
   }
   if (importOpts.updateAttachmentColumns) {

@@ -1,7 +1,17 @@
 import path from "path"
 import { join } from "path"
 import { cache, db, objectStore } from "@budibase/backend-core"
-import { FieldType, type Row, type RowAttachment } from "@budibase/types"
+import {
+  DocumentType,
+  FieldType,
+  KnowledgeBaseFileStatus,
+  KnowledgeBaseType,
+  type Agent,
+  type GeminiKnowledgeBase,
+  type KnowledgeBaseFile,
+  type Row,
+  type RowAttachment,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
@@ -13,6 +23,11 @@ import {
   getLatestEnabledMigrationId,
   getWorkspaceMigrationCacheKey,
 } from "../../../workspaceMigrations"
+
+jest.mock("../../../sdk/workspace/ai/knowledgeBase/uploads", () => ({
+  ...jest.requireActual("../../../sdk/workspace/ai/knowledgeBase/uploads"),
+  resetKnowledgeBaseStore: jest.fn().mockResolvedValue(undefined),
+}))
 
 const PASSWORD = "testtest"
 
@@ -28,6 +43,190 @@ describe("/applications/:appId/import", () => {
 
   beforeEach(async () => {
     await config.newTenant()
+  })
+
+  it.each([
+    { name: "edited", published: false },
+    { name: "published", published: true },
+  ])(
+    "imports agents and knowledge from the $name workspace and supports reimport",
+    async ({ published }) => {
+      const sourceId = config.getDevWorkspaceId()
+      const knowledgeBaseId = `${DocumentType.KNOWLEDGE_BASE}_import`
+      const knowledgeFileId = `${DocumentType.KNOWLEDGE_BASE_FILE}_import_file`
+      const agentId = `${DocumentType.AGENT}_import`
+      const sourceObjectKey = `${sourceId}/ai/knowledge-bases/${knowledgeBaseId}/files/${knowledgeFileId}/knowledge.txt`
+      const sourceDb = db.getDB(sourceId)
+      const table = await config.api.table.save(basicTable())
+      const row = await config.api.row.save(table._id!, {
+        name: published ? "Published row" : "Edited row",
+      })
+      await sourceDb.bulkDocs([
+        {
+          _id: knowledgeBaseId,
+          name: "Imported knowledge",
+          type: KnowledgeBaseType.GEMINI,
+          config: { googleFileStoreId: "source-store" },
+        } satisfies GeminiKnowledgeBase,
+        {
+          _id: knowledgeFileId,
+          knowledgeBaseId,
+          filename: "knowledge.txt",
+          objectStoreKey: sourceObjectKey,
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "test-user",
+        } satisfies KnowledgeBaseFile,
+        {
+          _id: agentId,
+          name: "Imported agent",
+          aiconfig: "default",
+          operations: [
+            {
+              id: "operation_import",
+              name: "Knowledge lookup",
+              live: true,
+              knowledgeBases: [knowledgeBaseId],
+              allowKnowledgeSourceDownload: true,
+            },
+          ],
+        } satisfies Agent,
+      ])
+      await objectStore.upload({
+        bucket: objectStore.ObjectStoreBuckets.APPS,
+        filename: sourceObjectKey,
+        body: Buffer.from("The verification code is COBALT-729"),
+        type: "text/plain",
+      })
+      if (published) {
+        await config.api.workspace.publish(sourceId)
+        const editedRow = await sourceDb.get<Row>(row._id!)
+        await sourceDb.put({ ...editedRow, name: "Unpublished row change" })
+      }
+      const exportPath = await sdk.backups.exportWorkspace(
+        published ? config.getProdWorkspaceId() : sourceId,
+        { tar: true }
+      )
+
+      await config.createWorkspace()
+      const targetId = config.getDevWorkspaceId()
+      for (let importCount = 0; importCount < 2; importCount++) {
+        await request
+          .post(`/api/applications/${targetId}/import`)
+          .attach("appExport", exportPath)
+          .set(config.defaultHeaders())
+          .expect(200)
+      }
+
+      const targetDb = db.getDB(targetId)
+      const [agent, knowledgeBase, knowledgeFile] = await Promise.all([
+        targetDb.get<Agent>(agentId),
+        targetDb.get<GeminiKnowledgeBase>(knowledgeBaseId),
+        targetDb.get<KnowledgeBaseFile>(knowledgeFileId),
+      ])
+      const importedRow = await config.api.row.get(table._id!, row._id!)
+      expect(importedRow.name).toBe(published ? "Published row" : "Edited row")
+      expect(agent.operations?.[0].knowledgeBases).toEqual([knowledgeBaseId])
+      expect(knowledgeBase.name).toBe("Imported knowledge")
+      expect(knowledgeFile.objectStoreKey).toBe(
+        `${targetId}/ai/knowledge-bases/${knowledgeBaseId}/files/${knowledgeFileId}/knowledge.txt`
+      )
+      expect(
+        await objectStore.objectExists(
+          objectStore.ObjectStoreBuckets.APPS,
+          knowledgeFile.objectStoreKey
+        )
+      ).toBe(true)
+      expect(
+        await objectStore.objectExists(
+          objectStore.ObjectStoreBuckets.APPS,
+          sourceObjectKey
+        )
+      ).toBe(true)
+    }
+  )
+
+  it("imports agent structure without knowledge when data and files are excluded", async () => {
+    const sourceId = config.getDevWorkspaceId()
+    const knowledgeBaseId = `${DocumentType.KNOWLEDGE_BASE}_excluded`
+    const knowledgeFileId = `${DocumentType.KNOWLEDGE_BASE_FILE}_excluded_file`
+    const agentId = `${DocumentType.AGENT}_excluded`
+    const sourceObjectKey = `${sourceId}/ai/knowledge-bases/${knowledgeBaseId}/files/${knowledgeFileId}/knowledge.txt`
+    await db.getDB(sourceId).bulkDocs([
+      {
+        _id: knowledgeBaseId,
+        name: "Excluded knowledge",
+        type: KnowledgeBaseType.GEMINI,
+        config: { googleFileStoreId: "source-store" },
+      } satisfies GeminiKnowledgeBase,
+      {
+        _id: knowledgeFileId,
+        knowledgeBaseId,
+        filename: "knowledge.txt",
+        objectStoreKey: sourceObjectKey,
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "test-user",
+      } satisfies KnowledgeBaseFile,
+      {
+        _id: agentId,
+        name: "Agent without imported knowledge",
+        aiconfig: "default",
+        operations: [
+          {
+            id: "operation_excluded",
+            name: "Knowledge lookup",
+            live: true,
+            knowledgeBases: [knowledgeBaseId],
+            allowKnowledgeSourceDownload: true,
+          },
+        ],
+      } satisfies Agent,
+    ])
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: sourceObjectKey,
+      body: Buffer.from("The verification code is COBALT-729"),
+      type: "text/plain",
+    })
+    const exportPath = await sdk.backups.exportWorkspace(sourceId, {
+      excludeRows: true,
+      tar: true,
+    })
+
+    await config.createWorkspace()
+    const targetId = config.getDevWorkspaceId()
+    const staleObjectKey = `${targetId}/ai/knowledge-bases/stale/file.txt`
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: staleObjectKey,
+      body: Buffer.from("stale knowledge"),
+      type: "text/plain",
+    })
+    await request
+      .post(`/api/applications/${targetId}/import`)
+      .attach("appExport", exportPath)
+      .set(config.defaultHeaders())
+      .expect(200)
+
+    const targetDb = db.getDB(targetId)
+    const agent = await targetDb.get<Agent>(agentId)
+    expect(agent.operations?.[0].knowledgeBases).toEqual([])
+    expect(
+      await targetDb.getMultiple([knowledgeBaseId, knowledgeFileId], {
+        allowMissing: true,
+      })
+    ).toEqual([])
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        staleObjectKey
+      )
+    ).toBe(false)
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        sourceObjectKey
+      )
+    ).toBe(true)
   })
 
   it("should be able to perform an old import", async () => {
