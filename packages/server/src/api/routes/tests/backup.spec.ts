@@ -2,6 +2,7 @@ import { constants, context, events, objectStore } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DocumentType, Workspace } from "@budibase/types"
 import path from "path"
+import fsp from "fs/promises"
 import { Readable, Writable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
@@ -111,6 +112,23 @@ describe("/backups", () => {
       expect(events.app.exported).toHaveBeenCalledTimes(1)
 
       await checkExportContent(body, { includeRows: true, isEncrypted: false })
+    })
+
+    it("exports dev knowledge files with a published workspace", async () => {
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const exportPath = await sdk.backups.exportWorkspace(
+        config.getProdWorkspaceId(),
+        { tar: true }
+      )
+      try {
+        await checkExportContent(await fsp.readFile(exportPath), {
+          includeRows: true,
+          isEncrypted: false,
+        })
+      } finally {
+        await fsp.rm(exportPath, { force: true })
+      }
     })
 
     it("should be able to export a workspace without rows", async () => {

@@ -113,7 +113,8 @@ export const exportWorkspace: ExportWorkspaceFn = async (
     )
 
     if (!config?.excludeRows) {
-      const knowledgeObjectStorePath = `${workspaceId}/ai/knowledge-bases/`
+      const knowledgeWorkspaceId = dbCore.getDevWorkspaceID(workspaceId)
+      const knowledgeObjectStorePath = `${knowledgeWorkspaceId}/ai/knowledge-bases/`
       const knowledgeTmpPath = await objectStore.retrieveDirectory(
         ObjectStoreBuckets.APPS,
         knowledgeObjectStorePath
