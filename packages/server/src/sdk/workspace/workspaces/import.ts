@@ -297,10 +297,11 @@ export async function updateWithExport(
       await backups.cleanupUnusedKnowledgeBaseObjects(devId, workspaceDb)
     }
     for (const storeId of replacedStoreIds) {
-      await deleteGeminiVectorStore(storeId).catch((error: any) => {
-        if (error?.status !== 403 && error?.status !== 404) {
-          throw error
-        }
+      await deleteGeminiVectorStore(storeId).catch(error => {
+        console.log("Failed to delete replaced Gemini vector store", {
+          storeId,
+          error,
+        })
       })
     }
 

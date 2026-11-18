@@ -60,11 +60,21 @@ describe("/applications/:appId/import", () => {
   })
 
   it.each([
-    { name: "edited", published: false },
-    { name: "published", published: true },
+    {
+      name: "edited",
+      published: false,
+      deleteStore: async () => undefined,
+    },
+    {
+      name: "published when old vector-store deletion fails",
+      published: true,
+      deleteStore: async () => {
+        throw new Error("Vector store deletion failed")
+      },
+    },
   ])(
     "imports agents and knowledge from the $name workspace and supports reimport",
-    async ({ published }) => {
+    async ({ published, deleteStore }) => {
       const sourceId = config.getDevWorkspaceId()
       const knowledgeBaseId = `${DocumentType.KNOWLEDGE_BASE}_import`
       const knowledgeFileId = `${DocumentType.KNOWLEDGE_BASE_FILE}_import_file`
@@ -136,6 +146,7 @@ describe("/applications/:appId/import", () => {
         ...firstImportKnowledgeBase,
         config: { googleFileStoreId: "destination-store" },
       })
+      mockDeleteGeminiVectorStore.mockImplementationOnce(deleteStore)
 
       await request
         .post(`/api/applications/${targetId}/import`)
