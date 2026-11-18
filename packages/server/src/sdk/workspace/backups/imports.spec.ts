@@ -1,12 +1,17 @@
 import { context, db, objectStore } from "@budibase/backend-core"
-import { RuntimeDocumentTypes, SEPARATOR } from "@budibase/types"
+import {
+  DocumentType,
+  KnowledgeBaseFileStatus,
+  RuntimeDocumentTypes,
+  SEPARATOR,
+} from "@budibase/types"
 import fs from "fs"
 import os from "os"
 import path from "path"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { DB_EXPORT_FILE } from "./constants"
 import { exportDB } from "./exports"
-import { importApp } from "./imports"
+import { importApp, restoreImportedKnowledgeBases } from "./imports"
 
 describe("importApp", () => {
   const config = new TestConfiguration()
@@ -84,5 +89,25 @@ describe("importApp", () => {
         existingObjectKey
       )
     ).toBe(true)
+  })
+
+  it("preserves imported knowledge file documents without object keys", async () => {
+    const workspaceId = config.getDevWorkspaceId()
+    const workspaceDb = db.getDB(workspaceId)
+    const fileId = `${DocumentType.KNOWLEDGE_BASE_FILE}_legacy`
+    await workspaceDb.put({
+      _id: fileId,
+      knowledgeBaseId: `${DocumentType.KNOWLEDGE_BASE}_legacy`,
+      filename: "legacy.txt",
+      status: KnowledgeBaseFileStatus.READY,
+      uploadedBy: "test-user",
+    })
+
+    await config.doInContext(workspaceId, () =>
+      restoreImportedKnowledgeBases(workspaceId, workspaceDb)
+    )
+
+    const file = await workspaceDb.get(fileId)
+    expect(file).not.toHaveProperty("objectStoreKey")
   })
 })

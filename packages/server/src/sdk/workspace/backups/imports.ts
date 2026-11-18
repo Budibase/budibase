@@ -287,6 +287,9 @@ export async function restoreImportedKnowledgeBases(
     .map(row => row.doc)
     .filter((file): file is KnowledgeBaseFile => !!file)
     .map(file => {
+      if (!file.objectStoreKey) {
+        return file
+      }
       const marker = "/ai/knowledge-bases/"
       const markerIndex = file.objectStoreKey.indexOf(marker)
       if (markerIndex < 0) {
