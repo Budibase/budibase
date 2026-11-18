@@ -381,6 +381,36 @@ export async function cleanupUnusedKnowledgeBaseObjects(
   }
 }
 
+export async function cleanupUnusedWorkspaceObjects({
+  prodAppId,
+  importedFiles,
+}: {
+  prodAppId: string
+  importedFiles: string[]
+}) {
+  const filesToDelete: string[] = []
+  await utils.parallelForeach(
+    objectStore.listAllObjects(ObjectStoreBuckets.APPS, prodAppId),
+    async file => {
+      if (!file.Key || !file.Key.startsWith(`${prodAppId}/`)) {
+        return
+      }
+      const relativePath = file.Key.slice(prodAppId.length + 1)
+      if (
+        !relativePath.startsWith(`${ATTACHMENT_DIRECTORY}/`) &&
+        !relativePath.startsWith("ai/knowledge-bases/") &&
+        !importedFiles.includes(relativePath)
+      ) {
+        filesToDelete.push(file.Key)
+      }
+    },
+    5
+  )
+  if (filesToDelete.length) {
+    await objectStore.deleteFiles(ObjectStoreBuckets.APPS, filesToDelete)
+  }
+}
+
 export const importApp: ImportWorkspaceFn = async (
   appId,
   db,
@@ -400,6 +430,7 @@ export const importApp: ImportWorkspaceFn = async (
   const objectStoreProdAppId = dbCore.getProdWorkspaceID(objectStoreWorkspaceId)
   let dbStream: fs.ReadStream
   let shouldRestoreKnowledge = false
+  let importedObjectStoreFiles: string[] = []
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
     template.file && (await fsp.lstat(template.file.path)).isDirectory()
@@ -453,7 +484,7 @@ export const importApp: ImportWorkspaceFn = async (
         }
       }
       await Promise.all(promises)
-      const uploadedFiles = await fsp.readdir(tmpPath, { recursive: true })
+      importedObjectStoreFiles = await fsp.readdir(tmpPath, { recursive: true })
 
       const filesToDelete: string[] = []
       const collectFilesToDelete = async ({
@@ -478,7 +509,7 @@ export const importApp: ImportWorkspaceFn = async (
             if (
               !relativePath.startsWith(`${ATTACHMENT_DIRECTORY}/`) &&
               !relativePath.startsWith("ai/knowledge-bases/") &&
-              !uploadedFiles.includes(toExportPath(relativePath))
+              !importedObjectStoreFiles.includes(toExportPath(relativePath))
             ) {
               filesToDelete.push(file.Key)
             }
@@ -487,9 +518,9 @@ export const importApp: ImportWorkspaceFn = async (
         )
       }
       if (importOpts.cleanupObjectStoreContents) {
-        await collectFilesToDelete({
-          prefix: objectStoreProdAppId,
-          toExportPath: relativePath => relativePath,
+        await cleanupUnusedWorkspaceObjects({
+          prodAppId: objectStoreProdAppId,
+          importedFiles: importedObjectStoreFiles,
         })
         if (shouldRestoreKnowledge) {
           await collectFilesToDelete({
@@ -533,5 +564,9 @@ export const importApp: ImportWorkspaceFn = async (
   if (tmpPath) {
     await fsp.rm(tmpPath, { recursive: true, force: true })
   }
-  return { ok, containsKnowledge: shouldRestoreKnowledge }
+  return {
+    ok,
+    containsKnowledge: shouldRestoreKnowledge,
+    objectStoreFiles: importedObjectStoreFiles,
+  }
 }

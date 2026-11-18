@@ -146,6 +146,13 @@ describe("/applications/:appId/import", () => {
         ...firstImportKnowledgeBase,
         config: { googleFileStoreId: "destination-store" },
       })
+      const staleObjectKey = `${db.getProdWorkspaceID(targetId)}/plugins/stale.js`
+      await objectStore.upload({
+        bucket: objectStore.ObjectStoreBuckets.APPS,
+        filename: staleObjectKey,
+        body: Buffer.from("stale plugin"),
+        type: "text/javascript",
+      })
       mockDeleteGeminiVectorStore.mockImplementationOnce(deleteStore)
 
       await request
@@ -184,6 +191,12 @@ describe("/applications/:appId/import", () => {
           sourceObjectKey
         )
       ).toBe(true)
+      expect(
+        await objectStore.objectExists(
+          objectStore.ObjectStoreBuckets.APPS,
+          staleObjectKey
+        )
+      ).toBe(false)
     }
   )
 

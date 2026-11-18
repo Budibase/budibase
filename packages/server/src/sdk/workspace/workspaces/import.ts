@@ -292,6 +292,14 @@ export async function updateWithExport(
       throw new HTTPError("Error importing documents", 500)
     }
 
+    await backups
+      .cleanupUnusedWorkspaceObjects({
+        prodAppId: dbCore.getProdWorkspaceID(devId),
+        importedFiles: importResult.objectStoreFiles,
+      })
+      .catch(error => {
+        console.log("Failed to clean up replaced workspace objects", error)
+      })
     if (importResult.containsKnowledge) {
       await backups.restoreImportedKnowledgeBases(devId, workspaceDb)
       await backups.cleanupUnusedKnowledgeBaseObjects(devId, workspaceDb)

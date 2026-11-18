@@ -31,6 +31,7 @@ export interface ImportWorkspaceOpts {
 export interface ImportWorkspaceResult {
   ok: string
   containsKnowledge: boolean
+  objectStoreFiles: string[]
 }
 
 export type ExportWorkspaceFn = (
