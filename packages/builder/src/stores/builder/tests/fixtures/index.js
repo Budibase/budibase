@@ -70,6 +70,7 @@ export const getFakeScreenPatch = store => {
   }
 }
 
+/** @returns {Record<string, import("@budibase/types").ComponentDefinition>} */
 export const componentDefinitionMap = () => {
   return Object.keys(COMPONENT_DEFINITIONS).reduce((acc, key) => {
     const def = COMPONENT_DEFINITIONS[key]
@@ -78,6 +79,7 @@ export const componentDefinitionMap = () => {
   }, {})
 }
 
+/** @returns {Record<string, import("@budibase/types").ComponentDefinition>} */
 export const pluginDefinitionMap = () => {
   return Object.keys(PLUGIN_DEFINITIONS).reduce((acc, key) => {
     const def = PLUGIN_DEFINITIONS[key]

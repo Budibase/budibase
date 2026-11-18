@@ -5,7 +5,16 @@ metadata:
   name: ingress-budibase
   annotations:
     kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/scheme: {{ .Values.awsAlbIngress.scheme | default "internet-facing" | quote }}
+    {{- with .Values.awsAlbIngress.groupName }}
+    alb.ingress.kubernetes.io/group.name: {{ . | quote }}
+    {{- end }}
+    {{- with .Values.awsAlbIngress.subnets }}
+    alb.ingress.kubernetes.io/subnets: {{ join "," . | quote }}
+    {{- end }}
+    {{- with .Values.awsAlbIngress.inboundCidrs }}
+    alb.ingress.kubernetes.io/inbound-cidrs: {{ join "," . | quote }}
+    {{- end }}
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/success-codes: '200'
     alb.ingress.kubernetes.io/healthcheck-path: '/health'
