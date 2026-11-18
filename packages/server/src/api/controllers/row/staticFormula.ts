@@ -3,7 +3,7 @@ import { FieldType, FormulaType, Row, Table, ViewV2 } from "@budibase/types"
 import { cloneDeep, merge } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import * as linkRows from "../../../db/linkedRows"
-import { getRowParams } from "../../../db/utils"
+import { getRowParams, pageAllDocs } from "../../../db/utils"
 import sdk from "../../../sdk"
 import {
   outputProcessing,
@@ -93,33 +93,14 @@ export async function updateRelatedFormula(
   await Promise.all(promises)
 }
 
-const FORMULA_ROW_PAGE_SIZE = 1000
-
 export async function updateAllFormulasInTable(table: Table) {
   const db = context.getWorkspaceDB()
-  let startAfter: string | undefined
-
-  while (true) {
-    const response = await db.allDocs<Row>(
-      getRowParams(table._id, null, {
-        include_docs: true,
-        limit: FORMULA_ROW_PAGE_SIZE + (startAfter ? 1 : 0),
-        ...(startAfter ? { startkey: startAfter } : {}),
-      })
-    )
-    // Filter the cursor instead of skipping one result: it may have been
-    // deleted since the preceding page was read.
-    const page = response.rows
-      .filter(row => row.id !== startAfter)
-      .slice(0, FORMULA_ROW_PAGE_SIZE)
-    if (!page.length) {
-      break
-    }
-    startAfter = page[page.length - 1].id
-
+  for await (const rows of pageAllDocs<Row>({
+    db,
+    params: getRowParams(table._id),
+  })) {
     // raw rows are written back, so enrich a clone to keep relationship data
     // out of the stored documents
-    const rows = page.flatMap(({ doc }) => (doc ? [doc] : []))
     const enrichedRows = await outputProcessing(table, cloneDeep(rows), {
       squash: false,
     })
@@ -141,10 +122,6 @@ export async function updateAllFormulasInTable(table: Table) {
     }
     if (updatedRows.length) {
       await db.bulkDocs(updatedRows)
-    }
-
-    if (page.length < FORMULA_ROW_PAGE_SIZE) {
-      break
     }
   }
 }
