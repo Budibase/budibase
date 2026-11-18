@@ -13,6 +13,7 @@ import {
   type RowAttachment,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { deleteGeminiVectorStore } from "../../../sdk/workspace/ai/knowledgeBase/geminiFileStore"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
 import { basicTable } from "../../../tests/utilities/structures"
@@ -24,10 +25,19 @@ import {
   getWorkspaceMigrationCacheKey,
 } from "../../../workspaceMigrations"
 
+jest.mock("../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => ({
+  ...jest.requireActual(
+    "../../../sdk/workspace/ai/knowledgeBase/geminiFileStore"
+  ),
+  deleteGeminiVectorStore: jest.fn().mockResolvedValue(undefined),
+}))
+
 jest.mock("../../../sdk/workspace/ai/knowledgeBase/uploads", () => ({
   ...jest.requireActual("../../../sdk/workspace/ai/knowledgeBase/uploads"),
   resetKnowledgeBaseStore: jest.fn().mockResolvedValue(undefined),
 }))
+
+const mockDeleteGeminiVectorStore = jest.mocked(deleteGeminiVectorStore)
 
 const PASSWORD = "testtest"
 
@@ -109,15 +119,26 @@ describe("/applications/:appId/import", () => {
 
       await config.createWorkspace()
       const targetId = config.getDevWorkspaceId()
-      for (let importCount = 0; importCount < 2; importCount++) {
-        await request
-          .post(`/api/applications/${targetId}/import`)
-          .attach("appExport", exportPath)
-          .set(config.defaultHeaders())
-          .expect(200)
-      }
+      await request
+        .post(`/api/applications/${targetId}/import`)
+        .attach("appExport", exportPath)
+        .set(config.defaultHeaders())
+        .expect(200)
 
       const targetDb = db.getDB(targetId)
+      const firstImportKnowledgeBase =
+        await targetDb.get<GeminiKnowledgeBase>(knowledgeBaseId)
+      await targetDb.put({
+        ...firstImportKnowledgeBase,
+        config: { googleFileStoreId: "destination-store" },
+      })
+
+      await request
+        .post(`/api/applications/${targetId}/import`)
+        .attach("appExport", exportPath)
+        .set(config.defaultHeaders())
+        .expect(200)
+
       const [agent, knowledgeBase, knowledgeFile] = await Promise.all([
         targetDb.get<Agent>(agentId),
         targetDb.get<GeminiKnowledgeBase>(knowledgeBaseId),
@@ -127,6 +148,12 @@ describe("/applications/:appId/import", () => {
       expect(importedRow.name).toBe(published ? "Published row" : "Edited row")
       expect(agent.operations?.[0].knowledgeBases).toEqual([knowledgeBaseId])
       expect(knowledgeBase.name).toBe("Imported knowledge")
+      expect(mockDeleteGeminiVectorStore).toHaveBeenCalledWith(
+        "destination-store"
+      )
+      expect(mockDeleteGeminiVectorStore).not.toHaveBeenCalledWith(
+        "source-store"
+      )
       expect(knowledgeFile.objectStoreKey).toBe(
         `${targetId}/ai/knowledge-bases/${knowledgeBaseId}/files/${knowledgeFileId}/knowledge.txt`
       )

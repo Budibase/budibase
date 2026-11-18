@@ -9,12 +9,14 @@ import {
   Document,
   DocumentType,
   DocumentTypesToImport,
+  GeminiKnowledgeBase,
   RowValue,
   Workspace,
 } from "@budibase/types"
 import { getWorkspaceMigrationCacheKey } from "../../../workspaceMigrations"
 import { processMigrations } from "../../../workspaceMigrations/migrationsProcessor"
 import backups from "../backups"
+import { deleteGeminiVectorStore } from "../ai/knowledgeBase/geminiFileStore"
 import {
   USER_METDATA_PREFIX,
   LINK_USER_METADATA_PREFIX,
@@ -210,6 +212,29 @@ export async function updateWithExport(
             type !== DocumentType.KNOWLEDGE_BASE &&
             type !== DocumentType.KNOWLEDGE_BASE_FILE
         )
+    const importedStoreIds = new Set(
+      toUpdate
+        .filter(
+          (doc): doc is GeminiKnowledgeBase =>
+            doc._id?.startsWith(`${DocumentType.KNOWLEDGE_BASE}_`) ?? false
+        )
+        .map(knowledgeBase => knowledgeBase.config.googleFileStoreId)
+    )
+    const existingKnowledgeBases = importsKnowledge
+      ? await workspaceDb.allDocs<GeminiKnowledgeBase>(
+          dbCore.getDocParams(DocumentType.KNOWLEDGE_BASE, undefined, {
+            include_docs: true,
+          })
+        )
+      : undefined
+    const replacedStoreIds = new Set(
+      (existingKnowledgeBases?.rows || [])
+        .map(row => row.doc?.config.googleFileStoreId)
+        .filter(
+          (storeId): storeId is string =>
+            !!storeId && !importedStoreIds.has(storeId)
+        )
+    )
     // clear out the old documents
     const toDelete = await removeImportableDocuments(
       workspaceDb,
@@ -267,6 +292,13 @@ export async function updateWithExport(
     }
 
     await backups.restoreImportedKnowledgeBases(devId, workspaceDb)
+    for (const storeId of replacedStoreIds) {
+      await deleteGeminiVectorStore(storeId).catch((error: any) => {
+        if (error?.status !== 403 && error?.status !== 404) {
+          throw error
+        }
+      })
+    }
 
     let partialImport = false
     for (let offset = 0; offset < rowDocs.length; offset += IMPORT_BATCH_SIZE) {
