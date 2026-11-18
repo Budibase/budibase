@@ -28,6 +28,11 @@ export interface ImportWorkspaceOpts {
   cleanupObjectStoreContents?: boolean
 }
 
+export interface ImportWorkspaceResult {
+  ok: string
+  containsKnowledge: boolean
+}
+
 export type ExportWorkspaceFn = (
   devWorkspaceId: string,
   opts: {
@@ -43,7 +48,7 @@ export type ImportWorkspaceFn = (
   destinationDb: Database,
   config: ImportWorkspaceConfig,
   opts?: ImportWorkspaceOpts
-) => Promise<string>
+) => Promise<ImportWorkspaceResult>
 type StatsFn = (devWorkspaceId: string) => Promise<WorkspaceBackupContents>
 
 export interface BackupProcessingOpts {

@@ -531,5 +531,5 @@ export const importApp: ImportWorkspaceFn = async (
   if (tmpPath) {
     await fsp.rm(tmpPath, { recursive: true, force: true })
   }
-  return ok
+  return { ok, containsKnowledge: shouldRestoreKnowledge }
 }

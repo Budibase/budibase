@@ -14,6 +14,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { deleteGeminiVectorStore } from "../../../sdk/workspace/ai/knowledgeBase/geminiFileStore"
+import { resetKnowledgeBaseStore } from "../../../sdk/workspace/ai/knowledgeBase/uploads"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
 import { basicTable } from "../../../tests/utilities/structures"
@@ -38,6 +39,7 @@ jest.mock("../../../sdk/workspace/ai/knowledgeBase/uploads", () => ({
 }))
 
 const mockDeleteGeminiVectorStore = jest.mocked(deleteGeminiVectorStore)
+const mockResetKnowledgeBaseStore = jest.mocked(resetKnowledgeBaseStore)
 
 const PASSWORD = "testtest"
 
@@ -356,6 +358,7 @@ describe("/applications/:appId/import", () => {
 
   it("should be able to perform an old import", async () => {
     const appId = config.getDevWorkspaceId()
+    mockResetKnowledgeBaseStore.mockClear()
     await request
       .post(`/api/applications/${appId}/import`)
       .field("encryptionPassword", PASSWORD)
@@ -554,6 +557,7 @@ describe("/applications/:appId/import", () => {
     expect(screens.length).toBe(2)
     expect(screens[0].routing.route).toBe("/derp")
     expect(screens[1].routing.route).toBe("/blank")
+    expect(mockResetKnowledgeBaseStore).not.toHaveBeenCalled()
   })
 
   it.each([

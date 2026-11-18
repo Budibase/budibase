@@ -193,7 +193,7 @@ export async function updateWithExport(
       },
     }
 
-    await backups.importApp(devId, tempDb, template, {
+    const importResult = await backups.importApp(devId, tempDb, template, {
       updateAttachmentColumns: true,
       restoreKnowledgeBases: false,
       cleanupObjectStoreContents: false,
@@ -292,8 +292,10 @@ export async function updateWithExport(
       throw new HTTPError("Error importing documents", 500)
     }
 
-    await backups.restoreImportedKnowledgeBases(devId, workspaceDb)
-    await backups.cleanupUnusedKnowledgeBaseObjects(devId, workspaceDb)
+    if (importResult.containsKnowledge) {
+      await backups.restoreImportedKnowledgeBases(devId, workspaceDb)
+      await backups.cleanupUnusedKnowledgeBaseObjects(devId, workspaceDb)
+    }
     for (const storeId of replacedStoreIds) {
       await deleteGeminiVectorStore(storeId).catch((error: any) => {
         if (error?.status !== 403 && error?.status !== 404) {
