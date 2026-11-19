@@ -33,23 +33,10 @@ async function createUpdateResponse(ctx: UserCtx, user?: User) {
   if (
     user &&
     ctx.request.body.password !== undefined &&
-    !users.isAdmin(ctx.user)
+    !users.isAdmin(ctx.user) &&
+    !isLoggedInUser(ctx, user)
   ) {
-    const callerId = dbCore.getGlobalIDFromUserMetadataID(ctx.user._id!)
-    const isSelf = ctx.user._id === user._id || callerId === user._id
-    const callerApps = ctx.user.builder?.apps || []
-    const targetApps = [
-      ...Object.keys(user.roles || {}),
-      ...(user.builder?.apps || []),
-    ]
-    const canUpdatePassword =
-      isSelf ||
-      (users.isGlobalBuilder(ctx.user) && !user.admin?.global) ||
-      (!user.admin?.global &&
-        callerApps.some(appId => targetApps.includes(appId)))
-    if (!canUpdatePassword) {
-      ctx.throw(403, "User does not have permission to update this password.")
-    }
+    ctx.throw(403, "User does not have permission to update this password.")
   }
   if (ctx.request.body.userGroups !== undefined) {
     const unchanged =

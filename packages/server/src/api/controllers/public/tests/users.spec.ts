@@ -157,6 +157,7 @@ describe("public users controller", () => {
 
   it.each<{ targetRoles: User["roles"]; admin?: User["admin"] }>([
     { targetRoles: { app_other: "BASIC" }, admin: undefined },
+    { targetRoles: { app_allowed: "BASIC" }, admin: undefined },
     { targetRoles: { app_allowed: "BASIC" }, admin: { global: true } },
   ])(
     "rejects a workspace builder changing an out-of-scope password",
@@ -189,18 +190,38 @@ describe("public users controller", () => {
     }
   )
 
-  it("allows a workspace builder to change a user password in their workspace", async () => {
+  it("allows an organisation admin to change a user password", async () => {
     const ctx = createCtx({
       caller: {
-        _id: "user_builder",
-        email: "builder@example.com",
+        _id: "user_admin",
+        email: "admin@example.com",
         tenantId: "tenant",
-        builder: { apps: ["app_allowed"] },
+        admin: { global: true },
       },
       target: { ...targetUser, password: "changed-password" },
       builderApps: ["app_allowed"],
     })
     setExistingTargetUser({ app_allowed: "BASIC" })
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.update(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
+  })
+
+  it("allows a user to change their own password", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: targetUser._id,
+        email: targetUser.email,
+        tenantId: "tenant",
+      },
+      target: { ...targetUser, password: "changed-password" },
+    })
+    setExistingTargetUser()
     saveTargetUser()
     const next = jest
       .fn()
