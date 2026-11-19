@@ -2,6 +2,7 @@ export interface ProcessOptions {
   cacheTemplates?: boolean
   noEscaping?: boolean
   noHelpers?: boolean
+  safeSearchHelpers?: boolean
   noFinalise?: boolean
   noThrow?: boolean
   escapeNewlines?: boolean
