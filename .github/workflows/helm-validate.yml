@@ -8,62 +8,25 @@ on:
       - ".github/workflows/helm-validate.yml"
 
 jobs:
-  helm-lint:
+  chart-static-validation:
+    name: Static checks (${{ matrix.test_type }})
     runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Set up Helm
-        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3
-        with:
-          version: v3.17.3
-
-      - name: Helm lint
-        run: helm lint charts/budibase
-
-  helm-unittest:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Set up Helm
-        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3
-        with:
-          version: v3.17.3
-
-      - name: Install helm-unittest plugin
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version 0.7.2
-
-      - name: Run unit tests
-        run: helm unittest charts/budibase
-
-      - name: Set up kind and kubectl
-        uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
-        with:
-          version: v0.33.0
-          kubectl_version: v1.37.1
-          install_only: true
-
-      - name: Verify cluster prerequisites
-        run: |
-          sudo systemctl start docker
-          docker info
-          kind version
-          kubectl version --client=true
-          python3 --version
-          ruby --version
-
-      - name: Check master and repeated branch upgrades in kind
-        run: python3 scripts/test-helm-secret-upgrades.py --kind
-
-  chart-testing:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - test_type: helm-lint
+            setup_chart_testing: false
+            command: helm lint charts/budibase
+          - test_type: chart-testing-lint
+            setup_chart_testing: true
+            command: |
+              changed=$(ct list-changed --config ct.yaml)
+              if [[ -z "$changed" ]]; then
+                echo "No changed charts detected"
+                exit 0
+              fi
+              ct lint --config ct.yaml
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -76,29 +39,87 @@ jobs:
           version: v3.17.3
 
       - name: Set up chart-testing
+        if: matrix.setup_chart_testing
         uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2
 
-      - name: List changed charts
-        id: list-changed
-        run: |
-          changed=$(ct list-changed --config ct.yaml)
-          if [[ -n "$changed" ]]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+      - name: Run static chart check
+        run: ${{ matrix.command }}
 
-      - name: Lint changed charts
-        if: steps.list-changed.outputs.changed == 'true'
-        run: ct lint --config ct.yaml
-
-  kubeconform:
+  chart-behaviour-validation:
+    name: Behaviour checks (${{ matrix.test_type }})
     runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
-        k8s_version:
-          - "1.28.0"
-          - "1.29.0"
-          - "1.30.0"
-          - "1.31.0"
+        include:
+          - test_type: helm-unittest
+            install_unittest_plugin: true
+            run_kind_upgrade_test: false
+          - test_type: kind-upgrade-replay
+            install_unittest_plugin: false
+            run_kind_upgrade_test: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3
+        with:
+          version: v3.17.3
+
+      - name: Install helm-unittest plugin
+        if: matrix.install_unittest_plugin
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version 0.7.2
+
+      - name: Run unit tests
+        if: matrix.install_unittest_plugin
+        run: helm unittest charts/budibase
+
+      - name: Set up kind and kubectl
+        if: matrix.run_kind_upgrade_test
+        uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
+        with:
+          version: v0.33.0
+          kubectl_version: v1.37.1
+          install_only: true
+
+      - name: Verify cluster prerequisites
+        if: matrix.run_kind_upgrade_test
+        run: |
+          sudo systemctl start docker
+          docker info
+          kind version
+          kubectl version --client=true
+          python3 --version
+          ruby --version
+
+      - name: Check master and repeated branch upgrades in kind
+        if: matrix.run_kind_upgrade_test
+        run: python3 scripts/test-helm-secret-upgrades.py --kind
+
+  chart-schema-validation:
+    name: Schema checks (${{ matrix.test_type }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - test_type: kubeconform-1.28
+            validator: kubeconform
+            kubernetes_version: "1.28.0"
+          - test_type: kubeconform-1.29
+            validator: kubeconform
+            kubernetes_version: "1.29.0"
+          - test_type: kubeconform-1.30
+            validator: kubeconform
+            kubernetes_version: "1.30.0"
+          - test_type: kubeconform-1.31
+            validator: kubeconform
+            kubernetes_version: "1.31.0"
+          - test_type: kubeval-strict
+            validator: kubeval
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -109,37 +130,30 @@ jobs:
           version: v3.17.3
 
       - name: Install kubeconform
+        if: matrix.validator == 'kubeconform'
         run: |
           curl -fsSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | \
             tar xz -C /usr/local/bin kubeconform
 
       - name: Template and validate with kubeconform
+        if: matrix.validator == 'kubeconform'
         run: |
           helm template budibase charts/budibase \
             --set services.couchdb.enabled=false | \
           kubeconform \
-            -kubernetes-version ${{ matrix.k8s_version }} \
+            -kubernetes-version ${{ matrix.kubernetes_version }} \
             -strict \
             -summary \
             -output text
 
-  kubeval:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up Helm
-        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3
-        with:
-          version: v3.17.3
-
       - name: Install kubeval
+        if: matrix.validator == 'kubeval'
         run: |
           curl -fsSL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz | \
             tar xz -C /usr/local/bin kubeval
 
       - name: Template and validate with kubeval
+        if: matrix.validator == 'kubeval'
         run: |
           helm template budibase charts/budibase \
             --set services.couchdb.enabled=false | \
