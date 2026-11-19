@@ -43,6 +43,22 @@ jobs:
       - name: Run unit tests
         run: helm unittest charts/budibase
 
+      - name: Set up kind and kubectl
+        uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
+        with:
+          version: v0.33.0
+          kubectl_version: v1.37.1
+          install_only: true
+
+      - name: Verify cluster prerequisites
+        run: |
+          sudo systemctl start docker
+          docker info
+          kind version
+          kubectl version --client=true
+          python3 --version
+          ruby --version
+
       - name: Check master and repeated branch upgrades in kind
         run: python3 scripts/test-helm-secret-upgrades.py --kind
 
