@@ -275,10 +275,9 @@ describe("project dependency assignments", () => {
               (await config.api.project.create({ name: "Reporting" })).project
                 ._id,
             ]
-        const preview = await config.api.project.previewAssignment({
-          resourceId: workspaceApp._id!,
-          projectIds,
-        })
+        const assignedWorkspaceApp = await config.api.workspaceApp.find(
+          workspaceApp._id!
+        )
         const dependencyProjectIds = [project._id, ...projectIds]
         await config.api.automation.update({
           ...(await config.api.automation.get(automation._id!)),
@@ -287,8 +286,8 @@ describe("project dependency assignments", () => {
         const result = await config.api.project.updateAssignment(
           workspaceApp._id!,
           {
-            resourceRev: preview.resourceRev,
-            dependencyFingerprint: preview.dependencyFingerprint,
+            resourceRev: assignedWorkspaceApp._rev!,
+            dependencyFingerprint: "",
             projectIds,
             dependencyIds: [],
           }

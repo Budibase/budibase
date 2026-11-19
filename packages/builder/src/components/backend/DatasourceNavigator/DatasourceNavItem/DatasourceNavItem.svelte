@@ -67,7 +67,8 @@
   $: assignableDatasource = isAssignableDatasource(datasource)
     ? datasource
     : undefined
-  $: canAssignProject = projectsEnabled && !!assignableDatasource
+  $: canAssignProject =
+    projectsEnabled && $projectsStore.length > 0 && !!assignableDatasource
   $: projectAssignmentResource = {
     id: assignableDatasource?._id || "",
     revision: assignableDatasource?._rev || "",

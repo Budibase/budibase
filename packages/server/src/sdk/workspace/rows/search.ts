@@ -84,7 +84,10 @@ export async function search(
     }
 
     if (context) {
-      options.query = await enrichSearchContext(options.query, context)
+      options.query = await enrichSearchContext({
+        fields: options.query,
+        inputs: context,
+      })
     }
 
     // need to make sure filters in correct shape before checking for view
@@ -96,9 +99,20 @@ export async function search(
       // Enrich saved query with ephemeral query params.
       // We prevent searching on any fields that are saved as part of the query, as
       // that could let users find rows they should not be allowed to access.
-      let viewQuery = (await enrichSearchContext(view.query || {}, context)) as
-        | SearchFilters
-        | LegacyFilter[]
+      let viewQuery: SearchFilters | LegacyFilter[]
+      try {
+        viewQuery = await enrichSearchContext({
+          fields: view.query || {},
+          inputs: context,
+          noThrow: false,
+        })
+      } catch (_err) {
+        // Unevaluated exclusion filters could expose rows the view hides.
+        console.log(
+          `View ${options.viewId} filter evaluation failed - returning no rows`
+        )
+        return { rows: [] }
+      }
       if (Array.isArray(viewQuery)) {
         viewQuery = dataFilters.buildQuery(viewQuery)
       }
