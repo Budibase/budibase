@@ -43,8 +43,8 @@ jobs:
       - name: Run unit tests
         run: helm unittest charts/budibase
 
-      - name: Check master and repeated branch upgrades
-        run: python3 scripts/test-helm-secret-upgrades.py
+      - name: Check master and repeated branch upgrades in kind
+        run: python3 scripts/test-helm-secret-upgrades.py --kind
 
   chart-testing:
     runs-on: ubuntu-24.04
