@@ -289,9 +289,6 @@ export async function mergeConfigs(update: Datasource, old: Datasource) {
   if (!update.config || !old.config) {
     return update
   }
-  const restoringStoredSecrets = Object.values(update.config).some(
-    value => value === PASSWORD_REPLACEMENT
-  )
   // specific to REST datasources, fix the auth configs again if required
   if (hasAuthConfigs(update)) {
     const configs = update.config.authConfigs as RestAuthConfig[]
@@ -314,11 +311,31 @@ export async function mergeConfigs(update: Datasource, old: Datasource) {
     }
   }
 
-  if (old.config?.auth) {
+  if (
+    !old.config.auth &&
+    !Object.values(update.config).includes(PASSWORD_REPLACEMENT)
+  ) {
+    return update
+  }
+  const definition = await getDefinition(old.source)
+  const credentialFields = Object.entries(definition?.datasource || {})
+    .filter(
+      ([, field]) =>
+        field.type === DatasourceFieldType.PASSWORD ||
+        field.type === DatasourceFieldType.SENSITIVE_LONGFORM
+    )
+    .map(([key]) => key)
+
+  if (old.config.auth) {
+    for (const key of credentialFields) {
+      if (Object.hasOwn(old.config, key) && update.config[key] === undefined) {
+        update.config[key] = PASSWORD_REPLACEMENT
+      }
+    }
     update.config = merge({}, old.config, update.config)
   }
 
-  if (restoringStoredSecrets) {
+  if (Object.values(update.config).includes(PASSWORD_REPLACEMENT)) {
     const restoredConfig = { ...update.config }
     for (const [key, value] of Object.entries(restoredConfig)) {
       if (value !== PASSWORD_REPLACEMENT) {
@@ -333,11 +350,8 @@ export async function mergeConfigs(update: Datasource, old: Datasource) {
 
     const storedSettings = { ...old.config }
     const updatedSettings = { ...restoredConfig }
-    const definition = await getDefinition(old.source)
-    for (const [key, field] of Object.entries(definition?.datasource || {})) {
+    for (const key of credentialFields) {
       if (
-        (field.type === DatasourceFieldType.PASSWORD ||
-          field.type === DatasourceFieldType.SENSITIVE_LONGFORM) &&
         Object.hasOwn(update.config, key) &&
         update.config[key] !== PASSWORD_REPLACEMENT
       ) {
@@ -345,16 +359,8 @@ export async function mergeConfigs(update: Datasource, old: Datasource) {
         delete updatedSettings[key]
       }
     }
-    // SQL query variables do not change the connection used by the stored password.
-    if (
-      [
-        SourceName.POSTGRES,
-        SourceName.SQL_SERVER,
-        SourceName.MYSQL,
-        SourceName.ORACLE,
-        SourceName.SNOWFLAKE,
-      ].includes(old.source)
-    ) {
+    // Only exempt query variables for built-in SQL sources, independent of plugin flags.
+    if (helpers.isSQL({ source: old.source, type: old.type })) {
       delete storedSettings.staticVariables
       delete storedSettings.dynamicVariables
       delete updatedSettings.staticVariables

@@ -514,6 +514,19 @@ describe("/datasources", () => {
       )
     })
 
+    it("binds an inherited password to its stored connection during auth merges", async () => {
+      const stored: Datasource = {
+        type: "datasource",
+        source: SourceName.POSTGRES,
+        config: { host: "example.com", password: "fixture", auth: {} },
+      }
+      const update = { ...stored, config: { host: "db.example.com" } }
+
+      await expect(
+        sdk.datasources.mergeConfigs(update, stored)
+      ).rejects.toThrow("Datasource settings cannot change")
+    })
+
     it("rejects a changed host when stored auth settings are merged", async () => {
       const stored: Datasource = {
         type: "datasource",
