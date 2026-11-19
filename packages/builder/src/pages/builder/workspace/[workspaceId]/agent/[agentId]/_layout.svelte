@@ -11,7 +11,10 @@
   import AgentTabList from "./AgentTabList.svelte"
   import AgentUnpublishedChangesIndicator from "./AgentUnpublishedChangesIndicator.svelte"
   import { FeatureFlag } from "@budibase/types"
-  import { getWorkspaceHomeUrl } from "@/helpers/workspaceHomeNavigation"
+  import {
+    getWorkspaceHomeUrl,
+    withWorkspaceHomeReturn,
+  } from "@/helpers/workspaceHomeNavigation"
 
   const { goto, isActive, params } = routify
 
@@ -53,7 +56,7 @@
 
   $effect(() => {
     if (!testsEnabled && $isActive("./tests")) {
-      $goto("./config")
+      $goto(withWorkspaceHomeReturn("./config"))
     }
   })
 
@@ -149,27 +152,27 @@
       <AgentTabList ariaLabel="Agent settings">
         <button
           class:active={activeTab === "Configuration"}
-          onclick={() => $goto("./config")}
+          onclick={() => $goto(withWorkspaceHomeReturn("./config"))}
         >
           Configuration
         </button>
         <button
           class:active={activeTab === "Deployment"}
-          onclick={() => $goto("./deployment")}
+          onclick={() => $goto(withWorkspaceHomeReturn("./deployment"))}
         >
           Deployment
         </button>
         {#if testsEnabled}
           <button
             class:active={activeTab === "Tests"}
-            onclick={() => $goto("./tests")}
+            onclick={() => $goto(withWorkspaceHomeReturn("./tests"))}
           >
             Tests
           </button>
         {/if}
         <button
           class:active={activeTab === "Logs"}
-          onclick={() => $goto("./logs")}
+          onclick={() => $goto(withWorkspaceHomeReturn("./logs"))}
         >
           Logs
         </button>

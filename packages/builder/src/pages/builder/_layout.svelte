@@ -34,6 +34,7 @@
   } from "@budibase/bbui"
   import SettingsModal from "@/components/settings/SettingsModal.svelte"
   import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
+  import { getDefaultWorkspace } from "./defaultWorkspace"
 
   $isActive
   $redirect
@@ -86,6 +87,10 @@
 
   const isOnPreLoginPage = () => {
     return $isActive("./auth") || $isActive("./invite") || $isActive("./admin")
+  }
+
+  const isOnPortalPage = () => {
+    return $isActive("/apps") || $isActive("/requests")
   }
 
   // Determine if the user is on a trial and show the banner.
@@ -195,7 +200,7 @@
       if (
         isBuilder &&
         ($workspacesStore.apps.length === 0 || !hasEditableWorkspaces) &&
-        !$isActive("./apps") &&
+        !isOnPortalPage() &&
         !$isActive("./onboarding") &&
         !$isActive("./get-started")
       ) {
@@ -206,7 +211,7 @@
       }
 
       // Redirect non-builders to apps unless they're already there
-      if (!isBuilder && !$isActive("./apps")) {
+      if (!isBuilder && !isOnPortalPage()) {
         return { type: "redirect", path: "/apps" }
       }
 
@@ -218,15 +223,17 @@
         isBuilder &&
         $workspacesStore.apps.length &&
         !isOnWorkspaceRoute &&
-        !$isActive("./apps")
+        !isOnPortalPage()
       ) {
-        // Find first editable app to redirect to
-        const defaultApp = $enrichedApps.find(app => app.editable)
+        const defaultWorkspace = getDefaultWorkspace(
+          $enrichedApps,
+          $auth.user.lastVisitedWorkspaceId
+        )
         // Only redirect if enriched apps are loaded and app is editable
-        if (defaultApp?.devId) {
+        if (defaultWorkspace?.devId) {
           return {
             type: "redirect",
-            path: `./workspace/${defaultApp.devId}/home`,
+            path: `./workspace/${defaultWorkspace.devId}/home`,
           }
         }
       }

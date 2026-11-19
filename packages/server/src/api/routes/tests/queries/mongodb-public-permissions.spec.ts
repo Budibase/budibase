@@ -133,6 +133,22 @@ describe("MongoDB public query permissions", () => {
     }
   )
 
+  it.each([PermissionLevel.READ, PermissionLevel.WRITE])(
+    "preserves existing public %s access",
+    async permissionLevel => {
+      await seedExistingPublicQuery()
+      const allowed = await config.doInContext(undefined, () =>
+        sdk.permissions.canRoleAccessResource({
+          roleId: PUBLIC,
+          resourceId: query._id!,
+          permissionType: PermissionType.QUERY,
+          permissionLevel,
+        })
+      )
+      expect(allowed).toBe(true)
+    }
+  )
+
   it("preserves public access when an existing query is edited", async () => {
     await seedExistingPublicQuery()
     await config.api.query.save({ ...query, name: "Edited query" })

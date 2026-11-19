@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "charts/**"
+      - ".github/workflows/helm-validate.yml"
 
 jobs:
   helm-lint:
@@ -36,9 +37,6 @@ jobs:
       - name: Install helm-unittest plugin
         run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version 0.7.2
 
-      - name: Update chart dependencies
-        run: helm dependency update charts/budibase
-
       - name: Run unit tests
         run: helm unittest charts/budibase
 
@@ -57,9 +55,6 @@ jobs:
 
       - name: Set up chart-testing
         uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f  # v2
-
-      - name: Add helm repositories
-        run: helm repo add couchdb https://apache.github.io/couchdb-helm
 
       - name: List changed charts
         id: list-changed
@@ -96,9 +91,6 @@ jobs:
           curl -fsSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | \
             tar xz -C /usr/local/bin kubeconform
 
-      - name: Update chart dependencies
-        run: helm dependency update charts/budibase
-
       - name: Template and validate with kubeconform
         run: |
           helm template budibase charts/budibase \
@@ -124,9 +116,6 @@ jobs:
         run: |
           curl -fsSL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz | \
             tar xz -C /usr/local/bin kubeval
-
-      - name: Update chart dependencies
-        run: helm dependency update charts/budibase
 
       - name: Template and validate with kubeval
         run: |

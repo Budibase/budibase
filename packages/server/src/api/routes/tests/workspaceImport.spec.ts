@@ -1,12 +1,18 @@
 import path from "path"
 import { join } from "path"
-import { db, objectStore } from "@budibase/backend-core"
+import { cache, db, objectStore } from "@budibase/backend-core"
+import { FieldType, type Row, type RowAttachment } from "@budibase/types"
 import sdk from "../../../sdk"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import * as setup from "./utilities"
 import { basicTable } from "../../../tests/utilities/structures"
 import fsp from "fs/promises"
 import os from "os"
+import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
+import {
+  getLatestEnabledMigrationId,
+  getWorkspaceMigrationCacheKey,
+} from "../../../workspaceMigrations"
 
 const PASSWORD = "testtest"
 
@@ -226,6 +232,127 @@ describe("/applications/:appId/import", () => {
     expect(screens[1].routing.route).toBe("/blank")
   })
 
+  it.each([
+    {
+      type: FieldType.ATTACHMENTS as const,
+      wrap: (attachment: RowAttachment) => [attachment],
+    },
+    {
+      type: FieldType.ATTACHMENT_SINGLE as const,
+      wrap: (attachment: RowAttachment) => attachment,
+    },
+    {
+      type: FieldType.SIGNATURE_SINGLE as const,
+      wrap: (attachment: RowAttachment) => attachment,
+    },
+  ])(
+    "rewrites imported $type keys into the destination workspace",
+    async ({ type, wrap }) => {
+      const sourceId = config.getDevWorkspaceId()
+      const sourceKey = `${config.getProdWorkspaceId()}/attachments/imported.txt`
+      await objectStore.upload({
+        bucket: objectStore.ObjectStoreBuckets.APPS,
+        filename: sourceKey,
+        body: Buffer.from("attachment content"),
+        type: "text/plain",
+      })
+      const table = await config.api.table.save(
+        basicTable(undefined, {
+          schema: { file: { name: "file", type } },
+        })
+      )
+      const row = await config.api.row.save(table._id!, {
+        file: wrap({
+          key: sourceKey,
+          name: "imported.txt",
+          extension: "txt",
+          size: 18,
+        }),
+      })
+      const exportPath = await sdk.backups.exportWorkspace(sourceId, {
+        tar: true,
+      })
+      await config.createWorkspace()
+      const targetId = config.getDevWorkspaceId()
+      await request
+        .post(`/api/applications/${targetId}/import`)
+        .attach("appExport", exportPath)
+        .set(config.defaultHeaders())
+        .expect(200)
+      const imported = await config.api.row.get(table._id!, row._id!)
+      const importedAttachment = [imported.file].flat()[0]
+      expect(importedAttachment.key).toBe(
+        `${config.getProdWorkspaceId()}/attachments/imported.txt`
+      )
+      expect(importedAttachment.url).toBeTruthy()
+      expect(
+        await objectStore.objectExists(
+          objectStore.ObjectStoreBuckets.APPS,
+          importedAttachment.key
+        )
+      ).toBe(true)
+      const updated = await config.api.row.patch(table._id!, {
+        _id: row._id!,
+        _rev: imported._rev!,
+        tableId: table._id!,
+        file: imported.file,
+      })
+      expect([updated.file].flat()[0].key).toBe(importedAttachment.key)
+    }
+  )
+
+  it("rewrites a foreign attachment key from an imported row and preserves the foreign object on delete", async () => {
+    const sourceId = config.getDevWorkspaceId()
+    const foreignKey = "app_other/attachments/victim.txt"
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: foreignKey,
+      body: Buffer.from("victim content"),
+      type: "text/plain",
+    })
+    const table = await config.api.table.save(
+      basicTable(undefined, {
+        schema: { file: { name: "file", type: FieldType.ATTACHMENT_SINGLE } },
+      })
+    )
+    const row = await config.api.row.save(table._id!, {})
+    await config.doInContext(sourceId, async () => {
+      const sourceDb = db.getDB(sourceId)
+      const stored = await sourceDb.get<Row>(row._id!)
+      await sourceDb.put({
+        ...stored,
+        file: {
+          key: foreignKey,
+          name: "victim.txt",
+          extension: "txt",
+          size: 14,
+        },
+      })
+    })
+    const exportPath = await sdk.backups.exportWorkspace(sourceId, {
+      tar: true,
+    })
+    await config.createWorkspace()
+    const targetId = config.getDevWorkspaceId()
+    await request
+      .post(`/api/applications/${targetId}/import`)
+      .attach("appExport", exportPath)
+      .set(config.defaultHeaders())
+      .expect(200)
+
+    const imported = await config.api.row.get(table._id!, row._id!)
+    expect(imported.file.key).toBe(
+      `${config.getProdWorkspaceId()}/attachments/victim.txt`
+    )
+    await config.api.row.delete(table._id!, { _id: row._id! })
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        foreignKey
+      )
+    ).toBe(true)
+  })
+
   it("should preserve existing attachment files when importing an export that does not include attachments", async () => {
     const appId = config.getDevWorkspaceId()
     const prodAppId = db.getProdWorkspaceID(appId)
@@ -324,6 +451,33 @@ describe("/applications/:appId/import", () => {
     })
   })
 
+  it("updates matching documents and deletes documents absent from the import", async () => {
+    const appId = config.getDevWorkspaceId()
+    const table = await config.api.table.save(basicTable())
+    const tmpDir = await fsp.mkdtemp(join(os.tmpdir(), "bb-import-merge-test-"))
+    const exportPath = join(tmpDir, "db.txt")
+
+    try {
+      await sdk.backups.exportDB(appId, { exportPath })
+      await config.api.table.save({ ...table, name: "Changed after export" })
+      const extraTable = await config.api.table.save(
+        basicTable(undefined, { name: "Added after export" })
+      )
+
+      await request
+        .post(`/api/applications/${appId}/import`)
+        .attach("appExport", exportPath)
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      const tables = await config.api.table.fetch()
+      expect(tables.find(t => t._id === table._id)?.name).toBe(table.name)
+      expect(tables.map(t => t._id)).not.toContain(extraTable._id)
+    } finally {
+      await fsp.rm(tmpDir, { recursive: true, force: true })
+    }
+  })
+
   it("should include row data when importing into an existing workspace for newly created tables", async () => {
     const appId = config.getDevWorkspaceId()
 
@@ -367,6 +521,115 @@ describe("/applications/:appId/import", () => {
       await fsp.rm(tmpDir, { recursive: true, force: true })
     }
   })
+
+  it.each([
+    "success",
+    "row conflict",
+    "row request failure",
+    "workspace failure",
+  ])(
+    "imports workspace documents separately from row batches: %s",
+    async outcome => {
+      const appId = config.getDevWorkspaceId()
+      const table = await config.api.table.save(basicTable())
+      const workspaceDb = db.getDB(appId)
+      const rows: Row[] = Array.from({ length: 2001 }, (_, index) => ({
+        _id: db.generateRowID(table._id!),
+        tableId: table._id!,
+        name: `Row ${index}`,
+      }))
+      await workspaceDb.bulkDocs(rows)
+      const tmpDir = await fsp.mkdtemp(join(os.tmpdir(), "bb-import-batches-"))
+      const exportPath = join(tmpDir, "db.txt")
+      const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
+      const destinationBatches: string[][] = []
+      let rowBatch = 0
+      let failedRowId: string | undefined
+      const bulkDocsSpy = jest.spyOn(DatabaseImpl.prototype, "bulkDocs")
+
+      try {
+        await sdk.backups.exportDB(appId, { exportPath })
+        await config.api.table.destroy(table._id!, table._rev!)
+
+        bulkDocsSpy.mockImplementation(async function (
+          this: DatabaseImpl,
+          documents
+        ) {
+          if (this.name !== appId) {
+            return originalBulkDocs.call(this, documents)
+          }
+          destinationBatches.push(documents.map(doc => doc._id!))
+          if (documents.every(doc => doc._id?.startsWith("ro_"))) {
+            rowBatch++
+            if (rowBatch === 2 && outcome === "row request failure") {
+              throw new Error("Row batch request failed")
+            }
+            if (rowBatch === 2 && outcome === "row conflict") {
+              failedRowId = documents[0]._id!
+              return [
+                { id: failedRowId, error: "conflict", reason: "Row conflict" },
+                ...(await originalBulkDocs.call(this, documents.slice(1))),
+              ]
+            }
+          } else if (outcome === "workspace failure") {
+            throw new Error("Workspace write failed")
+          }
+          if (destinationBatches.length === 1) {
+            await cache.store(getWorkspaceMigrationCacheKey(appId), "stale")
+          }
+          return originalBulkDocs.call(this, documents)
+        })
+        const response = await request
+          .post(`/api/applications/${appId}/import`)
+          .attach("appExport", exportPath)
+          .set(config.defaultHeaders())
+          .expect(outcome === "workspace failure" ? 500 : 200)
+
+        const imported = await workspaceDb.getMultiple<Row>(
+          rows.map(r => r._id!),
+          {
+            allowMissing: true,
+          }
+        )
+        if (outcome === "workspace failure") {
+          expect(imported).toEqual([])
+          return
+        }
+        expect(response.body.partialImport).toBe(outcome !== "success")
+        expect(destinationBatches[0].some(id => id.startsWith("ro_"))).toBe(
+          false
+        )
+        expect(
+          destinationBatches.slice(1, 4).map(batch => batch.length)
+        ).toEqual([1000, 1000, 1])
+        expect(
+          destinationBatches
+            .slice(1, 4)
+            .flat()
+            .every(id => id.startsWith("ro_"))
+        ).toBe(true)
+        const failedIds = new Set(
+          outcome === "row request failure"
+            ? destinationBatches[2]
+            : [failedRowId]
+        )
+        expect(imported.map(r => ({ _id: r._id, name: r.name }))).toEqual(
+          rows
+            .filter(r => !failedIds.has(r._id))
+            .map(r => ({ _id: r._id, name: r.name }))
+        )
+        expect((await config.api.table.get(table._id!)).name).toBe(table.name)
+        await config.doInContext(appId, async () => {
+          expect(await cache.get(getWorkspaceMigrationCacheKey(appId))).toBe(
+            getLatestEnabledMigrationId()
+          )
+        })
+      } finally {
+        bulkDocsSpy.mockRestore()
+        await fsp.rm(tmpDir, { recursive: true, force: true })
+      }
+    }
+  )
 
   it("should not overwrite row data for tables that already exist in the workspace", async () => {
     const appId = config.getDevWorkspaceId()

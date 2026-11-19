@@ -1309,6 +1309,11 @@ describe("agent slack integration provisioning", () => {
 
       expect(response.body.messages).toContain("Mock assistant response")
       expect(mockedWebhookChat).toHaveBeenCalledTimes(2)
+      // Slack falls back to the external user ID when it has no name
+      expect(mockedWebhookChat.mock.calls[0][0].triggeredBy).toEqual({
+        type: "user",
+        label: "user-unlinked (Slack)",
+      })
 
       const conversations = await fetchConversations()
       expect(conversations).toHaveLength(1)
@@ -1351,6 +1356,12 @@ describe("agent slack integration provisioning", () => {
       const conversations = await fetchConversations()
       expect(conversations).toHaveLength(1)
       expect(conversations[0]?.userId).toEqual(config.getUser()._id)
+      const { _id, firstName, lastName } = config.getUser()
+      expect(mockedWebhookChat.mock.calls[0][0].triggeredBy).toEqual({
+        type: "user",
+        id: _id,
+        label: `${firstName} ${lastName}`,
+      })
     })
 
     it("acknowledges when the link prompt falls back to a DM", async () => {
@@ -1449,6 +1460,13 @@ describe("agent slack integration provisioning", () => {
         ConversationAttachmentStatus.PROCESSING,
       ]).toContain(conversations[0]?.attachments?.[0]?.status)
       expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
+      const { _id, firstName, lastName } = config.getUser()
+      expect(
+        conversations[0]?.pendingAttachmentTurns?.map(turn => turn.triggeredBy)
+      ).toEqual([
+        { type: "user", id: _id, label: `${firstName} ${lastName}` },
+        { type: "user", id: _id, label: `${firstName} ${lastName}` },
+      ])
     })
 
     it("renews attachment expiry and preserves file context before invoking the model", async () => {
@@ -1705,6 +1723,62 @@ describe("agent slack integration provisioning", () => {
       )
       expect(conversations[0]?.userId).toEqual(config.getUser()._id)
       expect(conversations[0]?.messages).toHaveLength(2)
+    })
+
+    it("persists a failed turn and replies with an error", async () => {
+      mockedWebhookChat.mockImplementationOnce(async ({ chat }) => ({
+        messages: [
+          ...chat.messages,
+          {
+            id: "assistant-1",
+            role: "assistant",
+            parts: [
+              {
+                type: "tool-lookup",
+                toolCallId: "call-1",
+                state: "output-available",
+                input: {},
+                output: { ok: true },
+              },
+            ],
+          },
+        ],
+        assistantText: "",
+        title: "Mock conversation",
+        failed: true,
+      }))
+
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello slack",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "Sorry, something went wrong while processing your request."
+      )
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.messages.at(-1)?.parts).toEqual([
+        expect.objectContaining({
+          type: "tool-lookup",
+          state: "output-available",
+        }),
+      ])
     })
 
     it("formats Slack assistant replies using mrkdwn", async () => {
@@ -2104,6 +2178,134 @@ describe("agent slack integration provisioning", () => {
             message.parts?.[0]?.type === "text" && message.parts[0].text
         )
       expect(userTexts).toEqual(["first", "second"])
+    })
+
+    it(`continues in the new conversation after /${ChatCommands.NEW}`, async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "old chat",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      await postSlackMessage({
+        path,
+        body: {
+          command: `/${ChatCommands.NEW}`,
+          text: "",
+          channel_id: "D123",
+          user_id: "user-1",
+          user_name: "Slack User",
+          team_id: "T123",
+        },
+      })
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "new chat",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const conversations = await fetchConversations()
+      const userTexts = conversations.map(chat =>
+        chat.messages
+          .filter(message => message.role === "user")
+          .map(
+            message =>
+              message.parts?.[0]?.type === "text" && message.parts[0].text
+          )
+      )
+      expect(userTexts).toHaveLength(2)
+      expect(userTexts).toEqual(
+        expect.arrayContaining([["old chat"], ["new chat"]])
+      )
+    })
+
+    it(`continues in the conversation started by /${ChatCommands.NEW} with a message`, async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "old chat",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      await postSlackMessage({
+        path,
+        body: {
+          command: `/${ChatCommands.NEW}`,
+          text: "new chat",
+          channel_id: "D123",
+          user_id: "user-1",
+          user_name: "Slack User",
+          team_id: "T123",
+        },
+      })
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "follow up",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const conversations = await fetchConversations()
+      const userTexts = conversations.map(chat =>
+        chat.messages
+          .filter(message => message.role === "user")
+          .map(
+            message =>
+              message.parts?.[0]?.type === "text" && message.parts[0].text
+          )
+      )
+      expect(userTexts).toHaveLength(2)
+      expect(userTexts).toEqual(
+        expect.arrayContaining([["old chat"], ["new chat", "follow up"]])
+      )
     })
 
     it("creates a separate conversation for a different thread", async () => {

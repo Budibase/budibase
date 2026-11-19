@@ -6,10 +6,11 @@
     Modal,
     notifications,
   } from "@budibase/bbui"
-  import { isCustomRestTemplateId } from "@budibase/shared-core"
+  import { isCustomRestTemplateId, sdk } from "@budibase/shared-core"
   import type { RestTemplate } from "@budibase/types"
   import { confirm } from "@/helpers"
   import { bb } from "@/stores/bb"
+  import { auth } from "@/stores/portal"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import ImportRestTemplateModal from "./ImportRestTemplateModal.svelte"
@@ -52,7 +53,7 @@
   }
 </script>
 
-{#if !$bb.settings.locked}
+{#if !$bb.settings.locked && sdk.users.isAdmin($auth.user)}
   <ActionMenu align="right">
     <div slot="control" class="more-control">
       <Icon size="S" hoverable name="dots-three" />

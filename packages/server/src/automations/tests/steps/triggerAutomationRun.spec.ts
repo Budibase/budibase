@@ -1,5 +1,6 @@
 import * as automation from "../../index"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
+import { captureRunMetadata } from "../utilities"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import {
   AutomationStatus,
@@ -57,6 +58,47 @@ describe("Test triggering an automation from another automation", () => {
     expect(result.steps[0].outputs.value[1].outputs.message).toContain(
       "example.com"
     )
+  })
+
+  it("attributes the child run to the parent automation, even in a test run", async () => {
+    const { automation: child } = await createAutomationBuilder(config)
+      .onAppAction()
+      .serverLog({ text: "{{ [user].[email] }}" })
+      .save()
+    const parent = await createAutomationBuilder(config)
+      .onAppAction()
+      .name("Parent workflow")
+      .triggerAutomationRun({
+        automation: {
+          automationId: child._id!,
+        },
+      })
+      .save()
+
+    const metadata = await captureRunMetadata(() => parent.test({ fields: {} }))
+
+    const { _id, firstName, lastName } = config.getUser()
+    expect(metadata).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          asset: expect.objectContaining({ id: child._id }),
+          triggeredBy: {
+            type: "automation",
+            id: parent.automation._id,
+            label: "Parent workflow",
+          },
+        }),
+        expect.objectContaining({
+          asset: expect.objectContaining({ id: parent.automation._id }),
+          triggeredBy: {
+            type: "user",
+            id: _id,
+            label: `${firstName} ${lastName}`,
+          },
+        }),
+      ])
+    )
+    expect(metadata).toHaveLength(2)
   })
 
   it("should fail gracefully if the automation id is incorrect", async () => {

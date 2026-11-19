@@ -182,7 +182,12 @@ export async function importToRows(
 
 export async function handleDataImport(
   table: Table,
-  opts?: { identifierFields?: string[]; userId?: string; importRows?: Row[] }
+  opts?: {
+    identifierFields?: string[]
+    userId?: string
+    importRows?: Row[]
+    onRowsImported?: (rows: Row[]) => void
+  }
 ) {
   const schema = table.schema
   const identifierFields = opts?.identifierFields || []
@@ -233,8 +238,166 @@ export async function handleDataImport(
     tableId: table._id,
   })
 
+  opts?.onRowsImported?.(finalData)
   await events.rows.imported(table, finalData.length)
   return table
+}
+
+export async function importInternalTableRows({
+  table,
+  rows,
+  identifierFields,
+  userId,
+}: {
+  table: Table
+  rows: Row[]
+  identifierFields?: string[]
+  userId?: string
+}) {
+  const db = context.getWorkspaceDB()
+  const tableId = table._id!
+  const originalSchema = cloneDeep(table.schema)
+  let importedRows: Row[] = []
+  const importedTable = await handleDataImport(table, {
+    importRows: rows,
+    identifierFields,
+    userId,
+    onRowsImported: rows => {
+      importedRows = rows
+    },
+  })
+  const importedSchema = cloneDeep(importedTable.schema)
+  // Keep only import-added options before reconciling any column renames.
+  for (const [name, column] of Object.entries(importedSchema)) {
+    if (column.type !== FieldType.OPTIONS && column.type !== FieldType.ARRAY) {
+      continue
+    }
+    const originalValues = originalSchema[name].constraints?.inclusion || []
+    column.constraints = {
+      ...column.constraints,
+      inclusion: (column.constraints?.inclusion || []).filter(
+        value => !originalValues.includes(value)
+      ),
+    }
+  }
+
+  return await sdk.projects.doWithProjectAssignmentsLock(async () => {
+    const currentTable = await db.get<Table>(tableId)
+    // Schema saves can finish their row cleanup while this import is writing.
+    // Repair only this import's rows under the schema-save lock.
+    const reconciledSchema = await reconcileImportedRows({
+      importedTable: { ...importedTable, schema: importedSchema },
+      currentTable,
+      rows: importedRows,
+    })
+    let schemaChanged = false
+    for (const [name, importedColumn] of Object.entries(reconciledSchema)) {
+      const currentColumn = currentTable.schema[name]
+      if (
+        (importedColumn.type !== FieldType.OPTIONS &&
+          importedColumn.type !== FieldType.ARRAY) ||
+        currentColumn?.type !== importedColumn.type
+      ) {
+        continue
+      }
+      const existingValues = currentColumn.constraints?.inclusion || []
+      const addedValues = (importedColumn.constraints?.inclusion || []).filter(
+        value => !existingValues.includes(value)
+      )
+      if (addedValues.length) {
+        currentColumn.constraints = {
+          ...currentColumn.constraints,
+          inclusion: [...new Set([...existingValues, ...addedValues])].sort(),
+        }
+        schemaChanged = true
+      }
+    }
+    if (!schemaChanged) {
+      return currentTable
+    }
+    const { table: savedTable } = await sdk.tables.internal.save(currentTable, {
+      tableId,
+      userId,
+    })
+    return savedTable
+  })
+}
+
+export async function reconcileImportedRows({
+  importedTable,
+  currentTable,
+  rows,
+}: {
+  importedTable: Table
+  currentTable: Table
+  rows: Row[]
+}) {
+  const renames = (currentTable.pendingColumnRenames || []).slice(
+    importedTable.pendingColumnRenames?.length || 0
+  )
+  const importedSchema = { ...importedTable.schema }
+  for (const rename of renames) {
+    if (importedSchema[rename.old]) {
+      importedSchema[rename.updated] ??= importedSchema[rename.old]
+      delete importedSchema[rename.old]
+    }
+  }
+  const obsoleteColumns = [
+    ...new Set([
+      ...Object.keys(importedTable.schema),
+      ...renames.flatMap(rename => [rename.old, rename.updated]),
+    ]),
+  ].filter(column => !currentTable.schema[column])
+  if (!obsoleteColumns.length && !renames.length) {
+    return importedSchema
+  }
+
+  const db = context.getWorkspaceDB()
+  let rowIds = rows.map(row => row._id!)
+  for (let attempt = 0; attempt < 3 && rowIds.length; attempt++) {
+    const persistedRows = await db.getMultiple<Row>(rowIds, {
+      allowMissing: true,
+    })
+    const updates = persistedRows.filter(row => {
+      let changed = false
+      for (const rename of renames) {
+        if (row[rename.old] !== undefined) {
+          if (row[rename.updated] === undefined) {
+            row[rename.updated] = row[rename.old]
+          }
+          delete row[rename.old]
+          changed = true
+        }
+      }
+      for (const column of obsoleteColumns) {
+        if (column in row) {
+          delete row[column]
+          changed = true
+        }
+      }
+      return changed
+    })
+    if (!updates.length) {
+      return importedSchema
+    }
+
+    const results = await db.bulkDocs(updates)
+    const failures = results.filter(result => result.error)
+    if (failures.some(result => result.error !== "conflict")) {
+      throw new HTTPError(
+        "Could not reconcile imported rows with the table schema.",
+        500
+      )
+    }
+    rowIds = failures.map(result => result.id)
+  }
+  if (rowIds.length) {
+    throw new HTTPError(
+      "Imported rows changed while reconciling the table schema.",
+      409
+    )
+  }
+  return importedSchema
 }
 
 export async function handleSearchIndexes(table: Table) {

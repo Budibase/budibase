@@ -10,6 +10,10 @@ export const publishEvent = async (
   timestamp?: string | number,
   identityOverride?: Identity
 ) => {
+  // Capture publication time before asynchronous processing can delay delivery.
+  const eventTimestamp =
+    timestamp === undefined ? new Date().toISOString() : timestamp
+
   // in future this should use async events via a distributed queue.
   const identity =
     identityOverride || (await identification.getCurrentIdentity())
@@ -27,10 +31,10 @@ export const publishEvent = async (
       event,
       identity,
       properties,
-      timestamp,
+      timestamp: eventTimestamp,
     })
     // now handle the main sync event processing pipeline
-    await processors.processEvent(event, identity, properties, timestamp)
+    await processors.processEvent(event, identity, properties, eventTimestamp)
     return
   }
 
@@ -41,7 +45,7 @@ export const publishEvent = async (
     return
   } else {
     // send and record the event
-    await processors.processEvent(event, identity, properties, timestamp)
+    await processors.processEvent(event, identity, properties, eventTimestamp)
     await backfill.recordEvent(event, properties)
   }
 }

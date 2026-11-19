@@ -25,6 +25,9 @@ interface PortalAuthStore {
 }
 
 class AuthStore extends BudiStore<PortalAuthStore> {
+  private lastVisitedWorkspaceUpdate = Promise.resolve()
+  private latestVisitedWorkspaceId?: string
+
   constructor() {
     super({
       accountPortalAccess: false,
@@ -180,6 +183,37 @@ class AuthStore extends BudiStore<PortalAuthStore> {
     } catch (error) {
       this.setUser()
     }
+  }
+
+  updateLastVisitedWorkspace(workspaceId: string) {
+    this.latestVisitedWorkspaceId = workspaceId
+    this.lastVisitedWorkspaceUpdate = this.lastVisitedWorkspaceUpdate
+      .catch(() => undefined)
+      .then(async () => {
+        const latestWorkspaceId = this.latestVisitedWorkspaceId
+        const currentUser = get(this.store).user
+        if (
+          !latestWorkspaceId ||
+          currentUser?.lastVisitedWorkspaceId === latestWorkspaceId
+        ) {
+          return
+        }
+
+        await API.updateSelf({
+          lastVisitedWorkspaceId: latestWorkspaceId,
+        })
+        this.update(store => ({
+          ...store,
+          user: store.user
+            ? {
+                ...store.user,
+                lastVisitedWorkspaceId: latestWorkspaceId,
+              }
+            : undefined,
+        }))
+      })
+
+    return this.lastVisitedWorkspaceUpdate
   }
 
   async forgotPassword(email: string) {

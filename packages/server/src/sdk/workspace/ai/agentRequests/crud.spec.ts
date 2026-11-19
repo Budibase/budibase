@@ -6,11 +6,14 @@ import {
   EscalationSource,
   SEPARATOR,
 } from "@budibase/types"
+import type { AgentRequest } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { builderSocket } from "../../../../websockets"
 import backfillOperationIds from "../../../../workspaceMigrations/migrations/20261006164506_backfill_agent_request_operation_ids"
+import moveRequestsToTenantDb from "../../../../workspaceMigrations/migrations/20261015162044_move_agent_requests_to_tenant_db"
 import {
   createOrUpdateRequestForPrompt,
+  deleteWorkspaceRequests,
   fetchRequests,
   fetchRequestsByAgent,
   fetchRequestsSummary,
@@ -95,7 +98,7 @@ describe("agentRequests crud", () => {
           source: "Chat",
         })
 
-        expect(result?.requestId).toContain("agentrequest_")
+        expect(result?.requestId).toMatch(/^req_/)
 
         const [request] = await fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("active")
@@ -285,14 +288,14 @@ describe("agentRequests crud", () => {
           }))!
           const [request] = await fetchRequestsByAgent("agent_1")
           const baseTime = Date.now()
-          await context.getWorkspaceDB().put({
+          await context.getRequestsDB().put({
             ...request,
             updatedAt: new Date(baseTime - 60000).toISOString(),
           })
           for (let index = 0; index < 10; index++) {
-            await context.getWorkspaceDB().put({
+            await context.getRequestsDB().put({
               ...request,
-              _id: `agentrequest_newer_${index}`,
+              _id: `req_newer_${index}`,
               _rev: undefined,
               operationId:
                 newerRequestKind === "other_operation"
@@ -350,7 +353,7 @@ describe("agentRequests crud", () => {
           latestPrompt: "Raise a chips expense",
         }))!
         analyzeAgentRequestLinkMock.mockImplementationOnce(async () => {
-          const db = context.getWorkspaceDB()
+          const db = context.getRequestsDB()
           const request = await db.get(first.requestId)
           await db.remove(request)
           return {
@@ -404,12 +407,13 @@ describe("agentRequests crud", () => {
           ],
         })
         await backfillOperationIds()
+        await moveRequestsToTenantDb()
         analyzeAgentRequestLinkMock.mockImplementationOnce(
           async ({
             candidateRequests,
           }: Parameters<typeof analyzeAgentRequestLink>[0]) => {
             const existing = candidateRequests.find(
-              request => request._id === "agentrequest_legacy"
+              request => request._id === "req_legacy"
             )
             return existing
               ? {
@@ -434,7 +438,7 @@ describe("agentRequests crud", () => {
         })
 
         const requests = await fetchRequestsByAgent("agent_1")
-        expect(followUp?.requestId).toEqual("agentrequest_legacy")
+        expect(followUp?.requestId).toEqual("req_legacy")
         expect(requests).toHaveLength(1)
         expect(requests[0].operationId).toEqual("op_expenses")
         expect(requests[0].status).toEqual("needs_input")
@@ -764,7 +768,7 @@ describe("agentRequests crud", () => {
           source: "Chat",
         })
 
-        expect(result?.requestId).toContain("agentrequest_")
+        expect(result?.requestId).toMatch(/^req_/)
         const [request] = await fetchRequestsByAgent("agent_1")
         expect(request.status).toEqual("active")
         expect(request.title).toBeUndefined()
@@ -1780,7 +1784,7 @@ describe("agentRequests crud", () => {
           status: "completed",
         })
 
-        const requests = await fetchRequests({ limit: 10, page: 1 })
+        const { requests } = await fetchRequests({ limit: 10 })
         expect(requests.map(r => r._id)).toEqual([
           second.requestId,
           first.requestId,
@@ -1820,24 +1824,25 @@ describe("agentRequests crud", () => {
 
         const failedRequests = await fetchRequests({
           limit: 10,
-          page: 1,
           status: "failed",
         })
-        expect(failedRequests).toHaveLength(0)
+        expect(failedRequests.requests).toHaveLength(0)
 
         const completedRequests = await fetchRequests({
           limit: 10,
-          page: 1,
           status: "completed",
         })
-        expect(completedRequests.map(r => r._id)).toEqual([completed.requestId])
+        expect(completedRequests.requests.map(r => r._id)).toEqual([
+          completed.requestId,
+        ])
 
         const activeRequests = await fetchRequests({
           limit: 10,
-          page: 1,
           status: "active",
         })
-        expect(activeRequests.map(r => r._id)).toEqual([active.requestId])
+        expect(activeRequests.requests.map(r => r._id)).toEqual([
+          active.requestId,
+        ])
       })
     })
 
@@ -1862,20 +1867,25 @@ describe("agentRequests crud", () => {
 
         const firstPage = await fetchRequests({
           limit: 2,
-          page: 1,
           status: "active",
         })
         const secondPage = await fetchRequests({
           limit: 2,
-          page: 2,
           status: "active",
+          bookmark: firstPage.bookmark,
         })
 
-        expect(firstPage).toHaveLength(2)
-        expect(secondPage).toHaveLength(1)
+        expect(firstPage.requests).toHaveLength(2)
+        expect(firstPage.bookmark).toBeDefined()
+        expect(secondPage.requests).toHaveLength(1)
+        expect(secondPage.bookmark).toBeUndefined()
         expect(
-          firstPage.map(r => r._id).concat(secondPage.map(r => r._id))
-        ).toHaveLength(3)
+          new Set(
+            firstPage.requests
+              .map(r => r._id)
+              .concat(secondPage.requests.map(r => r._id))
+          ).size
+        ).toEqual(3)
       })
     })
   })
@@ -2140,7 +2150,7 @@ describe("agentRequests crud", () => {
           userId: "user_1",
         })
 
-        expect(created?.request._id).toContain("agentrequest_")
+        expect(created?.request._id).toMatch(/^req_/)
         expect(created?.request.entries).toHaveLength(1)
         expect(created?.request.entries[0]).toEqual({
           sessionId: "session_1",
@@ -2615,6 +2625,39 @@ describe("agentRequests crud", () => {
             sessionId: "session_2",
           }),
         ])
+      })
+    })
+  })
+
+  describe("deleteWorkspaceRequests", () => {
+    it("removes only the deleted workspace's requests from the tenant DB", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const { requestId } = (await initActiveRequest({
+          agentId: "agent_1",
+          userId: "user_1",
+          sessionId: "session_1",
+          latestPrompt: "Book me a meeting",
+          operation: {
+            id: "op_scheduling",
+            name: "Scheduling",
+            prompt: "Schedule meetings.",
+          },
+          source: "Chat",
+        }))!
+        const mine = await context.getRequestsDB().get<AgentRequest>(requestId)
+        const otherWorkspaceId = "app_other_workspace"
+        await context.getRequestsDB().put({
+          ...mine,
+          _id: "req_other",
+          _rev: undefined,
+          workspaceId: otherWorkspaceId,
+        })
+
+        await deleteWorkspaceRequests(config.getDevWorkspaceId())
+
+        expect(await context.getRequestsDB().exists(requestId)).toBe(false)
+        expect(await context.getRequestsDB().exists("req_other")).toBe(true)
+        expect(await fetchRequestsByAgent("agent_1")).toEqual([])
       })
     })
   })

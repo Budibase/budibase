@@ -14,10 +14,9 @@
   import { getContext } from "svelte"
   import { workspaceStore, rowActions } from "@/stores/builder"
   import { goto as gotoStore, url } from "@roxi/routify"
-  import { derived } from "svelte/store"
 
   $: goto = $gotoStore
-  $url
+  $: urlHelper = $url
 
   const { datasource } = getContext("grid")
 
@@ -34,16 +33,11 @@
   $: actionCount = isView ? viewRowActions.length : tableRowActions.length
   $: newNameInvalid = newName && tableRowActions.some(x => x.name === newName)
 
-  const rowActionUrl = derived(
-    [url, workspaceStore],
-    ([$url, $workspaceStore]) => {
-      return ({ automationId }) => {
-        return $url(
-          `/builder/workspace/${$workspaceStore.appId}/automation/${automationId}`
-        )
-      }
-    }
-  )
+  const rowActionUrl = ({ automationId }) => {
+    return urlHelper(
+      `/builder/workspace/${$workspaceStore.appId}/automation/${automationId}`
+    )
+  }
 
   const toggleAction = async (action, enabled) => {
     if (enabled) {
@@ -67,7 +61,7 @@
         newName
       )
       notifications.success("Row action created successfully")
-      goto($rowActionUrl(newRowAction))
+      goto(rowActionUrl(newRowAction))
     } catch (error) {
       console.error(error)
       notifications.error("Error creating row action")
@@ -95,7 +89,7 @@
   {:else}
     <List>
       {#each tableRowActions as action}
-        <ListItem title={action.name} url={$rowActionUrl(action)} showArrow>
+        <ListItem title={action.name} url={rowActionUrl(action)} showArrow>
           <svelte:fragment slot="right">
             {#if isView}
               <span>

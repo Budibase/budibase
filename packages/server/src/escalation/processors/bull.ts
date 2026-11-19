@@ -32,10 +32,11 @@ export class BullEscalationProcessor implements IEscalationProcessor {
 
     if (
       input.source === EscalationSource.OPERATION &&
-      !input.recipients?.length
+      !input.recipients?.length &&
+      !input.policy?.approvers?.length
     ) {
       throw new Error(
-        "Cannot create an operation escalation with no recipients"
+        "Cannot create an operation escalation with no recipients or approvers"
       )
     }
 
@@ -206,6 +207,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       resolvedAt: now,
       updatedAt: now,
     })
+    await sdk.ai.agentRequests.refreshRequestForEscalation(escalationId)
   }
 
   async list(appId: string): Promise<EscalationSummary[]> {

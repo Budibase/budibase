@@ -201,7 +201,7 @@ describe("Rest Importer", () => {
     await init(data)
     const datasource = await config.createDatasource()
     const importResult = await config.doInContext(config.devWorkspaceId, () =>
-      restImporter.importQueries(datasource._id)
+      restImporter.importQueries({ datasourceId: datasource._id })
     )
     expect(importResult.errorQueries.length).toBe(0)
     expect(importResult.queries.length).toBe(assertions[key].count)
@@ -269,7 +269,7 @@ describe("Rest Importer", () => {
     await init(oapi3OktaYaml)
     const datasource = await config.createDatasource()
     const { queries } = await config.doInContext(config.devWorkspaceId, () =>
-      restImporter.importQueries(datasource._id)
+      restImporter.importQueries({ datasourceId: datasource._id })
     )
 
     const listQuery = queries.find(query => query.name === "listApps")
@@ -342,7 +342,10 @@ describe("Rest Importer", () => {
     const endpoint = info.endpoints[0]
     const datasource = await config.createDatasource()
     const importResult = await config.doInContext(config.devWorkspaceId, () =>
-      restImporter.importQueries(datasource._id, endpoint.id)
+      restImporter.importQueries({
+        datasourceId: datasource._id,
+        selectedEndpointId: endpoint.id,
+      })
     )
     expect(importResult.errorQueries.length).toBe(0)
     expect(importResult.queries.length).toBe(1)
@@ -361,7 +364,10 @@ describe("Rest Importer", () => {
     const datasource = await config.createDatasource()
     await expect(
       config.doInContext(config.devWorkspaceId, () =>
-        restImporter.importQueries(datasource._id, "missing::endpoint")
+        restImporter.importQueries({
+          datasourceId: datasource._id,
+          selectedEndpointId: "missing::endpoint",
+        })
       )
     ).rejects.toThrow("Selected endpoint could not be imported")
   })
@@ -401,7 +407,7 @@ describe("Rest Importer", () => {
     await init(spec)
     const datasource = await config.createDatasource()
     const importResult = await config.doInContext(config.devWorkspaceId, () =>
-      restImporter.importQueries(datasource._id)
+      restImporter.importQueries({ datasourceId: datasource._id })
     )
 
     expect(importResult.errorQueries.length).toBe(0)
@@ -473,7 +479,7 @@ describe("Rest Importer", () => {
     const datasource = await config.createDatasource()
     const { queries: importedQueries } = await config.doInContext(
       config.devWorkspaceId,
-      () => restImporter.importQueries(datasource._id)
+      () => restImporter.importQueries({ datasourceId: datasource._id })
     )
 
     const createQuery = importedQueries.find(
@@ -564,7 +570,7 @@ describe("Rest Importer", () => {
     const datasource = await config.createDatasource()
     const { queries: importedQueries } = await config.doInContext(
       config.devWorkspaceId,
-      () => restImporter.importQueries(datasource._id)
+      () => restImporter.importQueries({ datasourceId: datasource._id })
     )
 
     const createQuery = importedQueries.find(
@@ -706,7 +712,7 @@ describe("Rest Importer", () => {
     await init(JSON.stringify(openapiWithHeaderSecurity))
     const datasource = await config.createDatasource()
     const importResult = await config.doInContext(config.devWorkspaceId, () =>
-      restImporter.importQueries(datasource._id)
+      restImporter.importQueries({ datasourceId: datasource._id })
     )
 
     expect(importResult.queries.length).toBe(1)
@@ -734,7 +740,7 @@ describe("Rest Importer", () => {
     await init(JSON.stringify(openapiWithoutServers))
     const datasource = await config.createDatasource()
     const importResult = await config.doInContext(config.devWorkspaceId, () =>
-      restImporter.importQueries(datasource._id)
+      restImporter.importQueries({ datasourceId: datasource._id })
     )
 
     expect(importResult.queries.length).toBe(1)

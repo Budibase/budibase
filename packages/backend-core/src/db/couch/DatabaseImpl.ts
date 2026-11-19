@@ -1,3 +1,5 @@
+import type http from "http"
+import type https from "https"
 import Nano from "@budibase/nano"
 import {
   AllDocsResponse,
@@ -26,16 +28,27 @@ import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 import { DDInstrumentedDatabase } from "../instrumentation"
 import { checkSlashesInUrl } from "../../helpers"
 import { sqlLog } from "../../sql/utils"
+import { createSafePinnedAgent } from "../../utils/outboundFetch"
 
 const DATABASE_NOT_FOUND = "Database does not exist."
 
-function buildNano(couchInfo: { url: string; cookie: string }) {
+// nano appends IDs matching this (its own check) to the URL unencoded, so they
+// must not be able to change the request path, e.g. "_design/../../_config".
+const UNENCODED_DOC_ID = /^_design|_local/
+const PATH_ESCAPE = /[?#\\]|\p{Cc}|(^|\/)(\.|%2e){1,2}(\/|$)/iu
+
+function buildNano(
+  couchInfo: { url: string; cookie: string },
+  agent?: http.Agent | https.Agent
+) {
   return Nano({
     url: couchInfo.url,
     requestDefaults: {
       headers: {
         Authorization: couchInfo.cookie,
       },
+      // An env-configured proxy would connect on our behalf, bypassing the pinned agent.
+      ...(agent && { agent, proxy: false }),
     },
     parseUrl: false,
   })
@@ -79,6 +92,16 @@ class CouchDBError extends Error implements DBError {
   }
 }
 
+function validateDocId(id: string) {
+  if (UNENCODED_DOC_ID.test(id) && PATH_ESCAPE.test(id)) {
+    throw new CouchDBError("Invalid document ID", {
+      name: "bad_request",
+      status: 400,
+      reason: "Invalid document ID",
+    })
+  }
+}
+
 export function DatabaseWithConnection(
   dbName: string,
   connection: string,
@@ -96,7 +119,8 @@ export function DatabaseWithConnection(
 export class DatabaseImpl implements Database {
   public readonly name: string
   private static nano: Nano.ServerScope
-  private readonly instanceNano?: Nano.ServerScope
+  private readonly isExternal: boolean = false
+  private externalNano?: Promise<Nano.ServerScope>
   private readonly pouchOpts: DatabaseOpts
 
   private readonly couchInfo = getCouchInfo()
@@ -106,7 +130,7 @@ export class DatabaseImpl implements Database {
     this.pouchOpts = opts || {}
     if (connection) {
       this.couchInfo = parseCouchConnection(connection)
-      this.instanceNano = buildNano(this.couchInfo)
+      this.isExternal = true
     }
     if (!DatabaseImpl.nano) {
       DatabaseImpl.init()
@@ -127,15 +151,46 @@ export class DatabaseImpl implements Database {
   }
 
   private async dbExists() {
+    if (this.isExternal) {
+      return this.externalDbExists()
+    }
     const response = await directCouchUrlCall({
       url: `${this.couchInfo.url}/${this.name}`,
       method: "HEAD",
       cookie: this.couchInfo.cookie,
     })
-    return response.status === 200
+    if (response.status === 200) {
+      return true
+    }
+    if (response.status === 404) {
+      return false
+    }
+    throw new CouchDBError("Unable to check database existence", {
+      status: response.status,
+      name: "CouchDBError",
+      reason: response.statusText,
+    })
+  }
+
+  private async externalDbExists() {
+    const nano = await this.nano()
+    try {
+      await nano.relax({ db: this.name, method: "HEAD" })
+      return true
+    } catch (err: any) {
+      if (err.statusCode === 404) {
+        return false
+      }
+      throw new CouchDBError("Unable to check database existence", {
+        status: err.statusCode,
+        name: "CouchDBError",
+        reason: err.reason,
+      })
+    }
   }
 
   private async docExists(id: string): Promise<boolean> {
+    validateDocId(id)
     try {
       await this.performCall(db => () => db.head(id))
       return true
@@ -144,12 +199,20 @@ export class DatabaseImpl implements Database {
     }
   }
 
-  private nano() {
-    return this.instanceNano || DatabaseImpl.nano
+  private async nano(): Promise<Nano.ServerScope> {
+    if (!this.isExternal) {
+      return DatabaseImpl.nano
+    }
+    // External URLs are user-supplied: check them against the outbound
+    // blacklist and pin the connection to the checked IP to prevent SSRF.
+    this.externalNano ??= createSafePinnedAgent(this.couchInfo.url).then(
+      agent => buildNano(this.couchInfo, agent)
+    )
+    return this.externalNano
   }
 
-  private getDb() {
-    return this.nano().db.use(this.name)
+  private async getDb() {
+    return (await this.nano()).db.use(this.name)
   }
 
   private async checkAndCreateDb() {
@@ -161,7 +224,7 @@ export class DatabaseImpl implements Database {
     }
     if (!exists) {
       try {
-        await this.nano().db.create(this.name)
+        await (await this.nano()).db.create(this.name)
       } catch (err: any) {
         // Handling race conditions
         if (err.statusCode !== 412) {
@@ -176,7 +239,7 @@ export class DatabaseImpl implements Database {
   private async performCallWithDBCreation<T>(
     call: DBCallback<T>
   ): Promise<any> {
-    const db = this.getDb()
+    const db = await this.getDb()
     const fnc = await call(db)
     try {
       return await fnc()
@@ -191,7 +254,7 @@ export class DatabaseImpl implements Database {
   }
 
   private async performCall<T>(call: DBCallback<T>): Promise<T> {
-    const db = this.getDb()
+    const db = await this.getDb()
     const fnc = await call(db)
     try {
       return await fnc()
@@ -206,12 +269,14 @@ export class DatabaseImpl implements Database {
       if (!id) {
         throw new Error("Unable to get doc without a valid _id.")
       }
+      validateDocId(id)
       return () => db.get(id)
     })
   }
 
   async getConflicts(id: string): Promise<string[]> {
     const doc = await this.performCall(db => {
+      validateDocId(id)
       return () => db.get(id, { conflicts: true })
     })
     return (doc as Document & { _conflicts?: string[] })._conflicts || []
@@ -281,6 +346,7 @@ export class DatabaseImpl implements Database {
       if (!_id || !_rev) {
         throw new Error("Unable to remove doc without a valid _id and _rev.")
       }
+      validateDocId(_id)
       return () => db.destroy(_id, _rev)
     })
   }
@@ -489,7 +555,7 @@ export class DatabaseImpl implements Database {
       await this.sqlDiskCleanup()
     }
     try {
-      return await this.nano().db.destroy(this.name)
+      return await (await this.nano()).db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
       if (err.statusCode === 404) {

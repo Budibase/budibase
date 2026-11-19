@@ -1,5 +1,8 @@
-import { objectStore } from "@budibase/backend-core"
+import { events, objectStore } from "@budibase/backend-core"
 import { SourceName, type RestTemplate } from "@budibase/types"
+import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
+import sdk from "../../../sdk"
+import { basicDatasource } from "../../../tests/utilities/structures"
 import { afterAll as cleanup, getConfig, getRequest } from "./utilities"
 
 jest.mock("@budibase/backend-core", () => {
@@ -60,6 +63,7 @@ describe("/rest-templates", () => {
 
   beforeAll(async () => {
     await config.init()
+    config.user = await config.globalUser({ admin: { global: true } })
   })
 
   afterAll(cleanup)
@@ -79,16 +83,115 @@ describe("/rest-templates", () => {
     }))
   })
 
-  it("uploads, lists, resolves and deletes a custom OpenAPI template", async () => {
-    const uploadResponse = await request
+  it.each([
+    {
+      scope: "workspace",
+      permissions: () => ({ apps: [config.getProdWorkspaceId()] }),
+    },
+    { scope: "global", permissions: () => ({ global: true }) },
+  ])(
+    "allows $scope builders to upload, list, update and delete templates",
+    async ({ scope, permissions }) => {
+      const builder = await config.globalUser({
+        builder: permissions(),
+        admin: { global: false },
+      })
+
+      await config.withUser(builder, async () => {
+        const template = await uploadExampleTemplate(`${scope} builder API`)
+        await request
+          .put(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
+          .field("name", `Updated ${scope} builder API`)
+          .field("description", "An updated example API")
+          .expect(200)
+
+        const updatedTemplates = await request
+          .get("/api/rest-templates")
+          .set(config.defaultHeaders())
+          .expect(200)
+        expect(updatedTemplates.body).toContainEqual({
+          ...template,
+          name: `Updated ${scope} builder API`,
+          description: "An updated example API",
+        })
+
+        await request
+          .delete(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
+          .expect(200)
+
+        const remainingTemplates = await request
+          .get("/api/rest-templates")
+          .set(config.defaultHeaders())
+          .expect(200)
+        expect(remainingTemplates.body).not.toContainEqual(
+          expect.objectContaining({ id: template.id })
+        )
+      })
+    }
+  )
+
+  it.each([
+    { role: "end users", builder: { global: false } },
+    {
+      role: "builders from another workspace",
+      builder: { apps: ["app_other"] },
+    },
+  ])(
+    "rejects template access and management by $role",
+    async ({ role, builder }) => {
+      const template = await uploadExampleTemplate(`${role} API`)
+      const user = await config.globalUser({
+        builder,
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        await request
+          .get("/api/rest-templates")
+          .set(config.defaultHeaders())
+          .expect(403)
+        await request
+          .post("/api/rest-templates")
+          .set(config.defaultHeaders())
+          .field("name", "Example API")
+          .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
+          .expect(403)
+        await request
+          .put(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
+          .field("name", "Updated Example API")
+          .field("description", "An updated example API")
+          .expect(403)
+        await request
+          .delete(`/api/rest-templates/${template.id}`)
+          .set(config.defaultHeaders())
+          .expect(403)
+      })
+
+      await request
+        .delete(`/api/rest-templates/${template.id}`)
+        .set(config.defaultHeaders())
+        .expect(200)
+    }
+  )
+
+  const uploadExampleTemplate = async (
+    name = "Example API"
+  ): Promise<RestTemplate> => {
+    const response = await request
       .post("/api/rest-templates")
       .set(config.defaultHeaders())
-      .field("name", "Example API")
+      .field("name", name)
       .field("description", "An example API")
       .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
       .expect(200)
+    return response.body.template
+  }
 
-    const template = uploadResponse.body.template as RestTemplate
+  it("uploads, lists, resolves and deletes a custom OpenAPI template", async () => {
+    const template = await uploadExampleTemplate()
     expect(template).toEqual(
       expect.objectContaining({
         id: expect.stringMatching(/^rest_template_[a-z0-9]+$/),
@@ -165,7 +268,7 @@ describe("/rest-templates", () => {
       source: SourceName.REST,
       config: {},
     })
-    await request
+    const existingImportResponse = await request
       .post("/api/queries/import")
       .set(config.defaultHeaders())
       .send({
@@ -173,6 +276,10 @@ describe("/rest-templates", () => {
         datasourceId: existingDatasource._id,
       })
       .expect(200)
+    expect(existingImportResponse.body.queries[0].parameters).toContainEqual({
+      name: "account",
+      default: "{{ account }}",
+    })
     const taggedDatasource = (await config.api.datasource.fetch()).find(
       datasource => datasource._id === existingDatasource._id
     )
@@ -273,6 +380,99 @@ describe("/rest-templates", () => {
       .delete(`/api/rest-templates/${template.id}`)
       .set(config.defaultHeaders())
       .expect(404)
+  })
+
+  it("does not change an existing datasource when the selected endpoint is missing", async () => {
+    const template = await uploadExampleTemplate()
+    const existingDatasource = await config.api.datasource.create({
+      type: "datasource",
+      name: "Existing Example API",
+      source: SourceName.REST,
+      config: {},
+    })
+    const originalDatasource = await config.doInContext(
+      config.getDevWorkspaceId(),
+      () => sdk.datasources.get(existingDatasource._id!)
+    )
+    await request
+      .post("/api/queries/import")
+      .set(config.defaultHeaders())
+      .send({
+        restTemplateId: template.id,
+        datasourceId: existingDatasource._id,
+        selectedEndpointId: "missing::endpoint",
+      })
+      .expect(400)
+    expect(
+      await config.doInContext(config.getDevWorkspaceId(), () =>
+        sdk.datasources.get(existingDatasource._id!)
+      )
+    ).toEqual(originalDatasource)
+  })
+
+  it.each(["datasource write", "datasource event", "query event"])(
+    "removes imported queries after a failed %s",
+    async failure => {
+      const template = await uploadExampleTemplate(`Failed ${failure}`)
+      const datasource = await config.api.datasource.create({
+        type: "datasource",
+        name: "Existing API",
+        source: SourceName.REST,
+        config: {},
+      })
+      const originalQueries = await config.api.query.fetch()
+      const originalPut = DatabaseImpl.prototype.put
+      const put = jest
+        .spyOn(DatabaseImpl.prototype, "put")
+        .mockImplementation(async function (this: DatabaseImpl, doc, opts) {
+          if (failure === "datasource write" && doc._id === datasource._id) {
+            throw new Error("Datasource write failed")
+          }
+          return originalPut.call(this, doc, opts)
+        })
+      const datasourceEvent = jest.spyOn(events.datasource, "updated")
+      const queryEvent = jest.spyOn(events.query, "imported")
+      if (failure === "datasource event")
+        datasourceEvent.mockRejectedValueOnce(
+          new Error("Datasource event failed")
+        )
+      if (failure === "query event")
+        queryEvent.mockRejectedValueOnce(new Error("Query event failed"))
+      try {
+        await request
+          .post("/api/queries/import")
+          .set(config.defaultHeaders())
+          .send({ restTemplateId: template.id, datasourceId: datasource._id })
+          .expect(500)
+      } finally {
+        put.mockRestore()
+        datasourceEvent.mockRestore()
+        queryEvent.mockRestore()
+      }
+      expect(await config.api.query.fetch()).toEqual(originalQueries)
+    }
+  )
+
+  it("rejects missing templates before preparing a datasource", async () => {
+    const prepareDatasource = jest
+      .spyOn(sdk.datasources, "prepareForSave")
+      .mockRejectedValueOnce(new Error("Schema discovery should not run"))
+    try {
+      await request
+        .post("/api/datasources")
+        .set(config.defaultHeaders())
+        .send({
+          datasource: {
+            ...basicDatasource().datasource,
+            restTemplateId: "rest_template_missing",
+          },
+          fetchSchema: true,
+        })
+        .expect(404)
+      expect(prepareDatasource).not.toHaveBeenCalled()
+    } finally {
+      prepareDatasource.mockRestore()
+    }
   })
 
   it("rejects non-OpenAPI uploads", async () => {

@@ -100,6 +100,7 @@ export interface ImportToUpdateWorkspaceRequest {
 }
 export interface ImportToUpdateWorkspaceResponse {
   message: string
+  partialImport: boolean
 }
 
 export interface ExportWorkspaceDumpRequest {

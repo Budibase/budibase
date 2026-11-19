@@ -1,3 +1,4 @@
+import type { ProjectAssignmentResponse } from "./project"
 import {
   Datasource,
   ImportEndpoint,
@@ -12,7 +13,7 @@ import type { CustomRestTemplateId } from "../../../ui/rest"
 export type FetchQueriesResponse = Query[]
 
 export interface SaveQueryRequest extends Query {}
-export interface SaveQueryResponse extends Query {}
+export interface SaveQueryResponse extends Query, ProjectAssignmentResponse {}
 
 export interface ImportRestQueryRequest {
   datasourceId?: string
@@ -39,7 +40,7 @@ export interface ImportRestQueryInfoResponse {
   staticVariables?: Record<string, string>
   servers?: OpenAPIServer[]
 }
-export interface ImportRestQueryResponse {
+export interface ImportRestQueryResponse extends ProjectAssignmentResponse {
   errorQueries: Query[]
   queries: Query[]
   datasourceId: string

@@ -647,14 +647,18 @@ describe("backups", () => {
     it("drains bounded batches past a deletion failure", async () => {
       await config.doInTenant(async () => {
         const expiredDate = new Date(expiredTimestamp())
-        const backupIds = await Promise.all(
-          Array.from({ length: 101 }, (_, i) =>
-            storeBackup({
-              status: BackupStatus.COMPLETE,
-              timestamp: new Date(expiredDate.getTime() + i).toISOString(),
-              filename: i === 99 ? "failed.tar.gz" : `backup-${i}.tar.gz`,
-            })
-          )
+        const storeExpiredBackup = (i: number) =>
+          storeBackup({
+            status: BackupStatus.COMPLETE,
+            timestamp: new Date(expiredDate.getTime() + i).toISOString(),
+            filename: i === 99 ? "failed.tar.gz" : `backup-${i}.tar.gz`,
+          })
+        // Initialise the tenant database before creating fixtures concurrently.
+        const backupIds = [await storeExpiredBackup(0)]
+        backupIds.push(
+          ...(await Promise.all(
+            Array.from({ length: 100 }, (_, i) => storeExpiredBackup(i + 1))
+          ))
         )
         mockedObjectStore.deleteFile.mockImplementation(
           async (_bucket, filename) => {

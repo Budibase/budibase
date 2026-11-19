@@ -7,6 +7,7 @@ import {
   Datasource,
   GoogleSheetsQueryFields,
   MongoQueryFields,
+  PlatformActionSessionMetadata,
   QueryParameter,
   QueryVerb,
   RestQueryFields,
@@ -16,7 +17,7 @@ import { Knex } from "knex"
 import { getQueue } from "../.."
 import { Job } from "bull"
 import { helpers } from "@budibase/shared-core"
-import { queue } from "@budibase/backend-core"
+import { context, events, queue } from "@budibase/backend-core"
 
 let config: TestConfiguration
 
@@ -181,6 +182,32 @@ export async function captureAllAutomationResults(
   }
 
   return runs
+}
+
+/**
+ * Capture the Actions session metadata of each automation run, read from the
+ * run's own scope when its first step reports an action.
+ */
+export async function captureRunMetadata(
+  f: () => Promise<unknown>
+): Promise<(PlatformActionSessionMetadata | undefined)[]> {
+  const captured = new Map<string, PlatformActionSessionMetadata | undefined>()
+  const spy = jest
+    .spyOn(events.action, "automationStepExecuted")
+    .mockImplementation(async source => {
+      if (!captured.has(source.sourceId)) {
+        captured.set(
+          source.sourceId,
+          context.getPlatformActionSessionMetadata(source)
+        )
+      }
+    })
+  try {
+    await f()
+  } finally {
+    spy.mockRestore()
+  }
+  return [...captured.values()]
 }
 
 export async function captureAutomationResults(

@@ -39,6 +39,10 @@ describe("row saved trigger", () => {
       })
     )
     expect(results[0].data.isTestRun).toBeUndefined()
+    expect(results[0].data.event.triggeredBy).toEqual({
+      type: "system",
+      id: "row_change",
+    })
   })
 
   it("should queue a Bull job when a row is created in dev", async () => {

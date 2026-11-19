@@ -11,6 +11,16 @@ export const AGENT_REQUEST_STATUSES = [
 
 export type AgentRequestStatus = (typeof AGENT_REQUEST_STATUSES)[number]
 
+export const REQUEST_ESCALATION_STATES = [
+  "pending",
+  "approved",
+  "rejected",
+  "expired",
+  "cancelled",
+] as const
+
+export type RequestEscalationState = (typeof REQUEST_ESCALATION_STATES)[number]
+
 export interface AgentRequestOperation
   extends Pick<AgentOperation, "id" | "name"> {
   prompt: string
@@ -75,7 +85,11 @@ export type AgentRequestAction =
   | EscalationRaisedAction
   | EscalationResolvedAction
 
+export const AGENT_REQUEST_TYPE = "agentRequest"
+
 export interface AgentRequest extends Document {
+  type: typeof AGENT_REQUEST_TYPE
+  workspaceId: string
   title?: string
   agentId: string
   operationId?: string
@@ -83,6 +97,11 @@ export interface AgentRequest extends Document {
   entries: AgentRequestEntry[]
   actions?: AgentRequestAction[]
   status: AgentRequestStatus
+  statusRank: number
+  approvers: string[]
+  pendingApprovers: string[]
+  respondedApprovers: string[]
+  expiresAt?: string
   error?: string
   completedAt?: string
 }

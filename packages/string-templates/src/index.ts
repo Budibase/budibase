@@ -32,6 +32,18 @@ registerAll(hbsInstance)
 const helperNames = Object.keys(hbsInstance.helpers)
 const hbsInstanceNoHelpers = create()
 registerMinimum(hbsInstanceNoHelpers, { includeJS: false })
+const hbsInstanceSafeSearch = create()
+// Search filters may use sandboxed JS and default, but not external helpers that traverse prototypes.
+registerMinimum(hbsInstanceSafeSearch)
+hbsInstanceSafeSearch.registerHelper("default", hbsInstance.helpers.default)
+// Missing zero-argument helpers otherwise resolve to undefined without throwing.
+for (const name of helperNames) {
+  if (!hbsInstanceSafeSearch.helpers[name]) {
+    hbsInstanceSafeSearch.registerHelper(name, () => {
+      throw new Error(`Helper "${name}" is not available in search filters`)
+    })
+  }
+}
 const defaultOpts: ProcessOptions = {
   noHelpers: false,
   cacheTemplates: false,
@@ -107,7 +119,12 @@ function createTemplate(
 
   // This does not throw an error when template can't be fulfilled,
   // have to try correct beforehand
-  const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
+  let instance = hbsInstance
+  if (opts.noHelpers) {
+    instance = hbsInstanceNoHelpers
+  } else if (opts.safeSearchHelpers) {
+    instance = hbsInstanceSafeSearch
+  }
 
   const template = instance.compile(string, {
     strict: false,
@@ -684,6 +701,73 @@ export function findHBSBlocks(string: string): string[] {
     return []
   }
   return matches
+}
+
+const ENV_VAR_PREFIX = "env."
+const ENV_VAR_REFERENCE_PATTERN = new RegExp(
+  `(?:^|[^A-Za-z0-9_.-])${ENV_VAR_PREFIX.replace(".", "\\.")}`
+)
+const ENV_VAR_BINDING_PATTERN =
+  /^(?:{{\s*env\.[A-Za-z0-9_.-]+\s*}}|{{{\s*env\.[A-Za-z0-9_.-]+\s*}}})$/
+const QUOTE_CHARACTERS = new Set(['"', "'", "`"])
+
+const withoutQuotedContent = (value: string) => {
+  let quote: string | undefined
+  let escaped = false
+
+  return Array.from(value, character => {
+    if (!quote) {
+      if (QUOTE_CHARACTERS.has(character)) {
+        quote = character
+        return " "
+      }
+      return character
+    }
+
+    if (escaped) {
+      escaped = false
+    } else if (character === "\\") {
+      escaped = true
+    } else if (character === quote) {
+      quote = undefined
+    }
+    return " "
+  }).join("")
+}
+
+const isHbsComment = (value: string) =>
+  value
+    .slice(value.startsWith("{{{") ? 3 : 2)
+    .trimStart()
+    .startsWith("!")
+
+export const containsEnvVarBinding = (str: unknown) => {
+  if (typeof str !== "string") {
+    return false
+  }
+  return findHBSBlocks(str).some(
+    block =>
+      !isHbsComment(block) &&
+      ENV_VAR_REFERENCE_PATTERN.test(withoutQuotedContent(block))
+  )
+}
+
+export const isEnvVarBinding = (str: unknown) => {
+  if (typeof str !== "string") {
+    return false
+  }
+  const blocks = findHBSBlocks(str)
+  if (
+    !blocks.length ||
+    blocks.some(block => !ENV_VAR_BINDING_PATTERN.test(block))
+  ) {
+    return false
+  }
+  const remaining = blocks.reduce(
+    (value, block) => value.replace(block, ""),
+    str
+  )
+  return !remaining.trim()
 }
 
 /**

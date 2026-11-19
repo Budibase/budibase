@@ -1,3 +1,4 @@
+import type { ProjectAssignmentResponse } from "./project"
 interface RowActionData {
   name: string
 }
@@ -8,7 +9,8 @@ export interface CreateRowActionRequest extends RowActionData {}
 
 export interface RowActionResponse
   extends RowActionData,
-    RowActionPermissionsData {
+    RowActionPermissionsData,
+    ProjectAssignmentResponse {
   id: string
   tableId: string
   automationId: string

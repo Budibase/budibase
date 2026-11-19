@@ -1,3 +1,4 @@
+import type { ProjectAssignmentResponse } from "./project"
 import { ScreenRoutingJson, Screen, SourceType } from "../../../documents"
 
 export interface FetchScreenRoutingResponse {
@@ -12,7 +13,7 @@ export type FetchScreenResponse = Screen[]
 export interface SaveScreenRequest extends Screen {
   navigationLinkLabel?: string
 }
-export interface SaveScreenResponse extends Screen {}
+export interface SaveScreenResponse extends Screen, ProjectAssignmentResponse {}
 
 export interface DeleteScreenResponse {
   message: string
