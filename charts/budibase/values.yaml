@@ -91,12 +91,6 @@ tolerations: []
 affinity: {}
 
 globals:
-  # -- Use an externally managed Secret instead of creating a chart-owned Secret.
-  existingSecret: ""
-  # -- Override Secret keys, for example:
-  # secretKeyMapping:
-  #   internalApiKey: internal_api_key
-  secretKeyMapping: {}
   # -- The version of Budibase to deploy. Defaults to what's specified by {{ .Chart.AppVersion }}.
   # Ends up being used as the image version tag for the apps, proxy, and worker images.
   appVersion: ""
@@ -153,8 +147,8 @@ globals:
   # looping here: <https://docs.budibase.com/docs/looping>.
   automationMaxIterations: "200"
 
-  # -- Create an internal API key, JWT secret, object store access key and
-  # secret, and store them in a Kubernetes `Secret`.
+  # -- Create the chart-owned credential Secret. Set false to read the fixed
+  # `<release>-budibase-runtime` Secret provisioned by an external controller.
   createSecrets: true
 
   # -- Used for encrypting API keys and environment variables when stored in the database.
