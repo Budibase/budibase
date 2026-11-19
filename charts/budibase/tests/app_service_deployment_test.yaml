@@ -144,6 +144,7 @@ tests:
               secretKeyRef:
                 name: budibase-budibase
                 key: bbai_litellm_key
+                optional: true
 
   - it: should set terminationGracePeriodSeconds to 70 by default
     asserts:
