@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "charts/**"
+      - "scripts/test-helm-secret-upgrades.py"
       - ".github/workflows/helm-validate.yml"
 
 jobs:
@@ -28,6 +29,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Helm
         uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3
@@ -39,6 +42,9 @@ jobs:
 
       - name: Run unit tests
         run: helm unittest charts/budibase
+
+      - name: Check master and repeated branch upgrades
+        run: python3 scripts/test-helm-secret-upgrades.py
 
   chart-testing:
     runs-on: ubuntu-24.04
