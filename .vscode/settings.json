@@ -33,5 +33,8 @@
     "typescript",
     "svelte"
   ],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "cSpell.words": [
+    "budibase"
+  ]
 }

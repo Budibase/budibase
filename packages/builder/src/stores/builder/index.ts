@@ -45,6 +45,7 @@ import { oauth2 } from "./oauth2"
 import { recaptchaStore } from "./recaptcha"
 import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
 import { workspaceConnections } from "./workspaceConnection"
+import { functionStore } from "./functions"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 import { selectedAppUrls } from "./appUrls"
@@ -100,6 +101,7 @@ export {
   dataAPI,
   restTemplates,
   workspaceConnections,
+  functionStore,
 }
 
 export const reset = () => {
@@ -112,6 +114,7 @@ export const reset = () => {
   rowActions.reset()
   workspaceDeploymentStore.reset()
   workspaceAppStore.reset()
+  functionStore.reset()
 }
 
 const refreshBuilderData = async () => {

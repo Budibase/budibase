@@ -7,6 +7,7 @@ import {
 import {
   AGENT_LOG_SESSION_PREFIX,
   AUTOMATION_LOG_PREFIX,
+  FUNCTION_RUN_LOG_PREFIX,
   LINK_USER_METADATA_PREFIX,
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
@@ -18,6 +19,7 @@ export const createWorkspaceExportFilter = (excludeRows?: boolean) => {
     LINK_USER_METADATA_PREFIX,
     AUTOMATION_LOG_PREFIX,
     AGENT_LOG_SESSION_PREFIX,
+    FUNCTION_RUN_LOG_PREFIX,
     `${DocumentType.SLACK_APP_CONFIG}${SEPARATOR}`,
   ]
   const runtimePrefixes = RuntimeDocumentTypes.map(prefixed)

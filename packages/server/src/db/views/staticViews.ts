@@ -13,6 +13,7 @@ const getPrefix = (type: DocumentType) => type + SEPARATOR
 
 const WORKSPACE_APP_PREFIX = getPrefix(DocumentType.WORKSPACE_APP)
 const AUTOMATION_PREFIX = getPrefix(DocumentType.AUTOMATION)
+const FUNCTION_PREFIX = getPrefix(DocumentType.FUNCTION)
 const AGENT_PREFIX = getPrefix(DocumentType.AGENT)
 const TABLE_PREFIX = getPrefix(DocumentType.TABLE)
 const DATASOURCE_PREFIX = getPrefix(DocumentType.DATASOURCE)
@@ -116,6 +117,7 @@ export async function createProjectMembersView() {
       if (
         doc._id.startsWith("${WORKSPACE_APP_PREFIX}") ||
         doc._id.startsWith("${AUTOMATION_PREFIX}") ||
+        doc._id.startsWith("${FUNCTION_PREFIX}") ||
         doc._id.startsWith("${AGENT_PREFIX}") ||
         doc._id.startsWith("${TABLE_PREFIX}")
       ) {

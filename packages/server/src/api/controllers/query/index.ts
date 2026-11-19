@@ -7,7 +7,6 @@ import {
 } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
-import { findHBSBlocks } from "@budibase/string-templates"
 import {
   ActionFailureReason,
   ActionType,
@@ -47,7 +46,7 @@ import { generateQueryID } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
 import { Thread, ThreadType } from "../../../threads"
-import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
+import { QueryEvent } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
 import {
@@ -58,6 +57,7 @@ import {
 import { builderSocket } from "../../../websockets"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
+import { enrichParameters } from "./parameters"
 import { mergePreviewSchema } from "./schema"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -70,32 +70,6 @@ function sanitiseUserStructure(user: ContextUser) {
   delete copiedUser.account
   delete copiedUser.license
   return copiedUser
-}
-
-function containsHandlebarsBinding(value: unknown): boolean {
-  if (typeof value === "string") {
-    return findHBSBlocks(value).length !== 0
-  }
-  if (Array.isArray(value)) {
-    return value.some(containsHandlebarsBinding)
-  }
-  if (value !== null && typeof value === "object") {
-    return Object.entries(value).some(
-      ([key, nestedValue]) =>
-        containsHandlebarsBinding(key) || containsHandlebarsBinding(nestedValue)
-    )
-  }
-  return false
-}
-
-function validateQueryInputs(parameters: QueryEventParameters) {
-  for (const [key, value] of Object.entries(parameters)) {
-    if (containsHandlebarsBinding(value)) {
-      throw new Error(
-        `Parameter '${key}' input contains a handlebars binding - this is not allowed.`
-      )
-    }
-  }
 }
 
 export async function fetchQueries(ctx: UserCtx<void, FetchQueriesResponse>) {
@@ -382,27 +356,6 @@ function getAuthConfig(ctx: UserCtx) {
   }
 }
 
-function enrichParameters(
-  query: Query,
-  requestParameters: QueryEventParameters = {}
-): QueryEventParameters {
-  const paramNotSet = (val: unknown) => val === "" || val == undefined
-  // first check parameters are all valid
-  validateQueryInputs(requestParameters)
-  // make sure parameters are fully enriched with defaults
-  for (const parameter of query.parameters) {
-    let value = requestParameters[parameter.name]
-    if (value == null || value === "") {
-      value = parameter.default
-    }
-    if (query.nullDefaultSupport && paramNotSet(value)) {
-      value = null
-    }
-    requestParameters[parameter.name] = value
-  }
-  return requestParameters
-}
-
 export async function preview(
   ctx: UserCtx<PreviewQueryRequest, PreviewQueryResponse>
 ) {
@@ -537,7 +490,7 @@ export async function preview(
     appId: ctx.appId,
     queryVerb: query.queryVerb,
     fields: query.fields,
-    parameters: enrichParameters(query),
+    parameters: enrichParameters({ query }),
     transformer: query.transformer,
     schema: query.schema,
     nullDefaultSupport: query.nullDefaultSupport,
@@ -608,7 +561,10 @@ async function execute(
       queryVerb: query.queryVerb,
       fields: query.fields,
       pagination: ctx.request.body.pagination,
-      parameters: enrichParameters(query, ctx.request.body.parameters),
+      parameters: enrichParameters({
+        query,
+        requestParameters: ctx.request.body.parameters,
+      }),
       transformer: query.transformer,
       queryId: ctx.params.queryId,
       // have to pass down to the thread runner - can't put into context now
@@ -644,7 +600,9 @@ async function execute(
       type: query.queryVerb,
       reason: ActionFailureReason.ERROR,
     })
-    ctx.throw(400, err)
+    const status =
+      opts.isAutomation && err instanceof HTTPError ? err.status : 400
+    ctx.throw(status, err)
   }
 }
 

@@ -1,4 +1,5 @@
 import { DocumentType, RuntimeDocumentTypes, SEPARATOR } from "@budibase/types"
+import { FUNCTION_RUN_LOG_PREFIX } from "../../../db/utils"
 import { createWorkspaceExportFilter } from "./filters"
 
 describe("workspace export filter", () => {
@@ -16,6 +17,11 @@ describe("workspace export filter", () => {
     expect(filter({ _id: slackAppConfigId, _deleted: true })).toBe(false)
   })
 
+  it("excludes Function run logs", () => {
+    const filter = createWorkspaceExportFilter()
+
+    expect(filter({ _id: `${FUNCTION_RUN_LOG_PREFIX}test` })).toBe(false)
+  })
   it.each(RuntimeDocumentTypes)("excludes %s documents", type => {
     const filter = createWorkspaceExportFilter()
 

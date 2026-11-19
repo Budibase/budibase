@@ -1,0 +1,310 @@
+import { API } from "@/api"
+import { FunctionStore } from "@/stores/builder/functions"
+import type { FunctionResponse, FunctionSummary } from "@budibase/types"
+import { SourceName } from "@budibase/types"
+import { get } from "svelte/store"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+vi.mock("@/api", () => ({
+  API: {
+    getFunctions: vi.fn(),
+    getFunctionQueryCatalog: vi.fn(),
+    getFunction: vi.fn(),
+    compileFunction: vi.fn(),
+    buildFunction: vi.fn(),
+    createFunction: vi.fn(),
+    updateFunction: vi.fn(),
+    deleteFunction: vi.fn(),
+  },
+}))
+
+const makeFunction = (
+  overrides: Partial<FunctionResponse> = {}
+): FunctionResponse & FunctionSummary => ({
+  linkedQueryCount: 1,
+  _id: "fn_one",
+  _rev: "1-one",
+  appId: "app_dev_test",
+  name: "Lookup customer",
+  source: "export default async function () { return { output: {} } }",
+  capabilities: [
+    {
+      capabilityId: "cap_one",
+      queryId: "query_one",
+      datasourceAlias: "CRM",
+      queryAlias: "findCustomer",
+      parameterNames: ["id"],
+    },
+  ],
+  readiness: "ready",
+  createdAt: "2026-07-23T12:00:00.000Z",
+  updatedAt: "2026-07-23T12:00:00.000Z",
+  artifact: {
+    capabilityIds: ["cap_one"],
+    compiledJavaScript: "compiled",
+    sourceHash: "source-hash",
+    declarationsHash: "declarations-hash",
+    compiledAt: "2026-07-23T12:00:00.000Z",
+  },
+  ...overrides,
+})
+
+describe("FunctionStore", () => {
+  let store: FunctionStore
+
+  beforeEach(() => {
+    store = new FunctionStore()
+    vi.resetAllMocks()
+    vi.mocked(API.getFunction).mockResolvedValue({ function: makeFunction() })
+    vi.mocked(API.getFunctions).mockResolvedValue({ functions: [] })
+  })
+
+  it("loads Function summaries with their build readiness", async () => {
+    const fn = makeFunction()
+    vi.mocked(API.getFunctions).mockResolvedValue({ functions: [fn] })
+
+    await store.fetch()
+
+    expect(store.list).toEqual([fn])
+    expect(get(store).loading).toBe(false)
+  })
+
+  it("stores a fetch error for the retry state", async () => {
+    vi.mocked(API.getFunctions).mockRejectedValue(new Error("Network failed"))
+
+    await store.fetch()
+
+    expect(get(store)).toMatchObject({
+      loading: false,
+      error: "Network failed",
+    })
+  })
+
+  it("fetches a single Function and adds it to the store", async () => {
+    const fn = makeFunction()
+    vi.mocked(API.getFunction).mockResolvedValue({ function: fn })
+
+    await expect(store.fetchOne(fn._id)).resolves.toEqual(fn)
+
+    expect(API.getFunction).toHaveBeenCalledWith(fn._id)
+    expect(store.list[0]._id).toBe(fn._id)
+  })
+
+  it("loads the saved query catalog", async () => {
+    const query = {
+      queryId: "query_one",
+      queryName: "Find customer",
+      datasourceId: "datasource_one",
+      datasourceName: "CRM",
+      source: SourceName.POSTGRES,
+      kind: "data" as const,
+      parameters: [{ name: "id" }],
+    }
+    vi.mocked(API.getFunctionQueryCatalog).mockResolvedValue({
+      queries: [query],
+    })
+
+    await store.fetchQueryCatalog()
+
+    expect(get(store)).toMatchObject({
+      queryCatalog: [query],
+      catalogLoading: false,
+      catalogError: undefined,
+    })
+  })
+
+  it("stores query catalog API failures for retry", async () => {
+    vi.mocked(API.getFunctionQueryCatalog).mockRejectedValue(
+      new Error("Catalog unavailable")
+    )
+
+    await store.fetchQueryCatalog()
+
+    expect(get(store)).toMatchObject({
+      catalogLoading: false,
+      catalogError: "Catalog unavailable",
+    })
+  })
+
+  it("creates and renames while sending only editable Function fields", async () => {
+    const fn = makeFunction()
+    vi.mocked(API.createFunction).mockResolvedValue({ function: fn })
+    vi.mocked(API.getFunction).mockResolvedValue({
+      function: makeFunction({ _rev: "3-three" }),
+    })
+    vi.mocked(API.updateFunction).mockResolvedValue({
+      function: makeFunction({ _rev: "4-four", name: "Renamed Function" }),
+    })
+
+    await store.create({
+      name: fn.name,
+      source: fn.source,
+      capabilities: [],
+    })
+    await store.rename(fn, "Renamed Function")
+
+    expect(API.updateFunction).toHaveBeenCalledWith(fn._id, {
+      _rev: "3-three",
+      name: "Renamed Function",
+      source: fn.source,
+      capabilities: [
+        {
+          queryId: "query_one",
+          datasourceAlias: "CRM",
+          queryAlias: "findCustomer",
+        },
+      ],
+    })
+    expect(store.list[0].name).toBe("Renamed Function")
+  })
+
+  it("keeps the fetched draft when it changes before the rename save", async () => {
+    const fn = makeFunction()
+    vi.mocked(API.getFunctions).mockResolvedValue({ functions: [fn] })
+    await store.fetch()
+    vi.mocked(API.getFunction).mockResolvedValue({
+      function: makeFunction({
+        _rev: "3-three",
+        name: "Updated in another tab",
+      }),
+    })
+    vi.mocked(API.updateFunction).mockRejectedValue({
+      status: 409,
+      message: "Function revision does not match.",
+    })
+
+    await expect(store.rename(fn, "Stale rename")).rejects.toMatchObject({
+      status: 409,
+    })
+
+    expect(API.updateFunction).toHaveBeenCalledWith(
+      fn._id,
+      expect.objectContaining({ _rev: "3-three" })
+    )
+    expect(store.list[0]).toMatchObject({
+      name: "Updated in another tab",
+      _rev: "3-three",
+    })
+  })
+
+  it("validates an unsaved draft without changing the stored Function", async () => {
+    const fn = makeFunction()
+    vi.mocked(API.getFunction).mockResolvedValue({ function: fn })
+    await store.fetchOne(fn._id)
+    const request = {
+      functionId: fn._id,
+      name: fn.name,
+      source: "invalid TypeScript",
+      capabilities: [],
+    }
+    vi.mocked(API.compileFunction).mockResolvedValue({
+      diagnostics: [{ code: "TS2304", message: "Cannot find name" }],
+    })
+
+    await expect(store.compile(request)).resolves.toEqual({
+      diagnostics: [{ code: "TS2304", message: "Cannot find name" }],
+    })
+
+    expect(API.compileFunction).toHaveBeenCalledWith(request)
+    expect(store.list).toEqual([fn])
+  })
+
+  it("builds the saved revision and stores its new readiness", async () => {
+    const fn = makeFunction({ readiness: "build_required" })
+    const built = makeFunction({
+      _rev: "2-two",
+      readiness: "ready",
+      source: "export default async function () { return { built: true } }",
+    })
+    const buildSummary: FunctionSummary = {
+      _id: built._id,
+      _rev: built._rev,
+      appId: built.appId,
+      name: built.name,
+      readiness: built.readiness,
+      createdAt: built.createdAt,
+      updatedAt: built.updatedAt,
+      linkedQueryCount: built.linkedQueryCount,
+    }
+    vi.mocked(API.buildFunction).mockResolvedValue({ function: buildSummary })
+    vi.mocked(API.getFunction).mockResolvedValue({ function: built })
+
+    await expect(store.build(fn)).resolves.toEqual(built)
+
+    expect(API.buildFunction).toHaveBeenCalledWith(fn._id, fn._rev)
+    expect(API.getFunction).toHaveBeenCalledWith(fn._id)
+    expect(store.list[0]).toEqual(
+      expect.objectContaining({
+        _rev: "2-two",
+        readiness: "ready",
+        source: built.source,
+      })
+    )
+  })
+
+  it("requires a revision before building", async () => {
+    const fn = makeFunction({ _rev: undefined })
+
+    await expect(store.build(fn)).rejects.toThrow(
+      "Function revision is missing"
+    )
+    expect(API.buildFunction).not.toHaveBeenCalled()
+  })
+
+  it("duplicates the draft without copying server-owned metadata", async () => {
+    const fn = makeFunction()
+    vi.mocked(API.getFunctions).mockResolvedValue({ functions: [fn] })
+    await store.fetch()
+    vi.mocked(API.createFunction).mockResolvedValue({
+      function: makeFunction({
+        _id: "fn_copy",
+        name: "Lookup customer 1",
+        artifact: undefined,
+      }),
+    })
+
+    await store.duplicate(fn)
+
+    expect(API.createFunction).toHaveBeenCalledWith({
+      name: "Lookup customer 1",
+      source: fn.source,
+      capabilities: [
+        {
+          queryId: "query_one",
+          datasourceAlias: "CRM",
+          queryAlias: "findCustomer",
+        },
+      ],
+    })
+    expect(
+      JSON.stringify(vi.mocked(API.createFunction).mock.calls)
+    ).not.toContain("source-hash")
+  })
+
+  it("keeps a Function in the store when guarded deletion conflicts", async () => {
+    const fn = makeFunction()
+    vi.mocked(API.getFunctions).mockResolvedValue({ functions: [fn] })
+    await store.fetch()
+    vi.mocked(API.deleteFunction).mockRejectedValue({
+      status: 409,
+      message: "Function is used by: Customer sync.",
+    })
+
+    await expect(store.delete(fn)).rejects.toMatchObject({ status: 409 })
+
+    expect(store.list).toHaveLength(1)
+    expect(store.list[0]._id).toBe(fn._id)
+  })
+
+  it("removes a Function after successful deletion", async () => {
+    const fn = makeFunction()
+    vi.mocked(API.getFunctions).mockResolvedValue({ functions: [fn] })
+    await store.fetch()
+    vi.mocked(API.deleteFunction).mockResolvedValue()
+
+    await store.delete(fn)
+
+    expect(API.deleteFunction).toHaveBeenCalledWith(fn._id, fn._rev)
+    expect(store.list).toEqual([])
+  })
+})
