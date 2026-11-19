@@ -86,7 +86,7 @@ Create a random string if the supplied key does not exist
 {{- if .Values.globals.createSecrets -}}
 {{- include "budibase.fullname" . -}}
 {{- else -}}
-{{- printf "%s-runtime" (include "budibase.fullname" . | trunc 55 | trimSuffix "-") -}}
+{{- printf "%s-budibase-runtime" (.Release.Name | trunc 46 | trimSuffix "-") -}}
 {{- end -}}
 {{- end -}}
 
