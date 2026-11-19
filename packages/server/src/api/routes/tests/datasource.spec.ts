@@ -130,6 +130,52 @@ describe("/datasources", () => {
   })
 
   describe("secret redaction", () => {
+    describe("environment-bound credentials", () => {
+      const stored = {
+        type: "datasource",
+        source: SourceName.POSTGRES,
+        config: { database: "main", password: "{{ env.DB_PASSWORD }}" },
+      }
+
+      it.each(["{{ env.DB_PASSWORD }}", "{{ env.NEXT_DB_PASSWORD }}"])(
+        "rejects a different connection when using %s",
+        async password => {
+          const config = { database: "other", password }
+          await expect(
+            sdk.datasources.mergeConfigs({ ...stored, config }, stored)
+          ).rejects.toThrow("Datasource settings cannot change")
+        }
+      )
+
+      it.each(["{{ env.DB_PASSWORD }}", "{{ env.NEXT_DB_PASSWORD }}"])(
+        "accepts the binding %s on the same connection",
+        async password => {
+          const config = { ...stored.config, password, schema: "reporting" }
+          const merged = await sdk.datasources.mergeConfigs(
+            { ...stored, config },
+            stored
+          )
+          expect(merged.config).toEqual({
+            database: "main",
+            password,
+            schema: "reporting",
+          })
+        }
+      )
+
+      it("allows an explicit password for a different connection with a bound database name", async () => {
+        const config = { database: "{{ env.DB_NAME }}", password: "fixture" }
+        const merged = await sdk.datasources.mergeConfigs(
+          { ...stored, config },
+          stored
+        )
+        expect(merged.config).toEqual({
+          database: "{{ env.DB_NAME }}",
+          password: "fixture",
+        })
+      })
+    })
+
     describe("numeric connection settings", () => {
       const stored: Datasource = {
         type: "datasource",

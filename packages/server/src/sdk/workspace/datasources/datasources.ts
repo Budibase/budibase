@@ -311,9 +311,12 @@ export async function mergeConfigs(update: Datasource, old: Datasource) {
     }
   }
 
+  const submittedConfig = update.config
   if (
     !old.config.auth &&
-    !Object.values(update.config).includes(PASSWORD_REPLACEMENT)
+    !Object.values(submittedConfig).some(
+      value => value === PASSWORD_REPLACEMENT || containsEnvVarBinding(value)
+    )
   ) {
     return update
   }
@@ -335,7 +338,14 @@ export async function mergeConfigs(update: Datasource, old: Datasource) {
     update.config = merge({}, old.config, update.config)
   }
 
-  if (Object.values(update.config).includes(PASSWORD_REPLACEMENT)) {
+  // Environment bindings supply server-side credentials even without a mask.
+  const usesBoundCredential = credentialFields.some(key =>
+    containsEnvVarBinding(submittedConfig[key])
+  )
+  if (
+    usesBoundCredential ||
+    Object.values(update.config).includes(PASSWORD_REPLACEMENT)
+  ) {
     const restoredConfig = { ...update.config }
     for (const [key, value] of Object.entries(restoredConfig)) {
       if (value !== PASSWORD_REPLACEMENT) {
