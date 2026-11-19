@@ -16,6 +16,7 @@ spec:
   template:
     metadata:
       annotations:
+{{- include "budibase.secretPodAnnotations" . | nindent 8 }}
         ad.datadoghq.com/litellm.logs: '[{"source":"python"}]'
         checksum/litellm-config: {{ .Values.services.litellm.config | sha256sum }}
       labels:
@@ -48,15 +49,15 @@ spec:
 {{- include "budibase.secretKeyRef" (dict "root" . "key" "litellm_salt_key") | nindent 16 }}
             - name: LITELLM_REASONING_AUTO_SUMMARY
               value: "true"
-          {{- if or .Values.globals.existingSecret .Values.services.litellm.uiUsername }}
+          {{- if or (not .Values.globals.createSecrets) .Values.services.litellm.uiUsername }}
             - name: UI_USERNAME
               valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "litellm_ui_username") | nindent 16 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "litellm_ui_username" "optional" true) | nindent 16 }}
           {{- end }}
-          {{- if or .Values.globals.existingSecret .Values.services.litellm.uiPassword }}
+          {{- if or (not .Values.globals.createSecrets) .Values.services.litellm.uiPassword }}
             - name: UI_PASSWORD
               valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "litellm_ui_password") | nindent 16 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "litellm_ui_password" "optional" true) | nindent 16 }}
           {{- end }}
           {{- if .Values.services.litellm.extraEnv }}
             {{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}

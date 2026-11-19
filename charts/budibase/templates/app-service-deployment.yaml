@@ -23,6 +23,7 @@ spec:
   template:
     metadata:
       annotations:
+{{- include "budibase.secretPodAnnotations" . | nindent 8 }}
         {{- if .Values.globals.deployTimestamp }}
         rollme/deploy-timestamp: {{ .Values.globals.deployTimestamp | quote }}
         {{- end }}
@@ -83,13 +84,13 @@ spec:
 {{- include "budibase.secretKeyRef" (dict "root" . "key" "internalApiKey") | nindent 12 }}
         - name: INTERNAL_API_KEY_FALLBACK
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "internal_api_key_fallback") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "internal_api_key_fallback" "optional" true) | nindent 12 }}
         - name: JWT_SECRET
           valueFrom:
 {{- include "budibase.secretKeyRef" (dict "root" . "key" "jwtSecret") | nindent 12 }}
         - name: JWT_SECRET_FALLBACK
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "jwt_secret_fallback") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "jwt_secret_fallback" "optional" true) | nindent 12 }}
         {{ if .Values.services.objectStore.region }}
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}
@@ -108,7 +109,7 @@ spec:
           value: {{ .Values.services.objectStore.cloudfront.publicKeyId | quote }}
         - name: CLOUDFRONT_PRIVATE_KEY_64
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "cloudfront_private_key_64") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "cloudfront_private_key_64" "optional" true) | nindent 12 }}
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
         - name: S3_IGNORE_SELF_SIGNED
@@ -138,10 +139,10 @@ spec:
         - name: REDIS_PASSWORD
           valueFrom:
 {{- include "budibase.secretKeyRef" (dict "root" . "key" "redis_password") | nindent 12 }}
-        {{- if or .Values.globals.existingSecret .Values.services.redis.username }}
+        {{- if or (not .Values.globals.createSecrets) .Values.services.redis.username }}
         - name: REDIS_USERNAME
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "redis_username") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "redis_username" "optional" true) | nindent 12 }}
         {{- end }}
         - name: REDIS_URL
           {{ if .Values.services.redis.url }}
@@ -153,20 +154,20 @@ spec:
           value: {{ .Values.globals.selfHosted | quote }}
         - name: POSTHOG_TOKEN
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "posthog_token") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "posthog_token" "optional" true) | nindent 12 }}
         - name: WORKER_URL
           value: http://worker-service:{{ .Values.services.worker.port }}
         - name: LITELLM_URL
           value: {{ .Values.globals.litellmUrl | quote }}
-        {{- if or .Values.globals.existingSecret .Values.services.litellm.masterKey }}
+        {{- if or (not .Values.globals.createSecrets) .Values.services.litellm.masterKey }}
         - name: LITELLM_MASTER_KEY
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "litellm_master_key") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "litellm_master_key" "optional" true) | nindent 12 }}
         {{- end }}
-        {{- if or .Values.globals.existingSecret .Values.services.litellm.bbaiKey }}
+        {{- if or (not .Values.globals.createSecrets) .Values.services.litellm.bbaiKey }}
         - name: BBAI_LITELLM_KEY
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "bbai_litellm_key") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "bbai_litellm_key" "optional" true) | nindent 12 }}
         {{- end }}
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
@@ -176,17 +177,17 @@ spec:
           value: {{ .Values.globals.internalAccountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "account_portal_api_key") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "account_portal_api_key" "optional" true) | nindent 12 }}
         - name: COOKIE_DOMAIN
           value: {{ .Values.globals.cookieDomain | quote }}
         - name: HTTP_MIGRATIONS
           value: {{ .Values.globals.httpMigrations | quote }}
         - name: GOOGLE_CLIENT_ID
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "google_client_id") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "google_client_id" "optional" true) | nindent 12 }}
         - name: GOOGLE_CLIENT_SECRET
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "google_client_secret") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "google_client_secret" "optional" true) | nindent 12 }}
         - name: AUTOMATION_MAX_ITERATIONS
           value: {{ .Values.globals.automationMaxIterations | quote }}
         - name: TENANT_FEATURE_FLAGS
@@ -198,10 +199,10 @@ spec:
         - name: BB_ADMIN_USER_EMAIL
           value: {{ .Values.globals.bbAdminUserEmail | quote }}
         {{ end }}
-        {{ if or .Values.globals.existingSecret .Values.globals.bbAdminUserPassword }}
+        {{ if or (not .Values.globals.createSecrets) .Values.globals.bbAdminUserPassword }}
         - name: BB_ADMIN_USER_PASSWORD
           valueFrom:
-{{- include "budibase.secretKeyRef" (dict "root" . "key" "bb_admin_user_password") | nindent 12 }}
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "bb_admin_user_password" "optional" true) | nindent 12 }}
         {{ end }}
         {{ if .Values.globals.pluginsDir }}
         - name: PLUGINS_DIR

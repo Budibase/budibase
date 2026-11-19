@@ -16,6 +16,10 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        {{- if .Values.globals.createSecrets }}
+        checksum/redis-password: {{ .Values.services.redis.password | default "" | toString | sha256sum }}
+        {{- end }}
       labels:
         io.kompose.service: redis-service
     spec:

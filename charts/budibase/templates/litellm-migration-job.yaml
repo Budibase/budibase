@@ -31,13 +31,13 @@ spec:
             - name: LITELLM_MASTER_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-litellm-migrations" (include "budibase.fullname" .)) .Values.globals.existingSecret }}
-                  key: litellm_master_key
+                  name: {{ if .Values.globals.createSecrets }}{{ printf "%s-litellm-migrations" (include "budibase.fullname" .) }}{{ else }}{{ include "budibase.secretName" . }}{{ end }}
+                  key: {{ "litellm_master_key" | quote }}
             - name: LITELLM_SALT_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-litellm-migrations" (include "budibase.fullname" .)) .Values.globals.existingSecret }}
-                  key: litellm_salt_key
+                  name: {{ if .Values.globals.createSecrets }}{{ printf "%s-litellm-migrations" (include "budibase.fullname" .) }}{{ else }}{{ include "budibase.secretName" . }}{{ end }}
+                  key: {{ "litellm_salt_key" | quote }}
           {{- if .Values.services.litellm.extraEnv }}
             {{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
           {{- end }}

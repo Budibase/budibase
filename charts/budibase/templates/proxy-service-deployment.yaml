@@ -23,6 +23,7 @@ spec:
   template:
     metadata:
       annotations:
+{{- include "budibase.secretPodAnnotations" . | nindent 8 }}
         {{- if .Values.globals.deployTimestamp }}
         rollme/deploy-timestamp: {{ .Values.globals.deployTimestamp | quote }}
         {{- end }}

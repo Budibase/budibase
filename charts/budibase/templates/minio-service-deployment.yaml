@@ -16,6 +16,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+{{- include "budibase.secretPodAnnotations" . | nindent 8 }}
       labels:
         io.kompose.service: minio-service
     spec:
