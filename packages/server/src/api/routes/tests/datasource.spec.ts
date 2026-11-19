@@ -130,6 +130,36 @@ describe("/datasources", () => {
   })
 
   describe("secret redaction", () => {
+    describe("numeric connection settings", () => {
+      const stored: Datasource = {
+        type: "datasource",
+        source: SourceName.POSTGRES,
+        config: { port: 5432, password: "fixture" },
+      }
+
+      it("accepts an unchanged port submitted as text", async () => {
+        const update = {
+          ...stored,
+          config: { port: "5432", password: PASSWORD_REPLACEMENT },
+        }
+        const merged = await sdk.datasources.mergeConfigs(update, stored)
+        expect(merged.config).toEqual({ port: "5432", password: "fixture" })
+      })
+
+      it.each(["5433", "{{ env.PORT }}"])(
+        "rejects a changed port of %s",
+        async port => {
+          const update = {
+            ...stored,
+            config: { port, password: PASSWORD_REPLACEMENT },
+          }
+          await expect(
+            sdk.datasources.mergeConfigs(update, stored)
+          ).rejects.toThrow("Datasource settings cannot change")
+        }
+      )
+    })
+
     it("allows Snowflake private key rotation while retaining a masked password", async () => {
       const stored = await config.api.datasource.create({
         type: "datasource",

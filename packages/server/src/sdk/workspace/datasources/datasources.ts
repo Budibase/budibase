@@ -350,6 +350,15 @@ export async function mergeConfigs(update: Datasource, old: Datasource) {
 
     const storedSettings = { ...old.config }
     const updatedSettings = { ...restoredConfig }
+    for (const [key, field] of Object.entries(definition?.datasource || {})) {
+      if (field.type === DatasourceFieldType.NUMBER) {
+        for (const settings of [storedSettings, updatedSettings]) {
+          if (Number.isFinite(settings[key])) {
+            settings[key] = String(settings[key])
+          }
+        }
+      }
+    }
     for (const key of credentialFields) {
       if (
         Object.hasOwn(update.config, key) &&
