@@ -1,7 +1,8 @@
-import { constants, context, events } from "@budibase/backend-core"
+import { constants, context, events, objectStore } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DocumentType, Workspace } from "@budibase/types"
 import path from "path"
+import fsp from "fs/promises"
 import { Readable, Writable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
@@ -28,6 +29,8 @@ describe("/backups", () => {
 
   describe("/api/backups/export", () => {
     let attachmentFileNames: string[] = []
+    const knowledgeFilePath =
+      "ai/knowledge-bases/kb_test/files/kb_file_test/knowledge.txt"
 
     async function checkExportContent(
       buffer: Buffer,
@@ -51,9 +54,13 @@ describe("/backups", () => {
         "manifest.json",
       ].map(encodeIfNeeded)
       if (opts.includeRows) {
+        expectedFiles.push(encodeIfNeeded(knowledgeFilePath))
         expectedFiles.push(
           ...attachmentFileNames.sort().map(f => `attachments/${f}`)
         )
+      } else {
+        expect(exportedFiles).not.toContain(knowledgeFilePath)
+        expect(exportedFiles).not.toContain(`${knowledgeFilePath}.enc`)
       }
 
       expect(exportedFiles).toEqual(expect.arrayContaining(expectedFiles))
@@ -65,6 +72,12 @@ describe("/backups", () => {
     }
 
     beforeEach(async () => {
+      await objectStore.upload({
+        bucket: objectStore.ObjectStoreBuckets.APPS,
+        filename: `${config.getDevWorkspaceId()}/${knowledgeFilePath}`,
+        body: Buffer.from("workspace knowledge"),
+        type: "text/plain",
+      })
       const table = await config.api.table.save(
         setup.structures.basicTableWithAttachmentField()
       )
@@ -99,6 +112,49 @@ describe("/backups", () => {
       expect(events.app.exported).toHaveBeenCalledTimes(1)
 
       await checkExportContent(body, { includeRows: true, isEncrypted: false })
+    })
+
+    it("exports dev knowledge files with a published workspace", async () => {
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const exportPath = await sdk.backups.exportWorkspace(
+        config.getProdWorkspaceId(),
+        { tar: true }
+      )
+      try {
+        await checkExportContent(await fsp.readFile(exportPath), {
+          includeRows: true,
+          isEncrypted: false,
+        })
+      } finally {
+        await fsp.rm(exportPath, { force: true })
+      }
+    })
+
+    it("does not create an empty knowledge directory", async () => {
+      await objectStore.deleteFile(
+        objectStore.ObjectStoreBuckets.APPS,
+        `${config.getDevWorkspaceId()}/${knowledgeFilePath}`
+      )
+      const exportPath = await sdk.backups.exportWorkspace(
+        config.getDevWorkspaceId(),
+        { tar: true }
+      )
+      try {
+        const exportedEntries: string[] = []
+        const parser = tar.list({
+          onReadEntry: entry => exportedEntries.push(entry.path),
+        })
+        await pipeline(
+          Readable.from(await fsp.readFile(exportPath)),
+          parser as unknown as Writable
+        )
+        expect(
+          exportedEntries.some(entry => entry.startsWith("ai/knowledge-bases"))
+        ).toBe(false)
+      } finally {
+        await fsp.rm(exportPath, { force: true })
+      }
     })
 
     it("should be able to export a workspace without rows", async () => {

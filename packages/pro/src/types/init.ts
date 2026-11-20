@@ -24,6 +24,14 @@ export interface ImportWorkspaceOpts {
   importObjStoreContents?: boolean
   objectStoreAppId?: string
   preserveLiteLLMConfig?: boolean
+  restoreKnowledgeBases?: boolean
+  cleanupObjectStoreContents?: boolean
+}
+
+export interface ImportWorkspaceResult {
+  ok: string
+  containsKnowledge: boolean
+  objectStoreFiles: string[]
 }
 
 export type ExportWorkspaceFn = (
@@ -41,7 +49,7 @@ export type ImportWorkspaceFn = (
   destinationDb: Database,
   config: ImportWorkspaceConfig,
   opts?: ImportWorkspaceOpts
-) => Promise<string>
+) => Promise<ImportWorkspaceResult>
 type StatsFn = (devWorkspaceId: string) => Promise<WorkspaceBackupContents>
 
 export interface BackupProcessingOpts {

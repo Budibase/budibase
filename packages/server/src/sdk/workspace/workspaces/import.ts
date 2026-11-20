@@ -9,12 +9,14 @@ import {
   Document,
   DocumentType,
   DocumentTypesToImport,
+  GeminiKnowledgeBase,
   RowValue,
   Workspace,
 } from "@budibase/types"
 import { getWorkspaceMigrationCacheKey } from "../../../workspaceMigrations"
 import { processMigrations } from "../../../workspaceMigrations/migrationsProcessor"
 import backups from "../backups"
+import { deleteGeminiVectorStore } from "../ai/knowledgeBase/geminiFileStore"
 import {
   USER_METDATA_PREFIX,
   LINK_USER_METADATA_PREFIX,
@@ -88,10 +90,13 @@ function mergeUpdateAndDeleteDocuments({
   return finalDocs
 }
 
-async function removeImportableDocuments(db: Database) {
+async function removeImportableDocuments(
+  db: Database,
+  documentTypes = DocumentTypesToImport
+) {
   // get the references to the documents, not the whole document
   const docPromises = []
-  for (let docType of DocumentTypesToImport) {
+  for (let docType of documentTypes) {
     docPromises.push(db.allDocs(dbCore.getDocParams(docType)))
   }
   let documentRefs: { _id: string; _rev: string }[] = []
@@ -188,14 +193,54 @@ export async function updateWithExport(
       },
     }
 
-    await backups.importApp(devId, tempDb, template, {
+    const importResult = await backups.importApp(devId, tempDb, template, {
       updateAttachmentColumns: true,
+      restoreKnowledgeBases: false,
+      cleanupObjectStoreContents: false,
     })
     const newMetadata = await getNewWorkspaceMetadata(tempDb, workspaceDb)
     // get the documents to copy
     const toUpdate = await getImportableDocuments(tempDb)
+    const importsKnowledge = toUpdate.some(
+      doc =>
+        doc._id?.startsWith(`${DocumentType.KNOWLEDGE_BASE}_`) ||
+        doc._id?.startsWith(`${DocumentType.KNOWLEDGE_BASE_FILE}_`)
+    )
+    const documentTypesToReplace = importsKnowledge
+      ? DocumentTypesToImport
+      : DocumentTypesToImport.filter(
+          type =>
+            type !== DocumentType.KNOWLEDGE_BASE &&
+            type !== DocumentType.KNOWLEDGE_BASE_FILE
+        )
+    const importedStoreIds = new Set(
+      toUpdate
+        .filter(
+          (doc): doc is GeminiKnowledgeBase =>
+            doc._id?.startsWith(`${DocumentType.KNOWLEDGE_BASE}_`) ?? false
+        )
+        .map(knowledgeBase => knowledgeBase.config.googleFileStoreId)
+    )
+    const existingKnowledgeBases = importsKnowledge
+      ? await workspaceDb.allDocs<GeminiKnowledgeBase>(
+          dbCore.getDocParams(DocumentType.KNOWLEDGE_BASE, undefined, {
+            include_docs: true,
+          })
+        )
+      : undefined
+    const replacedStoreIds = new Set(
+      (existingKnowledgeBases?.rows || [])
+        .map(row => row.doc?.config.googleFileStoreId)
+        .filter(
+          (storeId): storeId is string =>
+            !!storeId && !importedStoreIds.has(storeId)
+        )
+    )
     // clear out the old documents
-    const toDelete = await removeImportableDocuments(workspaceDb)
+    const toDelete = await removeImportableDocuments(
+      workspaceDb,
+      documentTypesToReplace
+    )
 
     // get existing tables to ensure we only import rows for newly created tables
     const existingTablesRes = await workspaceDb.allDocs(
@@ -245,6 +290,27 @@ export async function updateWithExport(
     const results = await workspaceDb.bulkDocs(workspaceDocs)
     if (results.some(r => r.error)) {
       throw new HTTPError("Error importing documents", 500)
+    }
+
+    await backups
+      .cleanupUnusedWorkspaceObjects({
+        prodAppId: dbCore.getProdWorkspaceID(devId),
+        importedFiles: importResult.objectStoreFiles,
+      })
+      .catch(error => {
+        console.log("Failed to clean up replaced workspace objects", error)
+      })
+    if (importResult.containsKnowledge) {
+      await backups.restoreImportedKnowledgeBases(devId, workspaceDb)
+      await backups.cleanupUnusedKnowledgeBaseObjects(devId, workspaceDb)
+    }
+    for (const storeId of replacedStoreIds) {
+      await deleteGeminiVectorStore(storeId).catch(error => {
+        console.log("Failed to delete replaced Gemini vector store", {
+          storeId,
+          error,
+        })
+      })
     }
 
     let partialImport = false

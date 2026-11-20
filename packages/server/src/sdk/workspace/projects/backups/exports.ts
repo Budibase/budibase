@@ -1,4 +1,9 @@
-import { context, encryption, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  encryption,
+  HTTPError,
+  objectStore,
+} from "@budibase/backend-core"
 import {
   Agent,
   AnyDocument,
@@ -8,6 +13,7 @@ import {
   Table,
   isEmailTrigger,
   KnowledgeBaseFile,
+  ProjectPackageKnowledge,
   Project,
   ProjectPackageDependencyIndex,
   ProjectPackageManifest,
@@ -19,6 +25,7 @@ import {
 } from "@budibase/types"
 import fsp from "fs/promises"
 import { dirname, join } from "path"
+import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import { v4 as uuid } from "uuid"
 import sdk from "../../.."
@@ -39,9 +46,12 @@ import {
   PROJECT_EXPORT_FORMAT_VERSION,
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
+  PROJECT_KNOWLEDGE_DIRECTORY,
+  PROJECT_KNOWLEDGE_FILE,
   PROJECT_PERMISSIONS_FILE,
   PROJECT_REST_TEMPLATES_FILE,
 } from "./constants"
+import { ObjectStoreBuckets } from "../../../../constants"
 import { exportProjectData } from "./data"
 import { readProjectPackageFiles } from "./files"
 import { exportProjectPermissions } from "./permissions"
@@ -225,7 +235,9 @@ async function getUnsupportedContent(
 async function sanitiseDocumentForExport(
   doc: AnyDocument,
   type: ResourceType,
-  screenWorkspaceAppIdByScreenId?: Map<string, string>
+  screenWorkspaceAppIdByScreenId?: Map<string, string>,
+  includeKnowledge = false,
+  exportedKnowledgeBaseIds?: Set<string>
 ) {
   const sanitised = structuredClone(doc)
   delete sanitised._rev
@@ -245,10 +257,22 @@ async function sanitiseDocumentForExport(
   }
 
   if (type === ResourceType.AGENT) {
-    return {
+    const agent = {
       ...sdk.ai.agents.sanitiseAgentForExport(sanitised as Agent),
       aiconfig: "",
     }
+    if (includeKnowledge) {
+      agent.operations = agent.operations?.map(operation => ({
+        ...operation,
+        knowledgeBases:
+          (sanitised as Agent).operations
+            ?.find(({ id }) => id === operation.id)
+            ?.knowledgeBases?.filter(knowledgeBaseId =>
+              exportedKnowledgeBaseIds?.has(knowledgeBaseId)
+            ) || [],
+      }))
+    }
+    return agent
   }
 
   if (type === ResourceType.AUTOMATION) {
@@ -269,6 +293,63 @@ async function sanitiseDocumentForExport(
   }
 
   return sanitised
+}
+
+const exportProjectKnowledge = async ({
+  agents,
+  dirPath,
+}: {
+  agents: Agent[]
+  dirPath: string
+}): Promise<ProjectPackageKnowledge> => {
+  const knowledgeBaseIds = Array.from(
+    new Set(
+      agents.flatMap(agent =>
+        (agent.operations || []).flatMap(
+          operation => operation.knowledgeBases || []
+        )
+      )
+    )
+  )
+  const knowledgeBases = []
+
+  for (const knowledgeBaseId of knowledgeBaseIds) {
+    const knowledgeBase = await sdk.ai.knowledgeBase.find(knowledgeBaseId)
+    if (!knowledgeBase) {
+      continue
+    }
+    const files =
+      await sdk.ai.knowledgeBase.listKnowledgeBaseFiles(knowledgeBaseId)
+    const exportedFiles = []
+    for (const file of files) {
+      const path = `${PROJECT_KNOWLEDGE_DIRECTORY}/${file._id}`
+      const destination = join(dirPath, path)
+      await fsp.mkdir(dirname(destination), { recursive: true })
+      const { stream } = await objectStore.getReadStream(
+        ObjectStoreBuckets.APPS,
+        file.objectStoreKey
+      )
+      await pipeline(
+        stream,
+        (await fsp.open(destination, "w")).createWriteStream()
+      )
+      exportedFiles.push({
+        _id: file._id!,
+        filename: file.filename,
+        mimetype: file.mimetype,
+        size: file.size,
+        path,
+      })
+    }
+    knowledgeBases.push({
+      _id: knowledgeBase._id!,
+      name: knowledgeBase.name,
+      type: knowledgeBase.type,
+      files: exportedFiles,
+    })
+  }
+
+  return { knowledgeBases }
 }
 
 function sanitiseProjectForExport(project: Project) {
@@ -329,6 +410,9 @@ function buildManifest({
     containsRows: false,
     containsAttachments: false,
     containsPermissions: true,
+    containsKnowledge: false,
+    knowledgeBaseCount: 0,
+    knowledgeFileCount: 0,
     requiresSecrets:
       !!resourcesByType[ResourceType.DATASOURCE] ||
       !!resourcesByType[ResourceType.AGENT] ||
@@ -449,6 +533,14 @@ export async function exportProject(
     workspaceApps,
     exportedAgentIds
   )
+  if (opts?.includeRows) {
+    const agentFileIndex = unsupportedContent.findIndex(
+      content => content.type === "agent_file"
+    )
+    if (agentFileIndex >= 0) {
+      unsupportedContent.splice(agentFileIndex, 1)
+    }
+  }
   if (excludedDependencies.length) {
     unsupportedContent.push({
       type: "excluded_dependency",
@@ -505,7 +597,29 @@ export async function exportProject(
   }
 
   const tmpPath = await fsp.mkdtemp(join(budibaseTempDir(), "project-export-"))
+  let exportedKnowledgeBaseIds: Set<string> | undefined
   try {
+    if (opts?.includeRows) {
+      const exportedAgents = agents.filter(
+        agent => !!agent._id && exportedAgentIds.has(agent._id)
+      )
+      const knowledge = await exportProjectKnowledge({
+        agents: exportedAgents,
+        dirPath: tmpPath,
+      })
+      exportedKnowledgeBaseIds = new Set(
+        knowledge.knowledgeBases.map(knowledgeBase => knowledgeBase._id)
+      )
+      manifest.containsKnowledge = knowledge.knowledgeBases.length > 0
+      manifest.knowledgeBaseCount = knowledge.knowledgeBases.length
+      manifest.knowledgeFileCount = knowledge.knowledgeBases.reduce(
+        (count, knowledgeBase) => count + knowledgeBase.files.length,
+        0
+      )
+      if (manifest.containsKnowledge) {
+        await writeJsonFile(join(tmpPath, PROJECT_KNOWLEDGE_FILE), knowledge)
+      }
+    }
     if (opts?.includeRows) {
       const { data, unsupportedContent: omittedData } = await exportProjectData(
         {
@@ -549,7 +663,9 @@ export async function exportProject(
         const sanitised = await sanitiseDocumentForExport(
           doc,
           type,
-          screenWorkspaceAppIdByScreenId
+          screenWorkspaceAppIdByScreenId,
+          !!opts?.includeRows,
+          exportedKnowledgeBaseIds
         )
         await writeJsonFile(
           join(tmpPath, PROJECT_DOCS_DIRECTORY, type, `${doc._id}.json`),

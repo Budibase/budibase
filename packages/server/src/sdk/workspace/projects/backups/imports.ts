@@ -23,11 +23,13 @@ import {
   ImportProjectResponse,
   isEmailTrigger,
   isWebhookTrigger,
+  KnowledgeBaseType,
   MAX_PROJECT_README_LENGTH,
   Project,
   ProjectImportRequirement,
   ProjectPackageDependencyIndex,
   ProjectPackageManifest,
+  ProjectPackageKnowledge,
   ProjectPackageData,
   IdentityType,
   Query,
@@ -82,6 +84,8 @@ import {
   PROJECT_EXPORT_FORMAT_VERSION,
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
+  PROJECT_KNOWLEDGE_DIRECTORY,
+  PROJECT_KNOWLEDGE_FILE,
   PROJECT_PERMISSIONS_FILE,
   PROJECT_REST_TEMPLATES_FILE,
 } from "./constants"
@@ -166,6 +170,7 @@ interface ExtractedProjectPackage {
   restTemplates: ProjectRestTemplate[]
   data?: ProjectPackageData
   permissions?: ProjectPackagePermissions
+  knowledge?: ProjectPackageKnowledge
 }
 
 interface InsertedDocRef {
@@ -683,11 +688,16 @@ const sanitiseImportedDoc = async ({
   }
 
   if (resourceType === ResourceType.AGENT) {
+    const operations = (remapped as Agent).operations
     Object.assign(
       remapped,
       sdk.ai.agents.sanitiseAgentForExport(remapped as Agent),
       { aiconfig: "" }
     )
+    ;(remapped as Agent).operations = operations?.map(operation => ({
+      ...operation,
+      knowledgeSources: [],
+    }))
     delete (remapped as Agent).publishedAt
   }
 
@@ -775,7 +785,15 @@ const validateManifest = (manifest: ProjectPackageManifest) => {
     typeof manifest.containsRows !== "boolean" ||
     typeof manifest.containsAttachments !== "boolean" ||
     (manifest.containsPermissions !== undefined &&
-      typeof manifest.containsPermissions !== "boolean")
+      typeof manifest.containsPermissions !== "boolean") ||
+    (manifest.containsKnowledge !== undefined &&
+      typeof manifest.containsKnowledge !== "boolean") ||
+    (manifest.knowledgeBaseCount !== undefined &&
+      (!Number.isInteger(manifest.knowledgeBaseCount) ||
+        manifest.knowledgeBaseCount < 0)) ||
+    (manifest.knowledgeFileCount !== undefined &&
+      (!Number.isInteger(manifest.knowledgeFileCount) ||
+        manifest.knowledgeFileCount < 0))
   ) {
     throw new HTTPError("Project package manifest is invalid.", 400)
   }
@@ -795,6 +813,67 @@ const validateManifest = (manifest: ProjectPackageManifest) => {
       throw new HTTPError("Project package manifest is invalid.", 400)
     }
   }
+}
+
+const validateProjectKnowledge = ({
+  value,
+  manifest,
+  knowledgePaths,
+}: {
+  value: unknown
+  manifest: ProjectPackageManifest
+  knowledgePaths: string[]
+}): ProjectPackageKnowledge => {
+  if (!isRecord(value) || !Array.isArray(value.knowledgeBases)) {
+    throw new HTTPError("Project package knowledge is invalid.", 400)
+  }
+  const knowledge = value as unknown as ProjectPackageKnowledge
+  const ids = new Set<string>()
+  const paths = new Set<string>()
+  for (const knowledgeBase of knowledge.knowledgeBases) {
+    if (
+      !isRecord(knowledgeBase) ||
+      typeof knowledgeBase._id !== "string" ||
+      !knowledgeBase._id ||
+      ids.has(knowledgeBase._id) ||
+      typeof knowledgeBase.name !== "string" ||
+      knowledgeBase.type !== KnowledgeBaseType.GEMINI ||
+      !Array.isArray(knowledgeBase.files)
+    ) {
+      throw new HTTPError("Project package knowledge is invalid.", 400)
+    }
+    ids.add(knowledgeBase._id)
+    for (const file of knowledgeBase.files) {
+      if (
+        !isRecord(file) ||
+        typeof file._id !== "string" ||
+        typeof file.filename !== "string" ||
+        typeof file.path !== "string" ||
+        !file.path.startsWith(`${PROJECT_KNOWLEDGE_DIRECTORY}/`) ||
+        !isSafeArchivePath(file.path) ||
+        file.path.split(/[\\/]/).length !== 2 ||
+        paths.has(file.path) ||
+        (file.mimetype !== undefined && typeof file.mimetype !== "string") ||
+        (file.size !== undefined &&
+          (!Number.isInteger(file.size) || file.size < 0))
+      ) {
+        throw new HTTPError("Project package knowledge is invalid.", 400)
+      }
+      paths.add(file.path)
+    }
+  }
+  if (
+    manifest.knowledgeBaseCount !== knowledge.knowledgeBases.length ||
+    manifest.knowledgeFileCount !== paths.size ||
+    knowledgePaths.length !== paths.size ||
+    knowledgePaths.some(path => !paths.has(path))
+  ) {
+    throw new HTTPError(
+      "Project package knowledge does not match its manifest.",
+      400
+    )
+  }
+  return knowledge
 }
 
 const validateProject = (project: Project) => {
@@ -1266,6 +1345,8 @@ async function extractProjectPackage(
             PROJECT_ATTACHMENTS_DIRECTORY,
             PROJECT_PERMISSIONS_FILE,
             PROJECT_REST_TEMPLATES_FILE,
+            PROJECT_KNOWLEDGE_FILE,
+            PROJECT_KNOWLEDGE_DIRECTORY,
           ].includes(entry)
       )
     ) {
@@ -1362,6 +1443,75 @@ async function extractProjectPackage(
         })
       : undefined
 
+    const knowledgePaths = packageFiles
+      .map(filePath => relative(tmpPath, filePath))
+      .filter(filePath =>
+        filePath.startsWith(`${PROJECT_KNOWLEDGE_DIRECTORY}/`)
+      )
+    if (
+      !!manifest.containsKnowledge !==
+      rootEntries.includes(PROJECT_KNOWLEDGE_FILE)
+    ) {
+      throw new HTTPError(
+        "Project package knowledge does not match its manifest.",
+        400
+      )
+    }
+    const knowledge = manifest.containsKnowledge
+      ? validateProjectKnowledge({
+          value: await readJsonFile<unknown>(
+            join(tmpPath, PROJECT_KNOWLEDGE_FILE)
+          ),
+          manifest,
+          knowledgePaths,
+        })
+      : undefined
+    const referencedKnowledgeBaseIds = new Set(
+      docs
+        .filter(({ resourceType }) => resourceType === ResourceType.AGENT)
+        .flatMap(({ doc }) =>
+          ((doc as Agent).operations || []).flatMap(
+            operation => operation.knowledgeBases || []
+          )
+        )
+    )
+    if (knowledge) {
+      const packagedKnowledgeBaseIds = new Set(
+        knowledge.knowledgeBases.map(knowledgeBase => knowledgeBase._id)
+      )
+      if (
+        packagedKnowledgeBaseIds.size !== referencedKnowledgeBaseIds.size ||
+        [...packagedKnowledgeBaseIds].some(
+          id => !referencedKnowledgeBaseIds.has(id)
+        )
+      ) {
+        throw new HTTPError(
+          "Project package knowledge contains invalid agent references.",
+          400
+        )
+      }
+      for (const knowledgeBase of knowledge.knowledgeBases) {
+        for (const file of knowledgeBase.files) {
+          const stats = await fsp.stat(join(tmpPath, file.path))
+          if (file.size !== undefined && stats.size !== file.size) {
+            throw new HTTPError(
+              "Project package knowledge does not match its manifest.",
+              400
+            )
+          }
+        }
+      }
+    }
+    if (
+      !knowledge &&
+      (knowledgePaths.length || referencedKnowledgeBaseIds.size)
+    ) {
+      throw new HTTPError(
+        "Project package knowledge does not match its manifest.",
+        400
+      )
+    }
+
     const attachmentPaths = packageFiles
       .map(filePath => relative(tmpPath, filePath))
       .filter(
@@ -1399,6 +1549,7 @@ async function extractProjectPackage(
       data,
       permissions,
       restTemplates,
+      knowledge,
     }
   } catch (err) {
     await fsp.rm(tmpPath, { recursive: true, force: true })
@@ -1527,6 +1678,39 @@ const cleanupProjectAttachments = async (uploadedKeys: string[]) => {
   }
 }
 
+const getImportedKnowledgeBaseName = (
+  name: string,
+  existingNames: Set<string>
+) => {
+  let candidate = name
+  let suffix = 2
+  while (existingNames.has(candidate.trim().toLowerCase())) {
+    candidate = `${name} (imported ${suffix})`
+    suffix += 1
+  }
+  existingNames.add(candidate.trim().toLowerCase())
+  return candidate
+}
+
+const cleanupImportedKnowledge = async (knowledgeBaseIds: string[]) => {
+  for (const knowledgeBaseId of [...knowledgeBaseIds].reverse()) {
+    try {
+      const knowledgeBase = await sdk.ai.knowledgeBase.find(knowledgeBaseId)
+      if (!knowledgeBase) {
+        continue
+      }
+      const files =
+        await sdk.ai.knowledgeBase.listKnowledgeBaseFiles(knowledgeBaseId)
+      for (const file of files) {
+        await sdk.ai.knowledgeBase.removeKnowledgeBaseFile(knowledgeBase, file)
+      }
+      await sdk.ai.knowledgeBase.remove(knowledgeBaseId)
+    } catch (error) {
+      console.log("Failed to clean up imported knowledge base", error)
+    }
+  }
+}
+
 export async function importProject(
   file: { path: string },
   opts?: { encryptPassword?: string }
@@ -1539,6 +1723,7 @@ export async function importProject(
   const extracted = await extractProjectPackage(file, opts?.encryptPassword)
   const uploadedKeys: string[] = []
   const createdTemplateIds: CustomRestTemplateId[] = []
+  const createdKnowledgeBaseIds: string[] = []
   let completedImport: ImportProjectResponse | undefined
   let canCleanupAttachments = true
   try {
@@ -1588,6 +1773,38 @@ export async function importProject(
         })
         const importedProjectId = importedProject._id!
         idMap.set(extracted.project._id!, importedProjectId)
+        if (extracted.knowledge) {
+          const existingNames = new Set(
+            (await sdk.ai.knowledgeBase.fetch()).map(knowledgeBase =>
+              knowledgeBase.name.trim().toLowerCase()
+            )
+          )
+          for (const packagedKnowledgeBase of extracted.knowledge
+            .knowledgeBases) {
+            const knowledgeBase = await sdk.ai.knowledgeBase.create({
+              name: getImportedKnowledgeBaseName(
+                packagedKnowledgeBase.name,
+                existingNames
+              ),
+              type: packagedKnowledgeBase.type,
+            })
+            createdKnowledgeBaseIds.push(knowledgeBase._id!)
+            idMap.set(packagedKnowledgeBase._id, knowledgeBase._id!)
+            for (const file of packagedKnowledgeBase.files) {
+              const buffer = await fsp.readFile(
+                join(extracted.tmpPath, file.path)
+              )
+              await sdk.ai.knowledgeBase.uploadKnowledgeBaseFile({
+                knowledgeBaseId: knowledgeBase._id!,
+                filename: file.filename,
+                mimetype: file.mimetype,
+                size: file.size,
+                buffer,
+                uploadedBy: context.getIdentity()?._id || "project_import",
+              })
+            }
+          }
+        }
         await importProjectRestTemplates({
           templates: extracted.restTemplates,
           idMap,
@@ -1754,6 +1971,7 @@ export async function importProject(
     }
     if (canCleanupAttachments) {
       await cleanupProjectAttachments(uploadedKeys)
+      await cleanupImportedKnowledge(createdKnowledgeBaseIds)
     }
     for (const templateId of createdTemplateIds) {
       try {

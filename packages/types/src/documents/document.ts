@@ -88,6 +88,9 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.MEM_VIEW,
   DocumentType.WORKSPACE_APP,
   DocumentType.WORKSPACE_FAVOURITE,
+  DocumentType.AGENT,
+  DocumentType.KNOWLEDGE_BASE,
+  DocumentType.KNOWLEDGE_BASE_FILE,
   // Deprecated but still copied
   DocumentType.INSTANCE,
   DocumentType.LAYOUT,
