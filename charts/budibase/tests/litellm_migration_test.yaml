@@ -98,3 +98,57 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: uses runtime key mappings for both migration-hook credentials
+    template: templates/litellm-migration-job.yaml
+    release:
+      name: budibase
+    set:
+      services.litellm.enabled: true
+      globals.createSecrets: false
+      globals.runtimeSecretKeys.litellm_master_key: custom_master_key
+      globals.runtimeSecretKeys.litellm_salt_key: custom_salt_key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budicloud-runtime
+                key: custom_master_key
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_SALT_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budicloud-runtime
+                key: custom_salt_key
+
+  - it: keeps migration-hook Secret keys in managed mode despite runtime mappings
+    template: templates/litellm-migration-job.yaml
+    release:
+      name: budibase
+    set:
+      services.litellm.enabled: true
+      globals.createSecrets: true
+      globals.runtimeSecretKeys.litellm_master_key: custom_master_key
+      globals.runtimeSecretKeys.litellm_salt_key: custom_salt_key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase-litellm-migrations
+                key: litellm_master_key
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_SALT_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase-litellm-migrations
+                key: litellm_salt_key
