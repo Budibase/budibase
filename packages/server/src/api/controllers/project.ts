@@ -4,9 +4,12 @@ import {
   Ctx,
   ExportProjectRequest,
   ExportProjectResponse,
+  FetchProjectTemplatesResponse,
   FetchProjectsResponse,
   ImportProjectRequest,
   ImportProjectResponse,
+  ImportProjectTemplateRequest,
+  ImportProjectTemplateResponse,
   KoaFile,
   PreviewProjectAssignmentRequest,
   PreviewProjectAssignmentResponse,
@@ -267,4 +270,38 @@ export async function importBundle(
       encryptPassword: ctx.request.body?.encryptPassword || undefined,
     }
   )
+}
+
+export async function fetchTemplates(
+  ctx: Ctx<void, FetchProjectTemplatesResponse>
+) {
+  ctx.body = await sdk.projects.fetchProjectTemplates()
+}
+
+export async function importTemplate(
+  ctx: Ctx<ImportProjectTemplateRequest, ImportProjectTemplateResponse>
+) {
+  ctx.req.setTimeout(0)
+  const downloaded = await sdk.projects.downloadProjectTemplate(
+    ctx.request.body.templateKey
+  )
+  try {
+    const imported = await sdk.projects.importProject({
+      path: downloaded.path,
+    })
+    ctx.status = 201
+    ctx.body = {
+      ...imported,
+      template: {
+        key: downloaded.template.key,
+        version: downloaded.template.version,
+        packageVersion: downloaded.template.packageVersion,
+        catalogueVersion: downloaded.template.catalogueVersion,
+      },
+    }
+  } finally {
+    await fsp.rm(downloaded.path, { force: true }).catch(error => {
+      console.log("Failed to remove downloaded Project template", error)
+    })
+  }
 }
