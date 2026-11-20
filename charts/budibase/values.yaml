@@ -148,8 +148,17 @@ globals:
   automationMaxIterations: "200"
 
   # -- Create the chart-owned credential Secret. Set false to read the fixed
-  # `<release>-budibase-runtime` Secret provisioned by an external controller.
+  # `budicloud-runtime` Secret provisioned by an external controller.
   createSecrets: true
+  # -- Keys in budicloud-runtime when createSecrets is false. Override only where
+  # the source stores an application-specific credential under another key.
+  runtimeSecretKeys:
+    apiEncryptionKey: api_encryption_key
+    bbEncryptionKey: bb_encryption_key
+    internalApiKey: internal_api_key
+    jwtSecret: jwt_secret
+    objectStoreAccess: objectstore_access_key
+    objectStoreSecret: objectstore_secret_key
 
   # -- Used for encrypting API keys and environment variables when stored in the database.
   # You don't need to set this if `createSecrets` is true.

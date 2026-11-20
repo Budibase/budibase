@@ -86,14 +86,18 @@ Create a random string if the supplied key does not exist
 {{- if .Values.globals.createSecrets -}}
 {{- include "budibase.fullname" . -}}
 {{- else -}}
-{{- printf "%s-budibase-runtime" (.Release.Name | trunc 46 | trimSuffix "-") -}}
+budicloud-runtime
 {{- end -}}
 {{- end -}}
 
 {{- define "budibase.secretKeyRef" -}}
+{{- $key := .key -}}
+{{- if not .root.Values.globals.createSecrets -}}
+{{- $key = get .root.Values.globals.runtimeSecretKeys .key | default .key -}}
+{{- end -}}
 secretKeyRef:
   name: {{ include "budibase.secretName" .root }}
-  key: {{ .key | quote }}
+  key: {{ $key | quote }}
 {{- if .optional }}
   optional: true
 {{- end }}
