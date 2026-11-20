@@ -1,10 +1,5 @@
-import { describe, expect, it, vi } from "vitest"
-
-vi.mock("@budibase/bbui", () => ({ Helpers: {} }))
-vi.mock("../../../utils", () => ({ getRelatedTableValues: vi.fn() }))
-vi.mock("../../../fetch", () => ({ fetchData: vi.fn() }))
-
-import { shouldReloadAfterDelete } from "./rows"
+import { describe, expect, it } from "vitest"
+import { shouldReloadAfterDelete } from "./pagination"
 
 describe("shouldReloadAfterDelete", () => {
   it("reloads when every loaded row was deleted and more rows exist", () => {

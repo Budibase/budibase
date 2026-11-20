@@ -2,6 +2,7 @@ import { writable, derived, get, Writable, Readable } from "svelte/store"
 import { sessionBannerStore } from "../../../stores/sessionBanner"
 import { DataFetch, DataFetchDefinition, fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
+import { shouldReloadAfterDelete } from "../lib/pagination"
 import {
   generateRowID,
   getCellID,
@@ -182,17 +183,6 @@ export const deriveStores = (context: StoreContext): RowDerivedStore => {
     rowCount,
   }
 }
-
-// Pagination only loads more rows while some are still loaded, so deleting
-// every loaded row needs a reload from the start. Offset based bookmarks mean
-// fetching the next page would skip the rows that shifted down.
-export const shouldReloadAfterDelete = ({
-  remainingRowCount,
-  hasNextPage,
-}: {
-  remainingRowCount: number
-  hasNextPage: boolean
-}) => remainingRowCount === 0 && hasNextPage
 
 export const createActions = (context: StoreContext): RowActionStore => {
   const {
