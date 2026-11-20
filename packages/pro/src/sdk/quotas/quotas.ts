@@ -1,6 +1,5 @@
 import {
   context,
-  locks,
   logging,
   tenancy,
   UsageLimitWarning,
@@ -11,8 +10,6 @@ import {
   isConstantQuota,
   isMonthlyQuota,
   isStaticQuota,
-  LockName,
-  LockType,
   MeteredQuotaName,
   MonthlyQuotaName,
   Quota,
@@ -27,7 +24,6 @@ import {
 import { tracer } from "dd-trace"
 import { quotas as constants } from "../../constants"
 import * as db from "../../db"
-import { getQuotaUsage } from "../../db/quotas"
 import * as licensing from "../licensing"
 
 // INCREMENT
@@ -225,46 +221,47 @@ const getExistingTriggers = (
   }
 }
 
-const triggerQuota = async (
-  name: MeteredQuotaName,
-  quota: Quota,
-  percentage: number,
+interface QuotaNotification {
+  quota: Quota
+  percentage: number
   resetDate?: string
-) => {
+}
+
+const triggerQuota = async ({
+  quota,
+  percentage,
+  resetDate,
+}: QuotaNotification) => {
   try {
-    // use a lock so that we never send the email more than once
-    // under high throughput where there may be stale reads
-    await locks.doWithLock(
-      {
-        type: LockType.TRY_ONCE,
-        name: LockName.TRIGGER_QUOTA,
-        resource: name, // use the quota name for extra uniqueness on the lock
-        ttl: 10000, // auto expire after 10 seconds
-      },
-      async () => {
-        const request: QuotaTriggeredRequest = {
-          percentage,
-          name: quota.name,
-        }
-        if (resetDate) {
-          request.resetDate = resetDate
-        }
-        await licensing.client.triggerQuota(request)
-      }
-    )
+    const request: QuotaTriggeredRequest = {
+      percentage,
+      name: quota.name,
+    }
+    if (resetDate) {
+      request.resetDate = resetDate
+    }
+    await licensing.client.triggerQuota(request)
   } catch (e: any) {
     // swallow error so we don't interrupt quota update
     logging.logAlert("Error triggering quota", e)
   }
 }
 
-const checkTriggers = async (
-  type: QuotaUsageType,
-  name: MeteredQuotaName,
-  totalValue: number,
+const checkTriggers = async ({
+  type,
+  name,
+  totalValue,
+  quota,
+  usage,
+  notifications,
+}: {
+  type: QuotaUsageType
+  name: MeteredQuotaName
+  totalValue: number
   quota: Quota
-): Promise<QuotaTriggers> => {
-  const usage = await getQuotaUsage()
+  usage: QuotaUsage
+  notifications: QuotaNotification[]
+}): Promise<QuotaTriggers> => {
   const resetDate =
     type === QuotaUsageType.MONTHLY ? usage.quotaReset : undefined
   const triggers = await getExistingTriggers(type, name, usage)
@@ -292,7 +289,7 @@ const checkTriggers = async (
         const sendNotification = !nextIsTriggered || isAtTrigger
 
         if (sendNotification) {
-          await triggerQuota(name, quota, percentage, resetDate)
+          notifications.push({ quota, percentage, resetDate })
         }
       }
     } else {
@@ -306,149 +303,162 @@ const checkTriggers = async (
 export const updateUsage = async (
   params: UpdateUsageParams | UpdateUsageParams[]
 ) => {
-  await tracer.trace("quotas.updateUsage", async span => {
-    const tenantId = tenancy.getTenantId()
-
-    const actions = Array.isArray(params) ? params : [params]
-
-    span.addTags({
-      numActions: actions.length,
-      tenantId,
-    })
-
-    let appId: string | undefined = undefined
-    let licensedQuota
-    const licenseQuotas = []
-    let totalValuesToApply: any = {}
-    let appValuesToApply: any = {}
-    let breakdownValuesToApply: any = {}
-    let triggersToApply: any = {}
-    for (let action of actions) {
-      await tracer.trace("quotas.updateUsage.action", async span => {
-        span.addTags({
-          actionName: action.name,
-          actionType: action.type,
-          actionUsageChange: action.usageChange,
-        })
-        try {
-          appId = context.getWorkspaceId()
-        } catch (err) {
-          // ignore error for now
-        }
-
-        // need an app ID for these
-        const isAppQuota = APP_QUOTA_NAMES.includes(action.name)
-        if (isAppQuota && !appId) {
-          throw new Error("App context required for quota update")
-        }
-
-        try {
-          licensedQuota = await getLicensedQuota(
-            QuotaType.USAGE,
-            action.name,
-            action.type
-          )
-          licenseQuotas.push(licensedQuota)
-
-          let {
-            total: totalValue,
-            app: appValue,
-            breakdown: breakdownValue,
-          } = await db.quotas.getCurrentUsageValues(
-            action.type,
-            action.name,
-            action.opts?.id
-          )
-
-          // increment / decrement the quota
-          totalValue += action.usageChange
-          if (appValue != null) {
-            appValue += action.usageChange
-          }
-          if (breakdownValue != null) {
-            breakdownValue += action.usageChange
-          }
-
-          let triggers: QuotaTriggers = {}
-          if (!action.opts?.dryRun) {
-            triggers = await checkTriggers(
-              action.type,
-              action.name,
-              totalValue,
-              licensedQuota
-            )
-            triggersToApply = { ...triggersToApply, [action.name]: triggers }
-          }
-
-          if (
-            licensedQuota.value !== constants.UNLIMITED &&
-            totalValue > licensedQuota.value &&
-            action.usageChange > 0 // allow for decrementing usage when the quota is already exceeded
-          ) {
-            throw new UsageLimitWarning(`${action.name}`)
-          }
-
-          // never go negative if the quota has previously been exceeded
-          totalValue = Math.max(0, totalValue)
-          if (appValue) {
-            appValue = Math.max(0, appValue)
-          }
-          if (breakdownValue != null) {
-            breakdownValue = Math.max(0, breakdownValue)
-            breakdownValuesToApply = {
-              ...breakdownValuesToApply,
-              [action.name]: breakdownValue,
-            }
-          }
-
-          // Apply functions if it is not a dry run
-          if (!action.opts?.dryRun) {
-            // if a value function is provided
-            // use it to calculate the new value instead of incrementing / decrementing
-            let fn = action.opts?.valueFn
-            if (fn) {
-              totalValue = await fn()
-              appValue = totalValue
-            }
-            totalValuesToApply = {
-              ...totalValuesToApply,
-              [action.name]: totalValue,
-            }
-            appValuesToApply = {
-              ...appValuesToApply,
-              [action.name]: appValue,
-            }
-          }
-        } catch (err) {
-          if (!action.opts?.suppressErrorLog) {
-            console.warn(`Error updating usage quotas for ${action.name}`, err)
-          }
-          // re-throw any error - if the error was caused by a usage limit being exceeded
-          // this will prevent the subsequent operation e.g. create app, from running
-          throw err
-        }
+  const requestedActions = Array.isArray(params) ? params : [params]
+  if (requestedActions.length === 0) {
+    return
+  }
+  const tenantId = tenancy.getTenantId()
+  if (
+    requestedActions.some(action => APP_QUOTA_NAMES.includes(action.name)) &&
+    !context.getWorkspaceId()
+  ) {
+    throw new Error("App context required for quota update")
+  }
+  const notifications: QuotaNotification[] = []
+  // License refresh can reconcile usage itself, so resolve it before locking usage.
+  const actions = await Promise.all(
+    requestedActions.map(async action => ({
+      ...action,
+      licensedQuota: await getLicensedQuota(
+        QuotaType.USAGE,
+        action.name,
+        action.type
+      ),
+    }))
+  )
+  const calculateUpdates = (usage: QuotaUsage) =>
+    tracer.trace("quotas.updateUsage", async span => {
+      span.addTags({
+        numActions: actions.length,
+        tenantId,
       })
-    }
 
-    // update the usage quotas
-    const usageQuotas = actions
-      .filter(action => !action.opts?.dryRun)
-      .map(action => ({
-        name: action.name,
-        type: action.type,
-        values: {
-          total: totalValuesToApply[action.name],
-          app: appValuesToApply[action.name],
-          breakdown: breakdownValuesToApply[action.name],
-          triggers: triggersToApply[action.name],
-        },
-        opts: { ...action.opts, tenantId },
-      }))
+      let totalValuesToApply: any = {}
+      let appValuesToApply: any = {}
+      let breakdownValuesToApply: any = {}
+      let triggersToApply: any = {}
+      for (let action of actions) {
+        await tracer.trace("quotas.updateUsage.action", async span => {
+          span.addTags({
+            actionName: action.name,
+            actionType: action.type,
+            actionUsageChange: action.usageChange,
+          })
+          try {
+            const { licensedQuota } = action
 
-    if (usageQuotas.length > 0) {
-      await db.quotas.setAllUsage(usageQuotas)
-    }
-  })
+            let {
+              total: totalValue,
+              app: appValue,
+              breakdown: breakdownValue,
+            } = db.quotas.getUsageValues({
+              quotaUsage: usage,
+              type: action.type,
+              name: action.name,
+              id: action.opts?.id,
+            })
+
+            // increment / decrement the quota
+            totalValue += action.usageChange
+            if (appValue != null) {
+              appValue += action.usageChange
+            }
+            if (breakdownValue != null) {
+              breakdownValue += action.usageChange
+            }
+
+            let triggers: QuotaTriggers = {}
+            if (!action.opts?.dryRun) {
+              triggers = await checkTriggers({
+                type: action.type,
+                name: action.name,
+                totalValue,
+                quota: licensedQuota,
+                usage,
+                notifications,
+              })
+              triggersToApply = { ...triggersToApply, [action.name]: triggers }
+            }
+
+            if (
+              licensedQuota.value !== constants.UNLIMITED &&
+              totalValue > licensedQuota.value &&
+              action.usageChange > 0 // allow for decrementing usage when the quota is already exceeded
+            ) {
+              throw new UsageLimitWarning(`${action.name}`)
+            }
+
+            // never go negative if the quota has previously been exceeded
+            totalValue = Math.max(0, totalValue)
+            if (appValue) {
+              appValue = Math.max(0, appValue)
+            }
+            if (breakdownValue != null) {
+              breakdownValue = Math.max(0, breakdownValue)
+              breakdownValuesToApply = {
+                ...breakdownValuesToApply,
+                [action.name]: breakdownValue,
+              }
+            }
+
+            // Apply functions if it is not a dry run
+            if (!action.opts?.dryRun) {
+              // if a value function is provided
+              // use it to calculate the new value instead of incrementing / decrementing
+              let fn = action.opts?.valueFn
+              if (fn) {
+                totalValue = await fn()
+                appValue = totalValue
+              }
+              totalValuesToApply = {
+                ...totalValuesToApply,
+                [action.name]: totalValue,
+              }
+              appValuesToApply = {
+                ...appValuesToApply,
+                [action.name]: appValue,
+              }
+            }
+          } catch (err) {
+            if (!action.opts?.suppressErrorLog) {
+              console.warn(
+                `Error updating usage quotas for ${action.name}`,
+                err
+              )
+            }
+            // re-throw any error - if the error was caused by a usage limit being exceeded
+            // this will prevent the subsequent operation e.g. create app, from running
+            throw err
+          }
+        })
+      }
+
+      // update the usage quotas
+      const usageQuotas = actions
+        .filter(action => !action.opts?.dryRun)
+        .map(action => ({
+          name: action.name,
+          type: action.type,
+          values: {
+            total: totalValuesToApply[action.name],
+            app: appValuesToApply[action.name],
+            breakdown: breakdownValuesToApply[action.name],
+            triggers: triggersToApply[action.name],
+          },
+          opts: { ...action.opts, tenantId },
+        }))
+
+      return usageQuotas
+    })
+  if (actions.every(action => action.opts?.dryRun)) {
+    await calculateUpdates(await db.quotas.getQuotaUsage())
+  } else {
+    await db.quotas.setAllUsage(calculateUpdates)
+  }
+  // Persist usage and trigger markers before notifying, without holding the usage lock.
+  for (const notification of notifications) {
+    await triggerQuota(notification)
+  }
 }
 
 export const getLicensedQuota = async (
