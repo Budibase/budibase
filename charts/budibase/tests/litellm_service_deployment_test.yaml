@@ -43,7 +43,7 @@ tests:
             name: LITELLM_MASTER_KEY
             valueFrom:
               secretKeyRef:
-                name: budibase-budibase-runtime
+                name: budicloud-runtime
                 key: litellm_master_key
       - contains:
           path: spec.template.spec.containers[0].env
@@ -51,7 +51,7 @@ tests:
             name: LITELLM_SALT_KEY
             valueFrom:
               secretKeyRef:
-                name: budibase-budibase-runtime
+                name: budicloud-runtime
                 key: litellm_salt_key
       - contains:
           path: spec.template.spec.containers[0].env
@@ -59,7 +59,7 @@ tests:
             name: UI_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: budibase-budibase-runtime
+                name: budicloud-runtime
                 key: litellm_ui_password
                 optional: true
 

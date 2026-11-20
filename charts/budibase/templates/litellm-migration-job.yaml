@@ -30,14 +30,22 @@ spec:
           env:
             - name: LITELLM_MASTER_KEY
               valueFrom:
+                {{- if .Values.globals.createSecrets }}
                 secretKeyRef:
-                  name: {{ if .Values.globals.createSecrets }}{{ printf "%s-litellm-migrations" (include "budibase.fullname" .) }}{{ else }}{{ include "budibase.secretName" . }}{{ end }}
+                  name: {{ printf "%s-litellm-migrations" (include "budibase.fullname" .) }}
                   key: {{ "litellm_master_key" | quote }}
+                {{- else }}
+                {{- include "budibase.secretKeyRef" (dict "root" . "key" "litellm_master_key") | nindent 16 }}
+                {{- end }}
             - name: LITELLM_SALT_KEY
               valueFrom:
+                {{- if .Values.globals.createSecrets }}
                 secretKeyRef:
-                  name: {{ if .Values.globals.createSecrets }}{{ printf "%s-litellm-migrations" (include "budibase.fullname" .) }}{{ else }}{{ include "budibase.secretName" . }}{{ end }}
+                  name: {{ printf "%s-litellm-migrations" (include "budibase.fullname" .) }}
                   key: {{ "litellm_salt_key" | quote }}
+                {{- else }}
+                {{- include "budibase.secretKeyRef" (dict "root" . "key" "litellm_salt_key") | nindent 16 }}
+                {{- end }}
           {{- if .Values.services.litellm.extraEnv }}
             {{- toYaml .Values.services.litellm.extraEnv | nindent 12 }}
           {{- end }}
