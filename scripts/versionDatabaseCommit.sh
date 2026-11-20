@@ -3,14 +3,14 @@ set -euo pipefail
 
 if [ -z "${1:-}" ]
 then
-  echo "Error: bump type is required. Usage: $0 [minor|major]"
+  echo "Error: bump type is required. Usage: $0 [patch|minor|major]"
   exit 1
 fi
 
 BUMP_TYPE=$1
 
-if [[ "$BUMP_TYPE" != "minor" && "$BUMP_TYPE" != "major" ]]; then
-  echo "Error: bump type must be 'minor' or 'major'"
+if [[ "$BUMP_TYPE" != "patch" && "$BUMP_TYPE" != "minor" && "$BUMP_TYPE" != "major" ]]; then
+  echo "Error: bump type must be 'patch', 'minor' or 'major'"
   exit 1
 fi
 
