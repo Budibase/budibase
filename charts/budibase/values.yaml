@@ -1,3 +1,7 @@
+reloader:
+  # -- Enable Stakater Reloader for Deployments in this chart.
+  enabled: false
+
 # -- Passed to all pods created by this chart. Should not ordinarily need to be changed.
 imagePullSecrets: []
 
@@ -143,8 +147,8 @@ globals:
   # looping here: <https://docs.budibase.com/docs/looping>.
   automationMaxIterations: "200"
 
-  # -- Create an internal API key, JWT secret, object store access key and
-  # secret, and store them in a Kubernetes `Secret`.
+  # -- Create the chart-owned credential Secret. Set false to read the fixed
+  # `<release>-budibase-runtime` Secret provisioned by an external controller.
   createSecrets: true
 
   # -- Used for encrypting API keys and environment variables when stored in the database.

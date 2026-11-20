@@ -1,4 +1,6 @@
 suite: LiteLLM service deployment
+release:
+  name: budibase
 templates:
   - templates/litellm-service-deployment.yaml
 tests:
@@ -23,3 +25,75 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: GEMINI_API_KEY
+
+  - it: uses fixed LiteLLM keys and allows absent external UI credentials
+    set:
+      services.litellm.enabled: true
+      globals.createSecrets: false
+      reloader.enabled: true
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+      - notExists:
+          path: spec.template.metadata.annotations["checksum/budibase-secrets"]
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase-runtime
+                key: litellm_master_key
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_SALT_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase-runtime
+                key: litellm_salt_key
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: UI_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase-runtime
+                key: litellm_ui_password
+                optional: true
+
+  - it: omits UI credentials when they are not configured in managed mode
+    set:
+      services.litellm.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: UI_USERNAME
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: UI_PASSWORD
+          any: true
+      - exists:
+          path: spec.template.metadata.annotations["checksum/budibase-secrets"]
+
+  - it: reads configured UI credentials from the managed Secret
+    release:
+      name: budibase
+    set:
+      services.litellm.enabled: true
+      services.litellm.uiUsername: test-admin
+      services.litellm.uiPassword: test-password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: UI_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase
+                key: litellm_ui_username
+                optional: true
