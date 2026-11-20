@@ -183,6 +183,17 @@ export const deriveStores = (context: StoreContext): RowDerivedStore => {
   }
 }
 
+// Pagination only loads more rows while some are still loaded, so deleting
+// every loaded row needs a reload from the start. Offset based bookmarks mean
+// fetching the next page would skip the rows that shifted down.
+export const shouldReloadAfterDelete = ({
+  remainingRowCount,
+  hasNextPage,
+}: {
+  remainingRowCount: number
+  hasNextPage: boolean
+}) => remainingRowCount === 0 && hasNextPage
+
 export const createActions = (context: StoreContext): RowActionStore => {
   const {
     rows,
@@ -799,6 +810,15 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
     // Update state
     handleRemoveRows(rowsToDelete)
+
+    if (
+      shouldReloadAfterDelete({
+        remainingRowCount: get(rows).length,
+        hasNextPage: get(hasNextPage),
+      })
+    ) {
+      await refreshData()
+    }
   }
 
   // Local handler to process new rows inside the fetch, and append any new
