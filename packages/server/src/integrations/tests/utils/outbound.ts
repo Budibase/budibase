@@ -12,7 +12,13 @@ export async function listen(
   server: net.Server,
   host: string
 ): Promise<{ port: number; close: () => Promise<void> }> {
-  await new Promise<void>(resolve => server.listen(0, host, resolve))
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject)
+    server.listen(0, host, () => {
+      server.off("error", reject)
+      resolve()
+    })
+  })
   return {
     port: (server.address() as net.AddressInfo).port,
     close: () => new Promise(resolve => server.close(() => resolve())),
