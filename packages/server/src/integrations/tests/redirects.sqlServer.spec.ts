@@ -1,6 +1,6 @@
 import { blacklist, setEnv as setCoreEnv } from "@budibase/backend-core"
 import net from "net"
-import sqlServer from "../microsoftSqlServer"
+import sqlServer, { connectToSafeHost } from "../microsoftSqlServer"
 import { type Listener, listen, startInternalListener } from "./utils/outbound"
 
 // A datasource can point at a SQL Server the user controls. That server passes
@@ -178,5 +178,21 @@ describe("SQL Server and routing redirects", () => {
     reset()
     await blacklist.refreshBlacklist()
     expect(internal.connections()).toBe(before + 1)
+  })
+
+  it("does not open a socket when the driver aborts during the host check", async () => {
+    const netConnect = jest.spyOn(net, "connect")
+    const controller = new AbortController()
+
+    const pending = connectToSafeHost({
+      host: "127.0.0.1",
+      port: tds.port,
+      signal: controller.signal,
+    })
+    controller.abort()
+
+    await expect(pending).rejects.toThrow("Connection aborted")
+    expect(netConnect).not.toHaveBeenCalled()
+    netConnect.mockRestore()
   })
 })

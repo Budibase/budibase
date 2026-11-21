@@ -48,6 +48,11 @@ export async function connectToSafeHost({
   signal,
 }: SocketTarget & { signal?: AbortSignal }): Promise<net.Socket> {
   const ip = await coreUtils.resolveSafeHostIp(host)
+  // A listener added to an already-aborted signal never fires, so an abort
+  // during the host check has to be caught here.
+  if (signal?.aborted) {
+    throw new Error("Connection aborted")
+  }
   return new Promise((resolve, reject) => {
     const socket = net.connect({ host: ip, port })
     const onAbort = () => socket.destroy(new Error("Connection aborted"))
