@@ -41,7 +41,8 @@ import {
   TriggeringEvent,
   TriggerType,
 } from "./base/types"
-import { sql } from "@budibase/backend-core"
+import { sql, utils } from "@budibase/backend-core"
+import { isIPv6 } from "net"
 
 const Sql = sql.Sql
 
@@ -108,6 +109,8 @@ const SCHEMA: Integration = {
 }
 
 const UNSUPPORTED_TYPES = ["BLOB", "NCLOB"]
+
+const SERVICE_NAME_PATTERN = /^[\w.$#:/-]+$/
 
 const OracleContraintTypes = {
   PRIMARY: "P",
@@ -500,9 +503,19 @@ class OracleIntegration extends Sql implements DatasourcePlus, SqlDatasource {
   }
 
   private getConnection = async (): Promise<Connection> => {
-    const connectString = `${this.config.host}:${this.config.port || 1521}/${
-      this.config.database
-    }`
+    // The connect string syntax allows extra hosts and connection parameters,
+    // so each part is checked before it is put into the string, and the host
+    // is replaced by its checked IP so the driver cannot resolve it again.
+    const port = Number(this.config.port || 1521)
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      throw new Error("Invalid port.")
+    }
+    if (!SERVICE_NAME_PATTERN.test(this.config.database)) {
+      throw new Error("Invalid database name.")
+    }
+    const ip = await utils.resolveSafeHostIp(this.config.host)
+    const host = isIPv6(ip) ? `[${ip}]` : ip
+    const connectString = `${host}:${port}/${this.config.database}`
     const attributes: ConnectionAttributes = {
       user: this.config.user,
       password: this.config.password,
