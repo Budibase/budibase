@@ -7,6 +7,8 @@ import {
   ConnectionInfo,
 } from "@budibase/types"
 
+import type { AgentOptions } from "http"
+import { utils } from "@budibase/backend-core"
 import { Client, ClientOptions } from "@elastic/elasticsearch"
 import { HOST_ADDRESS } from "./utils"
 
@@ -101,15 +103,30 @@ const SCHEMA: Integration = {
 
 export class ElasticSearchIntegration implements IntegrationBase {
   private config: ElasticsearchConfig
-  private client: Client
+  private client?: Promise<Client>
 
   constructor(config: ElasticsearchConfig) {
     this.config = config
+  }
+
+  private getClient(): Promise<Client> {
+    this.client ??= this.buildClient()
+    return this.client
+  }
+
+  // The URL is user-supplied: check its host against the outbound blacklist and
+  // pin the connection to the checked IP, so it cannot be used to reach
+  // internal services. The client still builds its own agent from these
+  // options (adding `ssl`) and reads any login from the URL itself.
+  private async buildClient(): Promise<Client> {
+    const { hostname } = new URL(this.config.url)
+    const ip = await utils.resolveSafeHostIp(hostname.replace(/^\[|\]$/g, ""))
+    const agent: AgentOptions = { lookup: utils.createPinnedLookup(ip) }
 
     const clientConfig: ClientOptions = {
       node: this.config.url,
+      agent,
     }
-
     if (this.config.ssl) {
       clientConfig.ssl = {
         rejectUnauthorized: this.config.rejectUnauthorized,
@@ -117,12 +134,13 @@ export class ElasticSearchIntegration implements IntegrationBase {
       }
     }
 
-    this.client = new Client(clientConfig)
+    return new Client(clientConfig)
   }
 
   async testConnection(): Promise<ConnectionInfo> {
     try {
-      await this.client.info()
+      const client = await this.getClient()
+      await client.info()
       return { connected: true }
     } catch (e: any) {
       return {
@@ -140,7 +158,8 @@ export class ElasticSearchIntegration implements IntegrationBase {
     const { index, json, extra } = query
 
     try {
-      const result = await this.client.index({
+      const client = await this.getClient()
+      const result = await client.index({
         index,
         body: json,
         ...extra,
@@ -155,7 +174,8 @@ export class ElasticSearchIntegration implements IntegrationBase {
   async read(query: { index: string; json: object }) {
     const { index, json } = query
     try {
-      const result = await this.client.search({
+      const client = await this.getClient()
+      const result = await client.search({
         index: index,
         body: json,
       })
@@ -174,7 +194,8 @@ export class ElasticSearchIntegration implements IntegrationBase {
   }) {
     const { id, index, json, extra } = query
     try {
-      const result = await this.client.update({
+      const client = await this.getClient()
+      const result = await client.update({
         id,
         index,
         body: json,
@@ -194,7 +215,8 @@ export class ElasticSearchIntegration implements IntegrationBase {
   }) {
     const { id, index, extra } = query
     try {
-      const result = await this.client.delete({
+      const client = await this.getClient()
+      const result = await client.delete({
         id,
         index,
         ...extra,

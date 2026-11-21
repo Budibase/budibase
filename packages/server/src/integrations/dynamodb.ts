@@ -16,6 +16,7 @@ import {
 } from "@aws-sdk/lib-dynamodb"
 import { DynamoDB, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb"
 import { AWS_REGION } from "../constants"
+import { pinnedRequestHandler } from "./utils/aws"
 
 export interface DynamoDBConfig {
   region: string
@@ -139,7 +140,8 @@ const SCHEMA: Integration = {
 
 export class DynamoDBIntegration implements IntegrationBase {
   private config: DynamoDBClientConfig
-  private client: DynamoDBDocument
+  private readonly endpoint?: string
+  private client?: DynamoDB
 
   constructor(config: DynamoDBConfig) {
     this.config = {
@@ -150,7 +152,23 @@ export class DynamoDBIntegration implements IntegrationBase {
       region: config.region || AWS_REGION,
       endpoint: config.endpoint || undefined,
     }
-    this.client = DynamoDBDocument.from(new DynamoDB(this.config))
+    this.endpoint = config.endpoint || undefined
+  }
+
+  private async getClient(): Promise<DynamoDB> {
+    if (!this.client) {
+      this.client = new DynamoDB({
+        ...this.config,
+        ...(this.endpoint && {
+          requestHandler: await pinnedRequestHandler(this.endpoint),
+        }),
+      })
+    }
+    return this.client
+  }
+
+  private async getDocumentClient(): Promise<DynamoDBDocument> {
+    return DynamoDBDocument.from(await this.getClient())
   }
 
   async testConnection() {
@@ -158,7 +176,8 @@ export class DynamoDBIntegration implements IntegrationBase {
       connected: false,
     }
     try {
-      const scanRes = await new DynamoDB(this.config).listTables()
+      const client = await this.getClient()
+      const scanRes = await client.listTables()
       response.connected = !!scanRes.$metadata
     } catch (e: any) {
       response.error = e.message as string
@@ -174,7 +193,8 @@ export class DynamoDBIntegration implements IntegrationBase {
       TableName: query.table,
       ...query.json,
     }
-    return this.client.put(params)
+    const client = await this.getDocumentClient()
+    return client.put(params)
   }
 
   async read(query: { table: string; json: object; index: null | string }) {
@@ -183,7 +203,8 @@ export class DynamoDBIntegration implements IntegrationBase {
       IndexName: query.index ? query.index : undefined,
       ...query.json,
     }
-    const response = await this.client.query(params)
+    const client = await this.getDocumentClient()
+    const response = await client.query(params)
     if (response.Items) {
       return response.Items
     }
@@ -196,7 +217,8 @@ export class DynamoDBIntegration implements IntegrationBase {
       IndexName: query.index ? query.index : undefined,
       ...query.json,
     }
-    const response = await this.client.scan(params)
+    const client = await this.getDocumentClient()
+    const response = await client.scan(params)
     if (response.Items) {
       return response.Items
     }
@@ -207,7 +229,8 @@ export class DynamoDBIntegration implements IntegrationBase {
     const params = {
       TableName: query.table,
     }
-    return new DynamoDB(this.config).describeTable(params)
+    const client = await this.getClient()
+    return client.describeTable(params)
   }
 
   async get(query: {
@@ -218,7 +241,8 @@ export class DynamoDBIntegration implements IntegrationBase {
       TableName: query.table,
       ...query.json,
     }
-    return this.client.get(params)
+    const client = await this.getDocumentClient()
+    return client.get(params)
   }
 
   async update(query: {
@@ -229,7 +253,8 @@ export class DynamoDBIntegration implements IntegrationBase {
       TableName: query.table,
       ...query.json,
     }
-    return this.client.update(params)
+    const client = await this.getDocumentClient()
+    return client.update(params)
   }
 
   async delete(query: {
@@ -240,7 +265,8 @@ export class DynamoDBIntegration implements IntegrationBase {
       TableName: query.table,
       ...query.json,
     }
-    return this.client.delete(params)
+    const client = await this.getDocumentClient()
+    return client.delete(params)
   }
 }
 
