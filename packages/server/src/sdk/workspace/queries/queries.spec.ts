@@ -290,8 +290,14 @@ describe("queries SDK", () => {
       ])
     })
 
-    it.each(["{{ other }}", "{{ env.secret }}"])(
-      "preserves binding syntax in MongoDB aggregate parameter %s",
+    it.each([
+      "{{ other }}",
+      "{{ env.secret }}",
+      '{"color":"blue"}',
+      "null",
+      "[1,2]",
+    ])(
+      "preserves the string value of a quoted MongoDB aggregate parameter %s",
       async target => {
         const result = await enrichContext(
           {
