@@ -54,7 +54,7 @@ const parseArgs = (args: unknown) => {
 }
 
 type WrapperResult =
-  | { kind: "script"; index: number }
+  | { kind: "possibleScriptArgs"; fromIndex: number }
   | { kind: "nested"; index: number }
   | { kind: "none" }
 
@@ -69,11 +69,14 @@ interface InterpreterSpec {
 const parseEnvArgs: WrapperParser = args => {
   for (let index = 0; index < args.length; index++) {
     const arg = args[index]
-    if (arg === "-S") {
-      return { kind: "script", index: index + 1 }
+    if (arg === "--split-string" || /^-[a-zA-Z]*S$/.test(arg)) {
+      const command = args[index + 1]
+      return command && /^[a-zA-Z0-9_./][a-zA-Z0-9_./-]*$/.test(command)
+        ? { kind: "nested", index: index + 1 }
+        : { kind: "possibleScriptArgs", fromIndex: index + 1 }
     }
-    if (arg.startsWith("-S") && arg.length > 2) {
-      return { kind: "script", index }
+    if (arg.startsWith("--split-string=") || /^-[a-zA-Z]*S.+/.test(arg)) {
+      return { kind: "possibleScriptArgs", fromIndex: index }
     }
     if (["-u", "--unset", "-C", "--chdir"].includes(arg)) {
       index++
@@ -123,12 +126,13 @@ const INTERPRETERS: InterpreterSpec[] = [
   },
   {
     matches: executable => /^python(?:\d+(?:\.\d+)?)?$/.test(executable),
-    codeInNextArg: arg => arg === "-c",
+    codeInNextArg: arg => /^-[a-zA-Z]*c$/.test(arg),
     codeAttached: arg => /^-[a-zA-Z]*c.+/.test(arg),
   },
   {
     matches: executable => ["node", "nodejs"].includes(executable),
-    codeInNextArg: arg => ["-e", "--eval", "-p", "--print"].includes(arg),
+    codeInNextArg: arg =>
+      /^-[a-zA-Z]*[ep]$/.test(arg) || ["--eval", "--print"].includes(arg),
     codeAttached: arg => /^-[ep].+/.test(arg) || /^--(?:eval|print)=/.test(arg),
   },
 ]
@@ -154,28 +158,34 @@ const findInlineCode = ({
   return -1
 }
 
-const scriptArgumentIndex = ({
+const scriptArgumentIndexes = ({
   command,
   args,
 }: {
   command: string
   args: string[]
-}): number => {
+}): number[] => {
   const executable = path.basename(command).toLowerCase()
   const wrapper = WRAPPERS.get(executable)
   if (wrapper) {
     const result = wrapper(args)
-    if (result.kind !== "nested") {
-      return result.kind === "script" ? result.index : -1
+    if (result.kind === "possibleScriptArgs") {
+      return args
+        .map((_, index) => index)
+        .filter(index => index >= result.fromIndex)
     }
-    const nestedIndex = scriptArgumentIndex({
+    if (result.kind !== "nested") {
+      return []
+    }
+    const nestedIndexes = scriptArgumentIndexes({
       command: args[result.index],
       args: args.slice(result.index + 1),
     })
-    return nestedIndex < 0 ? -1 : result.index + 1 + nestedIndex
+    return nestedIndexes.map(index => result.index + 1 + index)
   }
   const spec = INTERPRETERS.find(spec => spec.matches(executable))
-  return spec ? findInlineCode({ spec, args }) : -1
+  const index = spec ? findInlineCode({ spec, args }) : -1
+  return index < 0 ? [] : [index]
 }
 
 const processArgs = ({
@@ -188,16 +198,18 @@ const processArgs = ({
   context: object
 }) => {
   const parsedArgs = parseArgs(args)
-  const codeIndex = scriptArgumentIndex({ command, args: parsedArgs })
+  const processedArgs = parsedArgs.map(arg => processStringSync(arg, context))
+  const codeIndexes = scriptArgumentIndexes({ command, args: processedArgs })
   if (
-    codeIndex >= 0 &&
-    codeIndex < parsedArgs.length &&
-    findHBSBlocks(parsedArgs[codeIndex]).length > 0
+    codeIndexes.some(
+      index =>
+        index < parsedArgs.length && findHBSBlocks(parsedArgs[index]).length > 0
+    )
   ) {
     throw new Error(SCRIPT_BINDINGS_ERROR)
   }
 
-  return parsedArgs.map(arg => processStringSync(arg, context))
+  return processedArgs
 }
 
 export async function run({

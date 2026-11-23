@@ -234,6 +234,123 @@ describe("Execute Bash Automations", () => {
     expect(fs.existsSync(injectedPath)).toEqual(false)
   })
 
+  it("should reject a script binding when a dynamic option selects bash -c", async () => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "bash",
+        args: [
+          "{{ trigger.fields.option }}",
+          `printf '{{ trigger.fields.value }}' > ${injectedPath}`,
+        ],
+      })
+      .test({ fields: { option: "-c", value: "unsafe" } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it.each([
+    { name: "-S", args: ["-S", "bash", "-c"] },
+    { name: "--split-string", args: ["--split-string", "bash", "-c"] },
+    { name: "split command", args: ["-S", "bash -c"] },
+  ])("should reject a script binding through env $name", async input => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "env",
+        args: [
+          ...input.args,
+          `printf '{{ trigger.fields.value }}' > ${injectedPath}`,
+        ],
+      })
+      .test({ fields: { value: "unsafe" } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it.each([
+    {
+      command: "python3",
+      option: "-Ic",
+      script: (injectedPath: string) =>
+        `open("${injectedPath}", "w").write("{{ trigger.fields.value }}")`,
+    },
+    {
+      command: "node",
+      option: "-pe",
+      script: (injectedPath: string) =>
+        `require("fs").writeFileSync("${injectedPath}", "{{ trigger.fields.value }}")`,
+    },
+  ])("should reject a script binding through $command $option", async input => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: input.command,
+        args: [input.option, input.script(injectedPath)],
+      })
+      .test({ fields: { value: "unsafe" } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it("should pass positional values through env -S to a fixed script", async () => {
+    const payload = "hello'; printf injected; #"
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "env",
+        args: [
+          "-S",
+          "bash",
+          "-c",
+          'printf "%s\\n" "$1"',
+          "budibase",
+          "{{ trigger.fields.value }}",
+        ],
+      })
+      .test({ fields: { value: payload } })
+
+    expect(result.steps[0].outputs.success).toEqual(true)
+    expect(result.steps[0].outputs.stdout).toEqual(`${payload}\n`)
+  })
+
+  it("should pass SOAP XML from a JavaScript step as a positional argument", async () => {
+    const xml = '<Envelope><Body customer="O\'Hara">\ninvoice</Body></Envelope>'
+    const caBundle = "/opt/soap-trust/host-ca-bundle.pem"
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .executeScript(
+        { code: "return trigger.fields.xml" },
+        { stepName: "JavaScript" }
+      )
+      .bash({
+        command: "bash",
+        args: [
+          "-c",
+          `request="\${1-}"; ca_bundle="\${2-}"; printf "%s\\n" "$0" "$request" "$ca_bundle"`,
+          "soap-request",
+          "{{{ steps.JavaScript.value }}}",
+          caBundle,
+        ],
+      })
+      .test({ fields: { xml } })
+
+    expect(result.steps[1].outputs.success).toEqual(true)
+    expect(result.steps[1].outputs.stdout).toEqual(
+      `soap-request\n${xml}\n${caBundle}\n`
+    )
+  })
+
   it("should pass bindings as positional values to a fixed shell script", async () => {
     const payload = "hello'; printf injected; #"
     const result = await createAutomationBuilder(config)
