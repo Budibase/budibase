@@ -29,8 +29,9 @@ import {
 import { isDate, NUMBER_REGEX } from "../utilities"
 import { MySQLColumn } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
-import { sql } from "@budibase/backend-core"
+import { sql, utils } from "@budibase/backend-core"
 import mysql from "mysql2/promise"
+import net from "net"
 
 const Sql = sql.Sql
 
@@ -142,7 +143,7 @@ export function bindingTypeCoerce(bindings: SqlQueryBinding) {
 }
 
 class MySQLIntegration extends Sql implements DatasourcePlus, SqlDatasource {
-  private readonly config: MySQLConfig
+  private readonly config: mysql.ConnectionOptions
   private client?: mysql.Connection
 
   constructor(config: MySQLConfig) {
@@ -168,8 +169,15 @@ class MySQLIntegration extends Sql implements DatasourcePlus, SqlDatasource {
 
     // @ts-ignore
     delete config.rejectUnauthorized
+    // Only known keys are passed on: the driver also accepts keys such as
+    // socketPath, stream and uri, which would bypass the host check.
     this.config = {
-      ...config,
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      password: config.password,
+      database: config.database,
+      ssl: config.ssl,
       typeCast: defaultTypeCasting,
       multipleStatements: true,
       timezone: "Z",
@@ -237,7 +245,19 @@ class MySQLIntegration extends Sql implements DatasourcePlus, SqlDatasource {
   }
 
   async connect() {
-    this.client = await mysql.createConnection(this.config)
+    const host = this.config.host ?? "localhost"
+    const port = this.config.port ?? 3306
+    const ip = await utils.resolveSafeHostIp(host)
+    this.client = await mysql.createConnection({
+      ...this.config,
+      // The socket goes to the checked IP so the driver cannot resolve the
+      // host again, while the driver keeps the hostname for TLS.
+      stream: () => {
+        const socket = net.connect({ host: ip, port })
+        socket.setNoDelay(true)
+        return socket
+      },
+    })
     const res = await this.internalQuery(
       {
         sql: "SELECT VERSION();",

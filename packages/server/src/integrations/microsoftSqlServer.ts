@@ -28,13 +28,43 @@ import {
 import { MSSQLColumn, MSSQLTablesResponse } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import sqlServer from "mssql"
-import { sql } from "@budibase/backend-core"
+import { sql, utils as coreUtils } from "@budibase/backend-core"
 import { ConfidentialClientApplication } from "@azure/msal-node"
 import env from "../environment"
+import net from "net"
 
 import { utils } from "@budibase/shared-core"
 
 const Sql = sql.Sql
+
+interface SocketTarget {
+  host: string
+  port: number
+}
+
+export async function connectToSafeHost({
+  host,
+  port,
+  signal,
+}: SocketTarget & { signal?: AbortSignal }): Promise<net.Socket> {
+  const ip = await coreUtils.resolveSafeHostIp(host)
+  // A listener added to an already-aborted signal never fires, so an abort
+  // during the host check has to be caught here.
+  if (signal?.aborted) {
+    throw new Error("Connection aborted")
+  }
+  return new Promise((resolve, reject) => {
+    const socket = net.connect({ host: ip, port })
+    const onAbort = () => socket.destroy(new Error("Connection aborted"))
+    signal?.addEventListener("abort", onAbort, { once: true })
+    socket.once("error", reject)
+    socket.once("connect", () => {
+      signal?.removeEventListener("abort", onAbort)
+      socket.removeListener("error", reject)
+      resolve(socket)
+    })
+  })
+}
 
 const DEFAULT_SCHEMA = "dbo"
 
@@ -276,13 +306,32 @@ class SqlServerIntegration
     try {
       // if encrypt is undefined, then default is to encrypt
       const encrypt = this.config.encrypt === undefined || this.config.encrypt
+      const port = +this.config.port
+      const namedServer = /^(.*)\\(.*)$/.exec(this.config.server)
+      const host = namedServer ? namedServer[1] : this.config.server
+      const ip = await coreUtils.resolveSafeHostIp(host)
       const clientCfg: sqlServer.config = {
         user: this.config.user,
         password: this.config.password,
-        server: this.config.server,
+        // The instance lookup is a UDP request the connector below does not
+        // see, so a named instance is addressed by its checked IP.
+        server: namedServer ? `${ip}\\${namedServer[2]}` : this.config.server,
         database: this.config.database,
-        port: +this.config.port,
+        port,
         options: {
+          ...(namedServer && !net.isIP(host) && { serverName: host }),
+          // Every socket the driver opens goes through here, including the
+          // one for a routing redirect sent by the server after login.
+          connector: (
+            target?: SocketTarget,
+            _lookup?: unknown,
+            signal?: AbortSignal
+          ) =>
+            connectToSafeHost({
+              host: target?.host ?? host,
+              port: target?.port ?? port,
+              signal,
+            }),
           encrypt,
           enableArithAbort: true,
           requestTimeout: env.QUERY_THREAD_TIMEOUT,
