@@ -267,6 +267,117 @@ describe("queries SDK", () => {
       })
     })
 
+    it("keeps MongoDB aggregate step parameters inside the stage value", async () => {
+      const injected =
+        'alpha", "name": {"$exists": true}, "$comment": "injected'
+      const result = await enrichContext(
+        {
+          steps: [
+            {
+              key: "$match",
+              value: { value: '{"name": "{{ target }}"}' },
+            },
+          ],
+        },
+        { target: injected }
+      )
+
+      expect(result.steps).toEqual([
+        {
+          key: "$match",
+          value: { value: JSON.stringify({ name: injected }) },
+        },
+      ])
+    })
+
+    it.each([
+      "{{ other }}",
+      "{{ env.secret }}",
+      '{"color":"blue"}',
+      "null",
+      "[1,2]",
+    ])(
+      "preserves the string value of a quoted MongoDB aggregate parameter %s",
+      async target => {
+        const result = await enrichContext(
+          {
+            steps: [
+              {
+                key: "$match",
+                value: { value: '{"name": "{{ target }}"}' },
+              },
+            ],
+          },
+          { target, other: "unexpected replacement" }
+        )
+
+        expect(result.steps).toEqual([
+          {
+            key: "$match",
+            value: { value: JSON.stringify({ name: target }) },
+          },
+        ])
+      }
+    )
+
+    it.each(["first\nsecond", "first\\nsecond"])(
+      "preserves newline content in MongoDB aggregate parameter %p",
+      async target => {
+        const result = await enrichContext(
+          {
+            steps: [
+              {
+                key: "$match",
+                value: { value: '{"name": "{{ target }}"}' },
+              },
+            ],
+          },
+          { target }
+        )
+
+        expect(JSON.parse(result.steps[0].value.value)).toEqual({
+          name: target,
+        })
+      }
+    )
+
+    it("keeps MongoDB server-side JavaScript operators inside a bound value", async () => {
+      const injected =
+        'x", "pwned": {"$function": {"body": "function(){ return 1 }", "args": [], "lang": "js"}}, "tail": "y'
+      const result = await enrichContext(
+        {
+          steps: [
+            {
+              key: "$addFields",
+              value: { value: '{"injected": "{{ target }}"}' },
+            },
+          ],
+        },
+        { target: injected }
+      )
+
+      expect(result.steps).toEqual([
+        {
+          key: "$addFields",
+          value: { value: JSON.stringify({ injected }) },
+        },
+      ])
+    })
+
+    it.each([
+      { key: "$match", stage: { deletedAt: null } },
+      { key: "$group", stage: { _id: null } },
+    ])(
+      "preserves null fields in MongoDB $key stages",
+      async ({ key, stage }) => {
+        const steps = [{ key, value: { value: JSON.stringify(stage) } }]
+
+        const result = await enrichContext({ steps }, {})
+
+        expect(result.steps).toEqual(steps)
+      }
+    )
+
     it("keeps quoted JSON parameters safe in multi-object MongoDB templates", async () => {
       const injected = 'x","name":{"$exists":true},"$comment":"esc'
       const result = await enrichContext(
