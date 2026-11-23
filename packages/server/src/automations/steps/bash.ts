@@ -121,7 +121,7 @@ const INTERPRETERS: InterpreterSpec[] = [
   {
     matches: executable =>
       ["bash", "sh", "dash", "zsh", "ksh"].includes(executable),
-    codeInNextArg: arg => /^-[a-zA-Z]*c$/.test(arg),
+    codeInNextArg: arg => /^-[a-zA-Z]*c[a-zA-Z]*$/.test(arg),
     codeAttached: arg => /^-[a-zA-Z]*c.+/.test(arg),
   },
   {
