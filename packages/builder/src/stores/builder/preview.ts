@@ -8,6 +8,7 @@ interface PreviewState {
   previewDevice: PreviewDevice
   previewEventHandler: PreviewEventHandler | null
   showPreview: boolean
+  isUpdatingAppPackage: boolean
   selectedComponentContext: AppContext | null
   modalDevice: PreviewDevice | null
 }
@@ -16,6 +17,7 @@ const INITIAL_PREVIEW_STATE: PreviewState = {
   previewDevice: "desktop",
   previewEventHandler: null,
   showPreview: false,
+  isUpdatingAppPackage: false,
   selectedComponentContext: null,
   modalDevice: null,
 }
@@ -53,6 +55,13 @@ export class PreviewStore extends BudiStore<PreviewState> {
 
   resetModalDevice() {
     this.setModalDevice(null)
+  }
+
+  setUpdatingAppPackage(isUpdating: boolean) {
+    this.update(state => ({
+      ...state,
+      isUpdatingAppPackage: isUpdating,
+    }))
   }
 
   // Potential evt names "eject-block", "dragging-new-component"

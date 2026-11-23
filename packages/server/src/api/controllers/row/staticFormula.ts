@@ -3,6 +3,7 @@ import { FieldType, FormulaType, Row, Table, ViewV2 } from "@budibase/types"
 import { cloneDeep, merge } from "lodash/fp"
 import isEqual from "lodash/isEqual"
 import * as linkRows from "../../../db/linkedRows"
+import { pageAllDocs } from "../../../db/pageAllDocs"
 import { getRowParams } from "../../../db/utils"
 import sdk from "../../../sdk"
 import {
@@ -95,37 +96,35 @@ export async function updateRelatedFormula(
 
 export async function updateAllFormulasInTable(table: Table) {
   const db = context.getWorkspaceDB()
-  // start by getting the raw rows (which will be written back to DB after update)
-  let rows = (
-    await db.allDocs<Row>(
-      getRowParams(table._id, null, {
-        include_docs: true,
-      })
-    )
-  ).rows.map(row => row.doc!)
-  // now enrich the rows, note the clone so that we have the base state of the
-  // rows so that we don't write any of the enriched information back
-  let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
-    squash: false,
-  })
-  const updatedRows = []
-  for (let row of rows) {
-    // find the enriched row, if found process the formulas
-    const enrichedRow = enrichedRows.find(
-      (enriched: Row) => enriched._id === row._id
-    )
-    if (enrichedRow) {
-      let processed = await processFormulas(table, cloneDeep(row), {
+  for await (const rows of pageAllDocs<Row>({
+    db,
+    params: getRowParams(table._id),
+  })) {
+    // raw rows are written back, so enrich a clone to keep relationship data
+    // out of the stored documents
+    const enrichedRows = await outputProcessing(table, cloneDeep(rows), {
+      squash: false,
+    })
+    const enrichedById = new Map(enrichedRows.map(row => [row._id, row]))
+
+    const updatedRows: Row[] = []
+    for (const row of rows) {
+      const enrichedRow = enrichedById.get(row._id)
+      if (!enrichedRow) {
+        continue
+      }
+      const processed = await processFormulas(table, cloneDeep(row), {
         dynamic: false,
         contextRows: [enrichedRow],
       })
-      // values have changed, need to add to bulk docs to update
       if (!isEqual(processed, row)) {
         updatedRows.push(processed)
       }
     }
+    if (updatedRows.length) {
+      await db.bulkDocs(updatedRows)
+    }
   }
-  await db.bulkDocs(updatedRows)
 }
 
 /**

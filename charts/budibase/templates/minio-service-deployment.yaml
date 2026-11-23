@@ -2,6 +2,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+{{- include "budibase.deploymentAnnotations" (dict "root" . "annotations" dict) | nindent 4 }}
   labels:
     io.kompose.service: minio-service
   name: minio-service
@@ -14,6 +16,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+{{- include "budibase.secretPodAnnotations" . | nindent 8 }}
       labels:
         io.kompose.service: minio-service
     spec:
@@ -26,14 +30,10 @@ spec:
           value: {{ .Values.services.objectStore.browser | quote }}
         - name: MINIO_ACCESS_KEY
           valueFrom:
-            secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
-              key: objectStoreAccess
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "objectStoreAccess") | nindent 12 }}
         - name: MINIO_SECRET_KEY
           valueFrom:
-            secretKeyRef:
-              name: {{ template "budibase.fullname" . }}
-              key: objectStoreSecret
+{{- include "budibase.secretKeyRef" (dict "root" . "key" "objectStoreSecret") | nindent 12 }}
 
         image: {{ .Values.globals.dockerRegistry | default "" }}budibase/minio:final
         imagePullPolicy: ""
