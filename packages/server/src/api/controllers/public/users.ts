@@ -30,6 +30,14 @@ const NO_ROLES_MSG =
   "Roles/admin/builder can only be set on business/enterprise licenses - input ignored."
 
 async function createUpdateResponse(ctx: UserCtx, user?: User) {
+  if (
+    user &&
+    ctx.request.body.password !== undefined &&
+    !users.isAdmin(ctx.user) &&
+    !isLoggedInUser(ctx, user)
+  ) {
+    ctx.throw(403, "User does not have permission to update this password.")
+  }
   if (ctx.request.body.userGroups !== undefined) {
     const unchanged =
       user &&
