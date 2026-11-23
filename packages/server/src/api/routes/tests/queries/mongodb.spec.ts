@@ -424,6 +424,24 @@ if (descriptions.length) {
           ])
         })
 
+        it("does not widen a find query when a parameterised key is __proto__", async () => {
+          const query = await createQuery({
+            fields: {
+              json: '{"{{ key }}":"one"}',
+              extra: {
+                actionType: "find",
+              },
+            },
+            parameters: [{ name: "key", default: "name" }],
+          })
+
+          const result = await config.api.query.execute(query._id!, {
+            parameters: { key: "__proto__" },
+          })
+
+          expect(result.data).toEqual([])
+        })
+
         it("does not allow quoted find parameters to inject Mongo operators", async () => {
           const query = await createQuery({
             fields: {
