@@ -261,21 +261,30 @@ describe("Execute Bash Automations", () => {
     }
   )
 
-  it("should reject a script binding when another Bash flag follows c", async () => {
-    const execute = jest.spyOn(execa, "sync").mockImplementation(() => {
-      throw new Error("Unexpected subprocess")
-    })
-    try {
-      const result = await runBash({
-        inputs: { command: "bash", args: ["-ce", "{{ script }}"] },
-        context: { script: "true" },
+  it.each([
+    { options: ["-ce"] },
+    { options: ["-c", "-e"] },
+    { options: ["-c", "+e"] },
+    { options: ["-c", "-o", "pipefail"] },
+    { options: ["-c", "--"] },
+  ])(
+    "should reject a script binding after Bash options $options before execution",
+    async ({ options }) => {
+      const execute = jest.spyOn(execa, "sync").mockImplementation(() => {
+        throw new Error("Unexpected subprocess")
       })
-      expect(result.response).toContain("Script bindings are not supported")
-      expect(execute).not.toHaveBeenCalled()
-    } finally {
-      execute.mockRestore()
+      try {
+        const result = await runBash({
+          inputs: { command: "bash", args: [...options, "{{ script }}"] },
+          context: { script: "true" },
+        })
+        expect(result.response).toContain("Script bindings are not supported")
+        expect(execute).not.toHaveBeenCalled()
+      } finally {
+        execute.mockRestore()
+      }
     }
-  })
+  )
 
   it("should reject a script binding when a dynamic option selects bash -c", async () => {
     const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")

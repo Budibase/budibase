@@ -61,6 +61,7 @@ type WrapperResult =
 type WrapperParser = (args: string[]) => WrapperResult
 
 interface InterpreterSpec {
+  scriptArgsAfterFlag?: (input: { args: string[]; next: number }) => number[]
   matches: (executable: string) => boolean
   codeInNextArg: (arg: string) => boolean
   codeAttached: (arg: string) => boolean
@@ -122,6 +123,16 @@ const INTERPRETERS: InterpreterSpec[] = [
     matches: executable =>
       ["bash", "sh", "dash", "zsh", "ksh"].includes(executable),
     codeInNextArg: arg => /^-[a-zA-Z]*c[a-zA-Z]*$/.test(arg),
+    scriptArgsAfterFlag: ({ args, next }) => {
+      if (args[next] === "--") {
+        return [next + 1]
+      }
+      if (/^[-+]/.test(args[next] ?? "")) {
+        // Further options can consume operands before the shell reaches the script.
+        return args.slice(next).map((_, offset) => next + offset)
+      }
+      return [next]
+    },
     codeAttached: arg => /^-[a-zA-Z]*c.+/.test(arg),
   },
   {
@@ -143,19 +154,20 @@ const findInlineCode = ({
 }: {
   spec: InterpreterSpec
   args: string[]
-}): number => {
+}): number[] => {
   for (const [index, arg] of args.entries()) {
     if (arg === "--") {
-      return -1
+      return []
     }
     if (spec.codeInNextArg(arg)) {
-      return index + 1
+      const next = index + 1
+      return spec.scriptArgsAfterFlag?.({ args, next }) ?? [next]
     }
     if (spec.codeAttached(arg)) {
-      return index
+      return [index]
     }
   }
-  return -1
+  return []
 }
 
 const scriptArgumentIndexes = ({
@@ -190,8 +202,7 @@ const scriptArgumentIndexes = ({
     return nestedIndexes.map(index => result.index + 1 + index)
   }
   const spec = INTERPRETERS.find(spec => spec.matches(executable))
-  const index = spec ? findInlineCode({ spec, args }) : -1
-  return index < 0 ? [] : [index]
+  return spec ? findInlineCode({ spec, args }) : []
 }
 
 const processArgs = ({
