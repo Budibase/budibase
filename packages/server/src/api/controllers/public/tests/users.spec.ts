@@ -25,6 +25,7 @@ type TestUser = ContextUser
 type TestTarget = {
   _id?: string
   email: string
+  password?: string
 }
 type TestContext = {
   user: TestUser
@@ -34,6 +35,7 @@ type TestContext = {
   request: {
     body: {
       email: string
+      password?: string
       roles?: User["roles"]
       builder: {
         apps: unknown
@@ -60,6 +62,7 @@ const createCtx = ({
     request: {
       body: {
         email: target.email,
+        ...(target.password === undefined ? {} : { password: target.password }),
         ...(roles === undefined ? {} : { roles }),
         builder: {
           apps: builderApps,
@@ -150,6 +153,83 @@ describe("public users controller", () => {
 
     expect(saveUser).toHaveBeenCalledTimes(1)
     expect(next).toHaveBeenCalled()
+  })
+
+  it.each<{ targetRoles: User["roles"]; admin?: User["admin"] }>([
+    { targetRoles: { app_other: "BASIC" }, admin: undefined },
+    { targetRoles: { app_allowed: "BASIC" }, admin: undefined },
+    { targetRoles: { app_allowed: "BASIC" }, admin: { global: true } },
+  ])(
+    "rejects a workspace builder changing an out-of-scope password",
+    async ({ targetRoles, admin }) => {
+      const ctx = createCtx({
+        caller: {
+          _id: "user_builder",
+          email: "builder@example.com",
+          tenantId: "tenant",
+          builder: { apps: ["app_allowed"] },
+        },
+        target: { ...targetUser, password: "changed-password" },
+        builderApps: ["app_allowed"],
+      })
+      ctx.request.body.admin = admin
+      readUser.mockResolvedValue({
+        ...targetUser,
+        tenantId: "tenant",
+        roles: targetRoles,
+        admin,
+      })
+      const next = jest
+        .fn()
+        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+      await expect(controller.update(ctx, next)).rejects.toMatchObject({
+        status: 403,
+      })
+      expect(saveUser).not.toHaveBeenCalled()
+    }
+  )
+
+  it("allows an organisation admin to change a user password", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_admin",
+        email: "admin@example.com",
+        tenantId: "tenant",
+        admin: { global: true },
+      },
+      target: { ...targetUser, password: "changed-password" },
+      builderApps: ["app_allowed"],
+    })
+    setExistingTargetUser({ app_allowed: "BASIC" })
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.update(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
+  })
+
+  it("allows a user to change their own password", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: targetUser._id,
+        email: targetUser.email,
+        tenantId: "tenant",
+      },
+      target: { ...targetUser, password: "changed-password" },
+    })
+    setExistingTargetUser()
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.update(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
   })
 
   it("allows a workspace creator to assign another user to their workspace", async () => {
