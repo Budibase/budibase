@@ -77,6 +77,37 @@ const stripUsers = (users: (User | StrippedUser)[]): StrippedUser[] => {
   }))
 }
 
+const sensitiveSearchFields = [
+  "password",
+  "oauth2",
+  "provider",
+  "providerType",
+  "profile",
+  "thirdPartyProfile",
+  "ssoId",
+  "forceResetPassword",
+] as const
+
+const sanitizeSearchResponse = ({
+  response,
+  canViewUsers,
+}: {
+  response: SearchUsersResponse
+  canViewUsers: boolean
+}): SearchUsersResponse => {
+  const safeUsers = response.data.map(user => {
+    const safeUser = { ...user }
+    for (const field of sensitiveSearchFields) {
+      Reflect.deleteProperty(safeUser, field)
+    }
+    return safeUser
+  })
+  return {
+    ...response,
+    data: canViewUsers ? safeUsers : stripUsers(safeUsers),
+  }
+}
+
 export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
   try {
     const currentUserId = ctx.user?._id
@@ -370,10 +401,10 @@ export const search = async (
     let response = hasWorkspaceId
       ? await searchWorkspaceUsers(body)
       : await searchGroupUsers(body)
-    if (!users.hasBuilderPermissions(ctx.user)) {
-      response.data = stripUsers(response.data)
-    }
-    ctx.body = response
+    ctx.body = sanitizeSearchResponse({
+      response,
+      canViewUsers: users.hasBuilderPermissions(ctx.user),
+    })
     return
   }
 
@@ -399,11 +430,10 @@ export const search = async (
     }
   }
 
-  if (!users.hasBuilderPermissions(ctx.user)) {
-    response.data = stripUsers(response.data)
-  }
-
-  ctx.body = response
+  ctx.body = sanitizeSearchResponse({
+    response,
+    canViewUsers: users.hasBuilderPermissions(ctx.user),
+  })
 }
 
 const DEFAULT_USER_LIMIT = 8
