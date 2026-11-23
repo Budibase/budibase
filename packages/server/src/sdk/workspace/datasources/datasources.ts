@@ -1,4 +1,9 @@
-import { context, db as dbCore, events } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import {
   containsEnvVarBinding,
@@ -24,6 +29,7 @@ import {
   SourceName,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
+import isEqual from "lodash/isEqual"
 import merge from "lodash/merge"
 import {
   BudibaseInternalDB,
@@ -279,7 +285,7 @@ export async function removeSecretSingle(datasource: Datasource) {
   return (await removeSecrets([datasource]))[0]
 }
 
-export function mergeConfigs(update: Datasource, old: Datasource) {
+export async function mergeConfigs(update: Datasource, old: Datasource) {
   if (!update.config || !old.config) {
     return update
   }
@@ -305,20 +311,95 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
     }
   }
 
-  if (old.config?.auth) {
-    update.config = merge(old.config, update.config)
+  const submittedConfig = update.config
+  if (
+    !old.config.auth &&
+    !Object.values(submittedConfig).some(
+      value => value === PASSWORD_REPLACEMENT || containsEnvVarBinding(value)
+    )
+  ) {
+    return update
+  }
+  const definition = await getDefinition(old.source)
+  const credentialFields = Object.entries(definition?.datasource || {})
+    .filter(
+      ([, field]) =>
+        field.type === DatasourceFieldType.PASSWORD ||
+        field.type === DatasourceFieldType.SENSITIVE_LONGFORM
+    )
+    .map(([key]) => key)
+
+  if (old.config.auth) {
+    for (const key of credentialFields) {
+      if (Object.hasOwn(old.config, key) && update.config[key] === undefined) {
+        update.config[key] = PASSWORD_REPLACEMENT
+      }
+    }
+    update.config = merge({}, old.config, update.config)
   }
 
-  // update back to actual passwords for everything else
-  for (let [key, value] of Object.entries(update.config)) {
-    if (value !== PASSWORD_REPLACEMENT) {
-      continue
+  // Environment bindings supply server-side credentials even without a mask.
+  const usesBoundCredential = credentialFields.some(key =>
+    containsEnvVarBinding(submittedConfig[key])
+  )
+  if (
+    usesBoundCredential ||
+    Object.values(update.config).includes(PASSWORD_REPLACEMENT)
+  ) {
+    const restoredConfig = { ...update.config }
+    for (const [key, value] of Object.entries(restoredConfig)) {
+      if (value !== PASSWORD_REPLACEMENT) {
+        continue
+      }
+      if (Object.hasOwn(old.config, key)) {
+        restoredConfig[key] = old.config[key]
+      } else {
+        delete restoredConfig[key]
+      }
     }
-    if (update.config && old.config && old.config?.[key]) {
-      update.config[key] = old.config?.[key]
-    } else if (update.config) {
-      delete update.config[key]
+
+    const storedSettings = { ...old.config }
+    const updatedSettings = { ...restoredConfig }
+    for (const [key, field] of Object.entries(definition?.datasource || {})) {
+      if (field.type === DatasourceFieldType.NUMBER) {
+        for (const settings of [storedSettings, updatedSettings]) {
+          if (Number.isFinite(settings[key])) {
+            settings[key] = String(settings[key])
+          }
+        }
+      }
     }
+    for (const key of credentialFields) {
+      if (
+        Object.hasOwn(update.config, key) &&
+        update.config[key] !== PASSWORD_REPLACEMENT
+      ) {
+        delete storedSettings[key]
+        delete updatedSettings[key]
+      }
+    }
+    // Only exempt query variables for built-in SQL sources, independent of plugin flags.
+    if (helpers.isSQL({ source: old.source, type: old.type })) {
+      delete storedSettings.staticVariables
+      delete storedSettings.dynamicVariables
+      delete updatedSettings.staticVariables
+      delete updatedSettings.dynamicVariables
+    }
+    if ([SourceName.POSTGRES, SourceName.SQL_SERVER].includes(old.source)) {
+      delete storedSettings.schema
+      delete updatedSettings.schema
+    }
+
+    if (
+      (update.source && update.source !== old.source) ||
+      !isEqual(updatedSettings, storedSettings)
+    ) {
+      throw new HTTPError(
+        "Datasource settings cannot change while using stored credentials.",
+        400
+      )
+    }
+    update.config = restoredConfig
   }
 
   return update

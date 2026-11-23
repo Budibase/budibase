@@ -644,7 +644,12 @@ describe("/static", () => {
         async ({ endpoint, publicUrlPrefix }) => {
           await config.api.datasource.update({
             ...datasource,
-            config: { ...datasource.config, endpoint },
+            config: {
+              ...datasource.config,
+              accessKeyId: "bb",
+              secretAccessKey: "bb",
+              endpoint,
+            },
           })
           const requestedKey =
             "Research Archive/study-42/Reports/report#1? 50% café.pdf"

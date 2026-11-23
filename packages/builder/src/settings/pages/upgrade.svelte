@@ -22,6 +22,7 @@
   import { onMount } from "svelte"
   import { sdk, helpers } from "@budibase/shared-core"
   import { getFormattedPlanName } from "@/helpers/planTitle"
+  import Spinner from "@/components/common/Spinner.svelte"
 
   $: license = $auth.user.license
   const { accountPortalUpgradeUrl } = helpers
@@ -44,6 +45,7 @@
   const offlineLicenseExtensions = [".txt"]
 
   let installInfo
+  let refreshingLicense = false
 
   // LICENSE KEY
 
@@ -164,6 +166,7 @@
   }
 
   const refresh = async () => {
+    refreshingLicense = true
     try {
       await API.refreshLicense()
       await auth.getSelf()
@@ -173,6 +176,8 @@
     } catch (err) {
       console.error(err)
       notifications.error("Error refreshing license")
+    } finally {
+      refreshingLicense = false
     }
   }
 
@@ -281,7 +286,14 @@
         </div>
       </Layout>
       <div class="refresh-button">
-        <Button primary on:click={refresh}>Refresh</Button>
+        <Button primary on:click={refresh} disabled={refreshingLicense}>
+          <div class="button-content">
+            {#if refreshingLicense}
+              <Spinner size="10" />
+            {/if}
+            Refresh
+          </div>
+        </Button>
       </div>
       <Body size="XS">
         {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
@@ -331,6 +343,11 @@
   }
   .refresh-button {
     margin: 12px 0;
+  }
+  .button-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
   }
   .split-heading {
     display: flex;

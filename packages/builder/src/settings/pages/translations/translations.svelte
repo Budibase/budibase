@@ -11,7 +11,7 @@
   } from "@budibase/bbui"
   import { licensing, translations } from "@/stores/portal"
   import type { TranslationOverrideMap } from "@/stores/portal/translations"
-  import { onMount } from "svelte"
+  import { onMount, untrack } from "svelte"
   import {
     UI_TRANSLATIONS,
     TRANSLATION_CATEGORY_LABELS,
@@ -87,46 +87,62 @@
     )
   }
 
-  let selectedCategory = "userMenu"
-  let searchTerm = ""
-  let overrides: TranslationOverrideMap = {}
-  let lastSyncedSignature = signature(overrides)
-  let saving = false
-  $: hasPendingChanges = signature(overrides) !== lastSyncedSignature
-  $: activeLocale = $translations.config.defaultLocale
-  $: activeOverrides =
+  type CategoryFilter = TranslationCategory | "all"
+
+  let selectedCategory = $state<CategoryFilter>("userMenu")
+  let searchTerm = $state("")
+  let overrides = $state<TranslationOverrideMap>({})
+  let lastSyncedSignature = $state(signature({}))
+  let saving = $state(false)
+  const hasPendingChanges = $derived(
+    signature(overrides) !== lastSyncedSignature
+  )
+  const activeLocale = $derived($translations.config.defaultLocale)
+  const activeOverrides = $derived(
     $translations.config.locales[activeLocale]?.overrides ?? {}
-  $: storeLoaded = $translations.loaded
-  const refreshFromStore = ({ force = false }: { force?: boolean } = {}) => {
-    const storeSignature = signature(activeOverrides)
-    if (storeLoaded && (force || storeSignature !== lastSyncedSignature)) {
-      overrides = { ...activeOverrides }
-      lastSyncedSignature = storeSignature
-    }
+  )
+  const storeLoaded = $derived($translations.loaded)
+
+  const syncOverrides = (source: TranslationOverrideMap) => {
+    overrides = { ...source }
+    lastSyncedSignature = signature(source)
   }
 
-  $: refreshFromStore()
+  $effect(() => {
+    const loaded = storeLoaded
+    const source = activeOverrides
+    const storeSignature = signature(source)
+
+    if (loaded && storeSignature !== untrack(() => lastSyncedSignature)) {
+      untrack(() => syncOverrides(source))
+    }
+  })
 
   onMount(async () => {
     await translations.init({ force: true })
-    refreshFromStore({ force: true })
+    const { overrides: source } = translations.getActiveOverrides()
+    syncOverrides(source)
   })
 
-  $: filteredRows = UI_TRANSLATIONS.filter(definition => {
-    const inCategory =
-      selectedCategory === "all" || definition.category === selectedCategory
-    return inCategory && matchesQuery(definition, searchTerm)
-  })
+  const filteredRows = $derived(
+    UI_TRANSLATIONS.filter(definition => {
+      const inCategory =
+        selectedCategory === "all" || definition.category === selectedCategory
+      return inCategory && matchesQuery(definition, searchTerm)
+    })
+  )
 
-  $: tableData = filteredRows.map(definition => ({
-    key: definition.fullKey,
-    shortKey: definition.key,
-    name: definition.name,
-    translation: overrides?.[definition.fullKey] ?? "",
-    defaultValue: definition.defaultValue,
-    category: definition.category,
-    categoryLabel: categoryLabel(definition.category),
-  }))
+  const tableData = $derived(
+    filteredRows.map(definition => ({
+      key: definition.fullKey,
+      shortKey: definition.key,
+      name: definition.name,
+      translation: overrides[definition.fullKey] ?? "",
+      defaultValue: definition.defaultValue,
+      category: definition.category,
+      categoryLabel: categoryLabel(definition.category),
+    }))
+  )
 
   const handleTranslationChange = (detail: { key: string; value: string }) => {
     const { key, value } = detail
@@ -154,9 +170,7 @@
     try {
       await translations.saveLocaleOverrides(activeLocale, payload)
       await translations.init({ force: true })
-      refreshFromStore({ force: true })
-      lastSyncedSignature = nextSignature
-      overrides = { ...payload }
+      syncOverrides(payload)
       notifications.success("Translations saved successfully")
     } catch (error) {
       notifications.error("Failed to save translations")
