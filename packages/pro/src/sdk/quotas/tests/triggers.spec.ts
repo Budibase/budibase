@@ -299,9 +299,10 @@ describe("triggers", () => {
       promises.push(trigger())
       promises.push(trigger())
 
-      await Promise.all(promises)
+      const outcomes = await Promise.allSettled(promises)
 
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
+      expect(outcomes.filter(outcome => outcome.status === "fulfilled")).toHaveLength(1)
     })
   })
 })

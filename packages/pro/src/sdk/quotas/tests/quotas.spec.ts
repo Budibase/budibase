@@ -22,6 +22,73 @@ describe("quotas", () => {
   })
 
   describe("increment", () => {
+    it("allows quota increments nested inside a guarded callback", async () => {
+      await config.doInWorkspace(async () => {
+        const result = await quotas.increment(
+          MonthlyQuotaName.ACTIONS,
+          QuotaUsageType.MONTHLY,
+          {
+            fn: () =>
+              quotas.increment(StaticQuotaName.ROWS, QuotaUsageType.STATIC, {
+                fn: async () => "created",
+              }),
+          }
+        )
+        const actionUsage = await db.quotas.getCurrentUsageValues(
+          QuotaUsageType.MONTHLY,
+          MonthlyQuotaName.ACTIONS
+        )
+        const rowUsage = await db.quotas.getCurrentUsageValues(
+          QuotaUsageType.STATIC,
+          StaticQuotaName.ROWS
+        )
+
+        expect(result).toBe("created")
+        expect(actionUsage.total).toBe(1)
+        expect(rowUsage.total).toBe(1)
+      })
+    })
+
+    it("does not run two resource callbacks for one remaining quota slot", async () => {
+      const license: License = _.cloneDeep(CLOUD_FREE_LICENSE)
+      license.quotas.usage.static.rows.value = 1
+      mocks.licenses.useLicense(license)
+
+      await config.doInWorkspace(async () => {
+        let callbacksStarted = 0
+        let notifySecondCallback: () => void = () => {}
+        const secondCallback = new Promise<void>(resolve => {
+          notifySecondCallback = resolve
+        })
+        const createResource = async () => {
+          callbacksStarted += 1
+          if (callbacksStarted === 1) {
+            await Promise.race([
+              secondCallback,
+              new Promise<void>(resolve => setTimeout(resolve, 100)),
+            ])
+          } else {
+            notifySecondCallback()
+          }
+          return callbacksStarted
+        }
+
+        const outcomes = await Promise.allSettled([
+          quotas.increment(StaticQuotaName.ROWS, QuotaUsageType.STATIC, {
+            fn: createResource,
+          }),
+          quotas.increment(StaticQuotaName.ROWS, QuotaUsageType.STATIC, {
+            fn: createResource,
+          }),
+        ])
+
+        expect(callbacksStarted).toBe(1)
+        expect(
+          outcomes.filter(outcome => outcome.status === "fulfilled")
+        ).toHaveLength(1)
+      })
+    })
+
     it("increments by one", async () => {
       await config.doInWorkspace(async () => {
         await quotas.increment(

@@ -5,6 +5,7 @@ import {
   tenancy,
   UsageLimitWarning,
 } from "@budibase/backend-core"
+import { AsyncLocalStorage } from "async_hooks"
 import {
   APP_QUOTA_NAMES,
   ConstantQuotaName,
@@ -58,6 +59,13 @@ export interface IncrementManyParams<T = any> {
   opts?: IncrementOptions<T>
 }
 
+interface QuotaLockContext {
+  active: boolean
+  tenantId: string
+}
+
+const quotaLockContext = new AsyncLocalStorage<QuotaLockContext>()
+
 interface UpdateUsageParams {
   usageChange: number
   name: MeteredQuotaName
@@ -98,52 +106,75 @@ const tryIncrement = async <T = any>(
     const actions = Array.isArray(params) ? params : [params]
     span.addTags({ numActions: actions.length })
 
-    // dry run first to check that the quotas are not exceeded
-    await updateUsage(
-      actions.map(action => ({
-        usageChange: action.change,
-        name: action.name,
-        type: action.type,
-        opts: {
-          dryRun: true,
-          suppressErrorLog: action.opts?.suppressErrorLog,
-          id: action.opts?.id,
-        },
-      }))
-    )
+    const runActions = async () => {
+      await updateUsage(
+        actions.map(action => ({
+          usageChange: action.change,
+          name: action.name,
+          type: action.type,
+          opts: {
+            dryRun: true,
+            suppressErrorLog: action.opts?.suppressErrorLog,
+            id: action.opts?.id,
+          },
+        }))
+      )
 
-    // run the actual functions
-    const results: any[] = []
-    for (let action of actions) {
-      await tracer.trace("quotas.incrementMany.fn", async span => {
-        span.addTags({
-          actionName: action.name,
-          actionType: action.type,
-          actionChange: action.change,
+      const results: T[] = []
+      for (const action of actions) {
+        await tracer.trace("quotas.incrementMany.fn", async span => {
+          span.addTags({
+            actionName: action.name,
+            actionType: action.type,
+            actionChange: action.change,
+          })
+          const fn = action.opts?.fn
+          if (fn) {
+            results.push(await fn())
+          }
         })
-        let fn = action.opts?.fn
-        if (fn) {
-          results.push(await fn())
-        }
-      })
+      }
+
+      await updateUsage(
+        actions.map(action => ({
+          usageChange: action.change,
+          name: action.name,
+          type: action.type,
+          opts: {
+            dryRun: false,
+            valueFn: action.opts?.valueFn,
+            suppressErrorLog: action.opts?.suppressErrorLog,
+            id: action.opts?.id,
+          },
+        }))
+      )
+
+      return results[0]
     }
 
-    // increment the quota
-    await updateUsage(
-      actions.map(action => ({
-        usageChange: action.change,
-        name: action.name,
-        type: action.type,
-        opts: {
-          dryRun: false,
-          valueFn: action.opts?.valueFn,
-          suppressErrorLog: action.opts?.suppressErrorLog,
-          id: action.opts?.id,
-        },
-      }))
+    const tenantId = tenancy.getTenantId()
+    const activeLock = quotaLockContext.getStore()
+    if (activeLock?.active && activeLock.tenantId === tenantId) {
+      return await runActions()
+    }
+
+    const { result } = await locks.doWithLock(
+      {
+        type: LockType.AUTO_EXTEND,
+        name: LockName.QUOTA_USAGE_EVENT,
+        resource: "usage",
+      },
+      async () => {
+        const lockContext: QuotaLockContext = { active: true, tenantId }
+        try {
+          return await quotaLockContext.run(lockContext, runActions)
+        } finally {
+          lockContext.active = false
+        }
+      }
     )
 
-    return results[0] //TODO What happen if we need to get all the results?
+    return result
   })
 }
 
