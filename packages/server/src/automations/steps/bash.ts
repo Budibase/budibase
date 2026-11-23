@@ -137,8 +137,8 @@ const INTERPRETERS: InterpreterSpec[] = [
   },
   {
     matches: executable => /^python(?:\d+(?:\.\d+)?)?$/.test(executable),
-    codeInNextArg: arg => /^-[a-zA-Z]*c$/.test(arg),
-    codeAttached: arg => /^-[a-zA-Z]*c.+/.test(arg),
+    codeInNextArg: arg => /^-[a-bd-zA-Z]*c$/.test(arg),
+    codeAttached: arg => /^-[a-bd-zA-Z]*c[\s\S]/.test(arg),
   },
   {
     matches: executable => ["node", "nodejs"].includes(executable),
