@@ -126,12 +126,13 @@
     >
       {#if section.info}
         <div class="section-info">
-          <InfoDisplay body={section.info} />
+          <InfoDisplay body={section.info} allowHtml />
         </div>
       {:else if idx === 0 && section.name === "General" && componentDefinition?.info && !tag}
         <InfoDisplay
           title={componentDefinition.name}
           body={componentDefinition.info}
+          allowHtml
         />
       {/if}
       <div class="settings">

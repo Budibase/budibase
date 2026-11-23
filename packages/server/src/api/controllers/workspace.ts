@@ -457,10 +457,21 @@ export async function fetchAppPackage(
     )
   }
 
-  // Only filter screens if the user is not a builder call
   const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
   const isDev = isDevWorkspaceID(ctx.params.appId)
-  if (!isBuilder) {
+  if (isBuilder) {
+    const screenId =
+      typeof ctx.query.screenId === "string" ? ctx.query.screenId : undefined
+    screens = screens.map(screen =>
+      screenId === undefined || screen._id === screenId
+        ? screen
+        : {
+            ...screen,
+            _rev: undefined,
+            props: { ...screen.props, _children: [] },
+          }
+    )
+  } else {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)

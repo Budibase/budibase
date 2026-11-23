@@ -8,6 +8,7 @@
     FancyForm,
     FancyInput,
   } from "@budibase/bbui"
+  import { Constants, CookieUtils } from "@budibase/frontend-core"
   import { BUILDER_URLS, validatePasswordPolicy } from "@budibase/shared-core"
   import { goto as gotoStore } from "@roxi/routify"
   import { API } from "@/api"
@@ -38,8 +39,9 @@
       await API.createAdminUser(adminUser)
       notifications.success("Admin user created")
       await admin.init()
+      CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
       await auth.login(formData?.email.trim(), formData?.password)
-      goto(BUILDER_URLS.WORKSPACES)
+      goto(BUILDER_URLS.BUILDER)
     } catch (error) {
       submitted = false
       notifications.error(error.message || "Failed to create admin user")

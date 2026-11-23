@@ -256,7 +256,7 @@ async function updateUnlocked(
 
   let datasource: Datasource = {
     ...baseDatasource,
-    ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
+    ...(await sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource)),
   }
   if (datasource.source !== baseDatasource.source) {
     ctx.throw(
