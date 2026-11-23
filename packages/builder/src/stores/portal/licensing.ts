@@ -44,6 +44,7 @@ interface LicensingState {
   pwaEnabled: boolean
   scimEnabled: boolean
   environmentVariablesEnabled: boolean
+  enforceableSSO: boolean
   auditLogsEnabled: boolean
   customAppScriptsEnabled: boolean
   syncAutomationsEnabled: boolean
@@ -96,6 +97,7 @@ class LicensingStore extends BudiStore<LicensingState> {
       pwaEnabled: false,
       scimEnabled: false,
       environmentVariablesEnabled: false,
+      enforceableSSO: false,
       auditLogsEnabled: false,
       customAppScriptsEnabled: false,
       syncAutomationsEnabled: false,
