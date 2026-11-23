@@ -213,6 +213,24 @@ describe("queries SDK", () => {
       })
     })
 
+    it("retains a dynamic __proto__ filter in a MongoDB JSON template", async () => {
+      const result = await enrichContext(
+        { json: '{"{{ key }}":"fixed"}' },
+        { key: "__proto__" }
+      )
+
+      expect(result.json).toStrictEqual(JSON.parse('{"__proto__":"fixed"}'))
+    })
+
+    it("retains a dynamic __proto__ key in query fields", async () => {
+      const result = await enrichContext(
+        { "{{ key }}": "fixed" },
+        { key: "__proto__" }
+      )
+
+      expect(result).toStrictEqual(JSON.parse('{"__proto__":"fixed"}'))
+    })
+
     it("keeps quoted JSON parameters from changing MongoDB query structure", async () => {
       const result = await enrichContext(
         {

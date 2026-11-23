@@ -47,6 +47,19 @@ const processTemplateString = (
   })
 }
 
+const setJsonKey = (
+  target: Record<string, JSONValue>,
+  key: string,
+  value: JSONValue
+) => {
+  Object.defineProperty(target, key, {
+    value,
+    enumerable: true,
+    writable: true,
+    configurable: true,
+  })
+}
+
 const enrichJsonTemplate = (
   template: string,
   parameters: object,
@@ -87,10 +100,10 @@ const enrichJsonValue = (
       continue
     }
     const enrichedKey = processTemplateString(key, parameters, options)
-    enrichedQuery[enrichedKey] = enrichJsonValue(
-      fieldValue,
-      parameters,
-      options
+    setJsonKey(
+      enrichedQuery,
+      enrichedKey,
+      enrichJsonValue(fieldValue, parameters, options)
     )
   }
   return enrichedQuery
@@ -114,14 +127,18 @@ const enrichContextObject = async (
       preserveNullValues: isJsonField,
     }
     if (typeof fieldValue === "string") {
-      enrichedQuery[enrichedKey] = isJsonField
-        ? enrichJsonTemplate(fieldValue, parameters, jsonOptions)
-        : processTemplateString(fieldValue, parameters, options)
+      setJsonKey(
+        enrichedQuery,
+        enrichedKey,
+        isJsonField
+          ? enrichJsonTemplate(fieldValue, parameters, jsonOptions)
+          : processTemplateString(fieldValue, parameters, options)
+      )
     } else {
-      enrichedQuery[enrichedKey] = enrichJsonValue(
-        fieldValue,
-        parameters,
-        jsonOptions
+      setJsonKey(
+        enrichedQuery,
+        enrichedKey,
+        enrichJsonValue(fieldValue, parameters, jsonOptions)
       )
     }
   }
