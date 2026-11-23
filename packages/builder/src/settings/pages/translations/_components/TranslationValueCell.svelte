@@ -1,17 +1,24 @@
-<script>
+<script lang="ts">
   import { ActionButton, AbsTooltip, Input, Icon } from "@budibase/bbui"
+  import type { TranslationDetail } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
 
-  export let row
-  export let value
+  interface Props {
+    row: {
+      key: string
+      defaultValue: string
+    }
+    value?: string | null
+  }
 
-  const dispatch = createEventDispatcher()
+  let { row, value }: Props = $props()
+  const dispatch = createEventDispatcher<{
+    buttonclick: TranslationDetail
+  }>()
 
-  let defaultTooltip
-
-  $: defaultTooltip = row?.defaultValue
-    ? `Default: ${row.defaultValue}`
-    : "Budibase default"
+  const defaultTooltip = $derived(
+    row.defaultValue ? "Default: " + row.defaultValue : "Budibase default"
+  )
 </script>
 
 <div class="cell">
@@ -30,12 +37,7 @@
       />
     </div>
     <AbsTooltip text={defaultTooltip}>
-      <ActionButton
-        size="S"
-        quiet
-        iconOnly
-        aria-label="View Budibase default text"
-      >
+      <ActionButton size="S" quiet>
         <Icon name="info" size="XS" />
       </ActionButton>
     </AbsTooltip>
