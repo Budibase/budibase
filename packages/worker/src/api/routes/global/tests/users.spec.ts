@@ -2,6 +2,7 @@ import {
   DocumentType,
   InviteUsersResponse,
   OIDCUser,
+  SSOProviderType,
   prefixed,
   User,
 } from "@budibase/types"
@@ -1328,6 +1329,41 @@ describe("/api/global/users", () => {
         expect.arrayContaining([firstUser._id, secondUser._id])
       )
       expect(response.body.data).toHaveLength(2)
+    })
+
+    it("does not expose SSO tokens to an app-scoped Builder searching a tenant group", async () => {
+      featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
+      const group = await config.doInTenant(() =>
+        proSdk.groups.save(structures.groups.UserGroup())
+      )
+      const target = await config.createUser({ userGroups: [group.id] })
+      await config.doInTenant(() =>
+        context.getGlobalDB().put({
+          ...target,
+          provider: "example-oidc",
+          providerType: SSOProviderType.OIDC,
+          oauth2: {
+            accessToken: "example-access-canary",
+            refreshToken: "example-refresh-canary",
+          },
+        })
+      )
+      const builder = await config.createUser({
+        builder: { global: false, apps: ["app_builder_workspace"] },
+        admin: { global: false },
+      })
+      await config.login(builder)
+
+      const response = await config.withUser(builder, () =>
+        config.api.users.searchUsers({ groupIds: [group.id] })
+      )
+
+      expect(response.body.data).toHaveLength(1)
+      expect(response.body.data[0].email).toBe(target.email)
+      expect(response.body.data[0]).not.toHaveProperty("oauth2")
+      expect(response.body.data[0]).not.toHaveProperty("provider")
+      expect(response.body.data[0]).not.toHaveProperty("providerType")
     })
 
     it("should apply the selected group filter to workspace users", async () => {
