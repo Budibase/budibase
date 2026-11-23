@@ -18,6 +18,7 @@
   import { lowercase } from "@/helpers"
   import { sdk } from "@budibase/shared-core"
   import type { WorkspaceTemplate } from "@/types"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   $: goto = $gotoStore
 
@@ -165,7 +166,9 @@
         // Refresh for access to created applications
         await auth.getSelf()
       }
-      goto(`/builder/workspace/${createdApp.instance._id}/home`)
+      goto(
+        `/builder/workspace/${getWorkspaceUrlId(createdApp.instance._id)}/home`
+      )
     } catch (error) {
       creating = false
       builderStore.appCreated(false)

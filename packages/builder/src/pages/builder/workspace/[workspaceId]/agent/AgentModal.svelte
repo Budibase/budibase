@@ -11,6 +11,7 @@
   } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
   import { onMount } from "svelte"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   $: goto = $gotoStore
   export let initialProjectIds: string[] = []
@@ -52,7 +53,9 @@
         projectIds: initialProjectIds.length ? initialProjectIds : undefined,
       })
       modal.hide()
-      goto(`/builder/workspace/${workspaceId}/agent/${newAgent._id}/config`)
+      goto(
+        `/builder/workspace/${getWorkspaceUrlId(workspaceId)}/agent/${newAgent._id}/config`
+      )
     } catch (error) {
       notifications.error(getErrorMessage(error) || "Error creating agent")
       return keepOpen

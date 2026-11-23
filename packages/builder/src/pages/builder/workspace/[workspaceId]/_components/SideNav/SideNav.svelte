@@ -66,6 +66,7 @@
   import AgentModal from "@/pages/builder/workspace/[workspaceId]/agent/AgentModal.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   export const show = () => {
     pinned.set(true)
@@ -141,6 +142,7 @@
   let tableName = ""
 
   $: workspaceId = $workspaceStore.appId
+  $: workspaceUrlId = getWorkspaceUrlId(workspaceId)
   $: !$pinned && unPin()
 
   // keep sidebar expanded when workspace selector is open
@@ -158,7 +160,7 @@
       return
     }
 
-    const prefix = `/builder/workspace/${workspaceId}`
+    const prefix = `/builder/workspace/${workspaceUrlId}`
     const normalisedTarget = target.startsWith("/")
       ? target
       : `${prefix}/${target.replace(/^\.\//, "")}`
@@ -192,7 +194,7 @@
       return
     }
     notifications.success("Table created successfully")
-    $goto(`/builder/workspace/${workspaceId}/data/table/${table._id}`)
+    $goto(`/builder/workspace/${workspaceUrlId}/data/table/${table._id}`)
   }
 
   const openCreateTable = () => {
@@ -325,7 +327,7 @@
   }
 
   const resourceLink = (favourite: WorkspaceFavourite) => {
-    const workspacePrefix = `/builder/workspace/${workspaceId}`
+    const workspacePrefix = `/builder/workspace/${workspaceUrlId}`
     const link: Record<WorkspaceResource, ResourceLinkFn> = {
       [WorkspaceResource.AUTOMATION]: (id: string) =>
         `${workspacePrefix}/automation/${id}`,

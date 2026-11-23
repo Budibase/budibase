@@ -9,6 +9,7 @@
   import CreateWorkspaceModal from "../workspace/[workspaceId]/_components/CreateWorkspaceModal.svelte"
   import type { CreateWorkspaceResponse } from "@budibase/types"
   import { sdk } from "@budibase/shared-core"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   $: goto = $gotoStore
 
@@ -23,7 +24,9 @@
     // Refresh the apps list to include the newly created app
     await workspacesStore.load()
     // Redirect to the newly created workspace
-    goto(`/builder/workspace/${event.detail.instance._id}/home`)
+    goto(
+      `/builder/workspace/${getWorkspaceUrlId(event.detail.instance._id)}/home`
+    )
   }
 </script>
 

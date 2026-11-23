@@ -1,4 +1,5 @@
 <script>
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import {
     ActionButton,
     List,
@@ -35,7 +36,7 @@
 
   const rowActionUrl = ({ automationId }) => {
     return urlHelper(
-      `/builder/workspace/${$workspaceStore.appId}/automation/${automationId}`
+      `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/automation/${automationId}`
     )
   }
 

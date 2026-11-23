@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import {
     List,
     ListItem,
@@ -81,7 +82,7 @@
           {#each appScreens as screen}
             <ListItem
               title={screen.url}
-              url={`/builder/workspace/${$workspaceStore.appId}/design/${screen._id}`}
+              url={`/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/design/${screen._id}`}
               showArrow
             />
           {/each}
@@ -98,7 +99,7 @@
               ? "var(--spectrum-global-color-gray-600)"
               : "var(--spectrum-global-color-green-600)"}
             title={automation.name}
-            url={`/builder/workspace/${$workspaceStore.appId}/automation/${automation._id}`}
+            url={`/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/automation/${automation._id}`}
             showArrow
           />
         {/each}

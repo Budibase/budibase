@@ -323,7 +323,7 @@ describe("workspace home project assignments", () => {
         dependencyFingerprint: `preview-${app._id}`,
       }
     })
-    history.replaceState({}, "", "/builder/workspace/app_dev_test/home")
+    history.replaceState({}, "", "/builder/workspace/dev_test/home")
   })
 
   afterEach(() => {
@@ -357,7 +357,7 @@ describe("workspace home project assignments", () => {
     history.replaceState(
       {},
       "",
-      "/builder/workspace/app_dev_test/home?project=project_operations&setup=project_operations"
+      "/builder/workspace/dev_test/home?project=project_operations&setup=project_operations"
     )
 
     render(WorkspaceHome)
@@ -378,7 +378,7 @@ describe("workspace home project assignments", () => {
     history.replaceState(
       {},
       "",
-      "/builder/workspace/app_dev_test/home?project=project_operations&setup=project_operations"
+      "/builder/workspace/dev_test/home?project=project_operations&setup=project_operations"
     )
 
     render(WorkspaceHome)
@@ -499,7 +499,7 @@ describe("workspace home project assignments", () => {
       history.replaceState(
         {},
         "",
-        "/builder/workspace/app_dev_test/home?project=project_operations"
+        "/builder/workspace/dev_test/home?project=project_operations"
       )
       render(WorkspaceHome)
       await tick()
@@ -555,7 +555,7 @@ describe("workspace home project assignments", () => {
       history.replaceState(
         {},
         "",
-        "/builder/workspace/app_dev_test/home?project=project_operations"
+        "/builder/workspace/dev_test/home?project=project_operations"
       )
       render(WorkspaceHome)
       await tick()
@@ -608,7 +608,7 @@ describe("workspace home project assignments", () => {
       history.replaceState(
         {},
         "",
-        "/builder/workspace/app_dev_test/home?project=project_operations"
+        "/builder/workspace/dev_test/home?project=project_operations"
       )
       render(WorkspaceHome)
       await tick()
@@ -631,7 +631,7 @@ describe("workspace home project assignments", () => {
     history.replaceState(
       {},
       "",
-      "/builder/workspace/app_dev_test/home?project=project_operations"
+      "/builder/workspace/dev_test/home?project=project_operations"
     )
     render(WorkspaceHome)
     await tick()
@@ -663,7 +663,7 @@ describe("workspace home project assignments", () => {
     history.replaceState(
       {},
       "",
-      "/builder/workspace/app_dev_test/home?project=project_operations"
+      "/builder/workspace/dev_test/home?project=project_operations"
     )
     render(WorkspaceHome)
     await tick()

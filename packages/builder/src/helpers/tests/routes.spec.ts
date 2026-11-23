@@ -6,7 +6,7 @@ import {
 describe("buildBuilderWorkspaceRoute", () => {
   it("returns the base workspace route", () => {
     const route = buildBuilderWorkspaceRoute({ applicationId: "app_123" })
-    expect(route).toBe("/builder/workspace/app_123")
+    expect(route).toBe("/builder/workspace/123")
   })
 
   it("appends additional path segments", () => {
@@ -14,7 +14,7 @@ describe("buildBuilderWorkspaceRoute", () => {
       applicationId: "app_123",
       segments: ["design", "workspaceApp_456"],
     })
-    expect(route).toBe("/builder/workspace/app_123/design/workspaceApp_456")
+    expect(route).toBe("/builder/workspace/123/design/workspaceApp_456")
   })
 
   it("ignores empty segments and trims slashes", () => {
@@ -29,7 +29,7 @@ describe("buildBuilderWorkspaceRoute", () => {
       ],
     })
     expect(route).toBe(
-      "/builder/workspace/app_123/design/workspaceApp_456/screen_789"
+      "/builder/workspace/123/design/workspaceApp_456/screen_789"
     )
   })
 })
@@ -42,7 +42,7 @@ describe("buildBuilderWorkspaceDesignRoute", () => {
       screenId: "screen_789",
     })
     expect(route).toBe(
-      "/builder/workspace/app_123/design/workspaceApp_456/screen_789"
+      "/builder/workspace/123/design/workspaceApp_456/screen_789"
     )
   })
 
@@ -54,7 +54,7 @@ describe("buildBuilderWorkspaceDesignRoute", () => {
       componentId: "component_101",
     })
     expect(route).toBe(
-      "/builder/workspace/app_123/design/workspaceApp_456/screen_789/component_101"
+      "/builder/workspace/123/design/workspaceApp_456/screen_789/component_101"
     )
   })
 })

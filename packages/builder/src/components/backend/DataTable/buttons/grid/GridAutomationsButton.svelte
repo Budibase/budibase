@@ -1,4 +1,5 @@
 <script>
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import { ActionButton, List, ListItem, Button } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { TriggerStepID } from "@/constants/backend/automations"
@@ -61,7 +62,7 @@
             ? "var(--spectrum-global-color-gray-600)"
             : "var(--spectrum-global-color-green-600)"}
           title={automation.name}
-          url={`/builder/workspace/${$workspaceStore.appId}/automation/${automation._id}`}
+          url={`/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/automation/${automation._id}`}
           showArrow
         />
       {/each}

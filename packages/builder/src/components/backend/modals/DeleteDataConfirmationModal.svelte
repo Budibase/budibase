@@ -25,6 +25,7 @@
     Query,
     UIInternalDatasource,
   } from "@budibase/types"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   $gotoStore
   $paramsStore
@@ -84,7 +85,7 @@
   ): { text: string; url: string }[] {
     return screens.map(({ url, _id }) => ({
       text: url,
-      url: `/builder/workspace/${$workspaceStore.appId}/design/${_id}`,
+      url: `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/design/${_id}`,
     }))
   }
 
@@ -120,7 +121,7 @@
         await viewsV2.delete(viewV2)
         if (isSelected) {
           goto(
-            `/builder/workspace/${$workspaceStore.appId}/data/table/${viewV2.tableId}`
+            `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/data/table/${viewV2.tableId}`
           )
         }
       } else {
@@ -159,7 +160,7 @@
       // Go back to the datasource if we are deleting the active query
       if ($queries.selectedQueryId === query._id) {
         markSkipUnsavedPrompt(query._id)
-        const appId = $workspaceStore.appId
+        const workspaceUrlId = getWorkspaceUrlId($workspaceStore.appId)
         const datasource = $datasources.list.find(
           ds => ds._id === query.datasourceId
         )
@@ -167,10 +168,10 @@
 
         if (!isRestQuery) {
           goto(
-            `/builder/workspace/${appId}/data/datasource/${query.datasourceId}`
+            `/builder/workspace/${workspaceUrlId}/data/datasource/${query.datasourceId}`
           )
         } else {
-          const base = `/builder/workspace/${appId}/apis`
+          const base = `/builder/workspace/${workspaceUrlId}/apis`
           const nextQuery = $queries.list.find(
             q => q.datasourceId === query.datasourceId && q._id !== query._id
           )

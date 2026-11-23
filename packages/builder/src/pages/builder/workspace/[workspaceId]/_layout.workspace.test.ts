@@ -13,6 +13,7 @@ import {
   workspaceStore,
 } from "@/stores/builder"
 import WorkspaceLayout from "./_layout.workspace.svelte"
+import WorkspaceRouteLayout from "./_layout.svelte"
 
 const routeMocks = vi.hoisted(() => ({
   setParams: vi.fn<(value: Record<string, string>) => void>(),
@@ -101,6 +102,18 @@ describe("Workspace initialization", () => {
     vi.mocked(initialise).mockImplementation(async () => {
       workspaceStore.update(state => ({ ...state, hasAppPackage: true }))
     })
+  })
+
+  it("decodes a shortened route ID before loading the workspace", async () => {
+    render(WorkspaceRouteLayout, { workspaceId: "dev_first" })
+
+    await waitFor(() =>
+      expect(API.fetchAppPackage).toHaveBeenCalledWith(
+        "app_dev_first",
+        "screen_first"
+      )
+    )
+    expect(get(workspaceStore).appId).toBe("app_dev_first")
   })
 
   it("retries failed hydration before synchronizing later screen changes", async () => {

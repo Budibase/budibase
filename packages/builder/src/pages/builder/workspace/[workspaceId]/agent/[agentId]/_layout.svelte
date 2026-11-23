@@ -4,7 +4,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
-  import { deploymentStore } from "@/stores/builder"
+  import { deploymentStore, workspaceStore } from "@/stores/builder"
   import * as routify from "@roxi/routify"
   import { onDestroy, onMount } from "svelte"
   import AgentChatPanel from "./AgentChatPanel.svelte"
@@ -226,7 +226,7 @@
         <div class="config-preview">
           <AgentChatPanel
             agentId={currentAgent?._id}
-            workspaceId={$params.workspaceId || ""}
+            workspaceId={$workspaceStore.appId}
           />
         </div>
       {/if}

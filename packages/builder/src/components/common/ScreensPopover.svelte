@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import {
     List,
     ListItem,
@@ -65,7 +66,7 @@
         {#each appScreens as screen}
           <ListItem
             title={screen.url}
-            url={`/builder/workspace/${$workspaceStore.appId}/design/${screen._id}`}
+            url={`/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/design/${screen._id}`}
             showArrow
           />
         {/each}

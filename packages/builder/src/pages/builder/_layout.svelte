@@ -35,6 +35,7 @@
   import SettingsModal from "@/components/settings/SettingsModal.svelte"
   import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
   import { getDefaultWorkspace } from "./defaultWorkspace"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   $isActive
   $redirect
@@ -233,7 +234,7 @@
         if (defaultWorkspace?.devId) {
           return {
             type: "redirect",
-            path: `./workspace/${defaultWorkspace.devId}/home`,
+            path: `./workspace/${getWorkspaceUrlId(defaultWorkspace.devId)}/home`,
           }
         }
       }

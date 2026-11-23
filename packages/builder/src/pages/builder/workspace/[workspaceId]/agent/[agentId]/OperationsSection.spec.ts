@@ -155,7 +155,7 @@ describe("OperationsSection", () => {
     window.history.replaceState(
       {},
       "",
-      "/builder/workspace/app_1/agent/agent-1/config?returnTo=%2Fbuilder%2Fworkspace%2Fapp_1%2Fhome%3Ftype%3Dagent"
+      "/builder/workspace/1/agent/agent-1/config?returnTo=%2Fbuilder%2Fworkspace%2F1%2Fhome%3Ftype%3Dagent"
     )
     mocks.selectedAgent.set({
       _id: "agent-1",
@@ -179,7 +179,7 @@ describe("OperationsSection", () => {
     await fireEvent.click(screen.getByText("Customer support"))
 
     expect(mocks.goto).toHaveBeenCalledWith(
-      "./operation/operation_existing?returnTo=%2Fbuilder%2Fworkspace%2Fapp_1%2Fhome%3Ftype%3Dagent"
+      "./operation/operation_existing?returnTo=%2Fbuilder%2Fworkspace%2F1%2Fhome%3Ftype%3Dagent"
     )
   })
 

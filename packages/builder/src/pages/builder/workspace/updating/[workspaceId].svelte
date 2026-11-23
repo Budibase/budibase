@@ -4,14 +4,33 @@
   import { get } from "svelte/store"
 
   import { API } from "@/api"
+  import {
+    getWorkspaceIdFromUrl,
+    getWorkspaceUrlId,
+    redirectLegacyWorkspaceUrl,
+  } from "@/helpers/workspaceUrls"
   import { workspaceStore } from "@/stores/builder"
 
   export let workspaceId: string
 
+  $: workspaceUrlId = getWorkspaceUrlId(workspaceId)
+  $: internalWorkspaceId = getWorkspaceIdFromUrl(workspaceId)
+  $: isLegacyWorkspaceUrl = workspaceUrlId !== workspaceId
+
+  $: if (isLegacyWorkspaceUrl) {
+    redirectLegacyWorkspaceUrl(workspaceId)
+  }
+
   // Set appId immediately so API calls have the correct context
   // Only update if it's different to avoid unnecessary re-renders
-  if (get(workspaceStore).appId !== workspaceId) {
-    workspaceStore.update(state => ({ ...state, appId: workspaceId }))
+  $: if (
+    !isLegacyWorkspaceUrl &&
+    get(workspaceStore).appId !== internalWorkspaceId
+  ) {
+    workspaceStore.update(state => ({
+      ...state,
+      appId: internalWorkspaceId,
+    }))
   }
 
   $params
@@ -29,4 +48,6 @@
   }
 </script>
 
-<Updating {isMigrationDone} {onMigrationDone} />
+{#if !isLegacyWorkspaceUrl}
+  <Updating {isMigrationDone} {onMigrationDone} />
+{/if}

@@ -80,7 +80,7 @@ describe("row action creation navigation", () => {
 
     await waitFor(() =>
       expect(mocks.goto).toHaveBeenCalledWith(
-        "/builder/workspace/app_1/automation/automation_1"
+        "/builder/workspace/1/automation/automation_1"
       )
     )
     expect(mocks.createRowAction).toHaveBeenCalledWith(

@@ -13,43 +13,41 @@ describe("workspace home navigation", () => {
 
   it("passes the complete home URL through the resource query", () => {
     const result = withWorkspaceHomeReturn(
-      "/builder/workspace/app_1/automation/automation_1",
-      "/builder/workspace/app_1/home?q=invoices&type=app&project=project_1&sort=name&order=asc"
+      "/builder/workspace/1/automation/automation_1",
+      "/builder/workspace/1/home?q=invoices&type=app&project=project_1&sort=name&order=asc"
     )
 
     expect(
       getWorkspaceHomeUrl("app_1", new URL(result, location.origin).search)
     ).toBe(
-      "/builder/workspace/app_1/home?q=invoices&type=app&project=project_1&sort=name&order=asc"
+      "/builder/workspace/1/home?q=invoices&type=app&project=project_1&sort=name&order=asc"
     )
   })
 
   it("keeps return URLs isolated to the current workspace", () => {
     const search = new URLSearchParams({
-      returnTo: "/builder/workspace/app_2/home?type=automation",
+      returnTo: "/builder/workspace/2/home?type=automation",
     }).toString()
 
     expect(getWorkspaceHomeUrl("app_1", `?${search}`)).toBe(
-      "/builder/workspace/app_1/home"
+      "/builder/workspace/1/home"
     )
   })
 
   it("falls back when the return URL is missing or malformed", () => {
-    expect(getWorkspaceHomeUrl("app_1", "")).toBe(
-      "/builder/workspace/app_1/home"
-    )
+    expect(getWorkspaceHomeUrl("app_1", "")).toBe("/builder/workspace/1/home")
     expect(getWorkspaceHomeUrl("app_1", "?returnTo=http://[invalid")).toBe(
-      "/builder/workspace/app_1/home"
+      "/builder/workspace/1/home"
     )
   })
 
   it("rejects external return URLs", () => {
     const search = new URLSearchParams({
-      returnTo: "https://example.com/builder/workspace/app_1/home",
+      returnTo: "https://example.com/builder/workspace/1/home",
     }).toString()
 
     expect(getWorkspaceHomeUrl("app_1", `?${search}`)).toBe(
-      "/builder/workspace/app_1/home"
+      "/builder/workspace/1/home"
     )
   })
 
@@ -57,11 +55,11 @@ describe("workspace home navigation", () => {
     window.history.replaceState(
       {},
       "",
-      "/builder/workspace/app_1/agent/agent_1?returnTo=%2Fbuilder%2Fworkspace%2Fapp_1%2Fhome%3Ftype%3Dagent%26q%3Dsupport"
+      "/builder/workspace/1/agent/agent_1?returnTo=%2Fbuilder%2Fworkspace%2F1%2Fhome%3Ftype%3Dagent%26q%3Dsupport"
     )
 
     expect(withWorkspaceHomeReturn("./operation/operation_1")).toBe(
-      "./operation/operation_1?returnTo=%2Fbuilder%2Fworkspace%2Fapp_1%2Fhome%3Ftype%3Dagent%26q%3Dsupport"
+      "./operation/operation_1?returnTo=%2Fbuilder%2Fworkspace%2F1%2Fhome%3Ftype%3Dagent%26q%3Dsupport"
     )
   })
 
@@ -75,14 +73,14 @@ describe("workspace home navigation", () => {
     window.history.replaceState(
       {},
       "",
-      "/builder/workspace/app_1/agent/agent_1/operation/operation_1?returnTo=%2Fbuilder%2Fworkspace%2Fapp_1%2Fhome%3Ftype%3Dagent%26q%3Dsupport"
+      "/builder/workspace/1/agent/agent_1/operation/operation_1?returnTo=%2Fbuilder%2Fworkspace%2F1%2Fhome%3Ftype%3Dagent%26q%3Dsupport"
     )
 
     const agentUrl = withWorkspaceHomeReturn("../../config")
     const agentSearch = new URL(agentUrl, window.location.href).search
 
     expect(getWorkspaceHomeUrl("app_1", agentSearch)).toBe(
-      "/builder/workspace/app_1/home?type=agent&q=support"
+      "/builder/workspace/1/home?type=agent&q=support"
     )
   })
 
@@ -93,7 +91,7 @@ describe("workspace home navigation", () => {
       search: "?type=agent&q=support&project=old_project",
     })
     const agentUrl = withWorkspaceHomeReturn(
-      "/builder/workspace/app_1/agent/agent_1/config",
+      "/builder/workspace/1/agent/agent_1/config",
       homeUrl
     )
 
@@ -107,23 +105,22 @@ describe("workspace home navigation", () => {
       })
     ).toEqual({
       projectId: "project_1",
-      url: "/builder/workspace/app_1/home?type=agent&q=support&project=project_1&setup=project_1",
+      url: "/builder/workspace/1/home?type=agent&q=support&project=project_1&setup=project_1",
       cleanUrl:
-        "/builder/workspace/app_1/home?type=agent&q=support&project=project_1",
+        "/builder/workspace/1/home?type=agent&q=support&project=project_1",
     })
   })
 
   it("consumes the setup marker so ordinary reloads do not reopen setup", () => {
     const request = getProjectSetupRequest({
       workspaceId: "app_1",
-      homeUrl:
-        "/builder/workspace/app_1/home?project=project_1&setup=project_1",
+      homeUrl: "/builder/workspace/1/home?project=project_1&setup=project_1",
     })
 
     expect(request).toEqual({
       projectId: "project_1",
-      url: "/builder/workspace/app_1/home?project=project_1&setup=project_1",
-      cleanUrl: "/builder/workspace/app_1/home?project=project_1",
+      url: "/builder/workspace/1/home?project=project_1&setup=project_1",
+      cleanUrl: "/builder/workspace/1/home?project=project_1",
     })
     expect(
       getProjectSetupRequest({
@@ -145,7 +142,7 @@ describe("workspace home navigation", () => {
         {},
         "",
         withWorkspaceHomeReturn(
-          "/builder/workspace/app_1/agent/agent_1/config",
+          "/builder/workspace/1/agent/agent_1/config",
           homeUrl
         )
       )
@@ -161,8 +158,8 @@ describe("workspace home navigation", () => {
         })
       ).toEqual({
         projectId: "project_1",
-        url: "/builder/workspace/app_1/home?project=project_1&setup=project_1",
-        cleanUrl: "/builder/workspace/app_1/home?project=project_1",
+        url: "/builder/workspace/1/home?project=project_1&setup=project_1",
+        cleanUrl: "/builder/workspace/1/home?project=project_1",
       })
     }
   )
@@ -170,12 +167,12 @@ describe("workspace home navigation", () => {
   it.each([
     undefined,
     "http://[invalid",
-    "https://example.com/builder/workspace/app_1/home?project=project_1&setup=project_1",
-    "/builder/workspace/app_2/home?project=project_1&setup=project_1",
-    "/builder/workspace/app_1/agent/agent_1?project=project_1&setup=project_1",
-    "/builder/workspace/app_1/home?setup=project_1",
-    "/builder/workspace/app_1/home?project=project_1",
-    "/builder/workspace/app_1/home?project=project_1&setup=project_2",
+    "https://example.com/builder/workspace/1/home?project=project_1&setup=project_1",
+    "/builder/workspace/2/home?project=project_1&setup=project_1",
+    "/builder/workspace/1/agent/agent_1?project=project_1&setup=project_1",
+    "/builder/workspace/1/home?setup=project_1",
+    "/builder/workspace/1/home?project=project_1",
+    "/builder/workspace/1/home?project=project_1&setup=project_2",
   ])("rejects an invalid project setup return context: %s", homeUrl => {
     expect(
       getProjectSetupRequest({ workspaceId: "app_1", homeUrl })

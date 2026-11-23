@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import { ActionButton, ListItem, notifications } from "@budibase/bbui"
   import { getContext } from "svelte"
   import {
@@ -72,7 +73,9 @@
         "/builder/workspace/:workspaceId/data",
         window.location.pathname
       )
-      goto(`/builder/workspace/${response.appId}/automation/${response._id}`)
+      goto(
+        `/builder/workspace/${getWorkspaceUrlId(response.appId)}/automation/${response._id}`
+      )
       notifications.success(`Automation created successfully`)
     } catch (e) {
       console.error(e)

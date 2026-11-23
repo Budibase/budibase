@@ -1,4 +1,5 @@
 <script>
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import {
     tables,
     datasources,
@@ -231,7 +232,7 @@
 <div class="nav">
   {#if !isUsersTable}
     <a
-      href={`/builder/workspace/${$workspaceStore.appId}/data/datasource/${datasource?._id}`}
+      href={`/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/data/datasource/${datasource?._id}`}
     >
       <IntegrationIcon
         integrationType={datasource?.source}

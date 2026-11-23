@@ -38,6 +38,7 @@
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
   import { bb } from "@/stores/bb"
   import type { User, UserGroup } from "@budibase/types"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   $goto
 
@@ -465,7 +466,10 @@
           allowEditRows={false}
           allowEditColumns={false}
           customRenderers={customAppTableRenderers}
-          on:click={e => $goto(`/builder/workspace/${e.detail.devId}/home`)}
+          on:click={e =>
+            $goto(
+              `/builder/workspace/${getWorkspaceUrlId(e.detail.devId)}/home`
+            )}
         >
           <div class="placeholder" slot="placeholder">
             <Heading size="S">

@@ -174,7 +174,7 @@ describe("workspace home project notes", () => {
     history.replaceState(
       {},
       "",
-      "/builder/workspace/app_dev_test/home?project=project_operations&type=app&q=missing&sort=name&order=asc"
+      "/builder/workspace/dev_test/home?project=project_operations&type=app&q=missing&sort=name&order=asc"
     )
   })
 

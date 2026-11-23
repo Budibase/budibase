@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import { goto, isActive } from "@roxi/routify"
   import type {
     ImportRestQueryInfoRequest,
@@ -534,8 +535,8 @@
       q => q.datasourceId === datasource!._id
     )
     const targetPath = firstQuery?._id
-      ? `/builder/workspace/${$workspaceStore.appId}/apis/query/${firstQuery._id}`
-      : `/builder/workspace/${$workspaceStore.appId}/apis/query/new/${datasource._id}`
+      ? `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/apis/query/${firstQuery._id}`
+      : `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/apis/query/new/${datasource._id}`
     if ($isActive(targetPath)) {
       bb.hideSettings()
       return
@@ -940,7 +941,7 @@
                 onRowClick={(dv: DynamicVariable) => {
                   bb.hideSettings()
                   $goto(
-                    `/builder/workspace/${$workspaceStore.appId}/apis/query/${dv.queryId}`
+                    `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/apis/query/${dv.queryId}`
                   )
                 }}
               />

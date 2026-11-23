@@ -1,5 +1,7 @@
+import { getWorkspaceUrlId } from "./workspaceUrls"
+
 const buildHomePath = (workspaceId: string) =>
-  `/builder/workspace/${workspaceId}/home`
+  `/builder/workspace/${getWorkspaceUrlId(workspaceId)}/home`
 
 export const buildProjectSetupHomeUrl = ({
   workspaceId,

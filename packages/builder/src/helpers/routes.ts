@@ -1,3 +1,5 @@
+import { getWorkspaceUrlId } from "./workspaceUrls"
+
 interface BuilderWorkspaceRouteOptions {
   applicationId: string
   segments?: Array<string | null | undefined>
@@ -19,7 +21,7 @@ export const buildBuilderWorkspaceRoute = ({
   const pathSegments: Array<string | null | undefined> = [
     "builder",
     "workspace",
-    applicationId,
+    getWorkspaceUrlId(applicationId),
     ...segments,
   ]
   const path = buildPath(pathSegments)

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import { getErrorMessage } from "@/helpers/errors"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
@@ -140,7 +141,7 @@
         })
         notifications.success("App created successfully")
         goto(
-          `/builder/workspace/${workspaceId}/design/${workspaceApp._id}/${newScreen._id}`
+          `/builder/workspace/${getWorkspaceUrlId(workspaceId)}/design/${workspaceApp._id}/${newScreen._id}`
         )
       } else {
         await workspaceAppStore.edit({

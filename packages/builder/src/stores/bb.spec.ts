@@ -16,7 +16,7 @@ describe("settings project setup return", () => {
     const store = new BBStore()
     store.settings("/connections/api-connections/datasource_1", {
       projectSetupReturnTo:
-        "/builder/workspace/app_1/home?project=project_1&setup=project_1",
+        "/builder/workspace/1/home?project=project_1&setup=project_1",
     })
 
     store.hideSettings()

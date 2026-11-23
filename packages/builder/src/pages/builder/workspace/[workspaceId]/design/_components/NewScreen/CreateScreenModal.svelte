@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import ScreenDetailsModal from "@/components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import TypeModal from "./TypeModal.svelte"
@@ -204,11 +205,11 @@
       // Focus on the main component for the screen type
       const mainComponent = screen.props?._children?.[0]._id
       goto(
-        `/builder/workspace/${$workspaceStore.appId}/design/${workspaceAppId}/${screen._id}/${mainComponent}`
+        `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/design/${workspaceAppId}/${screen._id}/${mainComponent}`
       )
     } else {
       goto(
-        `/builder/workspace/${$workspaceStore.appId}/design/${workspaceAppId}/${screen._id}`
+        `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/design/${workspaceAppId}/${screen._id}`
       )
     }
 

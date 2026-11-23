@@ -6,6 +6,7 @@
   import { workspacesStore, enrichedApps } from "@/stores/portal"
   import { API } from "@/api"
   import { get } from "svelte/store"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   $: goto = $gotoStore
 
@@ -35,7 +36,7 @@
       workspace => workspace.editable && workspace.devId !== deletedAppId
     )
     return nextWorkspace?.devId
-      ? `/builder/workspace/${nextWorkspace.devId}`
+      ? `/builder/workspace/${getWorkspaceUrlId(nextWorkspace.devId)}`
       : "/"
   }
 

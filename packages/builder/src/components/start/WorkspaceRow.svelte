@@ -8,6 +8,7 @@
   import { processStringSync } from "@budibase/string-templates"
   import WorkspaceContextMenuModals from "./WorkspaceContextMenuModals.svelte"
   import getWorkspaceContextMenuItems from "./getWorkspaceContextMenuItems.js"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   // Initialize Routify store and derive callable function
   $gotoStore
@@ -34,11 +35,11 @@
   }
 
   const goToBuilder = () => {
-    goto && goto(`../../workspace/${app.devId}/home`)
+    goto && goto(`../../workspace/${getWorkspaceUrlId(app.devId)}/home`)
   }
 
   const goToOverview = () => {
-    goto && goto(`../../workspace/${app.devId}/settings`)
+    goto && goto(`../../workspace/${getWorkspaceUrlId(app.devId)}/settings`)
   }
 
   const goToApp = () => {

@@ -3,12 +3,13 @@
   import {
     tables,
     datasources,
+    workspaceStore,
     sortedIntegrations as integrations,
   } from "@/stores/builder"
 
   import { hasData } from "@/stores/selectors"
   import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"
-  import { params as paramsStore, goto as gotoStore } from "@roxi/routify"
+  import { goto as gotoStore } from "@roxi/routify"
   import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal/index.svelte"
   import CreateInternalTableModal from "./_components/CreateInternalTableModal.svelte"
   import DatasourceOption from "./_components/DatasourceOption.svelte"
@@ -20,7 +21,6 @@
 
   // Capture store values for use in async callbacks (Svelte 5 compatibility)
   $: goto = $gotoStore
-  $: params = $paramsStore
 
   let internalTableModal: CreateInternalTableModal
   let externalDatasourceModal: CreateExternalDatasourceModal
@@ -32,7 +32,7 @@
     sampleDataLoading = true
 
     try {
-      await API.addSampleData(params.workspaceId)
+      await API.addSampleData($workspaceStore.appId)
       await tables.fetch()
       await datasources.fetch()
       goto("./table")

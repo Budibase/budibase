@@ -9,6 +9,7 @@ import { get } from "svelte/store"
 import { auth, navigation } from "./stores/portal"
 import { sdk, Header, ClientHeader } from "@budibase/shared-core"
 import { withProjectAssignmentNotification } from "./helpers/projectAssignmentResults"
+import { getWorkspaceUrlId } from "./helpers/workspaceUrls"
 
 const newClient = (opts?: { production?: boolean }): APIClient => {
   const client = createAPIClient({
@@ -73,7 +74,7 @@ const newClient = (opts?: { production?: boolean }): APIClient => {
       }
     },
     onMigrationDetected: workspaceId => {
-      const updatingUrl = `/builder/workspace/updating/${workspaceId}`
+      const updatingUrl = `/builder/workspace/updating/${getWorkspaceUrlId(workspaceId)}`
 
       if (window.location.pathname === updatingUrl) {
         return

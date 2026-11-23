@@ -145,7 +145,7 @@ describe("Builder store", () => {
   it("Update the previousTopNavPath value when empty", () => {
     expect(getStore().previousTopNavPath).toBeDefined()
     const dataRoute = "/builder/workspace/:workspaceId/data"
-    const dataURL = "/builder/workspace/app_dev_123/data/table/ta_users"
+    const dataURL = "/builder/workspace/dev_123/data/table/ta_users"
 
     builderStore.setPreviousTopNavPath(dataRoute, dataURL)
 
@@ -156,11 +156,11 @@ describe("Builder store", () => {
 
   it("Add in new route/path mappings and maintain existing", () => {
     const dataRoute = "/builder/workspace/:workspaceId/data"
-    const dataURL = "/builder/workspace/app_dev_123/data/table/ta_users"
+    const dataURL = "/builder/workspace/dev_123/data/table/ta_users"
 
     const designRoute = "/builder/workspace/:workspaceId/design"
     const designURL =
-      "/builder/workspace/app_dev_123/design/screen_456/screen_456-screen"
+      "/builder/workspace/dev_123/design/screen_456/screen_456-screen"
 
     builderStore.setPreviousTopNavPath(dataRoute, dataURL)
 
@@ -180,8 +180,8 @@ describe("Builder store", () => {
     expect(getStore().previousTopNavPath).toStrictEqual({})
 
     const dataRoute = "/builder/workspace/:workspaceId/data"
-    const dataURL = "/builder/workspace/app_dev_123/data/table/ta_users"
-    const updatedURL = "/builder/workspace/app_dev_123/data/table/ta_employees"
+    const dataURL = "/builder/workspace/dev_123/data/table/ta_users"
+    const updatedURL = "/builder/workspace/dev_123/data/table/ta_employees"
 
     builderStore.setPreviousTopNavPath(dataRoute, dataURL)
 

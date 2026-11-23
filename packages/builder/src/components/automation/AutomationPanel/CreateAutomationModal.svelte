@@ -12,6 +12,7 @@
     Label,
   } from "@budibase/bbui"
   import { TriggerStepID } from "@/constants/backend/automations"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   $: goto = $gotoStore
 
@@ -46,7 +47,9 @@
         webhookModal.show()
       }
       notifications.success(`Automation ${name} created`)
-      goto(`/builder/workspace/${workspaceId}/automation/${automation._id}`)
+      goto(
+        `/builder/workspace/${getWorkspaceUrlId(workspaceId)}/automation/${automation._id}`
+      )
     } catch (error) {
       notifications.error(getErrorMessage(error) || "Error creating automation")
     }

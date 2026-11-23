@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import { goto as gotoStore, beforeUrlChange } from "@roxi/routify"
   import { flags, workspaceStore } from "@/stores/builder"
   import {
@@ -671,7 +672,9 @@
       if (isNew && redirectIfNew && !saveAndClose) {
         markSkipUnsavedPrompt(_id)
         workspaceConnections.discardDraft()
-        goto(`/builder/workspace/${$workspaceStore.appId}/apis/query/${_id}`)
+        goto(
+          `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/apis/query/${_id}`
+        )
         return { ok: true }
       }
 

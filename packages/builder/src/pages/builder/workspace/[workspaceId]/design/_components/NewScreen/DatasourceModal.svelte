@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
   import { Body, ModalContent, Layout, Link } from "@budibase/bbui"
   import {
     workspaceStore,
@@ -81,7 +82,7 @@
 
   let dataUrl = ""
   $: dataUrl = $workspaceStore.appId
-    ? `/builder/workspace/${$workspaceStore.appId}/data`
+    ? `/builder/workspace/${getWorkspaceUrlId($workspaceStore.appId)}/data`
     : ""
 </script>
 

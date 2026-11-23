@@ -13,6 +13,7 @@
   import { workspacesStore, sortBy } from "@/stores/portal/workspaces"
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
   import type { EnrichedWorkspace } from "@/types"
+  import { getWorkspaceUrlId } from "@/helpers/workspaceUrls"
 
   // Manually subscribe - https://github.com/roxiness/routify/issues/563
   $goto
@@ -99,7 +100,7 @@
 
   const getWorkspaceUrl = (app: EnrichedWorkspace) => {
     return app.editable
-      ? `/builder/workspace/${app.devId}/home`
+      ? `/builder/workspace/${getWorkspaceUrlId(app.devId)}/home`
       : `/app${app.url}`
   }
 
