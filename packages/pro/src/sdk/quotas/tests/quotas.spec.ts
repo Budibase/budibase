@@ -430,7 +430,7 @@ describe("quotas", () => {
       })
     })
 
-    it("preserves updates from direct setters alongside action increments", async () => {
+    it("preserves a direct usage update alongside an action increment", async () => {
       await config.doInTenant(async () => {
         await Promise.all([
           db.quotas.setUsage(
@@ -438,16 +438,10 @@ describe("quotas", () => {
             StaticQuotaName.CREATORS,
             QuotaUsageType.STATIC
           ),
-          db.quotas.setUsagePerApp(
-            { app_1: 4 },
-            StaticQuotaName.ROWS,
-            QuotaUsageType.STATIC
-          ),
           quotas.increment(MonthlyQuotaName.ACTIONS, QuotaUsageType.MONTHLY),
         ])
         const usage = await db.quotas.getQuotaUsage()
-        expect(usage.usageQuota).toMatchObject({ creators: 3, rows: 4 })
-        expect(usage.apps?.app_1.usageQuota.rows).toBe(4)
+        expect(usage.usageQuota.creators).toBe(3)
         expect(
           usage.monthly[db.quotas.utils.getCurrentMonthString()].actions
         ).toBe(1)

@@ -109,34 +109,6 @@ export const setUsage = async (
   return setAllUsage({ name, type, values: { total: value } })
 }
 
-export const setUsagePerApp = async (
-  appValues: { [key: string]: number },
-  name: MeteredQuotaName,
-  type: QuotaUsageType
-) =>
-  withUsageLock(async () => {
-    const db = getDB()
-    let quotaUsage = await readQuotaUsage()
-    const total = Object.values(appValues).reduce((sum, num) => sum + num, 0)
-    for (let [appId, value] of Object.entries(appValues)) {
-      quotaUsage = coreUsageUpdate(
-        quotaUsage,
-        name,
-        type,
-        {
-          total,
-          app: value,
-        },
-        {
-          appId,
-        }
-      )
-    }
-    const response = await db.put(quotaUsage)
-    quotaUsage._rev = response.rev
-    return quotaUsage
-  })
-
 const setBreakdown = (
   monthUsage: MonthlyUsage,
   name: MonthlyQuotaName,

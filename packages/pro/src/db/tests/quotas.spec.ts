@@ -53,26 +53,6 @@ describe("quotas", () => {
     })
   })
 
-  describe("setUsagePerApp", () => {
-    it("sets the usage for two apps", async () => {
-      await config.doInTenant(async () => {
-        await quotas.setUsagePerApp(
-          {
-            app_1: 3,
-            app_2: 4,
-          },
-          StaticQuotaName.ROWS,
-          QuotaUsageType.STATIC
-        )
-        const usage = await getQuotaUsage()
-        expect(usage).toBeDefined()
-        expect(usage.apps["app_1"].usageQuota[StaticQuotaName.ROWS]).toBe(3)
-        expect(usage.apps["app_2"].usageQuota[StaticQuotaName.ROWS]).toBe(4)
-        expect(usage.usageQuota[StaticQuotaName.ROWS]).toBe(7)
-      })
-    })
-  })
-
   describe("setAllUsage", () => {
     it("sets the usage", async () => {
       await config.doInTenant(async () => {
