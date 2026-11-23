@@ -161,9 +161,11 @@ const findInlineCode = ({
 const scriptArgumentIndexes = ({
   command,
   args,
+  originalArgs,
 }: {
   command: string
   args: string[]
+  originalArgs: string[]
 }): number[] => {
   const executable = path.basename(command).toLowerCase()
   const wrapper = WRAPPERS.get(executable)
@@ -177,9 +179,13 @@ const scriptArgumentIndexes = ({
     if (result.kind !== "nested") {
       return []
     }
+    if (findHBSBlocks(originalArgs[result.index]).length > 0) {
+      throw new Error(COMMAND_BINDINGS_ERROR)
+    }
     const nestedIndexes = scriptArgumentIndexes({
       command: args[result.index],
       args: args.slice(result.index + 1),
+      originalArgs: originalArgs.slice(result.index + 1),
     })
     return nestedIndexes.map(index => result.index + 1 + index)
   }
@@ -199,7 +205,11 @@ const processArgs = ({
 }) => {
   const parsedArgs = parseArgs(args)
   const processedArgs = parsedArgs.map(arg => processStringSync(arg, context))
-  const codeIndexes = scriptArgumentIndexes({ command, args: processedArgs })
+  const codeIndexes = scriptArgumentIndexes({
+    command,
+    args: processedArgs,
+    originalArgs: parsedArgs,
+  })
   if (
     codeIndexes.some(
       index =>

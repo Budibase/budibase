@@ -1,7 +1,9 @@
+import execa from "execa"
 import fs from "fs"
 import os from "os"
 import path from "path"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { run as runBash } from "../../steps/bash"
 import * as automation from "../../index"
 import { Table } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -233,6 +235,31 @@ describe("Execute Bash Automations", () => {
     expect(result.steps[0].outputs.success).toEqual(false)
     expect(fs.existsSync(injectedPath)).toEqual(false)
   })
+
+  it.each([
+    { command: "env", prefix: ["-S"] },
+    { command: "timeout", prefix: ["5", "env", "-S"] },
+  ])(
+    "should reject a bound executable inside $command before execution",
+    async input => {
+      const execute = jest.spyOn(execa, "sync").mockImplementation(() => {
+        throw new Error("Unexpected subprocess")
+      })
+      try {
+        const result = await runBash({
+          inputs: {
+            command: input.command,
+            args: [...input.prefix, "{{ executable }}"],
+          },
+          context: { executable: "echo" },
+        })
+        expect(result.response).toContain("Command bindings are not supported")
+        expect(execute).not.toHaveBeenCalled()
+      } finally {
+        execute.mockRestore()
+      }
+    }
+  )
 
   it("should reject a script binding when a dynamic option selects bash -c", async () => {
     const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
