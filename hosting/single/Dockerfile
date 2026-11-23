@@ -39,6 +39,7 @@ COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
 FROM $BASEIMG AS runner
 ARG TARGETARCH
 ENV TARGETARCH=$TARGETARCH
+ENV COUCHDB_USER="" COUCHDB_PASSWORD=""
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
 # e.g. docker build --build-arg TARGETBUILD=aas ....
 ARG TARGETBUILD=single

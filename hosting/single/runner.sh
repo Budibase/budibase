@@ -263,6 +263,11 @@ if [[ -f "${DATA_DIR}/.env" ]]; then
     set +a
 fi
 
+persisted_default_couch_admin="false"
+if [[ -f "${DATA_DIR}/.env" && "${COUCHDB_USER}" == "admin" && "${COUCHDB_PASSWORD}" == "admin" ]]; then
+    persisted_default_couch_admin="true"
+fi
+
 # Sync aliases before randomizing to avoid overwriting user-provided underscore vars.
 sync_couch_env_aliases
 
@@ -354,6 +359,20 @@ END {
     mv "${temp_file}" "${env_file}"
 }
 
+remove_default_couch_admin() {
+    local ini_file temp_file
+    for ini_file in /opt/couchdb/etc/local.d/*.ini; do
+        [[ -f "${ini_file}" ]] || continue
+        temp_file="$(mktemp)"
+        awk '
+/^\[[^]]+\]/ { in_admins = ($0 ~ /^\[admins\][[:space:]]*$/) }
+!(in_admins && /^[[:space:]]*admin[[:space:]]*=/) { print }
+' "${ini_file}" > "${temp_file}" || exit 1
+        cat "${temp_file}" > "${ini_file}" || exit 1
+        rm -f "${temp_file}"
+    done
+}
+
 ensure_env_var "LITELLM_DB_NAME" "${LITELLM_DB_NAME}"
 ensure_env_var "LITELLM_DB_USER" "${LITELLM_DB_USER}"
 ensure_env_var "LITELLM_DB_PASSWORD" "${LITELLM_DB_PASSWORD}"
@@ -373,10 +392,8 @@ if [[ "${runtime_litellm_internal_db_set}" == "true" ]]; then
     export LITELLM_INTERNAL_DB="${runtime_litellm_internal_db}"
 fi
 
-# A runtime-provided secret only overrides the persisted value when it actually
-# differs from it. This lets users rotate any secret by passing a new value on a
-# later boot, while ignoring image-baked defaults (e.g. the base image always sets
-# COUCHDB_USER/PASSWORD) that already match what is persisted.
+# A runtime-provided secret only overrides the persisted value when it differs.
+# This lets users rotate a secret on a later boot without rewriting unchanged values.
 couch_creds_updated="false"
 for var in "${!runtime_secret_values[@]}"; do
     if [[ "${runtime_secret_values[$var]}" == "${!var}" ]]; then
@@ -389,9 +406,30 @@ for var in "${!runtime_secret_values[@]}"; do
     fi
 done
 
+if [[ "${COUCHDB_USER}" == "admin" && "${COUCHDB_PASSWORD}" == "admin" &&
+      -z "${runtime_secret_values[COUCHDB_USER]+x}" &&
+      -z "${runtime_secret_values[COUCHDB_PASSWORD]+x}" ]]; then
+    export COUCHDB_USER="$(uuidgen | tr -d '-')"
+    export COUCHDB_PASSWORD="$(uuidgen | tr -d '-')"
+    export COUCH_DB_USER="${COUCHDB_USER}"
+    export COUCH_DB_PASSWORD="${COUCHDB_PASSWORD}"
+    upsert_env_var "COUCHDB_USER" "${COUCHDB_USER}"
+    upsert_env_var "COUCHDB_PASSWORD" "${COUCHDB_PASSWORD}"
+    couch_creds_updated="true"
+    echo "Rotated inherited CouchDB admin credentials"
+elif [[ "${COUCHDB_USER}" == "admin" && "${COUCHDB_PASSWORD}" == "admin" ]]; then
+    echo "WARNING: CouchDB is using explicitly configured admin/admin credentials" >&2
+fi
+
+if [[ "${persisted_default_couch_admin}" == "true" &&
+      ( "${COUCHDB_USER}" != "admin" || "${COUCHDB_PASSWORD}" != "admin" ) ]]; then
+    remove_default_couch_admin
+fi
+
 # If the CouchDB credentials changed, rebuild and persist the derived internal URL.
 if [[ "${couch_creds_updated}" == "true" ]]; then
-    sync_couch_env_aliases
+    export COUCH_DB_USER="${COUCHDB_USER}"
+    export COUCH_DB_PASSWORD="${COUCHDB_PASSWORD}"
     repair_internal_couch_url
     upsert_env_var "COUCH_DB_URL" "${COUCH_DB_URL}"
 fi

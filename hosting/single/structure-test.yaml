@@ -288,6 +288,10 @@ metadataTest:
       value: "--no-node-snapshot"
     - key: "TARGETBUILD"
       value: "single"
+    - key: "COUCHDB_USER"
+      value: ""
+    - key: "COUCHDB_PASSWORD"
+      value: ""
     - key: "BUDIBASE_VERSION"
       value: "^\\d+\\.\\d+\\.\\d+"
       isRegex: true
