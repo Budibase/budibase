@@ -3,6 +3,7 @@ import type {
   FetchAgentLogsResponse,
   AgentLogRequestDetail,
   AgentLogSession,
+  AgentLogSessionExport,
   UserCtx,
 } from "@budibase/types"
 import { Duration, HTTPError } from "@budibase/backend-core"
@@ -127,10 +128,14 @@ export async function fetchAgentLogs(
 }
 
 export async function fetchAgentLogSession(
-  ctx: UserCtx<void, AgentLogSession | null>
+  ctx: UserCtx<
+    void,
+    AgentLogSession | null,
+    { agentId: string; sessionId: string }
+  >
 ) {
-  const { agentId } = ctx.params
-  const { sessionId, environment } = ctx.query as Record<string, string>
+  const { agentId, sessionId } = ctx.params
+  const { environment } = ctx.query as Record<string, string>
   ctx.body = await sdk.ai.agentLogs.fetchSessionDetail(
     agentId,
     sessionId,
@@ -138,9 +143,33 @@ export async function fetchAgentLogSession(
   )
 }
 
-export async function fetchAgentLogDetail(
-  ctx: UserCtx<void, AgentLogRequestDetail>
+export async function exportAgentLogSession(
+  ctx: UserCtx<
+    void,
+    AgentLogSessionExport | null,
+    { agentId: string; sessionId: string }
+  >
 ) {
-  const { agentId, requestId } = ctx.params
-  ctx.body = await sdk.ai.agentLogs.fetchRequestDetail(agentId, requestId)
+  const { agentId, sessionId } = ctx.params
+  const { environment } = ctx.query as Record<string, string>
+  ctx.body = await sdk.ai.agentLogs.exportSession(
+    agentId,
+    sessionId,
+    sanitizeEnvironmentQuery(environment)
+  )
+}
+
+export async function fetchAgentLogDetail(
+  ctx: UserCtx<
+    void,
+    AgentLogRequestDetail,
+    { agentId: string; sessionId: string; requestId: string }
+  >
+) {
+  const { agentId, sessionId, requestId } = ctx.params
+  ctx.body = await sdk.ai.agentLogs.fetchRequestDetail({
+    agentId,
+    sessionId,
+    requestId,
+  })
 }

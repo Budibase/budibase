@@ -1,0 +1,23 @@
+suite: litellm deployment
+templates:
+  - templates/litellm-service-deployment.yaml
+release:
+  name: budibase
+tests:
+  - it: should include a checksum of the LiteLLM configuration
+    set:
+      services.litellm.enabled: true
+      services.litellm.config: first-config
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["checksum/litellm-config"]
+          value: 45e920513466a6b8a00a3c0ecb931746fa48ba526674b8a6cebb0182d6368faa
+
+  - it: should change the checksum when the LiteLLM configuration changes
+    set:
+      services.litellm.enabled: true
+      services.litellm.config: second-config
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["checksum/litellm-config"]
+          value: 1e473e8871252477d4e0797aa615670dcfd70ded2b6926d4797c36f28850fedf

@@ -9,6 +9,7 @@ import {
   StaticQuotaName,
 } from "@budibase/types"
 import type { Database, Document, Row, Table } from "@budibase/types"
+import { pageAllDocs } from "../../../db/pageAllDocs"
 import { getRowParams } from "../../../db/utils"
 
 const ROW_PAGE_SIZE = 1000
@@ -161,29 +162,11 @@ export const seedTableRows = async ({
   const sourceDb = context.getWorkspaceDB()
   await context.doInWorkspaceContext(prodWorkspaceId, async () => {
     const destinationDb = context.getWorkspaceDB()
-    let startAfter: string | undefined
-
-    while (true) {
-      const response = await sourceDb.allDocs<Row>(
-        getRowParams(tableId, null, {
-          include_docs: true,
-          limit: ROW_PAGE_SIZE + (startAfter ? 1 : 0),
-          ...(startAfter ? { startkey: startAfter } : {}),
-        })
-      )
-      // Filter the cursor instead of skipping one result: it may have been
-      // deleted since the preceding page was read.
-      const page = response.rows
-        .filter(row => row.id !== startAfter)
-        .slice(0, ROW_PAGE_SIZE)
-      if (!page.length) {
-        break
-      }
-      startAfter = page[page.length - 1].id
-      const rows = page.flatMap(({ doc }) =>
-        doc && !doc._deleted ? [doc] : []
-      )
-
+    for await (const rows of pageAllDocs<Row>({
+      db: sourceDb,
+      params: getRowParams(tableId),
+      pageSize: ROW_PAGE_SIZE,
+    })) {
       for (const batch of chunk(rows, ROW_CHUNK_SIZE)) {
         const missing = await findMissingRows({
           db: destinationDb,
@@ -195,10 +178,6 @@ export const seedTableRows = async ({
         const stripped = missing.map(({ _rev, _attachments, ...row }) => row)
         const sanitized = stripIgnoreTimezoneSuffix({ rows: stripped, table })
         await writeRows({ db: destinationDb, rows: sanitized, table })
-      }
-
-      if (page.length < ROW_PAGE_SIZE) {
-        break
       }
     }
     const autoColumnState = await destinationDb.tryGet<Document>(

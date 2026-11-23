@@ -30,8 +30,20 @@ const mockWebhookState: Record<MockProvider, MockPostEphemeralResult> = {
 }
 const mockChatOptions: ChatOptions[] = []
 
-const toMessageText = (value: unknown) =>
-  typeof value === "string" ? value : JSON.stringify(value)
+const toMessageText = (value: unknown) => {
+  if (typeof value === "string") {
+    return value
+  }
+  if (
+    value &&
+    typeof value === "object" &&
+    "markdown" in value &&
+    typeof value.markdown === "string"
+  ) {
+    return value.markdown
+  }
+  return JSON.stringify(value)
+}
 
 const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
   !!value &&
