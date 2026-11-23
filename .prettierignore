@@ -13,7 +13,6 @@ packages/pro/coverage
 !**/bson-polyfills.ivm.bundle.js
 **/*.hbs
 packages/worker/src/constants/templates/tests/
-.github
 .vscode
 examples
 i18n

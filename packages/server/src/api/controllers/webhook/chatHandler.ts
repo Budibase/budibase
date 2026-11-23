@@ -724,7 +724,7 @@ export const handleChatMessage = async ({
 
     if (
       incomingAttachments.length &&
-      !sdk.ai.knowledgeBase.isGeminiFileSearchConfigured()
+      !(await sdk.ai.knowledgeBase.isGeminiFileSearchConfigured())
     ) {
       await reply(
         "I can't process file attachments because Gemini File Search isn't enabled. Please ask your Budibase administrator to enable it."
