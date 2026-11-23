@@ -10,31 +10,41 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.context,
       getWorkspaceId: jest.fn(() => "app_1"),
       getTenantId: jest.fn(() => "tenant_1"),
+      getWorkspaceDB: jest.fn(),
     },
   }
 })
 
+import { context } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { licensing } from "@budibase/pro"
 import {
   ApprovalToolResultStatus,
+  BasicOperator,
   ConstantQuotaName,
   EscalationNotificationChannel,
   EscalationSource,
+  FieldType,
   ResolutionStrategy,
+  ToolAction,
+  ToolType,
   type AgentOperation,
   type AgentOperationApprovalPolicy,
   type ApprovalPolicyExpiry,
+  type Query,
 } from "@budibase/types"
 import { cloneDeep } from "lodash"
+import sdk from "../../.."
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
 import { initProMocks } from "../../../../tests/utilities/mocks/pro"
+import { basicQuery, basicTable } from "../../../../tests/utilities/structures"
 import { createEscalationGateRuntime } from "./escalationGate"
 
 initProMocks()
 
 const mockCreateEscalation = escalationProcessor.create as jest.Mock
+const mockGetWorkspaceDB = context.getWorkspaceDB as jest.Mock
 
 const operation: AgentOperation = {
   id: "operation_1",
@@ -89,6 +99,33 @@ describe("createEscalationGateRuntime", () => {
     mockCreateEscalation
       .mockReset()
       .mockResolvedValue({ escalationId: "esc_1" })
+  })
+
+  it("persists the session metadata for a later resume", async () => {
+    const sessionMetadata = {
+      asset: { type: "agent" as const, id: "agent_1", label: "Support agent" },
+      triggeredBy: { type: "user" as const, label: "Test User" },
+    }
+    const runtime = buildRuntime()
+
+    await context.doInPlatformActionSessionContext(
+      {
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        ...sessionMetadata,
+      },
+      () =>
+        runtime.intercept(
+          { workflow_id: "test-release.yml", inputs: {} },
+          { toolCallId: "call_1", messages: [] }
+        )
+    )
+
+    expect(mockCreateEscalation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: expect.objectContaining({ sessionMetadata }),
+      })
+    )
   })
 
   it("persists self-contained reviewer context for the frozen tool call", async () => {
@@ -488,6 +525,26 @@ describe("policy snapshot", () => {
     expect(escalationProcessor.create).not.toHaveBeenCalled()
   })
 
+  it("returns unavailable and raises nothing when the rule's policy no longer exists", async () => {
+    const result = await createEscalationGateRuntime({
+      agentId: "agent_1",
+      operation: { ...operation, approvalPolicies: [] },
+      toolName: "book_meeting",
+      sourceId: "automation_1",
+      rules: [{ policyId: "policy_deleted" }],
+      gateContext: {
+        sessionId: "session_1",
+        getMessages: () => [],
+        getRequestId: () => undefined,
+      },
+    }).intercept({ title: "Planning" }, { toolCallId: "call_1" })
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: ApprovalToolResultStatus.UNAVAILABLE })
+    )
+    expect(escalationProcessor.create).not.toHaveBeenCalled()
+  })
+
   it("never expires when the policy sets no duration", async () => {
     await gateFor({
       id: "policy_1",
@@ -590,5 +647,295 @@ describe("policy snapshot", () => {
 
       expect(createInput().durationMs).toEqual(90 * DAY_MS)
     })
+  })
+})
+
+describe("row write defaults", () => {
+  const table = basicTable(undefined, {
+    _id: "ta_1",
+    schema: {
+      category: {
+        type: FieldType.STRING,
+        name: "category",
+        default: "RESTRICTED",
+      },
+    },
+  })
+
+  const buildRuntime = ({
+    action,
+    reviewParameters,
+  }: {
+    action: ToolAction
+    reviewParameters?: string[]
+  }) =>
+    createEscalationGateRuntime({
+      agentId: "agent_1",
+      operation,
+      toolName: `ta_1_${action}`,
+      readableName: `TestTable.${action}`,
+      sourceId: "ta_1",
+      action,
+      argsKey: "data",
+      rules: [
+        {
+          policyId: "policy_1",
+          conditions: [
+            {
+              field: "category",
+              operator: BasicOperator.EQUAL,
+              value: "RESTRICTED",
+              type: FieldType.STRING,
+            },
+          ],
+          reviewParameters,
+        },
+      ],
+      gateContext: {
+        sessionId: "session_1",
+        getMessages: () => [],
+        getRequestId: () => undefined,
+      },
+    })
+
+  let getTable: jest.SpyInstance
+  let findRow: jest.SpyInstance
+
+  beforeEach(() => {
+    mockCreateEscalation
+      .mockReset()
+      .mockResolvedValue({ escalationId: "esc_1" })
+    getTable = jest.spyOn(sdk.tables, "getTable").mockResolvedValue(table)
+    findRow = jest.spyOn(sdk.rows, "find").mockResolvedValue({
+      _id: "ro_1",
+      name: "Review",
+      category: "PUBLIC",
+    })
+  })
+
+  afterEach(() => {
+    getTable.mockRestore()
+    findRow.mockRestore()
+  })
+
+  it.each([
+    ["leaves out", { name: "Review" }],
+    ["sends blank", { name: "Review", category: "" }],
+  ])(
+    "requires approval when a default fills a field the agent %s",
+    async (_, data) => {
+      const result = await buildRuntime({
+        action: ToolAction.CREATE_ROW,
+      }).intercept({ data }, { toolCallId: "call_1" })
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: ApprovalToolResultStatus.PENDING_APPROVAL,
+        })
+      )
+    }
+  )
+
+  it("requires approval when an update blanks a field that has a default", async () => {
+    const result = await buildRuntime({
+      action: ToolAction.UPDATE_ROW,
+    }).intercept(
+      { rowId: "ro_1", rowRev: "1-test", data: { category: "" } },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        status: ApprovalToolResultStatus.PENDING_APPROVAL,
+      })
+    )
+  })
+
+  it("lets a value the agent sends override the default", async () => {
+    const result = await buildRuntime({
+      action: ToolAction.CREATE_ROW,
+    }).intercept(
+      { data: { name: "Review", category: "PUBLIC" } },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toBeUndefined()
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
+  })
+
+  it("shows reviewers the value a default filled in", async () => {
+    await buildRuntime({
+      action: ToolAction.CREATE_ROW,
+      reviewParameters: ["name", "category"],
+    }).intercept({ data: { name: "Review" } }, { toolCallId: "call_1" })
+
+    const [input] = mockCreateEscalation.mock.calls[0]
+    expect(input.reviewContext.parameters).toEqual([
+      { name: "name", value: "Review" },
+      { name: "category", value: "RESTRICTED" },
+    ])
+  })
+
+  it("refuses without raising an approval when the row to update can't be found", async () => {
+    findRow.mockRejectedValue(new Error("Row not found"))
+
+    const result = await buildRuntime({
+      action: ToolAction.UPDATE_ROW,
+    }).intercept(
+      { rowId: "ro_missing", rowRev: "1-test", data: { category: "PUBLIC" } },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: ApprovalToolResultStatus.UNAVAILABLE })
+    )
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
+  })
+
+  it("refuses without raising an approval when a rule's column no longer exists", async () => {
+    const { category: _deleted, ...schema } = table.schema
+    getTable.mockResolvedValue({ ...table, schema })
+
+    const result = await buildRuntime({
+      action: ToolAction.CREATE_ROW,
+    }).intercept(
+      { data: { name: "Review", category: "RESTRICTED" } },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: ApprovalToolResultStatus.UNAVAILABLE })
+    )
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
+  })
+})
+
+describe("query parameter defaults", () => {
+  const queryWithDefault = (fallback: string): Query => ({
+    ...basicQuery("datasource_1"),
+    _id: "query_1",
+    parameters: [{ name: "qaWho", default: fallback }],
+  })
+
+  const buildRuntime = ({
+    reviewParameters,
+  }: { reviewParameters?: string[] } = {}) =>
+    createEscalationGateRuntime({
+      agentId: "agent_1",
+      operation,
+      toolName: "rest_qa_who",
+      readableName: "QA who",
+      sourceId: "query_1",
+      sourceType: ToolType.REST_QUERY,
+      rules: [
+        {
+          policyId: "policy_1",
+          conditions: [
+            {
+              field: "qaWho",
+              operator: BasicOperator.EQUAL,
+              value: "RESTRICTED",
+              type: FieldType.STRING,
+            },
+          ],
+          reviewParameters,
+        },
+      ],
+      gateContext: {
+        sessionId: "session_1",
+        getMessages: () => [],
+        getRequestId: () => undefined,
+      },
+    })
+
+  const tryGet = jest.fn()
+  let getEnvironmentVariables: jest.SpyInstance
+
+  beforeEach(() => {
+    mockCreateEscalation
+      .mockReset()
+      .mockResolvedValue({ escalationId: "esc_1" })
+    tryGet.mockReset().mockResolvedValue(queryWithDefault("RESTRICTED"))
+    mockGetWorkspaceDB.mockReturnValue({ tryGet })
+    getEnvironmentVariables = jest
+      .spyOn(context, "getEnvironmentVariables")
+      .mockReturnValue({ QA_WHO: "RESTRICTED" })
+  })
+
+  afterEach(() => {
+    mockGetWorkspaceDB.mockReset()
+    getEnvironmentVariables.mockRestore()
+  })
+
+  it.each([
+    ["leaves out", {}],
+    ["sends blank", { qaWho: "" }],
+  ])(
+    "requires approval when a default fills a parameter the agent %s",
+    async (_, input) => {
+      const result = await buildRuntime().intercept(input, {
+        toolCallId: "call_1",
+      })
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: ApprovalToolResultStatus.PENDING_APPROVAL,
+        })
+      )
+    }
+  )
+
+  it("lets a value the agent sends override the default", async () => {
+    const result = await buildRuntime().intercept(
+      { qaWho: "PUBLIC" },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toBeUndefined()
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
+  })
+
+  it("shows reviewers the value a default filled in", async () => {
+    await buildRuntime({ reviewParameters: ["qaWho"] }).intercept(
+      {},
+      { toolCallId: "call_1" }
+    )
+
+    const [input] = mockCreateEscalation.mock.calls[0]
+    expect(input.reviewContext.parameters).toEqual([
+      { name: "qaWho", value: "RESTRICTED" },
+    ])
+  })
+
+  it("matches on a resolved environment variable default but shows reviewers the binding", async () => {
+    tryGet.mockResolvedValue(queryWithDefault("{{ env.QA_WHO }}"))
+
+    const result = await buildRuntime({
+      reviewParameters: ["qaWho"],
+    }).intercept({}, { toolCallId: "call_1" })
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        status: ApprovalToolResultStatus.PENDING_APPROVAL,
+      })
+    )
+    const [input] = mockCreateEscalation.mock.calls[0]
+    expect(input.reviewContext.parameters).toEqual([
+      { name: "qaWho", value: "{{ env.QA_WHO }}" },
+    ])
+  })
+
+  it("refuses without raising an approval when the query can't be found", async () => {
+    tryGet.mockResolvedValue(undefined)
+
+    const result = await buildRuntime().intercept(
+      { qaWho: "PUBLIC" },
+      { toolCallId: "call_1" }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: ApprovalToolResultStatus.UNAVAILABLE })
+    )
+    expect(mockCreateEscalation).not.toHaveBeenCalled()
   })
 })

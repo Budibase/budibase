@@ -1,4 +1,4 @@
-import { env } from "@budibase/backend-core"
+import { blacklist, env, setEnv as setCoreEnv } from "@budibase/backend-core"
 import { CouchDBIntegration } from "../couchdb"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -17,6 +17,18 @@ function query(data?: Record<string, any>): { json: string } {
 
 describe("CouchDB Integration", () => {
   let couchdb: CouchDBIntegration
+  let resetBlacklistEnv: () => void
+
+  // The test CouchDB runs on loopback, which the default blacklist blocks.
+  beforeAll(async () => {
+    resetBlacklistEnv = setCoreEnv({ BLACKLIST_IPS: "" })
+    await blacklist.refreshBlacklist()
+  })
+
+  afterAll(async () => {
+    resetBlacklistEnv()
+    await blacklist.refreshBlacklist()
+  })
 
   beforeEach(() => {
     couchdb = new CouchDBIntegration({
@@ -83,5 +95,36 @@ describe("CouchDB Integration", () => {
 
     const docs = await couchdb.read(query())
     expect(docs).toBeEmpty()
+  })
+
+  it("rejects document IDs that escape the database path", async () => {
+    await expect(
+      couchdb.get({ id: "_design/../../_session" })
+    ).rejects.toMatchObject({ status: 400 })
+  })
+})
+
+describe("CouchDB Integration with the default blacklist", () => {
+  it("does not connect to the cloud metadata address", async () => {
+    const couchdb = new CouchDBIntegration({
+      url: "http://user:password@169.254.169.254",
+      database: couchSafeID(),
+    })
+
+    expect(await couchdb.testConnection()).toEqual({
+      connected: false,
+      error: "URL is blocked or could not be resolved safely.",
+    })
+  })
+
+  it("does not connect to the internal CouchDB", async () => {
+    const couchdb = new CouchDBIntegration({
+      url: env.COUCH_DB_URL,
+      database: couchSafeID(),
+    })
+
+    await expect(couchdb.read(query())).rejects.toThrow(
+      "URL is blocked or could not be resolved safely."
+    )
   })
 })

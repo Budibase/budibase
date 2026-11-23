@@ -23,6 +23,7 @@ import api from "./api"
 import { loadTemplateConfig } from "./constants/templates"
 import * as db from "./db"
 import env from "./environment"
+import { getSessionCookieKey } from "./sessionCookieKey"
 
 db.init()
 
@@ -44,7 +45,7 @@ bootstrap()
 
 const app: Application = new Application()
 
-app.keys = ["secret", "key"]
+app.keys = [getSessionCookieKey(coreEnv.JWT_SECRET)]
 app.proxy = true
 
 // set up top level koa middleware

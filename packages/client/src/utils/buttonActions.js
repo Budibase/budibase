@@ -373,7 +373,8 @@ const exportDataHandler = async action => {
         rows,
         type,
         columns,
-        delimiter
+        delimiter,
+        customHeaders
       )
       download(
         new Blob([cleanedRows], { type: "text/plain" }),

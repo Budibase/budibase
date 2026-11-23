@@ -12,26 +12,40 @@ import {
   RestAuthType,
   SharePointScopeMode,
 } from "@budibase/types"
-import environment, { setEnv } from "../../../../environment"
+import environment from "../../../../environment"
+import sdk from "../../../../sdk"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
 import * as knowledgeSourceSyncQueue from "../../../../sdk/workspace/ai/rag/sources/knowledgeSourceSyncQueue"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
+const mockGuardGeminiFileSearchConfigured = jest.fn()
+const mockIsGeminiFileSearchConfigured = jest.fn()
+
+jest.mock("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  >("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  return {
+    ...actual,
+    guardGeminiFileSearchConfigured: (...args: []) =>
+      mockGuardGeminiFileSearchConfigured(...args),
+    isGeminiFileSearchConfigured: (...args: []) =>
+      mockIsGeminiFileSearchConfigured(...args),
+  }
+})
+
 describe("agent files", () => {
   const config = new TestConfiguration()
-  let cleanup: ReturnType<typeof setEnv> | undefined
   let mockAgent: MockAgent
 
   beforeAll(() => {
-    cleanup = setEnv({ GEMINI_API_KEY: "test-gemini-key" })
     mockAgent = installHttpMocking()
   })
 
   afterAll(async () => {
     await resetHttpMocking()
     config.end()
-    cleanup?.()
   })
 
   beforeEach(async () => {
@@ -41,6 +55,10 @@ describe("agent files", () => {
     await config.newTenant()
     jest.restoreAllMocks()
     nock.cleanAll()
+    mockGuardGeminiFileSearchConfigured.mockReset()
+    mockGuardGeminiFileSearchConfigured.mockResolvedValue(undefined)
+    mockIsGeminiFileSearchConfigured.mockReset()
+    mockIsGeminiFileSearchConfigured.mockResolvedValue(true)
   })
 
   const fileBuffer = Buffer.from("Hello from Budibase")
@@ -307,6 +325,139 @@ describe("agent files", () => {
       operationId
     )
     expect(files).toHaveLength(0)
+  })
+
+  const uploadFailedFile = async ({
+    agentId,
+    operationId,
+    name,
+  }: {
+    agentId: string
+    operationId: string
+    name: string
+  }) => {
+    mockGeminiIngest(`gemini-${name}`)
+    const upload = await config.api.agent.uploadFile(agentId, operationId, {
+      file: fileBuffer,
+      name,
+    })
+    await utils.queue.processMessages(getQueue().getBullQueue())
+    return await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const file = await sdk.ai.knowledgeBase.getKnowledgeBaseFileOrThrow(
+        upload.file._id!
+      )
+      return await sdk.ai.knowledgeBase.updateKnowledgeBaseFile({
+        ...file,
+        status: KnowledgeBaseFileStatus.FAILED,
+        errorMessage: "Resource has been exhausted (e.g. check quota).",
+      })
+    })
+  }
+
+  it("retries a failed agent file ingestion", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Retry Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    const failedFile = await uploadFailedFile({
+      agentId: created._id!,
+      operationId,
+      name: "retry.txt",
+    })
+    const queueAddSpy = jest.spyOn(getQueue(), "add")
+
+    await config.api.agent.retryFile(created._id!, operationId, failedFile._id!)
+
+    expect(queueAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ fileId: failedFile._id }),
+      { jobId: failedFile._id }
+    )
+    const { files } = await config.api.agent.fetchFiles(
+      created._id!,
+      operationId
+    )
+    expect(files).toEqual([
+      expect.objectContaining({
+        _id: failedFile._id,
+        status: KnowledgeBaseFileStatus.PROCESSING,
+      }),
+    ])
+    expect(files[0].errorMessage).toBeUndefined()
+  })
+
+  it("returns 400 when retrying a file that has not failed", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Retry Ready Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    mockAutoKnowledgeBaseCreate()
+    mockGeminiIngest("gemini-file-ready")
+    const upload = await config.api.agent.uploadFile(
+      created._id!,
+      operationId,
+      {
+        file: fileBuffer,
+        name: "ready.txt",
+      }
+    )
+    await utils.queue.processMessages(getQueue().getBullQueue())
+
+    await config.api.agent.retryFile(
+      created._id!,
+      operationId,
+      upload.file._id!,
+      {
+        status: 400,
+        body: { message: "Knowledge base file is not in failed state" },
+      }
+    )
+  })
+
+  it("returns 404 when retrying a file from another operation", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Retry Other Operation Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+    const other = await config.api.agent.createWithOperation(
+      {
+        name: "Other Agent",
+        aiconfig: "default",
+      },
+      { ...operation, id: "operation_2" }
+    )
+    const otherOperationId = other.operations?.[0]?.id || "operation_2"
+
+    mockAutoKnowledgeBaseCreate()
+    const failedFile = await uploadFailedFile({
+      agentId: created._id!,
+      operationId,
+      name: "other.txt",
+    })
+
+    await config.api.agent.retryFile(
+      other._id!,
+      otherOperationId,
+      failedFile._id!,
+      {
+        status: 404,
+        body: { message: "File does not belong to this operation" },
+      }
+    )
   })
 
   it("returns 403 when knowledge source downloads are disabled for the operation", async () => {

@@ -420,6 +420,21 @@ export const publishWorkspaceInternal = async (
       try {
         const devId = dbCore.getDevWorkspaceID(appId)
         const prodId = dbCore.getProdWorkspaceID(appId)
+        const prodMetadata = await sdk.workspaces.metadata.tryGet({
+          production: true,
+        })
+        if (prodMetadata?.pendingTableSeeds?.length) {
+          const pendingTables = await context
+            .getDevWorkspaceDB()
+            .getMultiple<Table>(prodMetadata.pendingTableSeeds, {
+              allowMissing: true,
+            })
+          if (pendingTables.length) {
+            throw new Error(
+              "Retry Seed from Dev for incomplete tables before publishing this workspace."
+            )
+          }
+        }
 
         if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
           const allWorkspaceApps = await sdk.workspaceApps.fetch()
@@ -604,6 +619,7 @@ export const publishWorkspaceInternal = async (
           ...Object.fromEntries(deployedMap.map(id => [id, publishedAt])),
         }
         delete appDoc.automationErrors
+        delete appDoc.pendingTableSeeds
         await db.put(appDoc)
         await sdk.plugins.reconcileWorkspaceUsedPlugins(prodId)
         await cache.workspace.invalidateWorkspaceMetadata(prodId)

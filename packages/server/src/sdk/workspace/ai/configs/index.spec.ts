@@ -58,7 +58,8 @@ jest.mock("../../../utils", () => ({
 }))
 
 import type { CustomAIProviderConfig } from "@budibase/types"
-import { AIConfigType } from "@budibase/types"
+import { AIConfigType, WebSearchProvider } from "@budibase/types"
+import { encryption } from "@budibase/backend-core"
 import * as aiConfigs from "./index"
 
 const baseConfig = {
@@ -74,6 +75,41 @@ describe("ai configs sdk", () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockDbPut.mockResolvedValue({ rev: "1-abc" })
+  })
+
+  describe("encrypted credential injection", () => {
+    const encryptedValue = `bbai_enc::${encryption.encrypt("stored-secret")}`
+    const injectedFields: Partial<
+      Pick<CustomAIProviderConfig, "credentialsFields" | "webSearchConfig">
+    >[] = [
+      { credentialsFields: { audit_echo: encryptedValue } },
+      { credentialsFields: { api_key: encryptedValue } },
+      {
+        webSearchConfig: {
+          provider: WebSearchProvider.EXA,
+          apiKey: encryptedValue,
+        },
+      },
+    ]
+
+    it.each(injectedFields)("rejects creation: %o", async fields => {
+      await expect(
+        aiConfigs.create({ ...baseConfig, ...fields })
+      ).rejects.toMatchObject({ status: 400 })
+      expect(mockDbPut).not.toHaveBeenCalled()
+    })
+
+    it.each(injectedFields)("rejects updates: %o", async fields => {
+      await expect(
+        aiConfigs.update({
+          ...baseConfig,
+          _id: "cfg_1",
+          _rev: "1-abc",
+          ...fields,
+        })
+      ).rejects.toMatchObject({ status: 400 })
+      expect(mockDbPut).not.toHaveBeenCalled()
+    })
   })
 
   describe("create", () => {

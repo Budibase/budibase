@@ -112,19 +112,12 @@ export const toActionTimelineItem = ({
         detail: getFailureDetail(payload),
       }
     case Event.ACTION_AI_AGENT_EXECUTED:
-      if (payload.finalStatus === "failed") {
-        return {
-          ...item,
-          label: `Agent failed: ${agentName}`,
-          detail: getFailureDetail(payload),
-        }
-      }
       return {
         ...item,
         label: `Agent executed: ${agentName}`,
         detail:
           payload.awaitingEscalation === true
-            ? "Waiting for approval"
+            ? "Approval requested"
             : undefined,
       }
     case Event.ACTION_AI_AGENT_FAILED:

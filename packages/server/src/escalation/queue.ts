@@ -3,6 +3,7 @@ import type { Job } from "bull"
 import {
   ModelMessage,
   readUIMessageStream,
+  TypeValidationError,
   type JSONValue,
   type UIMessage,
 } from "ai"
@@ -36,6 +37,7 @@ import {
   SuspendedOperationContext,
   type AgentExecutionContext,
 } from "@budibase/types"
+import { INVALID_TOOL_INPUT_ERROR } from "../ai/tools"
 import { automationQueue } from "../automations"
 import sdk from "../sdk"
 import { getFullUser } from "../utilities/users"
@@ -57,15 +59,28 @@ export interface EscalationJob {
 
 const DEFAULT_CONCURRENCY = 1
 const DEFAULT_TIMEOUT_MS = 30000
-const GENERIC_APPROVED_ACTION_FAILURE_MESSAGE =
-  "Your request was approved, but I couldn't complete it. Please try again."
+const STALE_APPROVED_ACTION_ERROR =
+  "The data this request writes to changed after it was requested, so it wasn't run."
 
-const approvedActionFailureMessage = (title?: string) => {
+const isInvalidToolInput = (error: unknown) =>
+  TypeValidationError.isInstance(error) ||
+  (error instanceof Error && error.message === INVALID_TOOL_INPUT_ERROR)
+
+const approvedActionFailureMessage = ({
+  title,
+  stale,
+}: {
+  title?: string
+  stale: boolean
+}) => {
+  const outcome = stale
+    ? "but the data it writes to changed after it was requested, so it wasn't run. Please ask again."
+    : "but I couldn't complete it. Please try again."
   if (!title || title.startsWith(APPROVAL_REQUIRED_TITLE_PREFIX)) {
-    return GENERIC_APPROVED_ACTION_FAILURE_MESSAGE
+    return `Your request was approved, ${outcome}`
   }
   const requestTitle = `${title.charAt(0).toLowerCase()}${title.slice(1)}`
-  return `Your ${requestTitle} was approved, but I couldn't complete it. Please try again.`
+  return `Your ${requestTitle} was approved, ${outcome}`
 }
 
 const updateNotificationOutcome = async (
@@ -343,6 +358,7 @@ const executeApprovedToolCall = async ({
       toolName: string
       output: unknown
       failed: boolean
+      stale: boolean
     }
   | undefined
 > => {
@@ -385,6 +401,7 @@ const executeApprovedToolCall = async ({
 
   let output: unknown
   let failed = false
+  let stale = false
   try {
     output = await tool.execute(pending.args, {
       toolCallId: pending.toolCallId,
@@ -393,8 +410,9 @@ const executeApprovedToolCall = async ({
     })
   } catch (error) {
     failed = true
+    stale = isInvalidToolInput(error)
     output = {
-      error: getErrorMessage(error),
+      error: stale ? STALE_APPROVED_ACTION_ERROR : getErrorMessage(error),
     }
   }
 
@@ -402,6 +420,7 @@ const executeApprovedToolCall = async ({
     toolName,
     output,
     failed,
+    stale,
     messages: [
       {
         role: "assistant",
@@ -429,17 +448,27 @@ const executeApprovedToolCall = async ({
   }
 }
 
-export async function resumeOperation({
-  doc,
-  escalationId,
-  resolution,
-  ctx,
-}: {
+interface ResumeOperationParams {
   doc: EscalationContextDoc
   escalationId: string
   resolution: EscalationContextDoc["resolution"]
   ctx: SuspendedOperationContext
-}) {
+}
+
+export async function resumeOperation(params: ResumeOperationParams) {
+  const { sessionId, sessionMetadata } = params.ctx
+  return await context.doInPlatformActionSessionContext(
+    { sourceType: "agent_session", sourceId: sessionId, ...sessionMetadata },
+    () => runResumeOperation(params)
+  )
+}
+
+async function runResumeOperation({
+  doc,
+  escalationId,
+  resolution,
+  ctx,
+}: ResumeOperationParams) {
   const approved = doc.response?.accepted === true
   const expiredUndecided = resolution === "expired" && !doc.response?.actionId
   const outcome = expiredUndecided
@@ -536,22 +565,20 @@ export async function resumeOperation({
       outcome === "expired"
         ? "This request timed out without a response."
         : "This request was rejected."
-    const hasPending =
-      outcome === "expired" || !doc.requestId
-        ? await hasPendingEscalations()
-        : false
+    const hasPending = await hasPendingEscalations()
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
+    // No agent ran here, so the session keeps the outcome of its previous run.
     if (hasPending) {
-      await updatePlatformActionSessionStatus("waiting")
-    } else if (outcome === "expired") {
+      return
+    }
+    if (outcome === "expired") {
       // With no approvals pending, expiry without a response is a failure,
       // not a judgment call.
       await markEscalationRequestResolved({
         status: "failed",
         error: "Escalation expired without a response",
       })
-      await updatePlatformActionSessionStatus("failed")
     } else if (doc.requestId) {
       // A rejection is a human decision, not automatically a failure, let
       // the outcome judge weigh it against the request's full timeline.
@@ -566,12 +593,7 @@ export async function resumeOperation({
       })
       if (judged) {
         await markEscalationRequestResolved(judged)
-        await updatePlatformActionSessionStatus(judged.status)
       }
-    } else {
-      // Without a request timeline there's nothing to judge the rejection
-      // against, it settles the same way an untracked chat turn does
-      await updatePlatformActionSessionStatus("completed")
     }
     return
   }
@@ -640,9 +662,6 @@ export async function resumeOperation({
         await markEscalationRequestResolved({ status: "failed", error: text })
       }
       emitAgentResumeFailure(new Error(text))
-      if (hasPending) {
-        await updatePlatformActionSessionStatus("waiting")
-      }
       return
     }
     if (doc.requestId) {
@@ -674,7 +693,10 @@ export async function resumeOperation({
         "error" in executed.output
           ? getErrorMessage(executed.output.error)
           : "Tool execution failed"
-      const failureMessage = approvedActionFailureMessage(doc.title)
+      const failureMessage = approvedActionFailureMessage({
+        title: doc.title,
+        stale: executed.stale,
+      })
       await persistResumeResult(escalationId, textMessage(failureMessage))
       await deliverOperationResult(ctx, failureMessage)
       const hasPending = await hasPendingEscalations()
@@ -684,10 +706,7 @@ export async function resumeOperation({
           error: errorMessage,
         })
       }
-      emitAgentResumeFailure(new Error(errorMessage))
-      if (hasPending) {
-        await updatePlatformActionSessionStatus("waiting")
-      }
+      // The approved tool call failed before the agent was resumed; preserve its prior outcome.
       return
     }
     const approvalInstructions =
@@ -829,26 +848,6 @@ export async function resumeOperation({
       })
     })
 
-    events.action.aiAgentExecuted(
-      {
-        agentId: ctx.agentId,
-        sourceType: "agent_session",
-        sourceId: ctx.sessionId,
-        sessionId: ctx.sessionId,
-        requestId: doc.requestId,
-        ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
-      },
-      nextSessionTimestamp()
-    )
-    hasEmittedTerminalAction = true
-
-    const text = assistantMessage ? messageText(assistantMessage) : ""
-    await persistResumeResult(
-      escalationId,
-      assistantMessage ?? textMessage(text)
-    )
-    await deliverOperationResult(ctx, text)
-
     const finishReason = await Promise.resolve(result.finishReason).catch(
       error => {
         console.warn(
@@ -864,6 +863,32 @@ export async function resumeOperation({
     )
     const toolCallsIncomplete =
       pendingToolCalls.size > 0 || finishReason === "tool-calls"
+
+    if (toolCallsIncomplete && !awaitingEscalation) {
+      emitAgentResumeFailure(
+        new Error(sdk.ai.agents.formatIncompleteToolCallError([]))
+      )
+    } else {
+      events.action.aiAgentExecuted(
+        {
+          agentId: ctx.agentId,
+          sourceType: "agent_session",
+          sourceId: ctx.sessionId,
+          sessionId: ctx.sessionId,
+          requestId: doc.requestId,
+          ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
+        },
+        nextSessionTimestamp()
+      )
+      hasEmittedTerminalAction = true
+    }
+
+    const text = assistantMessage ? messageText(assistantMessage) : ""
+    await persistResumeResult(
+      escalationId,
+      assistantMessage ?? textMessage(text)
+    )
+    await deliverOperationResult(ctx, text)
     await toolCallChain
 
     const judged = doc.requestId
@@ -879,23 +904,6 @@ export async function resumeOperation({
       : undefined
     if (judged) {
       await markEscalationRequestResolved(judged)
-      await updatePlatformActionSessionStatus(judged.status)
-    } else {
-      try {
-        if (await hasPendingEscalations()) {
-          await updatePlatformActionSessionStatus("waiting")
-        }
-      } catch (error) {
-        console.error(
-          "Failed to check pending escalations for session status",
-          {
-            escalationId,
-            agentId: ctx.agentId,
-            requestId: doc.requestId,
-            error,
-          }
-        )
-      }
     }
   } catch (error) {
     await toolCallChain
@@ -914,16 +922,8 @@ export async function resumeOperation({
         }
       )
     }
-    // Correct an existing terminal action without double-counting or publishing
-    // an intermediate failed status while another approval is pending.
-    if (hasEmittedTerminalAction) {
-      await updatePlatformActionSessionStatus(hasPending ? "waiting" : "failed")
-    } else {
-      emitAgentResumeFailure(error)
-      if (hasPending) {
-        await updatePlatformActionSessionStatus("waiting")
-      }
-    }
+    // Finalization errors must not overwrite an already emitted run outcome.
+    emitAgentResumeFailure(error)
     if (hasPending === false) {
       await markEscalationRequestResolved({
         status: "failed",
@@ -1026,11 +1026,10 @@ export async function processResume(
     )
 
     if (doc.source === EscalationSource.OPERATION) {
-      await resumeOperation({
-        doc,
-        escalationId,
-        resolution,
-        ctx: suspendedContext as SuspendedOperationContext,
+      const ctx = suspendedContext as SuspendedOperationContext
+      await sdk.users.doInUserIdentity({
+        userId: ctx.userId,
+        task: () => resumeOperation({ doc, escalationId, resolution, ctx }),
       })
       return
     }

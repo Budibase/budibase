@@ -158,6 +158,7 @@
     flex-direction: column;
     gap: var(--spacing-xl);
     padding: var(--spacing-xl);
+    border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-m);
     background: var(--background);
   }

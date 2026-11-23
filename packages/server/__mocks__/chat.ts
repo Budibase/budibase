@@ -30,8 +30,20 @@ const mockWebhookState: Record<MockProvider, MockPostEphemeralResult> = {
 }
 const mockChatOptions: ChatOptions[] = []
 
-const toMessageText = (value: unknown) =>
-  typeof value === "string" ? value : JSON.stringify(value)
+const toMessageText = (value: unknown) => {
+  if (typeof value === "string") {
+    return value
+  }
+  if (
+    value &&
+    typeof value === "object" &&
+    "markdown" in value &&
+    typeof value.markdown === "string"
+  ) {
+    return value.markdown
+  }
+  return JSON.stringify(value)
+}
 
 const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
   !!value &&
@@ -282,7 +294,10 @@ export class Chat {
 
         if (slashHandler) {
           const messages: string[] = []
-          const channel = createMessageCollector("slack", messages)
+          const channel = {
+            id: `slack:${body?.channel_id}`,
+            ...createMessageCollector("slack", messages),
+          }
           await slashHandler({
             command,
             text: body?.text || "",
@@ -327,7 +342,7 @@ export class Chat {
         }
         const thread = {
           id: `slack:${channelId}:${threadTs}`,
-          channelId,
+          channelId: channel.id,
           ...createMessageCollector("slack", messages),
           channel,
         }

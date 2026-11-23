@@ -10,7 +10,7 @@ const pagination = { hasNextPage: false, hasPreviousPage: false }
 
 const sessionsResponse: FetchActionSessionsResponse = {
   sessions: [],
-  summary: { total: 0, active: 0, waiting: 0, completed: 0, failed: 0 },
+  summary: { total: 0, active: 0, completed: 0, failed: 0 },
   pagination,
 }
 

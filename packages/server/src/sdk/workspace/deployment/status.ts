@@ -247,6 +247,10 @@ export async function status() {
   const tables: Record<string, PublishStatusResource> = {}
   for (const table of developmentState.tables) {
     processResource(tables, prodTableIds, table)
+    if (metadata?.pendingTableSeeds?.includes(table._id!)) {
+      tables[table._id!].seedPending = true
+      tables[table._id!].unpublishedChanges = true
+    }
   }
 
   const workspaceApps: Record<string, PublishStatusResource> = {}

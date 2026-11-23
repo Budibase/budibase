@@ -49,7 +49,6 @@ export interface ActionSession {
 export interface ActionSessionsSummary {
   total: number
   active: number
-  waiting: number
   completed: number
   failed: number
 }

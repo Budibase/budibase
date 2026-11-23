@@ -151,7 +151,6 @@ describe("platformActions sessions", () => {
         expect(result.summary).toEqual({
           total: 1,
           active: 1,
-          waiting: 0,
           completed: 0,
           failed: 0,
         })
@@ -549,7 +548,6 @@ describe("platformActions sessions", () => {
         expect(summary).toEqual({
           total: 0,
           active: 0,
-          waiting: 0,
           completed: 0,
           failed: 0,
         })
@@ -560,12 +558,7 @@ describe("platformActions sessions", () => {
       "groups different timestamps by status with environment %s",
       async environment => {
         for (const env of ["prod", "dev"] as const) {
-          for (const status of [
-            "active",
-            "waiting",
-            "completed",
-            "failed",
-          ] as const) {
+          for (const status of ["active", "completed", "failed"] as const) {
             await createSession({
               sourceId: `${env}-${status}-1`,
               environment: env,
@@ -583,9 +576,8 @@ describe("platformActions sessions", () => {
         )
         const count = environment ? 2 : 4
         expect(summary).toEqual({
-          total: count * 4,
+          total: count * 3,
           active: count,
-          waiting: count,
           completed: count,
           failed: count,
         })
@@ -614,7 +606,6 @@ describe("platformActions sessions", () => {
       expect(summary).toEqual({
         total: 3,
         active: 1,
-        waiting: 0,
         completed: 1,
         failed: 1,
       })
@@ -639,7 +630,6 @@ describe("platformActions sessions", () => {
       expect(summary).toEqual({
         total: 1,
         active: 1,
-        waiting: 0,
         completed: 0,
         failed: 0,
       })
@@ -678,7 +668,7 @@ describe("platformActions sessions", () => {
           ...active,
           _id: "pas_other",
           sourceId: "other",
-          status: "waiting",
+          status: "failed",
           updatedAt: "2026-10-14T10:00:00.000Z",
         }
         const result = await withContext(async () => {
@@ -686,7 +676,7 @@ describe("platformActions sessions", () => {
           const query = jest.spyOn(database, "query")
           // The active read sees the old revision; the completed read sees
           // the same session after its transition, within the same request.
-          for (const docs of [[active], [other], [completed], []]) {
+          for (const docs of [[active], [completed], [other]]) {
             query.mockResolvedValueOnce({
               total_rows: docs.length,
               offset: 0,
@@ -745,11 +735,6 @@ describe("platformActions sessions", () => {
     async function createMixedSessions() {
       await createSessionDaysAgo({ sourceId: "old-active", daysAgo: 60 })
       await createSessionDaysAgo({
-        sourceId: "old-waiting",
-        daysAgo: 50,
-        status: "waiting",
-      })
-      await createSessionDaysAgo({
         sourceId: "expired-completed",
         daysAgo: 40,
         status: "completed",
@@ -772,7 +757,7 @@ describe("platformActions sessions", () => {
     }
 
     it.each([{}, { environment: "prod" as const }])(
-      "hides expired terminal sessions but keeps old active and waiting ones: %j",
+      "hides expired terminal sessions but keeps old active ones: %j",
       async filters => {
         await createMixedSessions()
 
@@ -781,7 +766,6 @@ describe("platformActions sessions", () => {
         expect(result.sessions.map(session => session.sourceId)).toEqual([
           "recent-completed",
           "recent-failed",
-          "old-waiting",
           "old-active",
         ])
       }
@@ -833,7 +817,6 @@ describe("platformActions sessions", () => {
           "recent-failed",
         ])
         expect(second.sessions.map(session => session.sourceId)).toEqual([
-          "old-waiting",
           "old-active",
         ])
         expect(second.pagination.hasNextPage).toBe(false)
@@ -848,7 +831,7 @@ describe("platformActions sessions", () => {
         await createSession({ sourceId: "a", status: "failed" })
         await createSession({ sourceId: "b", status: "active" })
         await createSession({ sourceId: "c", status: "completed" })
-        await createSession({ sourceId: "d", status: "waiting" })
+        await createSession({ sourceId: "d", status: "active" })
       } finally {
         tk.reset()
       }
@@ -926,9 +909,8 @@ describe("platformActions sessions", () => {
         )
 
         expect(summary).toEqual({
-          total: 4,
+          total: 3,
           active: 1,
-          waiting: 1,
           completed: 1,
           failed: 1,
         })
@@ -941,8 +923,8 @@ describe("platformActions sessions", () => {
 
       const result = await withContext(() => fetchSessions({}))
 
-      expect(result.sessions).toHaveLength(6)
-      expect(result.summary.total).toBe(6)
+      expect(result.sessions).toHaveLength(5)
+      expect(result.summary.total).toBe(5)
     })
 
     it("deletes expired sessions before listing", async () => {
@@ -962,7 +944,6 @@ describe("platformActions sessions", () => {
       })
       expect(storedIds).toEqual([
         "old-active",
-        "old-waiting",
         "recent-completed",
         "recent-failed",
       ])

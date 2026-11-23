@@ -18,6 +18,7 @@ import {
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentKnowledgeSourceEntriesResponse,
   isKnowledgeFileSupported,
+  RetryAgentFileResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   UserCtx,
@@ -166,7 +167,7 @@ export async function fetchAgentKnowledgeIndex(
     operations: Object.fromEntries(knowledgeEntries),
     configuration: {
       knowledgeSearchConfigured:
-        sdk.ai.knowledgeBase.isGeminiFileSearchConfigured(),
+        await sdk.ai.knowledgeBase.isGeminiFileSearchConfigured(),
     },
   }
   ctx.status = 200
@@ -259,6 +260,23 @@ export async function deleteAgentFile(
   const { agentId, operationId, fileId } = ctx.params
   await sdk.ai.rag.deleteFileForOperation(agentId, operationId, fileId)
   ctx.body = { deleted: true }
+  ctx.status = 200
+}
+
+export async function retryAgentFile(
+  ctx: UserCtx<
+    void,
+    RetryAgentFileResponse,
+    { agentId: string; operationId: string; fileId: string }
+  >
+) {
+  const { agentId, operationId, fileId } = ctx.params
+  const file = await sdk.ai.rag.retryFileForOperation({
+    agentId,
+    operationId,
+    fileId,
+  })
+  ctx.body = { file }
   ctx.status = 200
 }
 

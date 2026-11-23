@@ -72,13 +72,25 @@ function sanitiseUserStructure(user: ContextUser) {
   return copiedUser
 }
 
+function containsHandlebarsBinding(value: unknown): boolean {
+  if (typeof value === "string") {
+    return findHBSBlocks(value).length !== 0
+  }
+  if (Array.isArray(value)) {
+    return value.some(containsHandlebarsBinding)
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.entries(value).some(
+      ([key, nestedValue]) =>
+        containsHandlebarsBinding(key) || containsHandlebarsBinding(nestedValue)
+    )
+  }
+  return false
+}
+
 function validateQueryInputs(parameters: QueryEventParameters) {
-  for (let entry of Object.entries(parameters)) {
-    const [key, value] = entry
-    if (typeof value !== "string") {
-      continue
-    }
-    if (findHBSBlocks(value).length !== 0) {
+  for (const [key, value] of Object.entries(parameters)) {
+    if (containsHandlebarsBinding(value)) {
       throw new Error(
         `Parameter '${key}' input contains a handlebars binding - this is not allowed.`
       )
@@ -295,6 +307,9 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
       query.nullDefaultSupport = true
     }
     eventFn = () => events.query.updated(datasource, query)
+  }
+  if (existingDatasource.source !== datasource.source) {
+    ctx.throw(400, "Cannot change the integration type of an existing query")
   }
   const datasourceChanged =
     existingQuery?.datasourceId !== undefined &&

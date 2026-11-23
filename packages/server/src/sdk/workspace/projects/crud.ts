@@ -2,6 +2,7 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import {
   DocumentType,
+  MAX_PROJECT_NAME_LENGTH,
   MAX_PROJECT_README_LENGTH,
   prefixed,
   type Project,
@@ -38,6 +39,12 @@ const normaliseProjectColor = (color?: string) => {
 const validateProjectName = (name?: string) => {
   if (typeof name !== "string" || !name.trim()) {
     throw new HTTPError("Project name is required.", 400)
+  }
+  if (name.length > MAX_PROJECT_NAME_LENGTH) {
+    throw new HTTPError(
+      `Project name must be at most ${MAX_PROJECT_NAME_LENGTH} characters.`,
+      400
+    )
   }
 }
 

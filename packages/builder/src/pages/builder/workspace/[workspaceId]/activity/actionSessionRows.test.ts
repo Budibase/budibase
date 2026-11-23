@@ -13,7 +13,7 @@ const session: ActionSession = {
   sourceType: "automation_run",
   sourceId: "run/1",
   environment: "prod",
-  status: "waiting",
+  status: "active",
   actionCount: 3,
   startedAt: "2026-10-05T11:00:00.000Z",
   updatedAt: "2026-10-05T11:55:00.000Z",
@@ -41,8 +41,8 @@ describe("toActionSessionRow", () => {
       triggeredByLabel: "User: Jane Doe",
       triggeredByValue: "Jane Doe",
       triggeredByPrefix: "User",
-      status: "waiting",
-      statusLabel: "Waiting",
+      status: "active",
+      statusLabel: "Active",
       actionCount: 3,
       updatedLabel: "5 minutes ago",
     })
@@ -232,7 +232,7 @@ describe("getActionSessionTitle", () => {
 describe("getActionSessionDetails", () => {
   it("describes the session with explicit fallbacks", () => {
     expect(getActionSessionDetails(session)).toEqual([
-      { type: "status-badge", label: "Status", status: "waiting" },
+      { type: "status-badge", label: "Status", status: "active" },
       {
         type: "text",
         label: "Type",

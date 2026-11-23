@@ -20,20 +20,16 @@ router
   .get("/api/env/variables", auth.builderOrAdmin, controllers.fetch)
   .post(
     "/api/env/variables",
-    auth.builderOrAdmin,
+    auth.adminOnly,
     buildEnvVarUpdateValidator(),
     controllers.create
   )
   .patch(
     "/api/env/variables/:varName",
-    auth.builderOrAdmin,
+    auth.adminOnly,
     buildEnvVarUpdateValidator(),
     controllers.update
   )
-  .delete(
-    "/api/env/variables/:varName",
-    auth.builderOrAdmin,
-    controllers.destroy
-  )
+  .delete("/api/env/variables/:varName", auth.adminOnly, controllers.destroy)
 
 export default router

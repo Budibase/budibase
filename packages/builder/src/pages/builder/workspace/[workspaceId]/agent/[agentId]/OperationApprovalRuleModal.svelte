@@ -55,6 +55,11 @@
     OperatorOptions.NotEmpty.value,
   ])
 
+  const LIST_VALUE_OPERATORS = new Set<string>([
+    OperatorOptions.In.value,
+    OperatorOptions.NotIn.value,
+  ])
+
   let modal: Modal | undefined = $state()
   let policies = $state<AgentOperationApprovalPolicy[]>([])
   let fields = $state<ConditionField[]>([])
@@ -115,6 +120,21 @@
   const reviewSelectionValid = $derived(
     reviewParameters.length <= MAX_REVIEW_PARAMETERS
   )
+
+  const isMissingField = (condition: ConditionDraft) =>
+    !fields.some(field => field.name === condition.field)
+
+  const fieldOptionsFor = (condition: ConditionDraft): ConditionField[] =>
+    isMissingField(condition)
+      ? [
+          {
+            name: condition.field,
+            label: `${condition.field} (unavailable)`,
+            type: condition.type ?? FieldType.STRING,
+          },
+          ...fields,
+        ]
+      : fields
 
   const operatorsFor = (condition: ConditionDraft) => {
     const field = fields.find(candidate => candidate.name === condition.field)
@@ -178,12 +198,16 @@
     index: number,
     operator: ToolExecutionOperator
   ) => {
+    const condition = conditions[index]
     const noValue = NO_VALUE_OPERATORS.has(operator)
+    const valueShapeChanged =
+      LIST_VALUE_OPERATORS.has(operator) !==
+      LIST_VALUE_OPERATORS.has(condition.operator)
     conditions[index] = {
-      ...conditions[index],
+      ...condition,
       operator,
       noValue,
-      value: noValue ? undefined : conditions[index].value,
+      value: noValue || valueShapeChanged ? undefined : condition.value,
     }
   }
 
@@ -282,7 +306,7 @@
           this rule always applies.
         </Body>
       </div>
-      {#if !fields.length}
+      {#if !fields.length && !conditions.length}
         <Body size="XS" color="var(--spectrum-global-color-gray-600)">
           This tool has no fields that conditions can check, so this rule always
           applies.
@@ -291,12 +315,14 @@
         {#if conditions.length}
           <div class="conditions-list">
             {#each conditions as condition, index (index)}
+              {@const missing = isMissingField(condition)}
               <div class="condition-row">
                 <Select
                   size="M"
                   value={condition.field}
-                  options={fields}
+                  options={fieldOptionsFor(condition)}
                   placeholder={false}
+                  disabled={missing}
                   getOptionLabel={field => field.label}
                   getOptionValue={field => field.name}
                   on:change={event => changeConditionField(index, event.detail)}
@@ -306,13 +332,14 @@
                   value={condition.operator}
                   options={operatorsFor(condition)}
                   placeholder={false}
+                  disabled={missing}
                   getOptionLabel={option => option.label}
                   getOptionValue={option => option.value}
                   on:change={event =>
                     changeConditionOperator(index, event.detail)}
                 />
                 <FilterField
-                  filter={condition}
+                  filter={missing ? { ...condition, noValue: true } : condition}
                   schemaFields={fields}
                   useConditionValueControls
                   on:change={event =>
@@ -326,6 +353,12 @@
                   <Icon name="x" size="XS" />
                 </button>
               </div>
+              {#if missing}
+                <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+                  This field is no longer available. Remove the condition to
+                  save the rule.
+                </Body>
+              {/if}
             {/each}
           </div>
         {:else}
@@ -335,11 +368,18 @@
             </Body>
           </div>
         {/if}
-        <div>
-          <Button secondary size="S" icon="plus-circle" on:click={addCondition}>
-            Add condition
-          </Button>
-        </div>
+        {#if fields.length}
+          <div>
+            <Button
+              secondary
+              size="S"
+              icon="plus-circle"
+              on:click={addCondition}
+            >
+              Add condition
+            </Button>
+          </div>
+        {/if}
       {/if}
     </div>
     <div class="configuration-field">

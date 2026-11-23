@@ -41,9 +41,11 @@ export function unreachable(
 export async function parallelForeach<T>(
   items: Iterable<T> | AsyncIterable<T>,
   task: (item: T) => Promise<void>,
-  maxConcurrency: number
+  maxConcurrency: number,
+  options: { stopOnError?: boolean } = {}
 ): Promise<void> {
   const results: Promise<void>[] = []
+  let failed = false
 
   // Check if it's an async iterable
   const isAsyncIterable = Symbol.asyncIterator in items
@@ -56,8 +58,18 @@ export async function parallelForeach<T>(
       ? (iterator as AsyncIterator<T>).next()
       : Promise.resolve((iterator as Iterator<T>).next()))
 
-    while (!result.done) {
-      await task(result.value)
+    while (!result.done && (!options.stopOnError || !failed)) {
+      try {
+        await task(result.value)
+      } catch (error) {
+        if (options.stopOnError) {
+          failed = true
+        }
+        throw error
+      }
+      if (options.stopOnError && failed) {
+        return
+      }
       result = await (isAsyncIterable
         ? (iterator as AsyncIterator<T>).next()
         : Promise.resolve((iterator as Iterator<T>).next()))

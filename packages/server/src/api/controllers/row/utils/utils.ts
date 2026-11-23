@@ -1,13 +1,15 @@
 import * as utils from "../../../../db/utils"
 
-import { sql } from "@budibase/backend-core"
+import { BadRequestError, sql } from "@budibase/backend-core"
 import {
   Ctx,
   DatasourcePlusQueryResponse,
   FieldType,
   RelationshipsJson,
   Row,
+  SearchFilters,
   Table,
+  UserBindings,
   ViewV2,
 } from "@budibase/types"
 import {
@@ -17,7 +19,7 @@ import {
 import { isKnexRows } from "./sqlUtils"
 import { basicProcessing, generateIdForRow, getInternalRowId } from "./basic"
 import sdk from "../../../../sdk"
-import { processStringSync } from "@budibase/string-templates"
+import { findHBSBlocks, processStringSync } from "@budibase/string-templates"
 import validateJs from "validate.js"
 import { getTableIdFromViewId, helpers, isViewId } from "@budibase/shared-core"
 
@@ -172,62 +174,102 @@ export function isUserMetadataTable(tableId: string) {
   return tableId === utils.InternalTables.USER_METADATA
 }
 
-export async function enrichArrayContext(
-  fields: Record<string, unknown>[],
-  inputs = {},
-  helpers = true
-): Promise<Record<string, any>[]> {
-  const map: Record<string, any> = {}
-  for (let index in fields) {
-    map[index] = fields[index]
+export function resolveReaderSearchBindings({
+  query,
+  user,
+}: {
+  query: SearchFilters | undefined
+  user: UserBindings
+}): SearchFilters {
+  const bindings: Record<string, string | undefined> = {
+    "user._id": user._id,
+    "user.firstName": user.firstName,
+    "user.lastName": user.lastName,
+    "user.fullName": user.fullName,
+    "user.email": user.email,
+    "user.status": user.status,
+    "user.roleId": user.roleId ?? undefined,
+    "user.globalId": user.globalId,
+    "user.userId": user.userId,
+    now: new Date().toISOString(),
   }
-  const output = await enrichSearchContext(map, inputs, helpers)
-  const outputArray = []
-  for (let [key, value] of Object.entries(output)) {
-    outputArray[parseInt(key)] = value
+
+  const resolve = (value: unknown): unknown => {
+    if (typeof value === "string") {
+      return findHBSBlocks(value).reduce((result, block) => {
+        const binding = block
+          .slice(2, -2)
+          .trim()
+          .replace(/^\[user\]\./, "user.")
+          .replace(/^user\.\[([a-zA-Z_][a-zA-Z0-9_]*)\]$/, "user.$1")
+          .replace(/^\[now\]$/, "now")
+        if (!Object.prototype.hasOwnProperty.call(bindings, binding)) {
+          throw new BadRequestError("Unsupported search query binding")
+        }
+        return result.replace(block, bindings[binding] ?? "")
+      }, value)
+    }
+    if (Array.isArray(value)) {
+      return value.map(resolve)
+    }
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, nested]) => [key, resolve(nested)])
+      )
+    }
+    return value
   }
-  return outputArray
+
+  return resolve(query ?? {}) as SearchFilters
 }
 
-export async function enrichSearchContext(
-  fields: Record<string, any> | undefined,
+interface EnrichSearchContextOptions<T extends object> {
+  fields?: T
+  inputs?: Record<string, unknown>
+  noThrow?: boolean
+}
+
+const enrichSearchValue = ({
+  value,
+  inputs,
+  noThrow,
+}: {
+  value: unknown
+  inputs: Record<string, unknown>
+  noThrow: boolean
+}): unknown => {
+  if (typeof value === "string") {
+    return processStringSync(value, inputs, {
+      noEscaping: true,
+      safeSearchHelpers: true,
+      noThrow,
+      escapeNewlines: true,
+    })
+  }
+  if (Array.isArray(value)) {
+    return value.map(item =>
+      enrichSearchValue({ value: item, inputs, noThrow })
+    )
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        enrichSearchValue({ value: item, inputs, noThrow }),
+      ])
+    )
+  }
+  return value
+}
+
+export async function enrichSearchContext<T extends object>({
+  fields,
   inputs = {},
-  helpers = true
-): Promise<Record<string, any>> {
-  const enrichedQuery: Record<string, unknown> = {}
-  if (!fields || !inputs) {
-    return enrichedQuery
-  }
-  const parameters = { ...inputs }
-
-  if (Array.isArray(fields)) {
-    return enrichArrayContext(fields, inputs, helpers)
-  }
-
-  // enrich the fields with dynamic parameters
-  for (let key of Object.keys(fields)) {
-    if (fields[key] == null) {
-      enrichedQuery[key] = null
-      continue
-    }
-    if (typeof fields[key] === "object") {
-      // enrich nested fields object
-      enrichedQuery[key] = await enrichSearchContext(
-        fields[key],
-        parameters,
-        helpers
-      )
-    } else if (typeof fields[key] === "string") {
-      // enrich string value as normal
-      enrichedQuery[key] = processStringSync(fields[key], parameters, {
-        noEscaping: true,
-        noHelpers: !helpers,
-        escapeNewlines: true,
-      })
-    } else {
-      enrichedQuery[key] = fields[key]
-    }
-  }
-
-  return enrichedQuery
+  noThrow = true,
+}: EnrichSearchContextOptions<T>): Promise<T> {
+  return enrichSearchValue({
+    value: fields ?? {},
+    inputs: { ...inputs },
+    noThrow,
+  }) as T
 }

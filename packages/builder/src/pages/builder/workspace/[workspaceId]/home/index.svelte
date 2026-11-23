@@ -127,6 +127,8 @@
   let editProjectModal: ModalAPI
   let confirmDeleteProjectDialog: Pick<ModalAPI, "show" | "hide">
   let assignProjectModal: ModalAPI
+  let confirmRemoveFromProjectDialog: Pick<ModalAPI, "show" | "hide">
+  let projectRemoval: { row: HomeRow; project: ProjectResponse } | undefined
   let exportProjectModal: ModalAPI
   let importProjectModal: ModalAPI
   let importProjectResultModal: ModalAPI
@@ -153,12 +155,12 @@
   let highlightedRowId: string | null = null
 
   let hasMounted = false
-  let projectsRequestedForWorkspace = ""
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
   $: canEditProjectNotes = sdk.users.hasBuilderPermissions($auth.user)
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: canAssignProject = projectsEnabled && $projectsStore.length > 0
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
   $: selectedProjectResource = projectAssignmentRow
     ? {
@@ -346,7 +348,7 @@
     assignProjectModal?.show()
   }
 
-  const goToCreate = (target: "data/new" | "apis/new") => {
+  const goToCreate = (target: "apis/new") => {
     goto(url(`../${target}`))
   }
 
@@ -481,6 +483,42 @@
       console.error(error)
       notifications.warning(
         "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
+      )
+    }
+  }
+
+  const removeResourceFromProject = async () => {
+    const resourceRev = projectRemoval?.row.resource._rev
+    if (!projectRemoval || !resourceRev) {
+      return keepOpen
+    }
+
+    const { row, project } = projectRemoval
+    const projectIds = (row.projectIds || []).filter(id => id !== project._id)
+    try {
+      await projectsStore.updateAssignment({
+        resourceId: row.id,
+        request: {
+          resourceRev,
+          projectIds,
+          dependencyIds: [],
+          dependencyFingerprint: "",
+        },
+      })
+      notifications.success(`Removed '${row.name}' from '${project.name}'`)
+    } catch (error) {
+      notifications.error(
+        getErrorMessage(error) || "Unable to remove resource from project"
+      )
+      return keepOpen
+    }
+
+    try {
+      await workspaceStore.refresh()
+    } catch (error) {
+      console.error(error)
+      notifications.warning(
+        "Resource removed from project, but some resources could not be refreshed. Reload the workspace to see all changes."
       )
     }
   }
@@ -666,6 +704,20 @@
   }
 
   const getContextMenuItemsForRow = (row: HomeRow) => {
+    const project = selectedProject
+    const removeFromProject = {
+      icon: "stack-minus",
+      name: "Remove from project",
+      visible: true,
+      callback: () => {
+        if (!project) {
+          return
+        }
+        projectRemoval = { row, project }
+        confirmRemoveFromProjectDialog.show()
+      },
+    }
+
     if (row.type === "app") {
       const workspaceApp = row.resource
       const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
@@ -694,10 +746,11 @@
         },
         {
           icon: "stack",
-          name: "Assign project",
-          visible: projectsEnabled,
+          name: "Assign projects",
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
         {
           icon: "globe-simple",
           name: "View live app",
@@ -748,10 +801,11 @@
         edit,
         {
           icon: "stack",
-          name: "Assign project",
-          visible: projectsEnabled,
+          name: "Assign projects",
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
         {
           icon: "copy",
           name: "Duplicate",
@@ -783,10 +837,11 @@
         },
         {
           icon: "stack",
-          name: "Assign project",
-          visible: projectsEnabled,
+          name: "Assign projects",
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
         {
           icon: "copy",
           name: "Duplicate",
@@ -813,10 +868,11 @@
         },
         {
           icon: "stack",
-          name: "Assign project",
-          visible: projectsEnabled,
+          name: "Assign projects",
+          visible: canAssignProject,
           callback: openAssignProjectModal,
         },
+        ...(project ? [removeFromProject] : []),
       ]
     }
 
@@ -832,6 +888,10 @@
     x: number
     y: number
   }) => {
+    if (selectedProjectId && !selectedProject) {
+      return
+    }
+
     selectedWorkspaceApp = undefined
     selectedAutomation = undefined
     selectedAgent = undefined
@@ -881,18 +941,6 @@
     if (row.type === "table") {
       goto(url(`../data/table/${row.id}`))
       return
-    }
-  }
-
-  const loadProjects = async (workspaceId: string) => {
-    try {
-      projectsRequestedForWorkspace = workspaceId
-      await projectsStore.fetch(workspaceId)
-    } catch (error) {
-      projectsRequestedForWorkspace = ""
-      if ($workspaceStore.appId === workspaceId && projectsEnabled) {
-        notifications.error(getErrorMessage(error) || "Unable to load projects")
-      }
     }
   }
 
@@ -989,15 +1037,6 @@
   $: showBudibaseAIMetric =
     budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
 
-  $: if (
-    hasMounted &&
-    projectsEnabled &&
-    $workspaceStore.appId &&
-    projectsRequestedForWorkspace !== $workspaceStore.appId
-  ) {
-    loadProjects($workspaceStore.appId)
-  }
-
   $: if (hasMounted) {
     writeUrlState({
       searchTerm,
@@ -1083,7 +1122,7 @@
     })
 
     await agentsStore.fetchAgents()
-    if (setupRequest && projectsEnabled) {
+    if (setupRequest && projectsEnabled && projectsStore.hasFetched()) {
       await openProjectSetup({ refresh: false })
     }
   })
@@ -1194,7 +1233,7 @@
                     onCreateAgent={createAgent}
                     onCreateAutomation={createAutomation}
                     onCreateApp={createApp}
-                    onCreateConnection={() => goToCreate("data/new")}
+                    onCreateConnection={() => bb.settings("/connections/apis")}
                     onCreateTable={openCreateTable}
                     onCreateApi={() => goToCreate("apis/new")}
                   />
@@ -1256,7 +1295,7 @@
             onCreateAgent={createAgent}
             onCreateAutomation={createAutomation}
             onCreateApp={createApp}
-            onCreateConnection={() => goToCreate("data/new")}
+            onCreateConnection={() => bb.settings("/connections/apis")}
             onCreateTable={openCreateTable}
             onCreateApi={() => goToCreate("apis/new")}
           />
@@ -1290,6 +1329,18 @@
 </div>
 
 {#if projectsEnabled}
+  <ConfirmDialog
+    bind:this={confirmRemoveFromProjectDialog}
+    title="Remove from project"
+    okText="Remove"
+    onOk={removeResourceFromProject}
+    warning={false}
+  >
+    Remove <b>{projectRemoval?.row.name}</b> from
+    <b>{projectRemoval?.project.name}</b>? The resource will remain available in
+    the workspace and any other projects.
+  </ConfirmDialog>
+
   <Modal bind:this={createProjectModal}>
     {#key createProjectModalKey}
       <CreateProjectModal onConfirm={handleCreateProject} />
@@ -1541,9 +1592,9 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
-    margin-left: auto;
     flex-shrink: 0;
-    justify-content: flex-end;
+    flex-wrap: wrap;
+    max-width: 100%;
   }
 
   .controls-row .search-wrapper {
@@ -1585,30 +1636,6 @@
     border: 1px solid var(--spectrum-global-color-gray-200);
     padding: var(--spacing-xs);
     margin-top: var(--spacing-xs);
-  }
-
-  @media (max-width: 1080px) {
-    .controls-row .controls-right {
-      width: 100%;
-      margin-left: 0;
-      flex-shrink: 1;
-      justify-content: flex-end;
-    }
-
-    .controls-row .search-wrapper {
-      max-width: none;
-    }
-  }
-
-  @media (max-width: 720px) {
-    .controls-row .controls-right {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .controls-row .search-wrapper {
-      width: 100%;
-    }
   }
 
   .create-popover-container :global(.spectrum-Menu) {

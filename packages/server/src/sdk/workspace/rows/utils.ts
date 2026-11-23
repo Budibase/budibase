@@ -39,7 +39,6 @@ const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.COUCHDB]: undefined,
   [SourceName.S3]: undefined,
   [SourceName.AIRTABLE]: undefined,
-  [SourceName.ARANGODB]: undefined,
   [SourceName.REST]: undefined,
   [SourceName.FIRESTORE]: undefined,
   [SourceName.GOOGLE_SHEETS]: undefined,

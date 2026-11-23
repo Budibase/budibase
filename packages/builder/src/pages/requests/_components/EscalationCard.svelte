@@ -135,12 +135,12 @@
 </script>
 
 <div class="card" class:interactive={canRespond && !mode}>
-  <div class="top">
+  <div class="top" style:--escalation-state-color={pill.color}>
     <div class="title">{escalation.title || escalation.escalationId}</div>
     <Badge
       size="S"
       backgroundColor={`color-mix(in srgb, ${pill.color} 18%, transparent)`}
-      textColor={pill.color}
+      textColor="var(--escalation-state-text-color)"
     >
       {pill.label}
     </Badge>
@@ -237,6 +237,11 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: var(--spacing-l);
+    --escalation-state-text-color: var(--spectrum-alias-text-color);
+  }
+  :global(.spectrum--light) .top,
+  :global(.spectrum--lightest) .top {
+    --escalation-state-text-color: var(--escalation-state-color);
   }
   .title {
     font-weight: 600;

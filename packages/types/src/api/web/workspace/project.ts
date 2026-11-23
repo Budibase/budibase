@@ -166,6 +166,7 @@ export interface ProjectPackageManifest {
   resourcesByType: Partial<Record<ResourceType, number>>
   containsRows: boolean
   containsAttachments: boolean
+  containsPermissions?: boolean
   requiresSecrets: boolean
   unsupportedContent: ProjectPackageUnsupportedContent[]
 }

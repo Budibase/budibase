@@ -53,13 +53,14 @@ const buildHelperInfoNode = (helper: Helper) => {
   return ele
 }
 
-const toSpectrumIcon = (name: string) => {
-  return `
-    <i class="ph ph-${name}"
-       style="color:var(--spectrum-global-color-gray-700); font-size: 14px;" 
-       aria-label="${name}-section-icon"
-       aria-hidden="false"></i>
-  `
+const buildSpectrumIcon = (name: string) => {
+  const icon = document.createElement("i")
+  icon.className = `ph ph-${name}`
+  icon.style.color = "var(--spectrum-global-color-gray-700)"
+  icon.style.fontSize = "14px"
+  icon.setAttribute("aria-label", `${name}-section-icon`)
+  icon.setAttribute("aria-hidden", "false")
+  return icon
 }
 
 export const buildSectionHeader = (
@@ -73,7 +74,9 @@ export const buildSectionHeader = (
   if (type) {
     ele.classList.add(type)
   }
-  ele.innerHTML = `${toSpectrumIcon(icon)}<span>${sectionName}</span>`
+  const label = document.createElement("span")
+  label.textContent = sectionName
+  ele.append(buildSpectrumIcon(icon), label)
   return {
     name: sectionName,
     header: () => ele,

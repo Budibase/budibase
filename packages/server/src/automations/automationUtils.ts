@@ -129,13 +129,12 @@ export function inferAutomationRunActionStatus(
   switch (status) {
     case AutomationStatus.SUCCESS:
     case AutomationStatus.STOPPED:
+    case AutomationStatus.SUSPENDED:
       return "completed"
     case AutomationStatus.ERROR:
     case AutomationStatus.STOPPED_ERROR:
     case AutomationStatus.TIMED_OUT:
       return "failed"
-    case AutomationStatus.SUSPENDED:
-      return "waiting"
     default:
       throw new Error(`Unexpected automation run status: ${status}`)
   }
