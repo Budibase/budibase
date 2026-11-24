@@ -4,6 +4,7 @@ import {
   type PlatformActionResourceOrigin,
   type Table,
 } from "@budibase/types"
+import { helpers } from "@budibase/shared-core"
 import type { AiToolDefinition } from ".."
 import createAutomationTools from "./automations"
 import { createRowTools } from "./rows"
@@ -29,7 +30,7 @@ export const getBudibaseTools = (
     .filter(table => table._id)
     .flatMap(table => {
       const isExternal = table.sourceType === TableSourceType.EXTERNAL
-      return createRowTools({
+      const tableTools = createRowTools({
         tableId: table._id!,
         tableName: table.name || table._id!,
         tableSourceType: table.sourceType,
@@ -42,6 +43,30 @@ export const getBudibaseTools = (
           ? datasourceIconTypesById[table.sourceId]
           : undefined,
       })
+      if (isExternal) {
+        return tableTools
+      }
+      const viewTools = Object.values(table.views || {})
+        .filter(helpers.views.isV2)
+        .filter(view => !helpers.views.isCalculationView(view))
+        .flatMap(view =>
+          createRowTools({
+            tableId: view.id,
+            tableName: `${table.name} / ${view.name}`,
+            tableSourceType: table.sourceType,
+            tableSchema: Object.fromEntries(
+              Object.entries(table.schema).filter(
+                ([name, field]) =>
+                  view.schema?.[name] &&
+                  helpers.views.isVisible(view.schema[name]) &&
+                  field.visible !== false
+              )
+            ),
+            primaryDisplay: view.primaryDisplay,
+            view,
+          })
+        )
+      return [...tableTools, ...viewTools]
     })
 
   return [...baseTools, ...rowTools]
