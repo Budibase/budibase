@@ -1,11 +1,15 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
+  import type { BackupTableRow } from "../types"
 
-  export let row
+  interface Props {
+    row: BackupTableRow
+  }
 
-  $: automations = row?.automations
-  $: datasources = row?.datasources
-  $: screens = row?.screens
+  let { row }: Props = $props()
+  const automations = $derived(row?.automations)
+  const datasources = $derived(row?.datasources)
+  const screens = $derived(row?.screens)
 </script>
 
 <div class="cell">

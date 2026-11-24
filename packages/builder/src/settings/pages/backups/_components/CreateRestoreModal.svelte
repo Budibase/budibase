@@ -1,13 +1,16 @@
-<script>
+<script lang="ts">
   import { ModalContent, Input, Body } from "@budibase/bbui"
   import { auth } from "@/stores/portal/auth"
 
-  export let confirm
+  interface Props {
+    confirm: (name: string) => void
+  }
 
-  let templateName = $auth.user.firstName
+  let { confirm }: Props = $props()
+  const templateName = $auth.user?.firstName
     ? `${$auth.user.firstName}'s Backup`
     : "Restore Backup"
-  let name = templateName
+  let name = $state(templateName)
 </script>
 
 <ModalContent

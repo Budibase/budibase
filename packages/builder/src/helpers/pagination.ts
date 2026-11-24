@@ -45,7 +45,7 @@ export function createPaginationStore() {
     })
   }
 
-  function fetched(hasNextPage: boolean, nextPage: string) {
+  function fetched(hasNextPage: boolean, nextPage?: string) {
     update(state => {
       state.hasNextPage = hasNextPage
       state.nextPage = nextPage
