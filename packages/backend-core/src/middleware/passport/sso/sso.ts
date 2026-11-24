@@ -105,16 +105,17 @@ export async function authenticate(
         saveUserFn
       )
     } else {
-      if (!dbUser) {
-        // first time creation - no invite or existing account to draw from
-        dbUser = {
+      ssoUser = await syncAndSaveUser({
+        user: dbUser ?? {
           _id: userId,
           email: details.email,
           tenantId: context.getTenantId(),
           roles: {},
-        }
-      }
-      ssoUser = await syncAndSaveUser(dbUser, details, saveUserFn)
+        },
+        details,
+        saveUserFn,
+        isNewUser: !dbUser,
+      })
     }
   } catch (err: any) {
     return authError(done, "Error saving user", err)
@@ -123,11 +124,17 @@ export async function authenticate(
   return done(null, ssoUser)
 }
 
-async function syncAndSaveUser(
-  user: User,
-  details: SSOAuthDetails,
+async function syncAndSaveUser({
+  user,
+  details,
+  saveUserFn,
+  isNewUser,
+}: {
+  user: User
+  details: SSOAuthDetails
   saveUserFn: SaveSSOUserFunction
-): Promise<SSOUser> {
+  isNewUser: boolean
+}): Promise<SSOUser> {
   const ssoUser = await syncUser(user, details)
   // never prompt for password reset
   ssoUser.forceResetPassword = false
@@ -135,8 +142,7 @@ async function syncAndSaveUser(
   delete ssoUser.password
   // create or sync the user
   return (await saveUserFn(ssoUser, {
-    allowSsoProviderUserId:
-      ssoUser._id === generateGlobalUserID(details.userId),
+    allowSsoProviderUserId: isNewUser,
     hashPassword: false,
     requirePassword: false,
   })) as SSOUser
@@ -173,7 +179,12 @@ async function claimInviteAndSaveUser(
         if (!concurrentUser) {
           throw err
         }
-        return await syncAndSaveUser(concurrentUser, details, saveUserFn)
+        return await syncAndSaveUser({
+          user: concurrentUser,
+          details,
+          saveUserFn,
+          isNewUser: false,
+        })
       }
 
       // set up a blank user using the third party id, applying any access
@@ -185,7 +196,12 @@ async function claimInviteAndSaveUser(
         ...users.deriveUserFieldsFromInvite(invite.info),
       }
 
-      const ssoUser = await syncAndSaveUser(user, details, saveUserFn)
+      const ssoUser = await syncAndSaveUser({
+        user,
+        details,
+        saveUserFn,
+        isNewUser: true,
+      })
 
       await cache.invite.deleteCode(invite.code, invite.info.tenantId)
       await events.user.inviteAccepted(ssoUser)

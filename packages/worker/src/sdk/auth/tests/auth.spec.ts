@@ -1,4 +1,11 @@
-import { cache, context, sessions, users, utils } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  redis,
+  sessions,
+  users,
+  utils,
+} from "@budibase/backend-core"
 import { loginUser, resetUpdate } from "../auth"
 import { generator, structures } from "@budibase/backend-core/tests"
 import { TestConfiguration } from "../../../tests"
@@ -34,6 +41,19 @@ describe("auth", () => {
         const newPassword = generator.hash()
 
         await expect(resetUpdate(code, newPassword)).rejects.toThrow(
+          "Provided information is not valid, cannot reset password - please try again."
+        )
+      })
+    })
+
+    it("rejects a legacy reset code without a tenant ID", async () => {
+      const user = await config.createUser()
+      const code = generator.hash()
+      const client = await redis.clients.getPasswordResetClient()
+      await client.store(code, { userId: user._id, info: {} }, 60)
+
+      await context.doInTenant(config.tenantId, async () => {
+        await expect(resetUpdate(code, generator.hash())).rejects.toThrow(
           "Provided information is not valid, cannot reset password - please try again."
         )
       })
