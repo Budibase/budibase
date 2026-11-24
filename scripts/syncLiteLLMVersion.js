@@ -37,24 +37,13 @@ function main() {
   const checkOnly = process.argv.includes("--check")
   const versionConfig = readJson(versionConfigPath)
   const version = required(versionConfig.version, "version")
-  const channel = required(versionConfig.channel, "channel")
 
-  const imageTag = `main-v${version}-${channel}`
+  const imageTag = `v${version}`
 
-  const dockerHubImagePattern =
-    /image:\s*docker\.io\/litellm\/litellm:main-v(\d+\.\d+\.\d+)-([a-zA-Z0-9]+)((?:\.[a-zA-Z0-9]+)*)/
-  const dockerHubImageReplacement = (
-    _match,
-    existingVersion,
-    existingChannel,
-    suffix
-  ) => {
-    const isSameRelease =
-      existingVersion === version && existingChannel === channel
-    return `image: docker.io/litellm/litellm:${imageTag}${
-      isSameRelease ? suffix : ""
-    }`
-  }
+  const liteLLMImagePattern =
+    /image:\s*(?:docker\.io\/litellm\/litellm|ghcr\.io\/berriai\/litellm):[^\s\n]+/
+  const liteLLMImageReplacement =
+    `image: ghcr.io/berriai/litellm:${imageTag}`
 
   const updates = [
     {
@@ -72,8 +61,8 @@ function main() {
       update: content =>
         replaceRequired(
           content,
-          dockerHubImagePattern,
-          dockerHubImageReplacement,
+          liteLLMImagePattern,
+          liteLLMImageReplacement,
           "hosting/docker-compose.yaml"
         ),
     },
@@ -82,8 +71,8 @@ function main() {
       update: content =>
         replaceRequired(
           content,
-          dockerHubImagePattern,
-          dockerHubImageReplacement,
+          liteLLMImagePattern,
+          liteLLMImageReplacement,
           "hosting/docker-compose.build.yaml"
         ),
     },
@@ -92,8 +81,8 @@ function main() {
       update: content =>
         replaceRequired(
           content,
-          dockerHubImagePattern,
-          dockerHubImageReplacement,
+          liteLLMImagePattern,
+          liteLLMImageReplacement,
           "hosting/docker-compose.dev.yaml"
         ),
     },
@@ -105,6 +94,16 @@ function main() {
           /image:\s*ghcr\.io\/berriai\/litellm:[^\s\n]+/,
           `image: ghcr.io/berriai/litellm:${imageTag}`,
           "charts/budibase/values.yaml"
+        ),
+    },
+    {
+      path: path.join(repoRoot, "charts", "budibase", "README.md"),
+      update: content =>
+        replaceRequired(
+          content,
+          /ghcr\.io\/berriai\/litellm:[^"`\s]+/,
+          `ghcr.io/berriai/litellm:${imageTag}`,
+          "charts/budibase/README.md"
         ),
     },
   ]
@@ -121,9 +120,7 @@ function main() {
   }
 
   console.log(
-    `LiteLLM version ${
-      checkOnly ? "check" : "sync"
-    }: version=${version}, channel=${channel}`
+    `LiteLLM version ${checkOnly ? "check" : "sync"}: version=${version}`
   )
   if (changed.length > 0) {
     const header = checkOnly ? "Out-of-sync files" : "Updated files"

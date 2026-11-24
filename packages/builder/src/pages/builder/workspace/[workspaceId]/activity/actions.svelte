@@ -117,10 +117,6 @@
         value: summary?.completed ?? null,
       },
       { label: ACTIVITY_STATUS_LABELS.active, value: summary?.active ?? null },
-      {
-        label: ACTIVITY_STATUS_LABELS.waiting,
-        value: summary?.waiting ?? null,
-      },
       { label: ACTIVITY_STATUS_LABELS.failed, value: summary?.failed ?? null },
     ]
   })

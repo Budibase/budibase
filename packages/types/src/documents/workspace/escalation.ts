@@ -7,6 +7,7 @@ import type {
   EscalationPolicySnapshot,
   ToolExecutionRule,
 } from "../global/agents"
+import type { PlatformActionSessionMetadata } from "../../sdk"
 
 // This does need a degree of flexibility
 // {accepted: boolean} is a given for now, but response text
@@ -80,6 +81,8 @@ export interface SuspendedOperationContext {
   channel?: ChatConversationChannel
   userId?: string
   requester?: AgentRequester
+  // Lets a resumed run recreate its session if retention deleted it meanwhile
+  sessionMetadata?: PlatformActionSessionMetadata
   pendingToolCall: PendingToolCall
 }
 

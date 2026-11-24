@@ -1,0 +1,37 @@
+suite: ALB ingress network access
+templates:
+  - templates/alb-ingress.yaml
+tests:
+  - it: preserves public ALB defaults
+    set:
+      awsAlbIngress.enabled: true
+    asserts:
+      - equal:
+          path: metadata.annotations["alb.ingress.kubernetes.io/scheme"]
+          value: internet-facing
+      - notExists:
+          path: metadata.annotations["alb.ingress.kubernetes.io/inbound-cidrs"]
+      - notExists:
+          path: metadata.annotations["alb.ingress.kubernetes.io/group.name"]
+      - notExists:
+          path: metadata.annotations["alb.ingress.kubernetes.io/subnets"]
+  - it: creates private ingress restricted to the subnet router
+    set:
+      awsAlbIngress.enabled: true
+      awsAlbIngress.scheme: internal
+      awsAlbIngress.groupName: qa-private-budibase
+      awsAlbIngress.subnets: [subnet-a, subnet-b]
+      awsAlbIngress.inboundCidrs: [10.20.101.106/32]
+    asserts:
+      - equal:
+          path: metadata.annotations["alb.ingress.kubernetes.io/scheme"]
+          value: internal
+      - equal:
+          path: metadata.annotations["alb.ingress.kubernetes.io/group.name"]
+          value: qa-private-budibase
+      - equal:
+          path: metadata.annotations["alb.ingress.kubernetes.io/subnets"]
+          value: subnet-a,subnet-b
+      - equal:
+          path: metadata.annotations["alb.ingress.kubernetes.io/inbound-cidrs"]
+          value: 10.20.101.106/32

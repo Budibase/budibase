@@ -30,11 +30,18 @@
         body.encryptionPassword = password.trim()
       }
       const id = sdk.workspaces.getDevWorkspaceID(app.appId)
-      await API.updateAppFromExport(id, body, file)
+      const { partialImport } = await API.updateAppFromExport(id, body, file)
       const pkg = await API.fetchAppPackage(id)
       await initialise(pkg)
 
-      notifications.success("Workspace updated successfully")
+      if (partialImport) {
+        notifications.send(
+          "Workspace updated, but some table rows could not be confirmed as imported.",
+          { type: "warning", icon: "warning", autoDismiss: false }
+        )
+      } else {
+        notifications.success("Workspace updated successfully")
+      }
     } catch (err: any) {
       notifications.error(`Failed to update workspace - ${err.message || err}`)
     }

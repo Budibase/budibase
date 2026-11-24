@@ -39,9 +39,13 @@ import {
   PROJECT_EXPORT_FORMAT_VERSION,
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
+  PROJECT_PERMISSIONS_FILE,
+  PROJECT_REST_TEMPLATES_FILE,
 } from "./constants"
 import { exportProjectData } from "./data"
 import { readProjectPackageFiles } from "./files"
+import { exportProjectPermissions } from "./permissions"
+import { exportProjectRestTemplates } from "./restTemplates"
 import { doWithProjectAssignmentsLock } from "../lock"
 import {
   fetchAssignedProjectDocs,
@@ -324,6 +328,7 @@ function buildManifest({
     resourcesByType,
     containsRows: false,
     containsAttachments: false,
+    containsPermissions: true,
     requiresSecrets:
       !!resourcesByType[ResourceType.DATASOURCE] ||
       !!resourcesByType[ResourceType.AGENT] ||
@@ -392,6 +397,17 @@ export async function exportProject(
           allowMissing: false,
         })
       : []
+    const permissions = await exportProjectPermissions({
+      resources: exportedDocs.map(doc => ({
+        resourceType: typeByResourceId.get(doc._id!)!,
+        doc,
+      })),
+    })
+    const restTemplates = await exportProjectRestTemplates({
+      datasources: exportedDocs.filter(
+        doc => typeByResourceId.get(doc._id!) === ResourceType.DATASOURCE
+      ) as Datasource[],
+    })
 
     return {
       agents,
@@ -401,6 +417,8 @@ export async function exportProject(
       exportedDocs,
       graph,
       project,
+      permissions,
+      restTemplates,
       projectDependencies,
       typeByResourceId,
       workspaceApps,
@@ -414,6 +432,8 @@ export async function exportProject(
     exportedDocs,
     graph,
     project,
+    permissions,
+    restTemplates,
     projectDependencies,
     typeByResourceId,
     workspaceApps,
@@ -502,6 +522,13 @@ export async function exportProject(
       await writeJsonFile(join(tmpPath, PROJECT_DATA_FILE), data)
     }
     await writeJsonFile(join(tmpPath, PROJECT_MANIFEST_FILE), manifest)
+    await writeJsonFile(join(tmpPath, PROJECT_PERMISSIONS_FILE), permissions)
+    if (restTemplates.length) {
+      await writeJsonFile(
+        join(tmpPath, PROJECT_REST_TEMPLATES_FILE),
+        restTemplates
+      )
+    }
     await writeJsonFile(
       join(tmpPath, PROJECT_FILE),
       sanitiseProjectForExport(project)

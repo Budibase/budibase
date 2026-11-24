@@ -8,17 +8,17 @@ import TestConfig from "../../tests/utilities/TestConfiguration"
 import sdk from "../index"
 import { FIND_LIMIT } from "../workspace/rows/attachments"
 
-const attachment = {
-  size: 73479,
-  name: "2022-12-14 11_11_44-.png",
-  url: "/prod-budi-app-assets/app_bbb/attachments/a.png",
-  extension: "png",
-  key: "app_bbb/attachments/a.png",
-}
 jest.setTimeout(120 * 1000)
 
 describe("should be able to re-write attachment URLs", () => {
   const config = new TestConfig()
+  const attachment = () => ({
+    size: 73479,
+    name: "2022-12-14 11_11_44-.png",
+    url: `/prod-budi-app-assets/${config.getProdWorkspaceId()}/attachments/a.png`,
+    extension: "png",
+    key: `${config.getProdWorkspaceId()}/attachments/a.png`,
+  })
 
   beforeAll(async () => {
     await config.init()
@@ -69,8 +69,8 @@ describe("should be able to re-write attachment URLs", () => {
         },
       },
       {
-        photo: { ...attachment },
-        gallery: [{ ...attachment }, { ...attachment }],
+        photo: attachment(),
+        gallery: [attachment(), attachment()],
         otherCol: "string",
       }
     )
@@ -97,7 +97,7 @@ describe("should be able to re-write attachment URLs", () => {
         },
       },
       {
-        signature: { ...attachment },
+        signature: attachment(),
         otherCol: "string",
       }
     )

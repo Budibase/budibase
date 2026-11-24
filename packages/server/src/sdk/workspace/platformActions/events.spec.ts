@@ -481,16 +481,13 @@ describe("platformActions events", () => {
       }
     )
 
-    it.each<PlatformActionSessionStatus>(["active", "waiting"])(
-      "keeps the events of an old %s session",
-      async status => {
-        await createOldSessionWithEvent(status)
+    it("keeps the events of an old active session", async () => {
+      await createOldSessionWithEvent("active")
 
-        const result = await withContext(() => fetchSessionEvents(session))
+      const result = await withContext(() => fetchSessionEvents(session))
 
-        expect(result.summary).toEqual({ total: 1 })
-        expect(result.events).toHaveLength(1)
-      }
-    )
+      expect(result.summary).toEqual({ total: 1 })
+      expect(result.events).toHaveLength(1)
+    })
   })
 })

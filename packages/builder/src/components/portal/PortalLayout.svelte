@@ -10,7 +10,7 @@
     organisation,
     translations,
   } from "@/stores/portal"
-  import { workspaceStore } from "@/stores/builder"
+  import { builderStore, workspaceStore } from "@/stores/builder"
   import Branding from "@/pages/builder/Branding.svelte"
   import PortalHeader from "./PortalHeader.svelte"
 
@@ -47,6 +47,7 @@
   })
 
   onMount(async () => {
+    builderStore.reset()
     workspaceStore.reset()
     try {
       if (!$auth.user) {

@@ -439,6 +439,7 @@ describe("prepareAgentRunContext", () => {
       tools: {},
       toolDisplayNames: {},
       toolSources: {},
+      toolEventContexts: {},
     })
   })
 
@@ -791,6 +792,7 @@ describe("prepareAgentChatRun - approval gating", () => {
       tools: {},
       toolDisplayNames: {},
       toolSources: {},
+      toolEventContexts: {},
     })
 
     return prepareAgentChatRun({

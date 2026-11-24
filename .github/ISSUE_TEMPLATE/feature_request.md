@@ -1,10 +1,9 @@
 ---
 name: Feature Request
 about: Request a new budibase feature or enhancement
-title: ''
+title: ""
 labels: enhancement, needs-triage
-assignees: ''
-
+assignees: ""
 ---
 
 **Describe the feature request**

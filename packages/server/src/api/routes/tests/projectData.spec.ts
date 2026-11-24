@@ -5,11 +5,14 @@ import { quotas } from "@budibase/pro"
 import { Header } from "@budibase/shared-core"
 import {
   AutoFieldSubType,
+  DocumentType,
   FeatureFlag,
   FieldType,
   QuotaUsageType,
   RelationshipType,
   StaticQuotaName,
+  prefixed,
+  type Document,
   type ExportProjectRequest,
   type ImportProjectRequest,
   type ImportProjectResponse,
@@ -478,8 +481,14 @@ describe("Project data export and import", () => {
   const snapshotWorkspace = async (workspaceId: string) =>
     await config.doInContext(workspaceId, async () => ({
       documents: (
-        await context.getWorkspaceDB().allDocs({ include_docs: true })
-      ).rows.map(({ doc }) => doc),
+        await context.getWorkspaceDB().allDocs<Document>({ include_docs: true })
+      ).rows.map(({ doc }) => {
+        if (!doc?._id?.startsWith(prefixed(DocumentType.ROLE))) {
+          return doc
+        }
+        const { _rev: _revision, updatedAt: _updatedAt, ...role } = doc
+        return role
+      }),
       attachmentKeys: Object.keys(
         await objectStore.getAllFiles(
           ObjectStoreBuckets.APPS,

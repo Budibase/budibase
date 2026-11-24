@@ -111,6 +111,7 @@ export interface WebhookChatCompleteResult {
   ragSources?: AgentMessageMetadata["ragSources"]
   allowKnowledgeSourceDownload?: boolean
   title?: string
+  failed?: boolean
 }
 
 export type DraftChatConversation = Omit<ChatConversationRequest, "agentId"> & {

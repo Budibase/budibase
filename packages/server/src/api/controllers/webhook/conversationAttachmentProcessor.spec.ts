@@ -221,6 +221,51 @@ describe("conversation attachment processor", () => {
     )
   })
 
+  it("persists a failed turn and replies with an error without retrying it", async () => {
+    const assistantMessage = {
+      id: "assistant_1",
+      role: "assistant" as const,
+      parts: [
+        {
+          type: "tool-lookup",
+          toolCallId: "call_1",
+          state: "output-available",
+          input: {},
+          output: { ok: true },
+        },
+      ],
+    }
+    mockWebhookChat.mockResolvedValue({
+      messages: [
+        conversation.pendingAttachmentTurns![0].message,
+        assistantMessage,
+      ],
+      assistantText: "",
+      failed: true,
+    })
+
+    await processConversationAttachmentJob(
+      {
+        workspaceId: "workspace_1",
+        conversationId: "chat_1",
+        turnId: "turn_1",
+      },
+      false
+    )
+
+    expect(mockWebhookChat).toHaveBeenCalledTimes(1)
+    expect(mockFormatReply).not.toHaveBeenCalled()
+    expect(conversation.messages.at(-1)).toEqual(assistantMessage)
+    expect(conversation.pendingAttachmentTurns?.[0].status).toEqual(
+      ConversationAttachmentTurnStatus.COMPLETED
+    )
+    expect(mockReply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: "Sorry, something went wrong while processing your request.",
+      })
+    )
+  })
+
   it("preserves the queued origin after a linked user is renamed", async () => {
     conversation.pendingAttachmentTurns![0].requester = {
       userId: "us_1",

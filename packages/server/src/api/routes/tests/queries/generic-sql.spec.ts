@@ -573,6 +573,28 @@ if (descriptions.length) {
             )
           })
 
+          it("should reject handlebars inside array parameters", async () => {
+            const query = await createQuery({
+              fields: {
+                sql: client(tableName).insert({ name: "{{ foo }}" }).toString(),
+              },
+              parameters: [{ name: "foo", default: "bar" }],
+              queryVerb: "create",
+            })
+
+            await config.api.query.execute(
+              query._id!,
+              { parameters: JSON.parse('{"foo":["{{ 1 }}"]}') },
+              {
+                status: 400,
+                body: {
+                  message:
+                    "Parameter 'foo' input contains a handlebars binding - this is not allowed.",
+                },
+              }
+            )
+          })
+
           // Oracle doesn't automatically coerce strings into dates.
           !isOracle &&
             it.each(["2021-02-05T12:01:00.000Z", "2021-02-05"])(
