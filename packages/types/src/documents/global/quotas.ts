@@ -1,4 +1,4 @@
-import { MonthlyQuotaName, StaticQuotaName } from "../../sdk"
+import { MeteredQuotaName, MonthlyQuotaName, StaticQuotaName } from "../../sdk"
 
 export enum BreakdownQuotaName {
   ROW_QUERIES = "rowQueries",
@@ -66,6 +66,7 @@ export interface BaseQuotaUsage {
 export interface QuotaUsage extends BaseQuotaUsage {
   _id: string
   _rev?: string
+  lastWriteRevisions?: Partial<Record<MeteredQuotaName, string>>
   quotaReset: string
   apps?: {
     [key: string]: BaseQuotaUsage
