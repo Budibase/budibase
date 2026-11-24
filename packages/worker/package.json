@@ -57,7 +57,7 @@
     "lodash": "4.18.1",
     "marked": "^15.0.11",
     "node-fetch": "2.6.7",
-    "nodemailer": "10.1.7",
+    "nodemailer": "10.6.1",
     "pouchdb": "9.0.0",
     "scim2-parse-filter": "^0.2.8",
     "scim-patch": "^0.9.1",
@@ -77,7 +77,7 @@
     "nock": "^13.5.4",
     "nodemon": "2.0.15",
     "rimraf": "3.0.2",
-    "smtp-server": "^3.21.1",
+    "smtp-server": "^3.21.7",
     "superagent": "^10.1.1",
     "supertest": "6.3.3",
     "timekeeper": "2.2.0"
