@@ -127,7 +127,7 @@
     "serialize-error": "^7.0.1",
     "snowflake-sdk": "^3.4.0",
     "socket.io": "4.8.3",
-    "svelte": "5.40.2",
+    "svelte": "5.59.1",
     "tar": "7.5.22",
     "tmp": "0.2.7",
     "to-json-schema": "0.2.5",
