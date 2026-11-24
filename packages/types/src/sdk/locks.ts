@@ -19,7 +19,7 @@ export enum LockName {
   SYNC_ACCOUNT_LICENSE = "sync_account_license",
   UPDATE_TENANTS_DOC = "update_tenants_doc",
   PERSIST_WRITETHROUGH = "persist_writethrough",
-  QUOTA_USAGE_EVENT = "quota_usage_event",
+  UPDATE_QUOTA_USAGE = "update_quota_usage",
   WORKSPACE_MIGRATION = "app_migrations",
   PUBLISH_WORKSPACE = "publish_workspace",
   PROCESS_USER_INVITE = "process_user_invite",
