@@ -11,7 +11,7 @@ const config: Config = {
     "^.+\\.js$": "@swc/jest",
   },
   transformIgnorePatterns: [
-    "/node_modules/(?!uuid/|ai/|@ai-sdk/|@workflow/|@smithy/|@aws-sdk/).*",
+    "/node_modules/(?!uuid/|ai/|@ai-sdk/|@workflow/|@smithy/|@aws-sdk/|zod/).*",
   ],
   moduleNameMapper: {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
