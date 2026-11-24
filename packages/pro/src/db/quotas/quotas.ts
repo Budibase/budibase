@@ -73,13 +73,17 @@ async function removeUsage(retries: number) {
   const id = utils.getQuotaDocId()
   const usage = await db.db.tryGet<QuotaUsage>(id)
 
-  if (usage && usage._rev) {
-    await db.remove(id, usage._rev).catch(async e => {
-      if (retries < maxRetries) {
-        return await removeUsage(retries + 1)
-      }
-      throw e
-    })
+  try {
+    if (usage?._rev) {
+      await db.remove(id, usage._rev)
+    } else {
+      await db.invalidate(id)
+    }
+  } catch (err) {
+    if (retries < maxRetries) {
+      return removeUsage(retries + 1)
+    }
+    throw err
   }
 }
 

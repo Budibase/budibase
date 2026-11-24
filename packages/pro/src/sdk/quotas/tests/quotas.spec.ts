@@ -61,6 +61,44 @@ describe("quotas", () => {
     config.newTenant()
   })
 
+  describe("bustCache", () => {
+    it("retries Redis invalidation after the CouchDB document has been removed", async () => {
+      await config.doInTenant(async () => {
+        await db.quotas.setUsage(
+          10,
+          MonthlyQuotaName.ACTIONS,
+          QuotaUsageType.MONTHLY
+        )
+        const client = await redis.clients.getWritethroughClient()
+        const invalidate = jest
+          .spyOn(client, "delete")
+          .mockRejectedValueOnce(new Error("Redis unavailable"))
+        try {
+          await db.quotas.bustCache()
+          expect(await getCachedQuotaUsage()).toBeUndefined()
+          expect(
+            await tenancy.getGlobalDB().tryGet(db.quotas.utils.getQuotaDocId())
+          ).toBeUndefined()
+        } finally {
+          invalidate.mockRestore()
+        }
+      })
+    })
+
+    it("reports a persistent Redis failure even when the CouchDB document is absent", async () => {
+      await config.doInTenant(async () => {
+        const client = await redis.clients.getWritethroughClient()
+        const error = new Error("Redis unavailable")
+        const invalidate = jest.spyOn(client, "delete").mockRejectedValue(error)
+        try {
+          await expect(db.quotas.bustCache()).rejects.toBe(error)
+        } finally {
+          invalidate.mockRestore()
+        }
+      })
+    })
+  })
+
   describe("empty updates", () => {
     it("does not resolve licenses or initialize usage for an empty action list", async () => {
       await config.doInTenant(async () => {

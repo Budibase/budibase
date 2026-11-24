@@ -61,8 +61,7 @@ async function put(
         } catch (err) {
           logWarn("Could not refresh cache after a committed write", err)
           try {
-            const cache = await getCache()
-            await cache.delete(cacheKey)
+            await invalidate({ db, id: response.id })
           } catch (err) {
             logWarn("Could not invalidate cache after a committed write", err)
           }
@@ -136,15 +135,19 @@ async function tryGet<T extends Document>(
   return cacheItem.doc
 }
 
-async function remove(db: Database, docOrId: any, rev?: any): Promise<void> {
+async function invalidate({ db, id }: { db: Database; id: string }) {
   const cache = await getCache()
+  await cache.delete(makeCacheKey(db, id))
+}
+
+async function remove(db: Database, docOrId: any, rev?: any): Promise<void> {
   if (!docOrId) {
     throw new Error("No ID/Rev provided.")
   }
   const id = typeof docOrId === "string" ? docOrId : docOrId._id
   rev = typeof docOrId === "string" ? rev : docOrId._rev
   try {
-    await cache.delete(makeCacheKey(db, id))
+    await invalidate({ db, id })
   } finally {
     await db.remove(id, rev)
   }
@@ -176,5 +179,9 @@ export class Writethrough {
 
   async remove(docOrId: any, rev?: any) {
     return remove(this.db, docOrId, rev)
+  }
+
+  async invalidate(id: string) {
+    return invalidate({ db: this.db, id })
   }
 }
