@@ -1390,7 +1390,7 @@ describe("agent slack integration provisioning", () => {
 
     it("queues file ingestion and subsequent Slack turns", async () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
-      mockedIsGeminiFileSearchConfigured.mockReturnValue(true)
+      mockedIsGeminiFileSearchConfigured.mockResolvedValue(true)
       await linkExternalUser("user-file")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       const content = "quarterly revenue is 42"
@@ -1582,7 +1582,7 @@ describe("agent slack integration provisioning", () => {
 
     it("rejects file turns when Gemini File Search is not enabled", async () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
-      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      mockedIsGeminiFileSearchConfigured.mockResolvedValue(false)
       await linkExternalUser("user-file-disabled")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       const response = await postSlackMessage({
@@ -1623,7 +1623,7 @@ describe("agent slack integration provisioning", () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
         allowConversationAttachments: false,
       })
-      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      mockedIsGeminiFileSearchConfigured.mockResolvedValue(false)
       await linkExternalUser("user-file-disabled-by-agent")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       const response = await postSlackMessage({
@@ -1781,7 +1781,7 @@ describe("agent slack integration provisioning", () => {
       ])
     })
 
-    it("formats Slack assistant replies using mrkdwn", async () => {
+    it("posts Slack assistant replies as unconverted markdown", async () => {
       mockedWebhookChat.mockResolvedValueOnce({
         messages: [
           {
@@ -1821,7 +1821,7 @@ describe("agent slack integration provisioning", () => {
       })
 
       expect(response.body.messages).toContain(
-        "*Summary*\nUse *bold* and _italic_.\n• First bullet\n[Leave link](https://example.com/docs)"
+        "# Summary\nUse **bold** and *italic*.\n- First bullet\n[Leave link](https://example.com/docs)"
       )
     })
 
@@ -1842,7 +1842,7 @@ describe("agent slack integration provisioning", () => {
           {
             sourceId: "source-1",
             fileId: "file-1",
-            filename: "Source <One>|Draft.pdf",
+            filename: "Source [One] Draft.pdf",
           },
         ],
         title: "Mock conversation",
@@ -1873,7 +1873,7 @@ describe("agent slack integration provisioning", () => {
           "Answer with sources",
           "",
           "Sources:",
-          "- <http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf|Source One Draft.pdf>",
+          "- [Source \\[One\\] Draft.pdf](http://localhost:10000/files/signed/prod-budi-app-assets/source.pdf)",
         ].join("\n")
       )
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)

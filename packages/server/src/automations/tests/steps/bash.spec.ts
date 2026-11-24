@@ -1,7 +1,9 @@
+import execa from "execa"
 import fs from "fs"
 import os from "os"
 import path from "path"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
+import { run as runBash } from "../../steps/bash"
 import * as automation from "../../index"
 import { Table } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -173,6 +175,270 @@ describe("Execute Bash Automations", () => {
 
     expect(result.steps[0].outputs.stdout).toEqual(`${payload}\n`)
     expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it.each(["bash", "sh"])(
+    "should reject bindings in %s script arguments",
+    async command => {
+      const injectedPath = path.join(
+        os.tmpdir(),
+        "budibase-bash-step-injection"
+      )
+      const payload = `safe'; printf injected > ${injectedPath}; #`
+
+      const result = await createAutomationBuilder(config)
+        .onAppAction()
+        .bash({
+          command,
+          args: ["-c", "printf '%s\\n' '{{ trigger.fields.value }}'"],
+        })
+        .test({ fields: { value: payload } })
+
+      expect(result.steps[0].outputs.success).toEqual(false)
+      expect(fs.existsSync(injectedPath)).toEqual(false)
+    }
+  )
+
+  it("should reject bindings in node script arguments", async () => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+    const payload = `safe'); require('fs').writeFileSync('${injectedPath}', 'injected'); //`
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "node",
+        args: ["-e", "process.stdout.write('{{ trigger.fields.value }}')"],
+      })
+      .test({ fields: { value: payload } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it.each([
+    { command: "env", args: ["bash", "-c"] },
+    { command: "env", args: ["-u", "BASH_ENV", "bash", "-c"] },
+    { command: "timeout", args: ["5", "bash", "-c"] },
+    { command: "timeout", args: ["--signal", "TERM", "5", "bash", "-c"] },
+  ])("should reject script bindings through $command", async input => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+    const payload = `safe'; printf injected > ${injectedPath}; #`
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: input.command,
+        args: [...input.args, "printf '%s\\n' '{{ trigger.fields.value }}'"],
+      })
+      .test({ fields: { value: payload } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it.each([
+    { command: "env", prefix: ["-S"] },
+    { command: "timeout", prefix: ["5", "env", "-S"] },
+  ])(
+    "should reject a bound executable inside $command before execution",
+    async input => {
+      const execute = jest.spyOn(execa, "sync").mockImplementation(() => {
+        throw new Error("Unexpected subprocess")
+      })
+      try {
+        const result = await runBash({
+          inputs: {
+            command: input.command,
+            args: [...input.prefix, "{{ executable }}"],
+          },
+          context: { executable: "echo" },
+        })
+        expect(result.response).toContain("Command bindings are not supported")
+        expect(execute).not.toHaveBeenCalled()
+      } finally {
+        execute.mockRestore()
+      }
+    }
+  )
+
+  it.each([
+    { options: ["-ce"] },
+    { options: ["-c", "-e"] },
+    { options: ["-c", "+e"] },
+    { options: ["-c", "-o", "pipefail"] },
+    { options: ["-c", "--"] },
+  ])(
+    "should reject a script binding after Bash options $options before execution",
+    async ({ options }) => {
+      const execute = jest.spyOn(execa, "sync").mockImplementation(() => {
+        throw new Error("Unexpected subprocess")
+      })
+      try {
+        const result = await runBash({
+          inputs: { command: "bash", args: [...options, "{{ script }}"] },
+          context: { script: "true" },
+        })
+        expect(result.response).toContain("Script bindings are not supported")
+        expect(execute).not.toHaveBeenCalled()
+      } finally {
+        execute.mockRestore()
+      }
+    }
+  )
+
+  it.each(["-c", "-Ic"])(
+    "should reject bound Python code attached to %s even when the code ends in c",
+    async option => {
+      const execute = jest.spyOn(execa, "sync").mockImplementation(() => {
+        throw new Error("Unexpected subprocess")
+      })
+      try {
+        const result = await runBash({
+          inputs: { command: "python3", args: [option + "{{ script }}"] },
+          context: { script: "abc" },
+        })
+        expect(result.response).toContain("Script bindings are not supported")
+        expect(execute).not.toHaveBeenCalled()
+      } finally {
+        execute.mockRestore()
+      }
+    }
+  )
+
+  it("should reject a script binding when a dynamic option selects bash -c", async () => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "bash",
+        args: [
+          "{{ trigger.fields.option }}",
+          `printf '{{ trigger.fields.value }}' > ${injectedPath}`,
+        ],
+      })
+      .test({ fields: { option: "-c", value: "unsafe" } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it.each([
+    { name: "-S", args: ["-S", "bash", "-c"] },
+    { name: "--split-string", args: ["--split-string", "bash", "-c"] },
+    { name: "split command", args: ["-S", "bash -c"] },
+  ])("should reject a script binding through env $name", async input => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "env",
+        args: [
+          ...input.args,
+          `printf '{{ trigger.fields.value }}' > ${injectedPath}`,
+        ],
+      })
+      .test({ fields: { value: "unsafe" } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it.each([
+    {
+      command: "python3",
+      option: "-Ic",
+      script: (injectedPath: string) =>
+        `open("${injectedPath}", "w").write("{{ trigger.fields.value }}")`,
+    },
+    {
+      command: "node",
+      option: "-pe",
+      script: (injectedPath: string) =>
+        `require("fs").writeFileSync("${injectedPath}", "{{ trigger.fields.value }}")`,
+    },
+  ])("should reject a script binding through $command $option", async input => {
+    const injectedPath = path.join(os.tmpdir(), "budibase-bash-step-injection")
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: input.command,
+        args: [input.option, input.script(injectedPath)],
+      })
+      .test({ fields: { value: "unsafe" } })
+
+    expect(result.steps[0].outputs.success).toEqual(false)
+    expect(fs.existsSync(injectedPath)).toEqual(false)
+  })
+
+  it("should pass positional values through env -S to a fixed script", async () => {
+    const payload = "hello'; printf injected; #"
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "env",
+        args: [
+          "-S",
+          "bash",
+          "-c",
+          'printf "%s\\n" "$1"',
+          "budibase",
+          "{{ trigger.fields.value }}",
+        ],
+      })
+      .test({ fields: { value: payload } })
+
+    expect(result.steps[0].outputs.success).toEqual(true)
+    expect(result.steps[0].outputs.stdout).toEqual(`${payload}\n`)
+  })
+
+  it("should pass SOAP XML from a JavaScript step as a positional argument", async () => {
+    const xml = '<Envelope><Body customer="O\'Hara">\ninvoice</Body></Envelope>'
+    const caBundle = "/opt/soap-trust/host-ca-bundle.pem"
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .executeScript(
+        { code: "return trigger.fields.xml" },
+        { stepName: "JavaScript" }
+      )
+      .bash({
+        command: "bash",
+        args: [
+          "-c",
+          `request="\${1-}"; ca_bundle="\${2-}"; printf "%s\\n" "$0" "$request" "$ca_bundle"`,
+          "soap-request",
+          "{{{ steps.JavaScript.value }}}",
+          caBundle,
+        ],
+      })
+      .test({ fields: { xml } })
+
+    expect(result.steps[1].outputs.success).toEqual(true)
+    expect(result.steps[1].outputs.stdout).toEqual(
+      `soap-request\n${xml}\n${caBundle}\n`
+    )
+  })
+
+  it("should pass bindings as positional values to a fixed shell script", async () => {
+    const payload = "hello'; printf injected; #"
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .bash({
+        command: "bash",
+        args: [
+          "-c",
+          'printf "%s\\n" "$1"',
+          "budibase",
+          "{{ trigger.fields.value }}",
+        ],
+      })
+      .test({ fields: { value: payload } })
+
+    expect(result.steps[0].outputs.success).toEqual(true)
+    expect(result.steps[0].outputs.stdout).toEqual(`${payload}\n`)
   })
 
   it("should reject command bindings", async () => {

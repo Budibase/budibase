@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 const compose = require("docker-compose")
+const dotenv = require("dotenv")
 const path = require("path")
+
+dotenv.config({ path: path.resolve(process.cwd(), "../../.env") })
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {

@@ -44,9 +44,8 @@ async function saveUnlocked(
   }
 
   const isCreation = !screen._id
-  const storedScreen = isCreation
-    ? undefined
-    : await db.get<Screen>(screen._id!)
+  const storedScreen =
+    screen._id && screen._rev ? await db.get<Screen>(screen._id) : undefined
   // Fetch applies the existing default-app repair for ownerless screens.
   const previousScreen =
     storedScreen && !storedScreen.workspaceAppId

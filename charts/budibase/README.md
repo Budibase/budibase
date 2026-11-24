@@ -127,6 +127,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | globals.budibaseEnv | string | `"PRODUCTION"` | Sets the environment variable BUDIBASE_ENVIRONMENT for the apps and worker pods. Should not ordinarily need to be changed. |
 | globals.cookieDomain | string | `""` | Sets the domain attribute of the cookie that Budibase uses to store session information. See <https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent> for details on why you might want to set this. |
 | globals.createSecrets | bool | `true` | Create an internal API key, JWT secret, object store access key and secret, and store them in a Kubernetes `Secret`. |
++| globals.runtimeSecretKeys | object | `{"apiEncryptionKey":"api_encryption_key","bbEncryptionKey":"bb_encryption_key","internalApiKey":"internal_api_key","jwtSecret":"jwt_secret","objectStoreAccess":"objectstore_access_key","objectStoreSecret":"objectstore_secret_key"}` | Maps credential keys to keys in the shared `budicloud-runtime` Secret when `globals.createSecrets` is false. Ignored for chart-owned Secrets. |
 | globals.deployTimestamp | string | `""` | Opaque value stamped onto every pod template as an annotation. Changing it (e.g. to a fresh timestamp on each deploy) triggers a rolling restart of the pods without changing the image, which is useful for picking up mutable tags or externally-managed config. Leave empty to disable (no annotation is added). |
 | globals.enableAnalytics | string | `"1"` | Whether to enable analytics or not. You can read more about our analytics here: <https://docs.budibase.com/docs/analytics>. |
 | globals.google | object | `{"clientId":"","secret":""}` | Google OAuth settings. These can also be set in the Budibase UI, see <https://docs.budibase.com/docs/sso-with-google> for details. |
@@ -212,13 +213,19 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.couchdb.port | int | `5984` |  |
 | services.dns | string | `"cluster.local"` | The DNS suffix to use for service discovery. You only need to change this if you've configured your cluster to use a different DNS suffix. |
 | services.litellm.bbaiKey | string | `""` | The Budibase AI virtual key (BBAI_LITELLM_KEY) used by agents. When set it is rendered onto both the app service and the automation worker. |
-| services.litellm.config | string | `"general_settings:\n  store_model_in_db: true\n  store_prompts_in_spend_logs: true\nlitellm_settings:\n  drop_params: true\n  extra_spend_tag_headers:\n    - \"x-litellm-tags\"\n  disable_add_user_agent_to_request_tags: true\n  num_retries: 3\n  retry_after: 5\n  retry_policy:\n    RateLimitErrorRetries: 4\n"` | Inline configuration passed to litellm as config.yaml. |
+| services.litellm.config | string | `"general_settings:\n  store_model_in_db: true\n  store_prompts_in_spend_logs: true\n  enable_mcp_registry: false\ncredential_list:\n  - credential_name: budibase-gemini\n    credential_values:\n      api_key: os.environ/GEMINI_API_KEY\n    credential_info:\n      custom_llm_provider: gemini\nlitellm_settings:\n  drop_params: true\n  extra_spend_tag_headers:\n    - \"x-litellm-tags\"\n  disable_add_user_agent_to_request_tags: true\n  num_retries: 3\n  retry_after: 5\n  retry_policy:\n    RateLimitErrorRetries: 4\n"` | Inline configuration passed to litellm as config.yaml. Overriding this value replaces the entire config; retain the `budibase-gemini` entry in `credential_list` or Gemini file search will not work. |
 | services.litellm.enabled | bool | `false` | Whether or not to deploy the litellm gateway. |
 | services.litellm.extraEnv | list | `[{"name":"LITELLM_REASONING_AUTO_SUMMARY","value":"true"}]` | Extra environment variables for the litellm container. Budibase uses LiteLLM virtual keys/models and requires database-backed proxy mode. If `general_settings.store_model_in_db: true` (default), set DATABASE_URL here. |
 | services.litellm.extraVolumeMounts | list | `[]` | Additional volumeMounts on the litellm container. |
 | services.litellm.extraVolumes | list | `[]` | Additional volumes on the litellm pod. |
-| services.litellm.image | string | `"ghcr.io/berriai/litellm:main-v1.83.10-stable"` | litellm image to use. |
+| services.litellm.image | string | `"ghcr.io/berriai/litellm:v1.109.1"` | litellm image to use. |
 | services.litellm.masterKey | string | `""` | The master key to use for litellm. |
+| services.litellm.migrationJob.activeDeadlineSeconds | int | `1800` | Wall-clock timeout for the complete migration Job. |
+| services.litellm.migrationJob.backoffLimit | int | `4` | Maximum number of retries after the initial migration attempt. |
+| services.litellm.migrationJob.enabled | bool | `true` | Run schema migrations once before installing or upgrading LiteLLM. Serving pods disable schema updates while this Job owns migrations. |
+| services.litellm.migrationJob.hookWeight | string | `"1"` | Helm hook ordering weight. |
+| services.litellm.migrationJob.resources | object | `{}` | Resources for the migration Job. |
+| services.litellm.migrationJob.ttlSecondsAfterFinished | int | `120` | Remove a completed migration Job after this many seconds. |
 | services.litellm.pdb | object | `{}` | PodDisruptionBudget settings for the litellm service. Requires podDisruptionBudget.enabled to be true. Set minAvailable to override the global podDisruptionBudget.minAvailable for this service. |
 | services.litellm.port | int | `4000` | Port exposed by the litellm container. |
 | services.litellm.preStopDelaySeconds | int | `45` | Seconds to sleep before SIGTERM to allow load balancer deregistration. |

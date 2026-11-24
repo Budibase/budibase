@@ -1058,14 +1058,40 @@ describe("/applications", () => {
       }
     )
 
-    it("should retrieve all the screens for builder calls", async () => {
-      await config.api.screen.save(basicScreen())
-      await config.api.screen.save(basicScreen())
-      await config.api.screen.save(basicScreen())
+    it("should retrieve full screens when no screen is requested", async () => {
+      const screen = basicScreen()
+      screen.props._children = [basicScreen().props]
+      const savedScreen = await config.api.screen.save(screen)
 
       const res = await config.api.workspace.getAppPackage(workspace.appId)
 
-      expect(res.screens).toHaveLength(3) // 3 created screens
+      expect(res.screens).toContainEqual(
+        expect.objectContaining({
+          _id: savedScreen._id,
+          props: savedScreen.props,
+        })
+      )
+    })
+
+    it("should omit revisions from truncated builder screens", async () => {
+      const currentScreen = await config.api.screen.save(basicScreen("/one"))
+      const otherScreen = await config.api.screen.save(basicScreen("/two"))
+
+      const res = await config.api.workspace.getAppPackage(workspace.appId, {
+        query: { screenId: currentScreen._id },
+      })
+
+      const fetchedCurrentScreen = res.screens.find(
+        screen => screen._id === currentScreen._id
+      )
+      const fetchedOtherScreen = res.screens.find(
+        screen => screen._id === otherScreen._id
+      )
+
+      expect(fetchedCurrentScreen?._rev).toEqual(currentScreen._rev)
+      expect(fetchedCurrentScreen?.props).toEqual(currentScreen.props)
+      expect(fetchedOtherScreen?._rev).toBeUndefined()
+      expect(fetchedOtherScreen?.props._children).toEqual([])
     })
 
     it("should retrieve all the screens for public calls", async () => {

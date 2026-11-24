@@ -72,6 +72,13 @@ function makePinnedAgent(url: string, ip: string): http.Agent | https.Agent {
     : new http.Agent({ lookup })
 }
 
+export async function createSafePinnedAgent(
+  url: string
+): Promise<http.Agent | https.Agent> {
+  const ip = await resolveSafePinnedIp(url)
+  return makePinnedAgent(url, ip)
+}
+
 function nextRequestForRedirect<TRequest extends FetchRequest>(
   request: RedirectSafeRequest<TRequest>,
   responseStatus: number
