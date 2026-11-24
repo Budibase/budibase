@@ -27,6 +27,15 @@ const deferred = () => {
   return { promise, resolve }
 }
 
+const getCachedQuotaUsage = async () => {
+  const client = await redis.clients.getWritethroughClient()
+  const key = tenancy.getGlobalDB().name + db.quotas.utils.getQuotaDocId()
+  const cached = await client.get<{ doc: QuotaUsage }>(
+    `${key}:${tenancy.getTenantId()}`
+  )
+  return cached?.doc
+}
+
 const withTestDeadline = async <T>(task: Promise<T>): Promise<T> => {
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
@@ -319,20 +328,26 @@ describe("quotas", () => {
         await db.quotas.setUsage(10, name, type)
 
         const client = await redis.clients.getWritethroughClient()
-        const store = jest.spyOn(client, "store")
-        store.mockRejectedValueOnce(new Error("Redis write unavailable"))
+        const error = new Error("Redis cache unavailable")
+        const store = jest.spyOn(client, "store").mockRejectedValueOnce(error)
+        const invalidate = jest
+          .spyOn(client, "delete")
+          .mockRejectedValueOnce(error)
         const [first] = await Promise.allSettled([
           quotas.increment(name, type),
-        ]).finally(() => store.mockRestore())
+        ]).finally(() => {
+          store.mockRestore()
+          invalidate.mockRestore()
+        })
         await quotas.increment(name, type)
 
         const month = db.quotas.utils.getCurrentMonthString()
         const persisted = await tenancy
           .getGlobalDB()
           .get<QuotaUsage>(db.quotas.utils.getQuotaDocId())
-        const cached = await db.quotas.getQuotaUsage()
+        const cached = await getCachedQuotaUsage()
         expect(persisted.monthly[month].actions).toBe(12)
-        expect(cached.monthly[month].actions).toBe(12)
+        expect(cached?.monthly[month].actions).toBe(12)
         expect(first.status).toBe("fulfilled")
       })
     })
@@ -372,7 +387,7 @@ describe("quotas", () => {
         },
       ]) {
         await tenant.doInTenant(async () => {
-          const cached = await db.quotas.getQuotaUsage()
+          const cached = await getCachedQuotaUsage()
           const persisted = await tenancy
             .getGlobalDB()
             .tryGet<QuotaUsage>(db.quotas.utils.getQuotaDocId())
@@ -452,7 +467,7 @@ describe("quotas", () => {
           releaseWrite.resolve()
           await withTestDeadline(Promise.all(writes))
 
-          const cached = await db.quotas.getQuotaUsage()
+          const cached = await getCachedQuotaUsage()
           const persisted = await database.tryGet<QuotaUsage>(
             db.quotas.utils.getQuotaDocId()
           )
@@ -567,13 +582,13 @@ describe("quotas", () => {
           ]).flat()
         )
 
-        const cached = await db.quotas.getQuotaUsage()
+        const cached = await getCachedQuotaUsage()
         const persisted = await tenancy
           .getGlobalDB()
           .get<QuotaUsage>(db.quotas.utils.getQuotaDocId())
         const month = db.quotas.utils.getCurrentMonthString()
         for (const usage of [cached, persisted]) {
-          expect(usage.monthly[month]).toMatchObject({
+          expect(usage?.monthly[month]).toMatchObject({
             actions: 8,
             budibaseAICredits: 80,
             breakdown: { actions: { values: { aiAgent: 8 } } },

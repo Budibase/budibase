@@ -128,13 +128,16 @@ describe("writethrough", () => {
           const first = await writethrough.put({ _id: id, value: 1 }, 0)
           const error = Object.assign(new Error("Write failed"), { status })
           const write = jest.spyOn(db, "put").mockRejectedValueOnce(error)
+          const readDb = jest.spyOn(db, "tryGet")
           try {
             await expect(
               writethrough.put({ _id: id, _rev: first.rev, value: 2 }, 0)
             ).rejects.toBe(error)
-            expect((await db.tryGet<ValueDoc>(id))?.value).toBe(1)
             expect((await writethrough.tryGet<ValueDoc>(id))?.value).toBe(1)
+            expect(readDb).not.toHaveBeenCalled()
+            expect((await db.get<ValueDoc>(id)).value).toBe(1)
           } finally {
+            readDb.mockRestore()
             write.mockRestore()
           }
         })

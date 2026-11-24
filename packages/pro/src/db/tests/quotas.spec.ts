@@ -1,4 +1,4 @@
-import { cache, context } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import {
   MonthlyQuotaName,
   QuotaUsageType,
@@ -7,8 +7,6 @@ import {
 import tk from "timekeeper"
 import { DBTestConfiguration, mocks } from "../../../tests"
 import * as quotas from "../quotas"
-
-const { Writethrough } = cache.writethrough
 
 describe("quotas", () => {
   const config = new DBTestConfiguration()
@@ -39,10 +37,8 @@ describe("quotas", () => {
       let usage = await getQuotaUsage()
       // manually delete the 'monthly' field (mimic backward compatibility)
       await config.doInTenant(async () => {
-        let db = context.getGlobalDB()
-        const writethroughDb = new Writethrough(db)
         delete usage.monthly
-        await writethroughDb.put(usage)
+        await context.getGlobalDB().put(usage)
       })
       expect(usage.monthly).toBeUndefined()
 

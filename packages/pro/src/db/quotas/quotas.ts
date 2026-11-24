@@ -2,7 +2,6 @@ import {
   cache,
   context,
   db as dbCore,
-  Duration,
   locks,
   tenancy,
 } from "@budibase/backend-core"
@@ -24,7 +23,6 @@ import {
 } from "@budibase/types"
 import * as utils from "./utils"
 
-const DB_WRITE_RATE_MS = Duration.fromSeconds(60).toMs()
 const { Writethrough } = cache.writethrough
 
 // have to use any for this
@@ -48,9 +46,9 @@ const getDB = () => {
   // create a single global DB for all self-host users using Budicloud services,
   // and we track their quota in tenant-specific documents.
   if (tenancy.isSelfHostUsingCloud()) {
-    return new Writethrough(tenancy.getSelfHostCloudDB(), DB_WRITE_RATE_MS)
+    return new Writethrough(tenancy.getSelfHostCloudDB(), 0)
   }
-  return new Writethrough(tenancy.getGlobalDB(), DB_WRITE_RATE_MS)
+  return new Writethrough(tenancy.getGlobalDB(), 0)
 }
 
 const withUsageLock = async <T>(task: () => Promise<T>): Promise<T> => {
@@ -73,7 +71,7 @@ async function removeUsage(retries: number) {
   const maxRetries = 1
   const db = getDB()
   const id = utils.getQuotaDocId()
-  const usage = await db.tryGet<QuotaUsage>(id)
+  const usage = await db.db.tryGet<QuotaUsage>(id)
 
   if (usage && usage._rev) {
     await db.remove(id, usage._rev).catch(async e => {
@@ -87,7 +85,8 @@ async function removeUsage(retries: number) {
 
 const readQuotaUsage = async (): Promise<QuotaUsage> => {
   const db = getDB()
-  let usage = await db.tryGet<QuotaUsage>(utils.getQuotaDocId())
+  // A committed write may have left an older revision in Redis.
+  let usage = await db.db.tryGet<QuotaUsage>(utils.getQuotaDocId())
   if (!usage) {
     usage = utils.generateNewQuotaUsage()
     const { rev } = await db.put(usage)
@@ -322,7 +321,7 @@ export const setAllUsage = async (
       // The input document revision uniquely identifies this locked write.
       quotaUsage.lastWriteRevisions[action.name] = quotaUsage._rev
     }
-    const response = await db.put(quotaUsage, 0)
+    const response = await db.put(quotaUsage)
     quotaUsage._rev = response.rev
     return quotaUsage
   })

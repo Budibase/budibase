@@ -36,7 +36,6 @@ async function put(
   doc: Document,
   writeRateMs: number = DEFAULT_WRITE_RATE_MS
 ) {
-  const cache = await getCache()
   const key = doc._id
   const lockOptions = {
     name: LockName.PERSIST_WRITETHROUGH,
@@ -54,15 +53,19 @@ async function put(
     const { result } = await locks.doWithLock(
       { ...lockOptions, type: LockType.DEFAULT },
       async () => {
-        // Leave a cache miss if the DB commits but the cache refresh fails.
-        if (key) {
-          await cache.delete(makeCacheKey(db, key))
-        }
         const response = await writeDb()
+        const cacheKey = makeCacheKey(db, response.id)
         try {
-          await cache.store(makeCacheKey(db, response.id), makeCacheItem(doc))
+          const cache = await getCache()
+          await cache.store(cacheKey, makeCacheItem(doc))
         } catch (err) {
           logWarn("Could not refresh cache after a committed write", err)
+          try {
+            const cache = await getCache()
+            await cache.delete(cacheKey)
+          } catch (err) {
+            logWarn("Could not invalidate cache after a committed write", err)
+          }
         }
         return response
       }
@@ -70,6 +73,7 @@ async function put(
     return result
   }
 
+  const cache = await getCache()
   let cacheItem: CacheItem<Document> | undefined
   if (key) {
     cacheItem = await cache.get(makeCacheKey(db, key))
