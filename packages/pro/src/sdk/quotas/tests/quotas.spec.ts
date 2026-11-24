@@ -452,6 +452,46 @@ describe("quotas", () => {
       })
     })
 
+    it("allows updates during a slow recount and discards the stale count", async () => {
+      mocks.licenses.useUnlimited()
+      await config.doInTenant(async () => {
+        const counting = deferred()
+        const releaseCount = deferred()
+        const creators = {
+          name: StaticQuotaName.CREATORS,
+          type: QuotaUsageType.STATIC,
+          usageChange: 1,
+        }
+        let sourceCount = 1
+        const valueFn = jest.fn(async () => sourceCount)
+        valueFn.mockImplementationOnce(async () => {
+          const observed = sourceCount
+          counting.resolve()
+          await releaseCount.promise
+          return observed
+        })
+        const slow = quotas.updateUsage({ ...creators, opts: { valueFn } })
+        try {
+          await withTestDeadline(counting.promise)
+          await withTestDeadline(
+            quotas.increment(MonthlyQuotaName.ACTIONS, QuotaUsageType.MONTHLY)
+          )
+          sourceCount = 2
+          await withTestDeadline(
+            quotas.updateUsage({ ...creators, opts: { valueFn } })
+          )
+        } finally {
+          releaseCount.resolve()
+          await withTestDeadline(slow)
+        }
+        const usage = await db.quotas.getQuotaUsage()
+        expect(usage.usageQuota.creators).toBe(2)
+        expect(
+          usage.monthly[db.quotas.utils.getCurrentMonthString()].actions
+        ).toBe(1)
+      })
+    })
+
     it("preserves action and credit increments in cache and database", async () => {
       await config.doInTenant(async () => {
         await db.quotas.getQuotaUsage()

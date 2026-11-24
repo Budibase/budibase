@@ -445,6 +445,22 @@ const applyUsage = async ({
     })
   if (dryRunOnly) {
     await calculateUpdates(await db.quotas.getQuotaUsage())
+  } else if (
+    actions.some(action => !action.opts?.dryRun && action.opts?.valueFn)
+  ) {
+    let snapshot = await db.quotas.getQuotaUsage()
+    let committed = false
+    while (!committed) {
+      const updates = await calculateUpdates(snapshot)
+      snapshot = await db.quotas.setAllUsage(async current => {
+        // A count can finish after a newer one. Only commit the revision it was calculated for.
+        committed = current._rev === snapshot._rev
+        return committed ? updates : []
+      })
+      if (!committed) {
+        notifications.length = 0
+      }
+    }
   } else {
     await db.quotas.setAllUsage(calculateUpdates)
   }
