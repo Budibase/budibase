@@ -243,7 +243,7 @@
   }
 </script>
 
-<Layout noPadding gap="S">
+<div class="plugins-page">
   {#if $pluginUpdates.length}
     <Banner type="info" showCloseButton={false}>
       <div class="updates-banner">
@@ -330,7 +330,7 @@
       />
     {/if}
   </Layout>
-</Layout>
+</div>
 
 <Modal bind:this={modal}>
   <AddPluginModal />
@@ -362,6 +362,12 @@
 </ConfirmDialog>
 
 <style>
+  .plugins-page {
+    display: grid;
+    grid-template-columns: 1fr;
+    position: relative;
+    gap: var(--spectrum-alias-grid-gutter-xsmall);
+  }
   .filters {
     display: flex;
     gap: var(--spacing-xl);
