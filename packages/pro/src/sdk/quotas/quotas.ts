@@ -337,6 +337,7 @@ const applyUsage = async ({
     }))
   )
   const dryRunOnly = actions.every(action => action.opts?.dryRun)
+  const recountedValues = new Map<UpdateUsageParams, number>()
   const calculateUpdates = (snapshot: QuotaUsage) =>
     tracer.trace("quotas.updateUsage", async span => {
       span.addTags({
@@ -406,8 +407,9 @@ const applyUsage = async ({
               breakdownValue = Math.max(0, breakdownValue)
             }
 
-            if (!action.opts?.dryRun && action.opts?.valueFn) {
-              totalValue = await action.opts.valueFn()
+            const recountedValue = recountedValues.get(action)
+            if (recountedValue !== undefined) {
+              totalValue = recountedValue
               appValue = totalValue
             }
             const update = {
@@ -443,23 +445,27 @@ const applyUsage = async ({
 
       return updates
     })
+  const recounts = actions.flatMap(action => {
+    const valueFn = action.opts?.valueFn
+    return valueFn && !action.opts?.dryRun ? [{ action, valueFn }] : []
+  })
   if (dryRunOnly) {
     await calculateUpdates(await db.quotas.getQuotaUsage())
-  } else if (
-    actions.some(action => !action.opts?.dryRun && action.opts?.valueFn)
-  ) {
+  } else if (recounts.length) {
     let snapshot = await db.quotas.getQuotaUsage()
-    let committed = false
-    while (!committed) {
-      const updates = await calculateUpdates(snapshot)
-      snapshot = await db.quotas.setAllUsage(async current => {
-        // A count can finish after a newer one. Only commit the revision it was calculated for.
-        committed = current._rev === snapshot._rev
-        return committed ? updates : []
-      })
-      if (!committed) {
-        notifications.length = 0
+    let pending = recounts
+    while (pending.length) {
+      for (const { action, valueFn } of pending) {
+        recountedValues.set(action, await valueFn())
       }
+      snapshot = await db.quotas.setAllUsage(async current => {
+        pending = recounts.filter(
+          ({ action }) =>
+            current.lastWriteRevisions?.[action.name] !==
+            snapshot.lastWriteRevisions?.[action.name]
+        )
+        return pending.length ? [] : calculateUpdates(current)
+      })
     }
   } else {
     await db.quotas.setAllUsage(calculateUpdates)

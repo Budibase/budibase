@@ -452,6 +452,42 @@ describe("quotas", () => {
       })
     })
 
+    it("finishes a recount when an unrelated quota changes during every count", async () => {
+      mocks.licenses.useUnlimited()
+      await config.doInTenant(async () => {
+        const actions = {
+          name: MonthlyQuotaName.ACTIONS,
+          type: QuotaUsageType.MONTHLY,
+          usageChange: 1,
+        }
+        const valueFn = jest
+          .fn<Promise<number>, []>()
+          .mockRejectedValue(
+            new Error("Unrelated action invalidated the creator count")
+          )
+          .mockImplementationOnce(async () => {
+            await quotas.updateUsage(actions)
+            return 3
+          })
+        await quotas.updateUsage([
+          {
+            name: StaticQuotaName.CREATORS,
+            type: QuotaUsageType.STATIC,
+            usageChange: 1,
+            opts: { valueFn },
+          },
+          actions,
+        ])
+
+        const usage = await db.quotas.getQuotaUsage()
+        expect(valueFn).toHaveBeenCalledTimes(1)
+        expect(usage.usageQuota.creators).toBe(3)
+        expect(
+          usage.monthly[db.quotas.utils.getCurrentMonthString()].actions
+        ).toBe(2)
+      })
+    })
+
     it("allows updates during a slow recount and discards the stale count", async () => {
       mocks.licenses.useUnlimited()
       await config.doInTenant(async () => {

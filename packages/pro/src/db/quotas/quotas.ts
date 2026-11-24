@@ -316,8 +316,11 @@ export const setAllUsage = async (
     if (!actions.length) {
       return quotaUsage
     }
+    quotaUsage.lastWriteRevisions ??= {}
     for (const action of actions) {
       coreUsageUpdate({ quotaUsage, update: action })
+      // The input document revision uniquely identifies this locked write.
+      quotaUsage.lastWriteRevisions[action.name] = quotaUsage._rev
     }
     const response = await db.put(quotaUsage, 0)
     quotaUsage._rev = response.rev
