@@ -2,6 +2,7 @@ import { writable, derived, get, Writable, Readable } from "svelte/store"
 import { sessionBannerStore } from "../../../stores/sessionBanner"
 import { DataFetch, DataFetchDefinition, fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
+import { shouldReloadAfterDelete } from "../lib/pagination"
 import {
   generateRowID,
   getCellID,
@@ -799,6 +800,15 @@ export const createActions = (context: StoreContext): RowActionStore => {
 
     // Update state
     handleRemoveRows(rowsToDelete)
+
+    if (
+      shouldReloadAfterDelete({
+        remainingRowCount: get(rows).length,
+        hasNextPage: get(hasNextPage),
+      })
+    ) {
+      await refreshData()
+    }
   }
 
   // Local handler to process new rows inside the fetch, and append any new
