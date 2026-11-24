@@ -1703,20 +1703,19 @@ describe("/applications", () => {
       expect(updatedApp.embedSSO?.audience).toBe("budibase-example")
     })
 
-    it("rejects enabling embed SSO without an audience", async () => {
+    it("allows enabling embed SSO without an audience", async () => {
       mocks.licenses.useEmbedAuth()
 
-      await config.api.workspace.update(
-        workspace.appId,
-        {
-          embedSSO: {
-            enabled: true,
-            algorithm: "HS256",
-            key: "super-secret",
-          },
+      const updatedApp = await config.api.workspace.update(workspace.appId, {
+        embedSSO: {
+          enabled: true,
+          algorithm: "HS256",
+          key: "super-secret",
         },
-        { status: 400 }
-      )
+      })
+
+      expect(updatedApp.embedSSO?.enabled).toBe(true)
+      expect(updatedApp.embedSSO?.audience).toBeUndefined()
     })
   })
 

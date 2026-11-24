@@ -93,10 +93,6 @@
       )
       return
     }
-    if (ssoEnabled && !ssoAudience.trim()) {
-      notifications.error("Please provide the expected token audience")
-      return
-    }
     try {
       const config = {
         enabled: ssoEnabled,
@@ -234,10 +230,10 @@
           disabled={!$licensing.embedAuthEnabled}
         />
         <Input
-          label="Audience"
+          label="Audience (recommended)"
           bind:value={ssoAudience}
-          placeholder="Your Budibase client ID"
-          helpText="The token's 'aud' claim must match this value."
+          placeholder="Budibase audience identifier"
+          helpText="If set, the token's 'aud' claim must match this value. Use an audience dedicated to this Budibase integration."
           disabled={!$licensing.embedAuthEnabled}
         />
         <Input

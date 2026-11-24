@@ -75,7 +75,7 @@ describe("embedSSO sdk", () => {
   })
 
   describe("authenticateEmbedUser", () => {
-    it("maps a valid token to an existing user and sets the auth cookie", async () => {
+    it("accepts a token with the configured audience and sets the auth cookie", async () => {
       getGlobalUserByEmail.mockResolvedValue({
         _id: "us_123",
         email: "user@example.com",
@@ -175,7 +175,7 @@ describe("embedSSO sdk", () => {
       expect(cookiesSet).not.toHaveBeenCalled()
     })
 
-    it("rejects a token for a different audience before finding a user", async () => {
+    it("rejects a token whose aud claim differs from the configured audience", async () => {
       const token = jwt.sign(
         { userdata: { email: "user@example.com" } },
         SECRET,
@@ -191,7 +191,7 @@ describe("embedSSO sdk", () => {
       expect(cookiesSet).not.toHaveBeenCalled()
     })
 
-    it("rejects a token without an audience", async () => {
+    it("rejects a token without aud when an audience is configured", async () => {
       const token = jwt.sign(
         { userdata: { email: "user@example.com" } },
         SECRET
@@ -205,11 +205,16 @@ describe("embedSSO sdk", () => {
       expect(cookiesSet).not.toHaveBeenCalled()
     })
 
-    it("rejects tokens when an existing configuration has no audience", async () => {
+    it("accepts a token without an audience when none is configured", async () => {
+      getGlobalUserByEmail.mockResolvedValue({
+        _id: "us_123",
+        email: "user@example.com",
+        tenantId: "default",
+        roles: {},
+      })
       const token = jwt.sign(
         { userdata: { email: "user@example.com" } },
-        SECRET,
-        { audience: AUDIENCE }
+        SECRET
       )
       const { ctx, cookiesSet } = buildCtx()
 
@@ -219,9 +224,34 @@ describe("embedSSO sdk", () => {
         token
       )
 
-      expect(result).toBe(false)
-      expect(createASession).not.toHaveBeenCalled()
-      expect(cookiesSet).not.toHaveBeenCalled()
+      expect(result).toBe(true)
+      expect(createASession).toHaveBeenCalled()
+      expect(cookiesSet).toHaveBeenCalled()
+    })
+
+    it("skips audience matching when none is configured", async () => {
+      getGlobalUserByEmail.mockResolvedValue({
+        _id: "us_123",
+        email: "user@example.com",
+        tenantId: "default",
+        roles: {},
+      })
+      const token = jwt.sign(
+        { userdata: { email: "user@example.com" } },
+        SECRET,
+        { audience: "other-client" }
+      )
+      const { ctx, cookiesSet } = buildCtx()
+
+      const result = await authenticateEmbedUser(
+        ctx,
+        hmacConfig({ audience: undefined }),
+        token
+      )
+
+      expect(result).toBe(true)
+      expect(createASession).toHaveBeenCalled()
+      expect(cookiesSet).toHaveBeenCalled()
     })
 
     it("rejects an RS256 token issued for another relying party", async () => {
@@ -252,18 +282,11 @@ describe("embedSSO sdk", () => {
   })
 
   describe("encodeConfigForStorage", () => {
-    it("requires an audience when embed SSO is enabled", () => {
-      expect(() =>
-        encodeConfigForStorage(hmacConfig({ audience: undefined }))
-      ).toThrow("An audience is required for embed SSO")
-    })
+    it("allows an enabled configuration without an audience", () => {
+      const result = encodeConfigForStorage(hmacConfig({ audience: undefined }))
 
-    it("allows an existing configuration without an audience to be disabled", () => {
-      const result = encodeConfigForStorage(
-        hmacConfig({ enabled: false, audience: undefined })
-      )
-
-      expect(result.enabled).toBe(false)
+      expect(result.enabled).toBe(true)
+      expect(result.audience).toBeUndefined()
     })
 
     it("encrypts a newly provided key", () => {
