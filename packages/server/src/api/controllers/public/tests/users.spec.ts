@@ -23,18 +23,19 @@ jest.mock("@budibase/pro", () => ({
 
 type TestUser = ContextUser
 type TestTarget = {
-  _id: string
+  _id?: string
   email: string
+  password?: string
 }
 type TestContext = {
   user: TestUser
   params: {
-    userId: string
+    userId?: string
   }
   request: {
     body: {
-      _id: string
       email: string
+      password?: string
       roles?: User["roles"]
       builder: {
         apps: unknown
@@ -57,13 +58,11 @@ const createCtx = ({
 }): UserCtx =>
   ({
     user: caller,
-    params: {
-      userId: target._id,
-    },
+    params: target._id ? { userId: target._id } : {},
     request: {
       body: {
-        _id: target._id,
         email: target.email,
+        ...(target.password === undefined ? {} : { password: target.password }),
         ...(roles === undefined ? {} : { roles }),
         builder: {
           apps: builderApps,
@@ -103,6 +102,34 @@ describe("public users controller", () => {
     saveUser.mockResolvedValue({ _id: targetUser._id })
   }
 
+  it.each([
+    { field: "_id", value: "user_target" },
+    { field: "_rev", value: "1-existing" },
+  ])(
+    "rejects a supplied $field on public user creation",
+    async ({ field, value }) => {
+      const ctx = createCtx({
+        caller: {
+          _id: "user_creator",
+          email: "creator@example.com",
+          tenantId: "tenant",
+          builder: { apps: ["app_allowed"] },
+        },
+        target: { email: targetUser.email },
+        builderApps: ["app_allowed"],
+      })
+      ctx.request.body[field] = value
+      const next = jest
+        .fn()
+        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+      await expect(controller.create(ctx, next)).rejects.toMatchObject({
+        status: 400,
+      })
+      expect(saveUser).not.toHaveBeenCalled()
+    }
+  )
+
   it("allows an organisation admin to assign any user to any workspace", async () => {
     const ctx = createCtx({
       caller: {
@@ -126,6 +153,83 @@ describe("public users controller", () => {
 
     expect(saveUser).toHaveBeenCalledTimes(1)
     expect(next).toHaveBeenCalled()
+  })
+
+  it.each<{ targetRoles: User["roles"]; admin?: User["admin"] }>([
+    { targetRoles: { app_other: "BASIC" }, admin: undefined },
+    { targetRoles: { app_allowed: "BASIC" }, admin: undefined },
+    { targetRoles: { app_allowed: "BASIC" }, admin: { global: true } },
+  ])(
+    "rejects a workspace builder changing an out-of-scope password",
+    async ({ targetRoles, admin }) => {
+      const ctx = createCtx({
+        caller: {
+          _id: "user_builder",
+          email: "builder@example.com",
+          tenantId: "tenant",
+          builder: { apps: ["app_allowed"] },
+        },
+        target: { ...targetUser, password: "changed-password" },
+        builderApps: ["app_allowed"],
+      })
+      ctx.request.body.admin = admin
+      readUser.mockResolvedValue({
+        ...targetUser,
+        tenantId: "tenant",
+        roles: targetRoles,
+        admin,
+      })
+      const next = jest
+        .fn()
+        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+      await expect(controller.update(ctx, next)).rejects.toMatchObject({
+        status: 403,
+      })
+      expect(saveUser).not.toHaveBeenCalled()
+    }
+  )
+
+  it("allows an organisation admin to change a user password", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_admin",
+        email: "admin@example.com",
+        tenantId: "tenant",
+        admin: { global: true },
+      },
+      target: { ...targetUser, password: "changed-password" },
+      builderApps: ["app_allowed"],
+    })
+    setExistingTargetUser({ app_allowed: "BASIC" })
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.update(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
+  })
+
+  it("allows a user to change their own password", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: targetUser._id,
+        email: targetUser.email,
+        tenantId: "tenant",
+      },
+      target: { ...targetUser, password: "changed-password" },
+    })
+    setExistingTargetUser()
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.update(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
   })
 
   it("allows a workspace creator to assign another user to their workspace", async () => {
@@ -163,7 +267,7 @@ describe("public users controller", () => {
           apps: ["app_allowed"],
         },
       },
-      target: targetUser,
+      target: { email: targetUser.email },
       builderApps: ["app_allowed"],
     })
     setExistingTargetUser()
@@ -175,6 +279,8 @@ describe("public users controller", () => {
     await controller.create(ctx, next)
 
     expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(saveUser.mock.calls[0][0].request.body).not.toHaveProperty("_id")
+    expect(saveUser.mock.calls[0][0].request.body).not.toHaveProperty("_rev")
     expect(next).toHaveBeenCalled()
   })
 
@@ -213,7 +319,7 @@ describe("public users controller", () => {
           apps: ["app_allowed"],
         },
       },
-      target: targetUser,
+      target: { email: targetUser.email },
       builderApps: ["app_target"],
     })
     const next = jest
@@ -284,7 +390,7 @@ describe("public users controller", () => {
           apps: ["app_allowed"],
         },
       },
-      target: targetUser,
+      target: { email: targetUser.email },
       roles: { app_allowed: "BASIC" },
     })
     saveTargetUser()
@@ -295,6 +401,8 @@ describe("public users controller", () => {
     await controller.create(ctx, next)
 
     expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(saveUser.mock.calls[0][0].request.body).not.toHaveProperty("_id")
+    expect(saveUser.mock.calls[0][0].request.body).not.toHaveProperty("_rev")
     expect(next).toHaveBeenCalled()
   })
 
@@ -333,7 +441,7 @@ describe("public users controller", () => {
           apps: ["app_allowed"],
         },
       },
-      target: targetUser,
+      target: { email: targetUser.email },
       roles: { app_other: "ADMIN" },
     })
     const next = jest

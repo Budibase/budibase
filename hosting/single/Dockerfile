@@ -64,7 +64,7 @@ RUN apt-get update && \
 # Install litellm
 RUN python3 -m venv /opt/venv/litellm
 
-ARG LITELLM_PYPI_VERSION=1.83.10
+ARG LITELLM_PYPI_VERSION=1.109.1
 RUN /opt/venv/litellm/bin/pip install "litellm[proxy]==${LITELLM_PYPI_VERSION}"
 ENV PATH="/opt/venv/litellm/bin:${PATH}"
 RUN mkdir -p /litellm

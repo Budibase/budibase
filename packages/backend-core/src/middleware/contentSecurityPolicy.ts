@@ -31,7 +31,6 @@ const CSP_DIRECTIVES = {
   "connect-src": [
     "'self'",
     "https://*.budibase.app",
-    "https://*.budibaseqa.app",
     "https://*.budibase.net",
     "https://api-iam.intercom.io",
     "https://api-ping.intercom.io",

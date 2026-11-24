@@ -1,0 +1,154 @@
+suite: LiteLLM migrations
+templates:
+  - templates/litellm-migration-job.yaml
+  - templates/litellm-service-deployment.yaml
+tests:
+  - it: runs migrations before install and upgrade
+    template: templates/litellm-migration-job.yaml
+    set:
+      services.litellm.enabled: true
+      services.litellm.extraEnv:
+        - name: DATABASE_URL
+          value: postgresql://example.com/litellm
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: pre-install,pre-upgrade
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value:
+            - python
+            - litellm/proxy/prisma_migration.py
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DISABLE_SCHEMA_UPDATE
+            value: "false"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DATABASE_URL
+            value: postgresql://example.com/litellm
+
+  - it: applies chart-wide scheduling settings to the migration Job
+    template: templates/litellm-migration-job.yaml
+    set:
+      services.litellm.enabled: true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: example.com/workload
+                    operator: In
+                    values:
+                      - migrations
+      tolerations:
+        - key: example.com/workload
+          operator: Equal
+          value: migrations
+          effect: NoSchedule
+      schedulerName: custom-scheduler
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
+          value: example.com/workload
+      - equal:
+          path: spec.template.spec.tolerations[0]
+          value:
+            key: example.com/workload
+            operator: Equal
+            value: migrations
+            effect: NoSchedule
+      - equal:
+          path: spec.template.spec.schedulerName
+          value: custom-scheduler
+
+  - it: disables schema updates on serving pods
+    template: templates/litellm-service-deployment.yaml
+    set:
+      services.litellm.enabled: true
+      services.litellm.migrationJob.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DISABLE_SCHEMA_UPDATE
+            value: "true"
+
+  - it: preserves startup migrations when the migration Job is disabled
+    template: templates/litellm-service-deployment.yaml
+    set:
+      services.litellm.enabled: true
+      services.litellm.migrationJob.enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DISABLE_SCHEMA_UPDATE
+            value: "true"
+
+  - it: does not render the migration Job when disabled
+    template: templates/litellm-migration-job.yaml
+    set:
+      services.litellm.enabled: true
+      services.litellm.migrationJob.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: uses runtime key mappings for both migration-hook credentials
+    template: templates/litellm-migration-job.yaml
+    release:
+      name: budibase
+    set:
+      services.litellm.enabled: true
+      globals.createSecrets: false
+      globals.runtimeSecretKeys.litellm_master_key: custom_master_key
+      globals.runtimeSecretKeys.litellm_salt_key: custom_salt_key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budicloud-runtime
+                key: custom_master_key
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_SALT_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budicloud-runtime
+                key: custom_salt_key
+
+  - it: keeps migration-hook Secret keys in managed mode despite runtime mappings
+    template: templates/litellm-migration-job.yaml
+    release:
+      name: budibase
+    set:
+      services.litellm.enabled: true
+      globals.createSecrets: true
+      globals.runtimeSecretKeys.litellm_master_key: custom_master_key
+      globals.runtimeSecretKeys.litellm_salt_key: custom_salt_key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase-litellm-migrations
+                key: litellm_master_key
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LITELLM_SALT_KEY
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase-litellm-migrations
+                key: litellm_salt_key

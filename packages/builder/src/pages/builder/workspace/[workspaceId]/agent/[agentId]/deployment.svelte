@@ -262,8 +262,8 @@
         </Body>
         {#if !knowledgeSearchConfigured}
           <Body color="var(--spectrum-global-color-gray-700)" size="XS">
-            Set <code>GEMINI_API_KEY</code> in the Budibase server environment,
-            then restart Budibase. <Link
+            Set <code>GEMINI_API_KEY</code> in the LiteLLM server environment,
+            then restart LiteLLM. <Link
               href="https://aistudio.google.com/app/apikey"
               target="_blank"
               rel="noopener noreferrer"
