@@ -145,6 +145,7 @@ describe("sso", () => {
           ssoUser.tenantId = context.getTenantId()
 
           expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
+            allowSsoProviderUserId: true,
             hashPassword: false,
             requirePassword: false,
           })
@@ -192,6 +193,7 @@ describe("sso", () => {
           ssoUser._id = existingUser._id
 
           expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
+            allowSsoProviderUserId: false,
             hashPassword: false,
             requirePassword: false,
           })
@@ -201,6 +203,7 @@ describe("sso", () => {
 
       describe("exists by id", () => {
         beforeEach(() => {
+          existingUser._id = "us_" + details.userId
           users.getById.mockReturnValueOnce(Promise.resolve(existingUser))
         })
 
@@ -220,6 +223,7 @@ describe("sso", () => {
           ssoUser._id = existingUser._id
 
           expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
+            allowSsoProviderUserId: false,
             hashPassword: false,
             requirePassword: false,
           })
@@ -527,7 +531,7 @@ describe("sso", () => {
             roles: assignments.roles,
             admin: assignments.admin,
           }),
-          expect.anything()
+          expect.objectContaining({ allowSsoProviderUserId: true })
         )
 
         expect(mockInvite.deleteCode).toHaveBeenCalledWith(
@@ -617,7 +621,7 @@ describe("sso", () => {
         // the winner's account is reused - no second document is created
         expect(mockSaveUser).toHaveBeenCalledWith(
           expect.objectContaining({ _id: existingUser._id }),
-          expect.anything()
+          expect.objectContaining({ allowSsoProviderUserId: false })
         )
         expect(mockInvite.deleteCode).not.toHaveBeenCalled()
         expect(events.user.inviteAccepted).not.toHaveBeenCalled()
