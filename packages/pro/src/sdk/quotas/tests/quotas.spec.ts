@@ -477,7 +477,7 @@ describe("quotas", () => {
       })
     })
 
-    it("finishes a recount when an unrelated quota changes during every count", async () => {
+    it("counts creators once when action usage changes during the recount", async () => {
       mocks.licenses.useUnlimited()
       await config.doInTenant(async () => {
         const actions = {
@@ -487,9 +487,7 @@ describe("quotas", () => {
         }
         const valueFn = jest
           .fn<Promise<number>, []>()
-          .mockRejectedValue(
-            new Error("Unrelated action invalidated the creator count")
-          )
+          .mockRejectedValue(new Error("Unexpected retry of the creator count"))
           .mockImplementationOnce(async () => {
             await quotas.updateUsage(actions)
             return 3
