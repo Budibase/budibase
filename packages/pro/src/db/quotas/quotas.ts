@@ -148,7 +148,7 @@ export const setAppUsageValue = (
   } catch (err) {
     // ignore error for now
   }
-  if (!appId || !values.app || !APP_QUOTA_NAMES.includes(name)) {
+  if (!appId || values.app == null || !APP_QUOTA_NAMES.includes(name)) {
     return quotaUsage
   }
   if (!quotaUsage.apps?.[appId]) {
@@ -259,13 +259,13 @@ const setMonthlyTriggers = (
   }
 }
 
-const coreUsageUpdate = (
-  quotaUsage: QuotaUsage,
-  name: MeteredQuotaName,
-  type: QuotaUsageType,
-  values: SetUsageValues,
-  opts: { id?: string; appId?: string } = {}
-) => {
+export const coreUsageUpdate = ({
+  quotaUsage,
+  update: { name, type, values, opts = {} },
+}: {
+  quotaUsage: QuotaUsage
+  update: SetAllUsageParams
+}) => {
   if (type === QuotaUsageType.STATIC) {
     name = name as StaticQuotaName
     quotaUsage.usageQuota[name] = values.total
@@ -293,7 +293,7 @@ const coreUsageUpdate = (
   return setAppUsageValue(quotaUsage, name, type, opts, values)
 }
 
-interface SetAllUsageParams {
+export interface SetAllUsageParams {
   name: MeteredQuotaName
   type: QuotaUsageType
   values: SetUsageValues
@@ -308,7 +308,7 @@ export const setAllUsage = async (
 ) =>
   withUsageLock(async () => {
     const db = getDB()
-    let quotaUsage = await readQuotaUsage()
+    const quotaUsage = await readQuotaUsage()
     // Calculate deltas from the same snapshot that will be persisted, while locked.
     const updates =
       typeof params === "function" ? await params(quotaUsage) : params
@@ -317,13 +317,7 @@ export const setAllUsage = async (
       return quotaUsage
     }
     for (const action of actions) {
-      quotaUsage = coreUsageUpdate(
-        quotaUsage,
-        action.name,
-        action.type,
-        action.values,
-        action.opts
-      )
+      coreUsageUpdate({ quotaUsage, update: action })
     }
     const response = await db.put(quotaUsage, 0)
     quotaUsage._rev = response.rev

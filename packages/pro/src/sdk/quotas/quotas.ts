@@ -336,18 +336,17 @@ const applyUsage = async ({
       ),
     }))
   )
-  const calculateUpdates = (usage: QuotaUsage) =>
+  const dryRunOnly = actions.every(action => action.opts?.dryRun)
+  const calculateUpdates = (snapshot: QuotaUsage) =>
     tracer.trace("quotas.updateUsage", async span => {
       span.addTags({
         numActions: actions.length,
         tenantId,
       })
 
-      let totalValuesToApply: any = {}
-      let appValuesToApply: any = {}
-      let breakdownValuesToApply: any = {}
-      let triggersToApply: any = {}
-      for (let action of actions) {
+      const usage = structuredClone(snapshot)
+      const updates: db.quotas.SetAllUsageParams[] = []
+      for (const action of actions) {
         await tracer.trace("quotas.updateUsage.action", async span => {
           span.addTags({
             actionName: action.name,
@@ -377,7 +376,7 @@ const applyUsage = async ({
               breakdownValue += action.usageChange
             }
 
-            let triggers: QuotaTriggers = {}
+            let triggers: QuotaTriggers | undefined
             if (!action.opts?.dryRun) {
               triggers = await checkTriggers({
                 type: action.type,
@@ -387,7 +386,6 @@ const applyUsage = async ({
                 usage,
                 notifications,
               })
-              triggersToApply = { ...triggersToApply, [action.name]: triggers }
             }
 
             if (
@@ -406,29 +404,28 @@ const applyUsage = async ({
             }
             if (breakdownValue != null) {
               breakdownValue = Math.max(0, breakdownValue)
-              breakdownValuesToApply = {
-                ...breakdownValuesToApply,
-                [action.name]: breakdownValue,
-              }
             }
 
-            // Apply functions if it is not a dry run
+            if (!action.opts?.dryRun && action.opts?.valueFn) {
+              totalValue = await action.opts.valueFn()
+              appValue = totalValue
+            }
+            const update = {
+              name: action.name,
+              type: action.type,
+              values: {
+                total: totalValue,
+                app: appValue,
+                breakdown: breakdownValue,
+                triggers,
+              },
+              opts: { id: action.opts?.id, tenantId },
+            }
+            if (dryRunOnly || !action.opts?.dryRun) {
+              db.quotas.coreUsageUpdate({ quotaUsage: usage, update })
+            }
             if (!action.opts?.dryRun) {
-              // if a value function is provided
-              // use it to calculate the new value instead of incrementing / decrementing
-              let fn = action.opts?.valueFn
-              if (fn) {
-                totalValue = await fn()
-                appValue = totalValue
-              }
-              totalValuesToApply = {
-                ...totalValuesToApply,
-                [action.name]: totalValue,
-              }
-              appValuesToApply = {
-                ...appValuesToApply,
-                [action.name]: appValue,
-              }
+              updates.push(update)
             }
           } catch (err) {
             if (!action.opts?.suppressErrorLog) {
@@ -444,24 +441,9 @@ const applyUsage = async ({
         })
       }
 
-      // update the usage quotas
-      const usageQuotas = actions
-        .filter(action => !action.opts?.dryRun)
-        .map(action => ({
-          name: action.name,
-          type: action.type,
-          values: {
-            total: totalValuesToApply[action.name],
-            app: appValuesToApply[action.name],
-            breakdown: breakdownValuesToApply[action.name],
-            triggers: triggersToApply[action.name],
-          },
-          opts: { ...action.opts, tenantId },
-        }))
-
-      return usageQuotas
+      return updates
     })
-  if (actions.every(action => action.opts?.dryRun)) {
+  if (dryRunOnly) {
     await calculateUpdates(await db.quotas.getQuotaUsage())
   } else {
     await db.quotas.setAllUsage(calculateUpdates)

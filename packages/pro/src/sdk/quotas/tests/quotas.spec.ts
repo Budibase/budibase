@@ -119,6 +119,69 @@ describe("quotas", () => {
     })
   })
 
+  describe("incrementMany with repeated quota names", () => {
+    const ids = [ActionType.AI_AGENT, ActionType.AUTOMATION_STEP]
+    const quota = {
+      name: MonthlyQuotaName.ACTIONS,
+      type: QuotaUsageType.MONTHLY,
+    }
+    const seedUsage = () =>
+      db.quotas.setAllUsage([
+        {
+          ...quota,
+          opts: { id: ActionType.AI_AGENT },
+          values: { total: 7, breakdown: 7 },
+        },
+        {
+          ...quota,
+          opts: { id: ActionType.AUTOMATION_STEP },
+          values: { total: 10, breakdown: 3 },
+        },
+      ])
+
+    it("accumulates the total and each action type's usage", async () => {
+      mocks.licenses.useUnlimited()
+      await config.doInTenant(async () => {
+        await seedUsage()
+        await quotas.incrementMany(
+          ids.map(id => ({ ...quota, change: 1, opts: { id } }))
+        )
+        const usage = await tenancy
+          .getGlobalDB()
+          .get<QuotaUsage>(db.quotas.utils.getQuotaDocId())
+        expect(
+          usage.monthly[db.quotas.utils.getCurrentMonthString()]
+        ).toMatchObject({
+          actions: 12,
+          breakdown: { actions: { values: { aiAgent: 8, automationStep: 4 } } },
+        })
+      })
+    })
+
+    it("rejects the whole batch before callbacks when its combined cost exceeds the limit", async () => {
+      const license = _.cloneDeep(CLOUD_FREE_LICENSE)
+      license.quotas.usage.monthly.actions.value = 11
+      mocks.licenses.useLicense(license)
+      await config.doInTenant(async () => {
+        await seedUsage()
+        const fn = jest.fn(async () => "done")
+        await expect(
+          quotas.incrementMany(
+            ids.map(id => ({ ...quota, change: 1, opts: { id, fn } }))
+          )
+        ).rejects.toMatchObject({ code: APIWarningCode.USAGE_LIMIT_EXCEEDED })
+        expect(fn).not.toHaveBeenCalled()
+        const usage = await db.quotas.getQuotaUsage()
+        expect(
+          usage.monthly[db.quotas.utils.getCurrentMonthString()]
+        ).toMatchObject({
+          actions: 10,
+          breakdown: { actions: { values: { aiAgent: 7, automationStep: 3 } } },
+        })
+      })
+    })
+  })
+
   describe("increment", () => {
     it("charges both admitted actions and blocks the next callback", async () => {
       const license = _.cloneDeep(CLOUD_FREE_LICENSE)
