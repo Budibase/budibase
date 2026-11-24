@@ -10,7 +10,7 @@ import {
 } from "@budibase/types"
 import { DBTestConfiguration, mocks } from "../../../../tests"
 
-import { tenancy } from "@budibase/backend-core"
+import { redis, tenancy } from "@budibase/backend-core"
 import _ from "lodash"
 import Redlock from "redlock"
 import { CLOUD_FREE_LICENSE } from "../../../constants/licenses"
@@ -310,6 +310,31 @@ describe("quotas", () => {
   describe("concurrent usage updates", () => {
     beforeEach(() => {
       mocks.licenses.useUnlimited()
+    })
+
+    it("retains both charges when Redis fails after CouchDB commits the first increment", async () => {
+      await config.doInTenant(async () => {
+        const name = MonthlyQuotaName.ACTIONS
+        const type = QuotaUsageType.MONTHLY
+        await db.quotas.setUsage(10, name, type)
+
+        const client = await redis.clients.getWritethroughClient()
+        const store = jest.spyOn(client, "store")
+        store.mockRejectedValueOnce(new Error("Redis write unavailable"))
+        const [first] = await Promise.allSettled([
+          quotas.increment(name, type),
+        ]).finally(() => store.mockRestore())
+        await quotas.increment(name, type)
+
+        const month = db.quotas.utils.getCurrentMonthString()
+        const persisted = await tenancy
+          .getGlobalDB()
+          .get<QuotaUsage>(db.quotas.utils.getQuotaDocId())
+        const cached = await db.quotas.getQuotaUsage()
+        expect(persisted.monthly[month].actions).toBe(12)
+        expect(cached.monthly[month].actions).toBe(12)
+        expect(first.status).toBe("fulfilled")
+      })
     })
 
     it("keeps tenants independent while another tenant holds its usage lock", async () => {
