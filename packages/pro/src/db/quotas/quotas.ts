@@ -316,7 +316,7 @@ export const setAllUsage = async (
     if (!actions.length) {
       return quotaUsage
     }
-    for (let action of actions) {
+    for (const action of actions) {
       quotaUsage = coreUsageUpdate(
         quotaUsage,
         action.name,
