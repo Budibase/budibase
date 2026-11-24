@@ -160,6 +160,44 @@ describe("toOutputFields", () => {
     expect(result.bodyHtmlTruncated).toBe(true)
   })
 
+  it("keeps the sanitized body when source truncation only removes a comment", async () => {
+    const html = `<a href="https://example.com/invoices/123">View invoice</a><!--${"a".repeat(
+      EMAIL_HTML_SOURCE_CHARACTER_LIMIT
+    )}-->`
+    const message = buildMessage(
+      ["Content-Type: text/html; charset=utf-8", "", html].join("\r\n")
+    )
+
+    const result = await toOutputFields(message)
+
+    expect(result.bodyHtml).toBe(
+      `<a href="https://example.com/invoices/123">View invoice</a><p>${EMAIL_BODY_TRUNCATION_SUFFIX.trim()}</p>`
+    )
+    expect(result.bodyHtmlTruncated).toBe(true)
+  })
+
+  it("keeps the truncation marker when truncation cuts through an HTML attribute", async () => {
+    const suffix = `<p>${EMAIL_BODY_TRUNCATION_SUFFIX.trim()}</p>`
+    const incompleteHref = '<a href="https://'
+    const paragraph = `<p>${"a".repeat(
+      EMAIL_HTML_CHARACTER_LIMIT -
+        suffix.length -
+        incompleteHref.length -
+        "<p></p>".length
+    )}</p>`
+    const html = `${paragraph}<a href="https://example.com/invoices/123">View invoice</a>${"a".repeat(
+      100
+    )}`
+    const message = buildMessage(
+      ["Content-Type: text/html; charset=utf-8", "", html].join("\r\n")
+    )
+
+    const result = await toOutputFields(message)
+
+    expect(result.bodyHtml).toEndWith(suffix)
+    expect(result.bodyHtmlTruncated).toBe(true)
+  })
+
   it("sanitizes HTML body before returning it", async () => {
     const html =
       '<p onclick="alert(1)">Hello</p><script>alert(1)</script><img src="data:image/png;base64,abc" />'

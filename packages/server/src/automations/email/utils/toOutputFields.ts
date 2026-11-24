@@ -65,20 +65,32 @@ const applyHtmlBodyLimit = (body: string | undefined): BodyLimitResult => {
     return { body: sanitizedHtml, truncated: false }
   }
 
-  let sliceLength =
-    Math.min(sanitizedHtml.length, EMAIL_HTML_CHARACTER_LIMIT) -
-    HTML_BODY_TRUNCATION_SUFFIX.length
+  if (
+    sanitizedHtml.length + HTML_BODY_TRUNCATION_SUFFIX.length <=
+    EMAIL_HTML_CHARACTER_LIMIT
+  ) {
+    return {
+      body: `${sanitizedHtml}${HTML_BODY_TRUNCATION_SUFFIX}`,
+      truncated: true,
+    }
+  }
+
+  let sliceLength = Math.min(
+    sanitizedHtml.length,
+    EMAIL_HTML_CHARACTER_LIMIT - HTML_BODY_TRUNCATION_SUFFIX.length
+  )
 
   while (sliceLength > 0) {
-    const result = sanitizeHtmlString(
-      `${sanitizedHtml.slice(0, sliceLength)}${HTML_BODY_TRUNCATION_SUFFIX}`
+    const sanitizedSlice = sanitizeHtmlString(
+      sanitizedHtml.slice(0, sliceLength)
     )
+    const result = `${sanitizedSlice}${HTML_BODY_TRUNCATION_SUFFIX}`
 
     if (result.length <= EMAIL_HTML_CHARACTER_LIMIT) {
       return { body: result, truncated: true }
     }
 
-    sliceLength -= result.length - EMAIL_HTML_CHARACTER_LIMIT
+    sliceLength -= Math.max(1, result.length - EMAIL_HTML_CHARACTER_LIMIT)
   }
 
   return {
