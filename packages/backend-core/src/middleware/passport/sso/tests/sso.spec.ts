@@ -145,6 +145,7 @@ describe("sso", () => {
           ssoUser.tenantId = context.getTenantId()
 
           expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
+            allowSsoProviderUserId: true,
             hashPassword: false,
             requirePassword: false,
           })
@@ -192,6 +193,7 @@ describe("sso", () => {
           ssoUser._id = existingUser._id
 
           expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
+            allowSsoProviderUserId: false,
             hashPassword: false,
             requirePassword: false,
           })
@@ -220,6 +222,7 @@ describe("sso", () => {
           ssoUser._id = existingUser._id
 
           expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
+            allowSsoProviderUserId: false,
             hashPassword: false,
             requirePassword: false,
           })

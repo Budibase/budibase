@@ -135,6 +135,8 @@ async function syncAndSaveUser(
   delete ssoUser.password
   // create or sync the user
   return (await saveUserFn(ssoUser, {
+    allowSsoProviderUserId:
+      ssoUser._id === generateGlobalUserID(details.userId),
     hashPassword: false,
     requirePassword: false,
   })) as SSOUser
