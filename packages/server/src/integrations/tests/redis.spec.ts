@@ -7,8 +7,6 @@ class TestConfiguration {
 
   constructor(config: any = {}) {
     this.integration = new RedisIntegration.integration(config)
-    // have to kill the basic integration before replacing it
-    this.integration.client.quit()
     this.integration.client = new Redis({
       data: {
         test: "test",
@@ -102,5 +100,37 @@ describe("Redis Integration", () => {
       ["set", "foo", '"What a wonderful world!"'],
       ["get", "foo"],
     ])
+  })
+})
+
+describe("Redis Integration with the default blacklist", () => {
+  it.each(["169.254.169.254", "127.0.0.1", "localhost"])(
+    "does not connect to %s",
+    async host => {
+      const integration = new RedisIntegration.integration({
+        host,
+        port: 6379,
+        username: "",
+      })
+
+      const response = await integration.testConnection!()
+
+      expect(response.connected).toBe(false)
+      expect(response.error).toContain(
+        "Host is blocked or could not be resolved safely."
+      )
+    }
+  )
+
+  it("does not run queries against a blocked host", async () => {
+    const integration = new RedisIntegration.integration({
+      host: "127.0.0.1",
+      port: 6379,
+      username: "",
+    })
+
+    await expect(integration.read!({ key: "test" })).rejects.toThrow(
+      "Host is blocked or could not be resolved safely."
+    )
   })
 })
