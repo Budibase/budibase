@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Layout,
     Button,
@@ -12,7 +12,11 @@
     Input,
     Divider,
   } from "@budibase/bbui"
-  import { PASSWORD_REPLACEMENT } from "@budibase/types"
+  import {
+    PASSWORD_REPLACEMENT,
+    type EmbedSSOAlgorithm,
+    type UIWorkspaceApp,
+  } from "@budibase/types"
   import { AppStatus } from "@/constants"
   import { workspacesStore } from "@/stores/portal/workspaces"
   import { workspaceStore, workspaceAppStore } from "@/stores/builder"
@@ -20,11 +24,11 @@
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { onMount } from "svelte"
 
-  let selectedApp
+  let selectedApp: UIWorkspaceApp | undefined
 
   $: allowedOrigins = $workspaceStore.embedAllowedOrigins || []
 
-  const updateAllowedOrigins = async origins => {
+  const updateAllowedOrigins = async (origins: string[]) => {
     try {
       await workspaceStore.updateWorkspace({ embedAllowedOrigins: origins })
       notifications.success("Allowed domains updated")
@@ -33,21 +37,22 @@
     }
   }
 
-  const algorithmOptions = [
+  const algorithmOptions: { label: string; value: EmbedSSOAlgorithm }[] = [
     { label: "ES256 (public key)", value: "ES256" },
     { label: "RS256 (public key)", value: "RS256" },
     { label: "HS256 (shared secret)", value: "HS256" },
   ]
 
   let ssoEnabled = false
-  let ssoAlgorithm = "ES256"
+  let ssoAlgorithm: EmbedSSOAlgorithm = "ES256"
   let ssoKey = ""
+  let ssoAudience = ""
   let ssoIssuer = ""
   let ssoEmailClaim = ""
   // whether a key is already stored (server returns it masked)
   let ssoKeySet = false
   // the algorithm the stored key was created for
-  let originalAlgorithm = "ES256"
+  let originalAlgorithm: EmbedSSOAlgorithm = "ES256"
 
   onMount(() => {
     const config = $workspaceStore.embedSSO
@@ -55,6 +60,7 @@
       ssoEnabled = config.enabled
       ssoAlgorithm = config.algorithm || "ES256"
       originalAlgorithm = ssoAlgorithm
+      ssoAudience = config.audience || ""
       ssoIssuer = config.issuer || ""
       ssoEmailClaim = config.emailClaim || ""
       ssoKeySet = !!config.key
@@ -87,11 +93,16 @@
       )
       return
     }
+    if (ssoEnabled && !ssoAudience.trim()) {
+      notifications.error("Please provide the expected token audience")
+      return
+    }
     try {
       const config = {
         enabled: ssoEnabled,
         algorithm: ssoAlgorithm,
         key: ssoKey || (canReuseStoredKey ? PASSWORD_REPLACEMENT : ""),
+        audience: ssoAudience.trim() || undefined,
         issuer: ssoIssuer || undefined,
         emailClaim: ssoEmailClaim || undefined,
       }
@@ -110,7 +121,7 @@
   $: filteredApps = $workspacesStore.apps.filter(
     app => app.devId == $workspaceStore.appId
   )
-  $: workspace = filteredApps.length ? filteredApps[0] : {}
+  $: workspace = filteredApps[0]
   $: workspaceBaseUrl = `${window.origin}/embed${workspace?.url}`
   $: workspaceUrl =
     !selectedApp || selectedApp?.isDefault
@@ -220,6 +231,13 @@
           error={ssoKeySet && !canReuseStoredKey
             ? "A new key is required for the selected algorithm"
             : undefined}
+          disabled={!$licensing.embedAuthEnabled}
+        />
+        <Input
+          label="Audience"
+          bind:value={ssoAudience}
+          placeholder="Your Budibase client ID"
+          helpText="The token's 'aud' claim must match this value."
           disabled={!$licensing.embedAuthEnabled}
         />
         <Input
