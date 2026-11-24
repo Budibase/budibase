@@ -18,7 +18,7 @@ jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
   return {
     ...actual,
-    utils: { ...actual.utils, resolveSafeHostIp: jest.fn() },
+    utils: { ...actual.utils, requireSafeHostIp: jest.fn() },
   }
 })
 
@@ -52,7 +52,7 @@ jest.mock("snowflake-sdk", () => {
   }
 })
 
-const resolveSafeHostIp = jest.mocked(utils.resolveSafeHostIp)
+const requireSafeHostIp = jest.mocked(utils.requireSafeHostIp)
 
 const config = (account = "account") => ({
   account,
@@ -176,11 +176,11 @@ describe("snowflake integration", () => {
     ).testConnection()
 
     expect(response).toEqual({ connected: true })
-    expect(resolveSafeHostIp).toHaveBeenCalledWith(host)
+    expect(requireSafeHostIp).toHaveBeenCalledWith(host)
   })
 
   it("does not connect when the host is blocked", async () => {
-    resolveSafeHostIp.mockRejectedValueOnce(
+    requireSafeHostIp.mockRejectedValueOnce(
       new Error("Host is blocked or could not be resolved safely.")
     )
 
@@ -202,7 +202,7 @@ describe("snowflake integration", () => {
       connected: false,
       error: "Snowflake host could not be determined.",
     })
-    expect(resolveSafeHostIp).not.toHaveBeenCalled()
+    expect(requireSafeHostIp).not.toHaveBeenCalled()
     expect(connect).not.toHaveBeenCalled()
   })
 
@@ -220,7 +220,7 @@ describe("snowflake integration", () => {
         error:
           "Invalid account. The specified value must be a valid subdomain string.",
       })
-      expect(resolveSafeHostIp).not.toHaveBeenCalled()
+      expect(requireSafeHostIp).not.toHaveBeenCalled()
       expect(connect).not.toHaveBeenCalled()
     }
   )

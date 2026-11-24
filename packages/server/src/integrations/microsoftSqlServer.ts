@@ -47,7 +47,7 @@ export async function connectToSafeHost({
   port,
   signal,
 }: SocketTarget & { signal?: AbortSignal }): Promise<net.Socket> {
-  const ip = await coreUtils.resolveSafeHostIp(host)
+  const ip = await coreUtils.requireSafeHostIp(host)
   // A listener added to an already-aborted signal never fires, so an abort
   // during the host check has to be caught here.
   if (signal?.aborted) {
@@ -309,7 +309,7 @@ class SqlServerIntegration
       const port = +this.config.port
       const namedServer = /^(.*)\\(.*)$/.exec(this.config.server)
       const host = namedServer ? namedServer[1] : this.config.server
-      const ip = await coreUtils.resolveSafeHostIp(host)
+      const ip = await coreUtils.requireSafeHostIp(host)
       const clientCfg: sqlServer.config = {
         user: this.config.user,
         password: this.config.password,

@@ -247,7 +247,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus, SqlDatasource {
   async connect() {
     const host = this.config.host ?? "localhost"
     const port = this.config.port ?? 3306
-    const ip = await utils.resolveSafeHostIp(host)
+    const ip = await utils.requireSafeHostIp(host)
     this.client = await mysql.createConnection({
       ...this.config,
       // The socket goes to the checked IP so the driver cannot resolve the

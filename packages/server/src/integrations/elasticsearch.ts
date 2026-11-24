@@ -120,7 +120,7 @@ export class ElasticSearchIntegration implements IntegrationBase {
   // options (adding `ssl`) and reads any login from the URL itself.
   private async buildClient(): Promise<Client> {
     const { hostname } = new URL(this.config.url)
-    const ip = await utils.resolveSafeHostIp(hostname.replace(/^\[|\]$/g, ""))
+    const ip = await utils.requireSafeHostIp(hostname.replace(/^\[|\]$/g, ""))
     const agent: AgentOptions = { lookup: utils.createPinnedLookup(ip) }
 
     const clientConfig: ClientOptions = {

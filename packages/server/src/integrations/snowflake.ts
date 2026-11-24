@@ -129,7 +129,7 @@ class SnowflakePromise {
     if (!options.host) {
       throw new Error("Snowflake host could not be determined.")
     }
-    await utils.resolveSafeHostIp(options.host)
+    await utils.requireSafeHostIp(options.host)
 
     this.client = client
     const connectAsync = promisify(client.connect.bind(client))

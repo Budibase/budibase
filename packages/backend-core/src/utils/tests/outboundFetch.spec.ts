@@ -4,7 +4,7 @@ import {
   createPinnedLookup,
   createSafeLookup,
   fetchWithBlacklist,
-  resolveSafeHostIp,
+  requireSafeHostIp,
 } from "../outboundFetch"
 import { generator } from "../../../tests"
 
@@ -610,7 +610,7 @@ describe("outboundFetch", () => {
 
   // ─── Host-level check (non-HTTP connections) ──────────────────────────────
 
-  describe("resolveSafeHostIp", () => {
+  describe("requireSafeHostIp", () => {
     it.each([
       "/var/run/postgresql",
       "http://db.example.com",
@@ -622,7 +622,7 @@ describe("outboundFetch", () => {
       resolveAddressMock.mockResolvedValue(["203.0.113.10"])
       isBlacklistedMock.mockResolvedValue(false)
 
-      await expect(resolveSafeHostIp(hostname)).rejects.toThrow(
+      await expect(requireSafeHostIp(hostname)).rejects.toThrow(
         "Host is blocked or could not be resolved safely."
       )
       expect(resolveAddressMock).not.toHaveBeenCalled()
@@ -632,7 +632,7 @@ describe("outboundFetch", () => {
       resolveAddressMock.mockResolvedValue(["203.0.113.10"])
       isBlacklistedMock.mockResolvedValue(false)
 
-      expect(await resolveSafeHostIp("db.example.com")).toEqual("203.0.113.10")
+      expect(await requireSafeHostIp("db.example.com")).toEqual("203.0.113.10")
     })
 
     it("rejects a host that resolves to a blocked address", async () => {
@@ -640,7 +640,7 @@ describe("outboundFetch", () => {
       isBlacklistedMock.mockResolvedValue(true)
 
       await expect(
-        resolveSafeHostIp("169.254.169.254.example.com")
+        requireSafeHostIp("169.254.169.254.example.com")
       ).rejects.toThrow("Host is blocked or could not be resolved safely.")
     })
 
@@ -650,7 +650,7 @@ describe("outboundFetch", () => {
         async address => address === "10.0.0.5"
       )
 
-      await expect(resolveSafeHostIp("db.example.com")).rejects.toThrow(
+      await expect(requireSafeHostIp("db.example.com")).rejects.toThrow(
         "Host is blocked or could not be resolved safely."
       )
     })
@@ -658,7 +658,7 @@ describe("outboundFetch", () => {
     it("rejects a host that does not resolve", async () => {
       resolveAddressMock.mockResolvedValue([])
 
-      await expect(resolveSafeHostIp("db.example.com")).rejects.toThrow(
+      await expect(requireSafeHostIp("db.example.com")).rejects.toThrow(
         "Host is blocked or could not be resolved safely."
       )
     })
@@ -667,14 +667,14 @@ describe("outboundFetch", () => {
       resolveAddressMock.mockResolvedValue(["2001:db8::1", "203.0.113.10"])
       isBlacklistedMock.mockResolvedValue(false)
 
-      expect(await resolveSafeHostIp("db.example.com")).toEqual("203.0.113.10")
+      expect(await requireSafeHostIp("db.example.com")).toEqual("203.0.113.10")
     })
 
     it("returns IPv6 when it is the only address family", async () => {
       resolveAddressMock.mockResolvedValue(["2001:db8::1"])
       isBlacklistedMock.mockResolvedValue(false)
 
-      expect(await resolveSafeHostIp("db.example.com")).toEqual("2001:db8::1")
+      expect(await requireSafeHostIp("db.example.com")).toEqual("2001:db8::1")
     })
   })
 

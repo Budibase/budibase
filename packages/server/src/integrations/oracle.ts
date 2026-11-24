@@ -513,7 +513,7 @@ class OracleIntegration extends Sql implements DatasourcePlus, SqlDatasource {
     if (!SERVICE_NAME_PATTERN.test(this.config.database)) {
       throw new Error("Invalid database name.")
     }
-    const ip = await utils.resolveSafeHostIp(this.config.host)
+    const ip = await utils.requireSafeHostIp(this.config.host)
     const host = isIPv6(ip) ? `[${ip}]` : ip
     const connectString = `${host}:${port}/${this.config.database}`
     const attributes: ConnectionAttributes = {

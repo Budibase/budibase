@@ -109,7 +109,7 @@ class RedisIntegration implements IntegrationBase {
   // connect to the checked IP, so it cannot be used to reach internal services.
   private async connect(): Promise<Redis> {
     if (!this.client) {
-      const host = await utils.resolveSafeHostIp(this.config.host)
+      const host = await utils.requireSafeHostIp(this.config.host)
       this.client = new Redis({
         host,
         port: this.config.port,

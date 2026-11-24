@@ -318,7 +318,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus, SqlDatasource {
   // connects to the checked IP so the driver cannot resolve the host again.
   private async createClient(): Promise<Client> {
     const { host } = this.config
-    const ip = await utils.resolveSafeHostIp(host)
+    const ip = await utils.requireSafeHostIp(host)
     const clientConfig: ClientConfig = {
       host: ip,
       port: this.config.port,

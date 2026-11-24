@@ -83,7 +83,7 @@ function blockedHostMessage() {
 // For connections that are not HTTP(S) URLs, such as database drivers. The
 // caller must connect to the returned IP rather than the hostname, otherwise
 // the driver resolves the name again and the check can be bypassed.
-export async function resolveSafeHostIp(hostname: string): Promise<string> {
+export async function requireSafeHostIp(hostname: string): Promise<string> {
   const message = blockedHostMessage()
   // Anything else (a socket path, a URL, host:port) would be parsed into a
   // different host than the one the driver ends up using.
@@ -100,7 +100,7 @@ export async function resolveSafeHostIp(hostname: string): Promise<string> {
 // runtime: every hostname is checked as it is resolved.
 export function createSafeLookup(): LookupFunction {
   return (hostname, options, callback) => {
-    resolveSafeHostIp(hostname).then(
+    requireSafeHostIp(hostname).then(
       ip => createPinnedLookup(ip)(hostname, options, callback),
       error => callback(error, "", 4)
     )

@@ -427,7 +427,7 @@ export class MongoIntegration implements IntegrationBase {
     // The lookup is not called for IP addresses or socket paths, so the
     // hosts in the connection string are checked here.
     for (const address of hosts) {
-      await utils.resolveSafeHostIp(address.host ?? address.socketPath ?? "")
+      await utils.requireSafeHostIp(address.host ?? address.socketPath ?? "")
     }
   }
 

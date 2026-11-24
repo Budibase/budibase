@@ -6,7 +6,7 @@ import { utils } from "@budibase/backend-core"
 // every connection goes to the checked IP, so the SDK cannot resolve it again.
 export async function pinnedRequestHandler(endpoint: string) {
   const { hostname } = new URL(endpoint)
-  const ip = await utils.resolveSafeHostIp(hostname.replace(/^\[|\]$/g, ""))
+  const ip = await utils.requireSafeHostIp(hostname.replace(/^\[|\]$/g, ""))
   const lookup = utils.createPinnedLookup(ip)
   return {
     httpAgent: new http.Agent({ keepAlive: true, lookup }),
