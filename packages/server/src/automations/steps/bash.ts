@@ -1,4 +1,5 @@
 import execa from "execa"
+import path from "path"
 import { findHBSBlocks, processStringSync } from "@budibase/string-templates"
 import * as automationUtils from "../automationUtils"
 import environment from "../../environment"
@@ -9,6 +10,8 @@ const COMMAND_BINDINGS_ERROR =
   "Budibase bash automation failed: Command bindings are not supported. Use the args field for dynamic values."
 const ARGS_VALIDATION_ERROR =
   "Budibase bash automation failed: Args must be a JSON array of strings."
+const SCRIPT_BINDINGS_ERROR =
+  "Budibase bash automation failed: Script bindings are not supported. Pass dynamic values as positional arguments to a fixed script."
 
 interface JsonEditorInput {
   value?: unknown
@@ -50,8 +53,184 @@ const parseArgs = (args: unknown) => {
   throw new Error(ARGS_VALIDATION_ERROR)
 }
 
-const processArgs = (args: unknown, context: object) => {
-  return parseArgs(args).map(arg => processStringSync(arg, context))
+type WrapperResult =
+  | { kind: "possibleScriptArgs"; fromIndex: number }
+  | { kind: "nested"; index: number }
+  | { kind: "none" }
+
+type WrapperParser = (args: string[]) => WrapperResult
+
+interface InterpreterSpec {
+  scriptArgsAfterFlag?: (input: { args: string[]; next: number }) => number[]
+  matches: (executable: string) => boolean
+  codeInNextArg: (arg: string) => boolean
+  codeAttached: (arg: string) => boolean
+}
+
+const parseEnvArgs: WrapperParser = args => {
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index]
+    if (arg === "--split-string" || /^-[a-zA-Z]*S$/.test(arg)) {
+      const command = args[index + 1]
+      return command && /^[a-zA-Z0-9_./][a-zA-Z0-9_./-]*$/.test(command)
+        ? { kind: "nested", index: index + 1 }
+        : { kind: "possibleScriptArgs", fromIndex: index + 1 }
+    }
+    if (arg.startsWith("--split-string=") || /^-[a-zA-Z]*S.+/.test(arg)) {
+      return { kind: "possibleScriptArgs", fromIndex: index }
+    }
+    if (["-u", "--unset", "-C", "--chdir"].includes(arg)) {
+      index++
+      continue
+    }
+    if (
+      arg === "--" ||
+      arg.startsWith("-") ||
+      /^[A-Za-z_][A-Za-z_0-9]*=/.test(arg)
+    ) {
+      continue
+    }
+    return { kind: "nested", index }
+  }
+  return { kind: "none" }
+}
+
+const parseTimeoutArgs: WrapperParser = args => {
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index]
+    if (["-s", "--signal", "-k", "--kill-after"].includes(arg)) {
+      index++
+      continue
+    }
+    if (arg.startsWith("-")) {
+      continue
+    }
+    if (index + 1 < args.length) {
+      return { kind: "nested", index: index + 1 }
+    }
+    return { kind: "none" }
+  }
+  return { kind: "none" }
+}
+
+const WRAPPERS = new Map<string, WrapperParser>([
+  ["env", parseEnvArgs],
+  ["timeout", parseTimeoutArgs],
+])
+
+const INTERPRETERS: InterpreterSpec[] = [
+  {
+    matches: executable =>
+      ["bash", "sh", "dash", "zsh", "ksh"].includes(executable),
+    codeInNextArg: arg => /^-[a-zA-Z]*c[a-zA-Z]*$/.test(arg),
+    scriptArgsAfterFlag: ({ args, next }) => {
+      if (args[next] === "--") {
+        return [next + 1]
+      }
+      if (/^[-+]/.test(args[next] ?? "")) {
+        // Further options can consume operands before the shell reaches the script.
+        return args.slice(next).map((_, offset) => next + offset)
+      }
+      return [next]
+    },
+    codeAttached: arg => /^-[a-zA-Z]*c.+/.test(arg),
+  },
+  {
+    matches: executable => /^python(?:\d+(?:\.\d+)?)?$/.test(executable),
+    codeInNextArg: arg => /^-[a-bd-zA-Z]*c$/.test(arg),
+    codeAttached: arg => /^-[a-bd-zA-Z]*c[\s\S]/.test(arg),
+  },
+  {
+    matches: executable => ["node", "nodejs"].includes(executable),
+    codeInNextArg: arg =>
+      /^-[a-zA-Z]*[ep]$/.test(arg) || ["--eval", "--print"].includes(arg),
+    codeAttached: arg => /^-[ep].+/.test(arg) || /^--(?:eval|print)=/.test(arg),
+  },
+]
+
+const findInlineCode = ({
+  spec,
+  args,
+}: {
+  spec: InterpreterSpec
+  args: string[]
+}): number[] => {
+  for (const [index, arg] of args.entries()) {
+    if (arg === "--") {
+      return []
+    }
+    if (spec.codeInNextArg(arg)) {
+      const next = index + 1
+      return spec.scriptArgsAfterFlag?.({ args, next }) ?? [next]
+    }
+    if (spec.codeAttached(arg)) {
+      return [index]
+    }
+  }
+  return []
+}
+
+const scriptArgumentIndexes = ({
+  command,
+  args,
+  originalArgs,
+}: {
+  command: string
+  args: string[]
+  originalArgs: string[]
+}): number[] => {
+  const executable = path.basename(command).toLowerCase()
+  const wrapper = WRAPPERS.get(executable)
+  if (wrapper) {
+    const result = wrapper(args)
+    if (result.kind === "possibleScriptArgs") {
+      return args
+        .map((_, index) => index)
+        .filter(index => index >= result.fromIndex)
+    }
+    if (result.kind !== "nested") {
+      return []
+    }
+    if (findHBSBlocks(originalArgs[result.index]).length > 0) {
+      throw new Error(COMMAND_BINDINGS_ERROR)
+    }
+    const nestedIndexes = scriptArgumentIndexes({
+      command: args[result.index],
+      args: args.slice(result.index + 1),
+      originalArgs: originalArgs.slice(result.index + 1),
+    })
+    return nestedIndexes.map(index => result.index + 1 + index)
+  }
+  const spec = INTERPRETERS.find(spec => spec.matches(executable))
+  return spec ? findInlineCode({ spec, args }) : []
+}
+
+const processArgs = ({
+  command,
+  args,
+  context,
+}: {
+  command: string
+  args: unknown
+  context: object
+}) => {
+  const parsedArgs = parseArgs(args)
+  const processedArgs = parsedArgs.map(arg => processStringSync(arg, context))
+  const codeIndexes = scriptArgumentIndexes({
+    command,
+    args: processedArgs,
+    originalArgs: parsedArgs,
+  })
+  if (
+    codeIndexes.some(
+      index =>
+        index < parsedArgs.length && findHBSBlocks(parsedArgs[index]).length > 0
+    )
+  ) {
+    throw new Error(SCRIPT_BINDINGS_ERROR)
+  }
+
+  return processedArgs
 }
 
 export async function run({
@@ -87,7 +266,7 @@ export async function run({
       }
     }
 
-    const args = processArgs(inputs.args, context)
+    const args = processArgs({ command, args: inputs.args, context })
 
     let stdout,
       success = true

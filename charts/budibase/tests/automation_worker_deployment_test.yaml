@@ -99,7 +99,11 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: BBAI_LITELLM_KEY
-            value: "sk-bbai-test"
+            valueFrom:
+              secretKeyRef:
+                name: budibase-budibase
+                key: bbai_litellm_key
+                optional: true
 
   - it: should not render BBAI_LITELLM_KEY when unset
     set:

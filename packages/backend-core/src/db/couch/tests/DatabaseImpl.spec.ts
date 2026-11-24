@@ -46,6 +46,68 @@ describe("DatabaseImpl", () => {
     )
   })
 
+  describe("external connection blacklist", () => {
+    it.each([
+      "http://user:password@169.254.169.254",
+      "http://user:password@10.0.0.1:5984",
+      "http://user:password@127.0.0.1:5984",
+      "http://user:password@localhost:5984",
+      "http://user:password@[::1]:5984",
+    ])("blocks document requests to %s", async connection => {
+      const database = new DatabaseImpl(generator.guid(), undefined, connection)
+
+      await expect(database.get("doc")).rejects.toThrow(
+        "URL is blocked or could not be resolved safely."
+      )
+    })
+
+    it("blocks database existence checks to internal addresses", async () => {
+      const database = new DatabaseImpl(
+        generator.guid(),
+        undefined,
+        "http://user:password@10.0.0.1:5984"
+      )
+
+      await expect(database.exists()).rejects.toThrow(
+        "URL is blocked or could not be resolved safely."
+      )
+    })
+  })
+
+  describe("document IDs", () => {
+    it.each([
+      "_design/../../_session",
+      "_design/../../_node/_local/_config",
+      "plg_x_local/../../_node/_local/_config",
+      "_design/%2e%2e/%2E%2e/_config",
+      "_design/.\t./.\n./_config",
+      "_design\\..\\..\\_config",
+      "_design/doc?attachments=true",
+      "_design/doc#fragment",
+    ])("rejects path-escaping ID %s", async id => {
+      await expect(db.get(id)).rejects.toMatchObject({ status: 400 })
+    })
+
+    it("rejects path-escaping IDs on remove", async () => {
+      await expect(
+        db.remove("_design/../../_node/_local/_config", "1-a")
+      ).rejects.toMatchObject({ status: 400 })
+    })
+
+    it("rejects path-escaping IDs on existence checks", async () => {
+      await expect(
+        db.exists("_design/../../_node/_local/_config")
+      ).rejects.toMatchObject({ status: 400 })
+    })
+
+    it("still reads design documents", async () => {
+      const id = `_design/${generator.guid()}`
+      await db.put({ _id: id })
+
+      expect(await db.get(id)).toMatchObject({ _id: id })
+    })
+  })
+
   describe("put", () => {
     it("persists createdAt and updatedAt fields", async () => {
       const id = generator.guid()

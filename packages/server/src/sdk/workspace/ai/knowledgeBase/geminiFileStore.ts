@@ -66,20 +66,7 @@ interface GeminiFileStoreResponse {
 
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
 const RETRY_DELAYS_MS = [500, 1500, 3000]
-
-export const isGeminiFileSearchConfigured = () =>
-  !!environment.GEMINI_API_KEY?.trim()
-
-export const getGeminiApiKey = () => {
-  const key = environment.GEMINI_API_KEY?.trim()
-  if (!key) {
-    throw new HTTPError(
-      "Gemini File Search failed. Set GEMINI_API_KEY on your local environment",
-      400
-    )
-  }
-  return key
-}
+const GEMINI_CREDENTIAL_NAME = "budibase-gemini"
 
 const isRetryableResponse = (response: GeminiFileStoreResponse) => {
   return !response.ok && RETRYABLE_STATUS_CODES.has(response.status)
@@ -142,15 +129,38 @@ const getCommonAuthHeaders = async () => {
   }
 }
 
+export const isGeminiFileSearchConfigured = async () => {
+  const response = await fetch(
+    `${environment.LITELLM_URL}/credentials/by_name/${GEMINI_CREDENTIAL_NAME}`,
+    {
+      headers: await getCommonAuthHeaders(),
+    }
+  )
+  if (response.status === 404) {
+    return false
+  }
+
+  await handleNotOkResponse({
+    response,
+    fallbackMessage: "Failed to check Gemini credential in LiteLLM",
+  })
+  return true
+}
+
+export const guardGeminiFileSearchConfigured = async () => {
+  if (!(await isGeminiFileSearchConfigured())) {
+    throw new HTTPError("Gemini File Search is not configured in LiteLLM", 400)
+  }
+}
+
 export async function createGeminiFileStore(name: string): Promise<string> {
-  const geminiApiKey = getGeminiApiKey()
   const response = await fetch(`${environment.LITELLM_URL}/v1/vector_stores`, {
     method: "POST",
     headers: await getCommonAuthHeaders(),
     body: JSON.stringify({
       name,
       custom_llm_provider: "gemini",
-      ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+      litellm_credential_name: GEMINI_CREDENTIAL_NAME,
     }),
   })
 
@@ -170,7 +180,6 @@ export async function createGeminiFileStore(name: string): Promise<string> {
 export async function deleteGeminiVectorStore(
   vectorStoreId: string
 ): Promise<void> {
-  const geminiApiKey = getGeminiApiKey()
   const response = await requestWithRetries(async () =>
     fetch(
       `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(vectorStoreId)}`,
@@ -179,7 +188,7 @@ export async function deleteGeminiVectorStore(
         headers: await getCommonAuthHeaders(),
         body: JSON.stringify({
           custom_llm_provider: "gemini",
-          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+          litellm_credential_name: GEMINI_CREDENTIAL_NAME,
         }),
       }
     )
@@ -218,7 +227,6 @@ export async function ingestGeminiFile({
   mimetype?: string
   buffer: Buffer
 }): Promise<{ fileId: string }> {
-  const geminiApiKey = getGeminiApiKey()
   const response = await fetch(`${environment.LITELLM_URL}/v1/rag/ingest`, {
     method: "POST",
     headers: await getCommonAuthHeaders(),
@@ -233,7 +241,7 @@ export async function ingestGeminiFile({
         vector_store: {
           custom_llm_provider: "gemini",
           vector_store_id: vectorStoreId,
-          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+          litellm_credential_name: GEMINI_CREDENTIAL_NAME,
         },
       },
     }),
@@ -308,7 +316,6 @@ export async function searchGeminiFileStore({
   vectorStoreId: string
   query: string
 }): Promise<RagSearchResultItem[]> {
-  const geminiApiKey = getGeminiApiKey()
   const sessionId = getLiteLLMSessionId()
   const response = await requestWithRetries(async () =>
     fetch(
@@ -322,7 +329,6 @@ export async function searchGeminiFileStore({
           query,
           passthrough_on_no_deployment: true,
           model: "gemini/gemini-3.8-flash",
-          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
           ...(sessionId
             ? {
                 litellm_session_id: sessionId,
@@ -350,7 +356,6 @@ export async function deleteGeminiFileFromStore({
   vectorStoreId: string
   fileId: string
 }): Promise<void> {
-  const geminiApiKey = getGeminiApiKey()
   const response = await requestWithRetries(async () =>
     fetch(
       `${environment.LITELLM_URL}/v1/vector_stores/${encodeURIComponent(
@@ -361,7 +366,7 @@ export async function deleteGeminiFileFromStore({
         headers: await getCommonAuthHeaders(),
         body: JSON.stringify({
           custom_llm_provider: "gemini",
-          ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
+          litellm_credential_name: GEMINI_CREDENTIAL_NAME,
         }),
       }
     )

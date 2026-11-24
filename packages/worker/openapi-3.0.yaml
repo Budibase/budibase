@@ -5,7 +5,7 @@ info:
 servers:
   - url: "http://localhost:10000"
     description: localhost
-  - url: "https://budibaseqa.app"
+  - url: "https://budicloud.qa.budibase.net"
     description: QA
   - url: "https://preprod.qa.budibase.net"
     description: Preprod

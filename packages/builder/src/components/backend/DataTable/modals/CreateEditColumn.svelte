@@ -482,7 +482,6 @@
     originalName
   )
 
-  // TODO: Can reuse this fr a top level display on the grid.
   const countOperationsWithColumnRules = ({
     tableId,
     column,
@@ -520,7 +519,7 @@
     tools: $agentsStore.tools,
   })
   $: operationsWithColumnRulesLabel = `${operationsWithColumnRules} ${
-    operationsWithColumnRules === 1 ? "operation" : "operations"
+    operationsWithColumnRules === 1 ? "agent operation" : "agent operations"
   }`
 
   async function deleteColumn() {
@@ -1128,11 +1127,15 @@
   {#if operationsWithColumnRules}
     <div class="approval-rules-note">
       <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-        <Icon size="S" name="sparkle" color="#4b75ff" weight="fill" />
+        <Icon
+          size="S"
+          name="warning"
+          color="var(--spectrum-global-color-yellow-400)"
+          weight="fill"
+        />
         Used in approval rules in
-        <strong>{operationsWithColumnRulesLabel}</strong>. Renaming updates them
-        and changing the type can break them. Pending approvals that use this
-        column will fail.
+        <strong>{operationsWithColumnRulesLabel}</strong>. Changing the type can
+        cause breaking changes to pending approvals.
       </Body>
     </div>
   {/if}

@@ -1,3 +1,7 @@
+reloader:
+  # -- Enable Stakater Reloader for Deployments in this chart.
+  enabled: false
+
 # -- Passed to all pods created by this chart. Should not ordinarily need to be changed.
 imagePullSecrets: []
 
@@ -50,6 +54,15 @@ ingress:
                 number: 10000
 
 awsAlbIngress:
+  # -- ALB scheme: internet-facing or internal.
+  scheme: internet-facing
+  # -- Optional explicit IngressGroup. Changing this creates a separate ALB.
+  groupName: ""
+  # -- Optional subnet IDs. Use private subnets for an internal ALB.
+  subnets: []
+  # -- Optional frontend CIDRs. With subnet routing, use the router's SNAT address.
+  # Ignored by the controller when securityGroups is supplied.
+  inboundCidrs: []
   # -- Whether to create an ALB Ingress resource pointing to the Budibase proxy. Requires the AWS ALB Ingress Controller.
   enabled: false
   # -- If you're wanting to use HTTPS, you'll need to create an ACM certificate and specify the ARN here.
@@ -134,9 +147,18 @@ globals:
   # looping here: <https://docs.budibase.com/docs/looping>.
   automationMaxIterations: "200"
 
-  # -- Create an internal API key, JWT secret, object store access key and
-  # secret, and store them in a Kubernetes `Secret`.
+  # -- Create the chart-owned credential Secret. Set false to read the fixed
+  # `budicloud-runtime` Secret provisioned by an external controller.
   createSecrets: true
+  # -- Keys in budicloud-runtime when createSecrets is false. Override only where
+  # the source stores an application-specific credential under another key.
+  runtimeSecretKeys:
+    apiEncryptionKey: api_encryption_key
+    bbEncryptionKey: bb_encryption_key
+    internalApiKey: internal_api_key
+    jwtSecret: jwt_secret
+    objectStoreAccess: objectstore_access_key
+    objectStoreSecret: objectstore_secret_key
 
   # -- Used for encrypting API keys and environment variables when stored in the database.
   # You don't need to set this if `createSecrets` is true.
@@ -659,11 +681,6 @@ services:
     #    emptyDir: {}
 
   couchdb:
-    # -- Whether or not to spin up a CouchDB instance in your cluster. True by
-    # default, and the configuration for the CouchDB instance is under the
-    # `couchdb` key at the root of this file. You can see what options are
-    # available to you by looking at the official CouchDB Helm chart:
-    # <https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
     enabled: true
     # url: "" # only change if pointing to existing couch server
     # user: "" # only change if pointing to existing couch server
@@ -730,7 +747,7 @@ services:
     # -- Whether or not to deploy the litellm gateway.
     enabled: false
     # -- litellm image to use.
-    image: ghcr.io/berriai/litellm:main-v1.83.10-stable
+    image: ghcr.io/berriai/litellm:v1.109.1
     # -- Port exposed by the litellm container.
     port: 4000
     # -- Number of litellm replicas.
@@ -762,6 +779,20 @@ services:
       timeoutSeconds: 1
     # -- Resources for litellm pods.
     resources: {}
+    # -- Run schema migrations once before installing or upgrading LiteLLM.
+    # Serving pods disable schema updates while this Job owns migrations.
+    migrationJob:
+      enabled: true
+      # -- Maximum number of retries after the initial migration attempt.
+      backoffLimit: 4
+      # -- Wall-clock timeout for the complete migration Job.
+      activeDeadlineSeconds: 1800
+      # -- Remove a completed migration Job after this many seconds.
+      ttlSecondsAfterFinished: 120
+      # -- Helm hook ordering weight.
+      hookWeight: "1"
+      # -- Resources for the migration Job.
+      resources: {}
     # -- Extra environment variables for the litellm container.
     # Budibase uses LiteLLM virtual keys/models and requires database-backed proxy mode.
     # If `general_settings.store_model_in_db: true` (default), set DATABASE_URL here.
@@ -787,11 +818,20 @@ services:
     # -- Optional password for LiteLLM Admin UI login.
     # If not set, LiteLLM uses its built-in defaults.
     uiPassword: ""
-    # -- Inline configuration passed to litellm as config.yaml.
+    # -- Inline configuration passed to litellm as config.yaml. Overriding this
+    # value replaces the entire config; retain the `budibase-gemini` entry in
+    # `credential_list` or Gemini file search will not work.
     config: |
       general_settings:
         store_model_in_db: true
         store_prompts_in_spend_logs: true
+        enable_mcp_registry: false
+      credential_list:
+        - credential_name: budibase-gemini
+          credential_values:
+            api_key: os.environ/GEMINI_API_KEY
+          credential_info:
+            custom_llm_provider: gemini
       litellm_settings:
         drop_params: true
         extra_spend_tag_headers:
@@ -865,15 +905,9 @@ services:
     #  - name: my-volume
     #    emptyDir: {}
 
-# Override values in couchDB subchart. We're only specifying the values we're changing.
-# If you want to see all of the available values, see:
-#   https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb
-# Warning: The upstream Helm chart does not set a persistent password for the admin user by default.
-#
-# To have a specific password persist, you can set the adminPassword value.
-# See: https://github.com/apache/couchdb-helm/blob/couchdb-4.3.0/couchdb/values.yaml#L41
-#
-# adminPassword: ""
+# Override values in the locally maintained CouchDB subchart.
+# See charts/couchdb/values.yaml for all available values.
+# To supply an explicit admin password, set couchdb.adminPassword.
 
 couchdb:
   # -- The number of replicas to run in the CouchDB cluster. We set this to

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import OidcLogo from "./_logos/OIDC.svelte"
   import MicrosoftLogo from "assets/microsoft-logo.png"
   import Auth0Logo from "assets/auth0-logo.png"
@@ -25,23 +25,57 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "@/api"
+  import { getErrorMessage } from "@/helpers/errors"
   import { organisation } from "@/stores/portal/organisation"
   import { admin } from "@/stores/portal/admin"
   import { licensing } from "@/stores/portal/licensing"
-  import { PKCEMethod } from "@budibase/types"
+  import {
+    ConfigType,
+    PKCEMethod,
+    isConfig,
+    isOIDCConfig,
+    type OIDCConfig,
+    type OIDCConfigs,
+    type OIDCInnerConfig,
+  } from "@budibase/types"
   import Scim from "./scim.svelte"
   import Google from "./google.svelte"
 
-  const ConfigTypes = {
-    OIDC: "oidc",
+  interface EditableOIDCConfig extends OIDCInnerConfig {
+    callbackURL?: string
+  }
+
+  interface EditableOIDCProvider extends Omit<OIDCConfig, "config"> {
+    config: OIDCConfigs & { configs: EditableOIDCConfig[] }
+  }
+
+  interface ConfigField {
+    name: "configUrl" | "clientID" | "clientSecret" | "callbackURL"
+    label: string
+    readonly?: boolean
+    tooltip?: string
+    placeholder?: string
+    copyButton?: boolean
+  }
+
+  interface IconOption {
+    label: string
+    value: string
+    icon?: string
+  }
+
+  interface ScopeField {
+    editing: boolean
+    inputText: string | null
+    error: string | null
   }
   const HasSpacesRegex = /[\\"\s]/
   const pkceOptions = [
     { label: "S256 (recommended)", value: PKCEMethod.S256 },
     { label: "Plain", value: PKCEMethod.PLAIN },
   ]
-  let defaultScopes = ["profile", "email", "offline_access"]
-  let iconDropdownOptions = [
+  const defaultScopes = ["profile", "email", "offline_access"]
+  let iconDropdownOptions = $state<IconOption[]>([
     {
       label: "Microsoft",
       value: "Microsoft",
@@ -71,68 +105,67 @@
       label: "Upload your own",
       value: "Upload",
     },
-  ]
+  ])
 
-  let fileinput
-  let image
-  let google
-  let oidc
-  let providers = { google, oidc }
+  let fileinput = $state<HTMLInputElement>()
+  let image = $state<File>()
+  let oidcProvider = $state<EditableOIDCProvider>()
 
   // control the state of the save button depending on whether form has changed
-  let originalOidcDoc
-  let oidcSaveButtonDisabled
+  let originalOidcDoc = $state<EditableOIDCProvider>()
 
-  let scopesFields = [
+  let scopesFields = $state<ScopeField[]>([
     {
       editing: true,
       inputText: null,
       error: null,
     },
-  ]
-  $: enforcedSSO = $organisation.isSSOEnforced
+  ])
+  const enforcedSSO = $derived($organisation.isSSOEnforced)
 
-  $: oidcConfig = providers?.oidc?.config?.configs?.[0] ?? {
-    allowUnverifiedEmailLinking: false,
-  }
+  const oidcConfig = $derived(oidcProvider?.config.configs[0])
 
-  $: OIDCConfigFields = {
-    Oidc: [
-      { name: "configUrl", label: "Config URL" },
-      { name: "clientID", label: "Client ID" },
-      { name: "clientSecret", label: "Client Secret" },
-      {
-        name: "callbackURL",
-        readonly: true,
-        tooltip: $admin.cloud
-          ? null
-          : "Vist the organisation page to update the platform URL",
-        label: "Callback URL",
-        placeholder: $organisation.oidcCallbackUrl,
-        copyButton: true,
-      },
-    ],
-  }
+  const oidcConfigFields = $derived<ConfigField[]>([
+    { name: "configUrl", label: "Config URL" },
+    { name: "clientID", label: "Client ID" },
+    { name: "clientSecret", label: "Client Secret" },
+    {
+      name: "callbackURL",
+      readonly: true,
+      tooltip: $admin.cloud
+        ? undefined
+        : "Vist the organisation page to update the platform URL",
+      label: "Callback URL",
+      placeholder: $organisation.oidcCallbackUrl,
+      copyButton: true,
+    },
+  ])
 
-  $: {
+  const oidcSaveButtonDisabled = $derived.by(() => {
     const current = normaliseOidcConfig({ configs: [oidcConfig] })
     const original = normaliseOidcConfig({
       configs: [originalOidcDoc?.config?.configs?.[0]],
     })
-    oidcSaveButtonDisabled = isEqual(current, original)
-  }
+    return isEqual(current, original)
+  })
 
-  $: oidcComplete = !!(
-    oidcConfig?.configUrl &&
-    oidcConfig?.clientID &&
-    oidcConfig?.clientSecret
+  const oidcComplete = $derived(
+    !!(
+      oidcConfig?.configUrl &&
+      oidcConfig?.clientID &&
+      oidcConfig?.clientSecret
+    )
   )
 
-  const onFileSelected = e => {
-    let fileName = e.target.files[0].name
-    image = e.target.files[0]
-    providers.oidc.config.configs[0].logo = fileName
-    providers = providers
+  const onFileSelected = (event: Event) => {
+    const input = event.currentTarget
+    if (!(input instanceof HTMLInputElement) || !input.files?.[0]) return
+
+    const file = input.files[0]
+    const fileName = file.name
+    image = file
+    if (!oidcConfig) return
+    oidcConfig.logo = fileName
     iconDropdownOptions.unshift({ label: fileName, value: fileName })
   }
 
@@ -140,12 +173,14 @@
     const value = $organisation.isSSOEnforced
     try {
       await organisation.save({ isSSOEnforced: !value })
-    } catch (e) {
-      notifications.error(e.message)
+    } catch (error) {
+      notifications.error(
+        getErrorMessage(error) || "Unable to update SSO setting"
+      )
     }
   }
 
-  async function saveConfig(config) {
+  async function saveConfig(config: OIDCConfig) {
     // Delete unsupported fields
     delete config.createdAt
     delete config.updatedAt
@@ -154,7 +189,7 @@
 
   async function saveOIDCLogo() {
     if (image) {
-      let data = new FormData()
+      const data = new FormData()
       data.append("file", image)
       await API.uploadOIDCLogo(image.name, data)
     }
@@ -163,15 +198,16 @@
   async function saveOIDC() {
     if (!oidcComplete) {
       notifications.error(
-        `Please fill in all required ${ConfigTypes.OIDC} fields`
+        `Please fill in all required ${ConfigType.OIDC} fields`
       )
       return
     }
 
-    const oidc = providers.oidc
+    const oidc = oidcProvider
+    if (!oidc) return
 
     // Add a UUID here so each config is distinguishable when it arrives at the login page
-    for (let config of oidc.config.configs) {
+    for (const config of oidc.config.configs) {
       if (!config.uuid) {
         config.uuid = Helpers.uuid()
       }
@@ -181,23 +217,26 @@
 
     try {
       const res = await saveConfig(oidc)
-      providers[res.type]._rev = res._rev
-      providers[res.type]._id = res._id
+      oidc._rev = res._rev
+      oidc._id = res._id
       await saveOIDCLogo()
       notifications.success(`Settings saved`)
-    } catch (e) {
-      notifications.error(e.message)
+    } catch (error) {
+      notifications.error(
+        getErrorMessage(error) || "Unable to save OIDC config"
+      )
       return
     }
 
     // Turn the save button grey when clicked
-    oidcSaveButtonDisabled = true
-    originalOidcDoc = cloneDeep(providers.oidc)
+    originalOidcDoc = cloneDeep(oidc)
   }
 
   const RENDER_INJECTED_FIELDS = ["callbackURL", "pkce"]
 
-  const normaliseOidcConfig = config => {
+  const normaliseOidcConfig = (config: {
+    configs: (EditableOIDCConfig | undefined)[]
+  }) => {
     if (!config?.configs) return config
     return {
       ...config,
@@ -215,18 +254,19 @@
     }
   }
 
-  const setOidcScopes = scopes => {
-    providers.oidc.config.configs[0].scopes = scopes
-    providers = providers
+  const setOidcScopes = (scopes: string[]) => {
+    if (!oidcConfig) return
+    oidcConfig.scopes = scopes
   }
 
-  const onScopeKeyup = e => {
+  const onScopeKeyup = (event: KeyboardEvent) => {
+    if (!oidcConfig) return
     const field = scopesFields[0]
     if (!field.inputText) {
       field.error = null
     }
 
-    if (e.key !== "Enter" && e.keyCode !== 13) {
+    if (event.key !== "Enter" && event.keyCode !== 13) {
       return
     }
 
@@ -247,7 +287,8 @@
     }
   }
 
-  const copyToClipboard = async value => {
+  const copyToClipboard = async (value?: string) => {
+    if (!value) return
     await Helpers.copyToClipboard(value)
     notifications.success("Copied")
   }
@@ -286,19 +327,25 @@
     // Fetch OIDC config
     let oidcDoc
     try {
-      oidcDoc = await API.getConfig(ConfigTypes.OIDC)
+      oidcDoc = await API.getConfig(ConfigType.OIDC)
     } catch (error) {
       notifications.error("Error fetching OIDC config")
     }
-    if (!oidcDoc?._id) {
-      providers.oidc = {
-        type: ConfigTypes.OIDC,
+    if (!oidcDoc || !isConfig(oidcDoc) || !isOIDCConfig(oidcDoc)) {
+      oidcProvider = {
+        type: ConfigType.OIDC,
         config: {
           configs: [
             {
               activated: false,
               scopes: defaultScopes,
               allowUnverifiedEmailLinking: false,
+              configUrl: "",
+              clientID: "",
+              clientSecret: "",
+              logo: "",
+              name: "",
+              uuid: "",
             },
           ],
         },
@@ -310,15 +357,15 @@
       if (oidcDoc.config.configs[0].allowUnverifiedEmailLinking === undefined) {
         oidcDoc.config.configs[0].allowUnverifiedEmailLinking = false
       }
-      providers.oidc = oidcDoc
+      oidcProvider = oidcDoc
     }
-    originalOidcDoc = cloneDeep(providers.oidc)
+    originalOidcDoc = cloneDeep(oidcProvider)
     delete originalOidcDoc?.config?.configs[0]?.callbackURL
   })
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <Layout noPadding gap="S">
   <Layout noPadding gap="XS">
     <Heading size="XS">Single Sign-On URL</Heading>
@@ -350,7 +397,7 @@
         {/if}
       </div>
       {#if $licensing.enforceableSSO}
-        <Toggle on:change={toggleIsSSOEnforced} bind:value={enforcedSSO} />
+        <Toggle on:change={toggleIsSSOEnforced} value={enforcedSSO} />
       {/if}
     </div>
     <Body size="S">
@@ -363,7 +410,7 @@
     </Body>
   </Layout>
   <Google />
-  {#if providers.oidc}
+  {#if oidcProvider && oidcConfig}
     <Divider noMargin />
     <Layout gap="XS" noPadding>
       <Heading size="XS">
@@ -377,7 +424,7 @@
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
-      {#each OIDCConfigFields.Oidc as field}
+      {#each oidcConfigFields as field}
         <div class="form-row">
           <Label size="L" tooltip={field.tooltip}>{field.label}</Label>
           <div class="inputContainer">
@@ -391,7 +438,7 @@
             {#if field.copyButton}
               <div
                 class="copy"
-                on:click={() => copyToClipboard(field.placeholder)}
+                onclick={() => copyToClipboard(field.placeholder)}
               >
                 <Icon size="S" name="copy" />
               </div>
@@ -415,13 +462,13 @@
           bind:value={oidcConfig.logo}
           useOptionIconImage
           options={iconDropdownOptions}
-          on:change={e => e.detail === "Upload" && fileinput.click()}
+          on:change={e => e.detail === "Upload" && fileinput?.click()}
         />
       </div>
       <input
         type="file"
         accept=".jpg, .jpeg, .png"
-        on:change={e => onFileSelected(e)}
+        onchange={onFileSelected}
         bind:this={fileinput}
       />
       <div class="form-row">
@@ -483,7 +530,7 @@
       <div class="form-row">
         <Label size="L">Auth Scopes</Label>
         <Input
-          error={scopesFields[0].error}
+          error={scopesFields[0].error ?? undefined}
           placeholder={"New Scope"}
           bind:value={scopesFields[0].inputText}
           on:keyup={onScopeKeyup}
