@@ -73,6 +73,7 @@ const APPROVAL_POLICY_SCHEMA = Joi.object({
     .valid(...Object.values(ResolutionStrategy))
     .optional(),
   approvers: Joi.array().items(Joi.string()).optional(),
+  includeRequesterManager: Joi.boolean().optional(),
   expiry: Joi.object({
     durationSeconds: Joi.number().integer().positive().optional(),
     outcome: Joi.string()

@@ -12,10 +12,14 @@ jest.mock("@budibase/backend-core", () => {
       getTenantId: jest.fn(() => "tenant_1"),
       getWorkspaceDB: jest.fn(),
     },
+    tenancy: {
+      ...actual.tenancy,
+      getGlobalDB: jest.fn(),
+    },
   }
 })
 
-import { context } from "@budibase/backend-core"
+import { context, tenancy } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import { licensing } from "@budibase/pro"
 import {
@@ -377,7 +381,10 @@ describe("policy snapshot", () => {
     },
   ]
 
-  const gateFor = (policy: AgentOperationApprovalPolicy) =>
+  const gateFor = (
+    policy: AgentOperationApprovalPolicy,
+    requesterGlobalId?: string
+  ) =>
     createEscalationGateRuntime({
       agentId: "agent_1",
       operation: { ...operation, approvalPolicies: [policy] },
@@ -386,12 +393,44 @@ describe("policy snapshot", () => {
       rules: [{ policyId: policy.id }],
       gateContext: {
         sessionId: "session_1",
+        requesterGlobalId,
         getMessages: () => [],
         getRequestId: () => undefined,
       },
     })
 
   const createInput = () => mockCreateEscalation.mock.calls[0][0]
+
+  it("freezes the requester's manager as an approver", async () => {
+    const mockGetGlobalDB = tenancy.getGlobalDB as jest.Mock
+    mockGetGlobalDB.mockReturnValueOnce({
+      tryGet: jest
+        .fn()
+        .mockResolvedValueOnce({ managerId: "us_manager" })
+        .mockResolvedValueOnce({
+          _id: "us_manager",
+          email: "manager@example.com",
+        }),
+    })
+    const policy = {
+      id: "policy_1",
+      name: "Manager approval",
+      includeRequesterManager: true,
+      notifications: {},
+    }
+
+    await gateFor(policy, "us_requester").intercept(
+      {},
+      { toolCallId: "call_1" }
+    )
+
+    expect(createInput().policy).toEqual({
+      id: policy.id,
+      name: policy.name,
+      approvers: ["us_manager"],
+      requesterManagerId: "us_manager",
+    })
+  })
 
   beforeEach(() => {
     mockCreateEscalation.mockReset().mockResolvedValue({

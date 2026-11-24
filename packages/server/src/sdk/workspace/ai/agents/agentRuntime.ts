@@ -602,6 +602,9 @@ const prepareAgentChatRunInternal = async ({
     sessionId,
     channel: chat?.channel,
     userId: user?._id,
+    requesterGlobalId: isSyntheticAutomationRequester
+      ? undefined
+      : user.globalId || user.userId || user._id,
     requester,
     requesterLabel: requesterLabel({
       user,

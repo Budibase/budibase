@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, tenancy } from "@budibase/backend-core"
 import { constants as proConstants, licensing } from "@budibase/pro"
 import { dataFilters, Duration, isQueryToolType } from "@budibase/shared-core"
 import {
@@ -11,6 +11,7 @@ import {
   ApprovalToolResultStatus,
   ConstantQuotaName,
   EscalationSource,
+  type EscalationPolicySnapshot,
   type EscalationReviewContext,
   type EscalationReviewParameter,
   type Query,
@@ -19,6 +20,8 @@ import {
   ToolExecutionRule,
   ToolAction,
   ToolType,
+  UserStatus,
+  type User,
 } from "@budibase/types"
 import type { ModelMessage } from "ai"
 import isEqual from "lodash/isEqual"
@@ -63,6 +66,7 @@ export interface EscalationGateContext {
   sessionId: string
   channel?: ChatConversationChannel
   userId?: string
+  requesterGlobalId?: string
   requester?: AgentRequester
   requesterLabel?: string
   getMessages: () => ModelMessage[]
@@ -369,11 +373,43 @@ export const createEscalationGateRuntime = ({
     const policy = resolvePolicy(operation, rule.policyId)
     if (
       !policy ||
-      (!policy.approvers?.length && !policy.notifications?.recipients?.length)
+      (!policy.includeRequesterManager &&
+        !policy.approvers?.length &&
+        !policy.notifications?.recipients?.length)
     ) {
       return unavailableResult(label)
     }
-    const { notifications, ...policySnapshot } = policy
+    const { notifications, includeRequesterManager, ...snapshot } = policy
+    const policySnapshot: EscalationPolicySnapshot = snapshot
+    if (includeRequesterManager) {
+      const globalDb = tenancy.getGlobalDB()
+      const requesterId = gateContext.requesterGlobalId
+      const requester = requesterId
+        ? await globalDb.tryGet<User>(requesterId)
+        : undefined
+      const managerId = requester?.scimInfo?.isSync
+        ? undefined
+        : requester?.managerId
+      const manager =
+        managerId && managerId !== requesterId
+          ? await globalDb.tryGet<User>(managerId)
+          : undefined
+      if (
+        !manager?._id ||
+        !manager.email ||
+        manager.status === UserStatus.INACTIVE
+      ) {
+        return {
+          status: ApprovalToolResultStatus.UNAVAILABLE,
+          note:
+            `"${label}" requires approval from the requester's manager, but ` +
+            "no eligible manager could be resolved. Tell the user the action " +
+            "cannot proceed.",
+        }
+      }
+      policySnapshot.approvers = [...(policy.approvers ?? []), manager._id]
+      policySnapshot.requesterManagerId = manager._id
+    }
     if (policySnapshot.approvers) {
       policySnapshot.approvers = Array.from(new Set(policySnapshot.approvers))
     }
@@ -433,7 +469,7 @@ export const createEscalationGateRuntime = ({
       ...(durationMs !== undefined && { durationMs }),
       recipients,
       resolutionStrategy: resolutionStrategyBinding(
-        policy.approvers?.length
+        policySnapshot.approvers?.length
           ? (policy.approvalType ?? ResolutionStrategy.FIRST_RESPONSE)
           : ResolutionStrategy.FIRST_RESPONSE
       ),

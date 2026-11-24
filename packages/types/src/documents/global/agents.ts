@@ -156,14 +156,18 @@ export interface AgentOperationApprovalPolicy {
   name: string
   approvalType?: ResolutionStrategy
   approvers?: string[]
+  includeRequesterManager?: boolean
   expiry?: ApprovalPolicyExpiry
   notifications: AgentEscalationConfig
 }
 
-export type EscalationPolicySnapshot = Omit<
-  AgentOperationApprovalPolicy,
-  "notifications"
->
+export interface EscalationPolicySnapshot
+  extends Omit<
+    AgentOperationApprovalPolicy,
+    "notifications" | "includeRequesterManager"
+  > {
+  requesterManagerId?: string
+}
 
 // TODO: This can go further. These exist all over the place
 // as magic strings. They can stay here until they are
