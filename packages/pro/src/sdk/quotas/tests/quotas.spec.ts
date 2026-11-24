@@ -16,6 +16,7 @@ import Redlock from "redlock"
 import { CLOUD_FREE_LICENSE } from "../../../constants/licenses"
 import * as db from "../../../db"
 import * as licensing from "../../licensing"
+import { addAction } from "../helpers/actions"
 import * as quotas from "../quotas"
 
 const deferred = () => {
@@ -119,6 +120,43 @@ describe("quotas", () => {
   })
 
   describe("increment", () => {
+    it("charges both admitted actions and blocks the next callback", async () => {
+      const license = _.cloneDeep(CLOUD_FREE_LICENSE)
+      license.quotas.usage.monthly.actions.value = 1
+      mocks.licenses.useLicense(license)
+
+      await config.doInTenant(async () => {
+        const firstStarted = deferred()
+        const secondStarted = deferred()
+        const results = await Promise.all([
+          addAction(ActionType.AI_AGENT, async () => {
+            firstStarted.resolve()
+            await withTestDeadline(secondStarted.promise)
+            return "first"
+          }),
+          addAction(ActionType.AI_AGENT, async () => {
+            secondStarted.resolve()
+            await withTestDeadline(firstStarted.promise)
+            return "second"
+          }),
+        ])
+        expect(results).toEqual(["first", "second"])
+
+        const next = jest.fn(async () => "third")
+        await expect(
+          addAction(ActionType.AI_AGENT, next)
+        ).rejects.toMatchObject({
+          code: APIWarningCode.USAGE_LIMIT_EXCEEDED,
+        })
+        expect(next).not.toHaveBeenCalled()
+        const usage = await db.quotas.getCurrentUsageValues(
+          QuotaUsageType.MONTHLY,
+          MonthlyQuotaName.ACTIONS
+        )
+        expect(usage.total).toBe(2)
+      })
+    })
+
     it("increments by one", async () => {
       await config.doInWorkspace(async () => {
         await quotas.increment(

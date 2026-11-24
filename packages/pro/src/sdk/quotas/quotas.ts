@@ -124,9 +124,11 @@ const tryIncrement = async <T = any>(
       })
     }
 
-    // increment the quota
-    await updateUsage(
-      actions.map(action => ({
+    // Once a callback has completed, its usage must be recorded even if
+    // another operation consumed the remaining quota after preflight.
+    await applyUsage({
+      enforceLimit: results.length === 0,
+      params: actions.map(action => ({
         usageChange: action.change,
         name: action.name,
         type: action.type,
@@ -136,8 +138,8 @@ const tryIncrement = async <T = any>(
           suppressErrorLog: action.opts?.suppressErrorLog,
           id: action.opts?.id,
         },
-      }))
-    )
+      })),
+    })
 
     return results[0] //TODO What happen if we need to get all the results?
   })
@@ -302,7 +304,15 @@ const checkTriggers = async ({
 
 export const updateUsage = async (
   params: UpdateUsageParams | UpdateUsageParams[]
-) => {
+) => applyUsage({ params, enforceLimit: true })
+
+const applyUsage = async ({
+  params,
+  enforceLimit,
+}: {
+  params: UpdateUsageParams | UpdateUsageParams[]
+  enforceLimit: boolean
+}) => {
   const requestedActions = Array.isArray(params) ? params : [params]
   if (requestedActions.length === 0) {
     return
@@ -381,6 +391,7 @@ export const updateUsage = async (
             }
 
             if (
+              enforceLimit &&
               licensedQuota.value !== constants.UNLIMITED &&
               totalValue > licensedQuota.value &&
               action.usageChange > 0 // allow for decrementing usage when the quota is already exceeded
