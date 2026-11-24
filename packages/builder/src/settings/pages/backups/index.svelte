@@ -53,7 +53,7 @@
   let backupData = $state<BackupTableRow[] | null>(null)
   const pageInfo = createPaginationStore()
   const currentPage = derived(pageInfo, value => value.page)
-  let filterOpt = $state<FilterOption["value"] | null>(null)
+  let filterOpt = $state.raw<FilterOption["value"] | null>(null)
   let dateRange = $state<DateRange>([])
   let selectedRows = $state<BackupTableRow[]>([])
   let bulkDeleteDialog = $state<ConfirmDialog>()
