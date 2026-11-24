@@ -73,7 +73,7 @@
     "@types/supertest": "2.0.14",
     "cheerio": "^1.0.0",
     "keygrip": "~1.1.0",
-    "mailparser": "3.9.28",
+    "mailparser": "3.15.0",
     "nock": "^13.5.4",
     "nodemon": "2.0.15",
     "rimraf": "3.0.2",
