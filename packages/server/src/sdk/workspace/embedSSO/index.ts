@@ -36,6 +36,13 @@ export function encodeConfigForStorage(
   incoming: EmbedSSOConfig,
   existing?: EmbedSSOConfig
 ): EmbedSSOConfig {
+  if (
+    incoming.enabled &&
+    (typeof incoming.audience !== "string" || !incoming.audience.trim())
+  ) {
+    throw new HTTPError("An audience is required for embed SSO", 400)
+  }
+
   let key = incoming.key
   if (key === PASSWORD_REPLACEMENT) {
     // the stored key is tied to its algorithm (shared secret vs EC/RSA public
@@ -75,10 +82,14 @@ const verifyToken = (
   token: string,
   config: EmbedSSOConfig
 ): Record<string, any> => {
+  if (typeof config.audience !== "string" || !config.audience.trim()) {
+    throw new Error("Embed SSO audience is not configured")
+  }
+
   const key = decodeSecret(config.key)
-  const options: jwt.VerifyOptions = { algorithms: [config.algorithm] }
-  if (config.audience) {
-    options.audience = config.audience
+  const options: jwt.VerifyOptions = {
+    algorithms: [config.algorithm],
+    audience: config.audience,
   }
   if (config.issuer) {
     options.issuer = config.issuer
