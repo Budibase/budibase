@@ -123,6 +123,12 @@
     })
   }
 
+  const isBackupInProgress = (
+    backup: Pick<WorkspaceBackup, "status">
+  ) =>
+    backup.status === BackupStatus.PENDING ||
+    backup.status === BackupStatus.STARTED
+
   const deselectAll = () => {
     selectedRows = []
   }
@@ -188,7 +194,7 @@
 
     // flatten so we have an easier structure to use for the table schema
     backupData = flattenBackups(response.data)
-    loading = backupData.some(backup => backup.status === BackupStatus.STARTED)
+    loading = backupData.some(isBackupInProgress)
 
     // Clear selections when fetching new data
     deselectAll()
@@ -237,7 +243,7 @@
 
   $effect(() => {
     const data = backupData
-    if (!data?.some(backup => backup.status === BackupStatus.STARTED)) return
+    if (!data?.some(isBackupInProgress)) return
 
     const filters = filterOpt
     const page = $currentPage

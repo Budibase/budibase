@@ -1,5 +1,6 @@
 import { render, waitFor } from "@testing-library/svelte"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { BackupStatus, BackupTrigger, BackupType } from "@budibase/types"
 import MockLayout from "@/test/mocks/MockLayout.svelte"
 
 const { backupsMock } = vi.hoisted(() => ({
@@ -92,6 +93,10 @@ describe("backups page", () => {
     })
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it("fetches the initial page once", async () => {
     render(BackupsPage)
 
@@ -102,6 +107,40 @@ describe("backups page", () => {
     )
     await waitFor(() =>
       expect(backupsMock.searchBackups).toHaveBeenCalledTimes(1)
+    )
+  })
+
+  it("polls while a backup is pending", async () => {
+    vi.useFakeTimers()
+    backupsMock.searchBackups
+      .mockResolvedValueOnce({
+        data: [
+          {
+            _id: "backup_1",
+            appId: "app_1",
+            status: BackupStatus.PENDING,
+            timestamp: "2026-01-01T00:00:00.000Z",
+            trigger: BackupTrigger.MANUAL,
+            type: BackupType.BACKUP,
+          },
+        ],
+        hasNextPage: false,
+        totalRows: 1,
+      })
+      .mockResolvedValueOnce({
+        data: [],
+        hasNextPage: false,
+        totalRows: 0,
+      })
+
+    render(BackupsPage)
+
+    await vi.waitFor(() =>
+      expect(backupsMock.searchBackups).toHaveBeenCalledTimes(1)
+    )
+    await vi.advanceTimersByTimeAsync(2000)
+    await vi.waitFor(() =>
+      expect(backupsMock.searchBackups).toHaveBeenCalledTimes(2)
     )
   })
 })
