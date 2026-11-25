@@ -123,9 +123,7 @@
     })
   }
 
-  const isBackupInProgress = (
-    backup: Pick<WorkspaceBackup, "status">
-  ) =>
+  const isBackupInProgress = (backup: Pick<WorkspaceBackup, "status">) =>
     backup.status === BackupStatus.PENDING ||
     backup.status === BackupStatus.STARTED
 
