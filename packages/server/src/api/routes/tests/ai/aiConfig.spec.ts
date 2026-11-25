@@ -250,6 +250,180 @@ describe("BudibaseAI", () => {
       )
     })
 
+    describe("stored credential reuse", () => {
+      let created: CustomAIProviderConfig
+
+      beforeEach(async () => {
+        nock(environment.LITELLM_URL)
+          .post("/key/generate")
+          .reply(200, { token_id: "key-reuse", key: "secret-reuse" })
+          .post("/health/test_connection")
+          .reply(200, { status: "success" })
+          .post("/model/new")
+          .reply(200, { model_id: "model-reuse" })
+          .post("/key/update")
+          .reply(200, { status: "success" })
+
+        created = await config.api.ai.createConfig({
+          ...defaultRequest,
+          webSearchConfig: {
+            provider: WebSearchProvider.EXA,
+            apiKey: "exa-stored-key",
+          },
+        })
+      })
+
+      it.each<{
+        description: string
+        credentialsFields: Record<string, string>
+        provider: string
+      }>([
+        {
+          description: "masked key and new api_base",
+          credentialsFields: {
+            api_key: PASSWORD_REPLACEMENT,
+            api_base: "https://attacker.example.com",
+          },
+          provider: "OpenAI",
+        },
+        {
+          description: "omitted key and new api_base",
+          credentialsFields: { api_base: "https://attacker.example.com" },
+          provider: "OpenAI",
+        },
+        {
+          description: "masked key and removed api_base",
+          credentialsFields: { api_key: PASSWORD_REPLACEMENT, api_base: "" },
+          provider: "OpenAI",
+        },
+        {
+          description: "masked key and new provider",
+          credentialsFields: { api_key: PASSWORD_REPLACEMENT },
+          provider: "groq",
+        },
+      ])(
+        "rejects $description before contacting LiteLLM",
+        async ({ credentialsFields, provider }) => {
+          const connectionScope = nock(environment.LITELLM_URL)
+            .post("/health/test_connection")
+            .reply(200, { status: "success" })
+
+          await config.api.ai.updateConfig(
+            { ...created, provider, credentialsFields },
+            { status: 400 }
+          )
+
+          expect(connectionScope.isDone()).toBe(false)
+          const persisted = await getPersistedConfigAI(created._id)
+          expect(persisted.provider).toBe("OpenAI")
+          expect(persisted.credentialsFields.api_base).toBe(
+            defaultRequest.credentialsFields.api_base
+          )
+        }
+      )
+
+      it("allows changing api_base when the key is re-entered", async () => {
+        const updateScope = nock(environment.LITELLM_URL)
+          .post("/health/test_connection", body => {
+            expect(body.litellm_params).toMatchObject({
+              api_key: "sk-new-key",
+              api_base: "https://new.example.com",
+            })
+            return true
+          })
+          .reply(200, { status: "success" })
+          .patch(`/model/${created.liteLLMModelId}/update`)
+          .reply(200, { status: "success" })
+          .post("/key/update")
+          .reply(200, { status: "success" })
+
+        await config.api.ai.updateConfig({
+          ...created,
+          credentialsFields: {
+            api_key: "sk-new-key",
+            api_base: "https://new.example.com",
+          },
+        })
+
+        expect(updateScope.isDone()).toBe(true)
+      })
+
+      it("rejects a masked web search key when the web search provider changes", async () => {
+        await config.api.ai.updateConfig(
+          {
+            ...created,
+            webSearchConfig: {
+              provider: WebSearchProvider.PARALLEL,
+              apiKey: PASSWORD_REPLACEMENT,
+            },
+          },
+          { status: 400 }
+        )
+
+        const persisted = await getPersistedConfigAI(created._id)
+        expect(persisted.webSearchConfig?.provider).toBe(WebSearchProvider.EXA)
+      })
+    })
+
+    it("only forwards provider credential fields and keeps routing params", async () => {
+      const liteLLMScope = nock(environment.LITELLM_URL)
+        .post("/key/generate")
+        .reply(200, { token_id: "key-routing", key: "secret-routing" })
+        .post("/health/test_connection", body => {
+          expect(body.litellm_params).toEqual({
+            api_key: "sk-test-key",
+            api_base: "https://api.openai.com",
+            model: "openai/gpt-4o-mini",
+            custom_llm_provider: "openai",
+          })
+          return true
+        })
+        .reply(200, { status: "success" })
+        .post("/model/new", body => {
+          expect(body.litellm_params).toMatchObject({
+            model: "openai/gpt-4o-mini",
+            custom_llm_provider: "openai",
+          })
+          expect(body.litellm_params.extra_field).toBeUndefined()
+          return true
+        })
+        .reply(200, { model_id: "model-routing" })
+        .post("/key/update")
+        .reply(200, { status: "success" })
+
+      const created = await config.api.ai.createConfig({
+        ...defaultRequest,
+        credentialsFields: {
+          ...defaultRequest.credentialsFields,
+          model: "anthropic/claude",
+          custom_llm_provider: "anthropic",
+          extra_field: "value",
+        },
+      })
+
+      expect(liteLLMScope.isDone()).toBe(true)
+      expect(Object.keys(created.credentialsFields).sort()).toEqual([
+        "api_base",
+        "api_key",
+      ])
+    })
+
+    it.each(["not a url", "file:///etc/passwd"])(
+      "rejects an invalid api_base: %s",
+      async apiBase => {
+        await config.api.ai.createConfig(
+          {
+            ...defaultRequest,
+            credentialsFields: {
+              ...defaultRequest.credentialsFields,
+              api_base: apiBase,
+            },
+          },
+          { status: 400 }
+        )
+      }
+    )
+
     it("fetches provider-specific models from LiteLLM cost map", async () => {
       const providers = await config.api.ai.fetchProviders()
       const openAIProvider = providers.find(

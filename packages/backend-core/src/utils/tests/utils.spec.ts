@@ -130,6 +130,36 @@ describe("utils", () => {
       expect(ctx.throw).toHaveBeenCalledWith(403, "App id conflict")
     })
 
+    it.each([
+      ["first character", (id: string) => `%61${id.slice(1)}`],
+      ["whole id", (id: string) => encodeURIComponent(id).replace(/_/g, "%5F")],
+    ])(
+      "throws 403 when header and percent-encoded path (%s) have different valid app IDs",
+      async (_, encode) => {
+        const ctx = structures.koa.newContext()
+
+        const appId1 = db.generateWorkspaceID()
+        const appId2 = db.generateWorkspaceID()
+
+        ctx.request.headers = {
+          [Header.WORKSPACE_ID]: appId1,
+        }
+        ctx.path = `/api/applications/${encode(appId2)}/duplicate`
+
+        await expect(utils.getWorkspaceIdFromCtx(ctx)).rejects.toThrow()
+        expect(ctx.throw).toHaveBeenCalledWith(403, "App id conflict")
+      }
+    )
+
+    it("returns the decoded app ID from a percent-encoded path", async () => {
+      const ctx = structures.koa.newContext()
+      const expected = db.generateWorkspaceID()
+      ctx.path = `/api/applications/%61${expected.slice(1)}`
+
+      const actual = await utils.getWorkspaceIdFromCtx(ctx)
+      expect(actual).toBe(expected)
+    })
+
     it("returns same app ID when found across multiple sources consistently", async () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateWorkspaceID()
