@@ -236,7 +236,7 @@
         <Input
           label="Audience"
           bind:value={ssoAudience}
-          placeholder="Your Budibase client ID"
+          placeholder="Budibase audience identifier"
           helpText="The token's 'aud' claim must match this value."
           disabled={!$licensing.embedAuthEnabled}
         />
