@@ -107,10 +107,12 @@ export class GeminiRagProcessor implements RagProcessor {
         if (!text) {
           return []
         }
-        return [{
-          source: chunk.retrievedContext?.uri || undefined,
-          chunkText: text,
-        }]
+        return [
+          {
+            source: chunk.retrievedContext?.uri || undefined,
+            chunkText: text,
+          },
+        ]
       })
     )
     const answer = (response.candidates || [])

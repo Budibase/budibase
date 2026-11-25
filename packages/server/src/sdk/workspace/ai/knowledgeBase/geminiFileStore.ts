@@ -318,7 +318,7 @@ export async function generateGeminiFileStoreAnswer({
 }): Promise<GeminiFileSearchResponse> {
   const response = await requestWithRetries(async () =>
     fetch(
-      `${environment.LITELLM_URL}/v1beta/models/budibase-gemini-file-search:generateContent`,
+      `${environment.LITELLM_URL}/models/budibase-gemini-file-search:generateContent`,
       {
         method: "POST",
         headers: await getCommonAuthHeaders(),
@@ -332,9 +332,7 @@ export async function generateGeminiFileStoreAnswer({
               ],
             },
           ],
-          tools: [
-            { fileSearch: { fileSearchStoreNames: [vectorStoreId] } },
-          ],
+          tools: [{ fileSearch: { fileSearchStoreNames: [vectorStoreId] } }],
         }),
       }
     )

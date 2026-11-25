@@ -376,12 +376,10 @@ describe("geminiFileStore", () => {
 
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain(
-        "/v1beta/models/budibase-gemini-file-search:generateContent"
+        "/models/budibase-gemini-file-search:generateContent"
       )
       const requestBody = JSON.parse(String(init?.body))
-      expect(requestBody.contents[0].parts[0].text).toContain(
-        "Question: hello"
-      )
+      expect(requestBody.contents[0].parts[0].text).toContain("Question: hello")
       expect(requestBody.contents[0].parts[0].text).toContain(
         "quote the exact passages"
       )
