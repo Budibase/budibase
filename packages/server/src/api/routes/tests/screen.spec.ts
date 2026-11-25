@@ -208,6 +208,34 @@ describe("/screens", () => {
       expect(events.screen.deleted).toHaveBeenCalledTimes(1)
     })
 
+    it("restores a deleted screen with its full children when undoing deletion", async () => {
+      const [{ _id: workspaceAppId }] = (await config.api.workspaceApp.fetch())
+        .workspaceApps
+      const baseScreen = { ...basicScreen(), workspaceAppId }
+      const component = {
+        _id: "component_restored",
+        _component: "@budibase/standard-components/heading",
+        _instanceName: "Restored heading",
+        _styles: { normal: {}, hover: {}, active: {}, selected: {} },
+        _children: [],
+        text: "Restored content",
+      }
+      const savedScreen = await config.api.screen.save({
+        ...baseScreen,
+        props: { ...baseScreen.props, _children: [component] },
+      })
+      await config.api.screen.destroy(savedScreen._id!, savedScreen._rev!)
+      const { _rev: _deletedRevision, ...screenToRestore } = savedScreen
+
+      const restored = await config.api.screen.save(screenToRestore)
+
+      expect(restored).toMatchObject({
+        _id: savedScreen._id,
+        props: { _children: [component] },
+      })
+      expect(await config.api.screen.list()).toContainEqual(restored)
+    })
+
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,

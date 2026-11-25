@@ -89,7 +89,7 @@ export async function getAndMergeDatasource(datasource: Datasource) {
   if (datasource._id) {
     const existingDatasource = await datasources.get(datasource._id)
 
-    datasource = datasources.mergeConfigs(datasource, existingDatasource)
+    datasource = await datasources.mergeConfigs(datasource, existingDatasource)
   }
   return await datasources.enrich(datasource)
 }
