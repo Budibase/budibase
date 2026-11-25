@@ -12,9 +12,10 @@ on:
     inputs:
       versioning:
         type: choice
-        description: "Versioning type: minor or major"
+        description: "Versioning type: patch, minor or major"
         default: minor
         options:
+          - patch
           - minor
           - major
         required: true
