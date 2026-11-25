@@ -327,9 +327,9 @@ async function validateCompletionsModel(model: {
     },
     body: JSON.stringify({
       litellm_params: {
+        ...credentialFields,
         model: `${mappedProvider}/${name}`,
         custom_llm_provider: mappedProvider,
-        ...credentialFields,
       },
     }),
   }
