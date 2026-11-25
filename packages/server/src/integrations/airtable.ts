@@ -90,7 +90,9 @@ class AirtableIntegration implements IntegrationBase {
 
   constructor(config: AirtableConfig) {
     this.config = config
-    this.client = new Airtable(config).base(config.base)
+    // Only the API key is passed on: the SDK also accepts endpointUrl, which
+    // would point it at an arbitrary host.
+    this.client = new Airtable({ apiKey: config.apiKey }).base(config.base)
   }
 
   async testConnection(): Promise<ConnectionInfo> {
