@@ -4,8 +4,8 @@ const semver = require("semver")
 const filePath = "../hosting/couchdb/VERSION"
 const versionBump = process.argv[2] || "minor"
 
-if (!["minor", "major"].includes(versionBump)) {
-  console.error("Usage: node bumpDatabaseVersion.js [minor|major]")
+if (!["patch", "minor", "major"].includes(versionBump)) {
+  console.error("Usage: node bumpDatabaseVersion.js [patch|minor|major]")
   process.exit(1)
 }
 
