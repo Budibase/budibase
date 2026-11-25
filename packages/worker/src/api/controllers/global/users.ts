@@ -77,34 +77,48 @@ const stripUsers = (users: (User | StrippedUser)[]): StrippedUser[] => {
   }))
 }
 
-const sensitiveSearchFields = [
-  "password",
-  "oauth2",
-  "provider",
-  "providerType",
-  "profile",
-  "thirdPartyProfile",
-  "ssoId",
-  "forceResetPassword",
-] as const
+type FullSearchUsersResponse = Omit<SearchUsersResponse, "data"> & {
+  data: User[]
+}
+
+const projectSearchUser = (user: User): User => ({
+  _id: user._id,
+  _rev: user._rev,
+  tenantId: user.tenantId,
+  email: user.email,
+  userId: user.userId,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  roles: user.roles,
+  admin: user.admin ? { global: user.admin.global } : undefined,
+  builder: user.builder
+    ? {
+        global: user.builder.global,
+        apps: user.builder.apps,
+        creator: user.builder.creator,
+      }
+    : undefined,
+  status: user.status,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+  userGroups: user.userGroups,
+  budibaseAccess: user.budibaseAccess,
+  accountPortalAccess: user.accountPortalAccess,
+  scimInfo: user.scimInfo ? { isSync: user.scimInfo.isSync } : undefined,
+})
 
 const sanitizeSearchResponse = ({
   response,
   canViewUsers,
 }: {
-  response: SearchUsersResponse
+  response: FullSearchUsersResponse
   canViewUsers: boolean
 }): SearchUsersResponse => {
-  const safeUsers = response.data.map(user => {
-    const safeUser = { ...user }
-    for (const field of sensitiveSearchFields) {
-      Reflect.deleteProperty(safeUser, field)
-    }
-    return safeUser
-  })
   return {
     ...response,
-    data: canViewUsers ? safeUsers : stripUsers(safeUsers),
+    data: canViewUsers
+      ? response.data.map(projectSearchUser)
+      : stripUsers(response.data),
   }
 }
 
@@ -408,7 +422,7 @@ export const search = async (
     return
   }
 
-  let response: SearchUsersResponse = { data: [] }
+  let response: FullSearchUsersResponse = { data: [] }
 
   if (body.paginate === false) {
     response.data = await userSdk.db.getUsersByAppAccess({
@@ -445,7 +459,7 @@ const filterAndPaginateUsers = ({
 }: {
   userList: User[]
   body: SearchUsersRequest
-}): SearchUsersResponse => {
+}): FullSearchUsersResponse => {
   const query = body.query
   const limit = body.limit ?? DEFAULT_USER_LIMIT
   let filtered = userList
@@ -495,7 +509,7 @@ const filterAndPaginateUsers = ({
 
 const searchGroupUsers = async (
   body: SearchUsersRequest
-): Promise<SearchUsersResponse> => {
+): Promise<FullSearchUsersResponse> => {
   const groupIds = [...new Set(body.groupIds || [])]
   const userIds = await proDb.groups.getUserIdsFromGroups(groupIds)
   const groupUsers = userIds.length ? await userSdk.db.bulkGet(userIds) : []
@@ -542,7 +556,7 @@ const getGlobalPermissionUsers = async () => {
 
 const searchWorkspaceUsers = async (
   body: SearchUsersRequest
-): Promise<SearchUsersResponse> => {
+): Promise<FullSearchUsersResponse> => {
   const workspaceId = body.workspaceId
   if (!workspaceId) {
     return { data: [], hasNextPage: false }

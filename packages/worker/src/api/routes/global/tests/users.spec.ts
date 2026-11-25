@@ -1393,6 +1393,8 @@ describe("/api/global/users", () => {
             accessToken: "example-access-canary",
             refreshToken: "example-refresh-canary",
           },
+          internalToken: "example-internal-canary",
+          scimInfo: { isSync: true, accessToken: "example-scim-canary" },
         })
       )
       const builder = await config.createUser({
@@ -1410,6 +1412,8 @@ describe("/api/global/users", () => {
       expect(response.body.data[0]).not.toHaveProperty("oauth2")
       expect(response.body.data[0]).not.toHaveProperty("provider")
       expect(response.body.data[0]).not.toHaveProperty("providerType")
+      expect(response.body.data[0]).not.toHaveProperty("internalToken")
+      expect(response.body.data[0].scimInfo).toEqual({ isSync: true })
     })
 
     it("should apply the selected group filter to workspace users", async () => {
