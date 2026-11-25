@@ -709,6 +709,21 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users/bulk", () => {
+    it("rejects a caller-supplied ID for a new user", async () => {
+      const user = structures.users.user({ _id: db.generateGlobalUserID() })
+
+      const response = await config.api.users.bulkCreateUsers([user])
+
+      expect(response.created?.successful).toHaveLength(0)
+      expect(response.created?.unsuccessful).toEqual([
+        {
+          email: user.email,
+          reason: "User ID cannot be supplied when creating a user",
+        },
+      ])
+      expect(await config.getUser(user.email)).toBeUndefined()
+    })
+
     it("should ignore users existing in the same tenant", async () => {
       const user = await config.createUser()
       jest.clearAllMocks()
@@ -772,11 +787,23 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users", () => {
+    it("rejects a caller-supplied ID for a new user", async () => {
+      const user = structures.users.user({ _id: db.generateGlobalUserID() })
+
+      const response = await config.api.users.saveUser(user, 400)
+
+      expect(response.body.message).toBe(
+        "User ID cannot be supplied when creating a user"
+      )
+      expect(await config.getUser(user.email)).toBeUndefined()
+    })
+
     it("should be able to create a basic user", async () => {
       const user = structures.users.user()
 
-      await config.api.users.saveUser(user)
+      const response = await config.api.users.saveUser(user)
 
+      expect(response.body._id).toMatch(/^us_/)
       expect(events.user.created).toHaveBeenCalledTimes(1)
       expect(events.user.updated).not.toHaveBeenCalled()
       expect(events.user.permissionBuilderAssigned).not.toHaveBeenCalled()
@@ -898,6 +925,25 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users (update)", () => {
+    it("rejects an update if the user is deleted before persistence", async () => {
+      const user = await config.createUser()
+      const save = userSdk.db.save.bind(userSdk.db)
+      const concurrentDelete = jest
+        .spyOn(userSdk.db, "save")
+        .mockImplementationOnce(async (request, options) => {
+          await context.getGlobalDB().remove(user)
+          return save(request, options)
+        })
+      try {
+        const response = await config.api.users.saveUser(user, 400)
+        expect(response.body.message).toBe(
+          "User ID cannot be supplied when creating a user"
+        )
+      } finally {
+        concurrentDelete.mockRestore()
+      }
+    })
+
     it("should be able to update a basic user", async () => {
       const user = await config.createUser()
       jest.clearAllMocks()
