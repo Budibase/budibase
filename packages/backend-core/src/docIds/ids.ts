@@ -42,7 +42,7 @@ export function generateRowID(tableId: string, id?: string) {
  * Generates a new global user ID.
  * @returns The new user ID which the user doc can be stored under.
  */
-export function generateGlobalUserID(id?: any) {
+export function generateGlobalUserID(id?: string) {
   return `${DocumentType.USER}${SEPARATOR}${id || newid()}`
 }
 

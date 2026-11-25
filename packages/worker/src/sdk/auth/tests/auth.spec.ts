@@ -1,4 +1,11 @@
-import { cache, context, sessions, utils } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  redis,
+  sessions,
+  users,
+  utils,
+} from "@budibase/backend-core"
 import { loginUser, resetUpdate } from "../auth"
 import { generator, structures } from "@budibase/backend-core/tests"
 import { TestConfiguration } from "../../../tests"
@@ -37,6 +44,55 @@ describe("auth", () => {
           "Provided information is not valid, cannot reset password - please try again."
         )
       })
+    })
+
+    it("rejects a legacy reset code without a tenant ID", async () => {
+      const user = await config.createUser()
+      const code = generator.hash()
+      const client = await redis.clients.getPasswordResetClient()
+      await client.store(code, { userId: user._id, info: {} }, 60)
+
+      await context.doInTenant(config.tenantId, async () => {
+        await expect(resetUpdate(code, generator.hash())).rejects.toThrow(
+          "Provided information is not valid, cannot reset password - please try again."
+        )
+      })
+    })
+
+    it("cannot redeem a reset code in another tenant", async () => {
+      const user = await config.createUser()
+      const otherTenantId = structures.tenant.id()
+      const victim = structures.users.user({
+        _id: user._id,
+        tenantId: otherTenantId,
+        password: user.password,
+      })
+      await context.doInTenant(otherTenantId, () =>
+        context.getGlobalDB().put(victim)
+      )
+      const code = await context.doInTenant(config.tenantId, () =>
+        cache.passwordReset.createCode(user._id!, {})
+      )
+      const newPassword = generator.hash()
+
+      await context.doInTenant(otherTenantId, async () => {
+        await expect(resetUpdate(code, newPassword)).rejects.toThrow(
+          "Provided information is not valid, cannot reset password - please try again."
+        )
+      })
+
+      await context.doInTenant(config.tenantId, async () => {
+        await resetUpdate(code, newPassword)
+      })
+
+      const persistedUser = await config.getUser(user.email)
+      const persistedVictim = await context.doInTenant(otherTenantId, () =>
+        users.getGlobalUserByEmail(victim.email)
+      )
+      expect(
+        await utils.compare(newPassword, persistedUser.password!)
+      ).toBeTruthy()
+      expect(persistedVictim?.password).toBe(victim.password)
     })
 
     it("the same code cannot be used twice", async () => {
