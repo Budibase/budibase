@@ -11,6 +11,7 @@ jest.mock("../configs/litellm", () => ({
 }))
 
 import { withEnv } from "../../../../environment"
+import { withLiteLLMSessionId } from "../llm/requestSession"
 import {
   createGeminiFileStore,
   deleteGeminiFileFromStore,
@@ -155,6 +156,46 @@ describe("geminiFileStore", () => {
     expect(JSON.parse(String(init.body))).not.toHaveProperty(
       "litellm_credential_name"
     )
+  })
+
+  it("includes the active session in attachment search requests", async () => {
+    mockFetch.mockResolvedValue(
+      response({ ok: true, status: 200, json: { data: [] } })
+    )
+
+    await withLiteLLMSessionId("chatconvo_123", async () =>
+      searchGeminiFileStore({
+        vectorStoreId: "vector-store-1",
+        query: "hello",
+      })
+    )
+
+    const [url, init] = mockFetch.mock.calls[0]
+    expect(url).toContain("/v1/vector_stores/vector-store-1/search")
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      query: "hello",
+      model: "gemini/gemini-3.8-flash",
+      litellm_session_id: "chatconvo_123",
+      metadata: { session_id: "chatconvo_123" },
+    })
+  })
+
+  it("retries transient attachment search failures", async () => {
+    mockFetch
+      .mockResolvedValueOnce(
+        response({ ok: false, status: 503, text: "upstream unavailable" })
+      )
+      .mockResolvedValueOnce(
+        response({ ok: true, status: 200, json: { data: [] } })
+      )
+
+    await expect(
+      searchGeminiFileStore({
+        vectorStoreId: "vector-store-1",
+        query: "hello",
+      })
+    ).resolves.toEqual([])
+    expect(mockFetch).toHaveBeenCalledTimes(2)
   })
 
   it("uses upstream response status when ingest fails", async () => {
