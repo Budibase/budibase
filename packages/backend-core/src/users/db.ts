@@ -282,10 +282,11 @@ export class UserDB {
           throw new Error("Email address cannot be changed")
         }
       } catch (e: any) {
-        if (e.status === 404) {
-          // do nothing, save this new user with the id specified - required for SSO auth
-        } else {
+        if (e.status !== 404) {
           throw e
+        }
+        if (!opts.allowSsoProviderUserId) {
+          throw new Error("User ID cannot be supplied when creating a user")
         }
       }
     }
@@ -433,6 +434,13 @@ export class UserDB {
       const userExists = existingEmails.includes(newUser.email.toLowerCase())
       if (duplicateUser || userExists) {
         unsuccessful.push({ email: newUser.email, reason: `Unavailable` })
+        continue
+      }
+      if (newUser._id) {
+        unsuccessful.push({
+          email: newUser.email,
+          reason: "User ID cannot be supplied when creating a user",
+        })
         continue
       }
       newUser.userGroups = [...groupIdsToAssign]
