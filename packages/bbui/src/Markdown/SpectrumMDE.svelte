@@ -304,6 +304,7 @@
     "|",
     "link",
     "image",
+    "table",
     "|",
     textColorToolbarButton,
     highlightToolbarButton,
