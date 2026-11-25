@@ -18,7 +18,10 @@ import {
   RequiredKeys,
 } from "@budibase/types"
 import * as liteLLM from "./litellm"
-import { processEnvironmentVariable } from "../../../utils"
+import {
+  isEnvironmentVariableKey,
+  processEnvironmentVariable,
+} from "../../../utils"
 import { IMPORT_PENDING_LITELLM_MODEL_ID } from "../../backups/constants"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -69,6 +72,125 @@ const getPasswordCredentialFieldKeys = async (
       .filter(field => field.field_type === "password")
       .map(field => field.key) || []
   )
+}
+
+const getProviderOrThrow = async (providerId: string): Promise<LLMProvider> => {
+  const providers = await fetchLiteLLMProviders()
+  const provider = providers.find(p => p.id === providerId)
+  if (!provider) {
+    throw new HTTPError(`Unknown AI provider: ${providerId}`, 400)
+  }
+  return provider
+}
+
+const validateApiBase = (apiBase: string | undefined) => {
+  if (!apiBase || isEnvironmentVariableKey(apiBase)) {
+    return
+  }
+  let url: URL
+  try {
+    url = new URL(apiBase)
+  } catch {
+    throw new HTTPError("api_base must be a valid URL", 400)
+  }
+  if (!["http:", "https:"].includes(url.protocol)) {
+    throw new HTTPError("api_base must use http or https", 400)
+  }
+}
+
+// Only the fields declared by the provider can reach LiteLLM, so arbitrary keys
+// cannot override routing params such as model or custom_llm_provider
+const restrictCredentialFields = async ({
+  providerId,
+  credentialsFields,
+}: {
+  providerId: string
+  credentialsFields: Record<string, string> | undefined
+}): Promise<Record<string, string>> => {
+  const provider = await getProviderOrThrow(providerId)
+  const allowedKeys = new Set(provider.credentialFields.map(f => f.key))
+  const restricted = Object.fromEntries(
+    Object.entries(credentialsFields || {}).filter(([key]) =>
+      allowedKeys.has(key)
+    )
+  )
+  validateApiBase(restricted.api_base)
+  return restricted
+}
+
+const isFreshSecret = (value: string | undefined) =>
+  !!value && value !== PASSWORD_REPLACEMENT
+
+const mergeUpdatedCredentials = async ({
+  existing,
+  config,
+}: {
+  existing: CustomAIProviderConfig
+  config: Pick<CustomAIProviderConfig, "provider" | "credentialsFields">
+}): Promise<Record<string, string>> => {
+  const incoming = await restrictCredentialFields({
+    providerId: config.provider,
+    credentialsFields: config.credentialsFields,
+  })
+  const existingFields = existing.credentialsFields || {}
+
+  // Stored secrets can never follow the config to a different provider
+  if (config.provider !== existing.provider) {
+    if (Object.values(incoming).some(value => !isFreshSecret(value))) {
+      throw new HTTPError(
+        "Credentials must be re-entered when changing the provider",
+        400
+      )
+    }
+    return incoming
+  }
+
+  const passwordKeys = await getPasswordCredentialFieldKeys(config.provider)
+  const merged = { ...existingFields, ...incoming }
+
+  const routingChanged = [
+    ...new Set([...Object.keys(existingFields), ...Object.keys(merged)]),
+  ]
+    .filter(key => !passwordKeys.has(key))
+    .some(key => (merged[key] || "") !== (existingFields[key] || ""))
+
+  const reusesStoredSecret = [...passwordKeys].some(
+    key => !!existingFields[key] && !isFreshSecret(incoming[key])
+  )
+
+  if (routingChanged && reusesStoredSecret) {
+    throw new HTTPError(
+      "Credentials must be re-entered when changing the endpoint",
+      400
+    )
+  }
+
+  for (const [key, value] of Object.entries(merged)) {
+    if (value === PASSWORD_REPLACEMENT) {
+      merged[key] = existingFields[key] || ""
+    }
+  }
+  return merged
+}
+
+const mergeUpdatedWebSearchConfig = ({
+  existing,
+  config,
+}: {
+  existing: CustomAIProviderConfig
+  config: Pick<CustomAIProviderConfig, "webSearchConfig">
+}) => {
+  const webSearchConfig = config.webSearchConfig
+  if (webSearchConfig?.apiKey !== PASSWORD_REPLACEMENT) {
+    return webSearchConfig
+  }
+  if (webSearchConfig.provider !== existing.webSearchConfig?.provider) {
+    throw new HTTPError(
+      "Web search API key must be re-entered when changing the provider",
+      400
+    )
+  }
+  return { ...webSearchConfig, apiKey: existing.webSearchConfig.apiKey }
 }
 
 const encodeConfigSecrets = async (
@@ -195,6 +317,11 @@ export async function create(
   validateSecretInputs(config)
   const db = context.getWorkspaceDB()
 
+  config.credentialsFields = await restrictCredentialFields({
+    providerId: config.provider,
+    credentialsFields: config.credentialsFields,
+  })
+
   const isBBAI = config.provider === BUDIBASE_AI_PROVIDER_ID
   const isSelfhost = env.SELF_HOSTED
 
@@ -298,24 +425,27 @@ export async function update(
     throw new HTTPError("Config to edit not found", 404)
   }
 
-  if (config.credentialsFields) {
-    const mergedCredentials = {
-      ...(existing.credentialsFields || {}),
-      ...config.credentialsFields,
-    }
+  const involvesBBAI =
+    config.provider === BUDIBASE_AI_PROVIDER_ID ||
+    existing.provider === BUDIBASE_AI_PROVIDER_ID
+  if (involvesBBAI && config.provider !== existing.provider) {
+    throw new HTTPError(
+      "Cannot switch to or from Budibase AI, create a new configuration instead",
+      400
+    )
+  }
 
-    Object.entries(mergedCredentials).forEach(([key, value]) => {
-      if (value === PASSWORD_REPLACEMENT) {
-        mergedCredentials[key] = existing.credentialsFields?.[key] || ""
-      }
+  if (config.provider === BUDIBASE_AI_PROVIDER_ID) {
+    // Budibase AI credentials are managed by the server
+    config.credentialsFields = existing.credentialsFields
+  } else if (config.credentialsFields) {
+    config.credentialsFields = await mergeUpdatedCredentials({
+      existing,
+      config,
     })
-
-    config.credentialsFields = mergedCredentials
   }
 
-  if (config.webSearchConfig?.apiKey === PASSWORD_REPLACEMENT) {
-    config.webSearchConfig.apiKey = existing.webSearchConfig?.apiKey || ""
-  }
+  config.webSearchConfig = mergeUpdatedWebSearchConfig({ existing, config })
 
   const updatedConfig: CustomAIProviderConfig = {
     ...existing,
