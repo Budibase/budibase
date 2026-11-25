@@ -832,6 +832,11 @@ services:
             api_key: os.environ/GEMINI_API_KEY
           credential_info:
             custom_llm_provider: gemini
+      model_list:
+        - model_name: budibase-gemini-file-search
+          litellm_params:
+            model: gemini/gemini-3.8-flash
+            litellm_credential_name: budibase-gemini
       litellm_settings:
         drop_params: true
         extra_spend_tag_headers:
