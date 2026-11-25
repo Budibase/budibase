@@ -145,10 +145,21 @@ function parseWorkspaceIdFromUrlPath(url?: string) {
   if (!url) {
     return
   }
+  // Segments must be decoded the same way @koa/router decodes route params,
+  // otherwise an encoded id (e.g. "%61pp_...") bypasses the conflict check
   return url
     .split("?")[0] // Remove any possible query string
     .split("/")
+    .map(safeDecodeURIComponent)
     .find(subPath => subPath.startsWith(WORKSPACE_PREFIX))
+}
+
+const safeDecodeURIComponent = (value: string) => {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
 }
 
 /**

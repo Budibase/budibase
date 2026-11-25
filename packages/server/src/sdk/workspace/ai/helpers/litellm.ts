@@ -78,9 +78,10 @@ const applyReasoningParams: LiteLLMParamBuilder = (params, args) => {
   }
 }
 
+// Base params go after credentials so credential fields cannot override routing
 const buildLiteLLMParamsPipeline = [
-  applyBaseParams,
   applyCredentialParams,
+  applyBaseParams,
   applyReasoningParams,
 ]
 
