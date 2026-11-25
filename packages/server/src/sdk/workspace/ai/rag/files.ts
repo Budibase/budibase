@@ -482,6 +482,7 @@ interface RetrievedContextResult {
   text: string
   chunks: RetrievedContextChunk[]
   sources: AgentMessageRagSource[]
+  answer?: string
 }
 
 export const retrieveContextForOperation = async (
@@ -500,6 +501,7 @@ export const retrieveContextForOperation = async (
   const knowledgeBases = await resolveKnowledgeBasesForOperation(operation)
   const chunks: Array<RetrievedContextChunk> = []
   const files: KnowledgeBaseFile[] = []
+  const answers: string[] = []
 
   for (const knowledgeBase of knowledgeBases) {
     const knowledgeBaseId = knowledgeBase._id
@@ -533,8 +535,11 @@ export const retrieveContextForOperation = async (
     assertKnowledgeBaseHasId(knowledgeBase)
     const processor = getProcessor(knowledgeBase)
     const returned = await processor.search(question)
+    if (returned.answer) {
+      answers.push(returned.answer)
+    }
 
-    for (const chunk of returned) {
+    for (const chunk of returned.chunks) {
       if (!chunk.source) {
         chunks.push(chunk)
         continue
@@ -575,7 +580,7 @@ export const retrieveContextForOperation = async (
     }
   }
 
-  if (chunks.length === 0) {
+  if (chunks.length === 0 && answers.length === 0) {
     return { text: "", chunks: [], sources: [] }
   }
 
@@ -585,6 +590,7 @@ export const retrieveContextForOperation = async (
     ),
     chunks,
     sources: toSourceMetadata(chunks, files),
+    ...(answers.length ? { answer: answers.join("\n\n") } : {}),
   }
 }
 

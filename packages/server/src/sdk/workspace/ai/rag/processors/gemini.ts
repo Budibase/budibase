@@ -7,11 +7,11 @@ import {
   WithRequired,
 } from "@budibase/types"
 import { events } from "@budibase/backend-core"
-import { RagProcessor, RetrievedContextChunk } from "."
+import { RagProcessor, RagSearchResult } from "."
 import {
   deleteGeminiFileFromStore,
   ingestGeminiFile,
-  searchGeminiFileStore,
+  generateGeminiFileStoreAnswer,
 } from "../../knowledgeBase/geminiFileStore"
 import { updateKnowledgeBaseFile } from "../../knowledgeBase"
 import { prepareTabularKnowledgeFileForRagIngestion } from "./tabularText"
@@ -95,38 +95,38 @@ export class GeminiRagProcessor implements RagProcessor {
     }
   }
 
-  async search(question: string): Promise<RetrievedContextChunk[]> {
-    const rows = await searchGeminiFileStore({
+  async search(question: string): Promise<RagSearchResult> {
+    const response = await generateGeminiFileStoreAnswer({
       vectorStoreId: this.knowledgeBase.config.googleFileStoreId,
       query: question,
     })
 
-    const results = rows.flatMap<RetrievedContextChunk>(row => {
-      const chunkText = getChunkText(row)
-      const groundingIndices = asRecord(row.attributes)?.grounding_chunk_indices
-      if (!Array.isArray(groundingIndices)) {
-        return [{ source: getChunkSource(row), chunkText }]
-      }
-
-      const sources = new Set<string>()
-      for (const index of groundingIndices) {
-        if (typeof index !== "number" || !Number.isInteger(index)) {
-          continue
+    const chunks = (response.candidates || []).flatMap(candidate =>
+      (candidate.groundingMetadata?.groundingChunks || []).flatMap(chunk => {
+        const text = chunk.retrievedContext?.text?.trim()
+        if (!text) {
+          return []
         }
-        const groundingChunk = rows[index]
-        if (!groundingChunk) {
-          continue
-        }
-        const source = getChunkSource(groundingChunk)
-        if (source) {
-          sources.add(source)
-        }
-      }
+        return [{
+          source: chunk.retrievedContext?.uri || undefined,
+          chunkText: text,
+        }]
+      })
+    )
+    const answer = (response.candidates || [])
+      .flatMap(candidate => candidate.content?.parts || [])
+      .map(part => part.text || "")
+      .join("")
+      .trim()
 
-      return Array.from(sources, source => ({ source, chunkText }))
-    })
-
-    return results
+    return {
+      chunks,
+      answer:
+        answer &&
+        (chunks.length > 0 || response.usageMetadata?.toolUsePromptTokenCount)
+          ? answer
+          : undefined,
+    }
   }
 
   async deleteFiles(fileIds: string[]): Promise<void> {
@@ -140,98 +140,4 @@ export class GeminiRagProcessor implements RagProcessor {
       )
     )
   }
-}
-
-const asRecord = (value: unknown): Record<string, unknown> | undefined => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return undefined
-  }
-  return value as Record<string, unknown>
-}
-
-const getRetrievedContext = (
-  value: Record<string, unknown>
-): Record<string, unknown> | undefined => {
-  return asRecord(value.retrievedContext) || asRecord(value.retrieved_context)
-}
-
-const getStringValue = (value: unknown): string | undefined => {
-  if (typeof value !== "string") {
-    return undefined
-  }
-  const trimmed = value.trim()
-  return trimmed || undefined
-}
-
-const getChunkSource = (row: Record<string, unknown>): string | undefined => {
-  const retrievedContext = getRetrievedContext(row)
-  const content = row.content
-  const contentRetrievedContexts = Array.isArray(content)
-    ? content
-        .map(part => asRecord(part))
-        .map(partRecord =>
-          partRecord ? getRetrievedContext(partRecord) : undefined
-        )
-    : []
-
-  const sourceCandidates = [
-    row.file_id,
-    row.filename,
-    ...contentRetrievedContexts.flatMap(context => [
-      context?.mediaId,
-      context?.media_id,
-      context?.title,
-      context?.uri,
-    ]),
-    retrievedContext?.mediaId,
-    retrievedContext?.media_id,
-    row.id,
-    retrievedContext?.title,
-    retrievedContext?.uri,
-  ]
-
-  for (const candidate of sourceCandidates) {
-    const value = getStringValue(candidate)
-    if (value) {
-      return value
-    }
-  }
-
-  return undefined
-}
-
-const getChunkTextFromPart = (part: unknown): string | undefined => {
-  const directText = getStringValue(part)
-  if (directText) {
-    return directText
-  }
-
-  const record = asRecord(part)
-  if (!record) {
-    return undefined
-  }
-
-  return (
-    getStringValue(record.text) ||
-    getStringValue(getRetrievedContext(record)?.text)
-  )
-}
-
-const getChunkText = (row: Record<string, unknown>): string => {
-  const content = row.content
-  if (Array.isArray(content)) {
-    const contentText = content
-      .map(getChunkTextFromPart)
-      .filter((text): text is string => Boolean(text))
-      .join("\n")
-      .trim()
-
-    return contentText || getStringValue(getRetrievedContext(row)?.text) || ""
-  }
-
-  return (
-    getStringValue(content) ||
-    getStringValue(getRetrievedContext(row)?.text) ||
-    ""
-  )
 }

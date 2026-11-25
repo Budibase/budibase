@@ -63,7 +63,10 @@ jest.mock("./sources/knowledgeSourceSyncQueue", () => ({
 jest.mock("./processors/gemini", () => ({
   GeminiRagProcessor: jest.fn().mockImplementation(() => ({
     ingestKnowledgeBaseFile: (...args: any[]) => mockProcessorIngest(...args),
-    search: (...args: any[]) => mockProcessorSearch(...args),
+    search: async (...args: any[]) => {
+      const result = await mockProcessorSearch(...args)
+      return Array.isArray(result) ? { chunks: result } : result
+    },
     deleteFiles: (...args: any[]) => mockProcessorDelete(...args),
   })),
 }))
@@ -439,6 +442,38 @@ describe("rag files", () => {
           filename: "policy.md",
         },
       ])
+    })
+
+    it("preserves an answer when Gemini supplies no grounding passages", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "strategy.md",
+          objectStoreKey: "objects/strategy.md",
+          ragSourceId: "source-1",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+      ])
+      mockProcessorSearch.mockResolvedValue({
+        chunks: [],
+        answer: "The Cooldown period starts in November 2026.",
+      })
+
+      const result = await retrieveContextForOperation(
+        defaultAgent,
+        "operation_1",
+        "When does the Cooldown period start?"
+      )
+
+      expect(result).toEqual({
+        text: "",
+        chunks: [],
+        sources: [],
+        answer: "The Cooldown period starts in November 2026.",
+      })
     })
 
     it("includes shared passages once while preserving every source and chunk", async () => {
