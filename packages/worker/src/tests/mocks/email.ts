@@ -88,7 +88,7 @@ function getAddresses(
 }
 
 function parseEmail(message: ParsedMail, session: SMTPServerSession): Email {
-  if (message.html === false) {
+  if (typeof message.html !== "string") {
     throw new Error("Expected email to contain an HTML body")
   }
 
