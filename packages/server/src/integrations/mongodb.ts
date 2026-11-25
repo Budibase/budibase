@@ -7,6 +7,7 @@ import {
   ConnectionInfo,
 } from "@budibase/types"
 import {
+  AuthMechanism,
   Document,
   MongoClient,
   ObjectId,
@@ -22,6 +23,7 @@ import {
   InsertManyResult,
 } from "mongodb"
 import environment from "../environment"
+import { utils } from "@budibase/backend-core"
 import { HOST_ADDRESS } from "./utils"
 
 export interface MongoDBConfig {
@@ -366,8 +368,12 @@ export class MongoIntegration implements IntegrationBase {
 
   constructor(config: MongoDBConfig) {
     this.config = config
-    const options = buildMongoClientOptions(config)
-    this.client = new MongoClient(config.connectionString, options)
+    this.client = new MongoClient(config.connectionString, {
+      ...buildMongoClientOptions(config),
+      // Checks every hostname the driver resolves, including ones found
+      // through SRV records, and connects to the checked IP.
+      lookup: utils.createSafeLookup(),
+    })
   }
 
   async testConnection() {
@@ -397,7 +403,32 @@ export class MongoIntegration implements IntegrationBase {
         "MongoDB TLS file options are only supported on self-hosted installations"
       )
     }
+    await this.checkConnectionTargets()
     return this.client.connect()
+  }
+
+  private async checkConnectionTargets() {
+    const { hosts, proxyHost, credentials } = this.client.options
+    if (proxyHost) {
+      throw new Error("MongoDB proxy options are not supported")
+    }
+    // Without explicit credentials these mechanisms fetch the server's own
+    // cloud credentials from the metadata service and present them to the
+    // database host.
+    const usesServerCredentials =
+      credentials?.mechanism === AuthMechanism.MONGODB_OIDC ||
+      (credentials?.mechanism === AuthMechanism.MONGODB_AWS &&
+        !credentials.username)
+    if (!environment.SELF_HOSTED && usesServerCredentials) {
+      throw new Error(
+        "MongoDB authentication with the server's own cloud credentials is only supported on self-hosted installations"
+      )
+    }
+    // The lookup is not called for IP addresses or socket paths, so the
+    // hosts in the connection string are checked here.
+    for (const address of hosts) {
+      await utils.requireSafeHostIp(address.host ?? address.socketPath ?? "")
+    }
   }
 
   matchId(value?: string) {

@@ -1,3 +1,4 @@
+import { blacklist, setEnv as setCoreEnv } from "@budibase/backend-core"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 import { Datasource, SourceName } from "@budibase/types"
 import { Knex } from "knex"
@@ -158,6 +159,17 @@ export function datasourceDescribe(opts: DatasourceDescribeOpts) {
   jest.setTimeout(
     databases.includes(DatabaseName.ORACLE) ? oracle.testTimeoutMs : 240000
   )
+
+  // The test databases run on loopback, which the default blacklist blocks.
+  let resetBlacklistEnv: () => void
+  beforeAll(async () => {
+    resetBlacklistEnv = setCoreEnv({ BLACKLIST_IPS: "" })
+    await blacklist.refreshBlacklist()
+  })
+  afterAll(async () => {
+    resetBlacklistEnv()
+    await blacklist.refreshBlacklist()
+  })
 
   const config = new TestConfiguration()
   return databases.map(dbName => ({
