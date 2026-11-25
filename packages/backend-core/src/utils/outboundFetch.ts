@@ -1,7 +1,9 @@
 import http from "http"
 import https from "https"
 import { isBlacklisted, resolveAddress } from "../blacklist"
+import env from "../environment"
 import fetch, { Headers, RequestInit, Response } from "node-fetch"
+import { isIP } from "net"
 import type { LookupFunction } from "net"
 
 const MAX_REDIRECTS = 5
@@ -36,20 +38,73 @@ function isRedirect(status: number): boolean {
   return [301, 302, 303, 307, 308].includes(status)
 }
 
-async function resolveSafePinnedIp(url: string): Promise<string> {
-  const parsed = parseUrl(url)
-  const addresses = await resolveAddress(parsed.hostname)
+const BLOCKED_URL_MESSAGE = "URL is blocked or could not be resolved safely."
+const BLOCKED_HOST_MESSAGE = "Host is blocked or could not be resolved safely."
+const HOSTNAME_PATTERN =
+  /^[a-z0-9_]([a-z0-9_-]*[a-z0-9_])?(\.[a-z0-9_]([a-z0-9_-]*[a-z0-9_])?)*\.?$/i
+
+async function resolveSafeAddresses({
+  hostname,
+  message,
+}: {
+  hostname: string
+  message: string
+}): Promise<string[]> {
+  const addresses = await resolveAddress(hostname)
   if (addresses.length === 0) {
-    throw new Error("URL is blocked or could not be resolved safely.")
+    throw new Error(message)
   }
 
   for (const address of addresses) {
     if (await isBlacklisted(address)) {
-      throw new Error("URL is blocked or could not be resolved safely.")
+      console.log(`Blocked outbound connection to "${hostname}"`)
+      throw new Error(message)
     }
   }
 
+  return addresses
+}
+
+async function resolveSafePinnedIp(url: string): Promise<string> {
+  const parsed = parseUrl(url)
+  const addresses = await resolveSafeAddresses({
+    hostname: parsed.hostname,
+    message: BLOCKED_URL_MESSAGE,
+  })
   return addresses[0]
+}
+
+function blockedHostMessage() {
+  return env.SELF_HOSTED
+    ? `${BLOCKED_HOST_MESSAGE} Blocked addresses are controlled by BLACKLIST_IPS.`
+    : BLOCKED_HOST_MESSAGE
+}
+
+// For connections that are not HTTP(S) URLs, such as database drivers. The
+// caller must connect to the returned IP rather than the hostname, otherwise
+// the driver resolves the name again and the check can be bypassed.
+export async function requireSafeHostIp(hostname: string): Promise<string> {
+  const message = blockedHostMessage()
+  // Anything else (a socket path, a URL, host:port) would be parsed into a
+  // different host than the one the driver ends up using.
+  if (!isIP(hostname) && !HOSTNAME_PATTERN.test(hostname)) {
+    throw new Error(message)
+  }
+  const addresses = await resolveSafeAddresses({ hostname, message })
+  // Drivers fall back from IPv6 to IPv4 on their own when given a hostname; a
+  // single pinned address cannot, so prefer the one more likely to be routable.
+  return addresses.find(address => !address.includes(":")) ?? addresses[0]
+}
+
+// For drivers that accept a lookup function and connect to hosts discovered at
+// runtime: every hostname is checked as it is resolved.
+export function createSafeLookup(): LookupFunction {
+  return (hostname, options, callback) => {
+    requireSafeHostIp(hostname).then(
+      ip => createPinnedLookup(ip)(hostname, options, callback),
+      error => callback(error, "", 4)
+    )
+  }
 }
 
 // Always pin to the first resolved IP address to avoid DNS rebinding attacks.
