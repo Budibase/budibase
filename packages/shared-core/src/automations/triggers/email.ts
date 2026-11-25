@@ -98,6 +98,10 @@ export const definition: AutomationTriggerDefinition = {
           type: AutomationIOType.STRING,
           description: "Email content (plain text)",
         },
+        bodyHtml: {
+          type: AutomationIOType.STRING,
+          description: "Email content (HTML)",
+        },
       },
       required: ["from", "to"],
     },
