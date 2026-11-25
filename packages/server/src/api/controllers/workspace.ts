@@ -1313,6 +1313,15 @@ export async function duplicateWorkspace(
     ctx.throw(404, "Source workspace not found")
   }
 
+  // Builder authorization is evaluated against the context workspace, so the
+  // exported workspace must be exactly that one and belong to the user tenant
+  if (
+    !dbCore.isSameWorkspaceID(sourceAppId, context.getWorkspaceId()) ||
+    !tenancy.isUserInWorkspaceTenant(sourceAppId, ctx.user)
+  ) {
+    ctx.throw(403, "Not authorized to duplicate this workspace")
+  }
+
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
   })

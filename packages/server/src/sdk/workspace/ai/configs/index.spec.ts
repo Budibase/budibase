@@ -49,11 +49,21 @@ jest.mock("./litellm", () => ({
   addModel: jest.fn().mockResolvedValue("model_123"),
   updateModel: jest.fn(),
   syncKeyModels: jest.fn(),
-  fetchPublicProviders: jest.fn().mockResolvedValue([]),
+  fetchPublicProviders: jest.fn().mockResolvedValue([
+    {
+      provider: "openai",
+      provider_display_name: "OpenAI",
+      litellm_provider: "openai",
+      credential_fields: [
+        { key: "api_key", label: "API Key", field_type: "password" },
+      ],
+    },
+  ]),
   fetchPublicModelCostMap: jest.fn().mockResolvedValue({}),
 }))
 
 jest.mock("../../../utils", () => ({
+  isEnvironmentVariableKey: jest.fn(() => false),
   processEnvironmentVariable: jest.fn((v: string) => v),
 }))
 
