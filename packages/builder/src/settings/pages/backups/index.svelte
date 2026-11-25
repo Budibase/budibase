@@ -151,7 +151,11 @@
       }
 
       deselectAll()
-      await fetchBackups({ filters: filterOpt, page: $currentPage })
+      await fetchBackups({
+        filters: filterOpt,
+        page: $currentPage,
+        dateRange: [...dateRange],
+      })
     } catch (err) {
       notifications.error("Error while deleting the selected backups")
     } finally {
@@ -204,7 +208,11 @@
     try {
       loading = true
       const response = await backups.createManualBackup($workspaceStore.appId)
-      await fetchBackups({ filters: filterOpt, page: $currentPage })
+      await fetchBackups({
+        filters: filterOpt,
+        page: $currentPage,
+        dateRange: [...dateRange],
+      })
       notifications.success(response.message)
     } catch (err) {
       notifications.error("Unable to create backup")
@@ -214,14 +222,22 @@
   async function handleButtonClick({ detail }: CustomEvent<BackupTableAction>) {
     if (detail.type === "backupDelete") {
       await backups.deleteBackup($workspaceStore.appId, detail.backupId)
-      await fetchBackups({ filters: filterOpt, page: $currentPage })
+      await fetchBackups({
+        filters: filterOpt,
+        page: $currentPage,
+        dateRange: [...dateRange],
+      })
     } else if (detail.type === "backupRestore") {
       await backups.restoreBackup(
         $workspaceStore.appId,
         detail.backupId,
         detail.restoreBackupName
       )
-      await fetchBackups({ filters: filterOpt, page: $currentPage })
+      await fetchBackups({
+        filters: filterOpt,
+        page: $currentPage,
+        dateRange: [...dateRange],
+      })
     }
   }
 

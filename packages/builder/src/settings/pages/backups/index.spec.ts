@@ -1,6 +1,8 @@
-import { render, waitFor } from "@testing-library/svelte"
+import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { BackupStatus, BackupTrigger, BackupType } from "@budibase/types"
+import MockButton from "@/test/mocks/MockButton.svelte"
+import MockDateRangePicker from "@/test/mocks/MockDateRangePicker.svelte"
 import MockLayout from "@/test/mocks/MockLayout.svelte"
 
 const { backupsMock } = vi.hoisted(() => ({
@@ -18,7 +20,7 @@ vi.mock("@budibase/bbui", async importOriginal => {
   return {
     ...actual,
     Body: MockLayout,
-    Button: MockLayout,
+    Button: MockButton,
     Divider: MockLayout,
     Heading: MockLayout,
     Layout: MockLayout,
@@ -51,7 +53,7 @@ vi.mock("@/stores/builder", async () => {
 })
 
 vi.mock("@/components/common/DateRangePicker.svelte", () => ({
-  default: MockLayout,
+  default: MockDateRangePicker,
 }))
 
 vi.mock("@/components/common/ConfirmDialog.svelte", () => ({
@@ -90,6 +92,9 @@ describe("backups page", () => {
       data: [],
       hasNextPage: false,
       totalRows: 0,
+    })
+    backupsMock.createManualBackup.mockResolvedValue({
+      message: "Backup created",
     })
   })
 
@@ -142,5 +147,46 @@ describe("backups page", () => {
     await vi.waitFor(() =>
       expect(backupsMock.searchBackups).toHaveBeenCalledTimes(2)
     )
+  })
+
+  it("preserves the date range after creating a backup", async () => {
+    backupsMock.searchBackups.mockResolvedValue({
+      data: [
+        {
+          _id: "backup_1",
+          appId: "app_1",
+          status: BackupStatus.COMPLETE,
+          timestamp: "2026-01-01T00:00:00.000Z",
+          trigger: BackupTrigger.MANUAL,
+          type: BackupType.BACKUP,
+        },
+      ],
+      hasNextPage: false,
+      totalRows: 1,
+    })
+    render(BackupsPage)
+
+    await waitFor(() =>
+      expect(backupsMock.searchBackups).toHaveBeenCalledTimes(1)
+    )
+    await fireEvent.click(screen.getByText("Set date range"))
+    await waitFor(() =>
+      expect(backupsMock.searchBackups).toHaveBeenLastCalledWith("app_1", {
+        page: undefined,
+        startDate: "2026-01-01T00:00:00.000Z",
+        endDate: "2026-01-31T23:59:59.999Z",
+      })
+    )
+
+    await fireEvent.click(screen.getByText("Create backup"))
+
+    await waitFor(() =>
+      expect(backupsMock.searchBackups).toHaveBeenCalledTimes(3)
+    )
+    expect(backupsMock.searchBackups).toHaveBeenLastCalledWith("app_1", {
+      page: undefined,
+      startDate: "2026-01-01T00:00:00.000Z",
+      endDate: "2026-01-31T23:59:59.999Z",
+    })
   })
 })
