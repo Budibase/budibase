@@ -822,6 +822,9 @@ export const addWorkspaceIdToInvite = async (
   ctx: UserCtx<void, UpdateInviteResponse, { code: string; role: string }>
 ) => {
   const { code, role } = ctx.params
+  if (role === "CREATOR" && !users.isAdmin(ctx.user)) {
+    ctx.throw(403, "Only global admins can assign creator permissions")
+  }
 
   const workspaceId = await backendCoreUtils.getWorkspaceIdFromCtx(ctx)
   if (!workspaceId) {
@@ -954,6 +957,9 @@ async function handleUserWorkspacePermission(
   userId: string,
   role: string | undefined
 ) {
+  if (role === "CREATOR" && !users.isAdmin(ctx.user)) {
+    ctx.throw(403, "Only global admins can assign creator permissions")
+  }
   const { _rev } = ctx.request.body
   if (!_rev) {
     ctx.throw(400, "rev is required")

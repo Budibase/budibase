@@ -12,6 +12,7 @@ import { sdk as pro } from "@budibase/pro"
 import mappingFile from "./mapping.json"
 import sdk from "../../sdk"
 import { deleteFolderFileSystem } from "../../utilities/fileSystem"
+export { normaliseGithubUrl, parseGithubRepo } from "./githubUrl"
 
 export async function fetch(type?: PluginType): Promise<Plugin[]> {
   const db = tenancy.getGlobalDB()
@@ -27,55 +28,6 @@ export async function fetch(type?: PluginType): Promise<Plugin[]> {
   } else {
     return plugins
   }
-}
-
-export function normaliseGithubUrl(url: string): string | undefined {
-  try {
-    let gh = url.trim()
-    if (!gh) return
-
-    // Ensure it starts with https://
-    if (!gh.startsWith("http")) {
-      gh = `https://${gh}`
-    }
-    if (gh.endsWith("/")) {
-      gh = gh.slice(0, -1)
-    }
-    return gh
-  } catch (err) {
-    console.log(
-      "Failed to normalise GitHub URL:",
-      url,
-      err instanceof Error ? err.message : String(err)
-    )
-    return
-  }
-}
-
-export function parseGithubRepo(url?: string): { repo?: string; url?: string } {
-  if (!url) return {}
-  try {
-    const gh = normaliseGithubUrl(url)
-    if (!gh || !gh.includes("https://github.com/")) {
-      return {}
-    }
-    const parts = gh.replace("https://github.com/", "").split("/")
-    if (parts.length >= 2) {
-      const owner = parts[0]
-      const repo = parts[1]
-      return {
-        repo: `${owner}/${repo}`,
-        url: `https://github.com/${owner}/${repo}`,
-      }
-    }
-  } catch (err) {
-    console.log(
-      "Failed to parse GitHub repo:",
-      url,
-      err instanceof Error ? err.message : String(err)
-    )
-  }
-  return {}
 }
 
 const mapping = mappingFile as Record<string, string>
