@@ -111,6 +111,7 @@ export class GeminiRagProcessor implements RagProcessor {
           {
             source: chunk.retrievedContext?.uri || undefined,
             chunkText: text,
+            preserveIfSourceUnmatched: true,
           },
         ]
       })

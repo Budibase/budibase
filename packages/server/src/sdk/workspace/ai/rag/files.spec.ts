@@ -476,6 +476,42 @@ describe("rag files", () => {
       })
     })
 
+    it("keeps grounding passages with unmatched URIs without citing a file", async () => {
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles.mockResolvedValue([
+        {
+          _id: "file_1",
+          knowledgeBaseId: "kb_123",
+          filename: "strategy.md",
+          objectStoreKey: "objects/strategy.md",
+          ragSourceId: "source-1",
+          status: KnowledgeBaseFileStatus.READY,
+          uploadedBy: "user_1",
+        } as KnowledgeBaseFile,
+      ])
+      mockProcessorSearch.mockResolvedValue({
+        chunks: [
+          {
+            source: "https://example.com/file/opaque-id",
+            chunkText: "The Cooldown period starts in November 2026.",
+            preserveIfSourceUnmatched: true,
+          },
+        ],
+      })
+
+      const result = await retrieveContextForOperation(
+        defaultAgent,
+        "operation_1",
+        "When does the Cooldown period start?"
+      )
+
+      expect(result).toEqual({
+        text: "The Cooldown period starts in November 2026.",
+        chunks: [{ chunkText: "The Cooldown period starts in November 2026." }],
+        sources: [],
+      })
+    })
+
     it("includes shared passages once while preserving every source and chunk", async () => {
       mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
       mockKnowledgeBaseListFiles.mockResolvedValue([

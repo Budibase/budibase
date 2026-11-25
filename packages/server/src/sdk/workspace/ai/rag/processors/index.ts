@@ -3,6 +3,7 @@ import { KnowledgeBaseFile, WithRequired } from "@budibase/types"
 export interface RetrievedContextChunk {
   source?: string
   chunkText: string
+  preserveIfSourceUnmatched?: boolean
 }
 
 export interface RagSearchResult {

@@ -88,7 +88,13 @@ describe("GeminiRagProcessor", () => {
 
     expect(result).toEqual({
       answer: "The period starts in November.",
-      chunks: [{ source: undefined, chunkText: "November: agree priorities." }],
+      chunks: [
+        {
+          source: undefined,
+          chunkText: "November: agree priorities.",
+          preserveIfSourceUnmatched: true,
+        },
+      ],
     })
   })
 

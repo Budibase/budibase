@@ -540,8 +540,9 @@ export const retrieveContextForOperation = async (
     }
 
     for (const chunk of returned.chunks) {
+      const { preserveIfSourceUnmatched, ...contextChunk } = chunk
       if (!chunk.source) {
-        chunks.push(chunk)
+        chunks.push(contextChunk)
         continue
       }
 
@@ -554,7 +555,7 @@ export const retrieveContextForOperation = async (
         ) {
           continue
         }
-        chunks.push(chunk)
+        chunks.push(contextChunk)
         continue
       }
 
@@ -562,6 +563,9 @@ export const retrieveContextForOperation = async (
         normalizeFilenameLookup(chunk.source)
       )
       if (!sourceIdFromFilename) {
+        if (preserveIfSourceUnmatched) {
+          chunks.push({ chunkText: chunk.chunkText })
+        }
         continue
       }
       if (
@@ -574,7 +578,7 @@ export const retrieveContextForOperation = async (
       }
 
       chunks.push({
-        ...chunk,
+        ...contextChunk,
         source: sourceIdFromFilename,
       })
     }
