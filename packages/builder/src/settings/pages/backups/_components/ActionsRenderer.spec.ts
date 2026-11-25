@@ -6,7 +6,7 @@ import MockIcon from "@/test/mocks/MockIcon.svelte"
 import MockInput from "@/test/mocks/MockInput.svelte"
 import MockLayout from "@/test/mocks/MockLayout.svelte"
 import MockMenuItem from "@/test/mocks/MockMenuItem.svelte"
-import MockModal from "@/test/mocks/MockModal.svelte"
+import MockControllableModal from "@/test/mocks/MockControllableModal.svelte"
 import MockModalContent from "@/test/mocks/MockModalContent.svelte"
 
 vi.mock("@budibase/bbui", async importOriginal => {
@@ -20,14 +20,10 @@ vi.mock("@budibase/bbui", async importOriginal => {
     Icon: MockIcon,
     Input: MockInput,
     MenuItem: MockMenuItem,
-    Modal: MockModal,
+    Modal: MockControllableModal,
     ModalContent: MockModalContent,
   }
 })
-
-vi.mock("@/components/common/ConfirmDialog.svelte", () => ({
-  default: MockLayout,
-}))
 
 vi.mock("@/stores/builder", async () => {
   const { writable } = await import("svelte/store")
@@ -42,7 +38,7 @@ vi.mock("@/stores/portal/auth", async () => {
 import ActionsRenderer from "./ActionsRenderer.svelte"
 
 describe("ActionsRenderer", () => {
-  it("includes the entered backup name in the restore event", async () => {
+  it("dispatches the entered backup name through the restore flow", async () => {
     const onRestore = vi.fn()
     render(ActionsRenderer, {
       props: {
@@ -58,7 +54,9 @@ describe("ActionsRenderer", () => {
       events: { buttonclick: onRestore },
     })
 
-    await fireEvent.input(screen.getByLabelText("Backup name"), {
+    await fireEvent.click(screen.getByText("Restore"))
+    await fireEvent.click(await screen.findByText("Continue"))
+    await fireEvent.input(await screen.findByLabelText("Backup name"), {
       target: { value: "Before restore" },
     })
     await fireEvent.click(screen.getByText("Confirm Restore"))
