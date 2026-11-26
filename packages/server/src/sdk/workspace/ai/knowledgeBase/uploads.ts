@@ -28,6 +28,7 @@ import {
   deleteGeminiVectorStore,
 } from "./geminiFileStore"
 import { syncKeyVectorStores } from "../configs/litellm"
+import { invalidateActiveWorkspaceGeminiStore } from "./workspaceStore"
 
 interface UploadKnowledgeBaseFileInput {
   knowledgeBaseId: string
@@ -168,6 +169,8 @@ export const resetKnowledgeBaseStore = async (
   }
   const { rev } = await db.put(updated)
   updated._rev = rev
+
+  await invalidateActiveWorkspaceGeminiStore(knowledgeBaseId)
 
   await deleteGeminiVectorStore(knowledgeBase.config.googleFileStoreId).catch(
     (error: any) => {

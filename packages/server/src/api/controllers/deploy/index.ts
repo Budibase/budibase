@@ -486,6 +486,10 @@ export const publishWorkspaceInternal = async (
         replication = new dbCore.Replication(config)
         const devDb = context.getDevWorkspaceDB()
 
+        await context.doInWorkspaceContext(prodId, async () => {
+          await sdk.ai.knowledgeBase.beginWorkspaceGeminiPublish()
+        })
+
         const devTablesIds = tablesToPublish
           ? Array.from(tablesToPublish)
           : await sdk.tables.getAllInternalTableIds()
@@ -501,6 +505,14 @@ export const publishWorkspaceInternal = async (
             filter: tableFilter,
           })
         )
+
+        await context.doInWorkspaceContext(prodId, async () => {
+          const knowledgeBases = await sdk.ai.knowledgeBase.fetch()
+          await sdk.ai.knowledgeBase.reconcileWorkspaceGeminiStores(
+            knowledgeBases
+          )
+          await sdk.ai.knowledgeBase.completeWorkspaceGeminiPublish()
+        })
 
         const updatedProdTables =
           await sdk.tables.sqs.withDefinitionRebuildLock(

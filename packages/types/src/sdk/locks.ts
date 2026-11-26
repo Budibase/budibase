@@ -26,6 +26,7 @@ export enum LockName {
   SQS_SYNC_DEFINITIONS = "sys_sync_definitions",
   LITELLM_KEY = "litellm_key",
   AGENT_RAG_KNOWLEDGE_BASE = "agent_rag_knowledge_base",
+  GEMINI_KNOWLEDGE_STORE_BUILD = "gemini_knowledge_store_build",
   GEMINI_INGESTION_COOLDOWN = "gemini_ingestion_cooldown",
   PROJECT_ASSIGNMENTS = "project_assignments",
   RESOURCE_DUPLICATION = "resource_duplication",

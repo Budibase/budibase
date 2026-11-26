@@ -1,5 +1,6 @@
 import {
   context,
+  db as dbCore,
   docIds,
   HTTPError,
   locks,
@@ -7,6 +8,8 @@ import {
 } from "@budibase/backend-core"
 import {
   AIConfigType,
+  Document,
+  DocumentType,
   BUDIBASE_AI_PROVIDER_ID,
   KnowledgeBaseType,
   LiteLLMKeyConfig,
@@ -518,13 +521,42 @@ async function regenerateWorkspaceKey() {
   return result
 }
 
-export async function syncKeyVectorStores() {
-  const kbs = await sdk.ai.knowledgeBase.fetch()
-  const vectorStoreIds = kbs
-    .filter(kb => kb.type === KnowledgeBaseType.GEMINI)
-    .map(kb => kb.config.googleFileStoreId)
-    .filter((id): id is string => !!id)
-    .sort()
+export async function syncKeyVectorStores(additionalStoreIds: string[] = []) {
+  const workspaceId = context.getOrThrowWorkspaceId()
+  const workspaceIds = new Set([
+    dbCore.getDevWorkspaceID(workspaceId),
+    dbCore.getProdWorkspaceID(workspaceId),
+  ])
+  const legacyStoreIds: string[] = []
+  const runtimeStoreIds: string[] = []
+  for (const id of workspaceIds) {
+    await context.doInWorkspaceContext(id, async () => {
+      const workspaceDb = context.getWorkspaceDB()
+      if (!(await workspaceDb.exists())) {
+        return
+      }
+      const knowledgeBases = await sdk.ai.knowledgeBase.fetch()
+      legacyStoreIds.push(
+        ...knowledgeBases
+          .filter(kb => kb.type === KnowledgeBaseType.GEMINI)
+          .map(kb => kb.config.googleFileStoreId)
+          .filter((storeId): storeId is string => !!storeId)
+      )
+      const stores = await workspaceDb.allDocs<Document & { storeId: string }>({
+        startkey: `${DocumentType.GEMINI_KNOWLEDGE_STORE}_`,
+        endkey: `${DocumentType.GEMINI_KNOWLEDGE_STORE}_\ufff0`,
+        include_docs: true,
+      })
+      runtimeStoreIds.push(
+        ...stores.rows.flatMap(row =>
+          row.doc && !row.doc._deleted ? [row.doc.storeId] : []
+        )
+      )
+    })
+  }
+  const vectorStoreIds = Array.from(
+    new Set([...legacyStoreIds, ...runtimeStoreIds, ...additionalStoreIds])
+  ).sort()
 
   const { keyId } = await getKeySettings()
   await updateKey({

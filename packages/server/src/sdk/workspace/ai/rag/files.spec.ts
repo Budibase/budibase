@@ -11,6 +11,7 @@ const mockDeleteSharePointFilesForOperationSite = jest.fn()
 const mockDeleteKnowledgeSourceSyncStateForOperation = jest.fn()
 const mockReconcileAgentJobs = jest.fn()
 const mockObjectStoreGetReadStream = jest.fn()
+const mockEnsureWorkspaceGeminiStore = jest.fn()
 
 const mockProcessorIngest = jest.fn()
 const mockProcessorSearch = jest.fn()
@@ -60,6 +61,11 @@ jest.mock("./sources/knowledgeSourceSyncQueue", () => ({
   reconcileAgentJobs: (...args: any[]) => mockReconcileAgentJobs(...args),
 }))
 
+jest.mock("../knowledgeBase/workspaceStore", () => ({
+  ensureWorkspaceGeminiStore: (...args: any[]) =>
+    mockEnsureWorkspaceGeminiStore(...args),
+}))
+
 jest.mock("./processors/gemini", () => ({
   GeminiRagProcessor: jest.fn().mockImplementation(() => ({
     ingestKnowledgeBaseFile: (...args: any[]) => mockProcessorIngest(...args),
@@ -94,6 +100,20 @@ import { generator } from "@budibase/backend-core/tests"
 describe("rag files", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockEnsureWorkspaceGeminiStore.mockImplementation(async () => ({
+      storeId: "workspace-store-1",
+      files:
+        (await mockKnowledgeBaseListFiles.mock.results.at(-1)?.value)
+          ?.filter(
+            (file: KnowledgeBaseFile) =>
+              file.status === KnowledgeBaseFileStatus.READY
+          )
+          .map((file: KnowledgeBaseFile) => ({
+            fileId: file._id,
+            sourceId: file.ragSourceId,
+            objectStoreKey: file.objectStoreKey,
+          })) ?? [],
+    }))
     mockDoWithLock.mockImplementation(async (_opts: unknown, fn: any) => ({
       result: await fn(),
     }))
@@ -474,6 +494,72 @@ describe("rag files", () => {
         sources: [],
         answer: "The Cooldown period starts in November 2026.",
       })
+    })
+
+    it("routes dev and prod questions to their active workspace stores", async () => {
+      const baseFile = {
+        _id: "base_file",
+        knowledgeBaseId: "kb_123",
+        filename: "base.md",
+        objectStoreKey: "objects/base.md",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      }
+      const devFile = {
+        ...baseFile,
+        _id: "dev_file",
+        filename: "dev.md",
+        objectStoreKey: "objects/dev.md",
+      }
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles
+        .mockResolvedValueOnce([baseFile, devFile])
+        .mockResolvedValueOnce([baseFile])
+        .mockResolvedValueOnce([baseFile, devFile])
+        .mockResolvedValueOnce([baseFile])
+      mockEnsureWorkspaceGeminiStore
+        .mockResolvedValueOnce({ storeId: "dev-store", files: [] })
+        .mockResolvedValueOnce({ storeId: "prod-old-store", files: [] })
+        .mockResolvedValueOnce({ storeId: "prod-new-store", files: [] })
+        .mockResolvedValueOnce({ storeId: "dev-rebuilt-store", files: [] })
+      const answersByStore = new Map([
+        ["dev-store", "Dev answer"],
+        ["prod-old-store", "Prod old answer"],
+        ["prod-new-store", "Prod new answer"],
+        ["dev-rebuilt-store", "Dev deleted answer"],
+      ])
+      mockProcessorSearch.mockImplementation(async () => {
+        const calls = (GeminiRagProcessor as jest.Mock).mock.calls
+        const activeStoreId = calls.at(-1)?.[0].config.googleFileStoreId
+        return { chunks: [], answer: answersByStore.get(activeStoreId) }
+      })
+
+      const answers = []
+      for (let index = 0; index < 4; index++) {
+        const result = await retrieveContextForOperation(
+          defaultAgent,
+          "operation_1",
+          "What is in the files?"
+        )
+        answers.push(result.answer)
+      }
+
+      expect(answers).toEqual([
+        "Dev answer",
+        "Prod old answer",
+        "Prod new answer",
+        "Dev deleted answer",
+      ])
+      expect(
+        (GeminiRagProcessor as jest.Mock).mock.calls.map(
+          ([knowledgeBase]) => knowledgeBase.config.googleFileStoreId
+        )
+      ).toEqual([
+        "dev-store",
+        "prod-old-store",
+        "prod-new-store",
+        "dev-rebuilt-store",
+      ])
     })
 
     it("keeps grounding passages with unmatched URIs without citing a file", async () => {

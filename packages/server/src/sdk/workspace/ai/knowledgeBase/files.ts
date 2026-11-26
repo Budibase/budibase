@@ -4,6 +4,7 @@ import {
   docIds,
   events,
   HTTPError,
+  locks,
   objectStore,
 } from "@budibase/backend-core"
 import {
@@ -12,12 +13,14 @@ import {
   KnowledgeBaseFile,
   KnowledgeBaseFileSource,
   KnowledgeBaseFileStatus,
+  LockName,
+  LockType,
   RequiredKeys,
   ToDocCreateMetadata,
   WithRequired,
 } from "@budibase/types"
 import { ObjectStoreBuckets } from "../../../../constants"
-import { deleteKnowledgeBaseFileChunks } from "../rag/files"
+import { invalidateWorkspaceGeminiPublishStore } from "./workspaceStore"
 
 interface CreateKnowledgeBaseFileOptions {
   id: string
@@ -113,47 +116,56 @@ export const listKnowledgeBaseFiles = async (
 }
 
 export const removeKnowledgeBaseFile = async (
-  knowledgeBase: KnowledgeBase,
+  _knowledgeBase: KnowledgeBase,
   file: KnowledgeBaseFile
 ) => {
-  let isFileInProduction = false
+  const workspaceId = context.getOrThrowWorkspaceId()
+  await locks.doWithLock(
+    {
+      name: LockName.GEMINI_KNOWLEDGE_STORE_BUILD,
+      type: LockType.AUTO_EXTEND,
+      resource: db.getProdWorkspaceID(workspaceId),
+    },
+    async () => {
+      await invalidateWorkspaceGeminiPublishStore(file.knowledgeBaseId)
+      let isFileReferencedInOtherWorkspace = false
 
-  try {
-    const prodWorkspaceId = db.getProdWorkspaceID(
-      context.getOrThrowWorkspaceId()
-    )
-    await context.doInWorkspaceContext(prodWorkspaceId, async () => {
-      await getKnowledgeBaseFileOrThrow(file._id!)
-      isFileInProduction = true
-    })
-  } catch (error: any) {
-    if (error?.status !== 404) {
-      throw error
+      try {
+        const otherWorkspaceId = db.isProdWorkspaceID(workspaceId)
+          ? db.getDevWorkspaceID(workspaceId)
+          : db.getProdWorkspaceID(workspaceId)
+        await context.doInWorkspaceContext(otherWorkspaceId, async () => {
+          const otherFile = await getKnowledgeBaseFileOrThrow(file._id!)
+          isFileReferencedInOtherWorkspace =
+            otherFile.objectStoreKey === file.objectStoreKey
+        })
+      } catch (error: any) {
+        if (error?.status !== 404) {
+          throw error
+        }
+      }
+
+      await context.getWorkspaceDB().remove(file)
+
+      if (file.objectStoreKey && !isFileReferencedInOtherWorkspace) {
+        try {
+          await objectStore.deleteFile(
+            ObjectStoreBuckets.APPS,
+            file.objectStoreKey
+          )
+        } catch (error) {
+          console.log(
+            "Failed to delete knowledge base file from object store",
+            error
+          )
+        }
+      }
+
+      events.ai.ragFileDeleted({
+        knowledgeBaseId: file.knowledgeBaseId,
+        fileId: file._id!,
+        sourceType: file.source?.type,
+      })
     }
-  }
-
-  if (!isFileInProduction) {
-    if (file.ragSourceId) {
-      await deleteKnowledgeBaseFileChunks(knowledgeBase, [file.ragSourceId])
-    }
-  }
-
-  if (file.objectStoreKey) {
-    try {
-      await objectStore.deleteFile(ObjectStoreBuckets.APPS, file.objectStoreKey)
-    } catch (error) {
-      console.log(
-        "Failed to delete knowledge base file from object store",
-        error
-      )
-    }
-  }
-
-  await context.getWorkspaceDB().remove(file)
-
-  events.ai.ragFileDeleted({
-    knowledgeBaseId: file.knowledgeBaseId,
-    fileId: file._id!,
-    sourceType: file.source?.type,
-  })
+  )
 }

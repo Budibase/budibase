@@ -192,6 +192,14 @@ export async function syncWorkspace(
         delete replOpts.selector
       }
       await replication.replicate(replOpts)
+      if (!opts?.automationOnly) {
+        await context.doInWorkspaceContext(workspaceId, async () => {
+          const knowledgeBases = await sdk.ai.knowledgeBase.fetch()
+          await sdk.ai.knowledgeBase.reconcileWorkspaceGeminiStores(
+            knowledgeBases
+          )
+        })
+      }
     } catch (err) {
       error = err
     } finally {

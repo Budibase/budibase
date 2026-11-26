@@ -12,6 +12,7 @@ import {
   deleteGeminiVectorStore,
 } from "./geminiFileStore"
 import { syncKeyVectorStores } from "../configs/litellm"
+import { reconcileWorkspaceGeminiStores } from "./workspaceStore"
 import { utils } from "@budibase/shared-core"
 
 const normalizeKnowledgeBaseName = (name: string | undefined) =>
@@ -159,5 +160,5 @@ export async function remove(id: string) {
 
   const existing = await db.get<KnowledgeBase>(id)
   await db.remove(existing)
-  await syncKeyVectorStores()
+  await reconcileWorkspaceGeminiStores(await fetch())
 }

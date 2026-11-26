@@ -8,3 +8,4 @@ export {
   isGeminiFileSearchConfigured,
 } from "./geminiFileStore"
 export * from "./uploads"
+export * from "./workspaceStore"
