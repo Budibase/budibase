@@ -367,8 +367,27 @@ describe("workspace home project assignments", () => {
         screen.getByRole("button", { name: "Configure Support agent" })
       ).toBeInTheDocument()
     })
-    expect(mocks.fetchProjects).toHaveBeenCalledExactlyOnceWith("app_dev_test")
+    expect(mocks.ensureFetched).toHaveBeenCalledWith("app_dev_test")
     expect(window.location.search).toBe("?project=project_operations")
+  })
+
+  it("does not retry a failed initial project load for a setup deep link", async () => {
+    mocks.projects.set([])
+    mocks.hasFetchedProjects.mockReturnValue(false)
+    mocks.ensureFetched.mockRejectedValue(new Error("Unable to load projects"))
+    history.replaceState(
+      {},
+      "",
+      "/builder/workspace/app_dev_test/home?project=project_operations&setup=project_operations"
+    )
+
+    render(WorkspaceHome)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(mocks.ensureFetched).not.toHaveBeenCalled()
+    expect(mocks.fetchProjects).not.toHaveBeenCalled()
+    expect(mocks.notifications.error).not.toHaveBeenCalled()
+    expect(screen.queryByText("Project setup")).not.toBeInTheDocument()
   })
 
   it("keeps the open assignment and its save target when another row's context menu opens", async () => {
@@ -531,15 +550,8 @@ describe("workspace home project assignments", () => {
     "waits for the URL-selected project before opening the menu for %s",
     async name => {
       const projects = get(mocks.projects)
-      const fetchProjects = Promise.withResolvers<ProjectResponse[]>()
       mocks.projects.set([])
       mocks.hasFetchedProjects.mockReturnValue(false)
-      mocks.fetchProjects.mockImplementationOnce(async () => {
-        const projects = await fetchProjects.promise
-        mocks.hasFetchedProjects.mockReturnValue(true)
-        mocks.projects.set(projects)
-        return projects
-      })
       history.replaceState(
         {},
         "",
@@ -550,7 +562,8 @@ describe("workspace home project assignments", () => {
 
       await openContextMenu({ name })
 
-      fetchProjects.resolve(projects)
+      mocks.hasFetchedProjects.mockReturnValue(true)
+      mocks.projects.set(projects)
       await tick()
       await openContextMenu({ name })
 

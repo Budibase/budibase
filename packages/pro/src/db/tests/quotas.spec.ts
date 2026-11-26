@@ -1,4 +1,4 @@
-import { cache, context } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import {
   MonthlyQuotaName,
   QuotaUsageType,
@@ -7,8 +7,6 @@ import {
 import tk from "timekeeper"
 import { DBTestConfiguration, mocks } from "../../../tests"
 import * as quotas from "../quotas"
-
-const { Writethrough } = cache.writethrough
 
 describe("quotas", () => {
   const config = new DBTestConfiguration()
@@ -39,10 +37,8 @@ describe("quotas", () => {
       let usage = await getQuotaUsage()
       // manually delete the 'monthly' field (mimic backward compatibility)
       await config.doInTenant(async () => {
-        let db = context.getGlobalDB()
-        const writethroughDb = new Writethrough(db)
         delete usage.monthly
-        await writethroughDb.put(usage)
+        await context.getGlobalDB().put(usage)
       })
       expect(usage.monthly).toBeUndefined()
 
@@ -50,26 +46,6 @@ describe("quotas", () => {
       expect(usage.monthly).toBeDefined()
       expect(usage.monthly["1-2020"]).toBeDefined()
       expect(usage.monthly.current).toBe(usage.monthly["1-2020"])
-    })
-  })
-
-  describe("setUsagePerApp", () => {
-    it("sets the usage for two apps", async () => {
-      await config.doInTenant(async () => {
-        await quotas.setUsagePerApp(
-          {
-            app_1: 3,
-            app_2: 4,
-          },
-          StaticQuotaName.ROWS,
-          QuotaUsageType.STATIC
-        )
-        const usage = await getQuotaUsage()
-        expect(usage).toBeDefined()
-        expect(usage.apps["app_1"].usageQuota[StaticQuotaName.ROWS]).toBe(3)
-        expect(usage.apps["app_2"].usageQuota[StaticQuotaName.ROWS]).toBe(4)
-        expect(usage.usageQuota[StaticQuotaName.ROWS]).toBe(7)
-      })
     })
   })
 

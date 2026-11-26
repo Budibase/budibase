@@ -48,6 +48,7 @@
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: canAssignProject =
     projectsEnabled &&
+    $projectsStore.length > 0 &&
     tableId !== TableNames.USERS &&
     table?.sourceType !== DB_TYPE_EXTERNAL
   $: projectAssignmentResource = {

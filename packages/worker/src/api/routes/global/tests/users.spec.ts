@@ -2,6 +2,7 @@ import {
   DocumentType,
   InviteUsersResponse,
   OIDCUser,
+  SSOProviderType,
   prefixed,
   User,
 } from "@budibase/types"
@@ -342,6 +343,29 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users/invite/:code/:role", () => {
+    it("does not let a workspace builder grant creator permissions through an invite", async () => {
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        structures.users.newEmail()
+      )
+      const appId = "app_allowed_123"
+      const builderUser = await config.createUser({
+        ...structures.users.user(),
+        builder: { global: false, apps: [appId] },
+        admin: { global: false },
+      })
+
+      await config.login(builderUser)
+      await config.withUser(builderUser, () =>
+        config.withApp(appId, () =>
+          config.api.users.addWorkspaceIdToInvite(code, "CREATOR", 403)
+        )
+      )
+
+      const invite = await cache.invite.getCode(code, config.getTenantId())
+      expect(invite.info.apps?.[appId]).toBeUndefined()
+    })
+
     it("should be able to add workspace id to invite", async () => {
       const email = structures.users.newEmail()
       const { code } = await config.api.users.sendUserInvite(
@@ -708,6 +732,21 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users/bulk", () => {
+    it("rejects a caller-supplied ID for a new user", async () => {
+      const user = structures.users.user({ _id: db.generateGlobalUserID() })
+
+      const response = await config.api.users.bulkCreateUsers([user])
+
+      expect(response.created?.successful).toHaveLength(0)
+      expect(response.created?.unsuccessful).toEqual([
+        {
+          email: user.email,
+          reason: "User ID cannot be supplied when creating a user",
+        },
+      ])
+      expect(await config.getUser(user.email)).toBeUndefined()
+    })
+
     it("should ignore users existing in the same tenant", async () => {
       const user = await config.createUser()
       jest.clearAllMocks()
@@ -771,11 +810,23 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users", () => {
+    it("rejects a caller-supplied ID for a new user", async () => {
+      const user = structures.users.user({ _id: db.generateGlobalUserID() })
+
+      const response = await config.api.users.saveUser(user, 400)
+
+      expect(response.body.message).toBe(
+        "User ID cannot be supplied when creating a user"
+      )
+      expect(await config.getUser(user.email)).toBeUndefined()
+    })
+
     it("should be able to create a basic user", async () => {
       const user = structures.users.user()
 
-      await config.api.users.saveUser(user)
+      const response = await config.api.users.saveUser(user)
 
+      expect(response.body._id).toMatch(/^us_/)
       expect(events.user.created).toHaveBeenCalledTimes(1)
       expect(events.user.updated).not.toHaveBeenCalled()
       expect(events.user.permissionBuilderAssigned).not.toHaveBeenCalled()
@@ -897,6 +948,25 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users (update)", () => {
+    it("rejects an update if the user is deleted before persistence", async () => {
+      const user = await config.createUser()
+      const save = userSdk.db.save.bind(userSdk.db)
+      const concurrentDelete = jest
+        .spyOn(userSdk.db, "save")
+        .mockImplementationOnce(async (request, options) => {
+          await context.getGlobalDB().remove(user)
+          return save(request, options)
+        })
+      try {
+        const response = await config.api.users.saveUser(user, 400)
+        expect(response.body.message).toBe(
+          "User ID cannot be supplied when creating a user"
+        )
+      } finally {
+        concurrentDelete.mockRestore()
+      }
+    })
+
     it("should be able to update a basic user", async () => {
       const user = await config.createUser()
       jest.clearAllMocks()
@@ -1330,6 +1400,45 @@ describe("/api/global/users", () => {
       expect(response.body.data).toHaveLength(2)
     })
 
+    it("does not expose SSO tokens to an app-scoped Builder searching a tenant group", async () => {
+      featureMocks.licenses.useUnlimited()
+      featureMocks.licenses.useGroups()
+      const group = await config.doInTenant(() =>
+        proSdk.groups.save(structures.groups.UserGroup())
+      )
+      const target = await config.createUser({ userGroups: [group.id] })
+      await config.doInTenant(() =>
+        context.getGlobalDB().put({
+          ...target,
+          provider: "example-oidc",
+          providerType: SSOProviderType.OIDC,
+          oauth2: {
+            accessToken: "example-access-canary",
+            refreshToken: "example-refresh-canary",
+          },
+          internalToken: "example-internal-canary",
+          scimInfo: { isSync: true, accessToken: "example-scim-canary" },
+        })
+      )
+      const builder = await config.createUser({
+        builder: { global: false, apps: ["app_builder_workspace"] },
+        admin: { global: false },
+      })
+      await config.login(builder)
+
+      const response = await config.withUser(builder, () =>
+        config.api.users.searchUsers({ groupIds: [group.id] })
+      )
+
+      expect(response.body.data).toHaveLength(1)
+      expect(response.body.data[0].email).toBe(target.email)
+      expect(response.body.data[0]).not.toHaveProperty("oauth2")
+      expect(response.body.data[0]).not.toHaveProperty("provider")
+      expect(response.body.data[0]).not.toHaveProperty("providerType")
+      expect(response.body.data[0]).not.toHaveProperty("internalToken")
+      expect(response.body.data[0].scimInfo).toEqual({ isSync: true })
+    })
+
     it("should apply the selected group filter to workspace users", async () => {
       const workspaceId = "app_workspace_group_filter"
       featureMocks.licenses.useUnlimited()
@@ -1500,18 +1609,17 @@ describe("/api/global/users", () => {
 
     it("should include all global admins in workspace search when there are more than 25", async () => {
       const workspaceId = "app_workspace_filter_global_admin_many"
-      const globalAdminUsers = await Promise.all(
-        Array.from({ length: 30 }).map((_, index) =>
-          config.createUser({
-            email: `workspace-global-admin-${index}-${structures.users.newEmail()}`,
-            admin: { global: true },
-            builder: { global: true },
-          })
-        )
+      const globalAdminIds = Array.from({ length: 30 }, () =>
+        db.generateGlobalUserID()
       )
-      const globalAdminIds = globalAdminUsers
-        .map(user => user._id)
-        .filter(Boolean) as string[]
+      const users = globalAdminIds.map(_id =>
+        structures.users.adminUser({
+          _id,
+          tenantId: config.getTenantId(),
+          password: undefined,
+        })
+      )
+      await config.doInTenant(() => context.getGlobalDB().bulkDocs(users))
 
       const response = await config.api.users.searchUsers({
         workspaceId,
@@ -1745,6 +1853,32 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users/:userId/permission/:role", () => {
+    it("does not let a workspace builder grant creator permissions to a user", async () => {
+      const workspaceId = "app_allowed_123"
+      const targetUser = await config.createUser()
+      const builderUser = await config.createUser({
+        ...structures.users.user(),
+        builder: { global: false, apps: [workspaceId] },
+        admin: { global: false },
+      })
+
+      await config.login(builderUser)
+      await config.withUser(builderUser, () =>
+        config.withApp(workspaceId, () =>
+          config.api.users.addUserToWorkspace(
+            targetUser._id!,
+            targetUser._rev!,
+            "CREATOR",
+            403
+          )
+        )
+      )
+
+      const user = await config.getUser(targetUser.email)
+      expect(user.roles?.[workspaceId]).toBeUndefined()
+      expect(user.builder?.creator).toBeUndefined()
+    })
+
     it("should assign CREATOR role and set builder properties", async () => {
       const user = await config.createUser()
       const workspaceId = "app_123456789"

@@ -47,6 +47,19 @@ const processTemplateString = (
   })
 }
 
+const setJsonKey = (
+  target: Record<string, JSONValue>,
+  key: string,
+  value: JSONValue
+) => {
+  Object.defineProperty(target, key, {
+    value,
+    enumerable: true,
+    writable: true,
+    configurable: true,
+  })
+}
+
 const enrichJsonTemplate = (
   template: string,
   parameters: object,
@@ -65,16 +78,27 @@ const enrichJsonTemplate = (
 const enrichJsonValue = (
   value: JSONValue,
   parameters: object,
-  options: EnrichJsonOptions
+  options: EnrichJsonOptions,
+  path: string[] = []
 ): JSONValue => {
   if (Array.isArray(value)) {
-    return value.map(item => enrichJsonValue(item, parameters, options))
+    return value.map(item => enrichJsonValue(item, parameters, options, path))
   }
 
   if (value === null || typeof value !== "object") {
-    return typeof value === "string"
-      ? processTemplateString(value, parameters, options)
-      : value
+    if (typeof value !== "string") {
+      return value
+    }
+    if (path.join(".") === "steps.value.value") {
+      return JSON.stringify(
+        processJsonStringSync(value, parameters, {
+          noEscaping: true,
+          noHelpers: true,
+          escapeNewlines: false,
+        })
+      )
+    }
+    return processTemplateString(value, parameters, options)
   }
 
   const enrichedQuery: Record<string, JSONValue> = {}
@@ -87,10 +111,10 @@ const enrichJsonValue = (
       continue
     }
     const enrichedKey = processTemplateString(key, parameters, options)
-    enrichedQuery[enrichedKey] = enrichJsonValue(
-      fieldValue,
-      parameters,
-      options
+    setJsonKey(
+      enrichedQuery,
+      enrichedKey,
+      enrichJsonValue(fieldValue, parameters, options, [...path, enrichedKey])
     )
   }
   return enrichedQuery
@@ -114,14 +138,18 @@ const enrichContextObject = async (
       preserveNullValues: isJsonField,
     }
     if (typeof fieldValue === "string") {
-      enrichedQuery[enrichedKey] = isJsonField
-        ? enrichJsonTemplate(fieldValue, parameters, jsonOptions)
-        : processTemplateString(fieldValue, parameters, options)
+      setJsonKey(
+        enrichedQuery,
+        enrichedKey,
+        isJsonField
+          ? enrichJsonTemplate(fieldValue, parameters, jsonOptions)
+          : processTemplateString(fieldValue, parameters, options)
+      )
     } else {
-      enrichedQuery[enrichedKey] = enrichJsonValue(
-        fieldValue,
-        parameters,
-        jsonOptions
+      setJsonKey(
+        enrichedQuery,
+        enrichedKey,
+        enrichJsonValue(fieldValue, parameters, jsonOptions, [enrichedKey])
       )
     }
   }

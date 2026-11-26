@@ -1,5 +1,4 @@
 import {
-  Config,
   ConfigChecklistResponse,
   ConfigType,
   DeleteConfigResponse,
@@ -21,7 +20,7 @@ export interface ConfigEndpoints {
   getPublicTranslations: (
     tenantId?: string
   ) => Promise<GetPublicTranslationsResponse>
-  getOIDCLogos: () => Promise<Config<OIDCLogosConfig>>
+  getOIDCLogos: () => Promise<OIDCLogosConfig>
   saveConfig: (config: SaveConfigRequest) => Promise<SaveConfigResponse>
   deleteConfig: (id: string, rev: string) => Promise<DeleteConfigResponse>
   getChecklist: (tenantId: string) => Promise<ConfigChecklistResponse>

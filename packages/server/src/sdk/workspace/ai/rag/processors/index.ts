@@ -3,6 +3,12 @@ import { KnowledgeBaseFile, WithRequired } from "@budibase/types"
 export interface RetrievedContextChunk {
   source?: string
   chunkText: string
+  preserveIfSourceUnmatched?: boolean
+}
+
+export interface RagSearchResult {
+  chunks: RetrievedContextChunk[]
+  answer?: string
 }
 
 export interface RagProcessor {
@@ -11,6 +17,6 @@ export interface RagProcessor {
     fileBuffer: Buffer
   ): Promise<void>
 
-  search(question: string): Promise<RetrievedContextChunk[]>
+  search(question: string): Promise<RagSearchResult>
   deleteFiles(fileIds: string[]): Promise<void>
 }

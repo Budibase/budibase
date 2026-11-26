@@ -1,6 +1,20 @@
 general_settings:
   store_model_in_db: true
   store_prompts_in_spend_logs: true
+  enable_mcp_registry: false
+
+credential_list:
+  - credential_name: budibase-gemini
+    credential_values:
+      api_key: os.environ/GEMINI_API_KEY
+    credential_info:
+      custom_llm_provider: gemini
+
+model_list:
+  - model_name: budibase-gemini-file-search
+    litellm_params:
+      model: gemini/gemini-3.8-flash
+      litellm_credential_name: budibase-gemini
 
 litellm_settings:
   drop_params: true

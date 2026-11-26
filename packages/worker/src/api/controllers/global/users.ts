@@ -77,6 +77,51 @@ const stripUsers = (users: (User | StrippedUser)[]): StrippedUser[] => {
   }))
 }
 
+type FullSearchUsersResponse = Omit<SearchUsersResponse, "data"> & {
+  data: User[]
+}
+
+const projectSearchUser = (user: User): User => ({
+  _id: user._id,
+  _rev: user._rev,
+  tenantId: user.tenantId,
+  email: user.email,
+  userId: user.userId,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  roles: user.roles,
+  admin: user.admin ? { global: user.admin.global } : undefined,
+  builder: user.builder
+    ? {
+        global: user.builder.global,
+        apps: user.builder.apps,
+        creator: user.builder.creator,
+      }
+    : undefined,
+  status: user.status,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+  userGroups: user.userGroups,
+  budibaseAccess: user.budibaseAccess,
+  accountPortalAccess: user.accountPortalAccess,
+  scimInfo: user.scimInfo ? { isSync: user.scimInfo.isSync } : undefined,
+})
+
+const sanitizeSearchResponse = ({
+  response,
+  canViewUsers,
+}: {
+  response: FullSearchUsersResponse
+  canViewUsers: boolean
+}): SearchUsersResponse => {
+  return {
+    ...response,
+    data: canViewUsers
+      ? response.data.map(projectSearchUser)
+      : stripUsers(response.data),
+  }
+}
+
 export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
   try {
     const currentUserId = ctx.user?._id
@@ -370,14 +415,14 @@ export const search = async (
     let response = hasWorkspaceId
       ? await searchWorkspaceUsers(body)
       : await searchGroupUsers(body)
-    if (!users.hasBuilderPermissions(ctx.user)) {
-      response.data = stripUsers(response.data)
-    }
-    ctx.body = response
+    ctx.body = sanitizeSearchResponse({
+      response,
+      canViewUsers: users.hasBuilderPermissions(ctx.user),
+    })
     return
   }
 
-  let response: SearchUsersResponse = { data: [] }
+  let response: FullSearchUsersResponse = { data: [] }
 
   if (body.paginate === false) {
     response.data = await userSdk.db.getUsersByAppAccess({
@@ -399,11 +444,10 @@ export const search = async (
     }
   }
 
-  if (!users.hasBuilderPermissions(ctx.user)) {
-    response.data = stripUsers(response.data)
-  }
-
-  ctx.body = response
+  ctx.body = sanitizeSearchResponse({
+    response,
+    canViewUsers: users.hasBuilderPermissions(ctx.user),
+  })
 }
 
 const DEFAULT_USER_LIMIT = 8
@@ -415,7 +459,7 @@ const filterAndPaginateUsers = ({
 }: {
   userList: User[]
   body: SearchUsersRequest
-}): SearchUsersResponse => {
+}): FullSearchUsersResponse => {
   const query = body.query
   const limit = body.limit ?? DEFAULT_USER_LIMIT
   let filtered = userList
@@ -465,7 +509,7 @@ const filterAndPaginateUsers = ({
 
 const searchGroupUsers = async (
   body: SearchUsersRequest
-): Promise<SearchUsersResponse> => {
+): Promise<FullSearchUsersResponse> => {
   const groupIds = [...new Set(body.groupIds || [])]
   const userIds = await proDb.groups.getUserIdsFromGroups(groupIds)
   const groupUsers = userIds.length ? await userSdk.db.bulkGet(userIds) : []
@@ -512,7 +556,7 @@ const getGlobalPermissionUsers = async () => {
 
 const searchWorkspaceUsers = async (
   body: SearchUsersRequest
-): Promise<SearchUsersResponse> => {
+): Promise<FullSearchUsersResponse> => {
   const workspaceId = body.workspaceId
   if (!workspaceId) {
     return { data: [], hasNextPage: false }
@@ -778,6 +822,9 @@ export const addWorkspaceIdToInvite = async (
   ctx: UserCtx<void, UpdateInviteResponse, { code: string; role: string }>
 ) => {
   const { code, role } = ctx.params
+  if (role === "CREATOR" && !users.isAdmin(ctx.user)) {
+    ctx.throw(403, "Only global admins can assign creator permissions")
+  }
 
   const workspaceId = await backendCoreUtils.getWorkspaceIdFromCtx(ctx)
   if (!workspaceId) {
@@ -910,6 +957,9 @@ async function handleUserWorkspacePermission(
   userId: string,
   role: string | undefined
 ) {
+  if (role === "CREATOR" && !users.isAdmin(ctx.user)) {
+    ctx.throw(403, "Only global admins can assign creator permissions")
+  }
   const { _rev } = ctx.request.body
   if (!_rev) {
     ctx.throw(400, "rev is required")

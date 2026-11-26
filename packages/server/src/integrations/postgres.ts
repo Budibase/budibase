@@ -30,10 +30,11 @@ import {
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 import { v4 as uuidv4 } from "uuid"
+import { isIP } from "net"
 
 import { Client, ClientConfig, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
-import { sql } from "@budibase/backend-core"
+import { sql, utils } from "@budibase/backend-core"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -159,7 +160,7 @@ function processBindings(bindings: SqlQueryBinding): SqlQueryBinding {
 }
 
 class PostgresIntegration extends Sql implements DatasourcePlus, SqlDatasource {
-  private readonly client: Client
+  private pgClient?: Client
   private readonly config: PostgresConfig
   private index = 1
   private open: boolean
@@ -302,20 +303,39 @@ class PostgresIntegration extends Sql implements DatasourcePlus, SqlDatasource {
   constructor(config: PostgresConfig) {
     super(SqlClient.POSTGRES)
     this.config = config
+    this.open = false
+  }
 
-    let newConfig: ClientConfig = {
-      ...this.config,
+  private get client(): Client {
+    if (!this.pgClient) {
+      throw new Error("Postgres client is not connected")
+    }
+    return this.pgClient
+  }
+
+  // Only known keys are passed on: the driver also accepts keys such as
+  // connectionString and stream, which would bypass the host check. The client
+  // connects to the checked IP so the driver cannot resolve the host again.
+  private async createClient(): Promise<Client> {
+    const { host } = this.config
+    const ip = await utils.requireSafeHostIp(host)
+    const clientConfig: ClientConfig = {
+      host: ip,
+      port: this.config.port,
+      database: this.config.database,
+      user: this.config.user,
+      password: this.config.password,
       ssl: this.config.ssl
         ? {
             rejectUnauthorized: this.config.rejectUnauthorized,
             ca: this.config.ca,
             key: this.config.clientKey,
             cert: this.config.clientCert,
+            ...(isIP(host) === 0 && { servername: host }),
           }
         : undefined,
     }
-    this.client = new Client(newConfig)
-    this.open = false
+    return new Client(clientConfig)
   }
 
   async testConnection() {
@@ -352,6 +372,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus, SqlDatasource {
     if (this.open) {
       return
     }
+    if (!this.pgClient) {
+      this.pgClient = await this.createClient()
+    }
     try {
       await this.client.connect()
     } catch (error) {
@@ -374,8 +397,12 @@ class PostgresIntegration extends Sql implements DatasourcePlus, SqlDatasource {
 
   closeConnection() {
     const pg = this
+    const client = this.pgClient
+    if (!client) {
+      return Promise.resolve()
+    }
     return new Promise<void>((resolve, reject) => {
-      this.client.end((err: any) => {
+      client.end((err: any) => {
         pg.open = false
         if (err) {
           reject(err)

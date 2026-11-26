@@ -36,38 +36,59 @@ async function put(
   doc: Document,
   writeRateMs: number = DEFAULT_WRITE_RATE_MS
 ) {
-  const cache = await getCache()
   const key = doc._id
-  let cacheItem: CacheItem<any> | undefined
+  const lockOptions = {
+    name: LockName.PERSIST_WRITETHROUGH,
+    resource: key,
+    ttl: 15000,
+  }
+  const writeDb = async () => {
+    const response = await db.put(doc, { force: true })
+    doc._id = response.id
+    doc._rev = response.rev
+    return response
+  }
+
+  if (writeRateMs === 0) {
+    const { result } = await locks.doWithLock(
+      { ...lockOptions, type: LockType.DEFAULT },
+      async () => {
+        const response = await writeDb()
+        const cacheKey = makeCacheKey(db, response.id)
+        try {
+          const cache = await getCache()
+          await cache.store(cacheKey, makeCacheItem(doc))
+        } catch (err) {
+          logWarn("Could not refresh cache after a committed write", err)
+          try {
+            await invalidate({ db, id: response.id })
+          } catch (err) {
+            logWarn("Could not invalidate cache after a committed write", err)
+          }
+        }
+        return response
+      }
+    )
+    return result
+  }
+
+  const cache = await getCache()
+  let cacheItem: CacheItem<Document> | undefined
   if (key) {
     cacheItem = await cache.get(makeCacheKey(db, key))
   }
   const updateDb = !cacheItem || cacheItem.lastWrite < Date.now() - writeRateMs
-  let output = doc
   if (updateDb) {
     const lockResponse = await locks.doWithLock(
-      {
-        type: LockType.TRY_ONCE,
-        name: LockName.PERSIST_WRITETHROUGH,
-        resource: key,
-        ttl: 15000,
-      },
+      { ...lockOptions, type: LockType.TRY_ONCE },
       async () => {
-        const writeDb = async (toWrite: any) => {
-          // doc should contain the _id and _rev
-          const response = await db.put(toWrite, { force: true })
-          output._id = response.id
-          output._rev = response.rev
-        }
         try {
-          await writeDb(doc)
+          await writeDb()
         } catch (err: any) {
           if (err.status !== 409) {
             throw err
-          } else {
-            // Swallow 409s but log them
-            logWarn(`Ignoring conflict in write-through cache`)
           }
+          logWarn(`Ignoring conflict in write-through cache`)
         }
       }
     )
@@ -77,11 +98,11 @@ async function put(
     }
   }
   // if we are updating the DB then need to set the lastWrite to now
-  cacheItem = makeCacheItem(output, updateDb ? null : cacheItem?.lastWrite)
-  if (output._id) {
-    await cache.store(makeCacheKey(db, output._id), cacheItem)
+  cacheItem = makeCacheItem(doc, updateDb ? null : cacheItem?.lastWrite)
+  if (doc._id) {
+    await cache.store(makeCacheKey(db, doc._id), cacheItem)
   }
-  return { ok: true, id: output._id, rev: output._rev }
+  return { ok: true, id: doc._id, rev: doc._rev }
 }
 
 async function get<T extends Document>(db: Database, id: string): Promise<T> {
@@ -114,15 +135,19 @@ async function tryGet<T extends Document>(
   return cacheItem.doc
 }
 
-async function remove(db: Database, docOrId: any, rev?: any): Promise<void> {
+async function invalidate({ db, id }: { db: Database; id: string }) {
   const cache = await getCache()
+  await cache.delete(makeCacheKey(db, id))
+}
+
+async function remove(db: Database, docOrId: any, rev?: any): Promise<void> {
   if (!docOrId) {
     throw new Error("No ID/Rev provided.")
   }
   const id = typeof docOrId === "string" ? docOrId : docOrId._id
   rev = typeof docOrId === "string" ? rev : docOrId._rev
   try {
-    await cache.delete(makeCacheKey(db, id))
+    await invalidate({ db, id })
   } finally {
     await db.remove(id, rev)
   }
@@ -154,5 +179,9 @@ export class Writethrough {
 
   async remove(docOrId: any, rev?: any) {
     return remove(this.db, docOrId, rev)
+  }
+
+  async invalidate(id: string) {
+    return invalidate({ db: this.db, id })
   }
 }

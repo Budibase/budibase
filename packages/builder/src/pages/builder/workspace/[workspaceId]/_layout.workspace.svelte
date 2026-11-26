@@ -1,5 +1,8 @@
 <script lang="ts">
   import { sdk } from "@budibase/shared-core"
+  import { get } from "svelte/store"
+  import { goto, params } from "@roxi/routify"
+  import { FeatureFlag } from "@budibase/types"
   import {
     initialise,
     reset,
@@ -7,27 +10,60 @@
     previewStore,
     deploymentStore,
     workspaceStore,
+    componentStore,
+    screenStore,
   } from "@/stores/builder"
-  import { workspacesStore, admin, aiConfigsStore, auth } from "@/stores/portal"
+  import {
+    workspacesStore,
+    admin,
+    aiConfigsStore,
+    auth,
+    featureFlags,
+    projectsStore,
+  } from "@/stores/portal"
   import { bb } from "@/stores/bb"
-  import { Heading, Layout, Body } from "@budibase/bbui"
+  import { Heading, Layout, Body, notifications } from "@budibase/bbui"
   import { API } from "@/api"
+  import { getProjectSetupRequest } from "@/helpers/workspaceHomeNavigation"
+  import ProjectSetupBackButton from "@/components/projects/ProjectSetupBackButton.svelte"
   import InviteUsersModal from "./_components/InviteUsersModal.svelte"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
   import SideNav from "./_components/SideNav/SideNav.svelte"
   import { onMount } from "svelte"
-  import { goto, params } from "@roxi/routify"
-  import { getProjectSetupRequest } from "@/helpers/workspaceHomeNavigation"
-  import ProjectSetupBackButton from "@/components/projects/ProjectSetupBackButton.svelte"
+  import { getErrorMessage } from "@/helpers/errors"
 
   export let workspaceId: string
 
-  let promise = getPackage(workspaceId)
+  let workspaceReady = false
+  let projectsRequested = false
+  let packageKey = `${workspaceId}:${$params.screenId || ""}`
+  let packageInitialisation = Promise.resolve()
+  let initialisedWorkspaceId: string | undefined
+  const workspaceInitialisation = getPackage({
+    appId: workspaceId,
+    requestKey: packageKey,
+    screenId: $params.screenId,
+  })
   let sideNav: SideNav
   let showInviteUsersModal = false
+  $: {
+    const nextPackageKey = `${workspaceId}:${$params.screenId || ""}`
+    if (nextPackageKey !== packageKey) {
+      packageKey = nextPackageKey
+      getPackage({
+        appId: workspaceId,
+        requestKey: packageKey,
+        screenId: $params.screenId,
+      }).catch(error => {
+        notifications.error(
+          error?.message || "There was a problem loading the screen"
+        )
+      })
+    }
+  }
   $: projectSetupReturn = getProjectSetupRequest({
     workspaceId,
-    homeUrl: $params.returnTo,
+    homeUrl: $params["?returnTo"],
   })
   $: canInviteUsers = sdk.users.isAdmin($auth.user)
   $: canManageConnections =
@@ -40,35 +76,117 @@
   $: if (!canInviteUsers && showInviteUsersModal) {
     showInviteUsersModal = false
   }
+  $: if (
+    workspaceReady &&
+    $featureFlags[FeatureFlag.PROJECTS] &&
+    !projectsRequested
+  ) {
+    loadProjects(workspaceId)
+  }
 
-  async function getPackage(appId: string) {
+  const loadProjects = async (workspaceId: string) => {
+    projectsRequested = true
+    try {
+      await projectsStore.fetch(workspaceId)
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Unable to load projects")
+    }
+  }
+
+  const initialiseWorkspaceMetadata = async (appId: string) => {
+    if (workspaceReady) {
+      return
+    }
+    if ($featureFlags[FeatureFlag.PROJECTS]) {
+      await loadProjects(appId)
+    }
+    workspaceReady = true
+    if ($auth.user?.lastVisitedWorkspaceId !== appId) {
+      auth
+        .updateLastVisitedWorkspace(appId)
+        .catch(error =>
+          console.error("Failed to save last visited workspace", error)
+        )
+    }
+  }
+
+  async function getPackage({
+    appId,
+    requestKey,
+    screenId,
+  }: {
+    appId: string
+    requestKey: string
+    screenId?: string
+  }) {
     try {
       if ($admin.maintenance.length) {
         return
       }
+      const isScreenLoaded =
+        !!screenId &&
+        initialisedWorkspaceId === appId &&
+        get(screenStore).screens.some(
+          screen => screen._id === screenId && screen._rev
+        )
+      if (isScreenLoaded) {
+        return
+      }
+      previewStore.setUpdatingAppPackage(true)
       if ($builderStore.created) {
         builderStore.appCreated(false)
         await workspacesStore.load()
       } else {
-        reset()
+        const isSameWorkspace = $workspaceStore.appId === appId
+        const componentToPaste = isSameWorkspace
+          ? $componentStore.componentToPaste
+          : undefined
+        if (!isSameWorkspace) {
+          reset()
+          initialisedWorkspaceId = undefined
+          workspaceReady = false
+          projectsRequested = false
+        }
+        componentStore.update(state => ({ ...state, componentToPaste }))
         workspaceStore.update(state => ({ ...state, appId }))
-        const pkg = await API.fetchAppPackage(appId)
+        const pkg = await API.fetchAppPackage(appId, screenId ?? null)
+        if (requestKey !== packageKey) {
+          return
+        }
 
-        await initialise(pkg)
+        const currentInitialisation = packageInitialisation.then(async () => {
+          if (requestKey !== packageKey) {
+            return
+          }
+          if (isSameWorkspace && initialisedWorkspaceId === appId) {
+            screenStore.syncAppScreens(pkg, screenId)
+          } else {
+            await initialise(pkg, screenId)
+            initialisedWorkspaceId = appId
+          }
+          if (requestKey === packageKey) {
+            await deploymentStore.load()
+            await initialiseWorkspaceMetadata(appId)
+          }
+        })
+        packageInitialisation = currentInitialisation.catch(() => {})
+        await currentInitialisation
+        return
       }
       await deploymentStore.load()
-      if ($auth.user?.lastVisitedWorkspaceId !== appId) {
-        auth
-          .updateLastVisitedWorkspace(appId)
-          .catch(error =>
-            console.error("Failed to save last visited workspace", error)
-          )
-      }
+      await initialiseWorkspaceMetadata(appId)
     } catch (error: any) {
+      if (requestKey !== packageKey) {
+        return
+      }
       console.error(`Error initialising app: ${error?.message}`)
       sideNav.show()
 
       throw error
+    } finally {
+      if (requestKey === packageKey) {
+        previewStore.setUpdatingAppPackage(false)
+      }
     }
   }
 
@@ -92,7 +210,7 @@
       }
     }}
   />
-  {#await promise}
+  {#await workspaceInitialisation}
     <div class="loading"></div>
   {:then _}
     <div class="body">

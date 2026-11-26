@@ -20,6 +20,7 @@ import {
   AutomationIOType,
   AutomationStepType,
   BlockDefinitionTypes,
+  FilterCondition,
   ToolExecutionPrincipal,
   isBranchStep,
   isLoopV2Step,
@@ -46,6 +47,23 @@ interface TestBlockRef extends AutomationBlockRef {
 }
 
 describe("automation store", () => {
+  it("loads saved inputs for a Condition created from the built-in definition", () => {
+    const inputs = {
+      field: "status",
+      condition: FilterCondition.NOT_EQUAL,
+      value: "closed",
+    }
+    const inputData = automationStore.actions.getInputData({
+      ...automations.steps.filter.definition,
+      id: "condition",
+      stepId: AutomationActionStepId.FILTER,
+      inputs,
+    })
+
+    expect(inputData).toEqual(inputs)
+    expect(inputData).not.toBe(inputs)
+  })
+
   it("adds the execution principal field to legacy agent steps", () => {
     const agentDefinition = automations.steps.agent.definition
     const legacyAgent: AgentStep = {

@@ -12,6 +12,7 @@ import type { Delete } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import csv from "csvtojson"
 import stream from "stream"
+import { pinnedRequestHandler } from "./utils/aws"
 
 export const DEFAULT_SIGNED_URL_EXPIRY_SECONDS = 300
 export const MAX_SIGNED_URL_EXPIRY_SECONDS = 3600
@@ -190,7 +191,8 @@ const SCHEMA: Integration = {
 
 class S3Integration implements IntegrationBase {
   private readonly config: S3ClientConfig
-  private client: S3
+  private readonly endpoint?: string
+  private client?: S3
 
   constructor(config: S3Config) {
     this.config = {
@@ -210,8 +212,19 @@ class S3Integration implements IntegrationBase {
     } else {
       delete this.config.endpoint
     }
+    this.endpoint = config.endpoint
+  }
 
-    this.client = new S3(this.config)
+  private async getClient(): Promise<S3> {
+    if (!this.client) {
+      this.client = new S3({
+        ...this.config,
+        ...(this.endpoint && {
+          requestHandler: await pinnedRequestHandler(this.endpoint),
+        }),
+      })
+    }
+    return this.client
   }
 
   async testConnection() {
@@ -219,7 +232,8 @@ class S3Integration implements IntegrationBase {
       connected: false,
     }
     try {
-      await this.client.listBuckets({
+      const client = await this.getClient()
+      await client.listBuckets({
         MaxBuckets: 1,
       })
       response.connected = true
@@ -255,7 +269,8 @@ class S3Integration implements IntegrationBase {
         LocationConstraint: query.location,
       }
     }
-    return await this.client.createBucket(params)
+    const client = await this.getClient()
+    return await client.createBucket(params)
   }
 
   async read(query: {
@@ -266,7 +281,8 @@ class S3Integration implements IntegrationBase {
     maxKeys: number
     prefix: string
   }) {
-    const response = await this.client.listObjects({
+    const client = await this.getClient()
+    const response = await client.listObjects({
       Bucket: query.bucket,
       Delimiter: query.delimiter,
       Marker: query.marker,
@@ -277,7 +293,8 @@ class S3Integration implements IntegrationBase {
   }
 
   async readCsv(query: { bucket: string; key: string }) {
-    const response = await this.client.getObject({
+    const client = await this.getClient()
+    const response = await client.getObject({
       Bucket: query.bucket,
       Key: query.key,
     })
@@ -351,7 +368,8 @@ class S3Integration implements IntegrationBase {
   }
 
   async delete(query: { bucket: string; delete: string | Delete }) {
-    return await this.client.deleteObjects({
+    const client = await this.getClient()
+    return await client.deleteObjects({
       Bucket: query.bucket,
       Delete:
         typeof query.delete === "string"

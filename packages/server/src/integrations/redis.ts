@@ -6,6 +6,7 @@ import {
   type IntegrationBase,
   QueryType,
 } from "@budibase/types"
+import { utils } from "@budibase/backend-core"
 import Redis from "ioredis"
 import { HOST_ADDRESS } from "./utils"
 
@@ -98,17 +99,26 @@ const SCHEMA: Integration = {
 
 class RedisIntegration implements IntegrationBase {
   private readonly config: RedisConfig
-  private client
+  private client?: Redis
 
   constructor(config: RedisConfig) {
     this.config = config
-    this.client = new Redis({
-      host: this.config.host,
-      port: this.config.port,
-      username: this.config.username,
-      password: this.config.password,
-      db: this.config.db,
-    })
+  }
+
+  // The host is user-supplied: check it against the outbound blacklist and
+  // connect to the checked IP, so it cannot be used to reach internal services.
+  private async connect(): Promise<Redis> {
+    if (!this.client) {
+      const host = await utils.requireSafeHostIp(this.config.host)
+      this.client = new Redis({
+        host,
+        port: this.config.port,
+        username: this.config.username,
+        password: this.config.password,
+        db: this.config.db,
+      })
+    }
+    return this.client
   }
 
   async testConnection() {
@@ -116,7 +126,8 @@ class RedisIntegration implements IntegrationBase {
       connected: false,
     }
     try {
-      await this.client.ping()
+      const client = await this.connect()
+      await client.ping()
       response.connected = true
     } catch (e: any) {
       response.error = e.message as string
@@ -127,12 +138,12 @@ class RedisIntegration implements IntegrationBase {
   }
 
   async disconnect() {
-    return this.client.quit()
+    return this.client?.quit()
   }
 
-  async redisContext<T>(query: () => Promise<T>) {
+  async redisContext<T>(query: (client: Redis) => Promise<T>) {
     try {
-      return await query()
+      return await query(await this.connect())
     } catch (err) {
       throw new Error(`Redis error: ${err}`)
     } finally {
@@ -141,29 +152,29 @@ class RedisIntegration implements IntegrationBase {
   }
 
   async create(query: { key: string; value: string; ttl: number }) {
-    return this.redisContext(async () => {
-      const response = await this.client.set(query.key, query.value)
+    return this.redisContext(async client => {
+      const response = await client.set(query.key, query.value)
       if (query.ttl) {
-        await this.client.expire(query.key, query.ttl)
+        await client.expire(query.key, query.ttl)
       }
       return response
     })
   }
 
   async read(query: { key: string }) {
-    return this.redisContext(async () => {
-      return await this.client.get(query.key)
+    return this.redisContext(async client => {
+      return await client.get(query.key)
     })
   }
 
   async delete(query: { key: string }) {
-    return this.redisContext(async () => {
-      return await this.client.del(query.key)
+    return this.redisContext(async client => {
+      return await client.del(query.key)
     })
   }
 
   async command(query: { json: string }) {
-    return this.redisContext(async () => {
+    return this.redisContext(async client => {
       // commands split line by line
       const commands = query.json.trim().split("\n")
       let pipelineCommands = []
@@ -188,7 +199,7 @@ class RedisIntegration implements IntegrationBase {
         pipelineCommands.push(tokenised)
       }
 
-      const pipeline = this.client.pipeline(pipelineCommands)
+      const pipeline = client.pipeline(pipelineCommands)
       const result = await pipeline.exec()
 
       return result?.map((output: any) => {

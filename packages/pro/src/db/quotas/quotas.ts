@@ -2,13 +2,15 @@ import {
   cache,
   context,
   db as dbCore,
-  Duration,
+  locks,
   tenancy,
 } from "@budibase/backend-core"
 import {
   APP_QUOTA_NAMES,
   BREAKDOWN_QUOTA_NAMES,
   MeteredQuotaName,
+  LockName,
+  LockType,
   MonthlyQuotaName,
   MonthlyUsage,
   QuotaTriggers,
@@ -21,7 +23,6 @@ import {
 } from "@budibase/types"
 import * as utils from "./utils"
 
-const DB_WRITE_RATE_MS = Duration.fromSeconds(60).toMs()
 const { Writethrough } = cache.writethrough
 
 // have to use any for this
@@ -45,30 +46,51 @@ const getDB = () => {
   // create a single global DB for all self-host users using Budicloud services,
   // and we track their quota in tenant-specific documents.
   if (tenancy.isSelfHostUsingCloud()) {
-    return new Writethrough(tenancy.getSelfHostCloudDB(), DB_WRITE_RATE_MS)
+    return new Writethrough(tenancy.getSelfHostCloudDB(), 0)
   }
-  return new Writethrough(tenancy.getGlobalDB(), DB_WRITE_RATE_MS)
+  return new Writethrough(tenancy.getGlobalDB(), 0)
 }
 
-export async function bustCache(retries = 0) {
+const withUsageLock = async <T>(task: () => Promise<T>): Promise<T> => {
+  const db = getDB()
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.UPDATE_QUOTA_USAGE,
+      type: LockType.AUTO_EXTEND,
+      resource: `${db.db.name}:${utils.getQuotaDocId()}`,
+    },
+    task
+  )
+  return result
+}
+
+export const bustCache = (retries = 0) =>
+  withUsageLock(() => removeUsage(retries))
+
+async function removeUsage(retries: number) {
   const maxRetries = 1
   const db = getDB()
   const id = utils.getQuotaDocId()
-  const usage = await db.tryGet<QuotaUsage>(id)
+  const usage = await db.db.tryGet<QuotaUsage>(id)
 
-  if (usage && usage._rev) {
-    await db.remove(id, usage._rev).catch(async e => {
-      if (retries < maxRetries) {
-        return await bustCache(retries + 1)
-      }
-      throw e
-    })
+  try {
+    if (usage?._rev) {
+      await db.remove(id, usage._rev)
+    } else {
+      await db.invalidate(id)
+    }
+  } catch (err) {
+    if (retries < maxRetries) {
+      return removeUsage(retries + 1)
+    }
+    throw err
   }
 }
 
-export const getQuotaUsage = async (): Promise<QuotaUsage> => {
+const readQuotaUsage = async (): Promise<QuotaUsage> => {
   const db = getDB()
-  let usage = await db.tryGet<QuotaUsage>(utils.getQuotaDocId())
+  // A committed write may have left an older revision in Redis.
+  let usage = await db.db.tryGet<QuotaUsage>(utils.getQuotaDocId())
   if (!usage) {
     usage = utils.generateNewQuotaUsage()
     const { rev } = await db.put(usage)
@@ -79,39 +101,15 @@ export const getQuotaUsage = async (): Promise<QuotaUsage> => {
   return clearDeprecated(usage)
 }
 
+export const getQuotaUsage = (): Promise<QuotaUsage> =>
+  withUsageLock(readQuotaUsage)
+
 export const setUsage = async (
   value: number,
   name: MeteredQuotaName,
   type: QuotaUsageType
 ) => {
   return setAllUsage({ name, type, values: { total: value } })
-}
-
-export const setUsagePerApp = async (
-  appValues: { [key: string]: number },
-  name: MeteredQuotaName,
-  type: QuotaUsageType
-) => {
-  const db = getDB()
-  let quotaUsage = await getQuotaUsage()
-  const total = Object.values(appValues).reduce((sum, num) => sum + num, 0)
-  for (let [appId, value] of Object.entries(appValues)) {
-    quotaUsage = coreUsageUpdate(
-      quotaUsage,
-      name,
-      type,
-      {
-        total,
-        app: value,
-      },
-      {
-        appId,
-      }
-    )
-  }
-  const response = await db.put(quotaUsage)
-  quotaUsage._rev = response.rev
-  return quotaUsage
 }
 
 const setBreakdown = (
@@ -153,7 +151,7 @@ export const setAppUsageValue = (
   } catch (err) {
     // ignore error for now
   }
-  if (!appId || !values.app || !APP_QUOTA_NAMES.includes(name)) {
+  if (!appId || values.app == null || !APP_QUOTA_NAMES.includes(name)) {
     return quotaUsage
   }
   if (!quotaUsage.apps?.[appId]) {
@@ -264,13 +262,13 @@ const setMonthlyTriggers = (
   }
 }
 
-const coreUsageUpdate = (
-  quotaUsage: QuotaUsage,
-  name: MeteredQuotaName,
-  type: QuotaUsageType,
-  values: SetUsageValues,
-  opts: { id?: string; appId?: string } = {}
-) => {
+export const coreUsageUpdate = ({
+  quotaUsage,
+  update: { name, type, values, opts = {} },
+}: {
+  quotaUsage: QuotaUsage
+  update: SetAllUsageParams
+}) => {
   if (type === QuotaUsageType.STATIC) {
     name = name as StaticQuotaName
     quotaUsage.usageQuota[name] = values.total
@@ -298,7 +296,7 @@ const coreUsageUpdate = (
   return setAppUsageValue(quotaUsage, name, type, opts, values)
 }
 
-interface SetAllUsageParams {
+export interface SetAllUsageParams {
   name: MeteredQuotaName
   type: QuotaUsageType
   values: SetUsageValues
@@ -306,24 +304,31 @@ interface SetAllUsageParams {
 }
 
 export const setAllUsage = async (
-  params: SetAllUsageParams | SetAllUsageParams[]
-) => {
-  const actions = Array.isArray(params) ? params : [params]
-  const db = getDB()
-  let quotaUsage = await getQuotaUsage()
-  for (let action of actions) {
-    quotaUsage = coreUsageUpdate(
-      quotaUsage,
-      action.name,
-      action.type,
-      action.values,
-      action.opts
-    )
-  }
-  const response = await db.put(quotaUsage, 0)
-  quotaUsage._rev = response.rev
-  return quotaUsage
-}
+  params:
+    | SetAllUsageParams
+    | SetAllUsageParams[]
+    | ((usage: QuotaUsage) => Promise<SetAllUsageParams[]>)
+) =>
+  withUsageLock(async () => {
+    const db = getDB()
+    const quotaUsage = await readQuotaUsage()
+    // Calculate deltas from the same snapshot that will be persisted, while locked.
+    const updates =
+      typeof params === "function" ? await params(quotaUsage) : params
+    const actions = Array.isArray(updates) ? updates : [updates]
+    if (!actions.length) {
+      return quotaUsage
+    }
+    quotaUsage.lastWriteRevisions ??= {}
+    for (const action of actions) {
+      coreUsageUpdate({ quotaUsage, update: action })
+      // The input document revision uniquely identifies this locked write.
+      quotaUsage.lastWriteRevisions[action.name] = quotaUsage._rev
+    }
+    const response = await db.put(quotaUsage)
+    quotaUsage._rev = response.rev
+    return quotaUsage
+  })
 
 export const getCurrentUsageValues = async (
   type: QuotaUsageType,
@@ -331,6 +336,20 @@ export const getCurrentUsageValues = async (
   id?: string
 ): Promise<UsageValues> => {
   const quotaUsage = await getQuotaUsage()
+  return getUsageValues({ quotaUsage, type, name, id })
+}
+
+export const getUsageValues = ({
+  quotaUsage,
+  type,
+  name,
+  id,
+}: {
+  quotaUsage: QuotaUsage
+  type: QuotaUsageType
+  name: MeteredQuotaName
+  id?: string
+}): UsageValues => {
   let total = 0,
     appValues: { app?: number; breakdown?: number } = {}
   switch (type) {
