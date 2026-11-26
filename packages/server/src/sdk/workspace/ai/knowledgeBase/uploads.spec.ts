@@ -9,6 +9,7 @@ const mockRemoveRagFileIngestionJob = jest.fn()
 const mockCreateGeminiFileStore = jest.fn()
 const mockDeleteGeminiVectorStore = jest.fn()
 const mockSyncKeyVectorStores = jest.fn()
+const mockInvalidateActiveWorkspaceGeminiStore = jest.fn()
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -50,6 +51,11 @@ jest.mock("./geminiFileStore", () => ({
 
 jest.mock("../configs/litellm", () => ({
   syncKeyVectorStores: (...args: any[]) => mockSyncKeyVectorStores(...args),
+}))
+
+jest.mock("./workspaceStore", () => ({
+  invalidateActiveWorkspaceGeminiStore: (...args: any[]) =>
+    mockInvalidateActiveWorkspaceGeminiStore(...args),
 }))
 
 import { KnowledgeBaseFileStatus, KnowledgeBaseType } from "@budibase/types"
@@ -168,6 +174,7 @@ describe("resetKnowledgeBaseStore", () => {
     mockCreateGeminiFileStore.mockResolvedValue("new-store-id")
     mockDeleteGeminiVectorStore.mockResolvedValue(undefined)
     mockSyncKeyVectorStores.mockResolvedValue(undefined)
+    mockInvalidateActiveWorkspaceGeminiStore.mockResolvedValue(undefined)
     mockUpdateKnowledgeBaseFile.mockResolvedValue(undefined)
     mockEnqueueRagFileIngestion.mockResolvedValue(undefined)
     mockRemoveRagFileIngestionJob.mockResolvedValue(undefined)

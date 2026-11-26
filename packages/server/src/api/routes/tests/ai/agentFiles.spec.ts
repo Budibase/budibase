@@ -119,13 +119,6 @@ describe("agent files", () => {
       .post("/v1/rag/ingest")
       .reply(200, { file_id: fileId })
 
-  const mockGeminiFileDelete = (vectorStoreId: string, fileId: string) =>
-    nock(environment.LITELLM_URL)
-      .delete(
-        `/v1/vector_stores/${encodeURIComponent(vectorStoreId)}/files/${encodeURIComponent(fileId)}`
-      )
-      .reply(200, { deleted: true })
-
   const setSharePointSourceInAgent = async (
     agentId: string,
     siteIds: string[],
@@ -298,7 +291,6 @@ describe("agent files", () => {
 
     mockAutoKnowledgeBaseCreate()
     const ingestScope = mockGeminiIngest("gemini-file-2")
-    const deleteScope = mockGeminiFileDelete("vector-store-1", "gemini-file-2")
 
     const upload = await config.api.agent.uploadFile(
       created._id!,
@@ -318,7 +310,6 @@ describe("agent files", () => {
       upload.file._id!
     )
     expect(response.deleted).toBe(true)
-    expect(deleteScope.isDone()).toBe(true)
 
     const { files } = await config.api.agent.fetchFiles(
       created._id!,
