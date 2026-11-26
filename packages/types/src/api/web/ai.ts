@@ -38,6 +38,7 @@ export interface ChatCompletionRequestV2 {
   messages: ModelMessage[]
   model: string
   stream?: boolean
+  include_reasoning?: boolean
   metadata?: Record<string, string>
 }
 

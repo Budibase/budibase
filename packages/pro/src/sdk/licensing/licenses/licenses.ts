@@ -26,9 +26,7 @@ export const getLicense = async () => {
   })
 }
 
-export const getLicenseFromKey = (
-  licenseKey: string
-): Promise<License | undefined> => {
+export const getLicenseFromKey = (licenseKey: string) => {
   return licenseClient.getLicenseFromKey(licenseKey)
 }
 
