@@ -7,11 +7,15 @@ import {
   ConnectionInfo,
 } from "@budibase/types"
 
-import { S3, S3ClientConfig } from "@aws-sdk/client-s3"
+import { GetObjectCommand, S3, S3ClientConfig } from "@aws-sdk/client-s3"
 import type { Delete } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import csv from "csvtojson"
 import stream from "stream"
 import { pinnedRequestHandler } from "./utils/aws"
+
+export const DEFAULT_SIGNED_URL_EXPIRY_SECONDS = 300
+export const MAX_SIGNED_URL_EXPIRY_SECONDS = 3600
 
 interface S3Config {
   region: string
@@ -124,6 +128,33 @@ const SCHEMA: Integration = {
         key: {
           type: DatasourceFieldType.STRING,
           required: true,
+        },
+      },
+    },
+    getSignedUrl: {
+      displayName: "Get temporary URL",
+      type: QueryType.FIELDS,
+      readable: true,
+      fields: {
+        bucket: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+        },
+        key: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+        },
+        expiresIn: {
+          type: DatasourceFieldType.NUMBER,
+          display: "Expiry (secs)",
+        },
+        responseContentDisposition: {
+          type: DatasourceFieldType.STRING,
+          display: "Disposition",
+        },
+        responseContentType: {
+          type: DatasourceFieldType.STRING,
+          display: "Content type",
         },
       },
     },
@@ -294,6 +325,47 @@ class S3Integration implements IntegrationBase {
         throw err
       }
     })
+  }
+
+  async getSignedUrl(query: {
+    bucket: string
+    key: string
+    expiresIn?: number | string
+    responseContentDisposition?: string
+    responseContentType?: string
+  }) {
+    if (!query.bucket?.trim()) {
+      throw new Error("Bucket is required")
+    }
+    if (!query.key?.trim()) {
+      throw new Error("Key is required")
+    }
+
+    let expiresIn = DEFAULT_SIGNED_URL_EXPIRY_SECONDS
+    if (query.expiresIn !== undefined && query.expiresIn !== "") {
+      const requested = Math.floor(Number(query.expiresIn))
+      if (!Number.isFinite(requested) || requested <= 0) {
+        throw new Error("Expiry must be a positive number of seconds")
+      }
+      expiresIn = Math.min(requested, MAX_SIGNED_URL_EXPIRY_SECONDS)
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: query.bucket,
+      Key: query.key,
+      ResponseContentDisposition: query.responseContentDisposition || undefined,
+      ResponseContentType: query.responseContentType || undefined,
+    })
+    const signingDate = new Date()
+    const client = await this.getClient()
+    const url = await getSignedUrl(client, command, {
+      expiresIn,
+      signingDate,
+    })
+    const expiresAt = new Date(
+      signingDate.getTime() + expiresIn * 1000
+    ).toISOString()
+    return [{ url, expiresAt }]
   }
 
   async delete(query: { bucket: string; delete: string | Delete }) {
