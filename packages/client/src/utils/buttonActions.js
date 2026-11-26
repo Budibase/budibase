@@ -355,7 +355,7 @@ const exportDataHandler = async action => {
   } = action.parameters
   let tableId
   const getFileName = defaultFileName => {
-    const customFileName = fileName?.trim()
+    const customFileName = String(fileName ?? "").trim()
     if (!customFileName) {
       return defaultFileName
     }

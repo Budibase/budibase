@@ -162,6 +162,12 @@ describe("Export Data action", () => {
     )
   })
 
+  it("converts bound non-string file names", async () => {
+    await exportQueryRows({ format: "csv", fileName: 2026 })
+
+    expect(mockDownload).toHaveBeenLastCalledWith(expect.any(Blob), "2026.csv")
+  })
+
   it("uses a custom file name when exporting table rows", async () => {
     mockExportRows.mockResolvedValue("First name,Last name\\nJohn,Connor")
 
