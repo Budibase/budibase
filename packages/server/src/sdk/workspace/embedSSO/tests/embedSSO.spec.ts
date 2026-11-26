@@ -1,5 +1,9 @@
 import * as backendCore from "@budibase/backend-core"
-import { EmbedSSOConfig, PASSWORD_REPLACEMENT } from "@budibase/types"
+import { type Ctx, EmbedSSOConfig, PASSWORD_REPLACEMENT } from "@budibase/types"
+import { generateKeyPairSync } from "crypto"
+import { IncomingMessage, ServerResponse } from "http"
+import Koa from "koa"
+import { Socket } from "net"
 import jwt from "jsonwebtoken"
 
 jest.mock("@budibase/backend-core", (): typeof backendCore => {
@@ -39,6 +43,7 @@ const createASession = backendCore.sessions
 >
 
 const SECRET = "super-secret-value"
+const AUDIENCE = "budibase-example"
 
 const hmacConfig = (
   overrides: Partial<EmbedSSOConfig> = {}
@@ -46,14 +51,23 @@ const hmacConfig = (
   enabled: true,
   algorithm: "HS256",
   key: SECRET,
+  audience: AUDIENCE,
   emailClaim: "userdata.email",
   ...overrides,
 })
 
-const buildCtx = () => ({
-  secure: true,
-  cookies: { set: jest.fn() },
-})
+const buildCtx = (secure = true) => {
+  const app = new Koa()
+  app.proxy = true
+  const request = new IncomingMessage(new Socket())
+  request.headers["x-forwarded-proto"] = secure ? "https" : "http"
+  const response = new ServerResponse(request)
+  const ctx = app.createContext(request, response) as Ctx
+  const cookiesSet = jest
+    .spyOn(ctx.cookies, "set")
+    .mockImplementation(() => ctx.cookies)
+  return { ctx, cookiesSet }
+}
 
 describe("embedSSO sdk", () => {
   afterEach(() => {
@@ -70,26 +84,22 @@ describe("embedSSO sdk", () => {
       const token = jwt.sign(
         { userdata: { email: "User@Example.com" } },
         SECRET,
-        { algorithm: "HS256" }
+        { algorithm: "HS256", audience: AUDIENCE }
       )
-      const ctx = buildCtx()
+      const { ctx, cookiesSet } = buildCtx()
 
-      const result = await authenticateEmbedUser(
-        ctx as any,
-        hmacConfig(),
-        token
-      )
+      const result = await authenticateEmbedUser(ctx, hmacConfig(), token)
 
       expect(result).toBe(true)
       expect(getGlobalUserByEmail).toHaveBeenCalledWith("user@example.com")
       expect(createASession).toHaveBeenCalled()
-      const [name, authToken, options] = ctx.cookies.set.mock.calls[0]
+      const [name, authToken, options] = cookiesSet.mock.calls[0]
       expect(name).toBe(backendCore.constants.Cookie.Auth)
-      expect(jwt.decode(authToken)).toMatchObject({
+      expect(jwt.decode(authToken || "")).toMatchObject({
         exp: expect.any(Number),
       })
-      expect(options.sameSite).toBe("none")
-      expect(options.secure).toBe(true)
+      expect(options?.sameSite).toBe("none")
+      expect(options?.secure).toBe(true)
     })
 
     it("falls back to a Lax cookie over an insecure connection", async () => {
@@ -100,57 +110,48 @@ describe("embedSSO sdk", () => {
 
       const token = jwt.sign(
         { userdata: { email: "user@example.com" } },
-        SECRET
+        SECRET,
+        { audience: AUDIENCE }
       )
-      const ctx = { secure: false, cookies: { set: jest.fn() } }
+      const { ctx, cookiesSet } = buildCtx(false)
 
-      const result = await authenticateEmbedUser(
-        ctx as any,
-        hmacConfig(),
-        token
-      )
+      const result = await authenticateEmbedUser(ctx, hmacConfig(), token)
 
       expect(result).toBe(true)
-      const [, , options] = ctx.cookies.set.mock.calls[0]
-      expect(options.sameSite).toBe("lax")
-      expect(options.secure).toBe(false)
+      const [, , options] = cookiesSet.mock.calls[0]
+      expect(options?.sameSite).toBe("lax")
+      expect(options?.secure).toBe(false)
     })
 
     it("rejects a token signed with the wrong secret", async () => {
       const token = jwt.sign(
         { userdata: { email: "user@example.com" } },
-        "nope"
+        "nope",
+        { audience: AUDIENCE }
       )
-      const ctx = buildCtx()
+      const { ctx, cookiesSet } = buildCtx()
 
-      const result = await authenticateEmbedUser(
-        ctx as any,
-        hmacConfig(),
-        token
-      )
+      const result = await authenticateEmbedUser(ctx, hmacConfig(), token)
 
       expect(result).toBe(false)
       expect(getGlobalUserByEmail).not.toHaveBeenCalled()
-      expect(ctx.cookies.set).not.toHaveBeenCalled()
+      expect(cookiesSet).not.toHaveBeenCalled()
     })
 
     it("does not create a session when no Budibase user matches", async () => {
       getGlobalUserByEmail.mockResolvedValue(undefined)
       const token = jwt.sign(
         { userdata: { email: "missing@example.com" } },
-        SECRET
+        SECRET,
+        { audience: AUDIENCE }
       )
-      const ctx = buildCtx()
+      const { ctx, cookiesSet } = buildCtx()
 
-      const result = await authenticateEmbedUser(
-        ctx as any,
-        hmacConfig(),
-        token
-      )
+      const result = await authenticateEmbedUser(ctx, hmacConfig(), token)
 
       expect(result).toBe(false)
       expect(createASession).not.toHaveBeenCalled()
-      expect(ctx.cookies.set).not.toHaveBeenCalled()
+      expect(cookiesSet).not.toHaveBeenCalled()
     })
 
     it("validates the issuer when configured", async () => {
@@ -159,21 +160,112 @@ describe("embedSSO sdk", () => {
         SECRET,
         {
           issuer: "https://other.example.com",
+          audience: AUDIENCE,
         }
       )
-      const ctx = buildCtx()
+      const { ctx, cookiesSet } = buildCtx()
 
       const result = await authenticateEmbedUser(
-        ctx as any,
+        ctx,
         hmacConfig({ issuer: "https://nextcloud.example.com" }),
         token
       )
 
       expect(result).toBe(false)
+      expect(cookiesSet).not.toHaveBeenCalled()
+    })
+
+    it("rejects a token for a different audience before finding a user", async () => {
+      const token = jwt.sign(
+        { userdata: { email: "user@example.com" } },
+        SECRET,
+        { audience: "other-client" }
+      )
+      const { ctx, cookiesSet } = buildCtx()
+
+      const result = await authenticateEmbedUser(ctx, hmacConfig(), token)
+
+      expect(result).toBe(false)
+      expect(getGlobalUserByEmail).not.toHaveBeenCalled()
+      expect(createASession).not.toHaveBeenCalled()
+      expect(cookiesSet).not.toHaveBeenCalled()
+    })
+
+    it("rejects a token without an audience", async () => {
+      const token = jwt.sign(
+        { userdata: { email: "user@example.com" } },
+        SECRET
+      )
+      const { ctx, cookiesSet } = buildCtx()
+
+      const result = await authenticateEmbedUser(ctx, hmacConfig(), token)
+
+      expect(result).toBe(false)
+      expect(createASession).not.toHaveBeenCalled()
+      expect(cookiesSet).not.toHaveBeenCalled()
+    })
+
+    it("rejects tokens when an existing configuration has no audience", async () => {
+      const token = jwt.sign(
+        { userdata: { email: "user@example.com" } },
+        SECRET,
+        { audience: AUDIENCE }
+      )
+      const { ctx, cookiesSet } = buildCtx()
+
+      const result = await authenticateEmbedUser(
+        ctx,
+        hmacConfig({ audience: undefined }),
+        token
+      )
+
+      expect(result).toBe(false)
+      expect(createASession).not.toHaveBeenCalled()
+      expect(cookiesSet).not.toHaveBeenCalled()
+    })
+
+    it("rejects an RS256 token issued for another relying party", async () => {
+      const { privateKey, publicKey } = generateKeyPairSync("rsa", {
+        modulusLength: 2048,
+      })
+      const token = jwt.sign(
+        { userdata: { email: "user@example.com" } },
+        privateKey,
+        { algorithm: "RS256", audience: "other-client" }
+      )
+      const { ctx, cookiesSet } = buildCtx()
+
+      const result = await authenticateEmbedUser(
+        ctx,
+        hmacConfig({
+          algorithm: "RS256",
+          key: publicKey.export({ format: "pem", type: "spki" }).toString(),
+        }),
+        token
+      )
+
+      expect(result).toBe(false)
+      expect(getGlobalUserByEmail).not.toHaveBeenCalled()
+      expect(createASession).not.toHaveBeenCalled()
+      expect(cookiesSet).not.toHaveBeenCalled()
     })
   })
 
   describe("encodeConfigForStorage", () => {
+    it("requires an audience when embed SSO is enabled", () => {
+      expect(() =>
+        encodeConfigForStorage(hmacConfig({ audience: undefined }))
+      ).toThrow("An audience is required for embed SSO")
+    })
+
+    it("allows an existing configuration without an audience to be disabled", () => {
+      const result = encodeConfigForStorage(
+        hmacConfig({ enabled: false, audience: undefined })
+      )
+
+      expect(result.enabled).toBe(false)
+    })
+
     it("encrypts a newly provided key", () => {
       const result = encodeConfigForStorage(hmacConfig({ key: "plain-secret" }))
       expect(result.key).not.toBe("plain-secret")
