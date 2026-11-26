@@ -7,7 +7,11 @@ import {
   SqlQuery,
   type SqlDatasource,
 } from "@budibase/types"
-import snowflakeSdk, { SnowflakeError } from "snowflake-sdk"
+import { utils } from "@budibase/backend-core"
+import snowflakeSdk, {
+  type ConnectionOptions,
+  SnowflakeError,
+} from "snowflake-sdk"
 import { promisify } from "util"
 
 interface SnowflakeConfig {
@@ -17,6 +21,7 @@ interface SnowflakeConfig {
   password: string | undefined
   privateKey: string
   authenticator: string
+  role?: string
   warehouse: string
   database: string
   schema: string
@@ -100,14 +105,34 @@ class SnowflakePromise {
   async connect() {
     if (this.client?.isUp()) return
 
-    this.config.authenticator = "SNOWFLAKE"
-    if (this.config.privateKey) {
-      this.config.authenticator = "SNOWFLAKE_JWT"
-      this.config.privateKey = this.config.privateKey?.trim()
+    const privateKey = this.config.privateKey?.trim()
+
+    // Only known keys are passed on: the SDK also accepts keys such as
+    // accessUrl, host and proxyHost, which would point it at an arbitrary host.
+    const options: ConnectionOptions = {
+      account: this.config.account,
+      username: this.config.username,
+      password: this.config.password,
+      role: this.config.role,
+      warehouse: this.config.warehouse,
+      database: this.config.database,
+      schema: this.config.schema,
+      authenticator: privateKey ? "SNOWFLAKE_JWT" : "SNOWFLAKE",
+      ...(privateKey && { privateKey }),
     }
 
-    this.client = snowflakeSdk.createConnection(this.config)
-    const connectAsync = promisify(this.client.connect.bind(this.client))
+    // createConnection validates the account and fills in `options.host` with
+    // the host it will connect to, without any network request. The SDK has no
+    // hook for a checked lookup, so that host is checked before each
+    // connection. Without a host there is nothing to check, so don't connect.
+    const client = snowflakeSdk.createConnection(options)
+    if (!options.host) {
+      throw new Error("Snowflake host could not be determined.")
+    }
+    await utils.requireSafeHostIp(options.host)
+
+    this.client = client
+    const connectAsync = promisify(client.connect.bind(client))
     return connectAsync()
   }
 

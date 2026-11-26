@@ -2097,6 +2097,27 @@ describe("/applications", () => {
       expect(events.app.deleted).not.toHaveBeenCalled()
     })
 
+    it("should reject delete when APP_ID header conflicts with a percent-encoded path appId", async () => {
+      const secondWorkspace = await config.api.workspace.create({
+        name: generateAppName(),
+      })
+
+      await config.withHeaders(
+        { [Header.WORKSPACE_ID]: workspace.appId },
+        async () => {
+          await config.api.workspace.delete(
+            `%61${secondWorkspace.appId.slice(1)}`,
+            {
+              status: 403,
+              body: { message: "App id conflict" },
+            }
+          )
+        }
+      )
+
+      expect(events.app.deleted).not.toHaveBeenCalled()
+    })
+
     it("should delete the shared Actions database when the workspace is fully deleted", async () => {
       await objectStore.createBucketIfNotExists(
         objectStore.ObjectStore(),

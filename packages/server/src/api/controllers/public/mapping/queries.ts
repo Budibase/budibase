@@ -2,11 +2,12 @@ import { Query, ExecuteQuery } from "./types"
 import { RequiredKeys } from "@budibase/types"
 
 function query(body: any): RequiredKeys<Query> {
+  const { headers: _headers, ...fields } = body.fields
   return {
     _id: body._id,
     datasourceId: body.datasourceId,
     parameters: body.parameters,
-    fields: body.fields,
+    fields,
     queryVerb: body.queryVerb,
     name: body.name,
     schema: body.schema,
