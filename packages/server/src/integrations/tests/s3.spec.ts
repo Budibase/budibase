@@ -220,6 +220,7 @@ describe("S3 Integration", () => {
       expect(result).toEqual([
         { url: "https://example.com/signed", expiresAt: expiresAtFor(60) },
       ])
+      expect(config.integration.client).toBeDefined()
       expect(getSignedUrlMock).toHaveBeenCalledWith(
         config.integration.client,
         expect.any(GetObjectCommand),

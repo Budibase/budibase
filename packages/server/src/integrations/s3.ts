@@ -357,7 +357,8 @@ class S3Integration implements IntegrationBase {
       ResponseContentType: query.responseContentType || undefined,
     })
     const signingDate = new Date()
-    const url = await getSignedUrl(this.client, command, {
+    const client = await this.getClient()
+    const url = await getSignedUrl(client, command, {
       expiresIn,
       signingDate,
     })
