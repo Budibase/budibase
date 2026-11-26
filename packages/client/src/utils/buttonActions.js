@@ -344,9 +344,24 @@ const s3UploadHandler = async action => {
  * row selection store in combination with the tableComponentId parameter.
  */
 const exportDataHandler = async action => {
-  let { tableComponentId, rows, type, columns, delimiter, customHeaders } =
-    action.parameters
+  let {
+    tableComponentId,
+    rows,
+    type,
+    columns,
+    delimiter,
+    customHeaders,
+    fileName,
+  } = action.parameters
   let tableId
+  const getFileName = defaultFileName => {
+    const customFileName = fileName?.trim()
+    if (!customFileName) {
+      return defaultFileName
+    }
+
+    return `${customFileName.replace(/\.[^./\\]+$/, "")}.${type}`
+  }
 
   // Handle no rows selected
   if (!rows?.length) {
@@ -378,7 +393,7 @@ const exportDataHandler = async action => {
       )
       download(
         new Blob([cleanedRows], { type: "text/plain" }),
-        `${tableComponentId}.${type}`
+        getFileName(`${tableComponentId}.${type}`)
       )
     } catch (error) {
       notificationStore.actions.error(
@@ -399,7 +414,10 @@ const exportDataHandler = async action => {
       delimiter,
       customHeaders,
     })
-    download(new Blob([data], { type: "text/plain" }), `${tableId}.${type}`)
+    download(
+      new Blob([data], { type: "text/plain" }),
+      getFileName(`${tableId}.${type}`)
+    )
   } catch (error) {
     notificationStore.actions.error("There was an error exporting the data")
   }
