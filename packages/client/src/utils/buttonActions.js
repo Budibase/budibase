@@ -360,7 +360,7 @@ const exportDataHandler = async action => {
       return defaultFileName
     }
 
-    return `${customFileName.replace(/\.[^./\\]+$/, "")}.${type}`
+    return `${customFileName.replace(/\.(csv|json)?$/i, "")}.${type}`
   }
 
   // Handle no rows selected
