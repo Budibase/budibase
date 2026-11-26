@@ -21,6 +21,7 @@ import {
   type TabularRowExactMatch,
 } from "./processors/tabularText"
 import { ObjectStoreBuckets } from "../../../../constants"
+import { ensureWorkspaceGeminiStore } from "../knowledgeBase/workspaceStore"
 import {
   deleteKnowledgeSourceSyncStateForOperation,
   deleteSharePointFilesForOperationSite,
@@ -511,18 +512,24 @@ export const retrieveContextForOperation = async (
 
     const knowledgeBaseFiles =
       await knowledgeBaseSdk.listKnowledgeBaseFiles(knowledgeBaseId)
-    files.push(...knowledgeBaseFiles)
-
-    const readyFiles = knowledgeBaseFiles.filter(
+    const currentReadyFiles = knowledgeBaseFiles.filter(
       file => file.status === KnowledgeBaseFileStatus.READY
     )
+    const workspaceStore = await ensureWorkspaceGeminiStore(knowledgeBase)
+    if (!workspaceStore) {
+      continue
+    }
+    const sourceByFileId = new Map(
+      workspaceStore.files.map(file => [file.fileId, file.sourceId])
+    )
+    const readyFiles = currentReadyFiles.map(file => ({
+      ...file,
+      ragSourceId: sourceByFileId.get(file._id!),
+    }))
+    files.push(...readyFiles)
     const readyFileSources = readyFiles
       .map(file => file.ragSourceId)
       .filter((id): id is string => !!id)
-
-    if (readyFiles.length === 0) {
-      continue
-    }
 
     const exactTabularMatchResult = await retrieveExactTabularMatches(
       readyFiles,
@@ -533,7 +540,10 @@ export const retrieveContextForOperation = async (
     const readyFileSourceIds = new Set(readyFileSources)
     const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
     assertKnowledgeBaseHasId(knowledgeBase)
-    const processor = getProcessor(knowledgeBase)
+    const processor = getProcessor({
+      ...knowledgeBase,
+      config: { googleFileStoreId: workspaceStore.storeId },
+    })
     const returned = await processor.search(question)
     if (returned.answer) {
       answers.push(returned.answer)

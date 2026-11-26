@@ -11,6 +11,7 @@ const mockDeleteSharePointFilesForOperationSite = jest.fn()
 const mockDeleteKnowledgeSourceSyncStateForOperation = jest.fn()
 const mockReconcileAgentJobs = jest.fn()
 const mockObjectStoreGetReadStream = jest.fn()
+const mockEnsureWorkspaceGeminiStore = jest.fn()
 
 const mockProcessorIngest = jest.fn()
 const mockProcessorSearch = jest.fn()
@@ -60,6 +61,11 @@ jest.mock("./sources/knowledgeSourceSyncQueue", () => ({
   reconcileAgentJobs: (...args: any[]) => mockReconcileAgentJobs(...args),
 }))
 
+jest.mock("../knowledgeBase/workspaceStore", () => ({
+  ensureWorkspaceGeminiStore: (...args: any[]) =>
+    mockEnsureWorkspaceGeminiStore(...args),
+}))
+
 jest.mock("./processors/gemini", () => ({
   GeminiRagProcessor: jest.fn().mockImplementation(() => ({
     ingestKnowledgeBaseFile: (...args: any[]) => mockProcessorIngest(...args),
@@ -94,6 +100,20 @@ import { generator } from "@budibase/backend-core/tests"
 describe("rag files", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockEnsureWorkspaceGeminiStore.mockImplementation(async () => ({
+      storeId: "workspace-store-1",
+      files:
+        (await mockKnowledgeBaseListFiles.mock.results.at(-1)?.value)
+          ?.filter(
+            (file: KnowledgeBaseFile) =>
+              file.status === KnowledgeBaseFileStatus.READY
+          )
+          .map((file: KnowledgeBaseFile) => ({
+            fileId: file._id,
+            sourceId: file.ragSourceId,
+            objectStoreKey: file.objectStoreKey,
+          })) ?? [],
+    }))
     mockDoWithLock.mockImplementation(async (_opts: unknown, fn: any) => ({
       result: await fn(),
     }))

@@ -57,6 +57,8 @@ export enum DocumentType {
   AI_CONFIG = "aiconfig",
   LITELLM_KEY = "litellmkey",
   KNOWLEDGE_BASE = "knowledgebase",
+  GEMINI_KNOWLEDGE_STORE = "geminiknowledgestore",
+  GEMINI_KNOWLEDGE_PUBLISH = "geminiknowledgepublish",
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
   PROJECT = "project",
@@ -97,6 +99,8 @@ export const DocumentTypesToImport: DocumentType[] = [
 // them - never replicated between dev and prod, or included in exports
 export const RuntimeDocumentTypes: DocumentType[] = [
   DocumentType.AGENT_REQUEST,
+  DocumentType.GEMINI_KNOWLEDGE_STORE,
+  DocumentType.GEMINI_KNOWLEDGE_PUBLISH,
   DocumentType.ESCALATION_CONTEXT,
   DocumentType.ESCALATION_NOTIFICATION,
 ]

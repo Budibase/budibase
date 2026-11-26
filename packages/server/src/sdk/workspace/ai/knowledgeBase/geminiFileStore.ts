@@ -178,7 +178,8 @@ export async function createGeminiFileStore(name: string): Promise<string> {
 }
 
 export async function deleteGeminiVectorStore(
-  vectorStoreId: string
+  vectorStoreId: string,
+  options: { allowNotFound?: boolean } = {}
 ): Promise<void> {
   const response = await requestWithRetries(async () =>
     fetch(
@@ -197,7 +198,7 @@ export async function deleteGeminiVectorStore(
   await handleNotOkResponse({
     response,
     fallbackMessage: "Failed to delete Gemini vector store",
-    allowedStatuses: [404],
+    allowedStatuses: options.allowNotFound === false ? [] : [404],
   })
 }
 
