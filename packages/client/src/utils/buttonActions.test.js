@@ -3,6 +3,7 @@ import { writable } from "svelte/store"
 
 const mockDownload = vi.fn()
 const mockGetSelection = vi.fn()
+const mockExportRows = vi.fn()
 
 vi.mock("downloadjs", () => ({
   default: mockDownload,
@@ -28,7 +29,7 @@ vi.mock("@/stores", () => ({
 
 vi.mock("@/api", () => ({
   API: {
-    exportRows: vi.fn(),
+    exportRows: mockExportRows,
   },
 }))
 
@@ -51,7 +52,11 @@ vi.mock("@budibase/frontend-core", () => ({
   downloadStream: vi.fn(),
 }))
 
-const exportQueryRows = async ({ format, fileName }) => {
+const exportQueryRows = async ({
+  format,
+  fileName,
+  rows = [{ firstName: "John", lastName: "Connor" }],
+}) => {
   const { enrichButtonActions } = await import("./buttonActions.js")
   const exportData = enrichButtonActions(
     [
@@ -59,7 +64,7 @@ const exportQueryRows = async ({ format, fileName }) => {
         "##eventHandlerType": "Export Data",
         parameters: {
           tableComponentId: "query-table",
-          rows: [{ firstName: "John", lastName: "Connor" }],
+          rows,
           type: format,
           columns: [{ name: "firstName" }, { name: "lastName" }],
           delimiter: ",",
@@ -121,6 +126,24 @@ describe("Export Data action", () => {
     )
   })
 
+  it("preserves non-export file name extensions", async () => {
+    await exportQueryRows({ format: "csv", fileName: "customer-export.v2" })
+
+    expect(mockDownload).toHaveBeenLastCalledWith(
+      expect.any(Blob),
+      "customer-export.v2.csv"
+    )
+  })
+
+  it("removes a trailing dot before adding the selected format", async () => {
+    await exportQueryRows({ format: "csv", fileName: "customer-export." })
+
+    expect(mockDownload).toHaveBeenLastCalledWith(
+      expect.any(Blob),
+      "customer-export.csv"
+    )
+  })
+
   it("falls back to the generated filename when the CSV file name is blank", async () => {
     await exportQueryRows({ format: "csv", fileName: "   " })
 
@@ -136,6 +159,37 @@ describe("Export Data action", () => {
     expect(mockDownload).toHaveBeenLastCalledWith(
       expect.any(Blob),
       "customer-export.json"
+    )
+  })
+
+  it("uses a custom file name when exporting table rows", async () => {
+    mockExportRows.mockResolvedValue("First name,Last name\\nJohn,Connor")
+
+    await exportQueryRows({
+      format: "csv",
+      fileName: "customer-export",
+      rows: [
+        {
+          _id: "row_1",
+          tableId: "table_1",
+          firstName: "John",
+          lastName: "Connor",
+        },
+      ],
+    })
+
+    expect(mockExportRows).toHaveBeenCalledWith("table_1", "csv", {
+      rows: ["row_1"],
+      columns: ["firstName", "lastName"],
+      delimiter: ",",
+      customHeaders: {
+        firstName: "First name",
+        lastName: "Last name",
+      },
+    })
+    expect(mockDownload).toHaveBeenLastCalledWith(
+      expect.any(Blob),
+      "customer-export.csv"
     )
   })
 })
