@@ -16,6 +16,7 @@ import {
   createGeminiFileStore,
   deleteGeminiFileFromStore,
   deleteGeminiVectorStore,
+  generateGeminiFileStoreAnswer,
   ingestGeminiFile,
   isGeminiFileSearchConfigured,
   searchGeminiFileStore,
@@ -155,6 +156,46 @@ describe("geminiFileStore", () => {
     expect(JSON.parse(String(init.body))).not.toHaveProperty(
       "litellm_credential_name"
     )
+  })
+
+  it("includes the active session in attachment search requests", async () => {
+    mockFetch.mockResolvedValue(
+      response({ ok: true, status: 200, json: { data: [] } })
+    )
+
+    await withLiteLLMSessionId("chatconvo_123", async () =>
+      searchGeminiFileStore({
+        vectorStoreId: "vector-store-1",
+        query: "hello",
+      })
+    )
+
+    const [url, init] = mockFetch.mock.calls[0]
+    expect(url).toContain("/v1/vector_stores/vector-store-1/search")
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      query: "hello",
+      model: "gemini/gemini-3.8-flash",
+      litellm_session_id: "chatconvo_123",
+      metadata: { session_id: "chatconvo_123" },
+    })
+  })
+
+  it("retries transient attachment search failures", async () => {
+    mockFetch
+      .mockResolvedValueOnce(
+        response({ ok: false, status: 503, text: "upstream unavailable" })
+      )
+      .mockResolvedValueOnce(
+        response({ ok: true, status: 200, json: { data: [] } })
+      )
+
+    await expect(
+      searchGeminiFileStore({
+        vectorStoreId: "vector-store-1",
+        query: "hello",
+      })
+    ).resolves.toEqual([])
+    expect(mockFetch).toHaveBeenCalledTimes(2)
   })
 
   it("uses upstream response status when ingest fails", async () => {
@@ -340,58 +381,52 @@ describe("geminiFileStore", () => {
             ok: true,
             status: 200,
             json: {
-              data: [
-                {
-                  file_id: "file-1",
-                  filename: "notes.txt",
-                  score: 0.8,
-                  content: [{ type: "text", text: "hello" }],
-                },
-              ],
+              candidates: [{ content: { parts: [{ text: "hello" }] } }],
+              usageMetadata: { toolUsePromptTokenCount: 12 },
             },
           })
         )
 
-      const result = await searchGeminiFileStore({
+      const result = await generateGeminiFileStoreAnswer({
         vectorStoreId: "vector-store-1",
         query: "hello",
       })
 
-      expect(result).toEqual([
-        {
-          file_id: "file-1",
-          filename: "notes.txt",
-          score: 0.8,
-          content: [{ type: "text", text: "hello" }],
-        },
-      ])
+      expect(result).toEqual({
+        candidates: [{ content: { parts: [{ text: "hello" }] } }],
+        usageMetadata: { toolUsePromptTokenCount: 12 },
+      })
       expect(mockFetch).toHaveBeenCalledTimes(2)
     })
   })
 
-  it("includes litellm_session_id when a session context is active", async () => {
+  it("queries Gemini with the operation's specific File Search store", async () => {
     await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
-      let requestBody: Record<string, unknown> | undefined
       mockFetch.mockResolvedValueOnce(
         response({
           ok: true,
           status: 200,
-          json: { data: [] },
+          json: { candidates: [] },
         })
       )
 
-      await withLiteLLMSessionId("chatconvo_123", async () =>
-        searchGeminiFileStore({
-          vectorStoreId: "vector-store-1",
-          query: "hello",
-        })
-      )
+      await generateGeminiFileStoreAnswer({
+        vectorStoreId: "vector-store-1",
+        query: "hello",
+      })
 
-      const [, init] = mockFetch.mock.calls[0]
-      requestBody = JSON.parse(String(init?.body))
-      expect(requestBody?.model).toBe("gemini/gemini-3.8-flash")
-      expect(requestBody?.litellm_session_id).toBe("chatconvo_123")
-      expect(requestBody?.metadata).toEqual({ session_id: "chatconvo_123" })
+      const [url, init] = mockFetch.mock.calls[0]
+      expect(url).toContain(
+        "/models/budibase-gemini-file-search:generateContent"
+      )
+      const requestBody = JSON.parse(String(init?.body))
+      expect(requestBody.contents[0].parts[0].text).toContain("Question: hello")
+      expect(requestBody.contents[0].parts[0].text).toContain(
+        "quote the exact passages"
+      )
+      expect(requestBody.tools).toEqual([
+        { fileSearch: { fileSearchStoreNames: ["vector-store-1"] } },
+      ])
     })
   })
 
@@ -401,16 +436,16 @@ describe("geminiFileStore", () => {
         response({
           ok: true,
           status: 200,
-          json: { data: [] },
+          json: { candidates: [] },
         })
       )
 
       await expect(
-        searchGeminiFileStore({
+        generateGeminiFileStoreAnswer({
           vectorStoreId: "vector-store-1",
           query: "hello",
         })
-      ).resolves.toEqual([])
+      ).resolves.toEqual({ candidates: [] })
       expect(mockFetch).toHaveBeenCalledTimes(2)
     })
   })
@@ -420,7 +455,7 @@ describe("geminiFileStore", () => {
       mockGetKeySettings.mockRejectedValueOnce(new Error("config failed"))
 
       await expect(
-        searchGeminiFileStore({
+        generateGeminiFileStoreAnswer({
           vectorStoreId: "vector-store-1",
           query: "hello",
         })
@@ -437,7 +472,7 @@ describe("geminiFileStore", () => {
       )
 
       await expect(
-        searchGeminiFileStore({
+        generateGeminiFileStoreAnswer({
           vectorStoreId: "vector-store-1",
           query: "hello",
         })
