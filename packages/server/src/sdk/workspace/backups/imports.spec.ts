@@ -1,12 +1,17 @@
-import { context, db } from "@budibase/backend-core"
-import { RuntimeDocumentTypes, SEPARATOR } from "@budibase/types"
+import { context, db, objectStore } from "@budibase/backend-core"
+import {
+  DocumentType,
+  KnowledgeBaseFileStatus,
+  RuntimeDocumentTypes,
+  SEPARATOR,
+} from "@budibase/types"
 import fs from "fs"
 import os from "os"
 import path from "path"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { DB_EXPORT_FILE } from "./constants"
 import { exportDB } from "./exports"
-import { importApp } from "./imports"
+import { importApp, restoreImportedKnowledgeBases } from "./imports"
 
 describe("importApp", () => {
   const config = new TestConfiguration()
@@ -53,5 +58,76 @@ describe("importApp", () => {
       .getDB(targetWorkspaceId)
       .getMultiple(runtimeDocIds, { allowMissing: true })
     expect(imported).toEqual([])
+  })
+
+  it("preserves knowledge objects when an older export has no ai payload", async () => {
+    const sourceWorkspaceId = config.getDevWorkspaceId()
+    const exportDir = fs.mkdtempSync(path.join(os.tmpdir(), "bb-import-"))
+    await exportDB(sourceWorkspaceId, {
+      exportPath: path.join(exportDir, DB_EXPORT_FILE),
+    })
+    const { appId: targetWorkspaceId } = await config.api.workspace.create({
+      name: "Legacy knowledge import",
+    })
+    const existingObjectKey = `${targetWorkspaceId}/ai/knowledge-bases/existing/files/existing-file/existing.txt`
+    const staleObjectKey = `${db.getProdWorkspaceID(targetWorkspaceId)}/plugins/stale.js`
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: existingObjectKey,
+      body: Buffer.from("existing knowledge"),
+      type: "text/plain",
+    })
+    await objectStore.upload({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: staleObjectKey,
+      body: Buffer.from("stale plugin"),
+      type: "text/javascript",
+    })
+
+    await config.doInContext(targetWorkspaceId, () =>
+      importApp(targetWorkspaceId, db.getDB(targetWorkspaceId), {
+        file: { path: exportDir },
+      })
+    )
+
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        existingObjectKey
+      )
+    ).toBe(true)
+    expect(
+      await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        staleObjectKey
+      )
+    ).toBe(false)
+  })
+
+  it("preserves imported knowledge file documents without object keys", async () => {
+    const workspaceId = config.getDevWorkspaceId()
+    const workspaceDb = db.getDB(workspaceId)
+    const fileId = `${DocumentType.KNOWLEDGE_BASE_FILE}_legacy`
+    await workspaceDb.put({
+      _id: fileId,
+      knowledgeBaseId: `${DocumentType.KNOWLEDGE_BASE}_legacy`,
+      filename: "legacy.txt",
+      status: KnowledgeBaseFileStatus.READY,
+      uploadedBy: "test-user",
+    })
+
+    await config.doInContext(workspaceId, () =>
+      restoreImportedKnowledgeBases(workspaceId, workspaceDb)
+    )
+
+    const file = await workspaceDb.get(fileId)
+    expect(file).toMatchObject({
+      _id: fileId,
+      knowledgeBaseId: `${DocumentType.KNOWLEDGE_BASE}_legacy`,
+      filename: "legacy.txt",
+      status: KnowledgeBaseFileStatus.READY,
+      uploadedBy: "test-user",
+    })
+    expect(file).not.toHaveProperty("objectStoreKey")
   })
 })

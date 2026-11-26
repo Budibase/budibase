@@ -11,9 +11,12 @@ import {
   AutomationTriggerStepId,
   BUDIBASE_AI_PROVIDER_ID,
   CustomAIProviderConfig,
+  Agent,
   Database,
   DocumentType,
   FieldType,
+  GeminiKnowledgeBase,
+  KnowledgeBaseFile,
   LiteLLMKeyConfig,
   Row,
   RowAttachment,
@@ -205,6 +208,8 @@ export interface ImportAppOpts {
   importObjStoreContents?: boolean
   objectStoreAppId?: string
   preserveLiteLLMConfig?: boolean
+  restoreKnowledgeBases?: boolean
+  cleanupObjectStoreContents?: boolean
 }
 
 async function sanitizeLiteLLMImportData(db: Database) {
@@ -269,6 +274,143 @@ async function removeRuntimeDocuments(db: Database) {
   }
 }
 
+export async function restoreImportedKnowledgeBases(
+  appId: string,
+  db: Database
+) {
+  const filesResponse = await db.allDocs<KnowledgeBaseFile>(
+    docIds.getDocParams(DocumentType.KNOWLEDGE_BASE_FILE, undefined, {
+      include_docs: true,
+    })
+  )
+  const files = filesResponse.rows
+    .map(row => row.doc)
+    .filter((file): file is KnowledgeBaseFile => !!file)
+    .map(file => {
+      if (!file.objectStoreKey) {
+        return file
+      }
+      const marker = "/ai/knowledge-bases/"
+      const markerIndex = file.objectStoreKey.indexOf(marker)
+      if (markerIndex < 0) {
+        return file
+      }
+      return {
+        ...file,
+        objectStoreKey: `${appId}${file.objectStoreKey.slice(markerIndex)}`,
+      }
+    })
+  if (files.length) {
+    await db.bulkDocs(files)
+  }
+
+  const knowledgeBasesResponse = await db.allDocs<GeminiKnowledgeBase>(
+    docIds.getDocParams(DocumentType.KNOWLEDGE_BASE, undefined, {
+      include_docs: true,
+    })
+  )
+  const knowledgeBases = knowledgeBasesResponse.rows
+    .map(row => row.doc)
+    .filter(
+      (knowledgeBase): knowledgeBase is GeminiKnowledgeBase => !!knowledgeBase
+    )
+  for (const knowledgeBase of knowledgeBases) {
+    await sdk.ai.knowledgeBase.resetKnowledgeBaseStore(knowledgeBase, {
+      deleteExistingStore: false,
+    })
+  }
+}
+
+async function removeMissingKnowledgeBaseReferences(db: Database) {
+  const [agentsResponse, knowledgeBasesResponse] = await Promise.all([
+    db.allDocs<Agent>(
+      docIds.getDocParams(DocumentType.AGENT, undefined, {
+        include_docs: true,
+      })
+    ),
+    db.allDocs(docIds.getDocParams(DocumentType.KNOWLEDGE_BASE)),
+  ])
+  const knowledgeBaseIds = new Set(
+    knowledgeBasesResponse.rows.map(row => row.id)
+  )
+  const agents = agentsResponse.rows
+    .map(row => row.doc)
+    .filter((agent): agent is Agent => !!agent)
+    .map(agent => ({
+      ...agent,
+      operations: agent.operations?.map(operation => ({
+        ...operation,
+        knowledgeBases: operation.knowledgeBases?.filter(knowledgeBaseId =>
+          knowledgeBaseIds.has(knowledgeBaseId)
+        ),
+      })),
+    }))
+  if (agents.length) {
+    await db.bulkDocs(agents)
+  }
+}
+
+export async function cleanupUnusedKnowledgeBaseObjects(
+  appId: string,
+  db: Database
+) {
+  const filesResponse = await db.allDocs<KnowledgeBaseFile>(
+    docIds.getDocParams(DocumentType.KNOWLEDGE_BASE_FILE, undefined, {
+      include_docs: true,
+    })
+  )
+  const referencedKeys = new Set(
+    filesResponse.rows
+      .map(row => row.doc?.objectStoreKey)
+      .filter((key): key is string => !!key)
+      .map(key => objectStore.sanitizeKey(key))
+  )
+  const prefix = `${appId}/ai/knowledge-bases`
+  const filesToDelete: string[] = []
+  await utils.parallelForeach(
+    objectStore.listAllObjects(ObjectStoreBuckets.APPS, prefix),
+    async file => {
+      if (file.Key && !referencedKeys.has(file.Key)) {
+        filesToDelete.push(file.Key)
+      }
+    },
+    5
+  )
+  if (filesToDelete.length) {
+    await objectStore.deleteFiles(ObjectStoreBuckets.APPS, filesToDelete)
+  }
+}
+
+export async function cleanupUnusedWorkspaceObjects({
+  prodAppId,
+  importedFiles,
+}: {
+  prodAppId: string
+  importedFiles: string[]
+}) {
+  const filesToDelete: string[] = []
+  await utils.parallelForeach(
+    objectStore.listAllObjects(ObjectStoreBuckets.APPS, prodAppId),
+    async file => {
+      if (!file.Key || !file.Key.startsWith(`${prodAppId}/`)) {
+        return
+      }
+      const relativePath = file.Key.slice(prodAppId.length + 1)
+      if (
+        !relativePath.startsWith(`${ATTACHMENT_DIRECTORY}/`) &&
+        !relativePath.startsWith("ai/knowledge-bases/") &&
+        !importedFiles.includes(relativePath)
+      ) {
+        filesToDelete.push(file.Key)
+      }
+    },
+    5
+  )
+  if (filesToDelete.length) {
+    await objectStore.deleteFiles(ObjectStoreBuckets.APPS, filesToDelete)
+  }
+}
+
 export const importApp: ImportWorkspaceFn = async (
   appId,
   db,
@@ -279,12 +421,16 @@ export const importApp: ImportWorkspaceFn = async (
     updateAttachmentColumns: true,
     importObjStoreContents: true,
     preserveLiteLLMConfig: false,
+    restoreKnowledgeBases: true,
+    cleanupObjectStoreContents: true,
     ...opts,
   }
   const prodAppId = dbCore.getProdWorkspaceID(appId)
   const objectStoreWorkspaceId = importOpts.objectStoreAppId ?? appId
   const objectStoreProdAppId = dbCore.getProdWorkspaceID(objectStoreWorkspaceId)
   let dbStream: fs.ReadStream
+  let shouldRestoreKnowledge = false
+  let importedObjectStoreFiles: string[] = []
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
     template.file && (await fsp.lstat(template.file.path)).isDirectory()
@@ -295,6 +441,7 @@ export const importApp: ImportWorkspaceFn = async (
       await decryptFiles(tmpPath, template.file.password)
     }
     const contents = await fsp.readdir(tmpPath)
+    shouldRestoreKnowledge = contents.includes("ai")
     const stillEncrypted = !!contents.find(name => name.endsWith(".enc"))
     if (stillEncrypted) {
       throw new Error("Files are encrypted but no password has been supplied.")
@@ -319,7 +466,9 @@ export const importApp: ImportWorkspaceFn = async (
         if (excludedFiles.includes(filename)) {
           continue
         }
-        filename = join(objectStoreProdAppId, filename)
+        const objectStoreWorkspacePrefix =
+          filename === "ai" ? objectStoreWorkspaceId : objectStoreProdAppId
+        filename = join(objectStoreWorkspacePrefix, filename)
         if ((await fsp.lstat(path)).isDirectory()) {
           promises.push(
             objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
@@ -335,34 +484,51 @@ export const importApp: ImportWorkspaceFn = async (
         }
       }
       await Promise.all(promises)
-      const uploadedFiles = await fsp.readdir(tmpPath, { recursive: true })
+      importedObjectStoreFiles = await fsp.readdir(tmpPath, { recursive: true })
 
       const filesToDelete: string[] = []
-      await utils.parallelForeach(
-        objectStore.listAllObjects(
-          objectStore.ObjectStoreBuckets.APPS,
-          objectStoreProdAppId
-        ),
-        async file => {
-          if (!file.Key) {
-            return
-          }
-          const prefix = `${objectStoreProdAppId}/`
-          if (!file.Key.startsWith(prefix)) {
-            return
-          }
-          const relativePath = file.Key.slice(prefix.length)
-          // never delete attachment files - they are referenced by prod rows
-          // which are not included in the export and cannot be re-uploaded
-          if (
-            !relativePath.startsWith(`${ATTACHMENT_DIRECTORY}/`) &&
-            !uploadedFiles.includes(relativePath)
-          ) {
-            filesToDelete.push(file.Key)
-          }
-        },
-        5
-      )
+      const collectFilesToDelete = async ({
+        prefix,
+        toExportPath,
+      }: {
+        prefix: string
+        toExportPath: (relativePath: string) => string
+      }) => {
+        await utils.parallelForeach(
+          objectStore.listAllObjects(
+            objectStore.ObjectStoreBuckets.APPS,
+            prefix
+          ),
+          async file => {
+            if (!file.Key || !file.Key.startsWith(`${prefix}/`)) {
+              return
+            }
+            const relativePath = file.Key.slice(prefix.length + 1)
+            // never delete attachment files - they are referenced by prod rows
+            // which are not included in the export and cannot be re-uploaded
+            if (
+              !relativePath.startsWith(`${ATTACHMENT_DIRECTORY}/`) &&
+              !relativePath.startsWith("ai/knowledge-bases/") &&
+              !importedObjectStoreFiles.includes(toExportPath(relativePath))
+            ) {
+              filesToDelete.push(file.Key)
+            }
+          },
+          5
+        )
+      }
+      if (importOpts.cleanupObjectStoreContents) {
+        await cleanupUnusedWorkspaceObjects({
+          prodAppId: objectStoreProdAppId,
+          importedFiles: importedObjectStoreFiles,
+        })
+        if (shouldRestoreKnowledge) {
+          await collectFilesToDelete({
+            prefix: `${objectStoreWorkspaceId}/ai/knowledge-bases`,
+            toExportPath: relativePath => `ai/knowledge-bases/${relativePath}`,
+          })
+        }
+      }
 
       if (filesToDelete.length) {
         await objectStore.deleteFiles(
@@ -380,6 +546,10 @@ export const importApp: ImportWorkspaceFn = async (
     throw "Error loading database dump from template."
   }
   await removeRuntimeDocuments(db)
+  await removeMissingKnowledgeBaseReferences(db)
+  if (shouldRestoreKnowledge && importOpts.restoreKnowledgeBases) {
+    await restoreImportedKnowledgeBases(objectStoreWorkspaceId, db)
+  }
   if (importOpts.updateAttachmentColumns) {
     await updateAttachmentColumns(prodAppId, db)
   }
@@ -394,5 +564,9 @@ export const importApp: ImportWorkspaceFn = async (
   if (tmpPath) {
     await fsp.rm(tmpPath, { recursive: true, force: true })
   }
-  return ok
+  return {
+    ok,
+    containsKnowledge: shouldRestoreKnowledge,
+    objectStoreFiles: importedObjectStoreFiles,
+  }
 }

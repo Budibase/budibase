@@ -17,6 +17,7 @@ import {
   isWebhookTrigger,
   MAX_PROJECT_NAME_LENGTH,
   MAX_PROJECT_README_LENGTH,
+  KnowledgeBaseType,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
   PASSWORD_REPLACEMENT,
@@ -24,10 +25,12 @@ import {
   SourceName,
   ToolExecutionPrincipal,
   type Automation,
+  type Agent,
   type Datasource,
   type EmailTrigger,
   type EmailTriggerInputs,
   type ImportProjectResponse,
+  type GeminiKnowledgeBase,
   type Project,
   type ProjectPackageDependencyIndex,
   type Query,
@@ -46,6 +49,8 @@ import { createAutomationBuilder } from "../../../automations/tests/utilities/Au
 import { getAutomationTriggerToolName } from "../../../ai/tools/budibase/automations"
 import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 import sdk from "../../../sdk"
+import * as knowledgeBaseCrud from "../../../sdk/workspace/ai/knowledgeBase/crud"
+import * as knowledgeBaseFiles from "../../../sdk/workspace/ai/knowledgeBase/files"
 import { getQueryToolBindingsForResource } from "../../../sdk/workspace/ai/agents/queryToolReferences"
 import * as workspaceBackups from "../../../sdk/workspace/backups/imports"
 import * as projectPackageConstants from "../../../sdk/workspace/projects/backups/constants"
@@ -78,6 +83,35 @@ jest.mock("../../../sdk/workspace/projects/backups/constants", () => ({
     typeof import("../../../sdk/workspace/projects/backups/constants")
   >("../../../sdk/workspace/projects/backups/constants"),
 }))
+
+jest.mock("../../../sdk/workspace/ai/knowledgeBase/crud", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../sdk/workspace/ai/knowledgeBase/crud")
+  >("../../../sdk/workspace/ai/knowledgeBase/crud")
+  return {
+    ...actual,
+    create: jest.fn(actual.create),
+    find: jest.fn(actual.find),
+    remove: jest.fn(actual.remove),
+  }
+})
+
+jest.mock("../../../sdk/workspace/ai/knowledgeBase/files", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../sdk/workspace/ai/knowledgeBase/files")
+  >("../../../sdk/workspace/ai/knowledgeBase/files")
+  return {
+    ...actual,
+    listKnowledgeBaseFiles: jest.fn(actual.listKnowledgeBaseFiles),
+  }
+})
+
+const actualKnowledgeBaseCrud = jest.requireActual<
+  typeof import("../../../sdk/workspace/ai/knowledgeBase/crud")
+>("../../../sdk/workspace/ai/knowledgeBase/crud")
+const actualKnowledgeBaseFiles = jest.requireActual<
+  typeof import("../../../sdk/workspace/ai/knowledgeBase/files")
+>("../../../sdk/workspace/ai/knowledgeBase/files")
 
 // Agent create/update resolves the Slack workspace via auth.test - mocked so
 // tests never call out to Slack.
@@ -1407,6 +1441,47 @@ describe("/projects", () => {
         },
       })
     }
+
+    it("omits stale knowledge references from exported agents", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Stale knowledge",
+        })
+        const agent = await config.api.agent.create({
+          name: "Stale knowledge agent",
+          aiconfig: "default",
+          projectIds: [project._id],
+        })
+        await config.api.agent.createOperation(agent._id!, {
+          id: "operation_1",
+          name: "Search knowledge",
+          live: false,
+          allowKnowledgeSourceDownload: true,
+        })
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const workspaceDb = context.getWorkspaceDB()
+          const storedAgent = await workspaceDb.get<Agent>(agent._id!)
+          await workspaceDb.put({
+            ...storedAgent,
+            operations: storedAgent.operations?.map(operation => ({
+              ...operation,
+              knowledgeBases: ["knowledgebase_missing"],
+            })),
+          })
+        })
+
+        const files = await readTarEntries(
+          await config.api.project.export(project._id, { includeRows: true })
+        )
+        const exportedAgent: Agent = JSON.parse(
+          files.get(`docs/agent/${agent._id}.json`)!.toString()
+        )
+        const manifest = JSON.parse(files.get("manifest.json")!.toString())
+
+        expect(exportedAgent.operations?.[0].knowledgeBases).toEqual([])
+        expect(manifest.containsKnowledge).toBe(false)
+      })
+    })
 
     const exportThenImportUnsanitisedEmailAutomation = async ({
       projectId,
@@ -2860,6 +2935,166 @@ describe("/projects", () => {
             "Project package contains docs not listed in dependency-index.json.",
         },
       })
+    })
+  })
+
+  it("rejects agent knowledge references without a knowledge payload", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Missing knowledge payload",
+      })
+      const agent = await config.api.agent.create({
+        name: "Knowledge agent",
+        aiconfig: "default",
+        projectIds: [project._id],
+      })
+      await config.api.agent.createOperation(agent._id!, {
+        id: "operation_1",
+        name: "Search knowledge",
+        live: false,
+        allowKnowledgeSourceDownload: true,
+      })
+      const knowledgeBaseId = "knowledgebase_exported"
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const workspaceDb = context.getWorkspaceDB()
+        await workspaceDb.put({
+          _id: knowledgeBaseId,
+          name: "Exported knowledge",
+          type: KnowledgeBaseType.GEMINI,
+          config: { googleFileStoreId: "source-store" },
+        } satisfies GeminiKnowledgeBase)
+        const storedAgent = await workspaceDb.get<Agent>(agent._id!)
+        await workspaceDb.put({
+          ...storedAgent,
+          operations: storedAgent.operations?.map(operation => ({
+            ...operation,
+            knowledgeBases: [knowledgeBaseId],
+          })),
+        })
+      })
+
+      const files = await readTarEntries(
+        await config.api.project.export(project._id, { includeRows: true })
+      )
+      files.delete("knowledge.json")
+      const entries = Object.fromEntries(
+        [...files].map(([entryPath, contents]) => [
+          entryPath,
+          JSON.parse(contents.toString()),
+        ])
+      )
+      entries["manifest.json"] = {
+        ...entries["manifest.json"],
+        containsKnowledge: false,
+        knowledgeBaseCount: 0,
+        knowledgeFileCount: 0,
+      }
+
+      await config.api.project.import(
+        await createTarPackage(entries),
+        undefined,
+        {
+          status: 400,
+          body: {
+            message: "Project package knowledge does not match its manifest.",
+          },
+        }
+      )
+    })
+  })
+
+  it("preserves imported knowledge when project resource cleanup fails", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Failed cleanup",
+      })
+      await config.api.table.save({
+        ...basicTable(),
+        projectIds: [project._id],
+      })
+      const agent = await config.api.agent.create({
+        name: "Cleanup agent",
+        aiconfig: "default",
+        projectIds: [project._id],
+      })
+      await config.api.agent.createOperation(agent._id!, {
+        id: "operation_1",
+        name: "Search knowledge",
+        live: false,
+        allowKnowledgeSourceDownload: true,
+      })
+      const knowledgeBaseId = "knowledgebase_cleanup"
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const workspaceDb = context.getWorkspaceDB()
+        await workspaceDb.put({
+          _id: knowledgeBaseId,
+          name: "Cleanup knowledge",
+          type: KnowledgeBaseType.GEMINI,
+          config: { googleFileStoreId: "source-store" },
+        } satisfies GeminiKnowledgeBase)
+        const storedAgent = await workspaceDb.get<Agent>(agent._id!)
+        await workspaceDb.put({
+          ...storedAgent,
+          operations: storedAgent.operations?.map(operation => ({
+            ...operation,
+            knowledgeBases: [knowledgeBaseId],
+          })),
+        })
+      })
+      const packageBuffer = await config.api.project.export(project._id, {
+        includeRows: true,
+      })
+
+      const importedKnowledgeBase = {
+        _id: "knowledgebase_imported",
+        name: "Imported knowledge",
+        type: KnowledgeBaseType.GEMINI,
+        config: { googleFileStoreId: "imported-store" },
+      } satisfies GeminiKnowledgeBase
+      const createKnowledgeBase = jest.mocked(knowledgeBaseCrud.create)
+      const findKnowledgeBase = jest.mocked(knowledgeBaseCrud.find)
+      const listKnowledgeFiles = jest.mocked(
+        knowledgeBaseFiles.listKnowledgeBaseFiles
+      )
+      const removeKnowledgeBase = jest.mocked(knowledgeBaseCrud.remove)
+      createKnowledgeBase.mockResolvedValue(importedKnowledgeBase)
+      findKnowledgeBase.mockResolvedValue(importedKnowledgeBase)
+      listKnowledgeFiles.mockResolvedValue([])
+      removeKnowledgeBase.mockResolvedValue()
+      const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
+      let bulkDocsCall = 0
+      const bulkDocs = jest
+        .spyOn(DatabaseImpl.prototype, "bulkDocs")
+        .mockImplementation(async function (this: DatabaseImpl, documents) {
+          bulkDocsCall++
+          if (bulkDocsCall === 2) {
+            throw new Error("Resource insert failed")
+          }
+          return originalBulkDocs.call(this, documents)
+        })
+      const bulkRemove = jest
+        .spyOn(DatabaseImpl.prototype, "bulkRemove")
+        .mockRejectedValue(new Error("Resource cleanup failed"))
+
+      try {
+        await config.api.project.import(packageBuffer, undefined, {
+          status: 500,
+        })
+        expect(removeKnowledgeBase).not.toHaveBeenCalled()
+      } finally {
+        createKnowledgeBase.mockImplementation(actualKnowledgeBaseCrud.create)
+        findKnowledgeBase.mockImplementation(actualKnowledgeBaseCrud.find)
+        listKnowledgeFiles.mockImplementation(
+          actualKnowledgeBaseFiles.listKnowledgeBaseFiles
+        )
+        removeKnowledgeBase.mockImplementation(actualKnowledgeBaseCrud.remove)
+        createKnowledgeBase.mockClear()
+        findKnowledgeBase.mockClear()
+        listKnowledgeFiles.mockClear()
+        removeKnowledgeBase.mockClear()
+        bulkDocs.mockRestore()
+        bulkRemove.mockRestore()
+      }
     })
   })
 

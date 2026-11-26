@@ -23,6 +23,8 @@ export const createWorkspaceExportFilter = (excludeRows?: boolean) => {
   const runtimePrefixes = RuntimeDocumentTypes.map(prefixed)
   if (excludeRows) {
     excludedIds.push(TABLE_ROW_PREFIX)
+    excludedIds.push(`${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}`)
+    excludedIds.push(`${DocumentType.KNOWLEDGE_BASE_FILE}${SEPARATOR}`)
   }
   return (doc: { _id: string; [key: string]: unknown }) =>
     !runtimePrefixes.some(prefix => doc._id.startsWith(prefix)) &&

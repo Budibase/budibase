@@ -87,16 +87,20 @@
   {#if currentStep === Step.CONFIG}
     <Body>
       <Toggle
-        text="Export rows from internal tables"
+        text="Include data and files"
         bind:value={includeInternalTablesRows}
       />
-      <Toggle text="Encrypt my export" bind:value={encrypt} />
+      <Toggle text="Encrypt export" bind:value={encrypt} />
     </Body>
-    <InlineAlert
-      header={encrypt
-        ? "Please note Budibase does not encrypt attachments during the export process to ensure efficient export of large attachments."
-        : "Do not share your Budibase exports publicly as they may contain sensitive information such as database credentials or secret keys."}
-    />
+    {#if encrypt && includeInternalTablesRows}
+      <InlineAlert
+        header="Attachments are not encrypted. Agent knowledge files are encrypted."
+      />
+    {:else if !encrypt}
+      <InlineAlert
+        header="This export is not encrypted and may contain credentials, secret keys, and other sensitive data."
+      />
+    {/if}
   {/if}
   {#if currentStep === Step.SET_PASSWORD}
     <Input

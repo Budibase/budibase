@@ -1,5 +1,5 @@
 import type { ReadStream } from "fs"
-import type { LinkInfo, Row } from "../../../documents"
+import type { KnowledgeBaseType, LinkInfo, Row } from "../../../documents"
 import { ResourceType, UsedResource } from "./resource"
 
 export interface ProjectResponse {
@@ -167,8 +167,30 @@ export interface ProjectPackageManifest {
   containsRows: boolean
   containsAttachments: boolean
   containsPermissions?: boolean
+  containsKnowledge?: boolean
+  knowledgeBaseCount?: number
+  knowledgeFileCount?: number
   requiresSecrets: boolean
   unsupportedContent: ProjectPackageUnsupportedContent[]
+}
+
+export interface ProjectPackageKnowledgeFile {
+  _id: string
+  filename: string
+  mimetype?: string
+  size?: number
+  path: string
+}
+
+export interface ProjectPackageKnowledgeBase {
+  _id: string
+  name: string
+  type: KnowledgeBaseType
+  files: ProjectPackageKnowledgeFile[]
+}
+
+export interface ProjectPackageKnowledge {
+  knowledgeBases: ProjectPackageKnowledgeBase[]
 }
 
 export interface ProjectPackageDependencyIndex {

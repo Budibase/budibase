@@ -3,7 +3,7 @@ import { ExportWorkspaceFn } from "@budibase/pro"
 import { tracer } from "dd-trace"
 import fs from "fs"
 import fsp from "fs/promises"
-import { join } from "path"
+import { dirname, join } from "path"
 import * as tar from "tar"
 import { v4 as uuid } from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
@@ -100,7 +100,7 @@ export const exportWorkspace: ExportWorkspaceFn = async (
     const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
     const workspacePath = `${prodWorkspaceId}/`
 
-    const toExclude = [/\/\..+/]
+    const toExclude = [/\/\..+/, /\/ai\/knowledge-bases\/.*/]
     if (config?.excludeRows) {
       toExclude.push(/\/attachments\/.*/)
     }
@@ -111,6 +111,28 @@ export const exportWorkspace: ExportWorkspaceFn = async (
       toExclude
     )
 
+    if (!config?.excludeRows) {
+      const knowledgeWorkspaceId = dbCore.getDevWorkspaceID(workspaceId)
+      const knowledgeObjectStorePath = `${knowledgeWorkspaceId}/ai/knowledge-bases/`
+      const knowledgeTmpPath = await objectStore.retrieveDirectory(
+        ObjectStoreBuckets.APPS,
+        knowledgeObjectStorePath
+      )
+      try {
+        const downloadedKnowledgePath = join(
+          knowledgeTmpPath,
+          objectStore.sanitizeKey(knowledgeObjectStorePath)
+        )
+        if (fs.existsSync(downloadedKnowledgePath)) {
+          const exportKnowledgePath = join(tmpPath, "ai", "knowledge-bases")
+          await fsp.mkdir(dirname(exportKnowledgePath), { recursive: true })
+          await fsp.rename(downloadedKnowledgePath, exportKnowledgePath)
+        }
+      } finally {
+        await fsp.rm(knowledgeTmpPath, { recursive: true, force: true })
+      }
+    }
+
     span.addTags({ prodAppId: prodWorkspaceId, tmpPath })
 
     const downloadedPath = join(tmpPath, workspacePath)
@@ -118,8 +140,14 @@ export const exportWorkspace: ExportWorkspaceFn = async (
       const allFiles = await fsp.readdir(downloadedPath)
       for (let file of allFiles) {
         const path = join(downloadedPath, file)
+        const destination = join(downloadedPath, "..", file)
         // move out of workspace directory, simplify structure
-        await fsp.rename(path, join(downloadedPath, "..", file))
+        if (fs.existsSync(destination)) {
+          await fsp.cp(path, destination, { recursive: true, force: true })
+          await fsp.rm(path, { recursive: true, force: true })
+        } else {
+          await fsp.rename(path, destination)
+        }
       }
       // remove the old workspace directory created by object export
       await fsp.rmdir(downloadedPath)
