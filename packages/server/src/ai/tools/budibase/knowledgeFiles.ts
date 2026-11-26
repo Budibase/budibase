@@ -322,6 +322,7 @@ export const createKnowledgeSearchTool = (
         return {
           context: result.text,
           sources: result.sources,
+          ...(result.answer ? { answer: result.answer } : {}),
         }
       } catch (error: any) {
         if (isGeminiRetrievalUnavailable(error)) {
