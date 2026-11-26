@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     ActionMenu,
     MenuItem,
@@ -13,20 +13,26 @@
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
   import { createEventDispatcher } from "svelte"
   import { isOnlyUser } from "@/stores/builder"
-  import { BackupType } from "@/constants/backend/backups"
+  import { BackupType } from "@budibase/types"
+  import type { ModalAPI } from "@budibase/bbui"
+  import type { BackupTableAction, BackupTableRow } from "../types"
 
-  export let row
+  interface Props {
+    row: BackupTableRow
+  }
 
-  let deleteDialog
-  let restoreDialog
-  let restoreBackupModal
+  let { row }: Props = $props()
+  let deleteDialog = $state<ConfirmDialog>()
+  let restoreDialog = $state<ConfirmDialog>()
+  let restoreBackupModal = $state<ModalAPI>()
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ buttonclick: BackupTableAction }>()
 
-  const onClickRestore = () => {
+  const onClickRestore = (restoreBackupName: string) => {
     dispatch("buttonclick", {
       type: "backupRestore",
       backupId: row._id,
+      restoreBackupName,
     })
   }
 
@@ -37,7 +43,7 @@
     })
   }
 
-  async function downloadExport() {
+  const downloadExport = () => {
     window.open(`/api/apps/${row.appId}/backups/${row._id}/file`, "_blank")
   }
 </script>
@@ -53,14 +59,16 @@
         text="Unavailable - another user is editing this app"
       >
         <MenuItem
-          on:click={restoreDialog.show}
+          on:click={() => restoreDialog?.show()}
           icon="arrow-counter-clockwise"
           disabled={!$isOnlyUser}
         >
           Restore
         </MenuItem>
       </AbsTooltip>
-      <MenuItem on:click={deleteDialog.show} icon="trash">Delete</MenuItem>
+      <MenuItem on:click={() => deleteDialog?.show()} icon="trash">
+        Delete
+      </MenuItem>
       <MenuItem on:click={downloadExport} icon="download">Download</MenuItem>
     </ActionMenu>
   {/if}

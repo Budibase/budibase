@@ -5,6 +5,7 @@ import {
   DeleteWorkspaceBackupsResponse,
   ImportWorkspaceBackupResponse,
   SearchWorkspaceBackupsRequest,
+  SearchWorkspaceBackupsResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -20,7 +21,7 @@ export interface BackupEndpoints {
   searchBackups: (
     appId: string,
     opts: SearchWorkspaceBackupsRequest
-  ) => Promise<any>
+  ) => Promise<SearchWorkspaceBackupsResponse>
   deleteBackup: (
     appId: string,
     backupId: string

@@ -1,11 +1,18 @@
-import { BackupTrigger, BackupType } from "../../../documents"
+import { BackupTrigger, BackupType, WorkspaceBackup } from "../../../documents"
 
 export interface SearchWorkspaceBackupsRequest {
-  trigger: BackupTrigger
-  type: BackupType
-  startDate: string
-  endDate: string
+  trigger?: BackupTrigger
+  type?: BackupType
+  startDate?: string
+  endDate?: string
   page?: string
+}
+
+export interface SearchWorkspaceBackupsResponse {
+  data: WorkspaceBackup[]
+  hasNextPage: boolean
+  nextPage?: string
+  totalRows: number
 }
 
 export interface CreateWorkspaceBackupRequest {

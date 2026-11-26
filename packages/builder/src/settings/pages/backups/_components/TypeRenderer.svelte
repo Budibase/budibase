@@ -1,22 +1,23 @@
-<script>
-  import { BackupTrigger } from "@/constants/backend/backups"
+<script lang="ts">
+  import { BackupTrigger, BackupType } from "@budibase/types"
+  import type { BackupTableRow } from "../types"
 
-  export let row
+  interface Props {
+    row: BackupTableRow
+  }
 
-  $: trigger = row?.trigger || "manual"
-  $: type = row?.type || "backup"
+  let { row }: Props = $props()
+  const trigger = $derived(row?.trigger || BackupTrigger.MANUAL)
+  const type = $derived(row?.type || BackupType.BACKUP)
 
-  function printTrigger(trig) {
-    let final = "undefined"
-    switch (trig) {
+  const printTrigger = (value: BackupTrigger) => {
+    let final: string = value
+    switch (value) {
       case BackupTrigger.PUBLISH:
         final = "published"
         break
       case BackupTrigger.RESTORING:
         final = "pre-restore"
-        break
-      default:
-        final = trig
         break
     }
     return final.charAt(0).toUpperCase() + final.slice(1)

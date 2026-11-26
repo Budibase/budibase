@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Button,
     Divider,
@@ -21,20 +21,45 @@
   import StatusRenderer from "./_components/StatusRenderer.svelte"
   import TypeRenderer from "./_components/TypeRenderer.svelte"
   import BackupsDefault from "assets/backups-default.png"
-  import { BackupTrigger, BackupType } from "@/constants/backend/backups"
-  import { onMount } from "svelte"
+  import {
+    BackupStatus,
+    BackupTrigger,
+    BackupType,
+    type SearchWorkspaceBackupsRequest,
+    type WorkspaceBackup,
+  } from "@budibase/types"
+  import { untrack } from "svelte"
+  import { derived } from "svelte/store"
+  import type { Dayjs } from "dayjs"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import type { BackupTableAction, BackupTableRow } from "./types"
 
-  let loading = true
-  let backupData = null
-  let pageInfo = createPaginationStore()
-  let filterOpt = null
-  let dateRange = []
-  let selectedRows = []
-  let bulkDeleteDialog
-  let filters = [
+  interface FilterOption {
+    label: string
+    value: Pick<SearchWorkspaceBackupsRequest, "trigger" | "type">
+  }
+
+  interface FetchBackupsOptions {
+    filters: FilterOption["value"] | null
+    page?: string | null
+    dateRange?: DateRange
+  }
+
+  type DateRange = (Dayjs | null)[]
+
+  let loading = $state(true)
+  let backupData = $state<BackupTableRow[] | null>(null)
+  const pageInfo = createPaginationStore()
+  const currentPage = derived(pageInfo, value => value.page)
+  let filterOpt = $state.raw<FilterOption["value"] | null>(null)
+  let dateRange = $state<DateRange>([])
+  let selectedRows = $state<BackupTableRow[]>([])
+  let bulkDeleteDialog = $state<ConfirmDialog>()
+  let latestRequest = 0
+
+  const filters: FilterOption[] = [
     {
       label: "Manual backup",
       value: { type: BackupType.BACKUP, trigger: BackupTrigger.MANUAL },
@@ -53,10 +78,7 @@
     },
   ]
 
-  $: page = $pageInfo.page
-  $: fetchBackups(filterOpt, page, dateRange)
-
-  let schema = {
+  const schema = {
     type: {
       displayName: "Type",
       width: "auto",
@@ -92,7 +114,7 @@
     { column: "type", component: TypeRenderer },
   ]
 
-  function flattenBackups(backups) {
+  const flattenBackups = (backups: WorkspaceBackup[]): BackupTableRow[] => {
     return backups.map(backup => {
       return {
         ...backup,
@@ -101,7 +123,11 @@
     })
   }
 
-  function deselectAll() {
+  const isBackupInProgress = (backup: Pick<WorkspaceBackup, "status">) =>
+    backup.status === BackupStatus.PENDING ||
+    backup.status === BackupStatus.STARTED
+
+  const deselectAll = () => {
     selectedRows = []
   }
 
@@ -123,7 +149,11 @@
       }
 
       deselectAll()
-      await fetchBackups(filterOpt, page)
+      await fetchBackups({
+        filters: filterOpt,
+        page: $currentPage,
+        dateRange: [...dateRange],
+      })
     } catch (err) {
       notifications.error("Error while deleting the selected backups")
     } finally {
@@ -131,25 +161,42 @@
     }
   }
 
-  $: hasSelection = selectedRows.length > 0
+  const hasSelection = $derived(selectedRows.length > 0)
 
-  async function fetchBackups(filters, page, dateRange = []) {
-    const opts = {
+  async function fetchBackups({
+    filters,
+    page,
+    dateRange = [],
+  }: FetchBackupsOptions) {
+    const request = ++latestRequest
+    loading = true
+    pageInfo.loading()
+
+    const opts: SearchWorkspaceBackupsRequest = {
       ...filters,
-      page,
+      page: page ?? undefined,
     }
     const [startDate, endDate] = dateRange
     if (startDate) {
-      opts.startDate = startDate
+      opts.startDate = startDate.toISOString()
     }
     if (endDate) {
-      opts.endDate = endDate
+      opts.endDate = endDate.toISOString()
     }
-    const response = await backups.searchBackups($workspaceStore.appId, opts)
+    let response
+    try {
+      response = await backups.searchBackups($workspaceStore.appId, opts)
+    } catch (error) {
+      if (request !== latestRequest) return
+      throw error
+    }
+    if (request !== latestRequest) return
+
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
     // flatten so we have an easier structure to use for the table schema
     backupData = flattenBackups(response.data)
+    loading = backupData.some(isBackupInProgress)
 
     // Clear selections when fetching new data
     deselectAll()
@@ -158,45 +205,72 @@
   async function createManualBackup() {
     try {
       loading = true
-      let response = await backups.createManualBackup($workspaceStore.appId)
-      await fetchBackups(filterOpt, page)
+      const response = await backups.createManualBackup($workspaceStore.appId)
+      await fetchBackups({
+        filters: filterOpt,
+        page: $currentPage,
+        dateRange: [...dateRange],
+      })
       notifications.success(response.message)
     } catch (err) {
       notifications.error("Unable to create backup")
     }
   }
 
-  const poll = backupData => {
-    if (backupData === null) {
-      return
-    }
-
-    if (backupData.some(datum => datum.status === "started")) {
-      setTimeout(() => fetchBackups(filterOpt, page), 2000)
-    } else {
-      loading = false
-    }
-  }
-
-  $: poll(backupData)
-
-  async function handleButtonClick({ detail }) {
+  async function handleButtonClick({ detail }: CustomEvent<BackupTableAction>) {
     if (detail.type === "backupDelete") {
       await backups.deleteBackup($workspaceStore.appId, detail.backupId)
-      await fetchBackups(filterOpt, page)
+      await fetchBackups({
+        filters: filterOpt,
+        page: $currentPage,
+        dateRange: [...dateRange],
+      })
     } else if (detail.type === "backupRestore") {
       await backups.restoreBackup(
         $workspaceStore.appId,
         detail.backupId,
         detail.restoreBackupName
       )
-      await fetchBackups(filterOpt, page)
+      await fetchBackups({
+        filters: filterOpt,
+        page: $currentPage,
+        dateRange: [...dateRange],
+      })
     }
   }
 
-  onMount(async () => {
-    await fetchBackups(filterOpt, page, dateRange)
+  const handleFetchError = () => {
     loading = false
+    pageInfo.loading(false)
+    notifications.error("Unable to fetch backups")
+  }
+
+  $effect(() => {
+    const filters = filterOpt
+    const page = $currentPage
+    const range = [...dateRange]
+
+    untrack(() => {
+      fetchBackups({ filters, page, dateRange: range }).catch(handleFetchError)
+    })
+  })
+
+  $effect(() => {
+    const data = backupData
+    if (!data?.some(isBackupInProgress)) return
+
+    const filters = filterOpt
+    const page = $currentPage
+    const range = [...dateRange]
+    const timeout = setTimeout(() => {
+      untrack(() =>
+        fetchBackups({ filters, page, dateRange: range }).catch(
+          handleFetchError
+        )
+      )
+    }, 2000)
+
+    return () => clearTimeout(timeout)
   })
 </script>
 
@@ -255,7 +329,7 @@
           <div class="actions">
             {#if hasSelection}
               <div class="selection-controls">
-                <Button warning on:click={bulkDeleteDialog.show}>
+                <Button warning on:click={() => bulkDeleteDialog?.show()}>
                   Delete selected ({selectedRows.length})
                 </Button>
               </div>
@@ -272,10 +346,9 @@
             allowSelectRows={true}
             allowEditColumns={false}
             allowEditRows={false}
-            data={backupData}
+            data={backupData ?? []}
             {customRenderers}
             placeholderText="No backups found"
-            border={false}
             bind:selectedRows
             on:buttonclick={handleButtonClick}
           />
