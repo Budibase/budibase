@@ -3,23 +3,26 @@ import {
   mockAISDKChatGPTResponse,
   mockChatGPTResponse,
   mockChatGPTStreamFailure,
+  mockChatGPTStreamResponse,
   mockOpenAIFileUpload,
 } from "../../../tests/utilities/mocks/ai/openai"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import nock from "nock"
-import { context, env, setEnv } from "@budibase/backend-core"
+import { constants, context, env, setEnv } from "@budibase/backend-core"
 import {
   AIOperationEnum,
   AttachmentSubType,
   Feature,
   FieldType,
-  License,
+  GetLicenseByKeyResponse,
+  Hosting,
+  MonthlyQuotaName,
   PlanModel,
   PlanType,
   RelationshipType,
 } from "@budibase/types"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { quotas, ai } from "@budibase/pro"
 import { withEnv as serverWithEnv } from "../../../environment"
 
@@ -62,6 +65,13 @@ describe("AI", () => {
   })
 
   describe("POST /api/ai/js", () => {
+    it("denies a signed-in user without builder access", async () => {
+      const user = await config.createUser({ builder: { global: false } })
+      await config.withUser(user, () =>
+        config.api.ai.generateJs({ prompt: "test" }, { status: 403 })
+      )
+    })
+
     it("handles correct plain code response", async () => {
       mockAISDKChatGPTResponse(`return 42`)
 
@@ -187,6 +197,116 @@ describe("BudibaseAI", () => {
     )
   }
 
+  describe("AI license authentication", () => {
+    const routes = [
+      ["post", "/api/ai/chat"],
+      ["post", "/api/ai/chat/completions"],
+      ["get", "/api/ai/quotas"],
+      ["post", "/api/ai/upload-file"],
+    ] as const
+    const internalKey = "test-internal-key"
+    let restoreEnv: () => void
+
+    beforeAll(async () => {
+      restoreEnv = setEnv({ ACCOUNT_PORTAL_API_KEY: internalKey })
+      await config.newTenant()
+    })
+    afterAll(() => restoreEnv())
+
+    function portalLookup(
+      key: string,
+      hosting?: string,
+      tenantId = config.getTenantId()
+    ) {
+      return nock(env.ACCOUNT_PORTAL_URL)
+        .matchHeader(constants.Header.API_KEY, internalKey)
+        .get(`/api/license/${key}`)
+        .reply(200, { tenantId, hosting })
+    }
+
+    describe.each(routes)("%s %s", (method, path) => {
+      it.each([
+        [constants.Header.LICENSE_KEY, "cloud-key"],
+        ["Authorization", "Bearer cloud-key"],
+      ])("denies cloud hosting with %s", async (name, value) => {
+        const lookup = portalLookup("cloud-key", Hosting.CLOUD)
+        const credits = (await getQuotaUsage()).monthly.current
+          .budibaseAICredits
+        const response = await config
+          .request![method](path)
+          .set(config.defaultHeaders())
+          .set(name, value)
+          .expect(403)
+        expect(lookup.isDone()).toBe(true)
+        expect(response.body).not.toHaveProperty("monthlyCredits")
+        expect((await getQuotaUsage()).monthly.current.budibaseAICredits).toBe(
+          credits
+        )
+      })
+    })
+
+    it("denies a cloud session alone", async () => {
+      await config
+        .request!.get("/api/ai/quotas")
+        .set(config.defaultHeaders())
+        .expect(403)
+    })
+
+    it("denies a licence without hosting", async () => {
+      const lookup = portalLookup("legacy-key")
+      await config
+        .request!.get("/api/ai/quotas")
+        .set(constants.Header.LICENSE_KEY, "legacy-key")
+        .expect(403)
+      expect(lookup.isDone()).toBe(true)
+    })
+
+    it("denies a licence with an unrecognised hosting value", async () => {
+      const lookup = portalLookup("unknown-hosting-key", "unknown")
+      await config
+        .request!.get("/api/ai/quotas")
+        .set(constants.Header.LICENSE_KEY, "unknown-hosting-key")
+        .expect(403)
+      expect(lookup.isDone()).toBe(true)
+    })
+
+    it("denies a self-host licence without a tenant ID", async () => {
+      const lookup = portalLookup("tenantless-key", Hosting.SELF, "")
+      await config
+        .request!.get("/api/ai/quotas")
+        .set(constants.Header.LICENSE_KEY, "tenantless-key")
+        .expect(403)
+      expect(lookup.isDone()).toBe(true)
+    })
+
+    it("rejects the selected cloud header before using the alternate credential", async () => {
+      const lookup = portalLookup("cloud-key", Hosting.CLOUD)
+      await config
+        .request!.get("/api/ai/quotas")
+        .set(config.defaultHeaders())
+        .set(constants.Header.LICENSE_KEY, "cloud-key")
+        .set("Authorization", "Bearer self-key")
+        .expect(403)
+      expect(lookup.isDone()).toBe(true)
+    })
+
+    it("reads quotas for the license owner when the session belongs to another tenant", async () => {
+      const owner = "self-" + generator.guid()
+      const lookup = portalLookup("self-key", Hosting.SELF, owner)
+      await context.doInSelfHostTenantUsingCloud(owner, () =>
+        quotas.setBudibaseAICredits(17)
+      )
+      await config
+        .request!.get("/api/ai/quotas")
+        .set(config.defaultHeaders())
+        .set(constants.Header.TENANT_ID, config.getTenantId())
+        .set(constants.Header.LICENSE_KEY, "self-key")
+        .set("Authorization", "Bearer cloud-key")
+        .expect(200, { monthlyCredits: 17 })
+      expect(lookup.isDone()).toBe(true)
+    })
+  })
+
   describe("POST /api/ai/chat", () => {
     let licenseKey = "test-key"
     let internalApiKey = "api-key"
@@ -205,7 +325,8 @@ describe("BudibaseAI", () => {
 
     beforeEach(async () => {
       await config.newTenant()
-      const license: License = {
+      const license: GetLicenseByKeyResponse = {
+        hosting: Hosting.SELF,
         plan: {
           type: PlanType.FREE,
           model: PlanModel.PER_USER,
@@ -952,7 +1073,8 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      const license: License = {
+      const license: GetLicenseByKeyResponse = {
+        hosting: Hosting.SELF,
         plan: {
           type: PlanType.FREE,
           model: PlanModel.PER_USER,
@@ -1040,7 +1162,8 @@ describe("BudibaseAI", () => {
     beforeEach(async () => {
       await config.newTenant()
       nock.cleanAll()
-      const license: License = {
+      const license: GetLicenseByKeyResponse = {
+        hosting: Hosting.SELF,
         plan: {
           type: PlanType.FREE,
           model: PlanModel.PER_USER,
@@ -1088,6 +1211,38 @@ describe("BudibaseAI", () => {
       expect(response.choices[0].message.content).toBe(`{"value":"ok"}`)
     })
 
+    it.each([true, false])(
+      "forwards include_reasoning=%s to LiteLLM",
+      async includeReasoning => {
+        const onRequest = jest.fn()
+        mockChatGPTResponse("hello", { onRequest })
+
+        await config.api.ai.openaiChatCompletions({
+          model: "budibase/v1",
+          messages: [{ role: "user", content: "hello" }],
+          include_reasoning: includeReasoning,
+          licenseKey,
+        })
+
+        expect(onRequest).toHaveBeenCalledWith(
+          expect.objectContaining({ include_reasoning: includeReasoning })
+        )
+      }
+    )
+
+    it("rejects a non-boolean include_reasoning value", async () => {
+      await config.api.ai.openaiChatCompletions(
+        {
+          model: "budibase/v1",
+          messages: [{ role: "user", content: "hello" }],
+          // @ts-expect-error exercise runtime validation for untyped clients
+          include_reasoning: "true",
+          licenseKey,
+        },
+        { status: 400 }
+      )
+    })
+
     it("returns HTTP errors from upstream", async () => {
       mockChatGPTStreamFailure({
         status: 401,
@@ -1110,6 +1265,24 @@ describe("BudibaseAI", () => {
       )
     })
 
+    it("streams completions with a self-host Bearer credential", async () => {
+      mockChatGPTStreamResponse("hello")
+      const response = await config
+        .request!.post("/api/ai/chat/completions")
+        .set(config.defaultHeaders())
+        .set("Authorization", `Bearer ${licenseKey}`)
+        .send({
+          model: "budibase/v1",
+          messages: [{ role: "user", content: "hello" }],
+          stream: true,
+        })
+        .expect(200)
+      expect(response.text).toContain("[DONE]")
+      expect(
+        (await getQuotaUsage()).monthly.current.budibaseAICredits
+      ).toBeGreaterThan(0)
+    })
+
     it("increments Budibase AI credits from usage", async () => {
       let usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBe(0)
@@ -1124,6 +1297,27 @@ describe("BudibaseAI", () => {
 
       usage = await getQuotaUsage()
       expect(usage.monthly.current.budibaseAICredits).toBe(11)
+    })
+
+    it("enforces the credit limit after accepting a self-host license", async () => {
+      mocks.licenses.useUnlimited({
+        monthlyQuotas: [[MonthlyQuotaName.BUDIBASE_AI_CREDITS, 0]],
+      })
+      try {
+        await config.api.ai.openaiChatCompletions(
+          {
+            model: "budibase/v1",
+            messages: [{ role: "user", content: "hello" }],
+            licenseKey,
+          },
+          { status: 402 }
+        )
+        expect((await getQuotaUsage()).monthly.current.budibaseAICredits).toBe(
+          0
+        )
+      } finally {
+        mocks.licenses.useUnlimited()
+      }
     })
 
     it("rejects requests missing required fields", async () => {

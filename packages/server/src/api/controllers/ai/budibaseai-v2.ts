@@ -14,6 +14,7 @@ const allowedChatCompletionFields = new Set([
   "frequency_penalty",
   "function_call",
   "functions",
+  "include_reasoning",
   "logit_bias",
   "logprobs",
   "max_completion_tokens",
