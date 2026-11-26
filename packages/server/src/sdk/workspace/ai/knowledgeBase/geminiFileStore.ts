@@ -18,41 +18,41 @@ interface RagIngestResponse {
   error?: string
 }
 
+export interface GeminiFileSearchResponse {
+  candidates?: Array<{
+    content?: { parts?: Array<{ text?: string }> }
+    groundingMetadata?: {
+      groundingChunks?: Array<{
+        retrievedContext?: { text?: string; uri?: string }
+      }>
+    }
+  }>
+  usageMetadata?: { toolUsePromptTokenCount?: number }
+}
+
 interface RagSearchRetrievedContext {
   text?: string
   title?: string
   uri?: string
-  pageNumber?: number | string | null
-  page_number?: number | string | null
-  fileSearchStore?: string
-  file_search_store?: string
   mediaId?: string
   media_id?: string
-  customMetadata?: unknown
-  custom_metadata?: unknown
+  pageNumber?: number | string | null
+  page_number?: number | string | null
 }
 
 interface RagSearchContent {
   text?: string
-  type?: "text" | string
   retrievedContext?: RagSearchRetrievedContext
   retrieved_context?: RagSearchRetrievedContext
-  [key: string]: unknown
 }
 
 export interface RagSearchResultItem {
   id?: string | null
   file_id?: string | null
   filename?: string
-  score?: number | null
   content?: RagSearchContent[] | string | null
-  attributes?: Record<string, unknown> | Record<string, unknown>[] | string
-  metadata?: Record<string, unknown>
   retrievedContext?: RagSearchRetrievedContext
   retrieved_context?: RagSearchRetrievedContext
-  groundingMetadata?: Record<string, unknown>
-  grounding_metadata?: Record<string, unknown>
-  [key: string]: unknown
 }
 
 interface RagSearchResponse {
@@ -307,6 +307,43 @@ export async function ingestGeminiFile({
   return {
     fileId: payload.file_id,
   }
+}
+
+export async function generateGeminiFileStoreAnswer({
+  vectorStoreId,
+  query,
+}: {
+  vectorStoreId: string
+  query: string
+}): Promise<GeminiFileSearchResponse> {
+  const response = await requestWithRetries(async () =>
+    fetch(
+      `${environment.LITELLM_URL}/models/budibase-gemini-file-search:generateContent`,
+      {
+        method: "POST",
+        headers: await getCommonAuthHeaders(),
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Question: ${query}\nFind and quote the exact passages in the file contents that answer this question. Explain what they establish, including any uncertainty. Do not infer facts from filenames or titles. If the files do not contain the answer, say so.`,
+                },
+              ],
+            },
+          ],
+          tools: [{ fileSearch: { fileSearchStoreNames: [vectorStoreId] } }],
+        }),
+      }
+    )
+  )
+
+  await handleNotOkResponse({
+    response,
+    fallbackMessage: "Failed to query Gemini file store",
+  })
+
+  return (await response.json()) as GeminiFileSearchResponse
 }
 
 export async function searchGeminiFileStore({

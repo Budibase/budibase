@@ -819,8 +819,9 @@ services:
     # If not set, LiteLLM uses its built-in defaults.
     uiPassword: ""
     # -- Inline configuration passed to litellm as config.yaml. Overriding this
-    # value replaces the entire config; retain the `budibase-gemini` entry in
-    # `credential_list` or Gemini file search will not work.
+    # value replaces the entire config. Retain `budibase-gemini` in
+    # `credential_list` and `budibase-gemini-file-search` in `model_list` or
+    # Gemini file search will not work.
     config: |
       general_settings:
         store_model_in_db: true
@@ -832,6 +833,11 @@ services:
             api_key: os.environ/GEMINI_API_KEY
           credential_info:
             custom_llm_provider: gemini
+      model_list:
+        - model_name: budibase-gemini-file-search
+          litellm_params:
+            model: gemini/gemini-3.8-flash
+            litellm_credential_name: budibase-gemini
       litellm_settings:
         drop_params: true
         extra_spend_tag_headers:
