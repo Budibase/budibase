@@ -51,7 +51,7 @@ vi.mock("@budibase/frontend-core", () => ({
   downloadStream: vi.fn(),
 }))
 
-const exportQueryRows = async format => {
+const exportQueryRows = async ({ format, fileName }) => {
   const { enrichButtonActions } = await import("./buttonActions.js")
   const exportData = enrichButtonActions(
     [
@@ -67,6 +67,7 @@ const exportQueryRows = async format => {
             firstName: "First name",
             lastName: "Last name",
           },
+          fileName,
         },
       },
     ],
@@ -98,7 +99,43 @@ describe("Export Data action", () => {
   ])(
     "exports query rows with custom %s labels",
     async (format, expectedData) => {
-      await expect(exportQueryRows(format)).resolves.toBe(expectedData)
+      await expect(exportQueryRows({ format })).resolves.toBe(expectedData)
     }
   )
+
+  it("uses a custom CSV file name", async () => {
+    await exportQueryRows({ format: "csv", fileName: "customer-export" })
+
+    expect(mockDownload).toHaveBeenLastCalledWith(
+      expect.any(Blob),
+      "customer-export.csv"
+    )
+  })
+
+  it("replaces a custom file name extension with the selected format", async () => {
+    await exportQueryRows({ format: "json", fileName: "customer-export.csv" })
+
+    expect(mockDownload).toHaveBeenLastCalledWith(
+      expect.any(Blob),
+      "customer-export.json"
+    )
+  })
+
+  it("falls back to the generated filename when the CSV file name is blank", async () => {
+    await exportQueryRows({ format: "csv", fileName: "   " })
+
+    expect(mockDownload).toHaveBeenLastCalledWith(
+      expect.any(Blob),
+      "query-table.csv"
+    )
+  })
+
+  it("uses a custom JSON file name", async () => {
+    await exportQueryRows({ format: "json", fileName: "customer-export" })
+
+    expect(mockDownload).toHaveBeenLastCalledWith(
+      expect.any(Blob),
+      "customer-export.json"
+    )
+  })
 })
