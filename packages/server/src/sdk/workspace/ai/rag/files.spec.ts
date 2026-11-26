@@ -496,6 +496,72 @@ describe("rag files", () => {
       })
     })
 
+    it("routes dev and prod questions to their active workspace stores", async () => {
+      const baseFile = {
+        _id: "base_file",
+        knowledgeBaseId: "kb_123",
+        filename: "base.md",
+        objectStoreKey: "objects/base.md",
+        status: KnowledgeBaseFileStatus.READY,
+        uploadedBy: "user_1",
+      }
+      const devFile = {
+        ...baseFile,
+        _id: "dev_file",
+        filename: "dev.md",
+        objectStoreKey: "objects/dev.md",
+      }
+      mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
+      mockKnowledgeBaseListFiles
+        .mockResolvedValueOnce([baseFile, devFile])
+        .mockResolvedValueOnce([baseFile])
+        .mockResolvedValueOnce([baseFile, devFile])
+        .mockResolvedValueOnce([baseFile])
+      mockEnsureWorkspaceGeminiStore
+        .mockResolvedValueOnce({ storeId: "dev-store", files: [] })
+        .mockResolvedValueOnce({ storeId: "prod-old-store", files: [] })
+        .mockResolvedValueOnce({ storeId: "prod-new-store", files: [] })
+        .mockResolvedValueOnce({ storeId: "dev-rebuilt-store", files: [] })
+      const answersByStore = new Map([
+        ["dev-store", "Dev answer"],
+        ["prod-old-store", "Prod old answer"],
+        ["prod-new-store", "Prod new answer"],
+        ["dev-rebuilt-store", "Dev deleted answer"],
+      ])
+      mockProcessorSearch.mockImplementation(async () => {
+        const calls = (GeminiRagProcessor as jest.Mock).mock.calls
+        const activeStoreId = calls.at(-1)?.[0].config.googleFileStoreId
+        return { chunks: [], answer: answersByStore.get(activeStoreId) }
+      })
+
+      const answers = []
+      for (let index = 0; index < 4; index++) {
+        const result = await retrieveContextForOperation(
+          defaultAgent,
+          "operation_1",
+          "What is in the files?"
+        )
+        answers.push(result.answer)
+      }
+
+      expect(answers).toEqual([
+        "Dev answer",
+        "Prod old answer",
+        "Prod new answer",
+        "Dev deleted answer",
+      ])
+      expect(
+        (GeminiRagProcessor as jest.Mock).mock.calls.map(
+          ([knowledgeBase]) => knowledgeBase.config.googleFileStoreId
+        )
+      ).toEqual([
+        "dev-store",
+        "prod-old-store",
+        "prod-new-store",
+        "dev-rebuilt-store",
+      ])
+    })
+
     it("keeps grounding passages with unmatched URIs without citing a file", async () => {
       mockKnowledgeBaseFind.mockResolvedValue(defaultKnowledgeBase)
       mockKnowledgeBaseListFiles.mockResolvedValue([

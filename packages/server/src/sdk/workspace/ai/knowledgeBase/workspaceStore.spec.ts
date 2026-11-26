@@ -259,4 +259,65 @@ describe("workspace Gemini store", () => {
     )
     expect(stored.storeId).toBe(initial?.storeId)
   })
+
+  it("keeps dev and prod file sets independent through add, publish, and deletion", async () => {
+    let nextStore = 0
+    mockCreateStore.mockReset().mockImplementation(async () => {
+      nextStore++
+      return `workspace-store-${nextStore}`
+    })
+    const addedFile = {
+      ...readyFile,
+      _id: "dev_added",
+      objectStoreKey: "objects/dev-added.md",
+    }
+    const filesByWorkspace = new Map([
+      ["app_dev_1", [readyFile]],
+      ["app_1", [readyFile]],
+    ])
+    mockListFiles.mockImplementation(async () =>
+      filesByWorkspace.get(mockGetWorkspaceId())
+    )
+    const queryFiles = async (workspaceId: string) => {
+      mockGetWorkspaceId.mockReturnValue(workspaceId)
+      const store = await ensureWorkspaceGeminiStore(knowledgeBase)
+      return {
+        storeId: store?.storeId,
+        fileIds: store?.files.map(file => file.fileId) || [],
+      }
+    }
+
+    const initialDev = await queryFiles("app_dev_1")
+    const initialProd = await queryFiles("app_1")
+    expect(initialDev.fileIds).toEqual(["file_1"])
+    expect(initialProd.fileIds).toEqual(["file_1"])
+    expect(initialDev.storeId).not.toBe(initialProd.storeId)
+
+    filesByWorkspace.set("app_dev_1", [readyFile, addedFile])
+    expect((await queryFiles("app_dev_1")).fileIds).toEqual([
+      "dev_added",
+      "file_1",
+    ])
+    expect((await queryFiles("app_1")).fileIds).toEqual(["file_1"])
+
+    mockGetWorkspaceId.mockReturnValue("app_1")
+    await beginWorkspaceGeminiPublish()
+    filesByWorkspace.set("app_1", [readyFile, addedFile])
+    expect((await queryFiles("app_1")).fileIds).toEqual(["file_1"])
+    await reconcileWorkspaceGeminiStores([knowledgeBase])
+    expect((await queryFiles("app_1")).fileIds).toEqual(["file_1"])
+    await completeWorkspaceGeminiPublish()
+    expect((await queryFiles("app_1")).fileIds).toEqual(["dev_added", "file_1"])
+
+    filesByWorkspace.set("app_dev_1", [readyFile])
+    expect((await queryFiles("app_dev_1")).fileIds).toEqual(["file_1"])
+    expect((await queryFiles("app_1")).fileIds).toEqual(["dev_added", "file_1"])
+
+    mockGetWorkspaceId.mockReturnValue("app_1")
+    await beginWorkspaceGeminiPublish()
+    filesByWorkspace.set("app_1", [readyFile])
+    await reconcileWorkspaceGeminiStores([knowledgeBase])
+    await completeWorkspaceGeminiPublish()
+    expect((await queryFiles("app_1")).fileIds).toEqual(["file_1"])
+  })
 })
