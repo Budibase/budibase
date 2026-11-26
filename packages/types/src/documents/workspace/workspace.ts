@@ -65,6 +65,8 @@ export interface EmbedSSOConfig {
   // PEM-encoded public key (ES256/RS256) or shared secret (HS256). Stored
   // encrypted at rest and never returned to the browser.
   key: string
+  // expected "aud" claim for tokens issued to this workspace.
+  audience?: string
   // optional expected issuer (the "iss" claim) to validate against.
   issuer?: string
   // dot-path into the token payload for the user's email, e.g. "userdata.email"

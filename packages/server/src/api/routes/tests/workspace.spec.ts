@@ -1695,10 +1695,28 @@ describe("/applications", () => {
           enabled: true,
           algorithm: "HS256",
           key: "super-secret",
+          audience: "budibase-example",
         },
       })
 
       expect(updatedApp.embedSSO?.enabled).toBe(true)
+      expect(updatedApp.embedSSO?.audience).toBe("budibase-example")
+    })
+
+    it("rejects enabling embed SSO without an audience", async () => {
+      mocks.licenses.useEmbedAuth()
+
+      await config.api.workspace.update(
+        workspace.appId,
+        {
+          embedSSO: {
+            enabled: true,
+            algorithm: "HS256",
+            key: "super-secret",
+          },
+        },
+        { status: 400 }
+      )
     })
   })
 
