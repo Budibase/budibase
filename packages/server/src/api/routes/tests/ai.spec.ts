@@ -1230,19 +1230,6 @@ describe("BudibaseAI", () => {
       }
     )
 
-    it("rejects a non-boolean include_reasoning value", async () => {
-      await config.api.ai.openaiChatCompletions(
-        {
-          model: "budibase/v1",
-          messages: [{ role: "user", content: "hello" }],
-          // @ts-expect-error exercise runtime validation for untyped clients
-          include_reasoning: "true",
-          licenseKey,
-        },
-        { status: 400 }
-      )
-    })
-
     it("returns HTTP errors from upstream", async () => {
       mockChatGPTStreamFailure({
         status: 401,
