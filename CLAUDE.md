@@ -67,6 +67,11 @@
   this can be used to access the test API under `new TestConfiguration().api`, a list of functions and
   request/response types can be found in `packages/server/src/tests/utilities/api`.
 
+## GitHub
+
+- When asked to upload video attachments to a PR, do it inline and use the gh CLI.
+- Never create an issue unless explicitly asked to do so.
+
 ## Git
 
 Never auto-commit changes unless explicitly asked to do so. You may ask permission to commit.

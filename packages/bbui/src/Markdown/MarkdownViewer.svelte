@@ -62,9 +62,13 @@
     height: 2px;
   }
   /* Tables */
+  .markdown-viewer :global(table) {
+    border-collapse: collapse;
+  }
   .markdown-viewer :global(td),
   .markdown-viewer :global(th) {
-    border-color: var(--spectrum-alias-border-color) !important;
+    border: 1px solid var(--spectrum-alias-border-color);
+    padding: 4px 8px;
   }
   /* Links */
   .markdown-viewer :global(a) {

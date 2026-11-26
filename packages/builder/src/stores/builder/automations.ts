@@ -73,7 +73,6 @@ import {
   EnrichedBinding,
   GetAutomationActionDefinitionsResponse,
   GetAutomationTriggerDefinitionsResponse,
-  isActionStep,
   isAppTrigger,
   isAutomationResults,
   isBranchStep,
@@ -308,17 +307,7 @@ const automationActions = (store: AutomationStore) => ({
       console.error("Block required to generate step input data")
       return
     }
-    let newInputData
-
-    if (isTrigger(block)) {
-      const triggerInputs: AutomationTriggerInputs<typeof block.stepId> =
-        block.inputs
-      newInputData = cloneDeep(triggerInputs)
-    } else if (isActionStep(block)) {
-      const blockInputs: AutomationStepInputs<typeof block.stepId> =
-        block.inputs
-      newInputData = cloneDeep(blockInputs)
-    }
+    const newInputData = cloneDeep(block.inputs)
 
     store.actions.setDefaultEnumValues(
       newInputData,
