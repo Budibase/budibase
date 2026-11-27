@@ -123,10 +123,10 @@
     {/if}
   </div>
 {:else}
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
   {#key renderKey}
     <div class="dropdown" class:left={renderLeftNav} class:expanded>
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div class="text" class:collapsed on:click={onClickDropdown}>
         {#if collapsed}
           <AbsTooltip {text} position={TooltipPosition.Right}>
@@ -140,7 +140,23 @@
           {#if icon}
             <Icon name={icon} color={iconColor} size="S" />
           {/if}
-          <span>{text}</span>
+          {#if url && internalLink}
+            <a
+              class="parent-link"
+              href="#{url}"
+              on:click|stopPropagation={onClickLink}
+              use:active={url}
+              class:builderActive>{text}</a
+            >
+          {:else if url}
+            <a
+              class="parent-link"
+              href={url}
+              on:click|stopPropagation={onClickLink}>{text}</a
+            >
+          {:else}
+            <span>{text}</span>
+          {/if}
           <Icon name={caret} color={iconColor} size="S" />
         {/if}
       </div>
@@ -181,6 +197,9 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-s);
+  }
+  .dropdown .text a.parent-link {
+    padding: 0;
   }
   a,
   .text span {

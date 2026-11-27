@@ -125,22 +125,21 @@
         on:drawerShow={() => drawerCount++}
         on:drawerHide={() => drawerCount--}
       />
-    {:else}
-      <PropertyControl
-        label="Link"
-        control={DrawerBindableCombobox}
-        value={navItem.url}
-        onChange={update("url")}
-        {bindings}
-        props={{
-          options: $urlOptions,
-          appendBindingsAsOptions: false,
-          placeholder: null,
-        }}
-        on:drawerShow={() => drawerCount++}
-        on:drawerHide={() => drawerCount--}
-      />
     {/if}
+    <PropertyControl
+      label="Link"
+      control={DrawerBindableCombobox}
+      value={navItem.url}
+      onChange={update("url")}
+      {bindings}
+      props={{
+        options: $urlOptions,
+        appendBindingsAsOptions: false,
+        placeholder: null,
+      }}
+      on:drawerShow={() => drawerCount++}
+      on:drawerHide={() => drawerCount--}
+    />
     <PropertyControl
       label="Access"
       control={RoleSelect}
