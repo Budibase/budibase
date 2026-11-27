@@ -198,6 +198,9 @@
     align-items: center;
     gap: var(--spacing-s);
   }
+  .dropdown .text a.parent-link {
+    padding: 0;
+  }
   a,
   .text span {
     opacity: 0.75;
