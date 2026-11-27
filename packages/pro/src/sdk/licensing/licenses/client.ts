@@ -1,5 +1,6 @@
 import { API } from "../../../utilities"
 import {
+  GetLicenseByKeyResponse,
   GetLicenseRequest,
   License,
   LicenseActivateRequest,
@@ -160,7 +161,7 @@ export const getLicense = _getLicense
 
 export async function getLicenseFromKey(
   licenseKey: string
-): Promise<License | undefined> {
+): Promise<GetLicenseByKeyResponse | undefined> {
   return await tracer.trace("getLicenseFromKey", async span => {
     let response: Response
 

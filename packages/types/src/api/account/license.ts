@@ -1,5 +1,5 @@
 import { LicenseOverrides, QuotaUsage } from "../../documents"
-import { OfflineLicense, PlanType } from "../../sdk"
+import { Hosting, License, OfflineLicense, PlanType } from "../../sdk"
 import { ISO8601 } from "../../shared"
 
 export interface GetLicenseRequest {
@@ -12,6 +12,10 @@ export interface GetLicenseRequest {
     tenantId: string
     version: string
   }
+}
+
+export interface GetLicenseByKeyResponse extends License {
+  hosting?: Hosting
 }
 
 export interface QuotaTriggeredRequest {

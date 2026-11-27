@@ -1,9 +1,13 @@
-import { Ctx } from "@budibase/types"
+import { Ctx, Hosting } from "@budibase/types"
 import { Next } from "koa"
 import { constants, context, utils } from "@budibase/backend-core"
 import { getLicenseFromKey } from "../sdk/licensing"
 import { tracer } from "dd-trace"
 
+// The licenceAuth middleware is used to authenticate requests to the
+// Budibase API using only a license key. Authentication by licenseKey should
+// only be used for self-hosted instances, so this middleware checks that the
+// attached licence is self-hosted, otherwise it throws an error.
 export default async function (ctx: Ctx, next: Next) {
   await tracer.trace("licenseAuth", async span => {
     let licenseKey =
@@ -25,6 +29,10 @@ export default async function (ctx: Ctx, next: Next) {
 
     if (!license.tenantId) {
       ctx.throw(403, "License does not have a tenant ID")
+    }
+
+    if (license.hosting !== Hosting.SELF) {
+      ctx.throw(403, "Forbidden")
     }
 
     tracer.setUser({
