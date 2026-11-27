@@ -2,10 +2,12 @@
   import { Label, Select, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import ColumnEditor from "../../ColumnEditor/ColumnEditor.svelte"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import { findAllMatchingComponents } from "@/helpers/components"
   import { selectedScreen } from "@/stores/builder"
 
   export let parameters
+  export let bindings = []
 
   const FORMATS = [
     {
@@ -108,6 +110,15 @@
       options={DELIMITERS}
       disabled={parameters.type !== "csv"}
     />
+    <Label small>File name</Label>
+    <div class="file-name-input">
+      <DrawerBindableInput
+        title="File name"
+        {bindings}
+        value={parameters.fileName}
+        on:change={value => (parameters.fileName = value.detail)}
+      />
+    </div>
     <Label small>Export columns</Label>
     <ColumnEditor
       value={parameters.columns}
@@ -149,5 +160,9 @@
     row-gap: var(--spacing-m);
     grid-template-columns: 90px 1fr 90px;
     align-items: center;
+  }
+
+  .file-name-input {
+    grid-column: 2 / -1;
   }
 </style>
