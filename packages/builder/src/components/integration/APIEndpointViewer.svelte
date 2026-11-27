@@ -1257,6 +1257,7 @@
                         ...globalDynamicRequestBindings,
                       ]}
                       context={bindingPreviewContext}
+                      allowJS
                       on:change={onUpdateBindings}
                       actionButtonDisabled={isCustomMode
                         ? !datasource
@@ -1272,6 +1273,7 @@
                         headings
                         bindings={mergedBindings}
                         context={bindingPreviewContext}
+                        allowJS
                         on:change={onUpdateParams}
                         drawerZIndex={panelZIndex + 1}
                       />
@@ -1286,6 +1288,7 @@
                       headings
                       bindings={mergedBindings}
                       context={bindingPreviewContext}
+                      allowJS
                       on:change={onUpdateHeaders}
                       drawerZIndex={panelZIndex + 1}
                     />
