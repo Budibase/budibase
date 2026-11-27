@@ -182,6 +182,14 @@ vi.mock("@/stores/builder", async () => {
 
   return {
     tables: writable({ list: [] }),
+    builderStore: {
+      propertyFocus: vi.fn(),
+    },
+    previewStore: {
+      ...writable({ selectedComponentContext: {} }),
+      requestComponentContext: vi.fn(),
+    },
+    snippets: writable([]),
     datasources,
     flags: writable({}),
     workspaceStore: writable({ appId: "app_test" }),
@@ -1398,6 +1406,43 @@ describe("API Endpoint Viewer", () => {
             "Transformer",
           ])
         )
+      })
+    })
+
+    it.each([
+      ["Bindings", "Add binding"],
+      ["Params", "Add param"],
+      ["Headers", "Add header"],
+    ])("enables JavaScript bindings for %s", async (tab, addButtonText) => {
+      const { container, baseElement } = setupDOM({ datasourceId: REST_DS_ID })
+
+      await waitFor(() => expect(getTab(container, tab)).toBeDefined())
+      await fireEvent.click(getTab(container, tab)!)
+
+      const addButton = await waitFor(() => {
+        const button = Array.from(container.querySelectorAll("button")).find(
+          button => button.textContent?.trim().includes(addButtonText)
+        )
+        expect(button).toBeDefined()
+        return button!
+      })
+      await fireEvent.click(addButton)
+
+      const bindingIcon = await waitFor(() => {
+        const icon = container.querySelector(
+          ".spectrum-Tabs-content .control .icon"
+        ) as HTMLElement | null
+        expect(icon).not.toBeNull()
+        return icon!
+      })
+      await fireEvent.click(bindingIcon)
+
+      await waitFor(() => {
+        expect(
+          Array.from(baseElement.querySelectorAll("button")).some(
+            button => button.textContent?.trim() === "JavaScript"
+          )
+        ).toBe(true)
       })
     })
 
